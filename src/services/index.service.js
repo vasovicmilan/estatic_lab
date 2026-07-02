@@ -1,0 +1,127 @@
+import * as serviceService from "./service.service.js";
+import * as expertService from "./expert.service.js";
+import * as testimonialService from "./testimonial.service.js";
+import * as postService from "./post.service.js";
+import * as contactService from "./contact.service.js";
+import * as newsLetterService from "./news-letter.service.js";
+import { buildPageSeo } from "../seo/index.js";
+import { validationError } from "../utils/error.util.js";
+
+export async function getLandingPageData({
+  highlightedServiceLimit = 6,
+  featuredExpertLimit = 4,
+  testimonialLimit = 6,
+  latestPostLimit = 3,
+} = {}) {
+  const [highlightedServices, allExperts, testimonials, latestPosts] = await Promise.all([
+    serviceService.findHighlightedServices({ limit: highlightedServiceLimit }),
+    expertService.getActiveExperts(),
+    testimonialService.getApprovedTestimonials({ limit: testimonialLimit, featuredOnly: true }),
+    postService.findPublishedPosts({ limit: latestPostLimit }),
+  ]);
+
+  const seo = buildPageSeo({
+    title: "Estatic Lab | Vaš prostor za opuštanje i negu",
+    description: "Zakažite termin za masažu, tretmane lica i tela u opuštajućem ambijentu Estatic Lab wellness centra.",
+    canonical: "/",
+    isIndexable: true,
+    type: "website",
+  });
+
+  return {
+    highlightedServices,
+    featuredExperts: allExperts.slice(0, featuredExpertLimit),
+    testimonials,
+    latestPosts: latestPosts.data || [],
+    seo,
+  };
+}
+
+export async function getAboutPageData() {
+  const seo = buildPageSeo({
+    title: "O nama | Estatic Lab",
+    description: "Saznajte više o Estatic Lab wellness centru, našem timu i filozofiji nege.",
+    canonical: "/o-nama",
+    isIndexable: true,
+  });
+  return { seo };
+}
+
+export async function getPrivacyPolicyPageData() {
+  const seo = buildPageSeo({
+    title: "Politika privatnosti | Estatic Lab",
+    description: "Informacije o zaštiti podataka o ličnosti i privatnosti korisnika Estatic Lab sajta.",
+    canonical: "/politika-privatnosti",
+    isIndexable: true,
+  });
+  return { seo };
+}
+
+export async function getTermsAndConditionsPageData() {
+  const seo = buildPageSeo({
+    title: "Uslovi korišćenja | Estatic Lab",
+    description: "Uslovi korišćenja Estatic Lab sajta i pravila zakazivanja termina.",
+    canonical: "/uslovi-koriscenja",
+    isIndexable: true,
+  });
+  return { seo };
+}
+
+export async function getFaqPageData() {
+  const seo = buildPageSeo({
+    title: "Česta pitanja (FAQ) | Estatic Lab",
+    description: "Odgovori na najčešća pitanja o zakazivanju, uslugama, plaćanju i otkazivanju termina.",
+    canonical: "/faq",
+    isIndexable: true,
+  });
+  return { seo };
+}
+
+export async function getContactPageData() {
+  const seo = buildPageSeo({
+    title: "Kontakt | Estatic Lab",
+    description: "Kontaktirajte Estatic Lab tim za pitanja o uslugama, terminima ili saradnji.",
+    canonical: "/kontakt",
+    isIndexable: false,
+  });
+  return { seo };
+}
+
+// "leave a review" widget) rather than one specific domain's own page.
+
+export async function submitContactForm(data, meta) {
+  if (!data?.firstName || !data?.email || !data?.message) {
+    validationError("Sva obavezna polja moraju biti popunjena");
+  }
+  return contactService.submitContact(data, meta);
+}
+
+export async function submitTestimonialForm(data) {
+  if (!data?.rating || !data?.message) {
+    validationError("Ocena i komentar su obavezni");
+  }
+  return testimonialService.submitTestimonial(data);
+}
+
+export async function submitNewsletterForm(email) {
+  if (!email) validationError("email");
+  return newsLetterService.subscribe(email);
+}
+
+export async function unsubscribeNewsletter(token) {
+  if (!token) validationError("token");
+  return newsLetterService.unsubscribe(token);
+}
+
+export default {
+  getLandingPageData,
+  getAboutPageData,
+  getPrivacyPolicyPageData,
+  getTermsAndConditionsPageData,
+  getFaqPageData,
+  getContactPageData,
+  submitContactForm,
+  submitTestimonialForm,
+  submitNewsletterForm,
+  unsubscribeNewsletter,
+};
