@@ -1,0 +1,12 @@
+{
+  "name": "estetic_lab",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "Milan Vasovic",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

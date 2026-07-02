@@ -1,0 +1,1 @@
+// TODO: add all function to show blog, post details, search blog, blog categories, blog tags etc..
