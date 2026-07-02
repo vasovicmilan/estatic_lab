@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import ImageSchema from "./schemas/image.schema.js";
 
 export const CATEGORY_DOMAINS = ["post", "service"];
 
@@ -26,24 +27,23 @@ const CategorySchema = new Schema(
       ref: "Category",
       default: null,
     },
+
     shortDescription: {
       type: String,
-      required: true,
       trim: true,
     },
     longDescription: {
       type: String,
-      required: true,
     },
-    featureImage: {
-      img: { type: String, trim: true },
-      imgDesc: { type: String },
-    },
+
+    featureImage: ImageSchema,
+
     isIndexable: {
       type: Boolean,
       default: true,
       index: true,
     },
+
     meta: {
       priority: { type: Number, default: 0 },
       isActive: { type: Boolean, default: true, index: true },
@@ -53,5 +53,6 @@ const CategorySchema = new Schema(
 );
 
 CategorySchema.index({ slug: 1, domain: 1 }, { unique: true });
+CategorySchema.index({ parent: 1 });
 
 export default model("Category", CategorySchema);

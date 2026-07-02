@@ -4,9 +4,10 @@ const VideoSchema = new Schema(
   {
     url: {
       type: String,
+      required: true,
       trim: true,
     },
-    filePath: {
+    title: {
       type: String,
       trim: true,
     },
@@ -14,31 +15,9 @@ const VideoSchema = new Schema(
       type: String,
       trim: true,
     },
-    title: {
-      type: String,
-      trim: true,
-    },
-    description: {
-      type: String,
-      trim: true,
-    },
-    duration: {
-      type: Number,
-    },
-    provider: {
-      type: String,
-      enum: ["youtube", "vimeo", "local", "custom"],
-      default: "local",
-    },
-    providerId: {
-      type: String,
-    },
-    mimeType: {
-      type: String,
-      trim: true,
-    },
-    size: {
-      type: Number,
+    isExternal: {
+      type: Boolean,
+      default: false,
     },
   },
   { _id: false }

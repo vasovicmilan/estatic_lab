@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import { Schema, model } from "mongoose";
 import ImageSchema from "./schemas/image.schema.js";
 import VideoSchema from "./schemas/video.schema.js";
 import FAQSchema from "./schemas/faq.schema.js";
@@ -6,9 +6,7 @@ import ServiceFeatureSchema from "./schemas/service-feature.schema.js";
 import ServicePackageSchema from "./schemas/service-package.schema.js";
 import ComparisonRowSchema from "./schemas/comparison-row.schema.js";
 
-const { Schema, model } = mongoose;
-
-const OurServiceSchema = new Schema(
+const ServiceSchema = new Schema(
   {
     name: {
       type: String,
@@ -22,43 +20,31 @@ const OurServiceSchema = new Schema(
       lowercase: true,
       trim: true,
     },
-    shortDescription: String,
-    longDescription: String,
 
-    type: {
+    shortDescription: {
       type: String,
-      enum: ["esma", "massage"],
-      required: true,
-      index: true,
+      trim: true,
+    },
+    longDescription: {
+      type: String,
     },
 
-    defaultDuration: {
-      type: Number,
-      default: 60,
-    },
-
-    categories: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Category",
-      },
-    ],
-    tags: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Tag",
-      },
-    ],
+    categories: [{ type: Schema.Types.ObjectId, ref: "Category" }],
+    tags: [{ type: Schema.Types.ObjectId, ref: "Tag" }],
 
     image: {
       type: ImageSchema,
       required: true,
     },
     gallery: [ImageSchema],
-
     videos: [VideoSchema],
 
     seoKeywords: [String],
+
+    defaultDuration: {
+      type: Number,
+      default: 60,
+    },
 
     highlight: {
       type: Boolean,
@@ -67,7 +53,7 @@ const OurServiceSchema = new Schema(
     },
     ctaText: {
       type: String,
-      default: "Zakaži konsultaciju",
+      default: "Zakaži termin",
     },
 
     features: {
@@ -78,6 +64,10 @@ const OurServiceSchema = new Schema(
     packages: {
       type: [ServicePackageSchema],
       default: [],
+      validate: {
+        validator: (v) => v && v.length > 0,
+        message: "Usluga mora imati bar jednu varijantu (paket) za zakazivanje.",
+      },
     },
 
     comparisonColumns: {
@@ -91,12 +81,7 @@ const OurServiceSchema = new Schema(
 
     faq: [FAQSchema],
 
-    employees: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Employee",
-      },
-    ],
+    employees: [{ type: Schema.Types.ObjectId, ref: "Employee" }],
 
     isActive: {
       type: Boolean,
@@ -107,13 +92,13 @@ const OurServiceSchema = new Schema(
   { timestamps: true }
 );
 
-OurServiceSchema.pre("save", function (next) {
-  if (this.comparisonTable && this.comparisonColumns.length) {
+ServiceSchema.pre("save", function (next) {
+  if (this.comparisonTable?.length && this.comparisonColumns?.length) {
     for (const row of this.comparisonTable) {
       if (row.values.length !== this.comparisonColumns.length) {
         return next(
           new Error(
-            `Row "${row.label}" has ${row.values.length} values but ${this.comparisonColumns.length} columns`
+            `Red "${row.label}" ima ${row.values.length} vrednosti, a očekivano je ${this.comparisonColumns.length}.`
           )
         );
       }
@@ -122,7 +107,10 @@ OurServiceSchema.pre("save", function (next) {
   next();
 });
 
-OurServiceSchema.index({ categories: 1 });
-OurServiceSchema.index({ tags: 1 });
+ServiceSchema.index({ isActive: 1 });
+ServiceSchema.index({ categories: 1 });
+ServiceSchema.index({ tags: 1 });
+ServiceSchema.index({ highlight: 1 });
+ServiceSchema.index({ employees: 1 });
 
-export default model("OurService", OurServiceSchema);
+export default model("Service", ServiceSchema);
