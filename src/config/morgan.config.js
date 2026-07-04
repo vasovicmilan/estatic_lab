@@ -1,5 +1,5 @@
 import morgan from "morgan";
-import logger from "./logger.config.js";
+import { httpLogger } from "./logger.config.js";
 
 export function setupMorgan(app) {
   if (process.env.NODE_ENV === "test") {
@@ -23,10 +23,7 @@ export function setupMorgan(app) {
 
         stream: {
           write(message) {
-            logger.info({
-              type: "http",
-              msg: message.trim(),
-            });
+            httpLogger.info(message.trim());
           },
         },
       }

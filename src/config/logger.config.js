@@ -10,49 +10,56 @@ const isTest = process.env.NODE_ENV === "test";
 
 const LOGS_DIR = path.join(__dirname, "..", "..", "logs");
 
-let streams = [];
+const logFile = (name) =>
+  path.join(LOGS_DIR, isProd ? `${name}.log` : `${name}-dev.log`);
+
+const streams = [];
 
 if (isTest) {
   streams.push({
     stream: pino.destination("/dev/null"),
   });
 } else {
-  // Console (development only)
   if (!isProd) {
     try {
-      const pretty = pino.transport({
-        target: "pino-pretty",
-        options: {
-          colorize: true,
-          translateTime: "SYS:dd.mm.yyyy HH:MM:ss",
-          ignore: "pid,hostname",
-        },
-      });
-
       streams.push({
         level: "info",
-        stream: pretty,
+        stream: pino.transport({
+          target: "pino-pretty",
+          options: {
+            colorize: true,
+            translateTime: "SYS:dd.mm.yyyy HH:MM:ss",
+            ignore: "pid,hostname",
+          },
+        }),
       });
     } catch {
-      // pino-pretty nije instaliran
+
     }
   }
 
-  // Application log
   streams.push({
     level: "info",
     stream: pino.destination({
-      dest: path.join(LOGS_DIR, isProd ? "app.log" : "app-dev.log"),
+      dest: logFile("app"),
       mkdir: true,
       sync: false,
     }),
   });
 
-  // Error log
   streams.push({
     level: "error",
     stream: pino.destination({
-      dest: path.join(LOGS_DIR, isProd ? "error.log" : "error-dev.log"),
+      dest: logFile("error"),
+      mkdir: true,
+      sync: false,
+    }),
+  });
+
+  streams.push({
+    level: "info",
+    stream: pino.destination({
+      dest: logFile("http"),
       mkdir: true,
       sync: false,
     }),
@@ -94,6 +101,10 @@ const logger = pino(
 
 logger.on("error", (err) => {
   console.error("Logger stream error:", err);
+});
+
+export const httpLogger = logger.child({
+  type: "http",
 });
 
 export default logger;
