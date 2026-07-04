@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import postRepo from "../../../../src/repositories/post.repository.js";
-import * as postService from "../../../../src/services/post.service.js";
+import postRepo from "../../../src/repositories/post.repository.js";
+import * as postService from "../../../src/services/post.service.js";
 import { buildPost, id } from "../../helpers/factories.js";
 
 describe("post.service", () => {

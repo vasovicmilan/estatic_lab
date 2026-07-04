@@ -1,12 +1,12 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import serviceService from "../../../../src/services/service.service.js";
-import expertService from "../../../../src/services/expert.service.js";
-import testimonialService from "../../../../src/services/testimonial.service.js";
-import postService from "../../../../src/services/post.service.js";
-import contactService from "../../../../src/services/contact.service.js";
-import newsLetterService from "../../../../src/services/news-letter.service.js";
-import * as indexService from "../../../../src/services/index.service.js";
+import serviceService from "../../../src/services/service.service.js";
+import expertService from "../../../src/services/expert.service.js";
+import testimonialService from "../../../src/services/testimonial.service.js";
+import postService from "../../../src/services/post.service.js";
+import contactService from "../../../src/services/contact.service.js";
+import newsLetterService from "../../../src/services/news-letter.service.js";
+import * as indexService from "../../../src/services/index.service.js";
 
 describe("index.service", () => {
   describe("getLandingPageData", () => {

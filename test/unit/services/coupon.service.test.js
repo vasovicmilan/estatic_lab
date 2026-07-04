@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import couponRepo from "../../../../src/repositories/coupon.repository.js";
-import * as couponService from "../../../../src/services/coupon.service.js";
+import couponRepo from "../../../src/repositories/coupon.repository.js";
+import * as couponService from "../../../src/services/coupon.service.js";
 import { buildCoupon, id } from "../../helpers/factories.js";
 
 describe("coupon.service", () => {

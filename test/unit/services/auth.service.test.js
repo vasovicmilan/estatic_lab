@@ -1,9 +1,9 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import userService from "../../../../src/services/user.service.js";
-import eventEmitter from "../../../../src/events/event.emitter.js";
-import { hashPassword } from "../../../../src/services/crypto.service.js";
-import * as authService from "../../../../src/services/auth.service.js";
+import userService from "../../../src/services/user.service.js";
+import eventEmitter from "../../../src/events/event.emitter.js";
+import { hashPassword } from "../../../src/services/crypto.service.js";
+import * as authService from "../../../src/services/auth.service.js";
 import { buildUser, buildRole } from "../../helpers/factories.js";
 
 describe("auth.service", () => {

@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import roleRepo from "../../../../src/repositories/role.repository.js";
-import * as roleService from "../../../../src/services/role.service.js";
+import roleRepo from "../../../src/repositories/role.repository.js";
+import * as roleService from "../../../src/services/role.service.js";
 import { buildRole } from "../../helpers/factories.js";
 import { buildPaginatedResult } from "../../helpers/pagination.js";
 

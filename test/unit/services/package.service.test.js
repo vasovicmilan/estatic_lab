@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import packageRepo from "../../../../src/repositories/package.repository.js";
-import * as packageService from "../../../../src/services/package.service.js";
+import packageRepo from "../../../src/repositories/package.repository.js";
+import * as packageService from "../../../src/services/package.service.js";
 import { buildPackage, id } from "../../helpers/factories.js";
 
 describe("package.service", () => {

@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import tagRepo from "../../../../src/repositories/tag.repository.js";
-import * as tagService from "../../../../src/services/tag.service.js";
+import tagRepo from "../../../src/repositories/tag.repository.js";
+import * as tagService from "../../../src/services/tag.service.js";
 import { buildTag, id } from "../../helpers/factories.js";
 
 describe("tag.service", () => {

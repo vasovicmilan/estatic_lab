@@ -9,7 +9,7 @@ import {
   signJwt,
   verifyJwt,
   sha256,
-} from "../../../../src/services/crypto.service.js";
+} from "../../../src/services/crypto.service.js";
 
 describe("crypto.service", () => {
   describe("hashPassword / comparePasswords", () => {

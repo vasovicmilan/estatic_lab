@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import newsLetterRepo from "../../../../src/repositories/news-letter.repository.js";
-import * as newsLetterService from "../../../../src/services/news-letter.service.js";
+import newsLetterRepo from "../../../src/repositories/news-letter.repository.js";
+import * as newsLetterService from "../../../src/services/news-letter.service.js";
 import { buildSubscriber, id } from "../../helpers/factories.js";
 
 describe("news-letter.service", () => {

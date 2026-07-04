@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import testimonialRepo from "../../../../src/repositories/testimonial.repository.js";
-import * as testimonialService from "../../../../src/services/testimonial.service.js";
+import testimonialRepo from "../../../src/repositories/testimonial.repository.js";
+import * as testimonialService from "../../../src/services/testimonial.service.js";
 import { buildTestimonial, id } from "../../helpers/factories.js";
 
 describe("testimonial.service", () => {

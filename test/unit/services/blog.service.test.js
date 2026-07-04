@@ -1,9 +1,9 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import postService from "../../../../src/services/post.service.js";
-import categoryService from "../../../../src/services/category.service.js";
-import tagService from "../../../../src/services/tag.service.js";
-import * as blogService from "../../../../src/services/blog.service.js";
+import postService from "../../../src/services/post.service.js";
+import categoryService from "../../../src/services/category.service.js";
+import tagService from "../../../src/services/tag.service.js";
+import * as blogService from "../../../src/services/blog.service.js";
 import { id } from "../../helpers/factories.js";
 
 describe("blog.service", () => {

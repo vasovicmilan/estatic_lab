@@ -1,9 +1,9 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import employeeRepo from "../../../../src/repositories/employee.repository.js";
-import appointmentRepo from "../../../../src/repositories/appointment.repository.js";
-import serviceService from "../../../../src/services/service.service.js";
-import * as availabilityService from "../../../../src/services/availability.service.js";
+import employeeRepo from "../../../src/repositories/employee.repository.js";
+import appointmentRepo from "../../../src/repositories/appointment.repository.js";
+import serviceService from "../../../src/services/service.service.js";
+import * as availabilityService from "../../../src/services/availability.service.js";
 import { buildEmployee, buildServicePackageVariant, id } from "../../helpers/factories.js";
 
 const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];

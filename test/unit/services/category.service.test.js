@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import categoryRepo from "../../../../src/repositories/category.repository.js";
-import * as categoryService from "../../../../src/services/category.service.js";
+import categoryRepo from "../../../src/repositories/category.repository.js";
+import * as categoryService from "../../../src/services/category.service.js";
 import { buildCategory, id } from "../../helpers/factories.js";
 import { buildPaginatedResult } from "../../helpers/pagination.js";
 

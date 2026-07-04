@@ -1,9 +1,9 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import employeeRepo from "../../../../src/repositories/employee.repository.js";
-import userRepo from "../../../../src/repositories/user.repository.js";
-import roleService from "../../../../src/services/role.service.js";
-import * as employeeService from "../../../../src/services/employee.service.js";
+import employeeRepo from "../../../src/repositories/employee.repository.js";
+import userRepo from "../../../src/repositories/user.repository.js";
+import roleService from "../../../src/services/role.service.js";
+import * as employeeService from "../../../src/services/employee.service.js";
 import { buildEmployee, buildRole, id } from "../../helpers/factories.js";
 
 describe("employee.service", () => {
