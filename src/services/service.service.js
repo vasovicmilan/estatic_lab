@@ -1,4 +1,4 @@
-import * as serviceRepo from "../repositories/service.repository.js";
+import serviceRepo from "../repositories/service.repository.js";
 import {
   mapServicesForAdminList,
   mapServiceForAdminDetail,

@@ -1,6 +1,6 @@
-import * as postService from "./post.service.js";
-import * as categoryService from "./category.service.js";
-import * as tagService from "./tag.service.js";
+import postService from "./post.service.js";
+import categoryService from "./category.service.js";
+import tagService from "./tag.service.js";
 import { buildPageSeo } from "../seo/index.js";
 import { validationError } from "../utils/error.util.js";
 

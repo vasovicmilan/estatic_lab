@@ -1,4 +1,4 @@
-import * as roleRepo from "../repositories/role.repository.js";
+import roleRepo from "../repositories/role.repository.js";
 import {
   mapRolesForAdminList,
   mapRoleForAdminDetail,

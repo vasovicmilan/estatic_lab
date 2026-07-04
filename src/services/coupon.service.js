@@ -1,4 +1,4 @@
-import * as couponRepo from "../repositories/coupon.repository.js";
+import couponRepo from "../repositories/coupon.repository.js";
 import { mapCouponsForAdminList, mapCouponForAdminDetail, mapCouponForEdit } from "../mappers/coupon.mapper.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";

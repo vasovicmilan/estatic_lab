@@ -1,4 +1,4 @@
-import * as tagRepo from "../repositories/tag.repository.js";
+import tagRepo from "../repositories/tag.repository.js";
 import {
   mapTagsForAdminList,
   mapTagForAdminDetail,

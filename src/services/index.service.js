@@ -1,9 +1,9 @@
-import * as serviceService from "./service.service.js";
-import * as expertService from "./expert.service.js";
-import * as testimonialService from "./testimonial.service.js";
-import * as postService from "./post.service.js";
-import * as contactService from "./contact.service.js";
-import * as newsLetterService from "./news-letter.service.js";
+import serviceService from "./service.service.js";
+import expertService from "./expert.service.js";
+import testimonialService from "./testimonial.service.js";
+import postService from "./post.service.js";
+import contactService from "./contact.service.js";
+import newsLetterService from "./news-letter.service.js";
 import { buildPageSeo } from "../seo/index.js";
 import { validationError } from "../utils/error.util.js";
 

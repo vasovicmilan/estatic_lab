@@ -1,5 +1,5 @@
 import eventEmitter from "../events/event.emitter.js";
-import * as testimonialRepo from "../repositories/testimonial.repository.js";
+import testimonialRepo from "../repositories/testimonial.repository.js";
 import {
   mapTestimonialsForAdminList,
   mapTestimonialForAdminDetail,

@@ -1,4 +1,4 @@
-import * as packageRepo from "../repositories/package.repository.js";
+import packageRepo from "../repositories/package.repository.js";
 import {
   mapPackagesForAdminList,
   mapPackageForAdminDetail,

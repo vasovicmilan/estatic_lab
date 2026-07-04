@@ -1,4 +1,4 @@
-import * as expertRepo from "../repositories/expert.repository.js";
+import expertRepo from "../repositories/expert.repository.js";
 import {
   mapExpertsForAdminList,
   mapExpertForAdminDetail,

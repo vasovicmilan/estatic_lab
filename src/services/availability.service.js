@@ -1,6 +1,6 @@
-import * as employeeRepo from "../repositories/employee.repository.js";
-import * as appointmentRepo from "../repositories/appointment.repository.js";
-import * as serviceService from "./service.service.js";
+import employeeRepo from "../repositories/employee.repository.js";
+import appointmentRepo from "../repositories/appointment.repository.js";
+import serviceService from "./service.service.js";
 import { validationError, badRequest } from "../utils/error.util.js";
 
 const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];

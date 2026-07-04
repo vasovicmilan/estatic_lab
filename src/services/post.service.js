@@ -1,4 +1,4 @@
-import * as postRepo from "../repositories/post.repository.js";
+import postRepo from "../repositories/post.repository.js";
 import {
   mapPostsForAdminList,
   mapPostForAdminDetail,

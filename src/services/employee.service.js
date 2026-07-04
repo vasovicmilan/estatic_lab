@@ -1,6 +1,6 @@
-import * as employeeRepo from "../repositories/employee.repository.js";
-import * as userRepo from "../repositories/user.repository.js";
-import * as roleService from "./role.service.js";
+import employeeRepo from "../repositories/employee.repository.js";
+import userRepo from "../repositories/user.repository.js";
+import roleService from "./role.service.js";
 import { mapEmployee, mapEmployeesForAdminList } from "../mappers/employee.mapper.js";
 import { validationError, notFound, conflict, forbidden, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";

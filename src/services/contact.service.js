@@ -1,5 +1,5 @@
 import eventEmitter from "../events/event.emitter.js";
-import * as contactRepo from "../repositories/contact.repository.js";
+import contactRepo from "../repositories/contact.repository.js";
 import { mapContactsForAdminList, mapContactForAdminDetail, mapContactForUserShort } from "../mappers/contact.mapper.js";
 import { validationError, notFound, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";

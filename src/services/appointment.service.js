@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
 import eventEmitter from "../events/event.emitter.js";
-import * as appointmentRepo from "../repositories/appointment.repository.js";
-import * as userRepo from "../repositories/user.repository.js";
-import * as userService from "./user.service.js";
-import * as serviceService from "./service.service.js";
-import * as couponService from "./coupon.service.js";
-import * as availabilityService from "./availability.service.js";
+import appointmentRepo from "../repositories/appointment.repository.js";
+import userRepo from "../repositories/user.repository.js";
+import userService from "./user.service.js";
+import serviceService from "./service.service.js";
+import couponService from "./coupon.service.js";
+import availabilityService from "./availability.service.js";
 import { mapAppointment, mapAppointmentsForAdminList } from "../mappers/appointment.mapper.js";
 import { getAllowedStatuses } from "../models/appointment-status-transitions.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";

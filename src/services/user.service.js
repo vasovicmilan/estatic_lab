@@ -1,5 +1,5 @@
-import * as userRepo from "../repositories/user.repository.js";
-import * as roleService from "./role.service.js";
+import userRepo from "../repositories/user.repository.js";
+import roleService from "./role.service.js";
 import { mapUser, mapUsersForAdminList, mapUserForAdminDetail, mapUserForProfile } from "../mappers/user.mapper.js";
 import { hashPassword, comparePasswords, generateRandomToken } from "./crypto.service.js";
 import { validationError, notFound, conflict, unauthorized, badRequest } from "../utils/error.util.js";

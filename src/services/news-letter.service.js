@@ -1,5 +1,5 @@
 import eventEmitter from "../events/event.emitter.js";
-import * as newsLetterRepo from "../repositories/news-letter.repository.js";
+import newsLetterRepo from "../repositories/news-letter.repository.js";
 import { mapSubscribersForAdminList, mapSubscriberForAdminDetail } from "../mappers/news-letter.mapper.js";
 import { generateRandomToken } from "./crypto.service.js";
 import { validationError, notFound, badRequest } from "../utils/error.util.js";

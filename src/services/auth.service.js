@@ -1,5 +1,5 @@
 import eventEmitter from "../events/event.emitter.js";
-import * as userService from "./user.service.js";
+import userService from "./user.service.js";
 import { comparePasswords, signJwt } from "./crypto.service.js";
 import { validationError, unauthorized, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";

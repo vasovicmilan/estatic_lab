@@ -1,4 +1,4 @@
-import * as categoryRepo from "../repositories/category.repository.js";
+import categoryRepo from "../repositories/category.repository.js";
 import {
   mapCategoriesForAdminList,
   mapCategoryForAdminDetail,
