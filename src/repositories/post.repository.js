@@ -52,11 +52,11 @@ export async function findPosts({
 
 // atomic view counter increment — deliberately not part of a findById + save round trip
 export async function incrementPostViews(id, { session } = {}) {
-  return Post.findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true, session }).lean();
+  return Post.findByIdAndUpdate(id, { $inc: { views: 1 } }, { returnDocument: "after", session }).lean();
 }
 
 export async function updatePostById(id, updateData, { session } = {}) {
-  return Post.findByIdAndUpdate(id, updateData, { new: true, runValidators: true, session }).lean();
+  return Post.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
 export async function deletePostById(id, { session } = {}) {

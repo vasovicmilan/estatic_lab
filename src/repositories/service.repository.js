@@ -62,7 +62,7 @@ export async function findServices({
 }
 
 export async function updateServiceById(id, updateData, { session } = {}) {
-  return Service.findByIdAndUpdate(id, updateData, { new: true, runValidators: true, session }).lean();
+  return Service.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
 export async function deleteServiceById(id, { session } = {}) {

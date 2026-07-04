@@ -30,7 +30,7 @@ export async function findContacts({ search = "", limit = 20, page = 1, filters 
 }
 
 export async function updateContactById(id, updateData, { session } = {}) {
-  return Contact.findByIdAndUpdate(id, updateData, { new: true, runValidators: true, session }).lean();
+  return Contact.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
 export async function deleteContactById(id, { session } = {}) {

@@ -48,7 +48,7 @@ export async function findActiveExperts({ session } = {}) {
 }
 
 export async function updateExpertById(id, updateData, { session } = {}) {
-  return Expert.findByIdAndUpdate(id, updateData, { new: true, runValidators: true, session }).lean();
+  return Expert.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
 export async function deleteExpertById(id, { session } = {}) {

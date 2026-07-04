@@ -87,11 +87,11 @@ export async function findUsers({
 }
 
 export async function updateUserById(id, updateData, { session } = {}) {
-  return User.findByIdAndUpdate(id, updateData, { new: true, runValidators: true, session }).lean();
+  return User.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
 export async function updateLastLogin(id, { session } = {}) {
-  return User.findByIdAndUpdate(id, { lastLogin: new Date() }, { new: true, session }).lean();
+  return User.findByIdAndUpdate(id, { lastLogin: new Date() }, { returnDocument: "after", session }).lean();
 }
 
 export async function deleteUserById(id, { session } = {}) {

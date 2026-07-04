@@ -48,7 +48,7 @@ export async function findAllCategoriesByDomain(domain, { onlyActive = true, ses
 }
 
 export async function updateCategoryById(id, updateData, { session } = {}) {
-  return Category.findByIdAndUpdate(id, updateData, { new: true, runValidators: true, session }).lean();
+  return Category.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
 export async function deleteCategoryById(id, { session } = {}) {

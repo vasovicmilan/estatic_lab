@@ -12,9 +12,11 @@ export const validateExpertCreate = [
     .notEmpty().withMessage("Prezime je obavezno")
     .isLength({ min: 2, max: 50 }).withMessage("Prezime mora imati između 2 i 50 karaktera"),
 
+  // optional — auto-generated from name/title if omitted (see slug.util.js + the
+  // corresponding create*() service function)
   body("slug")
+    .optional({ values: "falsy" })
     .trim()
-    .notEmpty().withMessage("Slug je obavezan")
     .matches(/^[a-z0-9-]+$/).withMessage("Slug može sadržati samo mala slova, brojeve i crtice"),
 
   body("title")

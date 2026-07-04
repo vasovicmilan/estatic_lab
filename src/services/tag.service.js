@@ -6,6 +6,7 @@ import {
   mapTagsForPublic,
   mapTagsForSelect,
 } from "../mappers/tag.mapper.js";
+import { generateUniqueSlug } from "../utils/slug.util.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 
@@ -55,14 +56,17 @@ export async function getTagsForSelect(domain) {
 export async function createTag(data) {
   if (!data) validationError("data");
   if (!data.name) validationError("name");
-  if (!data.slug) validationError("slug");
   ensureValidDomain(data.domain);
 
-  const existing = await tagRepo.findTagBySlug(data.slug, data.domain);
-  if (existing) conflict("Tag sa istim slug-om i domenom već postoji");
+  if (data.slug) {
+    const existing = await tagRepo.findTagBySlug(data.slug, data.domain);
+    if (existing) conflict("Tag sa istim slug-om i domenom već postoji");
+  } else {
+    data.slug = await generateUniqueSlug(data.name, (candidate) => tagRepo.findTagBySlug(candidate, data.domain));
+  }
 
   const created = await tagRepo.createTag(data);
-  logInfo("Tag created", { tagId: created._id, name: created.name, domain: created.domain });
+  logInfo("Tag created", { tagId: created._id, name: created.name, domain: created.domain, slug: created.slug });
   return getTagById(created._id);
 }
 

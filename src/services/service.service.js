@@ -6,6 +6,7 @@ import {
   mapServicesForPublic,
   mapServiceForPublicDetail,
 } from "../mappers/service.mapper.js";
+import { generateSlug, generateUniqueSlug } from "../utils/slug.util.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 
@@ -21,6 +22,33 @@ function validatePackages(packages = []) {
     if (!p.duration || p.duration < 5) badRequest(`Varijanta "${p.name}" mora imati trajanje od bar 5 minuta`);
     if (p.totalPrice == null || p.totalPrice < 0) badRequest(`Varijanta "${p.name}" mora imati validnu cenu`);
   }
+}
+
+/**
+ * Each Service.packages[] entry (see service-package.schema.js) needs its own slug.
+ * Collisions here only matter *within this one service's own list* (two variants of the
+ * SAME service can't share a slug, but a slug can repeat across different services fine)
+ * — so uniqueness is checked against sibling entries in the same array, not the database.
+ */
+function assignPackageSlugs(packages = []) {
+  const usedSlugs = new Set();
+
+  return packages.map((p) => {
+    if (p.slug) {
+      usedSlugs.add(p.slug);
+      return p;
+    }
+
+    const base = generateSlug(p.name);
+    let candidate = base;
+    let suffix = 2;
+    while (usedSlugs.has(candidate)) {
+      candidate = `${base}-${suffix}`;
+      suffix += 1;
+    }
+    usedSlugs.add(candidate);
+    return { ...p, slug: candidate };
+  });
 }
 
 export async function listServices({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
@@ -74,15 +102,20 @@ export async function findServicesByCategorySlug(categorySlug, { limit = 12, pag
 export async function createService(data) {
   if (!data) validationError("data");
   if (!data.name) validationError("name");
-  if (!data.slug) validationError("slug");
   if (!data.image?.img) validationError("image");
+
+  data.packages = assignPackageSlugs(data.packages || []);
   validatePackages(data.packages);
 
-  const existing = await serviceRepo.findServiceBySlug(data.slug);
-  if (existing) conflict("Usluga sa ovim slug-om već postoji");
+  if (data.slug) {
+    const existing = await serviceRepo.findServiceBySlug(data.slug);
+    if (existing) conflict("Usluga sa ovim slug-om već postoji");
+  } else {
+    data.slug = await generateUniqueSlug(data.name, (candidate) => serviceRepo.findServiceBySlug(candidate));
+  }
 
   const created = await serviceRepo.createService(data);
-  logInfo("Service created", { serviceId: created._id, name: created.name });
+  logInfo("Service created", { serviceId: created._id, name: created.name, slug: created.slug });
   return getServiceById(created._id);
 }
 
@@ -95,7 +128,10 @@ export async function updateServiceById(serviceId, data) {
     const conflicting = await serviceRepo.findServiceBySlug(data.slug);
     if (conflicting) conflict("Usluga sa ovim slug-om već postoji");
   }
-  if (data.packages) validatePackages(data.packages);
+  if (data.packages) {
+    data.packages = assignPackageSlugs(data.packages);
+    validatePackages(data.packages);
+  }
 
   const updated = await serviceRepo.updateServiceById(serviceId, data);
   logInfo("Service updated", { serviceId, updatedFields: Object.keys(data) });

@@ -60,7 +60,7 @@ export async function findEmployees({
 }
 
 export async function updateEmployeeById(id, updateData, { session } = {}) {
-  return Employee.findByIdAndUpdate(id, updateData, { new: true, runValidators: true, session }).lean();
+  return Employee.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
 export async function deleteEmployeeById(id, { session } = {}) {

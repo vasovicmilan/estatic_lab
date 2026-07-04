@@ -6,6 +6,7 @@ import {
   mapPostsForCards,
   mapPostForPublicDetail,
 } from "../mappers/post.mapper.js";
+import { generateUniqueSlug } from "../utils/slug.util.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 
@@ -58,10 +59,13 @@ export async function getPublicPostBySlug(slug) {
 
 export async function createPost(data) {
   validateBasicData(data);
-  if (!data.slug) validationError("slug");
 
-  const existing = await postRepo.findPostBySlug(data.slug);
-  if (existing) conflict("Post sa ovim slug-om već postoji");
+  if (data.slug) {
+    const existing = await postRepo.findPostBySlug(data.slug);
+    if (existing) conflict("Post sa ovim slug-om već postoji");
+  } else {
+    data.slug = await generateUniqueSlug(data.title, (candidate) => postRepo.findPostBySlug(candidate));
+  }
 
   const created = await postRepo.createPost(data);
   logInfo("Post created", { postId: created._id, title: created.title });

@@ -42,7 +42,7 @@ export async function redeemCoupon(couponId, { userId, appointmentId, discountAm
       $inc: { usedCount: 1 },
       $push: { usageHistory: { user: userId, appointment: appointmentId, discountAmount, usedAt: new Date() } },
     },
-    { new: true, session }
+    { returnDocument: "after", session }
   ).lean();
 }
 
@@ -65,7 +65,7 @@ export async function findCoupons({ search = "", limit = 20, page = 1, filters =
 }
 
 export async function updateCouponById(id, updateData, { session } = {}) {
-  return Coupon.findByIdAndUpdate(id, updateData, { new: true, runValidators: true, session }).lean();
+  return Coupon.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
 export async function deleteCouponById(id, { session } = {}) {

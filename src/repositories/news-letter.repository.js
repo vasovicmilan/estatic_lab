@@ -43,7 +43,7 @@ export async function findAllActiveSubscribers({ session } = {}) {
 }
 
 export async function updateSubscriberById(id, updateData, { session } = {}) {
-  return NewsLetter.findByIdAndUpdate(id, updateData, { new: true, runValidators: true, session }).lean();
+  return NewsLetter.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
 export async function deleteSubscriberById(id, { session } = {}) {

@@ -6,6 +6,7 @@ import {
   mapCategoriesForPublic,
   mapCategoriesForSelect,
 } from "../mappers/category.mapper.js";
+import { generateUniqueSlug } from "../utils/slug.util.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 
@@ -56,14 +57,19 @@ export async function getCategoriesForSelect(domain) {
 export async function createCategory(data) {
   if (!data) validationError("data");
   if (!data.name) validationError("name");
-  if (!data.slug) validationError("slug");
   ensureValidDomain(data.domain);
 
-  const existing = await categoryRepo.findCategoryBySlug(data.slug, data.domain);
-  if (existing) conflict("Kategorija sa istim slug-om i domenom već postoji");
+  if (data.slug) {
+    // caller typed a slug on purpose — tell them loudly if it's taken, don't silently change it
+    const existing = await categoryRepo.findCategoryBySlug(data.slug, data.domain);
+    if (existing) conflict("Kategorija sa istim slug-om i domenom već postoji");
+  } else {
+    // no slug given — derive one from the name and resolve any collision automatically
+    data.slug = await generateUniqueSlug(data.name, (candidate) => categoryRepo.findCategoryBySlug(candidate, data.domain));
+  }
 
   const created = await categoryRepo.createCategory(data);
-  logInfo("Category created", { categoryId: created._id, name: created.name, domain: created.domain });
+  logInfo("Category created", { categoryId: created._id, name: created.name, domain: created.domain, slug: created.slug });
   return getCategoryById(created._id);
 }
 

@@ -49,7 +49,7 @@ export async function findApprovedTestimonials({ limit = 10, featuredOnly = fals
 }
 
 export async function updateTestimonialById(id, updateData, { session } = {}) {
-  return Testimonial.findByIdAndUpdate(id, updateData, { new: true, runValidators: true, session }).lean();
+  return Testimonial.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
 export async function deleteTestimonialById(id, { session } = {}) {

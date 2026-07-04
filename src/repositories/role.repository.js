@@ -33,7 +33,7 @@ export async function findRoles({ search = "", limit = 20, page = 1, session } =
 }
 
 export async function updateRoleById(id, updateData, { session } = {}) {
-  return Role.findByIdAndUpdate(id, updateData, { new: true, runValidators: true, session }).lean();
+  return Role.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
 export async function deleteRoleById(id, { session } = {}) {

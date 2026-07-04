@@ -47,7 +47,7 @@ export async function findPackages({
 }
 
 export async function updatePackageById(id, updateData, { session } = {}) {
-  return Package.findByIdAndUpdate(id, updateData, { new: true, runValidators: true, session }).lean();
+  return Package.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
 export async function deletePackageById(id, { session } = {}) {

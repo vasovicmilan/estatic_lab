@@ -117,7 +117,7 @@ export async function findAppointmentsByEmployee(employeeId, options = {}) {
 }
 
 export async function updateAppointmentById(id, updateData, { session } = {}) {
-  return Appointment.findByIdAndUpdate(id, updateData, { new: true, runValidators: true, session }).lean();
+  return Appointment.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
 export async function deleteAppointmentById(id, { session } = {}) {

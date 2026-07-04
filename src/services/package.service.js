@@ -6,6 +6,7 @@ import {
   mapPackagesForPublic,
   mapPackageForPublicDetail,
 } from "../mappers/package.mapper.js";
+import { generateUniqueSlug } from "../utils/slug.util.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 
@@ -53,15 +54,18 @@ export async function findActivePackages({ limit = 10, page = 1 } = {}) {
 export async function createPackage(data) {
   if (!data) validationError("data");
   if (!data.name) validationError("name");
-  if (!data.slug) validationError("slug");
   if (data.totalPrice == null) validationError("totalPrice");
   validateItems(data.items);
 
-  const existing = await packageRepo.findPackageBySlug(data.slug);
-  if (existing) conflict("Paket sa ovim slug-om već postoji");
+  if (data.slug) {
+    const existing = await packageRepo.findPackageBySlug(data.slug);
+    if (existing) conflict("Paket sa ovim slug-om već postoji");
+  } else {
+    data.slug = await generateUniqueSlug(data.name, (candidate) => packageRepo.findPackageBySlug(candidate));
+  }
 
   const created = await packageRepo.createPackage(data);
-  logInfo("Package created", { packageId: created._id, name: created.name });
+  logInfo("Package created", { packageId: created._id, name: created.name, slug: created.slug });
   return getPackageById(created._id);
 }
 

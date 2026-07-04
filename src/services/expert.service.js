@@ -6,6 +6,7 @@ import {
   mapExpertsForPublic,
   mapExpertForPublicDetail,
 } from "../mappers/expert.mapper.js";
+import { generateUniqueSlug } from "../utils/slug.util.js";
 import { validationError, notFound, conflict } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 
@@ -47,11 +48,14 @@ export async function createExpert(data) {
   if (!data) validationError("data");
   if (!data.firstName) validationError("firstName");
   if (!data.lastName) validationError("lastName");
-  if (!data.slug) validationError("slug");
   if (!data.image?.img) validationError("image");
 
-  const existing = await expertRepo.findExpertBySlug(data.slug);
-  if (existing) conflict("Ekspert sa ovim slug-om već postoji");
+  if (data.slug) {
+    const existing = await expertRepo.findExpertBySlug(data.slug);
+    if (existing) conflict("Ekspert sa ovim slug-om već postoji");
+  } else {
+    data.slug = await generateUniqueSlug(`${data.firstName} ${data.lastName}`, (candidate) => expertRepo.findExpertBySlug(candidate));
+  }
 
   const created = await expertRepo.createExpert(data);
   logInfo("Expert created", { expertId: created._id, name: `${created.firstName} ${created.lastName}` });

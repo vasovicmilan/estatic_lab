@@ -35,7 +35,7 @@ export async function findAllTagsByDomain(domain, { onlyActive = true, session }
 }
 
 export async function updateTagById(id, updateData, { session } = {}) {
-  return Tag.findByIdAndUpdate(id, updateData, { new: true, runValidators: true, session }).lean();
+  return Tag.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
 export async function deleteTagById(id, { session } = {}) {
