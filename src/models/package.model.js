@@ -3,11 +3,6 @@ import ImageSchema from "./schemas/image.schema.js";
 import VideoSchema from "./schemas/video.schema.js";
 import FAQSchema from "./schemas/faq.schema.js";
 
-/**
- * A combination offer spanning multiple different Services (e.g. "Bridal Day: facial +
- * massage + manicure"). Distinct from Service.packages[], which only ever describes
- * variants of a *single* service. See service.model.js file-level comment for the split.
- */
 const PackageItemSchema = new Schema(
   {
     service: {
@@ -65,7 +60,6 @@ const PackageSchema = new Schema(
   { timestamps: true }
 );
 
-PackageSchema.index({ isActive: 1 });
 PackageSchema.index({ categories: 1 });
 PackageSchema.index({ tags: 1 });
 PackageSchema.index({ "items.service": 1 });

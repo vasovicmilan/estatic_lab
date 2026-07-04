@@ -1,16 +1,5 @@
 import { Schema, model } from "mongoose";
 
-/**
- * Optional — only needed if the studio wants promo codes on treatments. Validated against
- * Appointment.finalPrice instead of a cart total (no cart concept in this project).
- *
- * Usage is tracked two ways, at two different levels of detail on purpose:
- *  - `usedCount` is a cheap running total, incremented atomically at redemption time
- *    ($inc), so checking "is this coupon exhausted" never requires scanning `usageHistory`.
- *  - `usageHistory[]` is the audit trail (who used it, on which appointment, when, how much
- *    it discounted) — this is also what `maxUsesPerUser` is enforced against, since that
- *    check needs to count entries scoped to one specific user.
- */
 const CouponUsageSchema = new Schema(
   {
     user: {
@@ -106,7 +95,6 @@ const CouponSchema = new Schema(
   { timestamps: true }
 );
 
-CouponSchema.index({ code: 1 }, { unique: true });
 CouponSchema.index({ isActive: 1, validUntil: 1 });
 CouponSchema.index({ "usageHistory.user": 1 });
 CouponSchema.index({ "usageHistory.appointment": 1 });

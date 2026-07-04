@@ -17,7 +17,6 @@ const NewsLetterSchema = new Schema(
       index: true,
     },
 
-    // used to build a one-click unsubscribe link without requiring login
     unsubscribeToken: {
       type: String,
       required: true,
@@ -34,8 +33,5 @@ const NewsLetterSchema = new Schema(
   },
   { timestamps: true }
 );
-
-NewsLetterSchema.index({ email: 1 }, { unique: true });
-NewsLetterSchema.index({ status: 1 });
 
 export default model("NewsLetter", NewsLetterSchema);

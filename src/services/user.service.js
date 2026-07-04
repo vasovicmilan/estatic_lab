@@ -58,14 +58,35 @@ export async function findUserForLogin(email) {
   return userRepo.findUserByEmailWithPassword(email, { populateFields: [{ path: "role", select: "name" }] });
 }
 
+/**
+ * The very first account ever created becomes admin and is auto-activated/confirmed
+ * (no one exists yet to click "verify" or "approve" them) — matches e_commerce's
+ * pattern. Every subsequent signup gets the normal "user" role and pending flow.
+ * Deliberately NOT used by createGuestUser() below — an anonymous booking should never
+ * be able to grant itself admin just by being first through the door.
+ */
+async function resolveRegistrationRole() {
+  const userCount = await userRepo.countUsers();
+  const isFirstUser = userCount === 0;
+
+  if (isFirstUser) {
+    const adminRole = await roleService.findRoleByName("admin");
+    if (!adminRole) badRequest("Rola 'admin' nije konfigurisana — pokrenite seed rola pre registracije");
+    return { role: adminRole, isFirstUser: true };
+  }
+
+  const userRole = await roleService.findRoleByName("user");
+  if (!userRole) badRequest("Podrazumevana rola za korisnike nije konfigurisana");
+  return { role: userRole, isFirstUser: false };
+}
+
 export async function registerUser(data) {
   validateRegistrationData(data);
 
   const existing = await userRepo.findUserByEmail(data.email);
   if (existing) conflict("Nalog sa ovim email-om već postoji");
 
-  const role = await roleService.findRoleByName("user");
-  if (!role) badRequest("Podrazumevana rola za korisnike nije konfigurisana");
+  const { role, isFirstUser } = await resolveRegistrationRole();
 
   const passwordHash = await hashPassword(data.password);
   const confirmToken = generateRandomToken();
@@ -78,15 +99,16 @@ export async function registerUser(data) {
     phone: data.phone || "",
     role: role._id,
     provider: "local",
-    status: "pending",
-    confirmed: false,
-    confirmToken,
-    confirmTokenExpiration: new Date(Date.now() + CONFIRM_TOKEN_TTL_MS),
+    // the first user has no one to send/click a confirmation link, so skip straight to active
+    status: isFirstUser ? "active" : "pending",
+    confirmed: isFirstUser,
+    confirmToken: isFirstUser ? null : confirmToken,
+    confirmTokenExpiration: isFirstUser ? null : new Date(Date.now() + CONFIRM_TOKEN_TTL_MS),
   });
 
-  logInfo("User registered", { userId: created._id, email: created.email });
+  logInfo("User registered", { userId: created._id, email: created.email, isFirstUser, roleName: role.name });
 
-  return { id: created._id.toString(), email: created.email, firstName: created.firstName, confirmToken };
+  return { id: created._id.toString(), email: created.email, firstName: created.firstName, confirmToken: isFirstUser ? null : confirmToken, isFirstUser };
 }
 
 export async function findOrCreateGoogleUser(googleData) {
@@ -106,8 +128,7 @@ export async function findOrCreateGoogleUser(googleData) {
     });
   }
 
-  const role = await roleService.findRoleByName("user");
-  if (!role) badRequest("Podrazumevana rola za korisnike nije konfigurisana");
+  const { role, isFirstUser } = await resolveRegistrationRole();
 
   const created = await userRepo.createUser({
     email: googleData.email.toLowerCase().trim(),
@@ -120,6 +141,10 @@ export async function findOrCreateGoogleUser(googleData) {
     status: "active",
     confirmed: true,
   });
+
+  if (isFirstUser) {
+    logInfo("First user registered via Google — auto-promoted to admin", { userId: created._id, email: created.email });
+  }
 
   logInfo("User registered via Google", { userId: created._id, email: created.email });
   return created;

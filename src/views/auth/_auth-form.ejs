@@ -17,11 +17,9 @@
           <% if (data.formType === 'login') { %>
             <h1 class="h4 mb-4 text-center">Prijava</h1>
 
-            <div id="g_id_onload"
-                 data-client_id="<%= data.googleClientId %>"
-                 data-login_uri="<%= data.googleCallbackUrl %>"
-                 data-auto_prompt="false"></div>
-            <div class="g_id_signin d-flex justify-content-center mb-3" data-type="standard" data-width="100%"></div>
+            <a href="<%= data.googleAuthUrl %>" class="btn btn-outline-secondary w-100 mb-3">
+              <i class="bi bi-google me-2"></i>Nastavi preko Google-a
+            </a>
             <div class="text-center text-muted small my-3">ili</div>
 
             <form action="<%= data.formAction %>" method="POST">
@@ -47,11 +45,9 @@
           <% } else if (data.formType === 'register') { %>
             <h1 class="h4 mb-4 text-center">Registracija</h1>
 
-            <div id="g_id_onload"
-                 data-client_id="<%= data.googleClientId %>"
-                 data-login_uri="<%= data.googleCallbackUrl %>"
-                 data-auto_prompt="false"></div>
-            <div class="g_id_signin d-flex justify-content-center mb-3" data-type="standard" data-width="100%"></div>
+            <a href="<%= data.googleAuthUrl %>" class="btn btn-outline-secondary w-100 mb-3">
+              <i class="bi bi-google me-2"></i>Nastavi preko Google-a
+            </a>
             <div class="text-center text-muted small my-3">ili</div>
 
             <form action="<%= data.formAction %>" method="POST">
@@ -92,12 +88,12 @@
               <button type="submit" class="btn btn-primary w-100">Registruj se</button>
             </form>
             <div class="text-center mt-3 small">
-              <a href="/prijava">Vec imate nalog? Prijavite se</a>
+              <a href="/prijava">Već imate nalog? Prijavite se</a>
             </div>
 
           <% } else if (data.formType === 'forgot-password') { %>
             <h1 class="h4 mb-4 text-center">Zaboravljena lozinka</h1>
-            <p class="text-muted small">Unesite email adresu i poslacemo vam link za resetovanje lozinke.</p>
+            <p class="text-muted small">Unesite email adresu i poslaćemo vam link za resetovanje lozinke.</p>
             <form action="<%= data.formAction %>" method="POST">
               <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
               <div class="mb-3">
@@ -105,13 +101,13 @@
                 <input type="email" name="email" class="form-control" value="<%= data.formData.email %>" required>
                 <% if (data.errors.email) { %><div class="text-danger small mt-1"><%= data.errors.email %></div><% } %>
               </div>
-              <button type="submit" class="btn btn-primary w-100">Posalji link</button>
+              <button type="submit" class="btn btn-primary w-100">Pošalji link</button>
             </form>
 
           <% } else if (data.formType === 'reset-password') { %>
-            <h1 class="h4 mb-4 text-center"><%= data.isAccountClaim ? "Preuzmite vas nalog" : "Nova lozinka" %></h1>
+            <h1 class="h4 mb-4 text-center"><%= data.isAccountClaim ? "Preuzmite vaš nalog" : "Nova lozinka" %></h1>
             <% if (data.isAccountClaim) { %>
-              <p class="text-muted small">Vas termin je zakazan i mi smo vam pripremili nalog. Postavite lozinku da biste ga preuzeli i pratili vase termine.</p>
+              <p class="text-muted small">Vaš termin je zakazan i mi smo vam pripremili nalog. Postavite lozinku da biste ga preuzeli i pratili vaše termine.</p>
             <% } %>
             <form action="<%= data.formAction %>" method="POST">
               <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
@@ -125,7 +121,7 @@
                 <input type="password" name="confirmPassword" class="form-control" required minlength="8">
                 <% if (data.errors.confirmPassword) { %><div class="text-danger small mt-1"><%= data.errors.confirmPassword %></div><% } %>
               </div>
-              <button type="submit" class="btn btn-primary w-100"><%= data.isAccountClaim ? "Preuzmi nalog" : "Sacuvaj lozinku" %></button>
+              <button type="submit" class="btn btn-primary w-100"><%= data.isAccountClaim ? "Preuzmi nalog" : "Sačuvaj lozinku" %></button>
             </form>
           <% } %>
 
@@ -134,9 +130,5 @@
     </div>
   </div>
 </main>
-
-<% if (data.googleClientId) { %>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-<% } %>
 
 <%- include("../includes/footer") %>

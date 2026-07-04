@@ -7,12 +7,16 @@ import { logInfo } from "../utils/logger.util.js";
 export async function register(data) {
   const result = await userService.registerUser(data);
 
-  eventEmitter.emit("user:registered", {
-    email: result.email,
-    firstName: result.firstName,
-    userId: result.id,
-    confirmToken: result.confirmToken,
-  });
+  if (!result.isFirstUser) {
+    eventEmitter.emit("user:registered", {
+      email: result.email,
+      firstName: result.firstName,
+      userId: result.id,
+      confirmToken: result.confirmToken,
+    });
+  } else {
+    logInfo("First user registered — auto-activated as admin, no confirmation email needed", { userId: result.id, email: result.email });
+  }
 
   return result;
 }

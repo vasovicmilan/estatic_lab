@@ -6,16 +6,6 @@ import ServiceFeatureSchema from "./schemas/service-feature.schema.js";
 import ServicePackageSchema from "./schemas/service-package.schema.js";
 import ComparisonRowSchema from "./schemas/comparison-row.schema.js";
 
-/**
- * A single treatment/service offered by the wellness center (e.g. "Deep Tissue Massage").
- * Consolidates the two near-duplicate models found in the reference codebase
- * (service.model.js and our-service.model.js) into one — this is the model
- * `Appointment.service` and `Employee.services[]` point to.
- *
- * `packages[]` here are the *bookable variants* of this one service (e.g. "60 min" vs
- * "90 min" vs "5-session bundle") — see schemas/service-package.schema.js. Don't confuse
- * this with the top-level `Package` model, which combines multiple different services.
- */
 const ServiceSchema = new Schema(
   {
     name: {
@@ -51,8 +41,6 @@ const ServiceSchema = new Schema(
 
     seoKeywords: [String],
 
-    // default duration (minutes) used by the availability engine when a specific
-    // package/variant isn't picked yet (e.g. showing a generic slot grid before checkout)
     defaultDuration: {
       type: Number,
       default: 60,
@@ -73,7 +61,6 @@ const ServiceSchema = new Schema(
       default: [],
     },
 
-    // bookable variants — see file-level comment
     packages: {
       type: [ServicePackageSchema],
       default: [],
@@ -94,7 +81,6 @@ const ServiceSchema = new Schema(
 
     faq: [FAQSchema],
 
-    // which employees can perform this service — drives availability lookups
     employees: [{ type: Schema.Types.ObjectId, ref: "Employee" }],
 
     isActive: {
@@ -121,10 +107,8 @@ ServiceSchema.pre("save", function (next) {
   next();
 });
 
-ServiceSchema.index({ isActive: 1 });
 ServiceSchema.index({ categories: 1 });
 ServiceSchema.index({ tags: 1 });
-ServiceSchema.index({ highlight: 1 });
 ServiceSchema.index({ employees: 1 });
 
 export default model("Service", ServiceSchema);

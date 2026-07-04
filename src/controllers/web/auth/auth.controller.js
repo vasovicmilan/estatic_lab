@@ -133,13 +133,15 @@ export async function register(req, res, next) {
     }
 
     const result = await authService.register(req.body);
-    logInfo(`[register] Nalog kreiran: "${result.email}"`, { userId: result.id });
+    logInfo(`[register] Nalog kreiran: "${result.email}"`, { userId: result.id, isFirstUser: result.isFirstUser });
 
     return flashAndRedirect(
       req,
       res,
       "success",
-      "Nalog je uspešno kreiran! Proverite vaš email da biste potvrdili registraciju.",
+      result.isFirstUser
+        ? "Nalog je uspešno kreiran kao administrator. Možete se prijaviti."
+        : "Nalog je uspešno kreiran! Proverite vaš email da biste potvrdili registraciju.",
       "/prijava"
     );
   } catch (error) {

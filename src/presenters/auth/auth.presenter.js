@@ -1,5 +1,4 @@
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
-const GOOGLE_CALLBACK_URL = "/prijava/google";
+const GOOGLE_AUTH_URL = "/prijava/google";
 
 export function prepareLoginFormData({ errors = {}, formData = {}, redirectTo = "/" } = {}) {
   return {
@@ -8,8 +7,7 @@ export function prepareLoginFormData({ errors = {}, formData = {}, redirectTo = 
     errors,
     formData: { email: formData.email || "" },
     redirectTo,
-    googleClientId: GOOGLE_CLIENT_ID,
-    googleCallbackUrl: GOOGLE_CALLBACK_URL,
+    googleAuthUrl: GOOGLE_AUTH_URL,
     breadcrumbs: [{ label: "Prijava", url: null }],
   };
 }
@@ -25,8 +23,7 @@ export function prepareRegisterFormData({ errors = {}, formData = {} } = {}) {
       email: formData.email || "",
       phone: formData.phone || "",
     },
-    googleClientId: GOOGLE_CLIENT_ID,
-    googleCallbackUrl: GOOGLE_CALLBACK_URL,
+    googleAuthUrl: GOOGLE_AUTH_URL,
     breadcrumbs: [{ label: "Registracija", url: null }],
   };
 }

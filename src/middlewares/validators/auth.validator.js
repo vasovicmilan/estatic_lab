@@ -50,16 +50,6 @@ export const validateLogin = [
   collectValidationErrors,
 ];
 
-// client-side Google Identity Services posts a signed ID token; the server verifies it
-// itself (see auth.controller.js googleCallback) rather than trusting a plain profile
-// object from the client
-export const validateGoogleAuth = [
-  body("credential")
-    .notEmpty().withMessage("Google credential je obavezan"),
-
-  collectValidationErrors,
-];
-
 export const validateRequestPasswordReset = [
   body("email")
     .trim()
@@ -126,7 +116,6 @@ export const validateResendVerification = [
 export default {
   validateRegister,
   validateLogin,
-  validateGoogleAuth,
   validateRequestPasswordReset,
   validateResetPassword,
   validateChangePassword,

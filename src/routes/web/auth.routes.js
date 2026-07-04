@@ -12,8 +12,8 @@ const router = Router();
 
 router.get("/prijava", AuthController.loginForm);
 router.post("/prijava", loginLimiter, validateLogin, AuthController.login);
-router.get("/prijava/google", AuthController.redirectToGoogle);
-router.get("/google/callback", loginLimiter, AuthController.googleCallback);
+router.get("/prijava/google", loginLimiter, AuthController.redirectToGoogle);
+router.get("/prijava/google/callback", loginLimiter, AuthController.googleCallback);
 
 router.get("/registracija", AuthController.registerForm);
 router.post("/registracija", registerLimiter, validateRegister, AuthController.register);
