@@ -1,0 +1,46 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <div class="row g-4">
+    <div class="col-md-4 text-center">
+      <% if (data.expert.slika && data.expert.slika.url) { %>
+        <img src="<%= data.expert.slika.url %>" class="img-fluid rounded mb-3" alt="<%= data.expert.imePrezime %>">
+      <% } %>
+      <% if (data.expert.drustveneMreze) { %>
+        <div class="d-flex justify-content-center gap-3">
+          <% if (data.expert.drustveneMreze.instagram) { %><a href="<%= data.expert.drustveneMreze.instagram %>"><i class="bi bi-instagram fs-4"></i></a><% } %>
+          <% if (data.expert.drustveneMreze.facebook) { %><a href="<%= data.expert.drustveneMreze.facebook %>"><i class="bi bi-facebook fs-4"></i></a><% } %>
+          <% if (data.expert.drustveneMreze.linkedin) { %><a href="<%= data.expert.drustveneMreze.linkedin %>"><i class="bi bi-linkedin fs-4"></i></a><% } %>
+          <% if (data.expert.drustveneMreze.website) { %><a href="<%= data.expert.drustveneMreze.website %>"><i class="bi bi-globe fs-4"></i></a><% } %>
+        </div>
+      <% } %>
+    </div>
+    <div class="col-md-8">
+      <h1 class="h3"><%= data.expert.imePrezime %></h1>
+      <p class="text-muted"><%= data.expert.titula %></p>
+      <p><%= data.expert.biografija %></p>
+
+      <% if (data.expert.specijalizacije && data.expert.specijalizacije.length > 0) { %>
+        <h2 class="h6 mt-4">Specijalizacije</h2>
+        <div class="d-flex flex-wrap gap-2">
+          <% data.expert.specijalizacije.forEach(function(s) { %><span class="badge bg-light text-dark border"><%= s %></span><% }) %>
+        </div>
+      <% } %>
+
+      <% if (data.expert.usluge && data.expert.usluge.length > 0) { %>
+        <h2 class="h6 mt-4">Usluge</h2>
+        <ul>
+          <% data.expert.usluge.forEach(function(s) { %><li><%= s %></li><% }) %>
+        </ul>
+      <% } %>
+
+      <a href="<%= data.bookingUrl %>" class="btn btn-primary mt-3">Zakažite termin</a>
+    </div>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>

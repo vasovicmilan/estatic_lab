@@ -59,7 +59,7 @@ export async function appointmentDetails(req, res, next) {
     return res.render("user/appointment-details", {
       pageTitle: `Termin — ${appointment.usluga.naziv}`,
       pageDescription: appointment.termin.pocetak,
-      data: viewData,
+      data: { ...viewData, csrfToken: req.csrfToken?.() },
     });
   } catch (error) {
     logError("[appointmentDetails] Greška pri učitavanju detalja termina", error, {

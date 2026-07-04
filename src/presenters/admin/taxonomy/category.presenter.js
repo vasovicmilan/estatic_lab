@@ -102,6 +102,7 @@ export function prepareCategoryFormData(category = null, { parentOptions = [] } 
   return {
     formAction: isEdit ? `/admin/kategorije/izmena/${category.id}` : "/admin/kategorije/dodavanje",
     isEdit,
+    formType: "category",
     backUrl: "/admin/kategorije",
     formData: isEdit
       ? category

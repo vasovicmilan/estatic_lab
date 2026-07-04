@@ -115,6 +115,7 @@ export function prepareCouponFormData(coupon = null, { serviceOptions = [] } = {
   return {
     formAction: isEdit ? `/admin/kuponi/izmena/${coupon.id}` : "/admin/kuponi/dodavanje",
     isEdit,
+    formType: "coupon",
     backUrl: "/admin/kuponi",
     formData: isEdit
       ? coupon

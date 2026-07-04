@@ -1,0 +1,80 @@
+<form action="<%= data.formAction %>" method="POST" enctype="multipart/form-data">
+  <input type="hidden" name="_method" value="<%= data.isEdit ? 'PUT' : 'POST' %>">
+  <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Naziv <span class="text-danger">*</span></label>
+          <input type="text" name="name" class="form-control" value="<%= data.formData.name || '' %>" required>
+          <% if (data.errors && data.errors.name) { %><div class="text-danger small mt-1"><%= data.errors.name %></div><% } %>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Slug <span class="text-danger">*</span></label>
+          <input type="text" name="slug" class="form-control" value="<%= data.formData.slug || '' %>" required>
+          <% if (data.errors && data.errors.slug) { %><div class="text-danger small mt-1"><%= data.errors.slug %></div><% } %>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Domen <span class="text-danger">*</span></label>
+          <select name="domain" class="form-select" required>
+            <% data.domains.forEach(function(d) { %>
+              <option value="<%= d.value %>" <%= data.formData.domain === d.value ? 'selected' : '' %>><%= d.label %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Roditeljska kategorija</label>
+          <select name="parent" class="form-select">
+            <option value="">— Nema (glavna kategorija) —</option>
+            <% data.parentOptions.forEach(function(opt) { %>
+              <option value="<%= opt.id %>" <%= data.formData.parent === opt.id ? 'selected' : '' %>><%= opt.naziv %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Kratak opis</label>
+        <textarea name="shortDescription" class="form-control" rows="2" maxlength="300"><%= data.formData.shortDescription || '' %></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Dugi opis</label>
+        <textarea name="longDescription" class="form-control" rows="4"><%= data.formData.longDescription || '' %></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Istaknuta slika</label>
+        <input type="file" name="categoryImage" class="form-control" accept="image/*">
+        <% if (data.formData.featureImage && data.formData.featureImage.img) { %>
+          <img src="<%= data.formData.featureImage.img %>" class="mt-2 rounded" width="120">
+        <% } %>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Prioritet</label>
+          <input type="number" name="priority" class="form-control" value="<%= data.formData.priority || 0 %>" min="0">
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <div class="form-check">
+            <input type="checkbox" name="isIndexable" value="true" class="form-check-input" id="isIndexableCheck" <%= data.formData.isIndexable !== false ? 'checked' : '' %>>
+            <label class="form-check-label" for="isIndexableCheck">Dozvoli indeksiranje (SEO)</label>
+          </div>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <div class="form-check">
+            <input type="checkbox" name="isActive" value="true" class="form-check-input" id="isActiveCheck" <%= data.formData.isActive !== false ? 'checked' : '' %>>
+            <label class="form-check-label" for="isActiveCheck">Aktivna</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Sačuvaj</button>
+</form>

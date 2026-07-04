@@ -1,6 +1,10 @@
 import { body, param } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
 
+// features/packages/comparisonColumns/comparisonTable/faq arrive as JSON strings from
+// the dynamic form-builder widgets (see service.controller.js's parseJsonField) — validated
+// here only for "is it well-formed", deep field-by-field rules live in service.service.js's
+// validatePackages(), which runs after JSON.parse against the real object shape.
 function isJsonArrayOrArray(value) {
   if (Array.isArray(value)) return true;
   if (typeof value !== "string") return false;

@@ -1,3 +1,6 @@
+/**
+ * Builds the Mongo filter object for Testimonial list queries.
+ */
 export function buildTestimonialFilter({ status = null, service = null, isFeatured = null, minRating = null } = {}) {
   const filter = {};
 

@@ -26,6 +26,7 @@ export async function findEmployeeByUserId(userId, { populateFields = [], sessio
   return query.lean();
 }
 
+// used by the availability engine to find every employee who can perform a given service
 export async function findEmployeesByService(serviceId, { onlyActive = true, session } = {}) {
   const filter = { services: serviceId };
   if (onlyActive) filter.isActive = true;

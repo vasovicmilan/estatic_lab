@@ -1,0 +1,68 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <h1 class="h3 mb-4">
+        <% if (data.category) { %><%= data.category.naziv %>
+        <% } else if (data.tag) { %>#<%= data.tag.naziv %>
+        <% } else if (data.search) { %>Rezultati pretrage: "<%= data.search %>"
+        <% } else { %>Blog<% } %>
+      </h1>
+
+      <% if (data.posts && data.posts.length > 0) { %>
+        <div class="row g-4">
+          <% data.posts.forEach(function(post) { %>
+            <div class="col-md-6">
+              <%- include("../includes/components/card-post", { post: post }) %>
+            </div>
+          <% }) %>
+        </div>
+        <%- include("../includes/pagination", { pagination: data.pagination }) %>
+      <% } else { %>
+        <p class="text-muted">Nema postova za prikaz.</p>
+      <% } %>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card mb-4">
+        <div class="card-body">
+          <form action="/blog/pretraga" method="GET" role="search">
+            <div class="input-group">
+              <input type="search" name="q" class="form-control" placeholder="Pretraži blog..." value="<%= data.search || '' %>">
+              <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <% if (data.sidebar && data.sidebar.categories && data.sidebar.categories.length > 0) { %>
+        <div class="card mb-4">
+          <div class="card-header"><h2 class="h6 mb-0">Kategorije</h2></div>
+          <div class="list-group list-group-flush">
+            <% data.sidebar.categories.forEach(function(cat) { %>
+              <a href="/blog/kategorija/<%= cat.slug %>" class="list-group-item list-group-item-action"><%= cat.naziv %></a>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+
+      <% if (data.sidebar && data.sidebar.tags && data.sidebar.tags.length > 0) { %>
+        <div class="card mb-4">
+          <div class="card-header"><h2 class="h6 mb-0">Tagovi</h2></div>
+          <div class="card-body d-flex flex-wrap gap-2">
+            <% data.sidebar.tags.forEach(function(tag) { %>
+              <a href="/blog/tag/<%= tag.slug %>" class="badge bg-light text-dark border text-decoration-none">#<%= tag.naziv %></a>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>

@@ -85,6 +85,7 @@ export function prepareTagFormData(tag = null) {
   return {
     formAction: isEdit ? `/admin/tagovi/izmena/${tag.id}` : "/admin/tagovi/dodavanje",
     isEdit,
+    formType: "tag",
     backUrl: "/admin/tagovi",
     formData: isEdit ? tag : { name: "", slug: "", domain: "service", isActive: true },
     domains: [

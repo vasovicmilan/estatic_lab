@@ -2,6 +2,10 @@ import { Schema, model } from "mongoose";
 import ImageSchema from "./schemas/image.schema.js";
 import ContentBlogSchema from "./schemas/content.blog.schema.js";
 
+/**
+ * Blog post. Reuses the shared Category/Tag models scoped to domain: "post".
+ * SEO fields here feed seo/builders/post.builder.js + seo/contracts/post.contract.js.
+ */
 export const POST_STATUSES = ["draft", "published", "archived"];
 
 const PostSchema = new Schema(
@@ -26,6 +30,7 @@ const PostSchema = new Schema(
       maxlength: 300,
     },
 
+    // structured, block-based body — see schemas/content.blog.schema.js
     content: {
       type: [ContentBlogSchema],
       default: [],
@@ -40,6 +45,8 @@ const PostSchema = new Schema(
     categories: [{ type: Schema.Types.ObjectId, ref: "Category" }],
     tags: [{ type: Schema.Types.ObjectId, ref: "Tag" }],
 
+    // authored by a staff member — either an admin or an employee (e.g. a therapist
+    // writing about their specialty). Not a public User to avoid guest accounts authoring posts.
     author: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -70,6 +77,7 @@ const PostSchema = new Schema(
       index: true,
     },
 
+    // informational, computed at save time from content length; used in the UI ("5 min read")
     readingTimeMinutes: {
       type: Number,
       default: 1,

@@ -1,5 +1,14 @@
 import { Schema, model } from "mongoose";
 
+/**
+ * The single identity model for estatic_lab — no separate Customer/User split like the
+ * e-commerce reference. A "guest" booking (no account, not logged in) still produces a
+ * real User document with status "guest": no password, a resetToken doubling as a
+ * "claim your account" link. If a User with the given email already exists at booking
+ * time, the appointment attaches to that User instead of creating a new one.
+ * See services/user.service.js `findOrCreateGuestUser` and services/appointment.service.js
+ * for how this is used inside the booking transaction.
+ */
 const UserSchema = new Schema(
   {
     email: {
@@ -11,6 +20,7 @@ const UserSchema = new Schema(
       match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Email format is invalid"],
     },
 
+    // absent for pure-Google users and for guest users who haven't claimed their account yet
     password: {
       type: String,
       minlength: 8,
@@ -31,6 +41,8 @@ const UserSchema = new Schema(
       trim: true,
     },
 
+    // needed at booking/contact time; not required at the schema level since a Google
+    // signup won't have it yet — enforced by the service layer when it's actually needed
     phone: {
       type: String,
       trim: true,
@@ -59,6 +71,10 @@ const UserSchema = new Schema(
       required: true,
     },
 
+    // "guest": created automatically during an unauthenticated booking, no password set yet.
+    // "pending": registered locally, hasn't confirmed their email yet.
+    // "active": normal usable account.
+    // "inactive" / "suspended": deactivated by self or by an admin.
     status: {
       type: String,
       enum: ["guest", "pending", "active", "inactive", "suspended"],
@@ -67,6 +83,7 @@ const UserSchema = new Schema(
       index: true,
     },
 
+    // doubles as the "claim your guest account" token when status === "guest"
     resetToken: String,
     resetTokenExpiration: Date,
 

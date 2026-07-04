@@ -30,6 +30,8 @@ async function renderTemplate(templateName, data) {
   }
 }
 
+// ==================== ACCOUNT ====================
+
 export async function sendAccountConfirmationEmail({ email, firstName }, confirmToken) {
   const html = await renderTemplate("account-confirmation", {
     firstName,
@@ -38,6 +40,8 @@ export async function sendAccountConfirmationEmail({ email, firstName }, confirm
   return sendEmail({ to: email, subject: `Dobrodošli u ${SITE_NAME} — potvrdite vaš nalog`, html });
 }
 
+// sent when a guest booking auto-creates a lightweight account — invites them to set a
+// password using the same reset-token flow as "forgot password" (see user.service.js)
 export async function sendClaimAccountEmail({ email, firstName }, resetToken) {
   const html = await renderTemplate("password-reset", {
     firstName,
@@ -66,6 +70,8 @@ export async function sendAccountDeactivatedEmail({ email, firstName }) {
   return sendEmail({ to: email, subject: `Nalog deaktiviran — ${SITE_NAME}`, html });
 }
 
+// ==================== APPOINTMENTS ====================
+
 export async function sendAppointmentReceivedEmail({ email, firstName }, appointment) {
   const html = await renderTemplate("appointment-received", { firstName, appointment, manageUrl: `${BASE_URL}/nalog/termini` });
   return sendEmail({ to: email, subject: `Zahtev za termin primljen — ${SITE_NAME}`, html });
@@ -81,6 +87,7 @@ export async function sendAppointmentCancelledEmail({ email, firstName }, appoin
   return sendEmail({ to: email, subject: `Termin otkazan — ${SITE_NAME}`, html });
 }
 
+// generic fallback for rejected/completed status changes
 export async function sendAppointmentStatusUpdateEmail({ email, firstName }, appointment, status) {
   const html = await renderTemplate("appointment-status-update", { firstName, appointment, status });
   return sendEmail({ to: email, subject: `Status termina ažuriran — ${SITE_NAME}`, html });
@@ -95,6 +102,8 @@ export async function notifyAdminAppointmentCancelled(appointment) {
   const html = await renderTemplate("admin-appointment-cancelled", { appointment });
   return sendEmail({ to: ADMIN_EMAIL, subject: `Termin otkazan — ${SITE_NAME}`, html });
 }
+
+// ==================== MARKETING ====================
 
 export async function notifyAdminNewContact(contact) {
   const html = await renderTemplate("admin-new-contact", { contact, adminUrl: `${BASE_URL}/admin/kontakt/detalji/${contact.contactId}` });

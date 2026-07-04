@@ -42,6 +42,7 @@ export async function findExperts({
   return { data, ...buildPaginationMeta({ total, page, limit }) };
 }
 
+// public "our experts" listing — active only, ordered for display, no pagination noise
 export async function findActiveExperts({ session } = {}) {
   return Expert.find({ isActive: true }).sort({ order: 1, createdAt: -1 }).session(session || null).lean();
 }

@@ -120,6 +120,7 @@ export function preparePostFormData(post = null, { categoryOptions = [], tagOpti
   return {
     formAction: isEdit ? `/admin/blog/izmena/${post.id}` : "/admin/blog/dodavanje",
     isEdit,
+    formType: "post",
     backUrl: "/admin/blog",
     formData: isEdit
       ? post

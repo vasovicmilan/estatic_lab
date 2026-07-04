@@ -1,0 +1,59 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/flash-messages") %>
+  <h1 class="h3 mb-4">Moj kalendar</h1>
+
+  <ul class="nav nav-pills mb-4">
+    <li class="nav-item"><a class="nav-link active" href="/moj-nalog">Pregled</a></li>
+    <li class="nav-item"><a class="nav-link" href="/moj-nalog/termini">Svi termini</a></li>
+    <li class="nav-item"><a class="nav-link" href="/moj-nalog/profil">Moj profil</a></li>
+  </ul>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card text-center">
+        <div class="card-body">
+          <div class="display-6"><%= data.todayAppointments.length %></div>
+          <div class="text-muted small">Termina danas</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center">
+        <div class="card-body">
+          <div class="display-6"><%= data.pendingCount %></div>
+          <div class="text-muted small">Na čekanju</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center">
+        <div class="card-body">
+          <div class="display-6"><%= data.weekAppointments.length %></div>
+          <div class="text-muted small">Ukupno termina</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="h5 mb-3">Danas</h2>
+  <% if (data.todayAppointments.length > 0) { %>
+    <div class="list-group">
+      <% data.todayAppointments.forEach(function(a) { %>
+        <a href="/moj-nalog/termini/detalji/<%= a.id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold"><%= a.klijent %></div>
+            <div class="text-muted small"><%= a.usluga %> &middot; <%= a.datum %></div>
+          </div>
+          <span class="badge bg-secondary"><%= a.status %></span>
+        </a>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <p class="text-muted">Nemate zakazanih termina za danas.</p>
+  <% } %>
+</main>
+
+<%- include("../includes/footer") %>

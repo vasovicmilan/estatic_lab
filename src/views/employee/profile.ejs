@@ -1,0 +1,47 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/flash-messages") %>
+  <h1 class="h3 mb-4">Moj profil</h1>
+
+  <ul class="nav nav-pills mb-4">
+    <li class="nav-item"><a class="nav-link" href="/moj-nalog">Pregled</a></li>
+    <li class="nav-item"><a class="nav-link" href="/moj-nalog/termini">Svi termini</a></li>
+    <li class="nav-item"><a class="nav-link active" href="/moj-nalog/profil">Moj profil</a></li>
+  </ul>
+
+  <div class="row g-4">
+    <div class="col-md-5">
+      <div class="card">
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-5 text-muted">Ime</dt><dd class="col-7"><%= data.employee.imePrezime %></dd>
+            <dt class="col-5 text-muted">Email</dt><dd class="col-7"><%= data.employee.email %></dd>
+            <dt class="col-5 text-muted">Telefon</dt><dd class="col-7"><%= data.employee.telefon || "-" %></dd>
+            <dt class="col-5 text-muted">Usluge</dt><dd class="col-7"><%= (data.employee.usluge || []).join(", ") || "-" %></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-7">
+      <div class="card">
+        <div class="card-header"><h2 class="h6 mb-0">Radno vreme</h2></div>
+        <div class="card-body">
+          <form action="<%= data.workingHoursEditUrl %>" method="POST">
+            <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+            <textarea name="workingHours" class="form-control font-monospace" rows="8"><%= JSON.stringify((data.employee.radnoVreme || []).map(function(wh) {
+              const dayMap = { "Ponedeljak": "monday", "Utorak": "tuesday", "Sreda": "wednesday", "Četvrtak": "thursday", "Petak": "friday", "Subota": "saturday", "Nedelja": "sunday" };
+              return { day: dayMap[wh.dan] || wh.dan, slots: (wh.termini || []).map(function(t) { const [from, to] = t.split(" - "); return { from, to }; }) };
+            }), null, 2) %></textarea>
+            <div class="form-text">Format: <code>[{ "day": "monday", "slots": [{ "from": "09:00", "to": "17:00" }] }]</code></div>
+            <button type="submit" class="btn btn-primary mt-3">Sačuvaj radno vreme</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>

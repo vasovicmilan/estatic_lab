@@ -12,7 +12,7 @@ export function prepareEmployeeAppointmentTabData(result, query = {}) {
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
-      basePath: "/moji-termini",
+      basePath: "/moj-nalog/termini",
       query,
     },
     filters: [
@@ -30,13 +30,13 @@ export function prepareEmployeeAppointmentDetailData(appointment) {
     canConfirm: appointment.status === "Na čekanju",
     canReject: appointment.status === "Na čekanju",
     canComplete: appointment.status === "Potvrđeno",
-    backUrl: "/moji-termini",
+    backUrl: "/moj-nalog/termini",
   };
 }
 
 export function prepareEmployeeProfileTabData(employee) {
   return {
     employee,
-    workingHoursEditUrl: "/moj-profil/radno-vreme",
+    workingHoursEditUrl: "/moj-nalog/profil/radno-vreme",
   };
 }

@@ -1,0 +1,35 @@
+<%- include("../../includes/head") %>
+<%- include("../../includes/navigation") %>
+
+<main class="container-fluid py-4">
+  <%- include("../../includes/breadcrumbs") %>
+  <%- include("../../includes/flash-messages") %>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><%= pageTitle %></h1>
+    <a href="<%= data.backUrl %>" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Nazad</a>
+  </div>
+
+  <% if (data.errors && data.errors.general) { %>
+    <div class="alert alert-danger"><%= data.errors.general %></div>
+  <% } %>
+
+  <div class="card">
+    <div class="card-body">
+      <form action="<%= data.formAction %>" method="POST">
+        <input type="hidden" name="_method" value="PUT">
+        <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+
+        <div class="mb-3">
+          <label class="form-label">SEO ključne reči (odvojeno zarezom)</label>
+          <input type="text" name="seoKeywords" class="form-control" value="<%= (data.formData.seoKeywords || []).join(', ') %>">
+          <div class="form-text">Koriste se u meta tagovima za pretraživače; ne prikazuju se posetiocima.</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Sačuvaj</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<%- include("../../includes/footer") %>

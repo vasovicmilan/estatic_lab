@@ -88,6 +88,11 @@ export async function editExpertForm(req, res, next) {
   }
 }
 
+function parseSpecializations(csv) {
+  if (!csv) return [];
+  return csv.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
 function buildImageFromUpload(req, existingImage) {
   if (req.uploadedFile) {
     return { img: req.uploadedFile.img, imgDesc: req.body.imageDesc || req.uploadedFile.imgDesc || "" };
@@ -111,6 +116,7 @@ export async function createExpert(req, res, next) {
     const data = { ...req.body };
     data.image = buildImageFromUpload(req, null);
     data.services = Array.isArray(req.body.services) ? req.body.services.filter(Boolean) : req.body.services ? [req.body.services] : [];
+    data.specializations = parseSpecializations(req.body.specializationsCsv);
 
     const expert = await expertService.createExpert(data);
     logInfo(`[createExpert] Ekspert kreiran: "${expert.osnovno.ime} ${expert.osnovno.prezime}"`, { expertId: expert.id, adminId: req.session?.user?.id });
@@ -152,6 +158,7 @@ export async function updateExpert(req, res, next) {
     const data = { ...req.body };
     data.image = buildImageFromUpload(req, existing.image);
     data.services = Array.isArray(req.body.services) ? req.body.services.filter(Boolean) : req.body.services ? [req.body.services] : [];
+    data.specializations = parseSpecializations(req.body.specializationsCsv);
 
     const updated = await expertService.updateExpertById(expertId, data);
     logInfo(`[updateExpert] Ekspert #${expertId} ažuriran`, { expertId, adminId: req.session?.user?.id });

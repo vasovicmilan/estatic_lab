@@ -50,6 +50,7 @@ export async function findPosts({
   return { data, ...buildPaginationMeta({ total, page, limit }) };
 }
 
+// atomic view counter increment — deliberately not part of a findById + save round trip
 export async function incrementPostViews(id, { session } = {}) {
   return Post.findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true, session }).lean();
 }

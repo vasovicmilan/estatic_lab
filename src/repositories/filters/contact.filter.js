@@ -1,3 +1,6 @@
+/**
+ * Builds the Mongo filter object for Contact list queries.
+ */
 export function buildContactFilter({ search = "", status = null } = {}) {
   const filter = {};
 

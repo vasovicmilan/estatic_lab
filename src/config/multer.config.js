@@ -24,7 +24,7 @@ await fs.ensureDir(path.join(PUBLIC_PATH, "videos", "thumbnails"));
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/avif"];
 const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm"];
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 const FIELD_DESTINATION_MAP = {
   serviceImage: "services",
@@ -71,6 +71,8 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage, fileFilter, limits: { fileSize: MAX_FILE_SIZE } });
 
+// =============== IMAGE (sharp) ===============
+
 async function handleImageUpload(file, destination, type) {
   const baseFilename = generateFilename(file.originalname);
 
@@ -103,6 +105,8 @@ async function handleImageUpload(file, destination, type) {
   };
 }
 
+// =============== VIDEO (ffmpeg — thumbnail only, no re-encode) ===============
+
 async function processVideo(buffer, baseFilename) {
   const videoDir = path.join(PUBLIC_PATH, "videos");
   const thumbDir = path.join(PUBLIC_PATH, "videos", "thumbnails");
@@ -126,6 +130,8 @@ async function processVideo(buffer, baseFilename) {
     title: "",
   };
 }
+
+// =============== SINGLE UPLOAD ===============
 
 function processUpload(fieldName, type = "site") {
   return [
@@ -151,6 +157,8 @@ function processUpload(fieldName, type = "site") {
     },
   ];
 }
+
+// =============== MULTIPLE UPLOADS (e.g. gallery[]) ===============
 
 function processMultipleUploads(fieldsConfig = []) {
   const multerFields = fieldsConfig.map((f) => ({ name: f.name, maxCount: f.maxCount || 1 }));

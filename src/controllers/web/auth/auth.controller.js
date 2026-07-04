@@ -8,6 +8,41 @@ import {
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 
+async function exchangeGoogleCodeForProfile(code) {
+  const tokenUrl = "https://oauth2.googleapis.com/token";
+  const params = new URLSearchParams({
+    code,
+    client_id: process.env.GOOGLE_CLIENT_ID,
+    client_secret: process.env.GOOGLE_CLIENT_SECRET,
+    redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+    grant_type: "authorization_code",
+  });
+  const tokenResponse = await fetch(tokenUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: params,
+  });
+  if (!tokenResponse.ok) {
+    throw new Error("Failed to exchange code for token");
+  }
+  const tokenData = await tokenResponse.json();
+  const { access_token } = tokenData;
+  const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+    headers: { Authorization: `Bearer ${access_token}` },
+  });
+  if (!userInfoResponse.ok) {
+    throw new Error("Failed to fetch user info");
+  }
+  const profile = await userInfoResponse.json();
+  return {
+    googleId: profile.id,
+    email: profile.email,
+    firstName: profile.given_name || "Korisnik",
+    lastName: profile.family_name || "",
+    avatar: profile.picture || "",
+  };
+}
+
 function setSessionUser(req, user) {
   req.session.isLoggedIn = true;
   req.session.user = {
@@ -122,13 +157,29 @@ export async function register(req, res, next) {
   }
 }
 
-// GET /auth/google — kicks off the OAuth redirect (actual redirect handled by passport
-// middleware mounted on the route; this file only handles the callback)
+export async function redirectToGoogle(req, res) {
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&response_type=code&scope=email%20profile`;
+  res.redirect(authUrl);
+}
+
 export async function googleCallback(req, res, next) {
   try {
-    // req.googleProfile is expected to be populated by the passport strategy middleware
-    // mounted before this handler on the route
-    const { isNewUser, user } = await authService.googleAuth(req.googleProfile);
+    const { code } = req.query;
+    if (!code) {
+      logWarn("[googleCallback] Nedostaje autorizacioni kod");
+      return flashAndRedirect(req, res, "error", "Nedostaje autorizacioni kod.", "/prijava");
+    }
+
+    const googleProfile = await exchangeGoogleCodeForProfile(code);
+
+    const { isNewUser, user } = await authService.googleAuth({
+      googleId: googleProfile.googleId,
+      email: googleProfile.email,
+      firstName: googleProfile.firstName,
+      lastName: googleProfile.lastName,
+      avatar: googleProfile.avatar,
+    });
+
     setSessionUser(req, user);
 
     logInfo(`[googleCallback] Google prijava uspešna za "${user.email}"`, { userId: user.id, isNewUser });
@@ -204,7 +255,8 @@ export async function requestPasswordReset(req, res, next) {
 
 export async function resetPasswordForm(req, res, next) {
   try {
-    const viewData = prepareResetPasswordFormData(req.params.token, {});
+    const isAccountClaim = req.path.startsWith("/preuzmi-nalog");
+    const viewData = prepareResetPasswordFormData(req.params.token, { isAccountClaim });
     return res.render("auth/_auth-form", {
       pageTitle: "Nova lozinka",
       pageDescription: "Postavite novu lozinku",
@@ -219,7 +271,8 @@ export async function resetPasswordForm(req, res, next) {
 export async function resetPassword(req, res, next) {
   try {
     if (req.validationErrors) {
-      const viewData = prepareResetPasswordFormData(req.params.token, { errors: req.validationErrors });
+      const isAccountClaim = req.path.startsWith("/preuzmi-nalog");
+      const viewData = prepareResetPasswordFormData(req.params.token, { errors: req.validationErrors, isAccountClaim });
       return res.status(400).render("auth/_auth-form", {
         pageTitle: "Nova lozinka",
         pageDescription: "Postavite novu lozinku",
@@ -233,7 +286,8 @@ export async function resetPassword(req, res, next) {
     logError("[resetPassword] Greška pri resetovanju lozinke", error, { token: req.params.token });
 
     if (error.statusCode === 400) {
-      const viewData = prepareResetPasswordFormData(req.params.token, { errors: { general: error.message } });
+      const isAccountClaim = req.path.startsWith("/preuzmi-nalog");
+      const viewData = prepareResetPasswordFormData(req.params.token, { errors: { general: error.message }, isAccountClaim });
       return res.status(400).render("auth/_auth-form", {
         pageTitle: "Nova lozinka",
         pageDescription: "Postavite novu lozinku",
@@ -288,6 +342,7 @@ export default {
   login,
   registerForm,
   register,
+  redirectToGoogle,
   googleCallback,
   logout,
   verifyAccount,

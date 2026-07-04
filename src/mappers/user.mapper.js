@@ -16,6 +16,13 @@ function getRoleName(user) {
   return "Nepoznato";
 }
 
+// raw role ObjectId — needed to pre-select the current role in an admin edit dropdown,
+// since `uloga` above is a translated display label, not usable for value matching
+function getRoleId(user) {
+  if (!user.role) return null;
+  return typeof user.role === "object" ? user.role._id.toString() : user.role.toString();
+}
+
 function translateStatus(status) {
   const map = {
     guest: "Gost",
@@ -61,6 +68,7 @@ export function mapUserForAdminDetail(user) {
     telefon: user.phone || null,
     nacinPrijave: translateProvider(user.provider),
     uloga: getRoleName(user),
+    roleId: getRoleId(user),
     avatar: user.avatar || null,
     status: translateStatus(user.status),
     statusRaw: user.status,
@@ -109,6 +117,8 @@ export function mapUserForProfile(user) {
   };
 }
 
+// used inside other mappers (e.g. appointment.mapper.js) so a referenced user isn't
+// re-mapped through the full admin/detail shape just to show a name
 export function mapUserForSelect(user) {
   if (!user) return null;
   if (typeof user === "string") return { id: user };
@@ -123,6 +133,10 @@ export function mapUserRaw(user) {
   return user;
 }
 
+/**
+ * Dispatcher used by user.service.js — picks the right shape by who's asking and
+ * whether it's their own profile.
+ */
 export function mapUser(user, role, viewType = "short", isOwnProfile = false) {
   if (!user) return null;
   if (isOwnProfile) return mapUserForProfile(user);

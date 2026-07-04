@@ -1,0 +1,16 @@
+<% if (faq && faq.length > 0) { %>
+<div class="accordion" id="faqAccordion">
+  <% faq.forEach(function(item, index) { %>
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button <%= index !== 0 ? 'collapsed' : '' %>" type="button" data-bs-toggle="collapse" data-bs-target="#faq<%= index %>">
+          <%= item.pitanje %>
+        </button>
+      </h2>
+      <div id="faq<%= index %>" class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>" data-bs-parent="#faqAccordion">
+        <div class="accordion-body"><%= item.odgovor %></div>
+      </div>
+    </div>
+  <% }) %>
+</div>
+<% } %>

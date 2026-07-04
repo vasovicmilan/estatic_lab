@@ -1,0 +1,58 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <article class="mx-auto" style="max-width: 800px;">
+    <% if (data.post.slika && data.post.slika.url) { %>
+      <img src="<%= data.post.slika.url %>" class="img-fluid rounded mb-4" alt="<%= data.post.slika.alt || data.post.naslov %>">
+    <% } %>
+
+    <h1 class="h2"><%= data.post.naslov %></h1>
+    <div class="text-muted small mb-4">
+      <% if (data.post.autor) { %>Autor: <%= data.post.autor.ime %> &middot; <% } %>
+      <%= data.post.datumObjave %> &middot; <%= data.post.vremeCitanja %>
+    </div>
+
+    <% (data.post.sadrzaj || []).forEach(function(block) { %>
+      <% if (block.tip === 'heading') { %>
+        <h3><%= block.tekst %></h3>
+      <% } else if (block.tip === 'paragraph') { %>
+        <p><%= block.tekst %></p>
+      <% } else if (block.tip === 'image' && block.slika) { %>
+        <img src="<%= block.slika.url %>" alt="<%= block.slika.alt %>" class="img-fluid rounded mb-3">
+      <% } else if (block.tip === 'quote') { %>
+        <blockquote class="blockquote"><p><%= block.tekst %></p><% if (block.izvor) { %><footer class="blockquote-footer"><%= block.izvor %></footer><% } %></blockquote>
+      <% } else if (block.tip === 'list') { %>
+        <% if (block.uredjeno) { %>
+          <ol><% (block.stavke || []).forEach(function(s) { %><li><%= s %></li><% }) %></ol>
+        <% } else { %>
+          <ul><% (block.stavke || []).forEach(function(s) { %><li><%= s %></li><% }) %></ul>
+        <% } %>
+      <% } else if (block.tip === 'video' && block.video) { %>
+        <video controls class="w-100 rounded mb-3" src="<%= block.video.url %>"></video>
+      <% } %>
+    <% }) %>
+
+    <% if (data.post.tagovi && data.post.tagovi.length > 0) { %>
+      <div class="d-flex flex-wrap gap-2 mt-4">
+        <% data.post.tagovi.forEach(function(tag) { %><span class="badge bg-light text-dark border">#<%= tag %></span><% }) %>
+      </div>
+    <% } %>
+  </article>
+
+  <% if (data.relatedPosts && data.relatedPosts.length > 0) { %>
+    <section class="mt-5">
+      <h2 class="h4 mb-3">Slični postovi</h2>
+      <div class="row g-4">
+        <% data.relatedPosts.forEach(function(post) { %>
+          <div class="col-md-4"><%- include("../includes/components/card-post", { post: post }) %></div>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+</main>
+
+<%- include("../includes/footer") %>

@@ -1,0 +1,64 @@
+<form action="<%= data.formAction %>" method="POST">
+  <input type="hidden" name="_method" value="<%= data.isEdit ? 'PUT' : 'POST' %>">
+  <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <% if (!data.isEdit) { %>
+        <div class="mb-3">
+          <label class="form-label">Korisnik <span class="text-danger">*</span></label>
+          <select name="userId" class="form-select" required>
+            <option value="">— Izaberite korisnika —</option>
+            <% data.userOptions.forEach(function(opt) { %>
+              <option value="<%= opt.value %>"><%= opt.label %></option>
+            <% }) %>
+          </select>
+          <div class="form-text">Rola izabranog korisnika će automatski biti promenjena u "employee".</div>
+          <% if (data.errors && data.errors.userId) { %><div class="text-danger small mt-1"><%= data.errors.userId %></div><% } %>
+        </div>
+      <% } %>
+
+      <div class="mb-3">
+        <label class="form-label">Povezan ekspert profil</label>
+        <select name="expert" class="form-select">
+          <option value="">— Nije povezan —</option>
+          <% data.expertOptions.forEach(function(opt) { %>
+            <option value="<%= opt.value %>" <%= data.formData.expert === opt.value ? 'selected' : '' %>><%= opt.label %></option>
+          <% }) %>
+        </select>
+        <div class="form-text">Opciono — povezuje ovaj nalog sa javnim profilom u sekciji "Naš tim".</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Usluge koje pruža</label>
+        <select name="services" class="form-select" multiple size="6">
+          <% data.serviceOptions.forEach(function(opt) { %>
+            <option value="<%= opt.value %>" <%= (data.formData.services || []).includes(opt.value) ? 'selected' : '' %>><%= opt.label %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Radno vreme (JSON)</label>
+        <textarea name="workingHours" class="form-control font-monospace" rows="8"><%= JSON.stringify(data.formData.workingHours || [], null, 2) %></textarea>
+        <div class="form-text">
+          Format: <code>[{ "day": "monday", "slots": [{ "from": "09:00", "to": "17:00" }] }]</code>.
+          Dozvoljeni dani: <%= data.weekDays.join(", ") %>.
+        </div>
+        <% if (data.errors && data.errors.workingHours) { %><div class="text-danger small mt-1"><%= data.errors.workingHours %></div><% } %>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Napomena</label>
+        <textarea name="notes" class="form-control" rows="2" maxlength="500"><%= data.formData.notes || '' %></textarea>
+      </div>
+
+      <div class="form-check">
+        <input type="checkbox" name="isActive" value="true" class="form-check-input" id="isActiveCheck" <%= data.formData.isActive !== false ? 'checked' : '' %>>
+        <label class="form-check-label" for="isActiveCheck">Aktivan (prima nove termine)</label>
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Sačuvaj</button>
+</form>

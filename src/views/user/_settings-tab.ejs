@@ -1,0 +1,78 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/flash-messages") %>
+  <h1 class="h3 mb-4">Moj nalog</h1>
+  <%- include("../includes/components/account-nav") %>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header"><h2 class="h6 mb-0">Lični podaci</h2></div>
+        <div class="card-body">
+          <% if (data.errors && data.errors.general) { %><div class="alert alert-danger"><%= data.errors.general %></div><% } %>
+          <form action="<%= data.formAction %>" method="POST">
+            <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+            <div class="mb-3">
+              <label class="form-label">Ime</label>
+              <input type="text" name="firstName" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.firstName) || data.formData.firstName %>">
+              <% if (data.errors && data.errors.firstName) { %><div class="text-danger small mt-1"><%= data.errors.firstName %></div><% } %>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Prezime</label>
+              <input type="text" name="lastName" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.lastName) || data.formData.lastName %>">
+              <% if (data.errors && data.errors.lastName) { %><div class="text-danger small mt-1"><%= data.errors.lastName %></div><% } %>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Telefon</label>
+              <input type="text" name="phone" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.phone) || data.formData.phone %>">
+            </div>
+            <button type="submit" class="btn btn-primary">Sačuvaj</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-header"><h2 class="h6 mb-0">Promena lozinke</h2></div>
+        <div class="card-body">
+          <form action="<%= data.changePasswordUrl %>" method="POST">
+            <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+            <div class="mb-3">
+              <label class="form-label">Trenutna lozinka</label>
+              <input type="password" name="oldPassword" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Nova lozinka</label>
+              <input type="password" name="newPassword" class="form-control" required minlength="8">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Potvrda nove lozinke</label>
+              <input type="password" name="confirmPassword" class="form-control" required minlength="8">
+            </div>
+            <button type="submit" class="btn btn-outline-primary">Promeni lozinku</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card border-danger">
+        <div class="card-header text-danger"><h2 class="h6 mb-0">Deaktivacija naloga</h2></div>
+        <div class="card-body">
+          <p class="text-muted small">Nakon deaktivacije nećete moći da se prijavite dok ne kontaktirate podršku.</p>
+          <form action="<%= data.deactivateUrl %>" method="POST" data-confirm="Da li ste sigurni da želite da deaktivirate nalog?">
+            <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+            <div class="mb-3">
+              <label class="form-label">Lozinka</label>
+              <input type="password" name="password" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-outline-danger">Deaktiviraj nalog</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>

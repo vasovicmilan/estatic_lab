@@ -1,0 +1,92 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <div class="row g-4 mb-5">
+    <div class="col-md-6">
+      <% if (data.service.slika && data.service.slika.url) { %>
+        <img src="<%= data.service.slika.url %>" class="img-fluid rounded" alt="<%= data.service.naziv %>">
+      <% } %>
+    </div>
+    <div class="col-md-6">
+      <h1 class="h2"><%= data.service.naziv %></h1>
+      <p class="text-muted"><%= data.service.kratakOpis %></p>
+      <div class="mb-3">
+        <% (data.service.kategorije || []).forEach(function(cat) { %><span class="badge bg-light text-dark border me-1"><%= cat %></span><% }) %>
+      </div>
+      <p><%= data.service.dugiOpis %></p>
+    </div>
+  </div>
+
+  <h2 class="h4 mb-3">Izaberite varijantu</h2>
+  <div class="row g-3 mb-5">
+    <% (data.service.varijante || []).forEach(function(variant) { %>
+      <div class="col-md-4">
+        <div class="card h-100 <%= variant.najbolji ? 'border-primary' : '' %>">
+          <div class="card-body text-center">
+            <% if (variant.oznaka) { %><span class="badge bg-primary mb-2"><%= variant.oznaka %></span><% } %>
+            <h3 class="h5"><%= variant.naziv %></h3>
+            <p class="text-muted small"><%= variant.trajanje %> min &middot; <%= variant.brojSeansi %> seansi</p>
+            <p class="h4"><%= variant.cena %></p>
+            <% if (variant.staraCena) { %><p class="text-muted text-decoration-line-through small"><%= variant.staraCena %></p><% } %>
+            <a href="/zakazivanje/<%= data.service.slug %>/termin?servicePackageId=<%= variant.id %>" class="btn btn-primary w-100">Zakaži</a>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+
+  <% if (data.service.karakteristike && data.service.karakteristike.length > 0) { %>
+    <h2 class="h4 mb-3">Šta dobijate</h2>
+    <div class="row g-3 mb-5">
+      <% data.service.karakteristike.forEach(function(f) { %>
+        <div class="col-md-4">
+          <div class="d-flex gap-2">
+            <% if (f.ikona) { %><i class="<%= f.ikona %> fs-4 text-primary"></i><% } %>
+            <div>
+              <h3 class="h6 mb-1"><%= f.naziv %></h3>
+              <p class="small text-muted"><%= f.opis %></p>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (data.service.tabelaPoredjenja && data.service.tabelaPoredjenja.redovi && data.service.tabelaPoredjenja.redovi.length > 0) { %>
+    <h2 class="h4 mb-3">Poređenje</h2>
+    <div class="table-responsive mb-5">
+      <table class="table table-bordered">
+        <thead>
+          <tr><th></th><% data.service.tabelaPoredjenja.kolone.forEach(function(col) { %><th><%= col %></th><% }) %></tr>
+        </thead>
+        <tbody>
+          <% data.service.tabelaPoredjenja.redovi.forEach(function(row) { %>
+            <tr><td><%= row.label %></td><% row.values.forEach(function(v) { %><td><%= v %></td><% }) %></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+
+  <% if (data.service.faq && data.service.faq.length > 0) { %>
+    <h2 class="h4 mb-3">Česta pitanja</h2>
+    <div class="mb-5">
+      <%- include("../includes/components/faq", { faq: data.service.faq }) %>
+    </div>
+  <% } %>
+
+  <% if (data.testimonials && data.testimonials.length > 0) { %>
+    <h2 class="h4 mb-3">Utisci klijenata</h2>
+    <div class="row g-4">
+      <% data.testimonials.forEach(function(t) { %>
+        <div class="col-md-4"><%- include("../includes/components/card-testimonial", { testimonial: t }) %></div>
+      <% }) %>
+    </div>
+  <% } %>
+</main>
+
+<%- include("../includes/footer") %>

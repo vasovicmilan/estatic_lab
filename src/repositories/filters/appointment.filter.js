@@ -1,3 +1,11 @@
+/**
+ * Builds the Mongo filter object for Appointment list queries.
+ *
+ * Role-scoping lives here (not ad hoc in the service) because "what can this role see"
+ * is a query-shape concern: an employee needs appointments where they're the assigned
+ * OR chosen therapist, OR appointments still unassigned — that's filter logic, not
+ * business logic, so it belongs next to the other filter builders.
+ */
 export function buildAppointmentFilter({
   search = "",
   userId = null,
@@ -35,6 +43,8 @@ export function buildAppointmentFilter({
   }
 
   if (search) {
+    // matches against the contact snapshot, since appointments aren't always tied to a
+    // fully-populated user record worth regex-searching through a $lookup
     filter.$or = (filter.$or || []).concat([
       { "contactSnapshot.firstName": { $regex: search, $options: "i" } },
       { "contactSnapshot.lastName": { $regex: search, $options: "i" } },

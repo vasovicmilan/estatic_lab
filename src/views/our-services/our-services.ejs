@@ -1,0 +1,42 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <div class="row">
+    <div class="col-lg-9">
+      <h1 class="h3 mb-4"><%= data.category ? data.category.naziv : "Usluge" %></h1>
+
+      <% if (data.services && data.services.length > 0) { %>
+        <div class="row g-4">
+          <% data.services.forEach(function(service) { %>
+            <div class="col-md-4">
+              <%- include("../includes/components/card-service", { service: service }) %>
+            </div>
+          <% }) %>
+        </div>
+        <%- include("../includes/pagination", { pagination: data.pagination }) %>
+      <% } else { %>
+        <p class="text-muted">Trenutno nema dostupnih usluga.</p>
+      <% } %>
+    </div>
+
+    <div class="col-lg-3">
+      <% if (data.sidebar && data.sidebar.categories && data.sidebar.categories.length > 0) { %>
+        <div class="card mb-4">
+          <div class="card-header"><h2 class="h6 mb-0">Kategorije</h2></div>
+          <div class="list-group list-group-flush">
+            <a href="/usluge" class="list-group-item list-group-item-action">Sve usluge</a>
+            <% data.sidebar.categories.forEach(function(cat) { %>
+              <a href="/usluge/kategorija/<%= cat.slug %>" class="list-group-item list-group-item-action"><%= cat.naziv %></a>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>

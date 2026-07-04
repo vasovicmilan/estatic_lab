@@ -5,7 +5,7 @@ export async function buildPostSeo(post, req, siteConfig = {}) {
   const defaultImage = siteConfig.defaultImage || "/images/default-og.jpg";
   const title = post.naslov ? `${escape(post.naslov)} | ${siteName}` : siteName;
   const description = truncate(post.seo?.opis || post.kratakOpis || siteConfig.defaultDescription || "");
-  const robots = "index, follow"; // repository already restricts public reads to published+indexable posts
+  const robots = "index, follow";
   const canonical = buildCanonical(req, `/blog/${post.slug}`);
   const imageUrl = post.slika?.url || post.coverImage?.img || defaultImage;
 

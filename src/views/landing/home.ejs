@@ -1,0 +1,73 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<header class="bg-light py-5 text-center">
+  <div class="container">
+    <h1 class="display-5 fw-bold"><%= data.hero.title %></h1>
+    <a href="<%= data.hero.ctaUrl %>" class="btn btn-primary btn-lg mt-3"><%= data.hero.ctaLabel %></a>
+  </div>
+</header>
+
+<main>
+  <%- include("../includes/flash-messages") %>
+
+  <% if (data.highlightedServices && data.highlightedServices.length > 0) { %>
+    <section class="container py-5">
+      <h2 class="h3 mb-4 text-center">Naše usluge</h2>
+      <div class="row g-4">
+        <% data.highlightedServices.forEach(function(service) { %>
+          <div class="col-md-4">
+            <%- include("../includes/components/card-service", { service: service }) %>
+          </div>
+        <% }) %>
+      </div>
+      <div class="text-center mt-4"><a href="/usluge" class="btn btn-outline-primary">Sve usluge</a></div>
+    </section>
+  <% } %>
+
+  <% if (data.featuredExperts && data.featuredExperts.length > 0) { %>
+    <section class="bg-light py-5">
+      <div class="container">
+        <h2 class="h3 mb-4 text-center">Naš tim</h2>
+        <div class="row g-4">
+          <% data.featuredExperts.forEach(function(expert) { %>
+            <div class="col-md-3">
+              <%- include("../includes/components/card-expert", { expert: expert }) %>
+            </div>
+          <% }) %>
+        </div>
+        <div class="text-center mt-4"><a href="/nas-tim" class="btn btn-outline-primary">Upoznajte ceo tim</a></div>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (data.testimonials && data.testimonials.length > 0) { %>
+    <section class="container py-5">
+      <h2 class="h3 mb-4 text-center">Šta kažu naši klijenti</h2>
+      <div class="row g-4">
+        <% data.testimonials.forEach(function(t) { %>
+          <div class="col-md-4">
+            <%- include("../includes/components/card-testimonial", { testimonial: t }) %>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (data.latestPosts && data.latestPosts.length > 0) { %>
+    <section class="bg-light py-5">
+      <div class="container">
+        <h2 class="h3 mb-4 text-center">Sa bloga</h2>
+        <div class="row g-4">
+          <% data.latestPosts.forEach(function(post) { %>
+            <div class="col-md-4">
+              <%- include("../includes/components/card-post", { post: post }) %>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+  <% } %>
+</main>
+
+<%- include("../includes/footer") %>

@@ -56,6 +56,7 @@ export async function findEmployeeProfile(userId, role = "employee") {
   return mapEmployee(employee, role, "detail");
 }
 
+// creates the Employee record AND promotes the target User's role to "employee"
 export async function createEmployee(data) {
   if (!data) validationError("data");
   if (!data.userId) validationError("userId");
@@ -119,6 +120,7 @@ export async function deleteEmployeeById(employeeId) {
   return { success: true };
 }
 
+// raw (unmapped) — used internally by the availability engine
 export async function findEmployeesByServiceRaw(serviceId) {
   if (!serviceId) validationError("serviceId");
   return employeeRepo.findEmployeesByService(serviceId);

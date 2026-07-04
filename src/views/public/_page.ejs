@@ -1,0 +1,77 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <h1 class="h3 mb-4"><%= pageTitle %></h1>
+
+      <% if (typeof showFaq !== 'undefined' && showFaq) { %>
+        <%
+          // Placeholder content — indexService.getFaqPageData() currently only returns
+          // SEO data, no actual FAQ entries. Replace with real content when available.
+          const placeholderFaq = [
+            { pitanje: "Kako mogu da zakažem termin?", odgovor: "Izaberite uslugu na stranici \"Usluge\", zatim varijantu i termin koji vam odgovara. Nije potrebno da imate nalog — dovoljno je da unesete vaše podatke za kontakt." },
+            { pitanje: "Da li mogu da otkažem termin?", odgovor: "Da, termin možete otkazati najkasnije 24h pre zakazanog vremena, iz vašeg naloga." },
+            { pitanje: "Da li je potrebna registracija?", odgovor: "Ne — možete zakazati termin kao gost. Ako se vaš email već koristi za postojeći nalog, termin će biti povezan sa tim nalogom." },
+          ];
+        %>
+        <%- include("../includes/components/faq", { faq: placeholderFaq }) %>
+
+      <% } else if (typeof showForm !== 'undefined' && showForm) { %>
+        <% if (data.errors && data.errors.general) { %><div class="alert alert-danger"><%= data.errors.general %></div><% } %>
+        <form action="/kontakt" method="POST">
+          <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
+          <input type="text" name="nickname" class="d-none" tabindex="-1" autocomplete="off">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Ime</label>
+              <input type="text" name="firstName" class="form-control" value="<%= data.formData.firstName || '' %>" required>
+              <% if (data.errors && data.errors.firstName) { %><div class="text-danger small mt-1"><%= data.errors.firstName %></div><% } %>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Prezime</label>
+              <input type="text" name="lastName" class="form-control" value="<%= data.formData.lastName || '' %>" required>
+              <% if (data.errors && data.errors.lastName) { %><div class="text-danger small mt-1"><%= data.errors.lastName %></div><% } %>
+            </div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control" value="<%= data.formData.email || '' %>" required>
+              <% if (data.errors && data.errors.email) { %><div class="text-danger small mt-1"><%= data.errors.email %></div><% } %>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Telefon</label>
+              <input type="text" name="phone" class="form-control" value="<%= data.formData.phone || '' %>">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Tema</label>
+            <input type="text" name="topic" class="form-control" value="<%= data.formData.topic || '' %>">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Poruka</label>
+            <textarea name="message" class="form-control" rows="5" required><%= data.formData.message || '' %></textarea>
+            <% if (data.errors && data.errors.message) { %><div class="text-danger small mt-1"><%= data.errors.message %></div><% } %>
+          </div>
+          <div class="form-check mb-3">
+            <input type="checkbox" name="consent" value="true" class="form-check-input" id="consentCheck" required>
+            <label class="form-check-label small" for="consentCheck">Slažem se sa <a href="/politika-privatnosti">politikom privatnosti</a>.</label>
+            <% if (data.errors && data.errors.consent) { %><div class="text-danger small mt-1"><%= data.errors.consent %></div><% } %>
+          </div>
+          <button type="submit" class="btn btn-primary">Pošalji poruku</button>
+        </form>
+
+      <% } else { %>
+        <p class="text-muted"><%= pageDescription %></p>
+        <p class="text-muted fst-italic">Sadržaj ove stranice će uskoro biti dopunjen.</p>
+      <% } %>
+    </div>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>

@@ -1,0 +1,30 @@
+<% const d = data; %>
+<form action="<%= d.roleFormAction %>" method="POST" class="d-flex gap-2 mb-3">
+  <input type="hidden" name="_method" value="PUT">
+  <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+  <select name="role" class="form-select form-select-sm">
+    <% d.roleOptions.forEach(function(opt) { %>
+      <option value="<%= opt.id %>" <%= d.currentRoleId === opt.id ? 'selected' : '' %>><%= opt.naziv %></option>
+    <% }) %>
+  </select>
+  <button type="submit" class="btn btn-outline-primary btn-sm text-nowrap">Promeni rolu</button>
+</form>
+
+<form action="<%= d.statusFormAction %>" method="POST" class="d-flex gap-2 mb-3">
+  <input type="hidden" name="_method" value="PUT">
+  <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+  <select name="status" class="form-select form-select-sm">
+    <% d.statuses.forEach(function(opt) { %>
+      <option value="<%= opt.value %>" <%= d.currentStatus === opt.value ? 'selected' : '' %>><%= opt.label %></option>
+    <% }) %>
+  </select>
+  <button type="submit" class="btn btn-outline-secondary btn-sm text-nowrap">Promeni status</button>
+</form>
+
+<% if (d.showVerifyAction) { %>
+  <form action="<%= d.verifyFormAction %>" method="POST">
+    <input type="hidden" name="_method" value="PUT">
+    <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+    <button type="submit" class="btn btn-success btn-sm w-100">Ručno verifikuj nalog</button>
+  </form>
+<% } %>

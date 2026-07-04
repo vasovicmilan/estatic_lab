@@ -1,3 +1,6 @@
+/**
+ * Builds the Mongo filter object for Post list queries.
+ */
 export function buildPostFilter({
   search = "",
   status = null,

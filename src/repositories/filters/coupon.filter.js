@@ -1,3 +1,6 @@
+/**
+ * Builds the Mongo filter object for Coupon list queries.
+ */
 export function buildCouponFilter({ search = "", isActive = null, service = null, validNow = false } = {}) {
   const filter = {};
 

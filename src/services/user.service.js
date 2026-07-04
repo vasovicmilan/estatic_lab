@@ -55,7 +55,7 @@ export async function findUserByEmail(email) {
 // raw (unmapped, password included) — used only by auth.service.js for credential checks
 export async function findUserForLogin(email) {
   if (!email) validationError("email");
-  return userRepo.findUserByEmailWithPassword(email);
+  return userRepo.findUserByEmailWithPassword(email, { populateFields: [{ path: "role", select: "name" }] });
 }
 
 export async function registerUser(data) {
@@ -201,6 +201,7 @@ export async function resetPassword(token, newPassword) {
     password: passwordHash,
     resetToken: null,
     resetTokenExpiration: null,
+    // claiming a guest account also confirms it, since they proved control of the inbox
     ...(wasGuest ? { status: "active", confirmed: true } : {}),
   });
 

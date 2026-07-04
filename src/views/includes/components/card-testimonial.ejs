@@ -1,0 +1,15 @@
+<div class="card h-100 shadow-sm">
+  <div class="card-body">
+    <div class="text-warning mb-2"><%= testimonial.ocenaZvezdice %></div>
+    <p class="fst-italic">"<%= testimonial.komentar %>"</p>
+    <div class="d-flex align-items-center gap-2 mt-3">
+      <% if (testimonial.slika && testimonial.slika.url) { %>
+        <img src="<%= testimonial.slika.url %>" class="rounded-circle" width="40" height="40" style="object-fit:cover;" alt="<%= testimonial.ime %>">
+      <% } %>
+      <div>
+        <div class="fw-semibold small"><%= testimonial.ime %></div>
+        <% if (testimonial.usluga) { %><div class="text-muted small"><%= testimonial.usluga %></div><% } %>
+      </div>
+    </div>
+  </div>
+</div>

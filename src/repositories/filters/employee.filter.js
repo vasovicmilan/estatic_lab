@@ -1,3 +1,6 @@
+/**
+ * Builds the Mongo filter object for Employee list queries.
+ */
 export function buildEmployeeFilter({ isActive = null, service = null, expert = null } = {}) {
   const filter = {};
 

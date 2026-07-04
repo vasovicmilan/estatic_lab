@@ -30,6 +30,7 @@ const ContactSchema = new Schema(
       index: true,
     },
 
+    // abuse/audit trail — not shown in the UI
     ip: String,
     userAgent: String,
   },

@@ -20,17 +20,24 @@ export async function findUserById(id, { populateFields = [], session } = {}) {
   return query.lean();
 }
 
-export async function findUserByEmailWithPassword(email, { session } = {}) {
-  return User.findOne({ email: email.toLowerCase().trim() })
+// password is `select: false` on the schema — only this finder opts back in, so a stray
+// findUserById never accidentally leaks a password hash into a mapper/presenter
+export async function findUserByEmailWithPassword(email, { populateFields = [], session } = {}) {
+  let query = User.findOne({ email: email.toLowerCase().trim() })
     .select("+password")
-    .session(session || null)
-    .lean();
+    .session(session || null);
+  for (const field of populateFields) query = query.populate(field);
+  return query.lean();
 }
 
 export async function findUserByEmail(email, { populateFields = [], session } = {}) {
   let query = User.findOne({ email: email.toLowerCase().trim() }).session(session || null);
   query = applyPopulate(query, populateFields);
   return query.lean();
+}
+
+export async function findUserByIdWithPassword(id, { session } = {}) {
+  return User.findById(id).select("+password").session(session || null).lean();
 }
 
 export async function findUserByGoogleId(googleId, { session } = {}) {
@@ -50,6 +57,8 @@ export async function findUserByConfirmToken(token, { session } = {}) {
     .lean();
 }
 
+// populateFields is applied ONCE, as a single populated query — this is the pattern that
+// replaces the manual Promise.all-per-document population loop flagged as an N+1 elsewhere
 export async function findUsers({
   search = "",
   limit = 20,

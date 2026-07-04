@@ -32,6 +32,7 @@ export async function getRolesForSelect() {
   return mapRolesForSelect(result.data);
 }
 
+// used internally by user.service.js when no role is specified at registration
 export async function findDefaultRole() {
   return roleRepo.findDefaultRole();
 }

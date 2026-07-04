@@ -1,3 +1,6 @@
+/**
+ * Builds the Mongo filter object for Tag list queries.
+ */
 export function buildTagFilter({ search = "", domain = null, isActive = null } = {}) {
   const filter = {};
 

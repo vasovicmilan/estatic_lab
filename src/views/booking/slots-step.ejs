@@ -1,0 +1,60 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <div class="mb-4">
+    <div class="progress" style="height: 6px;">
+      <div class="progress-bar" style="width: 50%"></div>
+    </div>
+    <p class="text-muted small mt-1">Korak 2 od 4 — Izbor termina</p>
+  </div>
+
+  <h1 class="h3 mb-4"><%= data.service.naziv %> — <%= data.variant.naziv %></h1>
+
+  <form method="GET" class="row g-3 align-items-end mb-4">
+    <input type="hidden" name="servicePackageId" value="<%= data.variant.id %>">
+    <div class="col-auto">
+      <label class="form-label small text-muted">Datum</label>
+      <input type="date" name="date" class="form-control" value="<%= data.date %>" min="<%= new Date().toISOString().slice(0,10) %>" onchange="this.form.submit()">
+    </div>
+    <% if (data.employees && data.employees.length > 0) { %>
+      <div class="col-auto">
+        <label class="form-label small text-muted">Terapeut</label>
+        <select name="employeeId" class="form-select" onchange="this.form.submit()">
+          <option value="">Nema preferenciju</option>
+          <% data.employees.forEach(function(emp) { %>
+            <option value="<%= emp.id %>"><%= emp.imePrezime %></option>
+          <% }) %>
+        </select>
+      </div>
+    <% } %>
+  </form>
+
+  <% if (data.slots && data.slots.length > 0) { %>
+    <div class="row g-2">
+      <% data.slots.forEach(function(slot) { %>
+        <%
+          const start = new Date(slot.pocetak);
+          const timeLabel = start.toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' });
+          const params = new URLSearchParams({
+            servicePackageId: data.variant.id,
+            startTime: start.toISOString(),
+            employeeId: slot.terapeutId || '',
+          });
+        %>
+        <div class="col-auto">
+          <a href="/zakazivanje/<%= data.service.slug %>/podaci?<%= params.toString() %>" class="btn btn-outline-primary"><%= timeLabel %></a>
+        </div>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <p class="text-muted">Nema dostupnih termina za izabrani datum. Pokušajte drugi datum.</p>
+  <% } %>
+
+  <a href="<%= data.backUrl %>" class="btn btn-link mt-4">&larr; Nazad na izbor varijante</a>
+</main>
+
+<%- include("../includes/footer") %>

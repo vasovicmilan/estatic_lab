@@ -91,6 +91,8 @@ export const searchLimiter = rateLimit({
   handler: handleRateLimitExceeded("Previše pretraga — pokušajte ponovo kasnije."),
 });
 
+// booking is the equivalent of e_commerce's checkout — the one flow worth guarding
+// tightly against automated slot-spamming
 export const bookingLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 5,

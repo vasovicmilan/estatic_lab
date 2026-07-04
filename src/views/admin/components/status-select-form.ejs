@@ -1,0 +1,11 @@
+<% const d = data; %>
+<form action="<%= d.formAction %>" method="POST" class="d-flex gap-2">
+  <input type="hidden" name="_method" value="PUT">
+  <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+  <select name="status" class="form-select form-select-sm">
+    <% d.options.forEach(function(opt) { %>
+      <option value="<%= opt.value %>" <%= d.currentStatus === opt.value ? 'selected' : '' %>><%= opt.label %></option>
+    <% }) %>
+  </select>
+  <button type="submit" class="btn btn-primary btn-sm text-nowrap">Sačuvaj</button>
+</form>

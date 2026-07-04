@@ -78,6 +78,7 @@ export function prepareRoleFormData(role = null, availablePermissions = []) {
   return {
     formAction: isEdit ? `/admin/role/izmena/${role.id}` : "/admin/role/dodavanje",
     isEdit,
+    formType: "role",
     backUrl: "/admin/role",
     formData: isEdit
       ? role

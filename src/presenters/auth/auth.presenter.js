@@ -1,16 +1,22 @@
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
+const GOOGLE_CALLBACK_URL = "/prijava/google";
+
 export function prepareLoginFormData({ errors = {}, formData = {}, redirectTo = "/" } = {}) {
   return {
+    formType: "login",
     formAction: "/prijava",
     errors,
     formData: { email: formData.email || "" },
     redirectTo,
-    googleAuthUrl: "/auth/google",
+    googleClientId: GOOGLE_CLIENT_ID,
+    googleCallbackUrl: GOOGLE_CALLBACK_URL,
     breadcrumbs: [{ label: "Prijava", url: null }],
   };
 }
 
 export function prepareRegisterFormData({ errors = {}, formData = {} } = {}) {
   return {
+    formType: "register",
     formAction: "/registracija",
     errors,
     formData: {
@@ -19,13 +25,15 @@ export function prepareRegisterFormData({ errors = {}, formData = {} } = {}) {
       email: formData.email || "",
       phone: formData.phone || "",
     },
-    googleAuthUrl: "/auth/google",
+    googleClientId: GOOGLE_CLIENT_ID,
+    googleCallbackUrl: GOOGLE_CALLBACK_URL,
     breadcrumbs: [{ label: "Registracija", url: null }],
   };
 }
 
 export function prepareForgotPasswordFormData({ errors = {}, formData = {} } = {}) {
   return {
+    formType: "forgot-password",
     formAction: "/zaboravljena-lozinka",
     errors,
     formData: { email: formData.email || "" },
@@ -33,14 +41,18 @@ export function prepareForgotPasswordFormData({ errors = {}, formData = {} } = {
   };
 }
 
-export function prepareResetPasswordFormData(token, { errors = {} } = {}) {
+export function prepareResetPasswordFormData(token, { errors = {}, isAccountClaim = false } = {}) {
   return {
+    formType: "reset-password",
     formAction: `/resetovanje-lozinke/${token}`,
     errors,
-    breadcrumbs: [{ label: "Nova lozinka", url: null }],
+    isAccountClaim,
+    breadcrumbs: [{ label: isAccountClaim ? "Preuzmite vaš nalog" : "Nova lozinka", url: null }],
   };
 }
 
+// shown after a guest booking creates a lightweight account — invites them to set a
+// password via the same reset-token flow used for "forgot password"
 export function prepareClaimAccountData(user) {
   return {
     email: user.email,

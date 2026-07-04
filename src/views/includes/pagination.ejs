@@ -1,0 +1,27 @@
+<%
+  const p = typeof pagination !== 'undefined' ? pagination : (typeof data !== 'undefined' ? data.pagination : null);
+%>
+<% if (p && p.totalPages > 1) { %>
+<nav aria-label="Paginacija" class="d-flex justify-content-center mt-4">
+  <ul class="pagination">
+    <%
+      const qs = { ...(p.query || {}) };
+      function pageUrl(page) {
+        const params = new URLSearchParams({ ...qs, page });
+        return `${p.basePath}?${params.toString()}`;
+      }
+    %>
+    <li class="page-item <%= p.currentPage <= 1 ? 'disabled' : '' %>">
+      <a class="page-link" href="<%= pageUrl(Math.max(1, p.currentPage - 1)) %>">Prethodna</a>
+    </li>
+    <% for (let i = 1; i <= p.totalPages; i++) { %>
+      <li class="page-item <%= i === p.currentPage ? 'active' : '' %>">
+        <a class="page-link" href="<%= pageUrl(i) %>"><%= i %></a>
+      </li>
+    <% } %>
+    <li class="page-item <%= p.currentPage >= p.totalPages ? 'disabled' : '' %>">
+      <a class="page-link" href="<%= pageUrl(Math.min(p.totalPages, p.currentPage + 1)) %>">Sledeća</a>
+    </li>
+  </ul>
+</nav>
+<% } %>

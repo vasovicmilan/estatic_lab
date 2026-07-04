@@ -73,11 +73,18 @@ export function prepareUserDetailsData(user, roleOptions = []) {
         type: "custom",
         content: "user-actions",
         data: {
-          userId: user.id,
-          currentRoleId: user.uloga,
+          roleFormAction: `/admin/korisnici/${user.id}/rola`,
+          statusFormAction: `/admin/korisnici/${user.id}/status`,
+          verifyFormAction: `/admin/korisnici/${user.id}/verifikuj`,
+          currentRoleId: user.roleId,
           roleOptions,
           currentStatus: user.statusRaw,
-          statuses: ["active", "inactive", "suspended"],
+          statuses: [
+            { value: "active", label: "Aktivan" },
+            { value: "inactive", label: "Neaktivan" },
+            { value: "suspended", label: "Suspendovan" },
+          ],
+          showVerifyAction: user.statusRaw === "pending",
         },
       },
       {

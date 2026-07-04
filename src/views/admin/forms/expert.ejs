@@ -1,0 +1,98 @@
+<form action="<%= data.formAction %>" method="POST" enctype="multipart/form-data">
+  <input type="hidden" name="_method" value="<%= data.isEdit ? 'PUT' : 'POST' %>">
+  <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Ime <span class="text-danger">*</span></label>
+          <input type="text" name="firstName" class="form-control" value="<%= data.formData.firstName || '' %>" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Prezime <span class="text-danger">*</span></label>
+          <input type="text" name="lastName" class="form-control" value="<%= data.formData.lastName || '' %>" required>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Slug <span class="text-danger">*</span></label>
+          <input type="text" name="slug" class="form-control" value="<%= data.formData.slug || '' %>" required>
+          <% if (data.errors && data.errors.slug) { %><div class="text-danger small mt-1"><%= data.errors.slug %></div><% } %>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Titula</label>
+          <input type="text" name="title" class="form-control" value="<%= data.formData.title || '' %>" placeholder="npr. Senior terapeut">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Kratka biografija</label>
+        <textarea name="shortBio" class="form-control" rows="2" maxlength="300"><%= data.formData.shortBio || '' %></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Biografija</label>
+        <textarea name="bio" class="form-control" rows="5"><%= data.formData.bio || '' %></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Profilna slika <% if (!data.isEdit) { %><span class="text-danger">*</span><% } %></label>
+        <input type="file" name="expertImage" class="form-control" accept="image/*" <%= !data.isEdit ? 'required' : '' %>>
+        <% if (data.formData.image && data.formData.image.img) { %>
+          <img src="<%= data.formData.image.img %>" class="mt-2 rounded" width="120">
+        <% } %>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Specijalizacije</label>
+        <input type="text" name="specializationsCsv" class="form-control" value="<%= (data.formData.specializations || []).join(', ') %>" placeholder="Odvojeno zarezom, npr: Masaža, Aromaterapija">
+        <div class="form-text">Ovo je informativno — ne utiče na to koje termine ovaj profil može da prima.</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Usluge (prikaz na profilu)</label>
+        <select name="services" class="form-select" multiple size="6">
+          <% data.serviceOptions.forEach(function(opt) { %>
+            <option value="<%= opt.value %>" <%= (data.formData.services || []).includes(opt.value) ? 'selected' : '' %>><%= opt.label %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-3">
+          <label class="form-label">Instagram</label>
+          <input type="text" name="socialLinks[instagram]" class="form-control" value="<%= (data.formData.socialLinks && data.formData.socialLinks.instagram) || '' %>">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Facebook</label>
+          <input type="text" name="socialLinks[facebook]" class="form-control" value="<%= (data.formData.socialLinks && data.formData.socialLinks.facebook) || '' %>">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">LinkedIn</label>
+          <input type="text" name="socialLinks[linkedin]" class="form-control" value="<%= (data.formData.socialLinks && data.formData.socialLinks.linkedin) || '' %>">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Web sajt</label>
+          <input type="text" name="socialLinks[website]" class="form-control" value="<%= (data.formData.socialLinks && data.formData.socialLinks.website) || '' %>">
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Redosled prikaza</label>
+          <input type="number" name="order" class="form-control" value="<%= data.formData.order || 0 %>" min="0">
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+          <div class="form-check">
+            <input type="checkbox" name="isActive" value="true" class="form-check-input" id="isActiveCheck" <%= data.formData.isActive !== false ? 'checked' : '' %>>
+            <label class="form-check-label" for="isActiveCheck">Aktivan (prikazan na sajtu)</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Sačuvaj</button>
+</form>

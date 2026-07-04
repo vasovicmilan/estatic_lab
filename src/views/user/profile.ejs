@@ -1,0 +1,24 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/flash-messages") %>
+  <h1 class="h3 mb-4">Moj nalog</h1>
+  <%- include("../includes/components/account-nav") %>
+
+  <div class="card" style="max-width: 500px;">
+    <div class="card-body">
+      <dl class="row mb-0">
+        <dt class="col-5 text-muted">Ime i prezime</dt><dd class="col-7"><%= data.user.imePrezime %></dd>
+        <dt class="col-5 text-muted">Email</dt><dd class="col-7"><%= data.user.email %></dd>
+        <dt class="col-5 text-muted">Telefon</dt><dd class="col-7"><%= data.user.telefon || "-" %></dd>
+        <dt class="col-5 text-muted">Način prijave</dt><dd class="col-7"><%= data.user.nacinPrijave %></dd>
+        <dt class="col-5 text-muted">Član od</dt><dd class="col-7"><%= data.user.clanOd %></dd>
+      </dl>
+    </div>
+  </div>
+
+  <a href="<%= data.editUrl %>" class="btn btn-outline-primary mt-3">Izmeni podešavanja</a>
+</main>
+
+<%- include("../includes/footer") %>

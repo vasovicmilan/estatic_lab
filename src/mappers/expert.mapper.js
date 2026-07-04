@@ -85,6 +85,7 @@ export function mapExpertForEdit(expert) {
   };
 }
 
+// public "our experts" team page card
 export function mapExpertForPublicCard(expert) {
   if (!expert) return null;
 
@@ -102,6 +103,7 @@ export function mapExpertsForPublic(experts = []) {
   return experts.map(mapExpertForPublicCard).filter(Boolean);
 }
 
+// public individual expert profile page
 export function mapExpertForPublicDetail(expert) {
   if (!expert) return null;
 

@@ -1,0 +1,42 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <% if (data.package.slika && data.package.slika.url) { %>
+        <img src="<%= data.package.slika.url %>" class="img-fluid rounded" alt="<%= data.package.naziv %>">
+      <% } %>
+    </div>
+    <div class="col-md-6">
+      <h1 class="h2"><%= data.package.naziv %></h1>
+      <p class="text-muted"><%= data.package.kratakOpis %></p>
+      <p><%= data.package.opis %></p>
+
+      <h2 class="h6 mt-4">Usluge u paketu</h2>
+      <ul>
+        <% (data.package.stavke || []).forEach(function(s) { %>
+          <li><%= s.usluga.naziv %> &times; <%= s.brojSeansi %></li>
+        <% }) %>
+      </ul>
+
+      <p class="h3 mt-3">
+        <%= data.package.cena %> RSD
+        <% if (data.package.staraCena) { %><small class="text-muted text-decoration-line-through">&nbsp;<%= data.package.staraCena %> RSD</small><% } %>
+      </p>
+
+      <a href="<%= data.bookingUrl %>" class="btn btn-primary btn-lg">Zainteresovan/a sam</a>
+      <p class="text-muted small mt-2">Kontaktiraćemo vas da dogovorimo termine za sve usluge u paketu.</p>
+    </div>
+  </div>
+
+  <% if (data.package.faq && data.package.faq.length > 0) { %>
+    <h2 class="h4 mt-5 mb-3">Česta pitanja</h2>
+    <%- include("../includes/components/faq", { faq: data.package.faq }) %>
+  <% } %>
+</main>
+
+<%- include("../includes/footer") %>

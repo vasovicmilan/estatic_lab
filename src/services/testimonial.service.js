@@ -71,6 +71,7 @@ export async function deleteTestimonialById(testimonialId) {
   return { success: true };
 }
 
+// public "what our clients say" widget
 export async function getApprovedTestimonials({ limit = 10, featuredOnly = false } = {}) {
   const testimonials = await testimonialRepo.findApprovedTestimonials({ limit, featuredOnly });
   return mapTestimonialsForPublic(testimonials);

@@ -77,11 +77,12 @@ export function prepareTestimonialDetailsData(testimonial) {
       {
         title: "Moderacija",
         type: "custom",
-        content: "status-change-form",
+        content: "testimonial-moderation-form",
         data: {
           testimonialId: testimonial.id,
           currentStatus: testimonial.status.vrednostRaw,
-          statuses: ["approved", "rejected"],
+          approveUrl: `/admin/testimoniali/${testimonial.id}/odobri`,
+          rejectUrl: `/admin/testimoniali/${testimonial.id}/odbij`,
           isFeatured: testimonial.status.istaknut,
         },
       },

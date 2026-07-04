@@ -104,6 +104,7 @@ export function prepareEmployeeFormData(employee = null, { userOptions = [], ser
   return {
     formAction: isEdit ? `/admin/zaposleni/izmena/${employee.id}` : "/admin/zaposleni/dodavanje",
     isEdit,
+    formType: "employee",
     backUrl: "/admin/zaposleni",
     formData: isEdit
       ? employee

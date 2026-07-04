@@ -1,0 +1,70 @@
+<form action="<%= data.formAction %>" method="POST">
+  <input type="hidden" name="_method" value="<%= data.isEdit ? 'PUT' : 'POST' %>">
+  <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Kod <span class="text-danger">*</span></label>
+          <input type="text" name="code" class="form-control text-uppercase" value="<%= data.formData.code || '' %>" required <%= data.isEdit ? 'readonly' : '' %>>
+          <% if (data.errors && data.errors.code) { %><div class="text-danger small mt-1"><%= data.errors.code %></div><% } %>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Tip popusta <span class="text-danger">*</span></label>
+          <select name="discountType" class="form-select" required>
+            <% data.discountTypes.forEach(function(opt) { %>
+              <option value="<%= opt.value %>" <%= data.formData.discountType === opt.value ? 'selected' : '' %>><%= opt.label %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Vrednost <span class="text-danger">*</span></label>
+          <input type="number" name="discountValue" class="form-control" value="<%= data.formData.discountValue || 0 %>" min="0" step="0.01" required>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <label class="form-label">Minimalna vrednost termina (RSD)</label>
+          <input type="number" name="minAppointmentValue" class="form-control" value="<%= data.formData.minAppointmentValue || 0 %>" min="0">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Max. upotreba (ukupno)</label>
+          <input type="number" name="maxUses" class="form-control" value="<%= data.formData.maxUses || '' %>" min="1" placeholder="Neograničeno">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Max. upotreba po korisniku</label>
+          <input type="number" name="maxUsesPerUser" class="form-control" value="<%= data.formData.maxUsesPerUser || 1 %>" min="1">
+        </div>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Važi od</label>
+          <input type="date" name="validFrom" class="form-control" value="<%= data.formData.validFrom ? new Date(data.formData.validFrom).toISOString().slice(0,10) : '' %>">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Važi do <span class="text-danger">*</span></label>
+          <input type="date" name="validUntil" class="form-control" value="<%= data.formData.validUntil ? new Date(data.formData.validUntil).toISOString().slice(0,10) : '' %>" required>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Primenljivo na usluge (prazno = sve usluge)</label>
+        <select name="applicableServices" class="form-select" multiple size="6">
+          <% data.serviceOptions.forEach(function(opt) { %>
+            <option value="<%= opt.value %>" <%= (data.formData.applicableServices || []).includes(opt.value) ? 'selected' : '' %>><%= opt.label %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="form-check">
+        <input type="checkbox" name="isActive" value="true" class="form-check-input" id="isActiveCheck" <%= data.formData.isActive !== false ? 'checked' : '' %>>
+        <label class="form-check-label" for="isActiveCheck">Aktivan</label>
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Sačuvaj</button>
+</form>

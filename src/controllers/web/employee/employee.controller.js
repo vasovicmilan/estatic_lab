@@ -77,7 +77,7 @@ export async function appointmentDetails(req, res, next) {
     return res.render("employee/appointment-details", {
       pageTitle: `Termin — ${appointment.klijent.ime}`,
       pageDescription: appointment.usluga.naziv,
-      data: viewData,
+      data: { ...viewData, csrfToken: req.csrfToken?.() },
     });
   } catch (error) {
     logError("[appointmentDetails] Greška pri učitavanju detalja termina", error, {
@@ -93,11 +93,11 @@ export async function confirmAppointment(req, res, next) {
     const { appointmentId } = req.params;
     await appointmentService.confirmAppointment(appointmentId, req.session.user.id, "employee");
     logInfo(`[confirmAppointment] Zaposleni potvrdio termin #${appointmentId}`, { appointmentId, userId: req.session.user.id });
-    return flashAndRedirect(req, res, "success", "Termin je potvrđen", `/moji-termini/detalji/${appointmentId}`);
+    return flashAndRedirect(req, res, "success", "Termin je potvrđen", `/moj-nalog/termini/detalji/${appointmentId}`);
   } catch (error) {
     logError("[confirmAppointment] Greška pri potvrđivanju termina", error, { appointmentId: req.params.appointmentId, userId: req.session?.user?.id });
     if (error.statusCode) {
-      return flashAndRedirect(req, res, "error", error.message, `/moji-termini/detalji/${req.params.appointmentId}`);
+      return flashAndRedirect(req, res, "error", error.message, `/moj-nalog/termini/detalji/${req.params.appointmentId}`);
     }
     next(error);
   }
@@ -109,16 +109,16 @@ export async function rejectAppointment(req, res, next) {
 
     if (req.validationErrors) {
       logWarn(`[rejectAppointment] Validacione greške za appointmentId=${appointmentId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
-      return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), `/moji-termini/detalji/${appointmentId}`);
+      return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), `/moj-nalog/termini/detalji/${appointmentId}`);
     }
 
     await appointmentService.rejectAppointment(appointmentId, req.body.reason, req.session.user.id, "employee");
     logInfo(`[rejectAppointment] Zaposleni odbio termin #${appointmentId}`, { appointmentId, userId: req.session.user.id });
-    return flashAndRedirect(req, res, "success", "Termin je odbijen", `/moji-termini/detalji/${appointmentId}`);
+    return flashAndRedirect(req, res, "success", "Termin je odbijen", `/moj-nalog/termini/detalji/${appointmentId}`);
   } catch (error) {
     logError("[rejectAppointment] Greška pri odbijanju termina", error, { appointmentId: req.params.appointmentId, userId: req.session?.user?.id });
     if (error.statusCode) {
-      return flashAndRedirect(req, res, "error", error.message, `/moji-termini/detalji/${req.params.appointmentId}`);
+      return flashAndRedirect(req, res, "error", error.message, `/moj-nalog/termini/detalji/${req.params.appointmentId}`);
     }
     next(error);
   }
@@ -129,11 +129,11 @@ export async function completeAppointment(req, res, next) {
     const { appointmentId } = req.params;
     await appointmentService.completeAppointment(appointmentId, req.session.user.id, "employee");
     logInfo(`[completeAppointment] Zaposleni završio termin #${appointmentId}`, { appointmentId, userId: req.session.user.id });
-    return flashAndRedirect(req, res, "success", "Termin je označen kao završen", `/moji-termini/detalji/${appointmentId}`);
+    return flashAndRedirect(req, res, "success", "Termin je označen kao završen", `/moj-nalog/termini/detalji/${appointmentId}`);
   } catch (error) {
     logError("[completeAppointment] Greška pri završavanju termina", error, { appointmentId: req.params.appointmentId, userId: req.session?.user?.id });
     if (error.statusCode) {
-      return flashAndRedirect(req, res, "error", error.message, `/moji-termini/detalji/${req.params.appointmentId}`);
+      return flashAndRedirect(req, res, "error", error.message, `/moj-nalog/termini/detalji/${req.params.appointmentId}`);
     }
     next(error);
   }
@@ -160,11 +160,11 @@ export async function updateWorkingHours(req, res, next) {
     const employeeId = await getOwnEmployeeId(req);
     await employeeService.manageWorkingHours(employeeId, req.body.workingHours || [], req.session.user.id, "employee");
     logInfo(`[updateWorkingHours] Zaposleni #${req.session.user.id} ažurirao radno vreme`, { userId: req.session.user.id });
-    return flashAndRedirect(req, res, "success", "Radno vreme je uspešno ažurirano", "/moj-profil");
+    return flashAndRedirect(req, res, "success", "Radno vreme je uspešno ažurirano", "/moj-nalog/profil");
   } catch (error) {
     logError("[updateWorkingHours] Greška pri ažuriranju radnog vremena", error, { userId: req.session?.user?.id });
     if (error.statusCode) {
-      return flashAndRedirect(req, res, "error", error.message, "/moj-profil");
+      return flashAndRedirect(req, res, "error", error.message, "/moj-nalog/profil");
     }
     next(error);
   }

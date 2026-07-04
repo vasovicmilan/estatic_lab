@@ -1,0 +1,75 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="/">Estatic Lab</a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link <%= currentPath === '/' ? 'active' : '' %>" href="/">Početna</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/usluge') ? 'active' : '' %>" href="/usluge">Usluge</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/paketi') ? 'active' : '' %>" href="/paketi">Paketi</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/blog') ? 'active' : '' %>" href="/blog">Blog</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/nas-tim') ? 'active' : '' %>" href="/nas-tim">Naš tim</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/kontakt') ? 'active' : '' %>" href="/kontakt">Kontakt</a></li>
+      </ul>
+
+      <div class="d-flex align-items-center gap-2">
+        <a href="/usluge" class="btn btn-primary btn-sm">Zakažite termin</a>
+
+        <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
+          <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+              <i class="bi bi-person-circle"></i> <%= user?.firstName %>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <% if (user?.roleName === 'admin') { %>
+                <li><a class="dropdown-item" href="/admin">Admin panel</a></li>
+              <% } else if (user?.roleName === 'employee') { %>
+                <li><a class="dropdown-item" href="/moj-nalog">Moj kalendar</a></li>
+                <li><a class="dropdown-item" href="/moj-nalog/termini">Moji termini</a></li>
+                <li><a class="dropdown-item" href="/moj-nalog/profil">Moj profil</a></li>
+              <% } else { %>
+                <li><a class="dropdown-item" href="/nalog">Moj profil</a></li>
+                <li><a class="dropdown-item" href="/nalog/termini">Moji termini</a></li>
+                <li><a class="dropdown-item" href="/nalog/podesavanja">Podešavanja</a></li>
+              <% } %>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="/odjava">Odjava</a></li>
+            </ul>
+          </div>
+        <% } else { %>
+          <a href="/prijava" class="btn btn-outline-secondary btn-sm">Prijava</a>
+          <a href="/registracija" class="btn btn-outline-primary btn-sm">Registracija</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<% if (typeof currentPath !== 'undefined' && currentPath.startsWith('/admin')) { %>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <div class="collapse navbar-collapse show">
+      <ul class="navbar-nav flex-wrap">
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/termini') ? 'active' : '' %>" href="/admin/termini"><i class="bi bi-calendar-check me-1"></i>Termini</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/usluge') ? 'active' : '' %>" href="/admin/usluge"><i class="bi bi-heart-pulse me-1"></i>Usluge</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/paketi') ? 'active' : '' %>" href="/admin/paketi"><i class="bi bi-box-seam me-1"></i>Paketi</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/kategorije') ? 'active' : '' %>" href="/admin/kategorije"><i class="bi bi-tags me-1"></i>Kategorije</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/tagovi') ? 'active' : '' %>" href="/admin/tagovi"><i class="bi bi-tag me-1"></i>Tagovi</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/blog') ? 'active' : '' %>" href="/admin/blog"><i class="bi bi-newspaper me-1"></i>Blog</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/zaposleni') ? 'active' : '' %>" href="/admin/zaposleni"><i class="bi bi-person-badge me-1"></i>Zaposleni</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/eksperti') ? 'active' : '' %>" href="/admin/eksperti"><i class="bi bi-award me-1"></i>Eksperti</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/korisnici') ? 'active' : '' %>" href="/admin/korisnici"><i class="bi bi-people me-1"></i>Korisnici</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/kuponi') ? 'active' : '' %>" href="/admin/kuponi"><i class="bi bi-ticket-perforated me-1"></i>Kuponi</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/kontakt') ? 'active' : '' %>" href="/admin/kontakt"><i class="bi bi-envelope-paper me-1"></i>Kontakt</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/newsletter') ? 'active' : '' %>" href="/admin/newsletter"><i class="bi bi-send me-1"></i>Newsletter</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/testimoniali') ? 'active' : '' %>" href="/admin/testimoniali"><i class="bi bi-star me-1"></i>Testimoniali</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/role') ? 'active' : '' %>" href="/admin/role"><i class="bi bi-shield-lock me-1"></i>Role</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<% } %>

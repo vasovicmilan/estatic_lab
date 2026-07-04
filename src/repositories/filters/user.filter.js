@@ -1,3 +1,6 @@
+/**
+ * Builds the Mongo filter object for User list queries.
+ */
 export function buildUserFilter({ search = "", role = null, status = null, provider = null } = {}) {
   const filter = {};
 

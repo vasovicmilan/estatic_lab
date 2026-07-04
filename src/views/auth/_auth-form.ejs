@@ -1,0 +1,142 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+
+          <% if (data.errors && data.errors.general) { %>
+            <div class="alert alert-danger"><%= data.errors.general %></div>
+          <% } %>
+
+          <% if (data.formType === 'login') { %>
+            <h1 class="h4 mb-4 text-center">Prijava</h1>
+
+            <div id="g_id_onload"
+                 data-client_id="<%= data.googleClientId %>"
+                 data-login_uri="<%= data.googleCallbackUrl %>"
+                 data-auto_prompt="false"></div>
+            <div class="g_id_signin d-flex justify-content-center mb-3" data-type="standard" data-width="100%"></div>
+            <div class="text-center text-muted small my-3">ili</div>
+
+            <form action="<%= data.formAction %>" method="POST">
+              <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+              <input type="hidden" name="redirectTo" value="<%= data.redirectTo %>">
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" value="<%= data.formData.email %>" required>
+                <% if (data.errors.email) { %><div class="text-danger small mt-1"><%= data.errors.email %></div><% } %>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Lozinka</label>
+                <input type="password" name="password" class="form-control" required>
+                <% if (data.errors.password) { %><div class="text-danger small mt-1"><%= data.errors.password %></div><% } %>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Prijavi se</button>
+            </form>
+            <div class="d-flex justify-content-between mt-3 small">
+              <a href="/zaboravljena-lozinka">Zaboravili ste lozinku?</a>
+              <a href="/registracija">Napravite nalog</a>
+            </div>
+
+          <% } else if (data.formType === 'register') { %>
+            <h1 class="h4 mb-4 text-center">Registracija</h1>
+
+            <div id="g_id_onload"
+                 data-client_id="<%= data.googleClientId %>"
+                 data-login_uri="<%= data.googleCallbackUrl %>"
+                 data-auto_prompt="false"></div>
+            <div class="g_id_signin d-flex justify-content-center mb-3" data-type="standard" data-width="100%"></div>
+            <div class="text-center text-muted small my-3">ili</div>
+
+            <form action="<%= data.formAction %>" method="POST">
+              <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="form-label">Ime</label>
+                  <input type="text" name="firstName" class="form-control" value="<%= data.formData.firstName %>" required>
+                  <% if (data.errors.firstName) { %><div class="text-danger small mt-1"><%= data.errors.firstName %></div><% } %>
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Prezime</label>
+                  <input type="text" name="lastName" class="form-control" value="<%= data.formData.lastName %>" required>
+                  <% if (data.errors.lastName) { %><div class="text-danger small mt-1"><%= data.errors.lastName %></div><% } %>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" value="<%= data.formData.email %>" required>
+                <% if (data.errors.email) { %><div class="text-danger small mt-1"><%= data.errors.email %></div><% } %>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Telefon</label>
+                <input type="text" name="phone" class="form-control" value="<%= data.formData.phone %>">
+              </div>
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="form-label">Lozinka</label>
+                  <input type="password" name="password" class="form-control" required minlength="8">
+                  <% if (data.errors.password) { %><div class="text-danger small mt-1"><%= data.errors.password %></div><% } %>
+                </div>
+                <div class="col-6">
+                  <label class="form-label">Potvrda lozinke</label>
+                  <input type="password" name="passwordConfirm" class="form-control" required minlength="8">
+                  <% if (data.errors.passwordConfirm) { %><div class="text-danger small mt-1"><%= data.errors.passwordConfirm %></div><% } %>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Registruj se</button>
+            </form>
+            <div class="text-center mt-3 small">
+              <a href="/prijava">Vec imate nalog? Prijavite se</a>
+            </div>
+
+          <% } else if (data.formType === 'forgot-password') { %>
+            <h1 class="h4 mb-4 text-center">Zaboravljena lozinka</h1>
+            <p class="text-muted small">Unesite email adresu i poslacemo vam link za resetovanje lozinke.</p>
+            <form action="<%= data.formAction %>" method="POST">
+              <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" value="<%= data.formData.email %>" required>
+                <% if (data.errors.email) { %><div class="text-danger small mt-1"><%= data.errors.email %></div><% } %>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Posalji link</button>
+            </form>
+
+          <% } else if (data.formType === 'reset-password') { %>
+            <h1 class="h4 mb-4 text-center"><%= data.isAccountClaim ? "Preuzmite vas nalog" : "Nova lozinka" %></h1>
+            <% if (data.isAccountClaim) { %>
+              <p class="text-muted small">Vas termin je zakazan i mi smo vam pripremili nalog. Postavite lozinku da biste ga preuzeli i pratili vase termine.</p>
+            <% } %>
+            <form action="<%= data.formAction %>" method="POST">
+              <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+              <div class="mb-3">
+                <label class="form-label">Nova lozinka</label>
+                <input type="password" name="newPassword" class="form-control" required minlength="8">
+                <% if (data.errors.newPassword) { %><div class="text-danger small mt-1"><%= data.errors.newPassword %></div><% } %>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Potvrda lozinke</label>
+                <input type="password" name="confirmPassword" class="form-control" required minlength="8">
+                <% if (data.errors.confirmPassword) { %><div class="text-danger small mt-1"><%= data.errors.confirmPassword %></div><% } %>
+              </div>
+              <button type="submit" class="btn btn-primary w-100"><%= data.isAccountClaim ? "Preuzmi nalog" : "Sacuvaj lozinku" %></button>
+            </form>
+          <% } %>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<% if (data.googleClientId) { %>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+<% } %>
+
+<%- include("../includes/footer") %>

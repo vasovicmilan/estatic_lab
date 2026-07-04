@@ -15,6 +15,8 @@ export async function findCouponByCode(code, { session } = {}) {
   return Coupon.findOne({ code: code.toUpperCase().trim() }).session(session || null).lean();
 }
 
+// count how many times one specific user has already redeemed this coupon —
+// used to enforce maxUsesPerUser before opening the booking transaction (read-only check)
 export async function countCouponUsagesByUser(couponId, userId, { session } = {}) {
   const result = await Coupon.aggregate([
     { $match: { _id: couponId } },
@@ -27,6 +29,12 @@ export async function countCouponUsagesByUser(couponId, userId, { session } = {}
   return result[0]?.count || 0;
 }
 
+/**
+ * Atomically records one redemption: pushes the usage entry and increments the running
+ * counter in a single update, so it's safe to call inside the same transaction that
+ * creates the Appointment — two concurrent redemptions can't silently overwrite each
+ * other's $inc.
+ */
 export async function redeemCoupon(couponId, { userId, appointmentId, discountAmount }, { session } = {}) {
   return Coupon.findByIdAndUpdate(
     couponId,

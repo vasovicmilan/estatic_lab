@@ -102,6 +102,7 @@ export function prepareExpertFormData(expert = null, { serviceOptions = [] } = {
   return {
     formAction: isEdit ? `/admin/eksperti/izmena/${expert.id}` : "/admin/eksperti/dodavanje",
     isEdit,
+    formType: "expert",
     backUrl: "/admin/eksperti",
     formData: isEdit
       ? expert

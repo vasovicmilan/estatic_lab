@@ -1,0 +1,91 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container-fluid py-4">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><%= pageTitle %></h1>
+    <div class="d-flex gap-2">
+      <% if (data.editUrl) { %>
+        <a href="<%= data.editUrl %>" class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i> Izmeni</a>
+      <% } %>
+      <% if (data.backUrl) { %>
+        <a href="<%= data.backUrl %>" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Nazad</a>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <% (data.sections || []).forEach(function(section) { %>
+        <div class="card mb-4">
+          <div class="card-header"><h2 class="h6 card-title mb-0"><%= section.title %></h2></div>
+          <div class="card-body">
+            <% if (section.type === 'table') { %>
+              <dl class="row mb-0">
+                <% section.rows.forEach(function(row) { %>
+                  <dt class="col-sm-4 text-muted"><%= row.label %></dt>
+                  <dd class="col-sm-8"><%- row.value %></dd>
+                <% }) %>
+              </dl>
+            <% } else if (section.type === 'list') { %>
+              <% if (section.items.length === 0) { %>
+                <p class="text-muted mb-0">Nema stavki.</p>
+              <% } else { %>
+                <ul class="mb-0">
+                  <% section.items.forEach(function(item) { %><li><%= item %></li><% }) %>
+                </ul>
+              <% } %>
+            <% } else if (section.type === 'blocks') { %>
+              <% (section.blocks || []).forEach(function(block) { %>
+                <% if (block.tip === 'heading') { %>
+                  <h4><%= block.tekst %></h4>
+                <% } else if (block.tip === 'paragraph') { %>
+                  <p><%= block.tekst %></p>
+                <% } else if (block.tip === 'image' && block.slika) { %>
+                  <img src="<%= block.slika.url %>" alt="<%= block.slika.alt %>" class="img-fluid rounded mb-3">
+                <% } else if (block.tip === 'quote') { %>
+                  <blockquote class="blockquote"><p><%= block.tekst %></p><% if (block.izvor) { %><footer class="blockquote-footer"><%= block.izvor %></footer><% } %></blockquote>
+                <% } else if (block.tip === 'list') { %>
+                  <% if (block.uredjeno) { %>
+                    <ol><% (block.stavke || []).forEach(function(s) { %><li><%= s %></li><% }) %></ol>
+                  <% } else { %>
+                    <ul><% (block.stavke || []).forEach(function(s) { %><li><%= s %></li><% }) %></ul>
+                  <% } %>
+                <% } else if (block.tip === 'video' && block.video) { %>
+                  <video controls class="w-100 rounded mb-3" src="<%= block.video.url %>"></video>
+                <% } %>
+              <% }) %>
+            <% } else if (section.type === 'custom') { %>
+              <%- include(`../admin/components/${section.content}`, { data: section.data, csrfToken: typeof csrfToken !== 'undefined' ? csrfToken : '' }) %>
+            <% } %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+    <div class="col-lg-4">
+      <% (data.sidebar || []).forEach(function(section) { %>
+        <div class="card mb-4">
+          <div class="card-header"><h2 class="h6 card-title mb-0"><%= section.title %></h2></div>
+          <div class="card-body">
+            <% if (section.type === 'table') { %>
+              <dl class="row mb-0">
+                <% section.rows.forEach(function(row) { %>
+                  <dt class="col-sm-5 text-muted small"><%= row.label %></dt>
+                  <dd class="col-sm-7 small"><%- row.value %></dd>
+                <% }) %>
+              </dl>
+            <% } else if (section.type === 'custom') { %>
+              <%- include(`../admin/components/${section.content}`, { data: section.data, csrfToken: typeof csrfToken !== 'undefined' ? csrfToken : '' }) %>
+            <% } %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>

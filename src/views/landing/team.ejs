@@ -1,0 +1,23 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <h1 class="h3 mb-4 text-center">Naš tim</h1>
+
+  <% if (data.experts && data.experts.length > 0) { %>
+    <div class="row g-4">
+      <% data.experts.forEach(function(expert) { %>
+        <div class="col-md-3">
+          <%- include("../includes/components/card-expert", { expert: expert }) %>
+        </div>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <p class="text-center text-muted">Uskoro više informacija o našem timu.</p>
+  <% } %>
+</main>
+
+<%- include("../includes/footer") %>

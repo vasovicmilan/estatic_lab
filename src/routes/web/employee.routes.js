@@ -6,17 +6,20 @@ import { validateWorkingHoursUpdate } from "../../middlewares/validators/employe
 
 const router = Router();
 
+// mounted at /moj-nalog in web.routes.js — symmetric with the customer's /nalog.
+// employeeMiddleware lives here (not in web.routes.js) so this router is self-contained:
+// anyone mounting it elsewhere gets the same guard for free.
 router.use(employeeMiddleware);
 
-router.get("/moj-kalendar", EmployeeController.dashboard);
+router.get("/", EmployeeController.dashboard);
 
-router.get("/moji-termini", EmployeeController.appointments);
-router.get("/moji-termini/detalji/:appointmentId", validateAppointmentId, EmployeeController.appointmentDetails);
-router.post("/moji-termini/:appointmentId/potvrdi", validateAppointmentId, EmployeeController.confirmAppointment);
-router.post("/moji-termini/:appointmentId/odbij", validateAppointmentId, validateAppointmentReject, EmployeeController.rejectAppointment);
-router.post("/moji-termini/:appointmentId/zavrsi", validateAppointmentId, EmployeeController.completeAppointment);
+router.get("/termini", EmployeeController.appointments);
+router.get("/termini/detalji/:appointmentId", validateAppointmentId, EmployeeController.appointmentDetails);
+router.post("/termini/:appointmentId/potvrdi", validateAppointmentId, EmployeeController.confirmAppointment);
+router.post("/termini/:appointmentId/odbij", validateAppointmentId, validateAppointmentReject, EmployeeController.rejectAppointment);
+router.post("/termini/:appointmentId/zavrsi", validateAppointmentId, EmployeeController.completeAppointment);
 
-router.get("/moj-profil", EmployeeController.profile);
-router.post("/moj-profil/radno-vreme", validateWorkingHoursUpdate, EmployeeController.updateWorkingHours);
+router.get("/profil", EmployeeController.profile);
+router.post("/profil/radno-vreme", validateWorkingHoursUpdate, EmployeeController.updateWorkingHours);
 
 export default router;

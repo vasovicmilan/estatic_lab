@@ -1,5 +1,8 @@
 import { Schema } from "mongoose";
 
+/**
+ * Video reference (self-hosted via fluent-ffmpeg processed files, or embedded/external URL).
+ */
 const VideoSchema = new Schema(
   {
     url: {

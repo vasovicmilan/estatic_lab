@@ -36,7 +36,7 @@ export async function login(email, password) {
     await userService.updateUserStatus(user._id, "active");
   }
 
-  const token = signJwt({ id: user._id, email: user.email, role: user.role });
+  const token = signJwt({ id: user._id, email: user.email, role: user.role?._id || user.role });
 
   logInfo("User logged in", { userId: user._id, email: user.email });
 
@@ -45,7 +45,8 @@ export async function login(email, password) {
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
-    role: user.role,
+    roleId: (user.role?._id || user.role).toString(),
+    roleName: user.role?.name || "user",
     token,
   };
 }
@@ -54,11 +55,14 @@ export async function googleAuth(googleData) {
   if (!googleData?.email) validationError("email");
   if (!googleData?.googleId) validationError("googleId");
 
-  const user = await userService.findOrCreateGoogleUser(googleData);
-  await userService.updateLastLogin(user._id);
+  const created = await userService.findOrCreateGoogleUser(googleData);
+  await userService.updateLastLogin(created._id);
+
+  // findOrCreateGoogleUser doesn't populate role — re-fetch so the session gets a role name
+  const user = await userService.findUserByEmail(created.email);
 
   const isNewUser = !user.createdAt || Date.now() - new Date(user.createdAt).getTime() < 5000;
-  const token = signJwt({ id: user._id, email: user.email, role: user.role });
+  const token = signJwt({ id: user._id, email: user.email, role: user.role?._id || user.role });
 
   if (isNewUser) {
     eventEmitter.emit("user:registered", { email: user.email, firstName: user.firstName, userId: user._id, provider: "google" });
@@ -70,7 +74,8 @@ export async function googleAuth(googleData) {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      role: user.role,
+      roleId: (user.role?._id || user.role).toString(),
+      roleName: user.role?.name || "user",
       token,
     },
     isNewUser,
@@ -87,7 +92,8 @@ export async function verifyAccount(token) {
 export async function requestPasswordReset(email) {
   if (!email) validationError("email");
   const user = await userService.findUserByEmail(email);
-
+  // deliberately the same response whether or not the email exists — don't leak
+  // account existence through response timing/content
   if (!user) return { message: "Ako email postoji, poslat je link za reset lozinke" };
 
   const result = await userService.setPasswordResetToken(user._id);

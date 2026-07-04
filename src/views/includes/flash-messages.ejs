@@ -1,0 +1,31 @@
+<% if (typeof success !== 'undefined' && success.length > 0) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="bi bi-check-circle me-2" aria-hidden="true"></i>
+    <%= success.join("<br>") %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zatvori"></button>
+  </div>
+<% } %>
+
+<% if (typeof error !== 'undefined' && error.length > 0) { %>
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>
+    <%= error.join("<br>") %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zatvori"></button>
+  </div>
+<% } %>
+
+<% if (typeof info !== 'undefined' && info.length > 0) { %>
+  <div class="alert alert-info alert-dismissible fade show" role="alert">
+    <i class="bi bi-info-circle me-2" aria-hidden="true"></i>
+    <%= info.join("<br>") %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zatvori"></button>
+  </div>
+<% } %>
+
+<% if (typeof warning !== 'undefined' && warning.length > 0) { %>
+  <div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-circle me-2" aria-hidden="true"></i>
+    <%= warning.join("<br>") %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zatvori"></button>
+  </div>
+<% } %>

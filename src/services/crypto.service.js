@@ -28,6 +28,8 @@ export function generateRandomToken(bytes = 32) {
 const ALGO = "aes-256-gcm";
 const KEY = Buffer.from(AES_SECRET, "utf8");
 
+// available for any future field that needs encryption at rest (e.g. appointment
+// contact snapshot phone numbers) — not used by any model yet
 export function encrypt(text) {
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv(ALGO, KEY, iv);

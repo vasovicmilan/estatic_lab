@@ -14,12 +14,14 @@ const TestimonialSchema = new Schema(
       lowercase: true,
     },
 
+    // optional link to the account that submitted it, if they were logged in
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
       default: null,
     },
 
+    // optional link to which service the review is about
     service: {
       type: Schema.Types.ObjectId,
       ref: "Service",
@@ -41,6 +43,8 @@ const TestimonialSchema = new Schema(
 
     image: ImageSchema,
 
+    // every testimonial starts pending and requires admin approval before it's public —
+    // prevents spam/abuse from showing up on the site immediately
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],

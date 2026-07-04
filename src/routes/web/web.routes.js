@@ -23,6 +23,7 @@ router.use(optionalWebAuth);
 
 router.get("/", IndexController.homePage);
 
+// static pages
 router.get("/o-nama", IndexController.aboutPage);
 router.get("/politika-privatnosti", IndexController.privacyPage);
 router.get("/uslovi-koriscenja", IndexController.termsPage);
@@ -61,11 +62,11 @@ router.use("/paketi", packageRoutes);
 router.use("/blog", blogRoutes);
 router.use("/zakazivanje", bookingRoutes);
 
-
+// auth.routes.js defines its own full paths ("/prijava", "/registracija", "/odjava"...)
 router.use("/", authRoutes);
 
 router.use("/admin", webAuthMiddleware, adminRoutes);
 router.use("/nalog", webAuthMiddleware, userRoutes);
-router.use("/", employeeRoutes);
+router.use("/moj-nalog", webAuthMiddleware, employeeRoutes);
 
 export default router;

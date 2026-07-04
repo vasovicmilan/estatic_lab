@@ -17,6 +17,7 @@ const NewsLetterSchema = new Schema(
       index: true,
     },
 
+    // used to build a one-click unsubscribe link without requiring login
     unsubscribeToken: {
       type: String,
       required: true,

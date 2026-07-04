@@ -2,6 +2,7 @@ import Appointment from "../models/appointment.model.js";
 import { buildAppointmentFilter } from "./filters/appointment.filter.js";
 import { resolveLimit, resolveSkip, buildPaginationMeta } from "../utils/pagination.util.js";
 
+// statuses that actually hold a slot busy — cancelled/rejected appointments free the slot back up
 const BLOCKING_STATUSES = ["pending", "confirmed"];
 
 function applyPopulate(query, populateFields = []) {
@@ -54,6 +55,13 @@ export async function findAppointments({
   return { data, ...buildPaginationMeta({ total, page, limit }) };
 }
 
+/**
+ * Every busy interval for one employee within [rangeStart, rangeEnd), regardless of
+ * whether they're the direct `employee` or the system-`assignedTo` therapist. This is
+ * the direct input to the availability engine's slot-subtraction step — it returns the
+ * raw list of {startTime, endTime}, not a boolean, so the caller can subtract many
+ * intervals from the working-hours grid at once instead of querying per candidate slot.
+ */
 export async function findBusyIntervals(employeeId, rangeStart, rangeEnd, { session } = {}) {
   return Appointment.find({
     $or: [{ employee: employeeId }, { assignedTo: employeeId }],
@@ -66,6 +74,10 @@ export async function findBusyIntervals(employeeId, rangeStart, rangeEnd, { sess
     .lean();
 }
 
+/**
+ * Write-time race guard — re-checked right before the transactional insert in case two
+ * people booked the same slot within seconds of each other off the same availability list.
+ */
 export async function findOverlappingAppointments(employeeId, startTime, endTime, excludeId = null, { session } = {}) {
   if (!employeeId) return [];
   const filter = {

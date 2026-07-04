@@ -2,7 +2,28 @@ import { Schema, model } from "mongoose";
 import ImageSchema from "./schemas/image.schema.js";
 import VideoSchema from "./schemas/video.schema.js";
 import FAQSchema from "./schemas/faq.schema.js";
-import PackageItemSchema from "./schemas/package-item-schema.js";
+
+/**
+ * A combination offer spanning multiple different Services (e.g. "Bridal Day: facial +
+ * massage + manicure"). Distinct from Service.packages[], which only ever describes
+ * variants of a *single* service. See service.model.js file-level comment for the split.
+ */
+const PackageItemSchema = new Schema(
+  {
+    service: {
+      type: Schema.Types.ObjectId,
+      ref: "Service",
+      required: true,
+    },
+    sessions: {
+      type: Number,
+      required: true,
+      min: 1,
+      default: 1,
+    },
+  },
+  { _id: false }
+);
 
 const PackageSchema = new Schema(
   {
@@ -22,7 +43,7 @@ const PackageSchema = new Schema(
 
     totalPrice: { type: Number, required: true, min: 0 },
     basePrice: { type: Number, min: 0 },
-    totalDuration: { type: Number, min: 0 },
+    totalDuration: { type: Number, min: 0 }, // minutes, informational (sum of item durations)
 
     badge: { type: String, trim: true },
     isBest: { type: Boolean, default: false },

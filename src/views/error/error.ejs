@@ -1,0 +1,21 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <div class="row justify-content-center text-center">
+    <div class="col-md-8">
+      <h1 class="display-1 fw-bold text-primary"><%= statusCode %></h1>
+      <p class="lead"><%= errorMsg %></p>
+
+      <% if (typeof errorDetails !== 'undefined' && errorDetails) { %>
+        <pre class="text-start bg-light p-3 rounded small text-danger"><%= typeof errorDetails === 'string' ? errorDetails : JSON.stringify(errorDetails, null, 2) %></pre>
+      <% } %>
+
+      <p class="text-muted small">ID greske: <code><%= errorId %></code></p>
+
+      <a href="/" class="btn btn-primary">Nazad na pocetnu</a>
+    </div>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>

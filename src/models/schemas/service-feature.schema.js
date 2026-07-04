@@ -1,5 +1,8 @@
 import { Schema } from "mongoose";
 
+/**
+ * A single "what this service does for you" feature card on a Service detail page.
+ */
 const ServiceFeatureSchema = new Schema(
   {
     name: {
@@ -16,9 +19,11 @@ const ServiceFeatureSchema = new Schema(
     description: {
       type: String,
       required: true,
+      trim: true,
     },
     icon: {
-      type: String,
+      type: String, // e.g. "bi bi-heart-pulse"
+      trim: true,
     },
     order: {
       type: Number,

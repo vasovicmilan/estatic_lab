@@ -1,3 +1,6 @@
+/**
+ * Builds the Mongo filter object for Expert list queries.
+ */
 export function buildExpertFilter({ search = "", isActive = null, service = null } = {}) {
   const filter = {};
 

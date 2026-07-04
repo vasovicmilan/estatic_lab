@@ -37,6 +37,7 @@ export async function findTestimonials({
   return { data, ...buildPaginationMeta({ total, page, limit }) };
 }
 
+// public "what our clients say" widget — approved only, featured first
 export async function findApprovedTestimonials({ limit = 10, featuredOnly = false, session } = {}) {
   const filter = { status: "approved" };
   if (featuredOnly) filter.isFeatured = true;

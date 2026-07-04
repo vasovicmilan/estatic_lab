@@ -1,3 +1,6 @@
+/**
+ * Builds the Mongo filter object for (combo) Package list queries.
+ */
 export function buildPackageFilter({ search = "", category = null, tag = null, service = null, isActive = null } = {}) {
   const filter = {};
 

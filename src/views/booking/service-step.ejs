@@ -1,0 +1,34 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <div class="mb-4">
+    <div class="progress" style="height: 6px;">
+      <div class="progress-bar" style="width: 25%"></div>
+    </div>
+    <p class="text-muted small mt-1">Korak 1 od 4 — Izbor varijante</p>
+  </div>
+
+  <h1 class="h3 mb-4"><%= data.service.naziv %></h1>
+
+  <div class="row g-3">
+    <% (data.service.varijante || []).forEach(function(variant) { %>
+      <div class="col-md-4">
+        <div class="card h-100 <%= variant.najbolji ? 'border-primary' : '' %>">
+          <div class="card-body text-center d-flex flex-column">
+            <% if (variant.oznaka) { %><span class="badge bg-primary mb-2 align-self-center"><%= variant.oznaka %></span><% } %>
+            <h2 class="h5"><%= variant.naziv %></h2>
+            <p class="text-muted small"><%= variant.trajanje %> min</p>
+            <p class="h4 flex-grow-1"><%= variant.cena %></p>
+            <a href="<%= data.nextUrl %>?servicePackageId=<%= variant.id %>" class="btn btn-primary w-100">Izaberi</a>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>

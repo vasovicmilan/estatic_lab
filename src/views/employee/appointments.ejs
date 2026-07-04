@@ -1,0 +1,43 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/flash-messages") %>
+  <h1 class="h3 mb-4">Moji termini</h1>
+
+  <ul class="nav nav-pills mb-4">
+    <li class="nav-item"><a class="nav-link" href="/moj-nalog">Pregled</a></li>
+    <li class="nav-item"><a class="nav-link active" href="/moj-nalog/termini">Svi termini</a></li>
+    <li class="nav-item"><a class="nav-link" href="/moj-nalog/profil">Moj profil</a></li>
+  </ul>
+
+  <form method="GET" class="mb-4" style="max-width: 250px;">
+    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+      <% data.filters.forEach(function(f) { %>
+        <option value="<%= f.value %>"><%= f.label %></option>
+      <% }) %>
+    </select>
+  </form>
+
+  <% if (data.appointments && data.appointments.length > 0) { %>
+    <div class="list-group">
+      <% data.appointments.forEach(function(a) { %>
+        <a href="/moj-nalog/termini/detalji/<%= a.id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold"><%= a.klijent %></div>
+            <div class="text-muted small"><%= a.usluga %> &middot; <%= a.datum %></div>
+          </div>
+          <div class="text-end">
+            <span class="badge bg-secondary"><%= a.status %></span>
+            <div class="small"><%= a.cena %></div>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+    <%- include("../includes/pagination", { pagination: data.pagination }) %>
+  <% } else { %>
+    <p class="text-muted">Nemate termina.</p>
+  <% } %>
+</main>
+
+<%- include("../includes/footer") %>

@@ -66,11 +66,15 @@ export function prepareContactDetailsData(contact) {
       {
         title: "Status",
         type: "custom",
-        content: "status-change-form",
+        content: "status-select-form",
         data: {
-          contactId: contact.id,
+          formAction: `/admin/kontakt/${contact.id}/status`,
           currentStatus: contact.osnovno.statusRaw,
-          statuses: ["read", "replied", "archived"],
+          options: [
+            { value: "read", label: "Pročitan" },
+            { value: "replied", label: "Odgovoren" },
+            { value: "archived", label: "Arhiviran" },
+          ],
         },
       },
       {

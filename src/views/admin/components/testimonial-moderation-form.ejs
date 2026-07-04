@@ -1,0 +1,19 @@
+<% const d = data; %>
+<% if (d.currentStatus === 'pending') { %>
+  <form action="<%= d.approveUrl %>" method="POST" class="mb-2">
+    <input type="hidden" name="_method" value="PUT">
+    <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+    <div class="form-check mb-2">
+      <input type="checkbox" name="isFeatured" value="true" class="form-check-input" id="isFeaturedCheck">
+      <label class="form-check-label small" for="isFeaturedCheck">Istakni na početnoj strani</label>
+    </div>
+    <button type="submit" class="btn btn-success btn-sm w-100">Odobri</button>
+  </form>
+  <form action="<%= d.rejectUrl %>" method="POST">
+    <input type="hidden" name="_method" value="PUT">
+    <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+    <button type="submit" class="btn btn-outline-danger btn-sm w-100">Odbij</button>
+  </form>
+<% } else { %>
+  <p class="text-muted small mb-0">Ovaj testimonijal je već obrađen (<%= d.currentStatus %>).</p>
+<% } %>

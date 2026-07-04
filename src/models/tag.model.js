@@ -1,6 +1,10 @@
 import { Schema, model } from "mongoose";
 import { CATEGORY_DOMAINS } from "./category.model.js";
 
+/**
+ * Tags mirror Category's domain-scoping but stay flat and lightweight — no parent,
+ * no long description, just a name/slug used for filtering and SEO keyword clustering.
+ */
 const TagSchema = new Schema(
   {
     name: {

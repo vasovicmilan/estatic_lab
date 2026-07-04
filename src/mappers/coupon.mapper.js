@@ -96,6 +96,7 @@ export function mapCouponForEdit(coupon) {
   };
 }
 
+// what "apply coupon" at checkout shows — no usage history, no other users' data
 export function mapCouponForBookingPreview(coupon) {
   if (!coupon) return null;
 

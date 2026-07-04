@@ -1,3 +1,6 @@
+/**
+ * Builds the Mongo filter object for NewsLetter subscriber list queries.
+ */
 export function buildNewsLetterFilter({ search = "", status = null } = {}) {
   const filter = {};
 

@@ -106,6 +106,7 @@ export async function validateCouponForBooking(code, { userId = null, serviceId,
   return { coupon, discountAmount: Math.min(discountAmount, appointmentValue) };
 }
 
+// atomic redemption — called from inside appointment.service.js's booking transaction
 export async function redeemCoupon(couponId, { userId, appointmentId, discountAmount }, { session } = {}) {
   return couponRepo.redeemCoupon(couponId, { userId, appointmentId, discountAmount }, { session });
 }

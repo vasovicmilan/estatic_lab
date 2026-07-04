@@ -50,6 +50,8 @@ export function mapContactForAdminDetail(contact) {
   };
 }
 
+// what the visitor sees right after submitting the form — a short confirmation, not
+// the full admin record (no ip/userAgent/status internals)
 export function mapContactForUserShort(contact) {
   if (!contact) return null;
   return {

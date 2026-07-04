@@ -87,6 +87,10 @@ export async function getContactPageData() {
   return { seo };
 }
 
+// ==================== PUBLIC SUBMISSION ENDPOINTS ====================
+// Thin pass-throughs kept here (rather than requiring the contact/blog/marketing
+// controllers to import three separate services) since these are exactly the forms
+// that live on general-purpose public pages (footer newsletter box, contact page,
 // "leave a review" widget) rather than one specific domain's own page.
 
 export async function submitContactForm(data, meta) {
