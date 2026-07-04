@@ -40,3 +40,12 @@ export async function deleteContactById(id, { session } = {}) {
 export async function countContacts(filters = {}, { session } = {}) {
   return Contact.countDocuments(buildContactFilter(filters)).session(session || null);
 }
+
+export default {
+  createContact,
+  findContactById,
+  findContacts,
+  updateContactById,
+  deleteContactById,
+  countContacts,
+}

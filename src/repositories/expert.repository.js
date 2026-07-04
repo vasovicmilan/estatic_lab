@@ -58,3 +58,14 @@ export async function deleteExpertById(id, { session } = {}) {
 export async function countExperts(filters = {}, { session } = {}) {
   return Expert.countDocuments(buildExpertFilter(filters)).session(session || null);
 }
+
+export default {
+  createExpert,
+  findExpertById,
+  findExpertBySlug,
+  findExperts,
+  findActiveExperts,
+  updateExpertById,
+  deleteExpertById,
+  countExperts,
+}

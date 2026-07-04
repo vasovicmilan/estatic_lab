@@ -53,3 +53,15 @@ export async function deleteSubscriberById(id, { session } = {}) {
 export async function countSubscribers(filters = {}, { session } = {}) {
   return NewsLetter.countDocuments(buildNewsLetterFilter(filters)).session(session || null);
 }
+
+export default {
+  createSubscriber,
+  findSubscriberById,
+  findSubscriberByEmail,
+  findSubscriberByUnsubscribeToken,
+  findSubscribers,
+  findAllActiveSubscribers,
+  updateSubscriberById,
+  deleteSubscriberById,
+  countSubscribers,
+}

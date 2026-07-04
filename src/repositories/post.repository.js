@@ -66,3 +66,14 @@ export async function deletePostById(id, { session } = {}) {
 export async function countPosts(filters = {}, { session } = {}) {
   return Post.countDocuments(buildPostFilter(filters)).session(session || null);
 }
+
+export default {
+  createPost,
+  findPostById,
+  findPostBySlug,
+  findPosts,
+  incrementPostViews,
+  updatePostById,
+  deletePostById,
+  countPosts,
+}

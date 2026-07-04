@@ -127,3 +127,16 @@ export async function deleteAppointmentById(id, { session } = {}) {
 export async function countAppointments(filters = {}, { session } = {}) {
   return Appointment.countDocuments(buildAppointmentFilter(filters)).session(session || null);
 }
+
+export default {
+  createAppointment,
+  findAppointmentById,
+  findAppointments,
+  findBusyIntervals,
+  findOverlappingAppointments,
+  findAppointmentsByUser,
+  findAppointmentsByEmployee,
+  updateAppointmentById,
+  deleteAppointmentById,
+  countAppointments,
+}

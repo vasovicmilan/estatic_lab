@@ -43,3 +43,14 @@ export async function deleteRoleById(id, { session } = {}) {
 export async function countRoles(filters = {}, { session } = {}) {
   return Role.countDocuments(buildRoleFilter(filters)).session(session || null);
 }
+
+export default {
+  createRole,
+  findRoleById,
+  findRoleByName,
+  findDefaultRole,
+  findRoles,
+  updateRoleById,
+  deleteRoleById,
+  countRoles,
+}

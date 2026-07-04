@@ -58,3 +58,15 @@ export async function deleteCategoryById(id, { session } = {}) {
 export async function countCategories(filters = {}, { session } = {}) {
   return Category.countDocuments(buildCategoryFilter(filters)).session(session || null);
 }
+
+export default {
+  createCategory,
+  findCategoryById,
+  findCategoryBySlug,
+  findCategories,
+  findCategories,
+  findAllCategoriesByDomain,
+  updateCategoryById,
+  deleteCategoryById,
+  countCategories,
+}

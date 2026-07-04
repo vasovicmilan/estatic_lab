@@ -57,3 +57,13 @@ export async function deletePackageById(id, { session } = {}) {
 export async function countPackages(filters = {}, { session } = {}) {
   return Package.countDocuments(buildPackageFilter(filters)).session(session || null);
 }
+
+export default {
+  createPackage,
+  findPackageById,
+  findPackageBySlug,
+  findPackages,
+  updatePackageById,
+  deletePackageById,
+  countPackages,
+}

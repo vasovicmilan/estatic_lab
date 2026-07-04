@@ -72,3 +72,14 @@ export async function deleteServiceById(id, { session } = {}) {
 export async function countServices(filters = {}, { session } = {}) {
   return Service.countDocuments(buildServiceFilter(filters)).session(session || null);
 }
+
+export default {
+  createService,
+  findServiceById,
+  findServiceBySlug,
+  findServicePackageVariant,
+  findServices,
+  updateServiceById,
+  deleteServiceById,
+  countServices,
+}

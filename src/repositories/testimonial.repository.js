@@ -59,3 +59,13 @@ export async function deleteTestimonialById(id, { session } = {}) {
 export async function countTestimonials(filters = {}, { session } = {}) {
   return Testimonial.countDocuments(buildTestimonialFilter(filters)).session(session || null);
 }
+
+export default {
+  createTestimonial,
+  findTestimonialById,
+  findTestimonials,
+  findApprovedTestimonials,
+  updateTestimonialById,
+  deleteTestimonialById,
+  countTestimonials,
+}

@@ -101,3 +101,19 @@ export async function deleteUserById(id, { session } = {}) {
 export async function countUsers(filters = {}, { session } = {}) {
   return User.countDocuments(buildUserFilter(filters)).session(session || null);
 }
+
+export default {
+  createUser,
+  findUserById,
+  findUserByEmailWithPassword,
+  findUserByEmail,
+  findUserByIdWithPassword,
+  findUserByGoogleId,
+  findUserByResetToken,
+  findUserByConfirmToken,
+  findUsers,
+  updateUserById,
+  updateLastLogin,
+  deleteUserById,
+  countUsers,
+}

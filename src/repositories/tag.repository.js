@@ -45,3 +45,14 @@ export async function deleteTagById(id, { session } = {}) {
 export async function countTags(filters = {}, { session } = {}) {
   return Tag.countDocuments(buildTagFilter(filters)).session(session || null);
 }
+
+export default {
+  createTag,
+  findTagById,
+  findTagBySlug,
+  findTags,
+  findAllTagsByDomain,
+  updateTagById,
+  deleteTagById,
+  countTags,
+}

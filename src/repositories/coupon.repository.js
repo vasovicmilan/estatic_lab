@@ -75,3 +75,16 @@ export async function deleteCouponById(id, { session } = {}) {
 export async function countCoupons(filters = {}, { session } = {}) {
   return Coupon.countDocuments(buildCouponFilter(filters)).session(session || null);
 }
+
+export default {
+  createCoupon,
+  findCouponById,
+  findCouponByCode,
+  countCouponUsagesByUser,
+  redeemCoupon,
+  findCoupons,
+  findCoupons,
+  updateCouponById,
+  deleteCouponById,
+  countCoupons
+}

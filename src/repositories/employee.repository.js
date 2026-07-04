@@ -70,3 +70,14 @@ export async function deleteEmployeeById(id, { session } = {}) {
 export async function countEmployees(filters = {}, { session } = {}) {
   return Employee.countDocuments(buildEmployeeFilter(filters)).session(session || null);
 }
+
+export default {
+  createEmployee,
+  findEmployeeById,
+  findEmployeeByUserId,
+  findEmployeesByService,
+  findEmployees,
+  updateEmployeeById,
+  deleteEmployeeById,
+  countEmployees,
+}
