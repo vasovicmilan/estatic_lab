@@ -35,6 +35,7 @@ describe("admin category CRUD + image upload (HTTP)", () => {
       .field("CSRFToken", token)
       .field("name", "Masaze Lica")
       .field("domain", "service")
+      .field("categoryImageDesc", "Masaze lica")
       .attach("categoryImage", TINY_PNG, "test.png");
 
     assert.equal(res.status, 302);
@@ -56,6 +57,7 @@ describe("admin category CRUD + image upload (HTTP)", () => {
       .post("/admin/kategorije")
       .field("name", "Bez Tokena")
       .field("domain", "service")
+      .field("categoryImageDesc", "Bez tokena")
       .attach("categoryImage", TINY_PNG, "test.png");
 
     assert.equal(res.status, 403);
@@ -71,6 +73,7 @@ describe("admin category CRUD + image upload (HTTP)", () => {
       .field("CSRFToken", createToken)
       .field("name", "Originalno Ime")
       .field("domain", "service")
+      .field("categoryImageDesc", "Originalna slika")
       .attach("categoryImage", TINY_PNG, "test.png");
 
     const existing = (await categoryRepo.findCategories({ filters: { domain: "service" } })).data[0];
@@ -82,6 +85,7 @@ describe("admin category CRUD + image upload (HTTP)", () => {
       .field("CSRFToken", editToken)
       .field("name", "Izmenjeno Ime")
       .field("domain", "service")
+      .field("categoryImageDesc", "Izmenjena slika")
       .attach("categoryImage", TINY_PNG, "test2.png");
 
     assert.equal(res.status, 302);
@@ -101,6 +105,7 @@ describe("admin category CRUD + image upload (HTTP)", () => {
       .field("CSRFToken", createToken)
       .field("name", "Za Brisanje")
       .field("domain", "service")
+      .field("categoryImageDesc", "Slika za brisanje")
       .attach("categoryImage", TINY_PNG, "test.png");
 
     const existing = (await categoryRepo.findCategories({ filters: { domain: "service" } })).data[0];
@@ -108,7 +113,6 @@ describe("admin category CRUD + image upload (HTTP)", () => {
 
     const { token: deleteToken } = await getCsrfToken(agent, "/admin/kategorije/dodavanje");
     const res = await agent.delete(`/admin/kategorije/${existing._id}`).set("X-CSRF-Token", deleteToken);
-
 
     assert.equal(res.status, 302);
     const found = await categoryRepo.findCategoryById(existing._id);

@@ -38,6 +38,7 @@ describe("admin package CRUD + image upload (HTTP)", () => {
       .field("description", "Kombinovani paket usluga")
       .field("totalPrice", "8000")
       .field("items", JSON.stringify([{ service: new mongoose.Types.ObjectId().toString(), sessions: 1 }]))
+      .field("imageDesc", "Dan za sebe")
       .attach("packageImage", TINY_PNG, "test.png");
 
     assert.equal(res.status, 302);
@@ -81,6 +82,7 @@ describe("admin package CRUD + image upload (HTTP)", () => {
       .field("description", "Opis")
       .field("totalPrice", "8000")
       .field("items", JSON.stringify([{ service: new mongoose.Types.ObjectId().toString(), sessions: 1 }]))
+      .field("imageDesc", "Originalna slika")
       .attach("packageImage", TINY_PNG, "test.png");
 
     const existing = (await packageRepo.findPackages({})).data[0];
@@ -113,6 +115,7 @@ describe("admin package CRUD + image upload (HTTP)", () => {
       .field("description", "Opis")
       .field("totalPrice", "1000")
       .field("items", JSON.stringify([{ service: new mongoose.Types.ObjectId().toString(), sessions: 1 }]))
+      .field("imageDesc", "Slika za brisanje")
       .attach("packageImage", TINY_PNG, "test.png");
 
     const existing = (await packageRepo.findPackages({})).data[0];

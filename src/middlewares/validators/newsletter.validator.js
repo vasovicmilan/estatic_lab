@@ -1,5 +1,6 @@
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
+import { mongoIdParamValidator } from "./helpers/common.validator.js";
 
 export const validateNewsletterSubscribe = [
   body("email")
@@ -11,9 +12,6 @@ export const validateNewsletterSubscribe = [
   collectValidationErrors,
 ];
 
-export const validateSubscriberId = [
-  param("subscriberId").isMongoId().withMessage("Neispravan ID pretplatnika"),
-  collectValidationErrors,
-];
+export const validateSubscriberId = mongoIdParamValidator("subscriberId", "pretplatnika");
 
 export default { validateNewsletterSubscribe, validateSubscriberId };

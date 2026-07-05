@@ -1,16 +1,7 @@
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
 import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
-
-function isJsonArrayOrArray(value) {
-  if (Array.isArray(value)) return true;
-  if (typeof value !== "string") return false;
-  try {
-    return Array.isArray(JSON.parse(value));
-  } catch {
-    return false;
-  }
-}
+import { isJsonArrayOrArray, isArrayOrString, slugField, booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
 
 export const validateServiceCreate = [
   body("name")
@@ -18,10 +9,7 @@ export const validateServiceCreate = [
     .notEmpty().withMessage("Naziv usluge je obavezan")
     .isLength({ min: 2, max: 150 }).withMessage("Naziv mora imati između 2 i 150 karaktera"),
 
-  body("slug")
-    .optional({ values: "falsy" })
-    .trim()
-    .matches(/^[a-z0-9-]+$/).withMessage("Slug može sadržati samo mala slova, brojeve i crtice"),
+  slugField(true),
 
   body("shortDescription")
     .optional()
@@ -30,11 +18,11 @@ export const validateServiceCreate = [
 
   body("categories")
     .optional()
-    .custom((value) => Array.isArray(value) || typeof value === "string").withMessage("Neispravne kategorije"),
+    .custom(isArrayOrString).withMessage("Neispravne kategorije"),
 
   body("tags")
     .optional()
-    .custom((value) => Array.isArray(value) || typeof value === "string").withMessage("Neispravni tagovi"),
+    .custom(isArrayOrString).withMessage("Neispravni tagovi"),
 
   body("defaultDuration")
     .optional()
@@ -61,13 +49,9 @@ export const validateServiceCreate = [
     .optional()
     .custom(isJsonArrayOrArray).withMessage("FAQ nije u ispravnom formatu"),
 
-  body("highlight")
-    .optional()
-    .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
+  booleanishField("highlight", true),
 
-  body("isActive")
-    .optional()
-    .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
+  booleanishField("isActive", true),
 
   body("imageDesc")
     .custom(requireImageDescIfUploaded((req) => req.uploadedFiles?.serviceImage)),
@@ -81,10 +65,7 @@ export const validateServiceUpdate = [
     .trim()
     .isLength({ min: 2, max: 150 }).withMessage("Naziv mora imati između 2 i 150 karaktera"),
 
-  body("slug")
-    .optional()
-    .trim()
-    .matches(/^[a-z0-9-]+$/).withMessage("Slug može sadržati samo mala slova, brojeve i crtice"),
+  slugField(false),
 
   body("defaultDuration")
     .optional()
@@ -106,13 +87,9 @@ export const validateServiceUpdate = [
     .optional()
     .custom(isJsonArrayOrArray).withMessage("FAQ nije u ispravnom formatu"),
 
-  body("highlight")
-    .optional()
-    .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
+  booleanishField("highlight", true),
 
-  body("isActive")
-    .optional()
-    .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
+  booleanishField("isActive", true),
 
   body("imageDesc")
     .custom(requireImageDescIfUploaded((req) => req.uploadedFiles?.serviceImage)),
@@ -126,9 +103,6 @@ export const validateServiceSeo = [
   collectValidationErrors,
 ];
 
-export const validateServiceId = [
-  param("serviceId").isMongoId().withMessage("Neispravan ID usluge"),
-  collectValidationErrors,
-];
+export const validateServiceId = mongoIdParamValidator("serviceId", "usluge");
 
 export default { validateServiceCreate, validateServiceUpdate, validateServiceSeo, validateServiceId };

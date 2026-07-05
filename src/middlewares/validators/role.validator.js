@@ -1,6 +1,7 @@
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 import { PERMISSIONS, ROLE_NAMES } from "../../models/role.model.js";
 import { collectValidationErrors } from "./collect-validation-errors.js";
+import { booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
 
 export const validateRoleCreate = [
   body("name")
@@ -21,9 +22,7 @@ export const validateRoleCreate = [
     .optional()
     .isIn(PERMISSIONS).withMessage("Neispravna permisija"),
 
-  body("isDefault")
-    .optional()
-    .isIn(["true", "false", true, false]).withMessage("Neispravna vrednost"),
+  booleanishField("isDefault"),
 
   body("priority")
     .optional()
@@ -51,9 +50,7 @@ export const validateRoleUpdate = [
     .optional()
     .isIn(PERMISSIONS).withMessage("Neispravna permisija"),
 
-  body("isDefault")
-    .optional()
-    .isIn(["true", "false", true, false]).withMessage("Neispravna vrednost"),
+  booleanishField("isDefault"),
 
   body("priority")
     .optional()
@@ -62,9 +59,6 @@ export const validateRoleUpdate = [
   collectValidationErrors,
 ];
 
-export const validateRoleId = [
-  param("roleId").isMongoId().withMessage("Neispravan ID role"),
-  collectValidationErrors,
-];
+export const validateRoleId = mongoIdParamValidator("roleId", "role");
 
 export default { validateRoleCreate, validateRoleUpdate, validateRoleId };

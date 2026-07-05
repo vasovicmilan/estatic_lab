@@ -35,6 +35,7 @@ describe("admin service CRUD + image upload (HTTP)", () => {
       .field("CSRFToken", token)
       .field("name", "Sportska Masaza")
       .field("packages", JSON.stringify([{ name: "60 minuta", duration: 60, totalPrice: 3000 }]))
+      .field("imageDesc", "Sportska masaza")
       .attach("serviceImage", TINY_PNG, "test.png");
 
     assert.equal(res.status, 302);
@@ -59,6 +60,7 @@ describe("admin service CRUD + image upload (HTTP)", () => {
       .field("CSRFToken", token)
       .field("name", "Bez Varijanti")
       .field("packages", JSON.stringify([]))
+      .field("imageDesc", "Bez varijanti")
       .attach("serviceImage", TINY_PNG, "test.png");
 
     assert.equal(res.status, 400);
@@ -76,6 +78,7 @@ describe("admin service CRUD + image upload (HTTP)", () => {
       .field("CSRFToken", createToken)
       .field("name", "Originalna Usluga")
       .field("packages", JSON.stringify([{ name: "60 minuta", duration: 60, totalPrice: 3000 }]))
+      .field("imageDesc", "Originalna usluga")
       .attach("serviceImage", TINY_PNG, "test.png");
 
     const existing = (await serviceRepo.findServices({})).data[0];
@@ -104,6 +107,7 @@ describe("admin service CRUD + image upload (HTTP)", () => {
       .field("CSRFToken", createToken)
       .field("name", "Za Brisanje")
       .field("packages", JSON.stringify([{ name: "60 minuta", duration: 60, totalPrice: 3000 }]))
+      .field("imageDesc", "Slika za brisanje")
       .attach("serviceImage", TINY_PNG, "test.png");
 
     const existing = (await serviceRepo.findServices({})).data[0];

@@ -1,5 +1,6 @@
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
+import { mongoIdParamValidator } from "./helpers/common.validator.js";
 
 export const validateUserStatus = [
   body("status")
@@ -19,10 +20,7 @@ export const validateUserRole = [
   collectValidationErrors,
 ];
 
-export const validateUserId = [
-  param("userId").isMongoId().withMessage("Neispravan ID korisnika"),
-  collectValidationErrors,
-];
+export const validateUserId = mongoIdParamValidator("userId", "korisnika");
 
 export const validateProfileUpdate = [
   body("firstName")

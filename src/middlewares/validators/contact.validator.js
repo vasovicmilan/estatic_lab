@@ -1,5 +1,6 @@
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
+import { mongoIdParamValidator } from "./helpers/common.validator.js";
 
 export const validateContactCreate = [
   body("firstName")
@@ -49,9 +50,6 @@ export const validateContactStatus = [
   collectValidationErrors,
 ];
 
-export const validateContactId = [
-  param("contactId").isMongoId().withMessage("Neispravan ID poruke"),
-  collectValidationErrors,
-];
+export const validateContactId = mongoIdParamValidator("contactId", "poruke");
 
 export default { validateContactCreate, validateContactStatus, validateContactId };

@@ -1,5 +1,6 @@
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
+import { booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
 
 const WEEK_DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -45,9 +46,7 @@ export const validateEmployeeCreate = [
 
   ...workingHoursValidators,
 
-  body("isActive")
-    .optional()
-    .isIn(["true", "false", true, false]).withMessage("Neispravna vrednost"),
+  booleanishField("isActive"),
 
   body("notes")
     .optional()
@@ -72,9 +71,7 @@ export const validateEmployeeUpdate = [
 
   ...workingHoursValidators,
 
-  body("isActive")
-    .optional()
-    .isIn(["true", "false", true, false]).withMessage("Neispravna vrednost"),
+  booleanishField("isActive"),
 
   body("notes")
     .optional()
@@ -86,10 +83,7 @@ export const validateEmployeeUpdate = [
 
 export const validateWorkingHoursUpdate = [...workingHoursValidators, collectValidationErrors];
 
-export const validateEmployeeId = [
-  param("employeeId").isMongoId().withMessage("Neispravan ID zaposlenog"),
-  collectValidationErrors,
-];
+export const validateEmployeeId = mongoIdParamValidator("employeeId", "zaposlenog");
 
 export default {
   validateEmployeeCreate,

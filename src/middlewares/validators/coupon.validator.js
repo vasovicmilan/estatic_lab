@@ -1,5 +1,6 @@
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
+import { isArrayOrString, booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
 
 export const validateCouponCreate = [
   body("code")
@@ -31,15 +32,13 @@ export const validateCouponCreate = [
 
   body("applicableServices")
     .optional()
-    .custom((value) => Array.isArray(value) || typeof value === "string").withMessage("Neispravne usluge"),
+    .custom(isArrayOrString).withMessage("Neispravne usluge"),
 
   body("validUntil")
     .notEmpty().withMessage("Datum isteka je obavezan")
     .isISO8601().withMessage("Neispravan format datuma"),
 
-  body("isActive")
-    .optional()
-    .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
+  booleanishField("isActive", true),
 
   collectValidationErrors,
 ];
@@ -57,9 +56,7 @@ export const validateCouponUpdate = [
     .optional()
     .isISO8601().withMessage("Neispravan format datuma"),
 
-  body("isActive")
-    .optional()
-    .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
+  booleanishField("isActive", true),
 
   collectValidationErrors,
 ];
@@ -72,9 +69,6 @@ export const validateCouponApply = [
   collectValidationErrors,
 ];
 
-export const validateCouponId = [
-  param("couponId").isMongoId().withMessage("Neispravan ID kupona"),
-  collectValidationErrors,
-];
+export const validateCouponId = mongoIdParamValidator("couponId", "kupona");
 
 export default { validateCouponCreate, validateCouponUpdate, validateCouponApply, validateCouponId };

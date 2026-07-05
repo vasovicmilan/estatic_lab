@@ -1,16 +1,7 @@
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
 import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
-
-function isJsonArrayOrArray(value) {
-  if (Array.isArray(value)) return true;
-  if (typeof value !== "string") return false;
-  try {
-    return Array.isArray(JSON.parse(value));
-  } catch {
-    return false;
-  }
-}
+import { isJsonArrayOrArray, isArrayOrString, slugField, booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
 
 export const validatePostCreate = [
   body("title")
@@ -18,12 +9,7 @@ export const validatePostCreate = [
     .notEmpty().withMessage("Naslov je obavezan")
     .isLength({ min: 2, max: 200 }).withMessage("Naslov mora imati između 2 i 200 karaktera"),
 
-  // optional — auto-generated from name/title if omitted (see slug.util.js + the
-  // corresponding create*() service function)
-  body("slug")
-    .optional({ values: "falsy" })
-    .trim()
-    .matches(/^[a-z0-9-]+$/).withMessage("Slug može sadržati samo mala slova, brojeve i crtice"),
+  slugField(true),
 
   body("excerpt")
     .trim()
@@ -36,11 +22,11 @@ export const validatePostCreate = [
 
   body("categories")
     .optional()
-    .custom((value) => Array.isArray(value) || typeof value === "string").withMessage("Neispravne kategorije"),
+    .custom(isArrayOrString).withMessage("Neispravne kategorije"),
 
   body("tags")
     .optional()
-    .custom((value) => Array.isArray(value) || typeof value === "string").withMessage("Neispravni tagovi"),
+    .custom(isArrayOrString).withMessage("Neispravni tagovi"),
 
   body("author")
     .optional()
@@ -50,9 +36,7 @@ export const validatePostCreate = [
     .optional()
     .isIn(["draft", "published", "archived"]).withMessage("Neispravan status"),
 
-  body("isIndexable")
-    .optional()
-    .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
+  booleanishField("isIndexable", true),
 
   body("coverImageDesc")
     .custom(requireImageDescIfUploaded((req) => req.uploadedFiles?.coverImage)),
@@ -66,10 +50,7 @@ export const validatePostUpdate = [
     .trim()
     .isLength({ min: 2, max: 200 }).withMessage("Naslov mora imati između 2 i 200 karaktera"),
 
-  body("slug")
-    .optional()
-    .trim()
-    .matches(/^[a-z0-9-]+$/).withMessage("Slug može sadržati samo mala slova, brojeve i crtice"),
+  slugField(false),
 
   body("excerpt")
     .optional()
@@ -113,9 +94,6 @@ export const validatePostSeo = [
   collectValidationErrors,
 ];
 
-export const validatePostId = [
-  param("postId").isMongoId().withMessage("Neispravan ID posta"),
-  collectValidationErrors,
-];
+export const validatePostId = mongoIdParamValidator("postId", "posta");
 
 export default { validatePostCreate, validatePostUpdate, validatePostStatus, validatePostSeo, validatePostId };

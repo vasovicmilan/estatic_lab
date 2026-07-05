@@ -1,5 +1,6 @@
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
+import { mongoIdParamValidator } from "./helpers/common.validator.js";
 
 export const validateAppointmentReject = [
   body("reason")
@@ -27,10 +28,7 @@ export const validateAppointmentReassign = [
   collectValidationErrors,
 ];
 
-export const validateAppointmentId = [
-  param("appointmentId").isMongoId().withMessage("Neispravan ID termina"),
-  collectValidationErrors,
-];
+export const validateAppointmentId = mongoIdParamValidator("appointmentId", "termina");
 
 export default {
   validateAppointmentReject,

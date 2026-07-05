@@ -1,6 +1,7 @@
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
 import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
+import { slugField, booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
 
 export const validateExpertCreate = [
   body("firstName")
@@ -13,12 +14,7 @@ export const validateExpertCreate = [
     .notEmpty().withMessage("Prezime je obavezno")
     .isLength({ min: 2, max: 50 }).withMessage("Prezime mora imati između 2 i 50 karaktera"),
 
-  // optional — auto-generated from name/title if omitted (see slug.util.js + the
-  // corresponding create*() service function)
-  body("slug")
-    .optional({ values: "falsy" })
-    .trim()
-    .matches(/^[a-z0-9-]+$/).withMessage("Slug može sadržati samo mala slova, brojeve i crtice"),
+  slugField(true),
 
   body("title")
     .optional()
@@ -46,9 +42,7 @@ export const validateExpertCreate = [
     .optional()
     .isMongoId().withMessage("Neispravan ID usluge"),
 
-  body("isActive")
-    .optional()
-    .isIn(["true", "false", true, false]).withMessage("Neispravna vrednost"),
+  booleanishField("isActive"),
 
   body("order")
     .optional()
@@ -71,10 +65,7 @@ export const validateExpertUpdate = [
     .trim()
     .isLength({ min: 2, max: 50 }).withMessage("Prezime mora imati između 2 i 50 karaktera"),
 
-  body("slug")
-    .optional()
-    .trim()
-    .matches(/^[a-z0-9-]+$/).withMessage("Slug može sadržati samo mala slova, brojeve i crtice"),
+  slugField(false),
 
   body("title")
     .optional()
@@ -89,9 +80,7 @@ export const validateExpertUpdate = [
     .optional()
     .isMongoId().withMessage("Neispravan ID usluge"),
 
-  body("isActive")
-    .optional()
-    .isIn(["true", "false", true, false]).withMessage("Neispravna vrednost"),
+  booleanishField("isActive"),
 
   body("imageDesc")
     .custom(requireImageDescIfUploaded((req) => req.uploadedFile)),
@@ -99,9 +88,6 @@ export const validateExpertUpdate = [
   collectValidationErrors,
 ];
 
-export const validateExpertId = [
-  param("expertId").isMongoId().withMessage("Neispravan ID eksperta"),
-  collectValidationErrors,
-];
+export const validateExpertId = mongoIdParamValidator("expertId", "eksperta");
 
 export default { validateExpertCreate, validateExpertUpdate, validateExpertId };

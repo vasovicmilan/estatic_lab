@@ -1,5 +1,6 @@
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
+import { booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
 
 export const validateTestimonialSubmit = [
   body("name")
@@ -30,16 +31,11 @@ export const validateTestimonialSubmit = [
 ];
 
 export const validateTestimonialApprove = [
-  body("isFeatured")
-    .optional()
-    .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
+  booleanishField("isFeatured", true),
 
   collectValidationErrors,
 ];
 
-export const validateTestimonialId = [
-  param("testimonialId").isMongoId().withMessage("Neispravan ID testimonijala"),
-  collectValidationErrors,
-];
+export const validateTestimonialId = mongoIdParamValidator("testimonialId", "testimonijala");
 
 export default { validateTestimonialSubmit, validateTestimonialApprove, validateTestimonialId };

@@ -1,16 +1,7 @@
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
 import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
-
-function isJsonArrayOrArray(value) {
-  if (Array.isArray(value)) return true;
-  if (typeof value !== "string") return false;
-  try {
-    return Array.isArray(JSON.parse(value));
-  } catch {
-    return false;
-  }
-}
+import { isJsonArrayOrArray, slugField, booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
 
 export const validatePackageCreate = [
   body("name")
@@ -18,12 +9,7 @@ export const validatePackageCreate = [
     .notEmpty().withMessage("Naziv paketa je obavezan")
     .isLength({ min: 2, max: 150 }).withMessage("Naziv mora imati između 2 i 150 karaktera"),
 
-  // optional — auto-generated from name/title if omitted (see slug.util.js + the
-  // corresponding create*() service function)
-  body("slug")
-    .optional({ values: "falsy" })
-    .trim()
-    .matches(/^[a-z0-9-]+$/).withMessage("Slug može sadržati samo mala slova, brojeve i crtice"),
+  slugField(true),
 
   body("description")
     .trim()
@@ -41,13 +27,9 @@ export const validatePackageCreate = [
     .optional({ values: "falsy" })
     .isFloat({ min: 0 }).withMessage("Stara cena mora biti pozitivan broj"),
 
-  body("isBest")
-    .optional()
-    .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
+  booleanishField("isBest", true),
 
-  body("isActive")
-    .optional()
-    .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
+  booleanishField("isActive", true),
 
   body("imageDesc")
     .custom(requireImageDescIfUploaded((req) => req.uploadedFiles?.packageImage)),
@@ -61,10 +43,7 @@ export const validatePackageUpdate = [
     .trim()
     .isLength({ min: 2, max: 150 }).withMessage("Naziv mora imati između 2 i 150 karaktera"),
 
-  body("slug")
-    .optional()
-    .trim()
-    .matches(/^[a-z0-9-]+$/).withMessage("Slug može sadržati samo mala slova, brojeve i crtice"),
+  slugField(false),
 
   body("items")
     .optional()
@@ -74,9 +53,7 @@ export const validatePackageUpdate = [
     .optional()
     .isFloat({ min: 0 }).withMessage("Cena mora biti pozitivan broj"),
 
-  body("isActive")
-    .optional()
-    .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
+  booleanishField("isActive", true),
 
   body("imageDesc")
     .custom(requireImageDescIfUploaded((req) => req.uploadedFiles?.packageImage)),
@@ -84,9 +61,6 @@ export const validatePackageUpdate = [
   collectValidationErrors,
 ];
 
-export const validatePackageId = [
-  param("packageId").isMongoId().withMessage("Neispravan ID paketa"),
-  collectValidationErrors,
-];
+export const validatePackageId = mongoIdParamValidator("packageId", "paketa");
 
 export default { validatePackageCreate, validatePackageUpdate, validatePackageId };
