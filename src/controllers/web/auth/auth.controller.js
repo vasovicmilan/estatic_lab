@@ -62,7 +62,7 @@ export async function loginForm(req, res, next) {
     return res.render("auth/_auth-form", {
       pageTitle: "Prijava",
       pageDescription: "Prijavite se na vaš nalog",
-      data: { ...viewData, csrfToken: req.csrfToken?.() },
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[loginForm] Greška pri prikazu forme za prijavu", error);
@@ -80,7 +80,7 @@ export async function login(req, res, next) {
       return res.status(400).render("auth/_auth-form", {
         pageTitle: "Prijava",
         pageDescription: "Prijavite se na vaš nalog",
-        data: { ...viewData, csrfToken: req.csrfToken?.() },
+        data: { ...viewData, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -98,7 +98,7 @@ export async function login(req, res, next) {
       return res.status(error.statusCode).render("auth/_auth-form", {
         pageTitle: "Prijava",
         pageDescription: "Prijavite se na vaš nalog",
-        data: { ...viewData, csrfToken: req.csrfToken?.() },
+        data: { ...viewData, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -112,7 +112,7 @@ export async function registerForm(req, res, next) {
     return res.render("auth/_auth-form", {
       pageTitle: "Registracija",
       pageDescription: "Kreirajte novi nalog",
-      data: { ...viewData, csrfToken: req.csrfToken?.() },
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[registerForm] Greška pri prikazu forme za registraciju", error);
@@ -128,7 +128,7 @@ export async function register(req, res, next) {
       return res.status(400).render("auth/_auth-form", {
         pageTitle: "Registracija",
         pageDescription: "Kreirajte novi nalog",
-        data: { ...viewData, csrfToken: req.csrfToken?.() },
+        data: { ...viewData, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -152,7 +152,7 @@ export async function register(req, res, next) {
       return res.status(error.statusCode).render("auth/_auth-form", {
         pageTitle: "Registracija",
         pageDescription: "Kreirajte novi nalog",
-        data: { ...viewData, csrfToken: req.csrfToken?.() },
+        data: { ...viewData, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -228,7 +228,7 @@ export async function forgotPasswordForm(req, res, next) {
     return res.render("auth/_auth-form", {
       pageTitle: "Zaboravljena lozinka",
       pageDescription: "Resetujte vašu lozinku",
-      data: { ...viewData, csrfToken: req.csrfToken?.() },
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[forgotPasswordForm] Greška pri prikazu forme", error);
@@ -243,7 +243,7 @@ export async function requestPasswordReset(req, res, next) {
       return res.status(400).render("auth/_auth-form", {
         pageTitle: "Zaboravljena lozinka",
         pageDescription: "Resetujte vašu lozinku",
-        data: { ...viewData, csrfToken: req.csrfToken?.() },
+        data: { ...viewData, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -262,7 +262,7 @@ export async function resetPasswordForm(req, res, next) {
     return res.render("auth/_auth-form", {
       pageTitle: "Nova lozinka",
       pageDescription: "Postavite novu lozinku",
-      data: { ...viewData, csrfToken: req.csrfToken?.() },
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[resetPasswordForm] Greška pri prikazu forme", error, { token: req.params.token });
@@ -278,7 +278,7 @@ export async function resetPassword(req, res, next) {
       return res.status(400).render("auth/_auth-form", {
         pageTitle: "Nova lozinka",
         pageDescription: "Postavite novu lozinku",
-        data: { ...viewData, csrfToken: req.csrfToken?.() },
+        data: { ...viewData, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -293,7 +293,7 @@ export async function resetPassword(req, res, next) {
       return res.status(400).render("auth/_auth-form", {
         pageTitle: "Nova lozinka",
         pageDescription: "Postavite novu lozinku",
-        data: { ...viewData, csrfToken: req.csrfToken?.() },
+        data: { ...viewData, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);

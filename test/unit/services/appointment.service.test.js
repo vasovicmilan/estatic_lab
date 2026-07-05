@@ -57,11 +57,14 @@ describe("appointment.service", () => {
 
   describe("status transitions", () => {
     it("confirmAppointment moves a pending appointment to confirmed for admin", async (t) => {
-      const appointment = buildAppointment({ status: "pending" });
-      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
-      t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "confirmed" }));
+      let current = buildAppointment({ status: "pending" });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => current);
+      t.mock.method(appointmentRepo, "updateAppointmentById", async (appId, patch) => {
+        current = { ...current, ...patch };
+        return current;
+      });
 
-      const result = await appointmentService.confirmAppointment(appointment._id.toString(), id().toString(), "admin");
+      const result = await appointmentService.confirmAppointment(current._id.toString(), id().toString(), "admin");
 
       assert.equal(result.status, "Potvrđeno");
     });
@@ -88,7 +91,8 @@ describe("appointment.service", () => {
     });
 
     it("rejectAppointment records the reason and actor", async (t) => {
-      const appointment = buildAppointment({ status: "pending" });
+      const employeeUser = buildEmployee();
+      const appointment = buildAppointment({ status: "pending", employee: employeeUser, assignedTo: null });
       t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
       let updatePayload;
       t.mock.method(appointmentRepo, "updateAppointmentById", async (appId, patch) => {
@@ -96,7 +100,7 @@ describe("appointment.service", () => {
         return { ...appointment, ...patch };
       });
 
-      await appointmentService.rejectAppointment(appointment._id.toString(), "Nema termina", id().toString(), "employee");
+      await appointmentService.rejectAppointment(appointment._id.toString(), "Nema termina", employeeUser._id.toString(), "employee");
 
       assert.equal(updatePayload.status, "rejected");
       assert.equal(updatePayload.rejectedBy, "employee");

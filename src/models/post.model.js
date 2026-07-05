@@ -91,7 +91,7 @@ const PostSchema = new Schema(
   { timestamps: true }
 );
 
-PostSchema.pre("save", function (next) {
+PostSchema.pre("save", function () {
   if (this.isModified("content")) {
     const words = this.content
       .filter((b) => b.type === "paragraph" || b.type === "heading" || b.type === "quote")
@@ -101,7 +101,6 @@ PostSchema.pre("save", function (next) {
   if (this.isModified("status") && this.status === "published" && !this.publishedAt) {
     this.publishedAt = new Date();
   }
-  next();
 });
 
 PostSchema.index({ status: 1, publishedAt: -1 });

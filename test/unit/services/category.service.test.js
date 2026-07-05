@@ -18,16 +18,16 @@ describe("category.service", () => {
   describe("createCategory", () => {
     it("auto-generates a slug from the name when none is given", async (t) => {
       t.mock.method(categoryRepo, "findCategoryBySlug", async () => null);
-      let payload;
+      let created;
       t.mock.method(categoryRepo, "createCategory", async (data) => {
-        payload = data;
-        return { ...data, _id: id() };
+        created = { ...data, _id: id() };
+        return created;
       });
-      t.mock.method(categoryRepo, "findCategoryById", async () => payload);
+      t.mock.method(categoryRepo, "findCategoryById", async () => created);
 
       await categoryService.createCategory({ name: "Masaze Lica", domain: "service" });
 
-      assert.equal(payload.slug, "masaze-lica");
+      assert.equal(created.slug, "masaze-lica");
     });
 
     it("checks uniqueness scoped to slug+domain, not slug alone", async (t) => {
@@ -36,12 +36,12 @@ describe("category.service", () => {
         calls.push({ slug, domain });
         return null;
       });
-      let payload;
+      let created;
       t.mock.method(categoryRepo, "createCategory", async (data) => {
-        payload = data;
-        return { ...data, _id: id() };
+        created = { ...data, _id: id() };
+        return created;
       });
-      t.mock.method(categoryRepo, "findCategoryById", async () => payload);
+      t.mock.method(categoryRepo, "findCategoryById", async () => created);
 
       await categoryService.createCategory({ name: "Blog kategorija", slug: "moj-slug", domain: "post" });
 

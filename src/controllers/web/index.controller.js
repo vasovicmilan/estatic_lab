@@ -83,7 +83,7 @@ export async function contactPage(req, res, next) {
       pageTitle: serviceData.seo.pageTitle,
       pageDescription: serviceData.seo.pageDescription,
       showForm: true,
-      data: { formData: { topic: req.query.tema || "" }, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { formData: { topic: req.query.tema || "" }, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[contactPage] Greška pri učitavanju kontakt stranice", error);
@@ -100,7 +100,7 @@ export async function submitContact(req, res, next) {
         pageTitle: serviceData.seo.pageTitle,
         pageDescription: serviceData.seo.pageDescription,
         showForm: true,
-        data: { formData: req.body, errors: req.validationErrors, csrfToken: req.csrfToken?.() },
+        data: { formData: req.body, errors: req.validationErrors, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -117,7 +117,7 @@ export async function submitContact(req, res, next) {
         pageTitle: serviceData.seo.pageTitle,
         pageDescription: serviceData.seo.pageDescription,
         showForm: true,
-        data: { formData: req.body, errors: { general: error.message }, csrfToken: req.csrfToken?.() },
+        data: { formData: req.body, errors: { general: error.message }, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);

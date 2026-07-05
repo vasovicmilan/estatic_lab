@@ -103,7 +103,7 @@ export async function newPackageForm(req, res, next) {
     return res.render("admin/_form", {
       pageTitle: "Novi paket",
       pageDescription: "Kreiraj novi paket",
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[newPackageForm] Greška pri prikazu forme za novi paket", error, { userId: req.session?.user?.id });
@@ -121,7 +121,7 @@ export async function editPackageForm(req, res, next) {
     return res.render("admin/_form", {
       pageTitle: `Izmena — ${pkg.name}`,
       pageDescription: pkg.shortDescription || pkg.name,
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[editPackageForm] Greška pri učitavanju forme za izmenu paketa", error, {
@@ -141,7 +141,7 @@ export async function createPackage(req, res, next) {
       return res.status(400).render("admin/_form", {
         pageTitle: "Novi paket",
         pageDescription: "Kreiraj novi paket",
-        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -159,7 +159,7 @@ export async function createPackage(req, res, next) {
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: "Novi paket",
         pageDescription: "Kreiraj novi paket",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -178,7 +178,7 @@ export async function updatePackage(req, res, next) {
       return res.status(400).render("admin/_form", {
         pageTitle: `Izmena — ${pkg.name}`,
         pageDescription: pkg.shortDescription || pkg.name,
-        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -202,7 +202,7 @@ export async function updatePackage(req, res, next) {
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: pkg ? `Izmena — ${pkg.name}` : "Izmena paketa",
         pageDescription: pkg?.shortDescription || "",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);

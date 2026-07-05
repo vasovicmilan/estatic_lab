@@ -27,16 +27,16 @@ describe("expert.service", () => {
         callCount++;
         return slug === "ana-anic" ? buildExpert({ slug: "ana-anic" }) : null;
       });
-      let createdPayload;
+      let created;
       t.mock.method(expertRepo, "createExpert", async (payload) => {
-        createdPayload = payload;
-        return { ...payload, _id: id() };
+        created = { ...payload, _id: id() };
+        return created;
       });
-      t.mock.method(expertRepo, "findExpertById", async () => createdPayload);
+      t.mock.method(expertRepo, "findExpertById", async () => created);
 
       await expertService.createExpert({ firstName: "Ana", lastName: "Anic", image: { img: "/x.webp" } });
 
-      assert.equal(createdPayload.slug, "ana-anic-2");
+      assert.equal(created.slug, "ana-anic-2");
       assert.ok(callCount >= 2);
     });
 

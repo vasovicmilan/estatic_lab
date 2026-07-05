@@ -51,7 +51,7 @@ export async function newTagForm(req, res, next) {
     return res.render("admin/_form", {
       pageTitle: "Novi tag",
       pageDescription: "Kreiraj novi tag",
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[newTagForm] Greška pri prikazu forme za novi tag", error, { userId: req.session?.user?.id });
@@ -68,7 +68,7 @@ export async function editTagForm(req, res, next) {
     return res.render("admin/_form", {
       pageTitle: `Izmena — ${tag.name}`,
       pageDescription: tag.name,
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[editTagForm] Greška pri učitavanju forme za izmenu taga", error, { tagId: req.params.tagId, userId: req.session?.user?.id });
@@ -84,7 +84,7 @@ export async function createTag(req, res, next) {
       return res.status(400).render("admin/_form", {
         pageTitle: "Novi tag",
         pageDescription: "Kreiraj novi tag",
-        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -100,7 +100,7 @@ export async function createTag(req, res, next) {
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: "Novi tag",
         pageDescription: "Kreiraj novi tag",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -118,7 +118,7 @@ export async function updateTag(req, res, next) {
       return res.status(400).render("admin/_form", {
         pageTitle: `Izmena — ${tag.name}`,
         pageDescription: tag.name,
-        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -135,7 +135,7 @@ export async function updateTag(req, res, next) {
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: tag ? `Izmena — ${tag.name}` : "Izmena taga",
         pageDescription: tag?.name || "",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);

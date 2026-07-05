@@ -77,7 +77,7 @@ export async function appointmentDetails(req, res, next) {
     return res.render("employee/appointment-details", {
       pageTitle: `Termin — ${appointment.klijent.ime}`,
       pageDescription: appointment.usluga.naziv,
-      data: { ...viewData, csrfToken: req.csrfToken?.() },
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[appointmentDetails] Greška pri učitavanju detalja termina", error, {
@@ -147,7 +147,7 @@ export async function profile(req, res, next) {
     return res.render("employee/profile", {
       pageTitle: "Moj profil",
       pageDescription: "Pregled vašeg profila i radnog vremena",
-      data: { ...viewData, csrfToken: req.csrfToken?.() },
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[profile] Greška pri učitavanju profila zaposlenog", error, { userId: req.session?.user?.id });

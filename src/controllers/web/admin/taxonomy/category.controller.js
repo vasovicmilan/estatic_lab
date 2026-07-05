@@ -61,7 +61,7 @@ export async function newCategoryForm(req, res, next) {
     return res.render("admin/_form", {
       pageTitle: "Nova kategorija",
       pageDescription: "Kreiraj novu kategoriju",
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[newCategoryForm] Greška pri prikazu forme za novu kategoriju", error, { userId: req.session?.user?.id });
@@ -79,7 +79,7 @@ export async function editCategoryForm(req, res, next) {
     return res.render("admin/_form", {
       pageTitle: `Izmena — ${category.name}`,
       pageDescription: category.shortDescription || category.name,
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[editCategoryForm] Greška pri učitavanju forme za izmenu kategorije", error, {
@@ -106,7 +106,7 @@ export async function createCategory(req, res, next) {
       return res.status(400).render("admin/_form", {
         pageTitle: "Nova kategorija",
         pageDescription: "Kreiraj novu kategoriju",
-        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -127,7 +127,7 @@ export async function createCategory(req, res, next) {
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: "Nova kategorija",
         pageDescription: "Kreiraj novu kategoriju",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -146,7 +146,7 @@ export async function updateCategory(req, res, next) {
       return res.status(400).render("admin/_form", {
         pageTitle: `Izmena — ${category.name}`,
         pageDescription: category.shortDescription || category.name,
-        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -173,7 +173,7 @@ export async function updateCategory(req, res, next) {
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: category ? `Izmena — ${category.name}` : "Izmena kategorije",
         pageDescription: category?.shortDescription || "",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);

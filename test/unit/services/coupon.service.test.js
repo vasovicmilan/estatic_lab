@@ -8,16 +8,16 @@ describe("coupon.service", () => {
   describe("createCoupon", () => {
     it("uppercases the code before storing", async (t) => {
       t.mock.method(couponRepo, "findCouponByCode", async () => null);
-      let payload;
+      let created;
       t.mock.method(couponRepo, "createCoupon", async (data) => {
-        payload = data;
-        return { ...data, _id: id() };
+        created = { ...data, _id: id() };
+        return created;
       });
-      t.mock.method(couponRepo, "findCouponById", async () => payload);
+      t.mock.method(couponRepo, "findCouponById", async () => created);
 
       await couponService.createCoupon({ code: "dobrodosli10", discountType: "percentage", discountValue: 10, validUntil: new Date() });
 
-      assert.equal(payload.code, "DOBRODOSLI10");
+      assert.equal(created.code, "DOBRODOSLI10");
     });
 
     it("rejects a duplicate code (case-insensitively, since codes are stored uppercase)", async (t) => {

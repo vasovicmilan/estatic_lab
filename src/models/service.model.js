@@ -92,19 +92,16 @@ const ServiceSchema = new Schema(
   { timestamps: true }
 );
 
-ServiceSchema.pre("save", function (next) {
+ServiceSchema.pre("save", function () {
   if (this.comparisonTable?.length && this.comparisonColumns?.length) {
-    for (const row of this.comparisonTable) {
-      if (row.values.length !== this.comparisonColumns.length) {
-        return next(
-          new Error(
-            `Red "${row.label}" ima ${row.values.length} vrednosti, a očekivano je ${this.comparisonColumns.length}.`
-          )
+     for (const row of this.comparisonTable) {
+       if (row.values.length !== this.comparisonColumns.length) {
+        throw new Error(
+          `Red "${row.label}" ima ${row.values.length} vrednosti, a očekivano je ${this.comparisonColumns.length}.`
         );
       }
     }
   }
-  next();
 });
 
 ServiceSchema.index({ categories: 1 });

@@ -31,16 +31,16 @@ describe("package.service", () => {
   describe("createPackage — slug generation", () => {
     it("auto-generates a slug from the name when omitted", async (t) => {
       t.mock.method(packageRepo, "findPackageBySlug", async () => null);
-      let payload;
+      let created;
       t.mock.method(packageRepo, "createPackage", async (data) => {
-        payload = data;
-        return { ...data, _id: id() };
+        created = { ...data, _id: id() };
+        return created;
       });
-      t.mock.method(packageRepo, "findPackageById", async () => payload);
+      t.mock.method(packageRepo, "findPackageById", async () => created);
 
       await packageService.createPackage({ name: "Dan Za Sebe", totalPrice: 8000, items: [{ service: id(), sessions: 1 }] });
 
-      assert.equal(payload.slug, "dan-za-sebe");
+      assert.equal(created.slug, "dan-za-sebe");
     });
 
     it("rejects an explicit slug that's already taken", async (t) => {

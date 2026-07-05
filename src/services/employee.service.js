@@ -30,7 +30,8 @@ const defaultPopulate = [
 export async function listEmployees({ limit = 10, page = 1, filters = {}, role = "admin" } = {}) {
   const result = await employeeRepo.findEmployees({ limit, page, filters, populateFields: defaultPopulate });
   return {
-    data: role === "admin" ? mapEmployeesForAdminList(result.data) : result.data.map((e) => mapEmployee(e, role, "short")),
+    data: role === "admin" ?
+      mapEmployeesForAdminList(result.data) : result.data.map((e) => mapEmployee(e, role, "short")),
     total: result.total,
     page: result.page,
     limit: result.limit,
@@ -60,11 +61,10 @@ export async function findEmployeeProfile(userId, role = "employee") {
 export async function createEmployee(data) {
   if (!data) validationError("data");
   if (!data.userId) validationError("userId");
+  if (data.workingHours) validateWorkingHours(data.workingHours);
 
   const existing = await employeeRepo.findEmployeeByUserId(data.userId);
   if (existing) conflict("Ovaj korisnik već ima profil zaposlenog");
-
-  if (data.workingHours) validateWorkingHours(data.workingHours);
 
   const employeeRole = await roleService.findRoleByName("employee");
   if (!employeeRole) badRequest("Rola 'employee' nije konfigurisana");

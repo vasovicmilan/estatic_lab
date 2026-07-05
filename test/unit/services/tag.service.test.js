@@ -11,16 +11,16 @@ describe("tag.service", () => {
 
   it("auto-generates a slug from the name when none is given", async (t) => {
     t.mock.method(tagRepo, "findTagBySlug", async () => null);
-    let payload;
+    let created;
     t.mock.method(tagRepo, "createTag", async (data) => {
-      payload = data;
-      return { ...data, _id: id() };
+      created = { ...data, _id: id() };
+      return created;
     });
-    t.mock.method(tagRepo, "findTagById", async () => payload);
+    t.mock.method(tagRepo, "findTagById", async () => created);
 
     await tagService.createTag({ name: "Opustanje i Wellness", domain: "service" });
 
-    assert.equal(payload.slug, "opustanje-i-wellness");
+    assert.equal(created.slug, "opustanje-i-wellness");
   });
 
   it("rejects an explicit slug already used in the same domain", async (t) => {

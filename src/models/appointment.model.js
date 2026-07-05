@@ -98,7 +98,7 @@ const AppointmentSchema = new Schema(
   { timestamps: true }
 );
 
-AppointmentSchema.pre("save", function (next) {
+AppointmentSchema.pre("save", function () {
   if (this.isModified("startTime") || this.isModified("variant.duration")) {
     if (this.startTime && this.variant?.duration) {
       this.endTime = new Date(this.startTime.getTime() + this.variant.duration * 60000);
@@ -107,7 +107,6 @@ AppointmentSchema.pre("save", function (next) {
   if (this.isModified("variant.price") || this.isModified("discountApplied")) {
     this.finalPrice = Math.max(0, (this.variant?.price || 0) - (this.discountApplied || 0));
   }
-  next();
 });
 
 AppointmentSchema.index({ user: 1, startTime: -1 });

@@ -21,7 +21,7 @@ export async function serviceStep(req, res, next) {
     return res.render("booking/service-step", {
       pageTitle: `Zakazivanje — ${service.naziv}`,
       pageDescription: "Izaberite varijantu usluge",
-      data: { ...viewData, csrfToken: req.csrfToken?.() },
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[serviceStep] Greška pri učitavanju koraka izbora usluge", error, { serviceSlug: req.params.serviceSlug });
@@ -40,7 +40,7 @@ export async function slotsStep(req, res, next) {
     }
 
     const service = await serviceService.getServiceBySlug(serviceSlug);
-    const variant = service.packages.find((p) => p.id === servicePackageId);
+    const variant = service.varijante.find((p) => p.id === servicePackageId);
     if (!variant) {
       return flashAndRedirect(req, res, "error", "Izabrana varijanta nije pronađena", `/zakazivanje/${serviceSlug}`);
     }
@@ -69,7 +69,7 @@ export async function slotsStep(req, res, next) {
     return res.render("booking/slots-step", {
       pageTitle: `Zakazivanje — ${service.naziv}`,
       pageDescription: "Izaberite datum i termin",
-      data: { ...viewData, csrfToken: req.csrfToken?.() },
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[slotsStep] Greška pri učitavanju dostupnih termina", error, { serviceSlug: req.params.serviceSlug, query: req.query });
@@ -88,7 +88,7 @@ export async function contactStep(req, res, next) {
     }
 
     const service = await serviceService.getServiceBySlug(serviceSlug);
-    const variant = service.packages.find((p) => p.id === servicePackageId);
+    const variant = service.varijante.find((p) => p.id === servicePackageId);
     if (!variant) {
       return flashAndRedirect(req, res, "error", "Izabrana varijanta nije pronađena", `/zakazivanje/${serviceSlug}`);
     }
@@ -104,7 +104,7 @@ export async function contactStep(req, res, next) {
     return res.render("booking/contact-step", {
       pageTitle: `Zakazivanje — ${service.naziv}`,
       pageDescription: "Unesite podatke za kontakt",
-      data: { ...viewData, csrfToken: req.csrfToken?.() },
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[contactStep] Greška pri učitavanju koraka unosa podataka", error, { serviceSlug: req.params.serviceSlug, query: req.query });
@@ -120,7 +120,7 @@ export async function confirmBooking(req, res, next) {
     if (req.validationErrors) {
       logWarn("[confirmBooking] Validacione greške pri zakazivanju", { validationErrors: req.validationErrors, email });
       const service = await serviceService.getServiceBySlug(serviceSlug);
-      const variant = service.packages.find((p) => p.id === servicePackageId);
+      const variant = service.varijante.find((p) => p.id === servicePackageId);
       const isLoggedIn = !!req.session?.isLoggedIn;
       const viewData = prepareBookingContactStepData(
         service,
@@ -131,7 +131,7 @@ export async function confirmBooking(req, res, next) {
       return res.status(400).render("booking/contact-step", {
         pageTitle: `Zakazivanje — ${service.naziv}`,
         pageDescription: "Unesite podatke za kontakt",
-        data: { ...viewData, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...viewData, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -161,7 +161,7 @@ export async function confirmBooking(req, res, next) {
       // contact details intact and the specific reason the booking failed
       try {
         const service = await serviceService.getServiceBySlug(serviceSlug);
-        const variant = service.packages.find((p) => p.id === servicePackageId);
+        const variant = service.varijante.find((p) => p.id === servicePackageId);
         const isLoggedIn = !!req.session?.isLoggedIn;
         const viewData = prepareBookingContactStepData(
           service,
@@ -172,7 +172,7 @@ export async function confirmBooking(req, res, next) {
         return res.status(400).render("booking/contact-step", {
           pageTitle: `Zakazivanje — ${service.naziv}`,
           pageDescription: "Unesite podatke za kontakt",
-          data: { ...viewData, formData: req.body, csrfToken: req.csrfToken?.() },
+          data: { ...viewData, formData: req.body, csrfToken: res.locals.csrfToken },
         });
       } catch (renderError) {
         logError("[confirmBooking] Greška pri ponovnom renderovanju forme nakon neuspešnog zakazivanja", renderError);

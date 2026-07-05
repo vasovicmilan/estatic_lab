@@ -72,7 +72,7 @@ export async function newCouponForm(req, res, next) {
     return res.render("admin/_form", {
       pageTitle: "Novi kupon",
       pageDescription: "Kreiraj novi kupon za popust",
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[newCouponForm] Greška pri prikazu forme za novi kupon", error, { userId: req.session?.user?.id });
@@ -90,7 +90,7 @@ export async function editCouponForm(req, res, next) {
     return res.render("admin/_form", {
       pageTitle: `Izmena — ${coupon.code}`,
       pageDescription: coupon.code,
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[editCouponForm] Greška pri učitavanju forme za izmenu kupona", error, { couponId: req.params.couponId, userId: req.session?.user?.id });
@@ -107,7 +107,7 @@ export async function createCoupon(req, res, next) {
       return res.status(400).render("admin/_form", {
         pageTitle: "Novi kupon",
         pageDescription: "Kreiraj novi kupon za popust",
-        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -125,7 +125,7 @@ export async function createCoupon(req, res, next) {
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: "Novi kupon",
         pageDescription: "Kreiraj novi kupon za popust",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -144,7 +144,7 @@ export async function updateCoupon(req, res, next) {
       return res.status(400).render("admin/_form", {
         pageTitle: `Izmena — ${coupon.code}`,
         pageDescription: coupon.code,
-        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -163,7 +163,7 @@ export async function updateCoupon(req, res, next) {
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: coupon ? `Izmena — ${coupon.code}` : "Izmena kupona",
         pageDescription: coupon?.code || "",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);

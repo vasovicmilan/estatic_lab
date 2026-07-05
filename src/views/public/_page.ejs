@@ -24,7 +24,7 @@
       <% } else if (typeof showForm !== 'undefined' && showForm) { %>
         <% if (data.errors && data.errors.general) { %><div class="alert alert-danger"><%= data.errors.general %></div><% } %>
         <form action="/kontakt" method="POST">
-          <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
+          <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
           <input type="text" name="nickname" class="d-none" tabindex="-1" autocomplete="off">
           <div class="row g-3 mb-3">
             <div class="col-md-6">

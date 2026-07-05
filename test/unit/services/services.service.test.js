@@ -41,12 +41,12 @@ describe("service.service", () => {
   describe("createService — slug generation", () => {
     it("auto-generates the service slug from its name", async (t) => {
       t.mock.method(serviceRepo, "findServiceBySlug", async () => null);
-      let payload;
+      let created;
       t.mock.method(serviceRepo, "createService", async (data) => {
-        payload = data;
-        return { ...data, _id: id() };
+        created = { ...data, _id: id() };
+        return created;
       });
-      t.mock.method(serviceRepo, "findServiceById", async () => payload);
+      t.mock.method(serviceRepo, "findServiceById", async () => created);
 
       await serviceService.createService({
         name: "Sportska Masaza",
@@ -54,17 +54,17 @@ describe("service.service", () => {
         packages: [buildServicePackageVariant({ name: "60 min" })],
       });
 
-      assert.equal(payload.slug, "sportska-masaza");
+      assert.equal(created.slug, "sportska-masaza");
     });
 
     it("auto-generates a slug per variant when the variant has none", async (t) => {
       t.mock.method(serviceRepo, "findServiceBySlug", async () => null);
-      let payload;
+      let created;
       t.mock.method(serviceRepo, "createService", async (data) => {
-        payload = data;
-        return { ...data, _id: id() };
+        created = { ...data, _id: id() };
+        return created;
       });
-      t.mock.method(serviceRepo, "findServiceById", async () => payload);
+      t.mock.method(serviceRepo, "findServiceById", async () => created);
 
       await serviceService.createService({
         name: "Masaza",
@@ -75,18 +75,18 @@ describe("service.service", () => {
         ],
       });
 
-      assert.equal(payload.packages[0].slug, "60-minuta");
-      assert.equal(payload.packages[1].slug, "90-minuta");
+      assert.equal(created.packages[0].slug, "60-minuta");
+      assert.equal(created.packages[1].slug, "90-minuta");
     });
 
     it("resolves a slug collision BETWEEN two variants of the same service", async (t) => {
       t.mock.method(serviceRepo, "findServiceBySlug", async () => null);
-      let payload;
+      let created;
       t.mock.method(serviceRepo, "createService", async (data) => {
-        payload = data;
-        return { ...data, _id: id() };
+        created = { ...data, _id: id() };
+        return created;
       });
-      t.mock.method(serviceRepo, "findServiceById", async () => payload);
+      t.mock.method(serviceRepo, "findServiceById", async () => created);
 
       // two variants that would both slugify to "60-minuta"
       await serviceService.createService({
@@ -98,18 +98,18 @@ describe("service.service", () => {
         ],
       });
 
-      assert.equal(payload.packages[0].slug, "60-minuta");
-      assert.equal(payload.packages[1].slug, "60-minuta-2");
+      assert.equal(created.packages[0].slug, "60-minuta");
+      assert.equal(created.packages[1].slug, "60-minuta-2");
     });
 
     it("preserves an explicitly-set variant slug instead of overwriting it", async (t) => {
       t.mock.method(serviceRepo, "findServiceBySlug", async () => null);
-      let payload;
+      let created;
       t.mock.method(serviceRepo, "createService", async (data) => {
-        payload = data;
-        return { ...data, _id: id() };
+        created = { ...data, _id: id() };
+        return created;
       });
-      t.mock.method(serviceRepo, "findServiceById", async () => payload);
+      t.mock.method(serviceRepo, "findServiceById", async () => created);
 
       await serviceService.createService({
         name: "Masaza",
@@ -117,7 +117,7 @@ describe("service.service", () => {
         packages: [{ name: "60 minuta", slug: "moj-custom-slug", duration: 60, totalPrice: 3000 }],
       });
 
-      assert.equal(payload.packages[0].slug, "moj-custom-slug");
+      assert.equal(created.packages[0].slug, "moj-custom-slug");
     });
   });
 

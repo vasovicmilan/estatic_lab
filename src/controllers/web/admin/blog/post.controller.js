@@ -103,7 +103,7 @@ export async function newPostForm(req, res, next) {
     return res.render("admin/_form", {
       pageTitle: "Novi post",
       pageDescription: "Kreiraj novu blog objavu",
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[newPostForm] Greška pri prikazu forme za novi post", error, { userId: req.session?.user?.id });
@@ -121,7 +121,7 @@ export async function editPostForm(req, res, next) {
     return res.render("admin/_form", {
       pageTitle: `Izmena — ${post.title}`,
       pageDescription: post.excerpt,
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[editPostForm] Greška pri učitavanju forme za izmenu posta", error, { postId: req.params.postId, userId: req.session?.user?.id });
@@ -138,7 +138,7 @@ export async function createPost(req, res, next) {
       return res.status(400).render("admin/_form", {
         pageTitle: "Novi post",
         pageDescription: "Kreiraj novu blog objavu",
-        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -158,7 +158,7 @@ export async function createPost(req, res, next) {
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: "Novi post",
         pageDescription: "Kreiraj novu blog objavu",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -177,7 +177,7 @@ export async function updatePost(req, res, next) {
       return res.status(400).render("admin/_form", {
         pageTitle: `Izmena — ${post.title}`,
         pageDescription: post.excerpt,
-        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -197,7 +197,7 @@ export async function updatePost(req, res, next) {
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: post ? `Izmena — ${post.title}` : "Izmena posta",
         pageDescription: post?.excerpt || "",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -228,7 +228,7 @@ export async function editPostSeoForm(req, res, next) {
     return res.render("admin/post/seo", {
       pageTitle: `SEO — ${post.naslov}`,
       pageDescription: post.naslov,
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[editPostSeoForm] Greška pri učitavanju SEO forme", error, { postId: req.params.postId, userId: req.session?.user?.id });

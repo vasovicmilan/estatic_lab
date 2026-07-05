@@ -62,7 +62,7 @@ export async function newRoleForm(req, res, next) {
     return res.render("admin/_form", {
       pageTitle: "Nova rola",
       pageDescription: "Kreiraj novu rolu",
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[newRoleForm] Greška pri prikazu forme za novu rolu", error, { userId: req.session?.user?.id });
@@ -79,7 +79,7 @@ export async function editRoleForm(req, res, next) {
     return res.render("admin/_form", {
       pageTitle: `Izmena — ${role.name}`,
       pageDescription: role.description || role.name,
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[editRoleForm] Greška pri učitavanju forme za izmenu role", error, {
@@ -98,7 +98,7 @@ export async function createRole(req, res, next) {
       return res.status(400).render("admin/_form", {
         pageTitle: "Nova rola",
         pageDescription: "Kreiraj novu rolu",
-        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -114,7 +114,7 @@ export async function createRole(req, res, next) {
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: "Nova rola",
         pageDescription: "Kreiraj novu rolu",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -132,7 +132,7 @@ export async function updateRole(req, res, next) {
       return res.status(400).render("admin/_form", {
         pageTitle: `Izmena — ${role.name}`,
         pageDescription: role.description || role.name,
-        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -149,7 +149,7 @@ export async function updateRole(req, res, next) {
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: role ? `Izmena — ${role.name}` : "Izmena role",
         pageDescription: role?.description || "",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);

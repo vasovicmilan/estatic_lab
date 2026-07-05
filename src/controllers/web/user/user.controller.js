@@ -59,7 +59,7 @@ export async function appointmentDetails(req, res, next) {
     return res.render("user/appointment-details", {
       pageTitle: `Termin — ${appointment.usluga.naziv}`,
       pageDescription: appointment.termin.pocetak,
-      data: { ...viewData, csrfToken: req.csrfToken?.() },
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[appointmentDetails] Greška pri učitavanju detalja termina", error, {
@@ -97,7 +97,7 @@ export async function settingsForm(req, res, next) {
     return res.render("user/_settings-tab", {
       pageTitle: "Podešavanja naloga",
       pageDescription: user.imePrezime,
-      data: { ...viewData, csrfToken: req.csrfToken?.() },
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[settingsForm] Greška pri učitavanju podešavanja", error, { userId: req.session?.user?.id });
@@ -114,7 +114,7 @@ export async function updateSettings(req, res, next) {
       return res.status(400).render("user/_settings-tab", {
         pageTitle: "Podešavanja naloga",
         pageDescription: user.imePrezime,
-        data: { ...viewData, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...viewData, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -134,7 +134,7 @@ export async function updateSettings(req, res, next) {
       return res.status(error.statusCode).render("user/_settings-tab", {
         pageTitle: "Podešavanja naloga",
         pageDescription: user?.imePrezime || "",
-        data: { ...viewData, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...viewData, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);

@@ -59,7 +59,7 @@ export async function newExpertForm(req, res, next) {
     return res.render("admin/_form", {
       pageTitle: "Novi ekspert",
       pageDescription: "Kreiraj novi ekspert profil",
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[newExpertForm] Greška pri prikazu forme za novog eksperta", error, { userId: req.session?.user?.id });
@@ -77,7 +77,7 @@ export async function editExpertForm(req, res, next) {
     return res.render("admin/_form", {
       pageTitle: `Izmena — ${expert.firstName} ${expert.lastName}`,
       pageDescription: expert.title || "",
-      data: { ...formData, errors: {}, csrfToken: req.csrfToken?.() },
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[editExpertForm] Greška pri učitavanju forme za izmenu eksperta", error, {
@@ -109,7 +109,7 @@ export async function createExpert(req, res, next) {
       return res.status(400).render("admin/_form", {
         pageTitle: "Novi ekspert",
         pageDescription: "Kreiraj novi ekspert profil",
-        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -131,7 +131,7 @@ export async function createExpert(req, res, next) {
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: "Novi ekspert",
         pageDescription: "Kreiraj novi ekspert profil",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -150,7 +150,7 @@ export async function updateExpert(req, res, next) {
       return res.status(400).render("admin/_form", {
         pageTitle: `Izmena — ${expert.firstName} ${expert.lastName}`,
         pageDescription: expert.title || "",
-        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
@@ -178,7 +178,7 @@ export async function updateExpert(req, res, next) {
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: expert ? `Izmena — ${expert.firstName} ${expert.lastName}` : "Izmena eksperta",
         pageDescription: expert?.title || "",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: req.csrfToken?.() },
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);

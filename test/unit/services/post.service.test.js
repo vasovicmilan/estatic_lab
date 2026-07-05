@@ -18,16 +18,16 @@ describe("post.service", () => {
 
     it("auto-generates a slug from the title when none is given", async (t) => {
       t.mock.method(postRepo, "findPostBySlug", async () => null);
-      let payload;
+      let created;
       t.mock.method(postRepo, "createPost", async (data) => {
-        payload = data;
-        return { ...data, _id: id() };
+        created = { ...data, _id: id() };
+        return created;
       });
-      t.mock.method(postRepo, "findPostById", async () => payload);
+      t.mock.method(postRepo, "findPostById", async () => created);
 
       await postService.createPost({ title: "Kako Da Se Opustite", excerpt: "opis", coverImage: { img: "/x.webp" }, author: id() });
 
-      assert.equal(payload.slug, "kako-da-se-opustite");
+      assert.equal(created.slug, "kako-da-se-opustite");
     });
 
     it("rejects an explicit slug that's already taken", async (t) => {
