@@ -9,6 +9,10 @@ import userRepo from "../../../src/repositories/user.repository.js";
 import appointmentRepo from "../../../src/repositories/appointment.repository.js";
 import Role from "../../../src/models/role.model.js";
 
+async function seedUserRole() {
+  await Role.create({ name: "user", isDefault: true, priority: 0 });
+}
+
 async function createBookableService() {
   const service = await serviceRepo.createService({
     name: "Sportska Masaza",
@@ -18,6 +22,8 @@ async function createBookableService() {
   });
 
   const role = await Role.create({ name: "employee", isDefault: false });
+  await seedUserRole();
+
   const employeeUser = await userRepo.createUser({
     email: "terapeut@example.com",
     password: "lozinka123",
@@ -148,6 +154,8 @@ describe("public booking flow (HTTP)", () => {
     });
 
     it("rejects booking when no employee is available for the service", async () => {
+      await seedUserRole();
+
       const service = await serviceRepo.createService({
         name: "Usluga Bez Terapeuta",
         slug: "usluga-bez-terapeuta",
