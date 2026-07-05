@@ -3,6 +3,7 @@ import * as serviceService from "../../../../services/service.service.js";
 import { prepareExpertListData, prepareExpertDetailsData, prepareExpertFormData } from "../../../../presenters/admin/auth/expert.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import { normalizeError } from "../../../../utils/error.util.js";
 
 async function loadServiceOptions() {
   const services = await serviceService.listServices({ limit: 200 });
@@ -95,7 +96,10 @@ function parseSpecializations(csv) {
 
 function buildImageFromUpload(req, existingImage) {
   if (req.uploadedFile) {
-    return { img: req.uploadedFile.img, imgDesc: req.body.imageDesc || req.uploadedFile.imgDesc || "" };
+    // imageDesc is required whenever a new image is uploaded — enforced by
+    // validateExpertCreate/validateExpertUpdate before this code ever runs, so
+    // req.body.imageDesc is guaranteed non-empty here. No silent "" fallback.
+    return { img: req.uploadedFile.img, imgDesc: req.body.imageDesc.trim() };
   }
   return existingImage || null;
 }
@@ -125,13 +129,14 @@ export async function createExpert(req, res, next) {
   } catch (error) {
     logError("[createExpert] Greška pri kreiranju eksperta", error, { body: req.body, userId: req.session?.user?.id });
 
-    if (error.statusCode === 400 || error.statusCode === 409) {
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode === 400 || statusCode === 409) {
       const serviceOptions = await loadServiceOptions();
       const formData = prepareExpertFormData(null, { serviceOptions });
-      return res.status(error.statusCode).render("admin/_form", {
+      return res.status(statusCode).render("admin/_form", {
         pageTitle: "Novi ekspert",
         pageDescription: "Kreiraj novi ekspert profil",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
+        data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -171,14 +176,15 @@ export async function updateExpert(req, res, next) {
       userId: req.session?.user?.id,
     });
 
-    if (error.statusCode === 400 || error.statusCode === 404 || error.statusCode === 409) {
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode === 400 || statusCode === 404 || statusCode === 409) {
       const expert = await expertService.getExpertForEdit(req.params.expertId).catch(() => null);
       const serviceOptions = await loadServiceOptions();
       const formData = prepareExpertFormData(expert, { serviceOptions });
-      return res.status(error.statusCode).render("admin/_form", {
+      return res.status(statusCode).render("admin/_form", {
         pageTitle: expert ? `Izmena — ${expert.firstName} ${expert.lastName}` : "Izmena eksperta",
         pageDescription: expert?.title || "",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
+        data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);

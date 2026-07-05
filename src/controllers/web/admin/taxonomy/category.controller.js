@@ -2,6 +2,7 @@ import * as categoryService from "../../../../services/category.service.js";
 import { prepareCategoryListData, prepareCategoryDetailsData, prepareCategoryFormData } from "../../../../presenters/admin/taxonomy/category.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import { normalizeError } from "../../../../utils/error.util.js";
 
 async function loadParentOptions(domain, excludeId = null) {
   const options = await categoryService.getCategoriesForSelect(domain || "service");
@@ -92,7 +93,9 @@ export async function editCategoryForm(req, res, next) {
 
 function buildFeatureImage(req, existing) {
   if (req.uploadedFile) {
-    return { img: req.uploadedFile.img, imgDesc: req.body.categoryImageDesc || req.uploadedFile.imgDesc || "" };
+    // categoryImageDesc is required whenever a new image is uploaded — enforced by
+    // validateCategoryCreate/validateCategoryUpdate before this code ever runs.
+    return { img: req.uploadedFile.img, imgDesc: req.body.categoryImageDesc.trim() };
   }
   return existing || null;
 }
@@ -121,13 +124,14 @@ export async function createCategory(req, res, next) {
   } catch (error) {
     logError("[createCategory] Greška pri kreiranju kategorije", error, { body: req.body, userId: req.session?.user?.id });
 
-    if (error.statusCode === 400 || error.statusCode === 409) {
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode === 400 || statusCode === 409) {
       const parentOptions = await loadParentOptions(req.body.domain);
       const formData = prepareCategoryFormData(null, { parentOptions });
-      return res.status(error.statusCode).render("admin/_form", {
+      return res.status(statusCode).render("admin/_form", {
         pageTitle: "Nova kategorija",
         pageDescription: "Kreiraj novu kategoriju",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
+        data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -166,14 +170,15 @@ export async function updateCategory(req, res, next) {
       userId: req.session?.user?.id,
     });
 
-    if (error.statusCode === 400 || error.statusCode === 404 || error.statusCode === 409) {
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode === 400 || statusCode === 404 || statusCode === 409) {
       const category = await categoryService.getCategoryForEdit(req.params.categoryId).catch(() => null);
       const parentOptions = await loadParentOptions(category?.domain, req.params.categoryId);
       const formData = prepareCategoryFormData(category, { parentOptions });
-      return res.status(error.statusCode).render("admin/_form", {
+      return res.status(statusCode).render("admin/_form", {
         pageTitle: category ? `Izmena — ${category.name}` : "Izmena kategorije",
         pageDescription: category?.shortDescription || "",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
+        data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);

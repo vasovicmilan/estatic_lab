@@ -5,6 +5,7 @@ import * as tagService from "../../../../services/tag.service.js";
 import { preparePackageListData, preparePackageDetailsData, preparePackageFormData } from "../../../../presenters/admin/catalog/package.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import { normalizeError } from "../../../../utils/error.util.js";
 
 function parseJsonField(value, fallback = []) {
   if (Array.isArray(value) || (value && typeof value === "object")) return value;
@@ -33,8 +34,10 @@ async function loadFormOptions() {
 function buildPackagePayload(req, existing = {}) {
   const data = { ...req.body };
 
-  data.image = req.uploadedFile
-    ? { img: req.uploadedFile.img, imgDesc: req.body.imageDesc || req.uploadedFile.imgDesc || "" }
+  // imageDesc is required whenever a new image is uploaded — enforced by
+  // validatePackageCreate/validatePackageUpdate before this code ever runs.
+  data.image = req.uploadedFiles?.packageImage
+    ? { img: req.uploadedFiles.packageImage.img, imgDesc: req.body.imageDesc.trim() }
     : existing.image || null;
 
   data.gallery = req.uploadedFiles?.gallery
@@ -153,13 +156,14 @@ export async function createPackage(req, res, next) {
   } catch (error) {
     logError("[createPackage] Greška pri kreiranju paketa", error, { body: req.body, userId: req.session?.user?.id });
 
-    if (error.statusCode === 400 || error.statusCode === 409) {
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode === 400 || statusCode === 409) {
       const options = await loadFormOptions();
       const formData = preparePackageFormData(null, options);
-      return res.status(error.statusCode).render("admin/_form", {
+      return res.status(statusCode).render("admin/_form", {
         pageTitle: "Novi paket",
         pageDescription: "Kreiraj novi paket",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
+        data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -195,14 +199,15 @@ export async function updatePackage(req, res, next) {
       userId: req.session?.user?.id,
     });
 
-    if (error.statusCode === 400 || error.statusCode === 404 || error.statusCode === 409) {
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode === 400 || statusCode === 404 || statusCode === 409) {
       const pkg = await packageService.getPackageForEdit(req.params.packageId).catch(() => null);
       const options = await loadFormOptions();
       const formData = preparePackageFormData(pkg, options);
-      return res.status(error.statusCode).render("admin/_form", {
+      return res.status(statusCode).render("admin/_form", {
         pageTitle: pkg ? `Izmena — ${pkg.name}` : "Izmena paketa",
         pageDescription: pkg?.shortDescription || "",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
+        data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);

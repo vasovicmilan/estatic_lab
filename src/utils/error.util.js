@@ -134,3 +134,21 @@ export function buildApiErrorPayload(err, req, extra = {}) {
 
   return { statusCode, payload, errorId };
 }
+
+export function normalizeError(error) {
+  if (error.statusCode) {
+    return { statusCode: error.statusCode, message: error.message };
+  }
+  if (error.name === "ValidationError" && error.errors) {
+    const firstMessage = Object.values(error.errors)[0]?.message || error.message;
+    return { statusCode: 400, message: firstMessage };
+  }
+  if (error.name === "CastError") {
+    return { statusCode: 400, message: "Neispravan format podataka" };
+  }
+  if (error.code === 11000) {
+    const field = Object.keys(error.keyPattern || {})[0] || "polje";
+    return { statusCode: 409, message: `Vrednost za '${field}' je već zauzeta` };
+  }
+  return { statusCode: null, message: error.message };
+}

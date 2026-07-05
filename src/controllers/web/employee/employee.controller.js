@@ -71,7 +71,8 @@ export async function appointments(req, res, next) {
 export async function appointmentDetails(req, res, next) {
   try {
     const { appointmentId } = req.params;
-    const appointment = await appointmentService.getAppointmentById(appointmentId, req.session.user.id, "employee");
+    const employeeId = await getOwnEmployeeId(req);
+    const appointment = await appointmentService.getAppointmentById(appointmentId, employeeId, "employee");
     const viewData = prepareEmployeeAppointmentDetailData(appointment);
 
     return res.render("employee/appointment-details", {
@@ -91,7 +92,8 @@ export async function appointmentDetails(req, res, next) {
 export async function confirmAppointment(req, res, next) {
   try {
     const { appointmentId } = req.params;
-    await appointmentService.confirmAppointment(appointmentId, req.session.user.id, "employee");
+    const employeeId = await getOwnEmployeeId(req);
+    await appointmentService.confirmAppointment(appointmentId, employeeId, "employee");
     logInfo(`[confirmAppointment] Zaposleni potvrdio termin #${appointmentId}`, { appointmentId, userId: req.session.user.id });
     return flashAndRedirect(req, res, "success", "Termin je potvrđen", `/moj-nalog/termini/detalji/${appointmentId}`);
   } catch (error) {
@@ -112,7 +114,8 @@ export async function rejectAppointment(req, res, next) {
       return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), `/moj-nalog/termini/detalji/${appointmentId}`);
     }
 
-    await appointmentService.rejectAppointment(appointmentId, req.body.reason, req.session.user.id, "employee");
+    const employeeId = await getOwnEmployeeId(req);
+    await appointmentService.rejectAppointment(appointmentId, req.body.reason, employeeId, "employee");
     logInfo(`[rejectAppointment] Zaposleni odbio termin #${appointmentId}`, { appointmentId, userId: req.session.user.id });
     return flashAndRedirect(req, res, "success", "Termin je odbijen", `/moj-nalog/termini/detalji/${appointmentId}`);
   } catch (error) {
@@ -127,7 +130,8 @@ export async function rejectAppointment(req, res, next) {
 export async function completeAppointment(req, res, next) {
   try {
     const { appointmentId } = req.params;
-    await appointmentService.completeAppointment(appointmentId, req.session.user.id, "employee");
+    const employeeId = await getOwnEmployeeId(req);
+    await appointmentService.completeAppointment(appointmentId, employeeId, "employee");
     logInfo(`[completeAppointment] Zaposleni završio termin #${appointmentId}`, { appointmentId, userId: req.session.user.id });
     return flashAndRedirect(req, res, "success", "Termin je označen kao završen", `/moj-nalog/termini/detalji/${appointmentId}`);
   } catch (error) {

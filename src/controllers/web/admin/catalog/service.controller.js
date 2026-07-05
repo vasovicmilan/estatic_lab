@@ -10,6 +10,7 @@ import {
 } from "../../../../presenters/admin/catalog/service.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import { normalizeError } from "../../../../utils/error.util.js";
 
 // complex nested arrays (packages, features, comparisonTable, faq) are submitted as
 // JSON from the dynamic form-builder widgets rather than flat form fields
@@ -40,8 +41,10 @@ async function loadFormOptions() {
 function buildServicePayload(req, existing = {}) {
   const data = { ...req.body };
 
-  data.image = req.uploadedFile
-    ? { img: req.uploadedFile.img, imgDesc: req.body.imageDesc || req.uploadedFile.imgDesc || "" }
+  // imageDesc is required whenever a new image is uploaded — enforced by
+  // validateServiceCreate/validateServiceUpdate before this code ever runs.
+  data.image = req.uploadedFiles?.serviceImage
+    ? { img: req.uploadedFiles.serviceImage.img, imgDesc: req.body.imageDesc.trim() }
     : existing.image || null;
 
   data.gallery = req.uploadedFiles?.gallery
@@ -56,7 +59,7 @@ function buildServicePayload(req, existing = {}) {
   data.packages = parseJsonField(req.body.packages, existing.packages || []);
   data.comparisonColumns = req.body.comparisonColumnsCsv
     ? req.body.comparisonColumnsCsv.split(",").map((c) => c.trim()).filter(Boolean)
-    : parseJsonField(req.body.comparisonColumns, existing.comparisonColumns || []);
+    : existing.comparisonColumns || [];
   data.comparisonTable = parseJsonField(req.body.comparisonTable, existing.comparisonTable || []);
   data.faq = parseJsonField(req.body.faq, existing.faq || []);
 
@@ -68,13 +71,13 @@ function buildServicePayload(req, existing = {}) {
 
 export async function listServices(req, res, next) {
   try {
-    const { search, isActive, categoryId, page = 1, limit = 10 } = req.query;
+    const { search, isActive, highlight, page = 1, limit = 10 } = req.query;
 
     const result = await serviceService.listServices({
       search: search || "",
       filters: {
         isActive: isActive === "true" ? true : isActive === "false" ? false : undefined,
-        category: categoryId || undefined,
+        highlight: highlight === "true" ? true : highlight === "false" ? false : undefined,
       },
       page: parseInt(page, 10) || 1,
       limit: parseInt(limit, 10) || 10,
@@ -105,10 +108,7 @@ export async function serviceDetails(req, res, next) {
       data: viewData,
     });
   } catch (error) {
-    logError("[serviceDetails] Greška pri učitavanju detalja usluge", error, {
-      serviceId: req.params.serviceId,
-      userId: req.session?.user?.id,
-    });
+    logError("[serviceDetails] Greška pri učitavanju detalja usluge", error, { serviceId: req.params.serviceId, userId: req.session?.user?.id });
     next(error);
   }
 }
@@ -170,13 +170,14 @@ export async function createService(req, res, next) {
   } catch (error) {
     logError("[createService] Greška pri kreiranju usluge", error, { body: req.body, userId: req.session?.user?.id });
 
-    if (error.statusCode === 400 || error.statusCode === 409) {
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode === 400 || statusCode === 409) {
       const options = await loadFormOptions();
       const formData = prepareServiceFormData(null, options);
-      return res.status(error.statusCode).render("admin/_form", {
+      return res.status(statusCode).render("admin/_form", {
         pageTitle: "Nova usluga",
         pageDescription: "Kreiraj novu uslugu",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
+        data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -212,14 +213,15 @@ export async function updateService(req, res, next) {
       userId: req.session?.user?.id,
     });
 
-    if (error.statusCode === 400 || error.statusCode === 404 || error.statusCode === 409) {
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode === 400 || statusCode === 404 || statusCode === 409) {
       const service = await serviceService.getServiceForEdit(req.params.serviceId).catch(() => null);
       const options = await loadFormOptions();
       const formData = prepareServiceFormData(service, options);
-      return res.status(error.statusCode).render("admin/_form", {
+      return res.status(statusCode).render("admin/_form", {
         pageTitle: service ? `Izmena — ${service.name}` : "Izmena usluge",
         pageDescription: service?.shortDescription || "",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
+        data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);

@@ -1,6 +1,7 @@
 import { body, param } from "express-validator";
 import { CATEGORY_DOMAINS } from "../../models/category.model.js";
 import { collectValidationErrors } from "./collect-validation-errors.js";
+import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
 
 export const validateCategoryCreate = [
   body("name")
@@ -45,6 +46,11 @@ export const validateCategoryCreate = [
     .optional()
     .isIn(["true", "false", true, false]).withMessage("Neispravna vrednost za aktivnost"),
 
+  // ImageSchema requires imgDesc whenever an image exists — a new upload without a
+  // description would otherwise crash as an unhandled Mongoose ValidationError
+  body("categoryImageDesc")
+    .custom(requireImageDescIfUploaded((req) => req.uploadedFile)),
+
   collectValidationErrors,
 ];
 
@@ -83,6 +89,9 @@ export const validateCategoryUpdate = [
   body("isActive")
     .optional()
     .isIn(["true", "false", true, false]).withMessage("Neispravna vrednost za aktivnost"),
+
+  body("categoryImageDesc")
+    .custom(requireImageDescIfUploaded((req) => req.uploadedFile)),
 
   collectValidationErrors,
 ];

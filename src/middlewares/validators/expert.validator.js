@@ -1,5 +1,6 @@
 import { body, param } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
+import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
 
 export const validateExpertCreate = [
   body("firstName")
@@ -53,6 +54,9 @@ export const validateExpertCreate = [
     .optional()
     .isInt({ min: 0 }).withMessage("Redosled mora biti pozitivan broj"),
 
+  body("imageDesc")
+    .custom(requireImageDescIfUploaded((req) => req.uploadedFile)),
+
   collectValidationErrors,
 ];
 
@@ -88,6 +92,9 @@ export const validateExpertUpdate = [
   body("isActive")
     .optional()
     .isIn(["true", "false", true, false]).withMessage("Neispravna vrednost"),
+
+  body("imageDesc")
+    .custom(requireImageDescIfUploaded((req) => req.uploadedFile)),
 
   collectValidationErrors,
 ];

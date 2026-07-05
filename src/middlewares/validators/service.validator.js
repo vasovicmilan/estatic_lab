@@ -1,10 +1,7 @@
 import { body, param } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
+import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
 
-// features/packages/comparisonColumns/comparisonTable/faq arrive as JSON strings from
-// the dynamic form-builder widgets (see service.controller.js's parseJsonField) — validated
-// here only for "is it well-formed", deep field-by-field rules live in service.service.js's
-// validatePackages(), which runs after JSON.parse against the real object shape.
 function isJsonArrayOrArray(value) {
   if (Array.isArray(value)) return true;
   if (typeof value !== "string") return false;
@@ -21,8 +18,6 @@ export const validateServiceCreate = [
     .notEmpty().withMessage("Naziv usluge je obavezan")
     .isLength({ min: 2, max: 150 }).withMessage("Naziv mora imati između 2 i 150 karaktera"),
 
-  // optional — auto-generated from name/title if omitted (see slug.util.js + the
-  // corresponding create*() service function)
   body("slug")
     .optional({ values: "falsy" })
     .trim()
@@ -74,6 +69,9 @@ export const validateServiceCreate = [
     .optional()
     .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
 
+  body("imageDesc")
+    .custom(requireImageDescIfUploaded((req) => req.uploadedFiles?.serviceImage)),
+
   collectValidationErrors,
 ];
 
@@ -115,6 +113,9 @@ export const validateServiceUpdate = [
   body("isActive")
     .optional()
     .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
+
+  body("imageDesc")
+    .custom(requireImageDescIfUploaded((req) => req.uploadedFiles?.serviceImage)),
 
   collectValidationErrors,
 ];

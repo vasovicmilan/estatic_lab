@@ -38,8 +38,8 @@ async function loadFormOptions() {
 function buildPostPayload(req, existing = {}) {
   const data = { ...req.body };
 
-  data.coverImage = req.uploadedFile
-    ? { img: req.uploadedFile.img, imgDesc: req.body.coverImageDesc || req.uploadedFile.imgDesc || "" }
+  data.coverImage = req.uploadedFiles?.coverImage
+    ? { img: req.uploadedFiles.coverImage.img, imgDesc: req.body.coverImageDesc || req.uploadedFiles.coverImage.imgDesc || "" }
     : existing.coverImage || null;
 
   data.gallery = req.uploadedFiles?.gallery

@@ -1,5 +1,6 @@
 import { body, param } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
+import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
 
 function isJsonArrayOrArray(value) {
   if (Array.isArray(value)) return true;
@@ -48,6 +49,9 @@ export const validatePackageCreate = [
     .optional()
     .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
 
+  body("imageDesc")
+    .custom(requireImageDescIfUploaded((req) => req.uploadedFiles?.packageImage)),
+
   collectValidationErrors,
 ];
 
@@ -73,6 +77,9 @@ export const validatePackageUpdate = [
   body("isActive")
     .optional()
     .isIn(["true", "false", true, false, "on"]).withMessage("Neispravna vrednost"),
+
+  body("imageDesc")
+    .custom(requireImageDescIfUploaded((req) => req.uploadedFiles?.packageImage)),
 
   collectValidationErrors,
 ];
