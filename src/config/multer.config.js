@@ -10,7 +10,7 @@ ffmpeg.setFfmpegPath(ffmpegStatic);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const PUBLIC_PATH = path.join(__dirname, "..", "public");
+const PUBLIC_PATH = process.env.UPLOAD_PUBLIC_PATH || path.join(__dirname, "..", "public");
 
 await fs.ensureDir(path.join(PUBLIC_PATH, "images", "services"));
 await fs.ensureDir(path.join(PUBLIC_PATH, "images", "packages"));

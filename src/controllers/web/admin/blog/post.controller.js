@@ -151,7 +151,7 @@ export async function createPost(req, res, next) {
     return flashAndRedirect(req, res, "success", "Post je uspešno kreiran", `/admin/blog/detalji/${post.id}`);
   } catch (error) {
     logError("[createPost] Greška pri kreiranju posta", error, { body: req.body, userId: req.session?.user?.id });
-
+    
     if (error.statusCode === 400 || error.statusCode === 409) {
       const options = await loadFormOptions();
       const formData = preparePostFormData(null, options);
