@@ -69,8 +69,6 @@ export function preparePostDetailsData(post) {
         type: "blocks",
         blocks: post.sadrzaj,
       },
-    ],
-    sidebar: [
       {
         title: "Klasifikacija",
         type: "table",
@@ -120,9 +118,6 @@ export function preparePostFormData(post = null, { categoryOptions = [], tagOpti
 
   const fields = [{ name: "title", label: "Naslov", type: "text", required: true, width: isEdit ? 6 : 12, value: values.title }];
 
-  // slug simply doesn't exist in the array on create — createPost() already
-  // auto-generates one from the title when it's omitted. Shown on edit so an admin
-  // can deliberately change it.
   if (isEdit) {
     fields.push({
       name: "slug",
@@ -137,9 +132,19 @@ export function preparePostFormData(post = null, { categoryOptions = [], tagOpti
 
   fields.push(
     { name: "excerpt", label: "Kratak opis", type: "textarea", rows: 2, required: true, width: 12, value: values.excerpt, help: "Najviše 300 karaktera." },
-    // structured post body built by the existing dynamic form-builder widget (see
-    // blockTypes below, used by that widget) — hidden field just seeds the current value
-    { name: "content", label: "Sadržaj", type: "hidden", width: 12, value: JSON.stringify(values.content || []) },
+    {
+      name: "content",
+      label: "Sadržaj",
+      type: "content-blocks",
+      width: 12,
+      value: values.content || [],
+      // NOTE: the "image"/"video"/"list" block shapes below are my best-guess
+      // reconstruction — I have confirmed field names from post.model.js's
+      // reading-time hook for paragraph/heading/quote (`.text`), but not for
+      // image/video/list. Please check these against content.blog.schema.js
+      // before shipping; happy to adjust the widget's field names once confirmed.
+      blockTypes: ["paragraph", "heading", "image", "quote", "list", "video"],
+    },
     {
       name: "categories",
       label: "Kategorije",
@@ -196,7 +201,6 @@ export function preparePostFormData(post = null, { categoryOptions = [], tagOpti
     formEnctype: "multipart/form-data",
     isEdit,
     fields,
-    blockTypes: ["paragraph", "heading", "image", "quote", "list", "video"], // used by the content-block widget
     submitLabel: isEdit ? "Sačuvaj izmene" : "Kreiraj post",
     cancelUrl: "/admin/blog",
     breadcrumbs: [
@@ -226,3 +230,5 @@ export function preparePostSeoFormData(post) {
     ],
   };
 }
+
+export default { preparePostListData, preparePostDetailsData, preparePostFormData, preparePostSeoFormData };

@@ -6,6 +6,7 @@ import { preparePackageListData, preparePackageDetailsData, preparePackageFormDa
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
+import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
 function parseJsonField(value, fallback = []) {
   if (Array.isArray(value) || (value && typeof value === "object")) return value;
@@ -49,8 +50,8 @@ function buildPackagePayload(req, existing = {}) {
   data.categories = Array.isArray(req.body.categories) ? req.body.categories.filter(Boolean) : req.body.categories ? [req.body.categories] : [];
   data.tags = Array.isArray(req.body.tags) ? req.body.tags.filter(Boolean) : req.body.tags ? [req.body.tags] : [];
 
-  data.isBest = req.body.isBest === "true" || req.body.isBest === true || req.body.isBest === "on";
-  data.isActive = req.body.isActive === "true" || req.body.isActive === true || req.body.isActive === "on";
+  data.isBest = parseCheckbox(req.body.isBest, existing.isBest ?? false);
+  data.isActive = parseCheckbox(req.body.isActive, existing.isActive ?? true);
   data.totalPrice = req.body.totalPrice != null ? Number(req.body.totalPrice) : existing.totalPrice;
   data.basePrice = req.body.basePrice ? Number(req.body.basePrice) : null;
   data.totalDuration = req.body.totalDuration ? Number(req.body.totalDuration) : null;

@@ -6,6 +6,7 @@ import {
   mapServicesForPublic,
   mapServiceForPublicDetail,
 } from "../mappers/service.mapper.js";
+import * as categoryService from "./category.service.js";
 import { generateSlug, generateUniqueSlug } from "../utils/slug.util.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
@@ -24,6 +25,12 @@ function validatePackages(packages = []) {
   }
 }
 
+/**
+ * Each Service.packages[] entry (see service-package.schema.js) needs its own slug.
+ * Collisions here only matter *within this one service's own list* (two variants of the
+ * SAME service can't share a slug, but a slug can repeat across different services fine)
+ * — so uniqueness is checked against sibling entries in the same array, not the database.
+ */
 function assignPackageSlugs(packages = []) {
   const usedSlugs = new Set();
 
@@ -43,6 +50,14 @@ function assignPackageSlugs(packages = []) {
     usedSlugs.add(candidate);
     return { ...p, slug: candidate };
   });
+}
+
+// Reused by both the schema-level publish guard's callers (phase 3) — same rules,
+// thrown as our own badRequest() here so the controller gets a normal 400 instead of
+// a raw Mongoose ValidationError when the check fails before we even hit the DB.
+function assertPublishable(service) {
+  if (!service.image?.img) badRequest("Usluga mora imati sliku pre objavljivanja");
+  validatePackages(service.packages || []);
 }
 
 export async function listServices({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
@@ -87,27 +102,64 @@ export async function findHighlightedServices({ limit = 6 } = {}) {
 }
 
 export async function findServicesByCategorySlug(categorySlug, { limit = 12, page = 1 } = {}) {
-  return findActiveServices({ limit, page, filters: {} });
+  const category = await categoryService.getCategoryBySlugAndDomain(categorySlug, "service");
+  return findActiveServices({ limit, page, filters: { category: category._id } });
 }
 
-export async function createService(data) {
+// ---- Phase 1: core info + image -------------------------------------------------
+export async function createDraftService(data) {
   if (!data) validationError("data");
   if (!data.name) validationError("name");
-  if (!data.image?.img) validationError("image");
 
-  data.packages = assignPackageSlugs(data.packages || []);
-  validatePackages(data.packages);
+  const payload = { ...data, isActive: false, packages: [] };
 
-  if (data.slug) {
-    const existing = await serviceRepo.findServiceBySlug(data.slug);
+  if (payload.slug) {
+    const existing = await serviceRepo.findServiceBySlug(payload.slug);
     if (existing) conflict("Usluga sa ovim slug-om već postoji");
   } else {
-    data.slug = await generateUniqueSlug(data.name, (candidate) => serviceRepo.findServiceBySlug(candidate));
+    payload.slug = await generateUniqueSlug(payload.name, (candidate) => serviceRepo.findServiceBySlug(candidate));
   }
 
-  const created = await serviceRepo.createService(data);
-  logInfo("Service created", { serviceId: created._id, name: created.name, slug: created.slug });
-  return getServiceById(created._id);
+  const created = await serviceRepo.createService(payload);
+  logInfo("Service draft created (phase 1)", { serviceId: created._id, name: created.name, slug: created.slug });
+  return mapServiceForEdit(created);
+}
+
+// ---- Phase 2: packages/variants -------------------------------------------------
+export async function addPackagesToService(serviceId, packages) {
+  if (!serviceId) validationError("serviceId");
+  const existing = await serviceRepo.findServiceById(serviceId);
+  if (!existing) notFound("Usluga");
+
+  validatePackages(packages || []);
+  const withSlugs = assignPackageSlugs(packages);
+
+  const updated = await serviceRepo.updateServiceById(serviceId, { packages: withSlugs });
+  logInfo("Service packages saved (phase 2)", { serviceId, packageCount: withSlugs.length });
+  return mapServiceForEdit(updated);
+}
+
+// ---- Phase 3: optional extras + publish -----------------------------------------
+export async function addExtrasAndPublish(serviceId, data) {
+  if (!serviceId) validationError("serviceId");
+  const existing = await serviceRepo.findServiceById(serviceId);
+  if (!existing) notFound("Usluga");
+
+  const merged = {
+    features: data.features ?? existing.features ?? [],
+    comparisonColumns: data.comparisonColumns ?? existing.comparisonColumns ?? [],
+    comparisonTable: data.comparisonTable ?? existing.comparisonTable ?? [],
+    faq: data.faq ?? existing.faq ?? [],
+    employees: data.employees ?? existing.employees ?? [],
+    highlight: data.highlight ?? existing.highlight ?? false,
+    isActive: data.isActive ?? true,
+  };
+
+  if (merged.isActive) assertPublishable({ ...existing, ...merged });
+
+  const updated = await serviceRepo.updateServiceById(serviceId, merged);
+  logInfo("Service extras saved" + (merged.isActive ? " and published (phase 3)" : " as draft (phase 3)"), { serviceId });
+  return mapServiceForAdminDetail(updated);
 }
 
 export async function updateServiceById(serviceId, data) {
@@ -157,49 +209,6 @@ export async function getActiveVariant(serviceId, servicePackageId) {
   return result;
 }
 
-// 
-
-function assertPublishable(service) {
-  if (!service.image) badRequest("Usluga mora imati sliku pre objavljivanja");
-  validatePackages(service.packages); // already exists, reused as-is
-}
-
-export async function createDraftService(data) {
-  const payload = { ...data, isActive: false };
-  if (payload.name && !payload.slug) payload.slug = await generateUniqueSlug(payload.name, serviceRepo.slugExists);
-  const created = await serviceRepo.createService(payload);
-  return mapServiceForEdit(created);
-}
-
-export async function addPackagesToService(serviceId, packages) {
-  if (!serviceId) validationError("serviceId");
-  validatePackages(packages);
-  const withSlugs = assignPackageSlugs(packages);
-  const updated = await serviceRepo.updateServiceById(serviceId, { packages: withSlugs });
-  if (!updated) notFound("Usluga");
-  return mapServiceForEdit(updated);
-}
-
-export async function addExtrasAndPublish(serviceId, data) {
-  if (!serviceId) validationError("serviceId");
-  const existing = await serviceRepo.findServiceById(serviceId);
-  if (!existing) notFound("Usluga");
-
-  const merged = {
-    features: data.features ?? existing.features ?? [],
-    comparisonColumns: data.comparisonColumns ?? existing.comparisonColumns ?? [],
-    comparisonTable: data.comparisonTable ?? existing.comparisonTable ?? [],
-    faq: data.faq ?? existing.faq ?? [],
-    employees: data.employees ?? existing.employees ?? [],
-    isActive: data.isActive ?? true,
-  };
-
-  if (merged.isActive) assertPublishable({ ...existing, ...merged });
-
-  const updated = await serviceRepo.updateServiceById(serviceId, merged);
-  return mapServiceForAdminDetail(updated);
-}
-
 export default {
   listServices,
   getServiceById,
@@ -208,12 +217,11 @@ export default {
   findActiveServices,
   findHighlightedServices,
   findServicesByCategorySlug,
-  createService,
+  createDraftService,
+  addPackagesToService,
+  addExtrasAndPublish,
   updateServiceById,
   updateServiceSeo,
   deleteServiceById,
   getActiveVariant,
-  createDraftService,
-  addPackagesToService,
-  addExtrasAndPublish,
 };

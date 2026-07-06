@@ -127,6 +127,71 @@
                     <small class="text-muted d-block mt-1" data-multiselect-empty <%= selectedValues.length ? 'style="display:none"' : '' %>>Ništa nije izabrano.</small>
                   </div>
 
+                <% } else if (field.type === 'repeater') { %>
+                  <%
+                    let repeaterValue = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
+                    if (typeof repeaterValue === 'string') {
+                      try { repeaterValue = JSON.parse(repeaterValue); } catch (e) { repeaterValue = []; }
+                    }
+                    if (!Array.isArray(repeaterValue)) repeaterValue = [];
+                  %>
+                  <input type="hidden" name="<%= field.name %>" value='<%- JSON.stringify(repeaterValue) %>' data-repeater-input="<%= field.name %>">
+                  <div class="border rounded p-3 <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'border-danger' : '' %>"
+                       data-repeater="<%= field.name %>"
+                       data-repeater-schema='<%- JSON.stringify(field.itemFields || []) %>'
+                       data-repeater-value='<%- JSON.stringify(repeaterValue) %>'>
+                    <div data-repeater-rows></div>
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" data-repeater-add>
+                      <i class="bi bi-plus-lg"></i> <%= field.addLabel || "Dodaj stavku" %>
+                    </button>
+                    <small class="text-muted d-block mt-2" data-repeater-empty <%= repeaterValue.length ? 'style="display:none"' : '' %>>Nijedna stavka nije dodata.</small>
+                  </div>
+
+                <% } else if (field.type === 'comparison-table') { %>
+                  <%
+                    let comparisonValue = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
+                    if (typeof comparisonValue === 'string') {
+                      try { comparisonValue = JSON.parse(comparisonValue); } catch (e) { comparisonValue = []; }
+                    }
+                    if (!Array.isArray(comparisonValue)) comparisonValue = [];
+                  %>
+                  <input type="hidden" name="<%= field.name %>" value='<%- JSON.stringify(comparisonValue) %>' data-repeater-input="<%= field.name %>">
+                  <div class="border rounded p-3 <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'border-danger' : '' %>"
+                       data-comparison-table="<%= field.name %>"
+                       data-comparison-columns-field="<%= field.columnsFieldName %>"
+                       data-comparison-value='<%- JSON.stringify(comparisonValue) %>'>
+                    <small class="text-muted d-block mb-2">Broj kolona i njihovi nazivi se preuzimaju iz polja "Kolone tabele poređenja" iznad.</small>
+                    <div data-comparison-rows></div>
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" data-comparison-add>
+                      <i class="bi bi-plus-lg"></i> Dodaj red
+                    </button>
+                  </div>
+
+                <% } else if (field.type === 'content-blocks') { %>
+                  <%
+                    let blocksValue = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
+                    if (typeof blocksValue === 'string') {
+                      try { blocksValue = JSON.parse(blocksValue); } catch (e) { blocksValue = []; }
+                    }
+                    if (!Array.isArray(blocksValue)) blocksValue = [];
+                  %>
+                  <input type="hidden" name="<%= field.name %>" value='<%- JSON.stringify(blocksValue) %>' data-repeater-input="<%= field.name %>">
+                  <div class="border rounded p-3 <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'border-danger' : '' %>"
+                       data-content-blocks="<%= field.name %>"
+                       data-content-blocks-value='<%- JSON.stringify(blocksValue) %>'>
+                    <div class="input-group mb-2">
+                      <select class="form-select" data-block-type-select>
+                        <% (field.blockTypes || []).forEach(function(bt) { %>
+                          <option value="<%= bt %>"><%= bt %></option>
+                        <% }) %>
+                      </select>
+                      <button type="button" class="btn btn-outline-primary" data-block-add>
+                        <i class="bi bi-plus-lg"></i> Dodaj blok
+                      </button>
+                    </div>
+                    <div data-content-blocks-list></div>
+                  </div>
+
                 <% } else if (field.type === 'checkbox') { %>
                   <div class="form-check">
                     <input type="hidden" name="<%= field.name %>" value="0">
@@ -238,4 +303,7 @@
 </main>
 
 <script src="/js/admin-multiselect.js"></script>
+<script src="/js/admin-repeater.js"></script>
+<script src="/js/admin-comparison-table.js"></script>
+<script src="/js/admin-content-blocks.js"></script>
 <%- include("../includes/footer") %>

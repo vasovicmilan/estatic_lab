@@ -34,7 +34,6 @@ const ServiceSchema = new Schema(
 
     image: {
       type: ImageSchema,
-      required: true,
     },
     gallery: [ImageSchema],
     videos: [VideoSchema],
@@ -88,20 +87,44 @@ const ServiceSchema = new Schema(
   { timestamps: true }
 );
 
-ServiceSchema.pre("save", function () {
-  if (this.isActive) {
-    if (!this.image) throw new Error("Objavljena usluga mora imati sliku.");
-    if (!this.packages?.length) throw new Error("Objavljena usluga mora imati bar jednu varijantu (paket) za zakazivanje.");
-  }
-  if (this.comparisonTable?.length && this.comparisonColumns?.length) {
-    for (const row of this.comparisonTable) {
-      if (row.values.length !== this.comparisonColumns.length) {
+function validateComparisonTable(doc) {
+  if (doc.comparisonTable?.length && doc.comparisonColumns?.length) {
+    for (const row of doc.comparisonTable) {
+      if (row.values.length !== doc.comparisonColumns.length) {
         throw new Error(
-          `Red "${row.label}" ima ${row.values.length} vrednosti, a očekivano je ${this.comparisonColumns.length}.`
+          `Red "${row.label}" ima ${row.values.length} vrednosti, a očekivano je ${doc.comparisonColumns.length}.`
         );
       }
     }
   }
+}
+
+function validatePublishInvariants(doc) {
+  if (!doc.isActive) return;
+  if (!doc.image) throw new Error("Objavljena usluga mora imati sliku.");
+  if (!doc.packages?.length) {
+    throw new Error("Objavljena usluga mora imati bar jednu varijantu (paket) za zakazivanje.");
+  }
+}
+
+ServiceSchema.pre("save", function () {
+  validateComparisonTable(this);
+  validatePublishInvariants(this);
+});
+
+ServiceSchema.pre("findOneAndUpdate", async function () {
+  const update = this.getUpdate() || {};
+  const patch = { ...update, ...(update.$set || {}) };
+  const touchesRelevantFields = ["isActive", "image", "packages", "comparisonTable", "comparisonColumns"].some(
+    (key) => key in patch
+  );
+  if (!touchesRelevantFields) return;
+
+  const current = await this.model.findOne(this.getQuery()).lean();
+  if (!current) return;
+  const merged = { ...current, ...patch };
+  validateComparisonTable(merged);
+  validatePublishInvariants(merged);
 });
 
 ServiceSchema.index({ categories: 1 });

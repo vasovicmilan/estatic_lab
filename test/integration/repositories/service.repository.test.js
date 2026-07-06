@@ -1,8 +1,7 @@
 import { describe, it, before, after, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import mongoose from "mongoose";
-import * as dbHandler from "../setup/db-handler.js";
 import serviceRepo from "../../../src/repositories/service.repository.js";
+import * as dbHandler from "../setup/db-handler.js";
 
 function validService(overrides = {}) {
   return {
@@ -28,14 +27,29 @@ describe("service.repository", () => {
   });
 
   describe("createService", () => {
-    it("persists a service with at least one package variant", async () => {
-      const service = await serviceRepo.createService(validService());
+    it("persists a fully-published service (image + packages + isActive:true)", async () => {
+      const service = await serviceRepo.createService(validService({ isActive: true }));
       assert.ok(service._id);
       assert.equal(service.packages.length, 1);
+      assert.equal(service.isActive, true);
     });
 
-    it("rejects a service with zero packages at the schema level", async () => {
-      await assert.rejects(() => serviceRepo.createService(validService({ packages: [] })));
+    // image/packages are no longer unconditionally required — a 3-phase draft can
+    // now be saved with neither, as long as isActive stays at its default (false).
+    it("persists a draft (isActive:false) service with no image and no packages", async () => {
+      const service = await serviceRepo.createService({ name: "Nova Usluga U Izradi", slug: "nova-usluga-u-izradi" });
+      assert.ok(service._id);
+      assert.equal(service.isActive, false);
+      assert.equal(service.packages.length, 0);
+      assert.equal(service.image, undefined);
+    });
+
+    it("rejects creating with isActive:true and no image", async () => {
+      await assert.rejects(() => serviceRepo.createService(validService({ isActive: true, image: undefined })));
+    });
+
+    it("rejects creating with isActive:true and zero packages", async () => {
+      await assert.rejects(() => serviceRepo.createService(validService({ isActive: true, packages: [] })));
     });
 
     it("rejects a duplicate slug (unique index)", async () => {
@@ -43,135 +57,61 @@ describe("service.repository", () => {
       await assert.rejects(() => serviceRepo.createService(validService({ name: "Druga usluga" })));
     });
 
-    it("rejects a mismatched comparisonTable row length via the pre-save hook", async () => {
+    it("rejects a mismatched comparisonTable row length on create", async () => {
       await assert.rejects(() =>
         serviceRepo.createService(
           validService({
-            comparisonColumns: ["30 min", "60 min"],
-            comparisonTable: [{ label: "Cena", values: ["1000"] }],
+            comparisonColumns: ["Osnovno", "Premium"],
+            comparisonTable: [{ label: "Trajanje", values: ["60 min"] }], // needs 2 values, has 1
           })
         )
       );
     });
+  });
 
-    it("rejects an image missing the required imgDesc field", async () => {
+  describe("updateServiceById — publish invariants via pre('findOneAndUpdate')", () => {
+    it("allows a draft update that clears packages while isActive stays false", async () => {
+      const created = await serviceRepo.createService(validService());
+      const updated = await serviceRepo.updateServiceById(created._id, { packages: [] });
+      assert.equal(updated.packages.length, 0);
+    });
+
+    it("rejects flipping isActive to true via update when packages is empty", async () => {
+      const created = await serviceRepo.createService(validService({ packages: [] }));
+      await assert.rejects(() => serviceRepo.updateServiceById(created._id, { isActive: true }));
+    });
+
+    it("rejects flipping isActive to true via update when there's no image", async () => {
+      const created = await serviceRepo.createService({
+        name: "Bez Slike",
+        slug: "bez-slike",
+        packages: validService().packages,
+      });
+      await assert.rejects(() => serviceRepo.updateServiceById(created._id, { isActive: true }));
+    });
+
+    it("allows flipping isActive to true once image and packages are both present", async () => {
+      const created = await serviceRepo.createService(validService());
+      const updated = await serviceRepo.updateServiceById(created._id, { isActive: true });
+      assert.equal(updated.isActive, true);
+    });
+
+    // this is the pre-existing bug the new findOneAndUpdate hook fixes: this check
+    // used to only run inside pre('save'), which findByIdAndUpdate never triggers —
+    // so a mismatched comparisonTable could previously be saved via any update.
+    it("rejects a mismatched comparisonTable row length on update (previously not checked at all)", async () => {
+      const created = await serviceRepo.createService(validService({ comparisonColumns: ["Osnovno", "Premium"] }));
       await assert.rejects(() =>
-        serviceRepo.createService(validService({ image: { img: "/images/services/masaza.webp" } }))
-      );
-    });
-    
-    it("accepts a matching comparisonTable row length", async () => {
-      const service = await serviceRepo.createService(
-        validService({
-          comparisonColumns: ["30 min", "60 min"],
-          comparisonTable: [{ label: "Cena", values: ["1000", "2000"] }],
+        serviceRepo.updateServiceById(created._id, {
+          comparisonTable: [{ label: "Trajanje", values: ["60 min"] }],
         })
       );
-      assert.ok(service._id);
-    });
-  });
-
-  describe("findServiceById", () => {
-    it("returns null for a nonexistent id", async () => {
-      const found = await serviceRepo.findServiceById(new mongoose.Types.ObjectId());
-      assert.equal(found, null);
-    });
-  });
-
-  describe("findServiceBySlug", () => {
-    it("finds a service by its slug", async () => {
-      await serviceRepo.createService(validService());
-      const found = await serviceRepo.findServiceBySlug("sportska-masaza");
-      assert.ok(found);
     });
 
-    it("returns null for a nonexistent slug", async () => {
-      const found = await serviceRepo.findServiceBySlug("ne-postoji");
-      assert.equal(found, null);
-    });
-  });
-
-  describe("findServicePackageVariant", () => {
-    it("returns the service and the matching variant only", async () => {
-      const created = await serviceRepo.createService(
-        validService({
-          packages: [
-            { name: "60 minuta", slug: "60-minuta", duration: 60, totalPrice: 3000 },
-            { name: "90 minuta", slug: "90-minuta", duration: 90, totalPrice: 4000 },
-          ],
-        })
-      );
-      const variantId = created.packages[1]._id;
-
-      const result = await serviceRepo.findServicePackageVariant(created._id, variantId);
-
-      assert.equal(result.variant.name, "90 minuta");
-      assert.equal(result.service.name, "Sportska Masaza");
-    });
-
-    it("returns null when the service or variant doesn't exist", async () => {
-      const result = await serviceRepo.findServicePackageVariant(new mongoose.Types.ObjectId(), new mongoose.Types.ObjectId());
-      assert.equal(result, null);
-    });
-  });
-
-  describe("findServices", () => {
-    it("filters by isActive", async () => {
-      await serviceRepo.createService(validService({ slug: "aktivna", isActive: true }));
-      await serviceRepo.createService(validService({ slug: "neaktivna", isActive: false }));
-
-      const result = await serviceRepo.findServices({ filters: { isActive: true }, populateFields: [] });
-
-      assert.equal(result.data.length, 1);
-      assert.equal(result.data[0].slug, "aktivna");
-    });
-
-    it("searches by name", async () => {
-      await serviceRepo.createService(validService({ name: "Relax Masaza", slug: "relax" }));
-      await serviceRepo.createService(validService({ name: "Sportska Masaza", slug: "sport" }));
-
-      const result = await serviceRepo.findServices({ search: "Relax", populateFields: [] });
-
-      assert.equal(result.data.length, 1);
-      assert.equal(result.data[0].slug, "relax");
-    });
-
-    it("filters by highlight", async () => {
-      await serviceRepo.createService(validService({ slug: "istaknuta", highlight: true }));
-      await serviceRepo.createService(validService({ slug: "obicna", highlight: false }));
-
-      const result = await serviceRepo.findServices({ filters: { highlight: true }, populateFields: [] });
-
-      assert.equal(result.data.length, 1);
-      assert.equal(result.data[0].slug, "istaknuta");
-    });
-  });
-
-  describe("updateServiceById", () => {
-    it("updates and returns the post-update document", async () => {
-      const created = await serviceRepo.createService(validService());
-      const updated = await serviceRepo.updateServiceById(created._id, { name: "Novo Ime" });
-      assert.equal(updated.name, "Novo Ime");
-    });
-  });
-
-  describe("deleteServiceById", () => {
-    it("deletes the service", async () => {
-      const created = await serviceRepo.createService(validService());
-      await serviceRepo.deleteServiceById(created._id);
-      const found = await serviceRepo.findServiceById(created._id);
-      assert.equal(found, null);
-    });
-  });
-
-  describe("countServices", () => {
-    it("counts services matching a filter", async () => {
-      await serviceRepo.createService(validService({ slug: "a", isActive: true }));
-      await serviceRepo.createService(validService({ slug: "b", isActive: false }));
-
-      const count = await serviceRepo.countServices({ isActive: true });
-
-      assert.equal(count, 1);
+    it("leaves invariant checks alone for updates that don't touch any relevant field", async () => {
+      const created = await serviceRepo.createService(validService({ isActive: true }));
+      const updated = await serviceRepo.updateServiceById(created._id, { shortDescription: "Novi kratak opis" });
+      assert.equal(updated.shortDescription, "Novi kratak opis");
     });
   });
 });

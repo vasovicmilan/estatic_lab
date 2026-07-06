@@ -97,7 +97,12 @@ export function preparePackageFormData(pkg = null, { serviceOptions = [], catego
         name: "",
         description: "",
         shortDescription: "",
-        items: [{ service: "", sessions: 1 }],
+        // was [{ service: "", sessions: 1 }] — that placeholder row with an empty
+        // service is exactly what was silently getting submitted with nothing to
+        // edit it, and is exactly what tripped "Svaka stavka paketa mora imati
+        // izabranu uslugu". Starts empty now; the repeater widget below is the
+        // only way rows get added, and every row it adds has a real service picker.
+        items: [],
         totalPrice: 0,
         basePrice: null,
         totalDuration: null,
@@ -130,9 +135,19 @@ export function preparePackageFormData(pkg = null, { serviceOptions = [], catego
   fields.push(
     { name: "description", label: "Opis", type: "textarea", rows: 4, required: true, width: 12, value: values.description },
     { name: "shortDescription", label: "Kratak opis", type: "textarea", rows: 2, width: 12, value: values.shortDescription, help: "Najviše 300 karaktera." },
-    // items is a repeating {service, sessions} list built by the existing dynamic
-    // form-builder widget — this hidden field just seeds it with the current value
-    { name: "items", label: "Stavke paketa", type: "hidden", width: 12, value: JSON.stringify(values.items || []) },
+    {
+      name: "items",
+      label: "Usluge u paketu",
+      type: "repeater",
+      width: 12,
+      value: values.items || [],
+      addLabel: "Dodaj uslugu u paket",
+      help: "Paket mora sadržati bar jednu uslugu — izaberite je iz padajućeg menija za svaku stavku.",
+      itemFields: [
+        { name: "service", label: "Usluga", type: "select", required: true, options: serviceOptions.map((s) => ({ value: s.id, label: s.naziv })) },
+        { name: "sessions", label: "Broj seansi", type: "number", min: 1, value: 1, required: true },
+      ],
+    },
     { name: "totalPrice", label: "Cena", type: "number", required: true, min: 0, step: "0.01", width: 6, value: values.totalPrice },
     { name: "basePrice", label: "Stara cena (opciono)", type: "number", min: 0, step: "0.01", width: 6, value: values.basePrice },
     { name: "totalDuration", label: "Ukupno trajanje (min, opciono)", type: "number", min: 0, width: 6, value: values.totalDuration },
@@ -155,7 +170,18 @@ export function preparePackageFormData(pkg = null, { serviceOptions = [], catego
       value: (values.tags || []).map((t) => (typeof t === "object" ? t.id ?? t._id?.toString() : t)),
       options: tagOptions.map((t) => ({ value: t.id, label: t.naziv })),
     },
-    { name: "faq", label: "Česta pitanja", type: "hidden", width: 12, value: JSON.stringify(values.faq || []) },
+    {
+      name: "faq",
+      label: "Česta pitanja",
+      type: "repeater",
+      width: 12,
+      value: values.faq || [],
+      addLabel: "Dodaj pitanje",
+      itemFields: [
+        { name: "question", label: "Pitanje", type: "text", required: true },
+        { name: "answer", label: "Odgovor", type: "textarea", required: true },
+      ],
+    },
     {
       name: "packageImage",
       label: "Slika",
@@ -174,7 +200,6 @@ export function preparePackageFormData(pkg = null, { serviceOptions = [], catego
     formEnctype: "multipart/form-data",
     isEdit,
     fields,
-    serviceOptions, // still needed by whatever widget builds the "items" repeater
     submitLabel: isEdit ? "Sačuvaj izmene" : "Kreiraj paket",
     cancelUrl: "/admin/paketi",
     breadcrumbs: [
@@ -184,3 +209,5 @@ export function preparePackageFormData(pkg = null, { serviceOptions = [], catego
     ],
   };
 }
+
+export default { preparePackageListData, preparePackageDetailsData, preparePackageFormData };

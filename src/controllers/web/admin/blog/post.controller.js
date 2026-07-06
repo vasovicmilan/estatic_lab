@@ -10,6 +10,7 @@ import {
 } from "../../../../presenters/admin/blog/post.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
 function parseJsonField(value, fallback = []) {
   if (Array.isArray(value) || (value && typeof value === "object")) return value;
@@ -50,7 +51,7 @@ function buildPostPayload(req, existing = {}) {
   data.categories = Array.isArray(req.body.categories) ? req.body.categories.filter(Boolean) : req.body.categories ? [req.body.categories] : [];
   data.tags = Array.isArray(req.body.tags) ? req.body.tags.filter(Boolean) : req.body.tags ? [req.body.tags] : [];
   data.seo = parseJsonField(req.body.seo, existing.seo || {});
-  data.isIndexable = req.body.isIndexable === "true" || req.body.isIndexable === true || req.body.isIndexable === "on";
+  data.isIndexable = parseCheckbox(req.body.isIndexable, existing.isIndexable ?? true);
 
   return data;
 }
