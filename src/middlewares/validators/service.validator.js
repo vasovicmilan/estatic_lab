@@ -10,8 +10,6 @@ export const validateServiceStep1 = [
     .notEmpty().withMessage("Naziv usluge je obavezan")
     .isLength({ min: 2, max: 150 }).withMessage("Naziv mora imati između 2 i 150 karaktera"),
 
-  slugField(true),
-
   body("shortDescription")
     .optional()
     .trim()
@@ -83,8 +81,6 @@ export const validateServiceUpdate = [
     .optional()
     .trim()
     .isLength({ min: 2, max: 150 }).withMessage("Naziv mora imati između 2 i 150 karaktera"),
-
-  slugField(false),
 
   body("defaultDuration")
     .optional()

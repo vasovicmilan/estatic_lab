@@ -12,7 +12,6 @@ const ServiceFeatureSchema = new Schema(
     },
     slug: {
       type: String,
-      required: true,
       lowercase: true,
       trim: true,
     },

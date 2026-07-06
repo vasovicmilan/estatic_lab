@@ -1,4 +1,5 @@
 import { formatDateTime, formatDate } from "../utils/date.time.util.js";
+import { decrypt } from "../services/crypto.service.js";
 
 function translateStatus(status) {
   const map = {
@@ -36,7 +37,7 @@ export function mapContactForAdminDetail(contact) {
       ime: contact.firstName,
       prezime: contact.lastName,
       email: contact.email,
-      telefon: contact.phone || null,
+      telefon: decrypt(contact.phone) || null,
       tema: contact.topic || null,
       status: translateStatus(contact.status),
       statusRaw: contact.status,

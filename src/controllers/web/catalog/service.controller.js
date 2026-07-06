@@ -17,7 +17,7 @@ export async function serviceList(req, res, next) {
     const viewData = prepareServiceListData(result, { query: req.query, categories });
     const seo = await generateSeo("page", { title: "Usluge", description: "Pregledajte sve usluge Estatic Lab wellness centra.", slug: "/usluge" }, req);
 
-    return res.render("our-services/our-services", {
+    return res.render("services/services", {
       pageTitle: seo.title,
       pageDescription: seo.description,
       seo,
@@ -40,7 +40,7 @@ export async function serviceCategory(req, res, next) {
     const viewData = prepareServiceCategoryData({ id: category._id.toString(), naziv: category.name, slug: category.slug }, result, req.query);
     const seo = await generateSeo("category", category, req);
 
-    return res.render("our-services/our-services", {
+    return res.render("services/services", {
       pageTitle: seo.title,
       pageDescription: seo.description,
       seo,
@@ -62,7 +62,7 @@ export async function serviceDetails(req, res, next) {
     const viewData = prepareServiceDetailData(service, { testimonials });
     const seo = await generateSeo("service", service, req);
 
-    return res.render("our-services/our-service-details", {
+    return res.render("services/our-service-details", {
       pageTitle: seo.title,
       pageDescription: seo.description,
       seo,

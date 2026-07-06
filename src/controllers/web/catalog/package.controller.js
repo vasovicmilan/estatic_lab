@@ -10,7 +10,7 @@ export async function packageList(req, res, next) {
     const viewData = preparePackageListData(result, req.query);
     const seo = await generateSeo("page", { title: "Paketi", description: "Kombinovani paketi usluga po povoljnijoj ceni.", slug: "/paketi" }, req);
 
-    return res.render("our-services/packages", {
+    return res.render("services/packages", {
       pageTitle: seo.title,
       pageDescription: seo.description,
       seo,
@@ -29,7 +29,7 @@ export async function packageDetails(req, res, next) {
     const viewData = preparePackageDetailData(pkg);
     const seo = await generateSeo("page", { title: pkg.naziv, description: pkg.kratakOpis, slug: `/paketi/${pkg.slug}` }, req);
 
-    return res.render("our-services/package-details", {
+    return res.render("services/package-details", {
       pageTitle: seo.title,
       pageDescription: seo.description,
       seo,

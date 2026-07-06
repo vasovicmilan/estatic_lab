@@ -167,6 +167,11 @@ export async function updateServiceById(serviceId, data) {
   const existing = await serviceRepo.findServiceById(serviceId);
   if (!existing) notFound("Usluga");
 
+  // QUESTION: NEEDS TO BE CHECKED DOES IT HAVE SENS AND DOES THIS WORK
+  if (data.name) {
+    data.slug = generateSlug(data.name);
+  }
+
   if (data.slug && data.slug !== existing.slug) {
     const conflicting = await serviceRepo.findServiceBySlug(data.slug);
     if (conflicting) conflict("Usluga sa ovim slug-om već postoji");

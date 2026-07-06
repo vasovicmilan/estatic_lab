@@ -87,6 +87,8 @@ export function wrapError(error) {
       ? { originalMessage: error.message, stack: error.stack }
       : null;
       
+  console.error(error);
+  
   return new AppError("Interna greška servera", error.statusCode || 500, {
     isOperational: false,
     details,

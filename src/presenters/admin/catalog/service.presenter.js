@@ -129,18 +129,6 @@ export function prepareServiceFormData(service = null, { categoryOptions = [], t
 
   const fields = [{ name: "name", label: "Naziv", type: "text", required: true, width: isEdit ? 6 : 12, value: values.name }];
 
-  if (isEdit) {
-    fields.push({
-      name: "slug",
-      label: "Slug",
-      type: "text",
-      required: true,
-      width: 6,
-      value: values.slug,
-      help: "Menjajte pažljivo — postojeći linkovi ka ovoj usluzi mogu prestati da rade.",
-    });
-  }
-
   fields.push(
     { name: "shortDescription", label: "Kratak opis", type: "textarea", rows: 2, width: 12, value: values.shortDescription, help: "Najviše 300 karaktera." },
     { name: "longDescription", label: "Dugi opis", type: "textarea", rows: 5, width: 12, value: values.longDescription },

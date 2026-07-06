@@ -144,7 +144,7 @@ export function preparePackageFormData(pkg = null, { serviceOptions = [], catego
       addLabel: "Dodaj uslugu u paket",
       help: "Paket mora sadržati bar jednu uslugu — izaberite je iz padajućeg menija za svaku stavku.",
       itemFields: [
-        { name: "service", label: "Usluga", type: "select", required: true, options: serviceOptions.map((s) => ({ value: s.id, label: s.naziv })) },
+        { name: "service", label: "Usluga", type: "select", required: true, options: serviceOptions },
         { name: "sessions", label: "Broj seansi", type: "number", min: 1, value: 1, required: true },
       ],
     },

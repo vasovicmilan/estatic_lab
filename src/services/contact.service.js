@@ -3,6 +3,7 @@ import contactRepo from "../repositories/contact.repository.js";
 import { mapContactsForAdminList, mapContactForAdminDetail, mapContactForUserShort } from "../mappers/contact.mapper.js";
 import { validationError, notFound, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
+import { encrypt } from "../services/crypto.service.js";
 
 export async function listContacts({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
   const result = await contactRepo.findContacts({ search, limit, page, filters });
@@ -28,7 +29,7 @@ export async function submitContact(data, { ip, userAgent } = {}) {
     firstName: data.firstName,
     lastName: data.lastName,
     email: data.email,
-    phone: data.phone || "",
+    phone: encrypt(data.phone) || "",
     topic: data.topic || "",
     message: data.message,
     consent: true,

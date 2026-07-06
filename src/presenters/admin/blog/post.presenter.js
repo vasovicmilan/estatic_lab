@@ -1,3 +1,5 @@
+import { BLOG_BLOCK_TYPES } from "../../../models/schemas/content.blog.schema.js";
+
 export function preparePostListData(result, query = {}) {
   return {
     items: result.data,
@@ -138,12 +140,11 @@ export function preparePostFormData(post = null, { categoryOptions = [], tagOpti
       type: "content-blocks",
       width: 12,
       value: values.content || [],
-      // NOTE: the "image"/"video"/"list" block shapes below are my best-guess
-      // reconstruction — I have confirmed field names from post.model.js's
-      // reading-time hook for paragraph/heading/quote (`.text`), but not for
-      // image/video/list. Please check these against content.blog.schema.js
-      // before shipping; happy to adjust the widget's field names once confirmed.
-      blockTypes: ["paragraph", "heading", "image", "quote", "list", "video"],
+      // block shapes confirmed against content.blog.schema.js: paragraph/heading/quote
+      // use `text` (+`level` for heading, +`meta` for quote's attribution); image/video
+      // are nested objects (`image.img`/`image.imgDesc`, `video.url`/`video.title`);
+      // list uses `items` + `ordered`. Widget implementation: admin-content-blocks.js.
+      blockTypes: BLOG_BLOCK_TYPES,
     },
     {
       name: "categories",
