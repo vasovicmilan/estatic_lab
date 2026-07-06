@@ -1,4 +1,5 @@
 import { formatDateTime } from "../utils/date.time.util.js";
+import { decryptPhone } from "../utils/phone.util.js";
 
 function translateStatus(status) {
   const map = {
@@ -39,7 +40,7 @@ function getUserEmail(appointment) {
 
 function getUserPhone(appointment) {
   if (appointment.contactSnapshot?.phone) return appointment.contactSnapshot.phone;
-  if (appointment.user && typeof appointment.user === "object") return appointment.user.phone || null;
+  if (appointment.user && typeof appointment.user === "object") return decryptPhone(appointment.user.phone);
   return null;
 }
 

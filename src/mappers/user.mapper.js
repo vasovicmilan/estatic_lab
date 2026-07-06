@@ -1,5 +1,5 @@
-// TODO: telefon needs to be decryptred in hear and i need to make sure that when creating user its encriptred (2026-07-06)
 import { formatDateTime, formatDate } from "../utils/date.time.util.js";
+import { decryptPhone } from "../utils/phone.util.js";
 
 function getFullName(user) {
   return `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Nepoznato";
@@ -48,7 +48,7 @@ export function mapUserForAdminShort(user) {
     id: user._id.toString(),
     imePrezime: getFullName(user),
     email: user.email,
-    telefon: user.phone || null,
+    telefon: decryptPhone(user.phone),
     uloga: getRoleName(user),
     status: translateStatus(user.status),
     statusRaw: user.status,
@@ -68,7 +68,7 @@ export function mapUserForAdminDetail(user) {
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
-    telefon: user.phone || null,
+    telefon: decryptPhone(user.phone),
     nacinPrijave: translateProvider(user.provider),
     uloga: getRoleName(user),
     roleId: getRoleId(user),
@@ -89,7 +89,7 @@ export function mapUserForEmployeeShort(user) {
     id: user._id.toString(),
     imePrezime: getFullName(user),
     email: user.email,
-    telefon: user.phone || null,
+    telefon: decryptPhone(user.phone),
   };
 }
 
@@ -98,7 +98,7 @@ export function mapUserForEmployeeDetail(user) {
     id: user._id.toString(),
     imePrezime: getFullName(user),
     email: user.email,
-    telefon: user.phone || null,
+    telefon: decryptPhone(user.phone),
     registrovan: formatDate(user.createdAt),
   };
 }
@@ -110,7 +110,7 @@ export function mapUserForProfile(user) {
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
-    telefon: user.phone || null,
+    telefon: decryptPhone(user.phone),
     uloga: getRoleName(user),
     avatar: user.avatar || null,
     nacinPrijave: translateProvider(user.provider),

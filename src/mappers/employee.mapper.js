@@ -1,4 +1,5 @@
 import { formatDateTime } from "../utils/date.time.util.js";
+import { decryptPhone } from "../utils/phone.util.js";
 
 function translateDay(day) {
   const map = {
@@ -36,7 +37,7 @@ function getEmail(employee) {
 
 function getPhone(employee) {
   if (employee.userId && typeof employee.userId === "object") {
-    return employee.userId.phone || null;
+    return decryptPhone(employee.userId.phone);
   }
   return null;
 }

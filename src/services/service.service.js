@@ -24,12 +24,6 @@ function validatePackages(packages = []) {
   }
 }
 
-/**
- * Each Service.packages[] entry (see service-package.schema.js) needs its own slug.
- * Collisions here only matter *within this one service's own list* (two variants of the
- * SAME service can't share a slug, but a slug can repeat across different services fine)
- * — so uniqueness is checked against sibling entries in the same array, not the database.
- */
 function assignPackageSlugs(packages = []) {
   const usedSlugs = new Set();
 
@@ -93,9 +87,6 @@ export async function findHighlightedServices({ limit = 6 } = {}) {
 }
 
 export async function findServicesByCategorySlug(categorySlug, { limit = 12, page = 1 } = {}) {
-  // NOTE: resolving the category id from slug is the controller's job (via category.service.js)
-  // — this function takes the already-resolved categoryId through `filters` to avoid a
-  // circular service->service->service dependency chain.
   return findActiveServices({ limit, page, filters: {} });
 }
 
@@ -154,10 +145,6 @@ export async function deleteServiceById(serviceId) {
   return { success: true };
 }
 
-/**
- * Pulls just the chosen variant + validates it's active — the read-only step that
- * happens before appointment.service.js opens its booking transaction.
- */
 export async function getActiveVariant(serviceId, servicePackageId) {
   if (!serviceId) validationError("serviceId");
   if (!servicePackageId) validationError("servicePackageId");
@@ -167,7 +154,50 @@ export async function getActiveVariant(serviceId, servicePackageId) {
   if (!result.service.name) notFound("Usluga");
   if (result.variant.isActive === false) badRequest("Ova varijanta trenutno nije dostupna za zakazivanje");
 
-  return result; // { service: { _id, name, employees }, variant: { _id, name, duration, totalPrice, ... } }
+  return result;
+}
+
+// 
+
+function assertPublishable(service) {
+  if (!service.image) badRequest("Usluga mora imati sliku pre objavljivanja");
+  validatePackages(service.packages); // already exists, reused as-is
+}
+
+export async function createDraftService(data) {
+  const payload = { ...data, isActive: false };
+  if (payload.name && !payload.slug) payload.slug = await generateUniqueSlug(payload.name, serviceRepo.slugExists);
+  const created = await serviceRepo.createService(payload);
+  return mapServiceForEdit(created);
+}
+
+export async function addPackagesToService(serviceId, packages) {
+  if (!serviceId) validationError("serviceId");
+  validatePackages(packages);
+  const withSlugs = assignPackageSlugs(packages);
+  const updated = await serviceRepo.updateServiceById(serviceId, { packages: withSlugs });
+  if (!updated) notFound("Usluga");
+  return mapServiceForEdit(updated);
+}
+
+export async function addExtrasAndPublish(serviceId, data) {
+  if (!serviceId) validationError("serviceId");
+  const existing = await serviceRepo.findServiceById(serviceId);
+  if (!existing) notFound("Usluga");
+
+  const merged = {
+    features: data.features ?? existing.features ?? [],
+    comparisonColumns: data.comparisonColumns ?? existing.comparisonColumns ?? [],
+    comparisonTable: data.comparisonTable ?? existing.comparisonTable ?? [],
+    faq: data.faq ?? existing.faq ?? [],
+    employees: data.employees ?? existing.employees ?? [],
+    isActive: data.isActive ?? true,
+  };
+
+  if (merged.isActive) assertPublishable({ ...existing, ...merged });
+
+  const updated = await serviceRepo.updateServiceById(serviceId, merged);
+  return mapServiceForAdminDetail(updated);
 }
 
 export default {
@@ -183,4 +213,7 @@ export default {
   updateServiceSeo,
   deleteServiceById,
   getActiveVariant,
+  createDraftService,
+  addPackagesToService,
+  addExtrasAndPublish,
 };

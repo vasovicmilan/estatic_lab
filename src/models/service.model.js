@@ -64,10 +64,6 @@ const ServiceSchema = new Schema(
     packages: {
       type: [ServicePackageSchema],
       default: [],
-      validate: {
-        validator: (v) => v && v.length > 0,
-        message: "Usluga mora imati bar jednu varijantu (paket) za zakazivanje.",
-      },
     },
 
     comparisonColumns: {
@@ -85,7 +81,7 @@ const ServiceSchema = new Schema(
 
     isActive: {
       type: Boolean,
-      default: true,
+      default: false,
       index: true,
     },
   },
@@ -93,9 +89,13 @@ const ServiceSchema = new Schema(
 );
 
 ServiceSchema.pre("save", function () {
+  if (this.isActive) {
+    if (!this.image) throw new Error("Objavljena usluga mora imati sliku.");
+    if (!this.packages?.length) throw new Error("Objavljena usluga mora imati bar jednu varijantu (paket) za zakazivanje.");
+  }
   if (this.comparisonTable?.length && this.comparisonColumns?.length) {
-     for (const row of this.comparisonTable) {
-       if (row.values.length !== this.comparisonColumns.length) {
+    for (const row of this.comparisonTable) {
+      if (row.values.length !== this.comparisonColumns.length) {
         throw new Error(
           `Red "${row.label}" ima ${row.values.length} vrednosti, a očekivano je ${this.comparisonColumns.length}.`
         );

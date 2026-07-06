@@ -4,6 +4,7 @@ import { mapUser, mapUsersForAdminList, mapUserForAdminDetail, mapUserForProfile
 import { hashPassword, comparePasswords, generateRandomToken, encrypt, sha256 } from "./crypto.service.js";
 import { validationError, notFound, conflict, unauthorized, badRequest } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
+import { buildPhoneRecord } from "../utils/phone.util.js";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1h
 const CONFIRM_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24h
@@ -91,15 +92,12 @@ export async function registerUser(data) {
   const passwordHash = await hashPassword(data.password);
   const confirmToken = generateRandomToken();
 
-  /* TODO: telephone needs to be encrypted and we need to chage a model a little bit to use schema that will handle telefon structure that will 
-    have hashed plain value and encrypted value so it woul be easear to comapre values (2026-07-06)
-  */
   const created = await userRepo.createUser({
     email: data.email.toLowerCase().trim(),
     password: passwordHash,
     firstName: data.firstName,
     lastName: data.lastName,
-    phone: data.phone || "",
+    phone: buildPhoneRecord(data.phone),
     role: role._id,
     provider: "local",
     // the first user has no one to send/click a confirmation link, so skip straight to active
@@ -174,7 +172,7 @@ export async function createGuestUser({ firstName, lastName, email, phone }, { s
       email: email.toLowerCase().trim(),
       firstName,
       lastName: lastName || "",
-      phone: phone || "",
+      phone: buildPhoneRecord(phone),
       role: role._id,
       provider: "local",
       status: "guest",
@@ -275,8 +273,10 @@ export async function deactivateAccount(userId, password) {
 
 export async function updateProfile(userId, data) {
   if (!userId) validationError("userId");
-  const allowed = { firstName: data.firstName, lastName: data.lastName, phone: data.phone };
-  const updated = await userRepo.updateUserById(userId, allowed);
+  const allowed = { firstName: data.firstName, lastName: data.lastName };
+  if (data.phone !== undefined) {
+    allowed.phone = buildPhoneRecord(data.phone);
+  }
   if (!updated) notFound("Korisnik");
   return mapUserForProfile(updated);
 }

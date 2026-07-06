@@ -1,5 +1,5 @@
-// TODO: need to add schema for phone! (2026-07-06)
 import { Schema, model } from "mongoose";
+import PhoneSchema from "./schemas/phone.schema.js";
 
 const UserSchema = new Schema(
   {
@@ -32,10 +32,7 @@ const UserSchema = new Schema(
       trim: true,
     },
 
-    phone: {
-      type: String,
-      trim: true,
-    },
+    phone: PhoneSchema,
 
     googleId: {
       type: String,
