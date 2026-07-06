@@ -74,14 +74,14 @@ describe("Google OAuth callback (HTTP)", () => {
     });
 
     const agent = request.agent(app);
-    const res = await agent.get("/prijava/google/callback?code=real-code");
+    const initial = await agent.get("/prijava/google");
+    const state = new URL(initial.headers.location).searchParams.get("state");
+    const res = await agent.get(`/prijava/google/callback?code=real-code&state=${state}`);
+
 
     assert.equal(res.status, 302);
     assert.equal(res.headers.location, "/");
 
-    // the session should now be authenticated — a request to /admin should no longer
-    // be bounced to login (it may still 403 if this account isn't admin, which is fine;
-    // we're only confirming the session itself was established)
     const adminCheck = await agent.get("/admin");
     assert.notEqual(adminCheck.status, 302);
   });
