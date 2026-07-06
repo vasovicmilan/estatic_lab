@@ -1,7 +1,7 @@
 import * as userService from "../../../../services/user.service.js";
 import * as authService from "../../../../services/auth.service.js";
 import * as roleService from "../../../../services/role.service.js";
-import { prepareUserListData, prepareUserDetailsData } from "../../../../presenters/admin/auth/user.presenter.js";
+import { prepareUserListData, prepareUserDetailsData, prepareUserEditFormData } from "../../../../presenters/admin/auth/user.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 
@@ -134,6 +134,58 @@ export async function deleteUser(req, res, next) {
   }
 }
 
+export async function editUserForm(req, res, next) {
+  try {
+    const { userId } = req.params;
+    const user = await userService.getUserById(userId);
+    const formData = prepareUserEditFormData(user);
+
+    return res.render("admin/_form", {
+      pageTitle: `Izmena — ${user.imePrezime}`,
+      pageDescription: user.email,
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
+    });
+  } catch (error) {
+    logError("[editUserForm] Greška pri učitavanju forme za izmenu korisnika", error, { userId: req.params.userId, adminId: req.session?.user?.id });
+    next(error);
+  }
+}
+
+export async function updateUser(req, res, next) {
+  try {
+    const { userId } = req.params;
+
+    if (req.validationErrors) {
+      logWarn(`[updateUser] Validacione greške za userId=${userId}`, { validationErrors: req.validationErrors, adminId: req.session?.user?.id });
+      const user = await userService.getUserById(userId);
+      const formData = prepareUserEditFormData(user);
+      return res.status(400).render("admin/_form", {
+        pageTitle: `Izmena — ${user.imePrezime}`,
+        pageDescription: user.email,
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
+      });
+    }
+
+    const updated = await userService.updateProfile(userId, req.body);
+    logInfo(`[updateUser] Korisnik #${userId} ažuriran od strane admina`, { userId, adminId: req.session?.user?.id });
+
+    return flashAndRedirect(req, res, "success", "Korisnik je uspešno ažuriran", `/admin/korisnici/detalji/${userId}`);
+  } catch (error) {
+    logError("[updateUser] Greška pri ažuriranju korisnika", error, { userId: req.params.userId, body: req.body, adminId: req.session?.user?.id });
+
+    if (error.statusCode === 400 || error.statusCode === 404) {
+      const user = await userService.getUserById(req.params.userId).catch(() => null);
+      const formData = prepareUserEditFormData(user || { id: req.params.userId });
+      return res.status(error.statusCode).render("admin/_form", {
+        pageTitle: user ? `Izmena — ${user.imePrezime}` : "Izmena korisnika",
+        pageDescription: user?.email || "",
+        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
+      });
+    }
+    next(error);
+  }
+}
+
 export default {
   listUsers,
   userDetails,
@@ -141,4 +193,6 @@ export default {
   updateUserRole,
   verifyUser,
   deleteUser,
+  editUserForm,
+  updateUser,
 };

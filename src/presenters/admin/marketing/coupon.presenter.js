@@ -111,31 +111,71 @@ export function prepareCouponDetailsData(coupon) {
 
 export function prepareCouponFormData(coupon = null, { serviceOptions = [] } = {}) {
   const isEdit = !!coupon;
+  const values = isEdit
+    ? coupon
+    : {
+        code: "",
+        discountType: "percentage",
+        discountValue: 0,
+        minAppointmentValue: 0,
+        maxUses: null,
+        maxUsesPerUser: 1,
+        applicableServices: [],
+        validFrom: new Date(),
+        validUntil: null,
+        isActive: true,
+      };
 
+  // Unlike name/slug elsewhere, a coupon code has no auto-generation — it's always a
+  // deliberate value the admin chooses, so it's required on both create and edit.
   return {
-    formAction: isEdit ? `/admin/kuponi/izmena/${coupon.id}` : "/admin/kuponi/dodavanje",
+    formAction: isEdit ? `/admin/kuponi/${coupon.id}` : "/admin/kuponi",
     isEdit,
-    formType: "coupon",
-    backUrl: "/admin/kuponi",
-    formData: isEdit
-      ? coupon
-      : {
-          code: "",
-          discountType: "percentage",
-          discountValue: 0,
-          minAppointmentValue: 0,
-          maxUses: null,
-          maxUsesPerUser: 1,
-          applicableServices: [],
-          validFrom: new Date(),
-          validUntil: null,
-          isActive: true,
-        },
-    serviceOptions,
-    discountTypes: [
-      { value: "percentage", label: "Procenat" },
-      { value: "fixed", label: "Fiksni iznos" },
+    fields: [
+      { name: "code", label: "Kod", type: "text", required: true, width: 6, value: values.code, help: "Automatski se čuva velikim slovima." },
+      {
+        name: "discountType",
+        label: "Tip popusta",
+        type: "select",
+        required: true,
+        width: 6,
+        value: values.discountType,
+        options: [
+          { value: "percentage", label: "Procenat (%)" },
+          { value: "fixed", label: "Fiksni iznos" },
+        ],
+      },
+      { name: "discountValue", label: "Vrednost popusta", type: "number", required: true, min: 0, step: "0.01", width: 6, value: values.discountValue },
+      { name: "minAppointmentValue", label: "Minimalna vrednost termina", type: "number", min: 0, step: "0.01", width: 6, value: values.minAppointmentValue },
+      { name: "maxUses", label: "Maksimalan broj upotreba (ukupno, opciono)", type: "number", min: 1, width: 6, value: values.maxUses },
+      { name: "maxUsesPerUser", label: "Maksimalan broj upotreba po korisniku", type: "number", min: 1, width: 6, value: values.maxUsesPerUser },
+      {
+        name: "applicableServices",
+        label: "Važi samo za usluge (opciono — prazno = sve usluge)",
+        type: "multiselect",
+        width: 12,
+        value: (values.applicableServices || []).map((s) => (typeof s === "object" ? s.id ?? s._id?.toString() : s)),
+        options: serviceOptions,
+      },
+      {
+        name: "validFrom",
+        label: "Važi od",
+        type: "date",
+        width: 6,
+        value: values.validFrom ? String(values.validFrom).slice(0, 10) : "",
+      },
+      {
+        name: "validUntil",
+        label: "Važi do",
+        type: "date",
+        required: true,
+        width: 6,
+        value: values.validUntil ? String(values.validUntil).slice(0, 10) : "",
+      },
+      { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive },
     ],
+    submitLabel: isEdit ? "Sačuvaj izmene" : "Kreiraj kupon",
+    cancelUrl: "/admin/kuponi",
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Kuponi", url: "/admin/kuponi" },

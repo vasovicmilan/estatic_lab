@@ -1,3 +1,4 @@
+// TODO: need to add schema for phone! (2026-07-06)
 import { Schema, model } from "mongoose";
 
 const UserSchema = new Schema(

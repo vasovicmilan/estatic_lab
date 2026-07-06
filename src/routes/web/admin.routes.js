@@ -4,6 +4,7 @@ import { adminLimiter } from "../../middlewares/rate-limiter.middleware.js";
 
 import roleRoutes from "./admin/role.routes.js";
 import userRoutes from "./admin/user.routes.js";
+import profileRoutes from "./admin/profile.routes.js";
 import employeeRoutes from "./admin/employee.routes.js";
 import expertRoutes from "./admin/expert.routes.js";
 import categoryRoutes from "./admin/category.routes.js";
@@ -24,6 +25,7 @@ router.use(adminLimiter);
 
 router.use("/role", roleRoutes);
 router.use("/korisnici", userRoutes);
+router.use("/profil", profileRoutes);
 router.use("/zaposleni", employeeRoutes);
 router.use("/eksperti", expertRoutes);
 router.use("/kategorije", categoryRoutes);

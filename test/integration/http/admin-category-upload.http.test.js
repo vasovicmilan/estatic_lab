@@ -31,7 +31,7 @@ describe("admin category CRUD + image upload (HTTP)", () => {
     const { token } = await getCsrfToken(agent, "/admin/kategorije/dodavanje");
 
     const res = await agent
-      .post("/admin/kategorije")
+      .post("/admin/kategorije/dodavanje")
       .field("CSRFToken", token)
       .field("name", "Masaze Lica")
       .field("domain", "service")
@@ -51,10 +51,10 @@ describe("admin category CRUD + image upload (HTTP)", () => {
   it("rejects category creation without a valid CSRF token, even as multipart", async () => {
     const agent = request.agent(app);
     await registerAndLogin(agent, { email: "admin@example.com", roleName: "admin" });
-    await getCsrfToken(agent, "/admin/kategorije/dodavanje"); // establish session, deliberately ignore the token
+    await getCsrfToken(agent, "/admin/kategorije/dodavanje");
 
     const res = await agent
-      .post("/admin/kategorije")
+      .post("/admin/kategorije/dodavanje")
       .field("name", "Bez Tokena")
       .field("domain", "service")
       .field("categoryImageDesc", "Bez tokena")
@@ -68,15 +68,18 @@ describe("admin category CRUD + image upload (HTTP)", () => {
     await registerAndLogin(agent, { email: "admin@example.com", roleName: "admin" });
 
     const { token: createToken } = await getCsrfToken(agent, "/admin/kategorije/dodavanje");
-    await agent
-      .post("/admin/kategorije")
+    const createRes = await agent
+      .post("/admin/kategorije/dodavanje")
       .field("CSRFToken", createToken)
       .field("name", "Originalno Ime")
       .field("domain", "service")
       .field("categoryImageDesc", "Originalna slika")
       .attach("categoryImage", TINY_PNG, "test.png");
 
+    assert.equal(createRes.status, 302);
+
     const existing = (await categoryRepo.findCategories({ filters: { domain: "service" } })).data[0];
+    assert.ok(existing);
     uploadedImageUrls.push(existing.featureImage.img);
 
     const { token: editToken } = await getCsrfToken(agent, `/admin/kategorije/izmena/${existing._id}`);
@@ -100,13 +103,15 @@ describe("admin category CRUD + image upload (HTTP)", () => {
     await registerAndLogin(agent, { email: "admin@example.com", roleName: "admin" });
 
     const { token: createToken } = await getCsrfToken(agent, "/admin/kategorije/dodavanje");
-    await agent
-      .post("/admin/kategorije")
+    const createRes = await agent
+      .post("/admin/kategorije/dodavanje")
       .field("CSRFToken", createToken)
       .field("name", "Za Brisanje")
       .field("domain", "service")
       .field("categoryImageDesc", "Slika za brisanje")
       .attach("categoryImage", TINY_PNG, "test.png");
+
+    assert.equal(createRes.status, 302);
 
     const existing = (await categoryRepo.findCategories({ filters: { domain: "service" } })).data[0];
     uploadedImageUrls.push(existing.featureImage.img);

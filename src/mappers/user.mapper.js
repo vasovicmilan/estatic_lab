@@ -1,3 +1,4 @@
+// TODO: telefon needs to be decryptred in hear and i need to make sure that when creating user its encriptred (2026-07-06)
 import { formatDateTime, formatDate } from "../utils/date.time.util.js";
 
 function getFullName(user) {
@@ -64,6 +65,8 @@ export function mapUserForAdminDetail(user) {
   return {
     id: user._id.toString(),
     imePrezime: getFullName(user),
+    firstName: user.firstName,
+    lastName: user.lastName,
     email: user.email,
     telefon: user.phone || null,
     nacinPrijave: translateProvider(user.provider),

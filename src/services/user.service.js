@@ -1,7 +1,7 @@
 import userRepo from "../repositories/user.repository.js";
 import roleService from "./role.service.js";
 import { mapUser, mapUsersForAdminList, mapUserForAdminDetail, mapUserForProfile } from "../mappers/user.mapper.js";
-import { hashPassword, comparePasswords, generateRandomToken } from "./crypto.service.js";
+import { hashPassword, comparePasswords, generateRandomToken, encrypt, sha256 } from "./crypto.service.js";
 import { validationError, notFound, conflict, unauthorized, badRequest } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 
@@ -91,6 +91,9 @@ export async function registerUser(data) {
   const passwordHash = await hashPassword(data.password);
   const confirmToken = generateRandomToken();
 
+  /* TODO: telephone needs to be encrypted and we need to chage a model a little bit to use schema that will handle telefon structure that will 
+    have hashed plain value and encrypted value so it woul be easear to comapre values (2026-07-06)
+  */
   const created = await userRepo.createUser({
     email: data.email.toLowerCase().trim(),
     password: passwordHash,

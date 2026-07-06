@@ -116,37 +116,89 @@ export function preparePostDetailsData(post) {
 
 export function preparePostFormData(post = null, { categoryOptions = [], tagOptions = [], authorOptions = [] } = {}) {
   const isEdit = !!post;
+  const values = isEdit ? post : { title: "", excerpt: "", content: [], categories: [], tags: [], author: "", status: "draft", isIndexable: true };
+
+  const fields = [{ name: "title", label: "Naslov", type: "text", required: true, width: isEdit ? 6 : 12, value: values.title }];
+
+  // slug simply doesn't exist in the array on create — createPost() already
+  // auto-generates one from the title when it's omitted. Shown on edit so an admin
+  // can deliberately change it.
+  if (isEdit) {
+    fields.push({
+      name: "slug",
+      label: "Slug",
+      type: "text",
+      required: true,
+      width: 6,
+      value: values.slug,
+      help: "Menjajte pažljivo — postojeći linkovi ka ovom postu mogu prestati da rade.",
+    });
+  }
+
+  fields.push(
+    { name: "excerpt", label: "Kratak opis", type: "textarea", rows: 2, required: true, width: 12, value: values.excerpt, help: "Najviše 300 karaktera." },
+    // structured post body built by the existing dynamic form-builder widget (see
+    // blockTypes below, used by that widget) — hidden field just seeds the current value
+    { name: "content", label: "Sadržaj", type: "hidden", width: 12, value: JSON.stringify(values.content || []) },
+    {
+      name: "categories",
+      label: "Kategorije",
+      type: "multiselect",
+      width: 6,
+      value: (values.categories || []).map((c) => (typeof c === "object" ? c.id ?? c._id?.toString() : c)),
+      options: categoryOptions.map((c) => ({ value: c.id, label: c.naziv })),
+    },
+    {
+      name: "tags",
+      label: "Tagovi",
+      type: "multiselect",
+      width: 6,
+      value: (values.tags || []).map((t) => (typeof t === "object" ? t.id ?? t._id?.toString() : t)),
+      options: tagOptions.map((t) => ({ value: t.id, label: t.naziv })),
+    },
+    {
+      name: "author",
+      label: "Autor",
+      type: "select",
+      width: 6,
+      value: typeof values.author === "object" ? values.author?.id ?? values.author?._id?.toString() : values.author,
+      options: authorOptions,
+      help: "Ostavite prazno da bi ste automatski bili postavljeni kao autor.",
+    },
+    {
+      name: "status",
+      label: "Status",
+      type: "select",
+      required: true,
+      width: 6,
+      value: values.status,
+      options: [
+        { value: "draft", label: "Nacrt" },
+        { value: "published", label: "Objavljeno" },
+        { value: "archived", label: "Arhivirano" },
+      ],
+    },
+    {
+      name: "coverImage",
+      label: "Naslovna slika",
+      type: "file",
+      accept: "image/*",
+      required: !isEdit,
+      width: 6,
+      preview: isEdit ? values.coverImage?.url : null,
+    },
+    { name: "coverImageDesc", label: "Opis slike (alt tekst)", type: "text", width: 6, required: true, value: values.coverImage?.imgDesc || "" },
+    { name: "isIndexable", label: "Dozvoli indeksiranje (SEO)", type: "checkbox", width: 6, value: values.isIndexable }
+  );
 
   return {
-    formAction: isEdit ? `/admin/blog/izmena/${post.id}` : "/admin/blog/dodavanje",
+    formAction: isEdit ? `/admin/blog/${post.id}` : "/admin/blog",
+    formEnctype: "multipart/form-data",
     isEdit,
-    formType: "post",
-    backUrl: "/admin/blog",
-    formData: isEdit
-      ? post
-      : {
-          title: "",
-          slug: "",
-          excerpt: "",
-          content: [],
-          coverImage: null,
-          gallery: [],
-          categories: [],
-          tags: [],
-          author: "",
-          status: "draft",
-          seo: { title: "", description: "", keywords: [] },
-          isIndexable: true,
-        },
-    categoryOptions,
-    tagOptions,
-    authorOptions,
-    statuses: [
-      { value: "draft", label: "Nacrt" },
-      { value: "published", label: "Objavljeno" },
-      { value: "archived", label: "Arhivirano" },
-    ],
-    blockTypes: ["paragraph", "heading", "image", "quote", "list", "video"],
+    fields,
+    blockTypes: ["paragraph", "heading", "image", "quote", "list", "video"], // used by the content-block widget
+    submitLabel: isEdit ? "Sačuvaj izmene" : "Kreiraj post",
+    cancelUrl: "/admin/blog",
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Blog", url: "/admin/blog" },
@@ -158,11 +210,14 @@ export function preparePostFormData(post = null, { categoryOptions = [], tagOpti
 export function preparePostSeoFormData(post) {
   return {
     formAction: `/admin/blog/${post.id}/seo`,
-    backUrl: `/admin/blog/detalji/${post.id}`,
-    formData: {
-      seo: post.seo,
-      isIndexable: post.indeksiranje === "Dozvoljeno",
-    },
+    isEdit: true,
+    fields: [
+      { name: "seoTitle", label: "SEO naslov", type: "text", width: 12, value: post.seo?.naslov || "", help: "Najviše 70 karaktera." },
+      { name: "seoDescription", label: "SEO opis", type: "textarea", rows: 3, width: 12, value: post.seo?.opis || "", help: "Najviše 160 karaktera." },
+      { name: "isIndexable", label: "Dozvoli indeksiranje (SEO)", type: "checkbox", width: 6, value: post.indeksiranje === "Dozvoljeno" },
+    ],
+    submitLabel: "Sačuvaj SEO podatke",
+    cancelUrl: `/admin/blog/detalji/${post.id}`,
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Blog", url: "/admin/blog" },

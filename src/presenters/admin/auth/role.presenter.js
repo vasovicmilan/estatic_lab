@@ -74,16 +74,39 @@ export function prepareRoleDetailsData(role) {
 
 export function prepareRoleFormData(role = null, availablePermissions = []) {
   const isEdit = !!role;
+  const values = isEdit ? role : { name: "", description: "", permissions: [], isDefault: false, priority: 0 };
 
   return {
-    formAction: isEdit ? `/admin/role/izmena/${role.id}` : "/admin/role/dodavanje",
+    formAction: isEdit ? `/admin/role/${role.id}` : "/admin/role",
     isEdit,
-    formType: "role",
-    backUrl: "/admin/role",
-    formData: isEdit
-      ? role
-      : { name: "", description: "", permissions: [], isDefault: false, priority: 0 },
-    availablePermissions,
+    fields: [
+      {
+        name: "name",
+        label: "Naziv role",
+        type: "select",
+        required: true,
+        width: 6,
+        value: values.name,
+        options: [
+          { value: "admin", label: "Admin" },
+          { value: "employee", label: "Zaposleni" },
+          { value: "user", label: "Korisnik" },
+        ],
+      },
+      { name: "priority", label: "Prioritet", type: "number", min: 0, width: 6, value: values.priority },
+      { name: "description", label: "Opis", type: "textarea", rows: 3, width: 12, value: values.description, help: "Najviše 300 karaktera." },
+      {
+        name: "permissions",
+        label: "Permisije",
+        type: "checkbox-group",
+        width: 12,
+        value: (values.permissions || []).map((p) => (typeof p === "object" ? p.value : p)),
+        options: availablePermissions,
+      },
+      { name: "isDefault", label: "Podrazumevana rola za nove korisnike", type: "checkbox", width: 6, value: values.isDefault },
+    ],
+    submitLabel: isEdit ? "Sačuvaj izmene" : "Kreiraj rolu",
+    cancelUrl: "/admin/role",
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Role", url: "/admin/role" },

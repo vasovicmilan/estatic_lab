@@ -23,10 +23,19 @@ export function slugField(isCreate = false) {
 }
 
 export function booleanishField(fieldName, allowCheckbox = false) {
-  const allowed = allowCheckbox ? ["true", "false", true, false, "on"] : ["true", "false", true, false];
+  const allowed = allowCheckbox
+    ? ["true", "false", true, false, "on", "1", "0"]
+    : ["true", "false", true, false, "1", "0"];
   return body(fieldName)
     .optional()
-    .isIn(allowed).withMessage("Neispravna vrednost");
+    .customSanitizer((value) => {
+      if (Array.isArray(value)) {
+        return value[value.length - 1];
+      }
+      return value;
+    })
+    .isIn(allowed)
+    .withMessage("Neispravna vrednost");
 }
 
 export function mongoIdParamValidator(paramName, label) {

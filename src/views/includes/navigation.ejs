@@ -27,6 +27,7 @@
             <ul class="dropdown-menu dropdown-menu-end">
               <% if (user?.roleName === 'admin') { %>
                 <li><a class="dropdown-item" href="/admin">Admin panel</a></li>
+                <li><a class="dropdown-item" href="/admin/profil">Moj profil</a></li>
               <% } else if (user?.roleName === 'employee') { %>
                 <li><a class="dropdown-item" href="/moj-nalog">Moj kalendar</a></li>
                 <li><a class="dropdown-item" href="/moj-nalog/termini">Moji termini</a></li>

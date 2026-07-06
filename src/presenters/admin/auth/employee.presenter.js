@@ -99,20 +99,57 @@ export function prepareEmployeeDetailsData(employee) {
 
 export function prepareEmployeeFormData(employee = null, { userOptions = [], serviceOptions = [], expertOptions = [] } = {}) {
   const isEdit = !!employee;
+  const values = isEdit ? employee : { userId: "", expert: null, services: [], workingHours: [], isActive: true, notes: "" };
   const weekDays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
+  // employee has no slug at all — nothing to hide here, included for consistency
+  // with the rest of the admin presenter sweep
+  const fields = [];
+
+  if (!isEdit) {
+    fields.push({
+      name: "userId",
+      label: "Korisnik",
+      type: "select",
+      required: true,
+      width: 12,
+      value: values.userId,
+      options: userOptions,
+      help: "Postojeći korisnički nalog koji se promoviše u zaposlenog.",
+    });
+  }
+
+  fields.push(
+    {
+      name: "expert",
+      label: "Povezani ekspert profil (opciono)",
+      type: "select",
+      width: 6,
+      value: typeof values.expert === "object" ? values.expert?.id ?? values.expert?._id?.toString() : values.expert,
+      options: expertOptions,
+    },
+    {
+      name: "services",
+      label: "Usluge koje pruža",
+      type: "multiselect",
+      width: 6,
+      value: (values.services || []).map((s) => (typeof s === "object" ? s.id ?? s._id?.toString() : s)),
+      options: serviceOptions,
+    },
+    // radno vreme (working hours) is a structured repeating widget already built
+    // client-side — hidden field seeds it with the current value
+    { name: "workingHours", label: "Radno vreme", type: "hidden", width: 12, value: JSON.stringify(values.workingHours || []) },
+    { name: "notes", label: "Napomena", type: "textarea", rows: 3, width: 12, value: values.notes, help: "Najviše 500 karaktera." },
+    { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive }
+  );
+
   return {
-    formAction: isEdit ? `/admin/zaposleni/izmena/${employee.id}` : "/admin/zaposleni/dodavanje",
+    formAction: isEdit ? `/admin/zaposleni/${employee.id}` : "/admin/zaposleni",
     isEdit,
-    formType: "employee",
-    backUrl: "/admin/zaposleni",
-    formData: isEdit
-      ? employee
-      : { userId: "", expert: null, services: [], workingHours: [], isActive: true, notes: "" },
-    userOptions,
-    serviceOptions,
-    expertOptions,
+    fields,
     weekDays,
+    submitLabel: isEdit ? "Sačuvaj izmene" : "Kreiraj profil zaposlenog",
+    cancelUrl: "/admin/zaposleni",
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Zaposleni", url: "/admin/zaposleni" },

@@ -5,16 +5,237 @@
   <%- include("../includes/breadcrumbs") %>
   <%- include("../includes/flash-messages") %>
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0"><%= pageTitle %></h1>
-    <a href="<%= data.backUrl %>" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Nazad</a>
+  <div class="row">
+    <div class="col-lg-8">
+      <% if (typeof data.phaseInfo !== 'undefined') { %>
+        <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+          <i class="bi bi-info-circle me-2"></i>
+          <div class="flex-grow-1">
+            <strong><%= data.phaseInfo.label %></strong>
+            <div class="progress mt-1" role="progressbar"
+                 data-progress="<%= (data.phaseInfo.current / data.phaseInfo.total) * 100 %>"
+                 aria-valuenow="<%= (data.phaseInfo.current / data.phaseInfo.total) * 100 %>"
+                 aria-valuemin="0"
+                 aria-valuemax="100">
+              <div class="progress-bar" data-progress-bar></div>
+            </div>
+            <small class="text-muted">Faza <%= data.phaseInfo.current %> od <%= data.phaseInfo.total %></small>
+          </div>
+        </div>
+      <% } %>
+
+      <div class="card">
+        <div class="card-body">
+          <form method="POST" action="<%= data.formAction %><% if (data.isEdit) { %>?_method=PUT<% } %>"
+                enctype="<%= data.formEnctype || 'application/x-www-form-urlencoded' %>" novalidate
+                data-form>
+
+            <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+
+            <% if (data.formMethod && data.formMethod !== 'POST') { %>
+              <input type="hidden" name="_method" value="<%= data.formMethod %>">
+            <% } else if (data.isEdit) { %>
+              <input type="hidden" name="_method" value="PUT">
+            <% } %>
+
+            <% if (typeof data.errors !== 'undefined' && data.errors.general) { %>
+              <div class="alert alert-danger" role="alert"><%= data.errors.general %></div>
+            <% } %>
+
+            <div class="row g-3">
+            <% data.fields.forEach(function(field) { %>
+              <div class="col-md-<%= field.width || 12 %> mb-3" data-field-wrapper="<%= field.name %>">
+
+                <% if (field.type !== 'checkbox' && field.type !== 'hidden' && field.type !== 'checkbox-group') { %>
+                  <label for="<%= field.name %>" class="form-label">
+                    <%= field.label %>
+                    <% if (field.required) { %><span class="text-danger" aria-hidden="true">*</span><span class="visually-hidden">(obavezno)</span><% } %>
+                  </label>
+                <% } %>
+
+                <% if (field.type === 'text' || field.type === 'email' || field.type === 'number' || field.type === 'date' || field.type === 'url' || field.type === 'tel') { %>
+                  <input type="<%= field.type %>"
+                         class="form-control <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'is-invalid' : '' %>"
+                         id="<%= field.name %>"
+                         name="<%= field.name %>"
+                         value="<%= (typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined) ? data.formData[field.name] : (field.value !== undefined && field.value !== null ? field.value : '') %>"
+                         <% if (field.required) { %>required<% } %>
+                         <% if (field.disabled) { %>disabled<% } %>
+                         <% if (field.placeholder) { %>placeholder="<%- field.placeholder %>"<% } %>
+                         <% if (field.min !== undefined) { %>min="<%- field.min %>"<% } %>
+                         <% if (field.max !== undefined) { %>max="<%- field.max %>"<% } %>
+                         <% if (field.step !== undefined) { %>step="<%- field.step %>"<% } %>
+                         data-field="<%= field.name %>">
+
+                <% } else if (field.type === 'textarea') { %>
+                  <textarea class="form-control <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'is-invalid' : '' %>"
+                            id="<%= field.name %>"
+                            name="<%= field.name %>"
+                            rows="<%= field.rows || 3 %>"
+                            <% if (field.required) { %>required<% } %>
+                            <% if (field.disabled) { %>disabled<% } %>
+                            data-field="<%= field.name %>"><%= (typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined) ? data.formData[field.name] : (field.value || '') %></textarea>
+
+                <% } else if (field.type === 'select') { %>
+                  <select class="form-select <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'is-invalid' : '' %>"
+                          id="<%= field.name %>"
+                          name="<%= field.name %>"
+                          <% if (field.required) { %>required<% } %>
+                          <% if (field.disabled) { %>disabled<% } %>
+                          data-field="<%= field.name %>">
+                    <option value="">Izaberite...</option>
+                    <% field.options.forEach(function(opt) { %>
+                      <option value="<%- opt.value %>" <%= (function() {
+                        const selected = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
+                        return selected === opt.value ? 'selected' : '';
+                      })() %>>
+                        <%= opt.label %>
+                      </option>
+                    <% }) %>
+                  </select>
+
+                <% } else if (field.type === 'multiselect') { %>
+                  <%
+                    let selectedValues = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
+                    if (!Array.isArray(selectedValues)) selectedValues = [];
+                  %>
+                  <input type="hidden" name="<%= field.name %>" value="">
+                  <div class="border rounded p-2 <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'border-danger' : '' %>"
+                       data-multiselect data-multiselect-name="<%= field.name %>">
+                    <div class="input-group mb-2">
+                      <select class="form-select" data-multiselect-source>
+                        <option value="">-- Izaberite da dodate --</option>
+                        <% field.options.forEach(function(opt) { %>
+                          <option value="<%- opt.value %>"><%= opt.label %></option>
+                        <% }) %>
+                      </select>
+                      <button type="button" class="btn btn-outline-primary" data-multiselect-add>
+                        <i class="bi bi-plus-lg"></i> Dodaj
+                      </button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2" data-multiselect-list>
+                      <% selectedValues.forEach(function(val) {
+                           const opt = field.options.find(function(o) { return String(o.value) === String(val); });
+                      %>
+                        <span class="badge text-bg-light border d-inline-flex align-items-center gap-1 py-2 px-2" data-multiselect-chip data-value="<%- val %>">
+                          <%= opt ? opt.label : val %>
+                          <input type="hidden" name="<%= field.name %>[]" value="<%- val %>">
+                          <button type="button" class="btn-close" style="font-size: 0.6rem;" aria-label="Ukloni" data-multiselect-remove></button>
+                        </span>
+                      <% }) %>
+                    </div>
+                    <small class="text-muted d-block mt-1" data-multiselect-empty <%= selectedValues.length ? 'style="display:none"' : '' %>>Ništa nije izabrano.</small>
+                  </div>
+
+                <% } else if (field.type === 'checkbox') { %>
+                  <div class="form-check">
+                    <input type="hidden" name="<%= field.name %>" value="0">
+                    <input type="checkbox"
+                           class="form-check-input <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'is-invalid' : '' %>"
+                           id="<%= field.name %>"
+                           name="<%= field.name %>"
+                           value="1"
+                           <% if (field.disabled) { %>disabled<% } %>
+                           <%= (function() {
+                             const val = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
+                             return val ? 'checked' : '';
+                           })() %>
+                           data-field="<%= field.name %>">
+                    <label class="form-check-label" for="<%= field.name %>"><%= field.label %></label>
+                  </div>
+
+                <% } else if (field.type === 'checkbox-group') { %>
+                  <fieldset class="mb-0">
+                    <legend class="form-label"><%= field.label %></legend>
+                    <div class="row g-2">
+                      <% field.options.forEach(function(opt) { %>
+                        <div class="col-md-6">
+                          <div class="form-check">
+                            <input type="checkbox"
+                                   class="form-check-input"
+                                   id="<%= field.name %>_<%= opt.value %>"
+                                   name="<%= field.name %>"
+                                   value="<%- opt.value %>"
+                                   <%= (function() {
+                                     let selectedValues = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
+                                     if (!Array.isArray(selectedValues)) selectedValues = [];
+                                     return selectedValues.includes(opt.value) ? 'checked' : '';
+                                   })() %>
+                                   data-field="<%= field.name %>">
+                            <label class="form-check-label" for="<%= field.name %>_<%= opt.value %>"><%= opt.label %></label>
+                          </div>
+                        </div>
+                      <% }) %>
+                    </div>
+                  </fieldset>
+                <% } else if (field.type === 'file') { %>
+                  <input type="file"
+                        class="form-control <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'is-invalid' : '' %>"
+                        id="<%= field.name %>"
+                        name="<%= field.name %>"
+                        accept="<%= field.accept || 'image/jpeg,image/png,image/webp' %>"
+                        <% if (field.required) { %>required<% } %>
+                        data-field="<%= field.name %>"
+                        data-file-preview="<%= field.name %>_preview">
+                  <% if (field.previewHtml) { %>
+                    <div id="<%= field.name %>_preview" class="mt-2">
+                      <%- field.previewHtml %>
+                      <p class="text-muted small mt-1">Trenutni video</p>
+                    </div>
+                  <% } else if (field.preview) { %>
+                    <div id="<%= field.name %>_preview" class="mt-2">
+                      <img src="<%= field.preview %>" alt="Trenutna slika" class="rounded" style="max-height: 150px;">
+                      <p class="text-muted small mt-1">Trenutna slika</p>
+                    </div>
+                  <% } %>
+
+                <% } else if (field.type === 'hidden') { %>
+                  <input type="hidden" name="<%= field.name %>" value="<%= typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : (field.value || '') %>" data-field="<%= field.name %>">
+                <% } %>
+
+                <% if (typeof data.errors !== 'undefined' && data.errors[field.name]) { %>
+                  <div class="text-danger small mt-1" data-field-error="<%= field.name %>"><%= data.errors[field.name] %></div>
+                <% } else { %>
+                  <div class="text-danger small mt-1 d-none" data-field-error="<%= field.name %>"></div>
+                <% } %>
+
+                <% if (field.help) { %>
+                  <small class="text-muted d-block mt-1"><%= field.help %></small>
+                <% } %>
+              </div>
+            <% }) %>
+            </div>
+
+            <div class="d-flex gap-2 pt-3 border-top">
+              <button type="submit" class="btn btn-primary" data-submit-btn>
+                <i class="bi bi-check-lg"></i> <span data-submit-label><%= data.submitLabel || "Sačuvaj" %></span>
+                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" data-submit-spinner></span>
+              </button>
+              <a href="<%= data.cancelUrl %>" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg"></i> Odustani
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <% if (typeof data.sidebar !== 'undefined') { %>
+      <div class="col-lg-4">
+        <% data.sidebar.forEach(function(card) { %>
+          <div class="card mb-4">
+            <div class="card-header">
+              <h6 class="card-title mb-0"><%= card.title %></h6>
+            </div>
+            <div class="card-body">
+              <%- include("components/" + card.content, { data: card.data }) %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
   </div>
-
-  <% if (data.errors && data.errors.general) { %>
-    <div class="alert alert-danger"><%= data.errors.general %></div>
-  <% } %>
-
-  <%- include(`forms/${data.formType}`, { data: data, csrfToken: typeof csrfToken !== 'undefined' ? csrfToken : '' }) %>
 </main>
 
+<script src="/js/admin-multiselect.js"></script>
 <%- include("../includes/footer") %>

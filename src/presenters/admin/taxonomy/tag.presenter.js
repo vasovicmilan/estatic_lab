@@ -81,17 +81,47 @@ export function prepareTagDetailsData(tag) {
 
 export function prepareTagFormData(tag = null) {
   const isEdit = !!tag;
+  const values = isEdit ? tag : { name: "", domain: "service", isActive: true };
+
+  const fields = [{ name: "name", label: "Naziv", type: "text", required: true, width: isEdit ? 6 : 12, value: values.name }];
+
+  // slug simply doesn't exist in the array on create — createTag() already
+  // auto-generates one from the name when it's omitted (see slug.util.js). Shown on
+  // edit so an admin can deliberately change it.
+  if (isEdit) {
+    fields.push({
+      name: "slug",
+      label: "Slug",
+      type: "text",
+      required: true,
+      width: 6,
+      value: values.slug,
+      help: "Menjajte pažljivo — postojeći linkovi mogu prestati da rade.",
+    });
+  }
+
+  fields.push(
+    {
+      name: "domain",
+      label: "Domen",
+      type: "select",
+      required: true,
+      width: 6,
+      value: values.domain,
+      options: [
+        { value: "post", label: "Blog" },
+        { value: "service", label: "Usluga" },
+      ],
+    },
+    { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive }
+  );
 
   return {
-    formAction: isEdit ? `/admin/tagovi/izmena/${tag.id}` : "/admin/tagovi/dodavanje",
+    formAction: isEdit ? `/admin/tagovi/${tag.id}` : "/admin/tagovi",
     isEdit,
-    formType: "tag",
-    backUrl: "/admin/tagovi",
-    formData: isEdit ? tag : { name: "", slug: "", domain: "service", isActive: true },
-    domains: [
-      { value: "post", label: "Blog" },
-      { value: "service", label: "Usluga" },
-    ],
+    fields,
+    submitLabel: isEdit ? "Sačuvaj izmene" : "Kreiraj tag",
+    cancelUrl: "/admin/tagovi",
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Tagovi", url: "/admin/tagovi" },

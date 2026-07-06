@@ -59,7 +59,7 @@
                 <% } %>
               <% }) %>
             <% } else if (section.type === 'custom') { %>
-              <%- include(`../admin/components/${section.content}`, { data: section.data, csrfToken: typeof csrfToken !== 'undefined' ? csrfToken : '' }) %>
+              <%- section.content %>
             <% } %>
           </div>
         </div>
@@ -79,7 +79,7 @@
                 <% }) %>
               </dl>
             <% } else if (section.type === 'custom') { %>
-              <%- include(`../admin/components/${section.content}`, { data: section.data, csrfToken: typeof csrfToken !== 'undefined' ? csrfToken : '' }) %>
+              <%- section.content %>
             <% } %>
           </div>
         </div>
