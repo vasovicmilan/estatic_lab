@@ -103,7 +103,7 @@ export function buildWebErrorContext(err, req, extra = {}) {
     errorMsg: err.isOperational ? err.message : "Došlo je do neočekivane greške.",
     errorDetails: process.env.NODE_ENV === "development" ? err.stack || err.details : null,
     isOperational: err.isOperational,
-    csrfToken: typeof req?.csrfToken === "function" ? req.csrfToken() : null,
+    csrfToken: req?.res?.locals?.csrfToken || null,
     isAuthenticated: !!req?.session?.isLoggedIn,
     user: req?.session?.user || null,
     path: req?.originalUrl || "/error",

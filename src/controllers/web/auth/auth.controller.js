@@ -7,7 +7,7 @@ import {
 } from "../../../presenters/auth/auth.presenter.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
-import crypto from "crypto"
+import { generateRandomToken } from "../../../services/crypto.service.js";
 
 async function exchangeGoogleCodeForProfile(code) {
   const tokenUrl = "https://oauth2.googleapis.com/token";
@@ -161,8 +161,9 @@ export async function register(req, res, next) {
 }
 
 export async function redirectToGoogle(req, res) {
-  const state = crypto.randomBytes(16).toString("hex");
+  const state = generateRandomToken(16);
   req.session.googleOAuthState = state;
+  
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&response_type=code&scope=email%20profile&state=${state}`;
   res.redirect(authUrl);
 }

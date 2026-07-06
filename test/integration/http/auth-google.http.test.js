@@ -30,7 +30,10 @@ describe("Google OAuth callback (HTTP)", () => {
   });
 
   it("redirects back to login with a flash error when the callback is missing the authorization code", async () => {
-    const res = await request(app).get("/prijava/google/callback");
+    const agent = request.agent(app);
+    await agent.get("/prijava/google");
+    const res = await agent.get("/prijava/google/callback");
+
     assert.equal(res.status, 302);
     assert.equal(res.headers.location, "/prijava");
   });
@@ -38,7 +41,11 @@ describe("Google OAuth callback (HTTP)", () => {
   it("redirects back to login with a flash error when Google's token exchange fails", async () => {
     global.fetch = mock.fn(async () => ({ ok: false, json: async () => ({}) }));
 
-    const res = await request(app).get("/prijava/google/callback?code=fake-code");
+    const agent = request.agent(app);
+    const initial = await agent.get("/prijava/google");
+    const state = new URL(initial.headers.location).searchParams.get("state");
+    const res = await agent.get(`/prijava/google/callback?code=fake-code&state=${state}`);
+
 
     assert.equal(res.status, 302);
     assert.equal(res.headers.location, "/prijava");
