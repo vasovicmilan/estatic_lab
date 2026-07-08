@@ -49,6 +49,10 @@ export const validateBookingConfirm = [
     .trim()
     .isLength({ max: 50 }).withMessage("Kod kupona nije validan"),
 
+  body("packagePurchaseId")
+    .optional({ values: "falsy" })
+    .isMongoId().withMessage("Neispravan ID kupljenog paketa"),
+
   collectValidationErrors,
 ];
 

@@ -36,7 +36,28 @@ export function prepareBookingSlotsStepData(service, variant, { date, employees 
 }
 
 // Step 3: contact details (only shown if not logged in) + confirmation
-export function prepareBookingContactStepData(service, variant, slot, { isLoggedIn = false, user = null, errors = {} } = {}) {
+export function prepareBookingContactStepData(
+  service,
+  variant,
+  slot,
+  { isLoggedIn = false, user = null, errors = {}, usablePackagePurchase = null } = {}
+) {
+  // usablePackagePurchase is a raw (lean) PackagePurchase doc from
+  // package-purchase.service.js's findUsablePurchaseForService — only ever passed
+  // when isLoggedIn, since a package purchase belongs to a real account. Trimmed
+  // down here to just what the contact-step view needs to render the "pay with my
+  // package" option; the actual authorization check happens again server-side in
+  // appointmentService.bookAppointment() regardless of what this suggests.
+  const packageOption = usablePackagePurchase
+    ? (() => {
+        const item = usablePackagePurchase.items.find((i) => String(i.service) === String(service.id));
+        return {
+          id: usablePackagePurchase._id.toString(),
+          preostaloSeansi: item ? item.sessionsTotal - item.sessionsUsed : 0,
+        };
+      })()
+    : null;
+
   return {
     service,
     variant,
@@ -47,7 +68,10 @@ export function prepareBookingContactStepData(service, variant, slot, { isLogged
       ? { firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.telefon || "" }
       : { firstName: "", lastName: "", email: "", phone: "" },
     errors,
+    // a package-covered booking is already prepaid — the coupon field only makes
+    // sense when the visitor is actually paying for this booking
     couponFieldEnabled: true,
+    usablePackagePurchase: packageOption,
     breadcrumbs: [
       { label: "Usluge", url: "/usluge" },
       { label: service.naziv, url: `/usluge/${service.slug}` },
@@ -64,3 +88,10 @@ export function prepareBookingConfirmationData(appointment, { accountJustCreated
     breadcrumbs: [{ label: "Termin zakazan", url: null }],
   };
 }
+
+export default {
+  prepareBookingServiceStepData,
+  prepareBookingSlotsStepData,
+  prepareBookingContactStepData,
+  prepareBookingConfirmationData,
+};

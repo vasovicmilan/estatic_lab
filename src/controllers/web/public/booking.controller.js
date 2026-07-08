@@ -2,6 +2,7 @@ import * as serviceService from "../../../services/service.service.js";
 import * as employeeService from "../../../services/employee.service.js";
 import * as availabilityService from "../../../services/availability.service.js";
 import * as appointmentService from "../../../services/appointment.service.js";
+import * as packagePurchaseService from "../../../services/package-purchase.service.js";
 import {
   prepareBookingServiceStepData,
   prepareBookingSlotsStepData,
@@ -94,11 +95,15 @@ export async function contactStep(req, res, next) {
     }
 
     const isLoggedIn = !!req.session?.isLoggedIn;
+    const usablePackagePurchase = isLoggedIn
+      ? await packagePurchaseService.findUsablePurchaseForService(req.session.user.id, service.id)
+      : null;
+
     const viewData = prepareBookingContactStepData(
       service,
       variant,
       { startTime, employeeId: employeeId || null },
-      { isLoggedIn, user: req.session?.user }
+      { isLoggedIn, user: req.session?.user, usablePackagePurchase }
     );
 
     return res.render("booking/contact-step", {
@@ -114,19 +119,36 @@ export async function contactStep(req, res, next) {
 
 // Step 4 — POST /zakazivanje/potvrda
 export async function confirmBooking(req, res, next) {
-  const { serviceSlug, serviceId, servicePackageId, employeeId, startTime, firstName, lastName, email, phone, note, couponCode } = req.body;
+  const {
+    serviceSlug,
+    serviceId,
+    servicePackageId,
+    employeeId,
+    startTime,
+    firstName,
+    lastName,
+    email,
+    phone,
+    note,
+    couponCode,
+    packagePurchaseId,
+  } = req.body;
 
   try {
+    const isLoggedIn = !!req.session?.isLoggedIn;
+
     if (req.validationErrors) {
       logWarn("[confirmBooking] Validacione greške pri zakazivanju", { validationErrors: req.validationErrors, email });
       const service = await serviceService.getServiceBySlug(serviceSlug);
       const variant = service.varijante.find((p) => p.id === servicePackageId);
-      const isLoggedIn = !!req.session?.isLoggedIn;
+      const usablePackagePurchase = isLoggedIn
+        ? await packagePurchaseService.findUsablePurchaseForService(req.session.user.id, service.id)
+        : null;
       const viewData = prepareBookingContactStepData(
         service,
         variant,
         { startTime, employeeId: employeeId || null },
-        { isLoggedIn, user: req.session?.user, errors: req.validationErrors }
+        { isLoggedIn, user: req.session?.user, errors: req.validationErrors, usablePackagePurchase }
       );
       return res.status(400).render("booking/contact-step", {
         pageTitle: `Zakazivanje — ${service.naziv}`,
@@ -134,8 +156,6 @@ export async function confirmBooking(req, res, next) {
         data: { ...viewData, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
-
-    const isLoggedIn = !!req.session?.isLoggedIn;
 
     const { appointment, accountJustCreated } = await appointmentService.bookAppointment({
       serviceId,
@@ -147,6 +167,7 @@ export async function confirmBooking(req, res, next) {
       contact: { firstName, lastName, email, phone },
       note,
       couponCode: couponCode || null,
+      packagePurchaseId: packagePurchaseId || null,
     });
 
     logInfo(`[confirmBooking] Termin zakazan za "${email}"`, { appointmentId: appointment.id, accountJustCreated });
@@ -160,14 +181,17 @@ export async function confirmBooking(req, res, next) {
       // never lose what the visitor already typed — re-render the same step with their
       // contact details intact and the specific reason the booking failed
       try {
+        const isLoggedIn = !!req.session?.isLoggedIn;
         const service = await serviceService.getServiceBySlug(serviceSlug);
         const variant = service.varijante.find((p) => p.id === servicePackageId);
-        const isLoggedIn = !!req.session?.isLoggedIn;
+        const usablePackagePurchase = isLoggedIn
+          ? await packagePurchaseService.findUsablePurchaseForService(req.session.user.id, service.id)
+          : null;
         const viewData = prepareBookingContactStepData(
           service,
           variant,
           { startTime, employeeId: employeeId || null },
-          { isLoggedIn, user: req.session?.user, errors: { general: error.message } }
+          { isLoggedIn, user: req.session?.user, errors: { general: error.message }, usablePackagePurchase }
         );
         return res.status(400).render("booking/contact-step", {
           pageTitle: `Zakazivanje — ${service.naziv}`,

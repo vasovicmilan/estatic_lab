@@ -64,6 +64,12 @@ export function prepareUserDetailsData(user, roleOptions = []) {
           { label: "Način prijave", value: user.nacinPrijave },
           { label: "Status", value: user.status },
           { label: "Email potvrđen", value: user.potvrdjenEmail },
+          {
+            label: "Kupljeni paketi",
+            // row.value is rendered unescaped (see admin/_details.ejs's <%- row.value %>),
+            // same pattern already used elsewhere for embedding real links in a details table
+            value: `<a href="/admin/kupljeni-paketi?userId=${user.id}">Pregled</a> &middot; <a href="/admin/kupljeni-paketi/dodavanje?userId=${user.id}">Dodeli paket</a>`,
+          },
         ],
       },
     ],
@@ -125,3 +131,5 @@ export function prepareUserEditFormData(user) {
     ],
   };
 }
+
+export default { prepareUserListData, prepareUserDetailsData, prepareUserEditFormData };
