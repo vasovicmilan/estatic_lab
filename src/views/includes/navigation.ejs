@@ -55,9 +55,11 @@
   <div class="container-fluid">
     <div class="collapse navbar-collapse show">
       <ul class="navbar-nav flex-wrap">
+        <li class="nav-item"><a class="nav-link <%= currentPath === '/admin' ? 'active' : '' %>" href="/admin"><i class="bi bi-speedometer2 me-1"></i>Početna</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/termini') ? 'active' : '' %>" href="/admin/termini"><i class="bi bi-calendar-check me-1"></i>Termini</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/usluge') ? 'active' : '' %>" href="/admin/usluge"><i class="bi bi-heart-pulse me-1"></i>Usluge</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/paketi') ? 'active' : '' %>" href="/admin/paketi"><i class="bi bi-box-seam me-1"></i>Paketi</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/kupljeni-paketi') ? 'active' : '' %>" href="/admin/kupljeni-paketi"><i class="bi bi-bag-check me-1"></i>Kupljeni paketi</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/kategorije') ? 'active' : '' %>" href="/admin/kategorije"><i class="bi bi-tags me-1"></i>Kategorije</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/tagovi') ? 'active' : '' %>" href="/admin/tagovi"><i class="bi bi-tag me-1"></i>Tagovi</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/blog') ? 'active' : '' %>" href="/admin/blog"><i class="bi bi-newspaper me-1"></i>Blog</a></li>

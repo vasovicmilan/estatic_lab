@@ -2,6 +2,7 @@ import { Router } from "express";
 import { adminMiddleware } from "../../middlewares/admin.middleware.js";
 import { adminLimiter } from "../../middlewares/rate-limiter.middleware.js";
 
+import * as DashboardController from "../../controllers/web/admin/dashboard.controller.js";
 import roleRoutes from "./admin/role.routes.js";
 import userRoutes from "./admin/user.routes.js";
 import profileRoutes from "./admin/profile.routes.js";
@@ -23,6 +24,8 @@ const router = Router();
 
 router.use(adminMiddleware);
 router.use(adminLimiter);
+
+router.get("/", DashboardController.dashboard);
 
 router.use("/role", roleRoutes);
 router.use("/korisnici", userRoutes);
