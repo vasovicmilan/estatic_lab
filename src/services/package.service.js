@@ -1,4 +1,5 @@
 import packageRepo from "../repositories/package.repository.js";
+import serviceRepo from "../repositories/service.repository.js";
 import {
   mapPackagesForAdminList,
   mapPackageForAdminDetail,
@@ -10,13 +11,22 @@ import { generateUniqueSlug } from "../utils/slug.util.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 
-const populate = [{ path: "items.service", select: "name slug" }];
+const populate = [{ path: "items.service", select: "name slug packages" }];
 
-function validateItems(items = []) {
+// Cross-checks that each item's servicePackageId actually belongs to the service it
+// claims to — without this, nothing would stop an item from pointing at a variant
+// that belongs to a totally different service.
+async function validateItems(items = []) {
   if (!items.length) badRequest("Paket mora sadržati bar jednu uslugu");
   for (const item of items) {
     if (!item.service) badRequest("Svaka stavka paketa mora imati izabranu uslugu");
+    if (!item.servicePackageId) badRequest("Svaka stavka paketa mora imati izabranu varijantu usluge");
     if (!item.sessions || item.sessions < 1) badRequest("Broj seansi mora biti bar 1");
+
+    const service = await serviceRepo.findServiceById(item.service);
+    if (!service) badRequest("Izabrana usluga ne postoji");
+    const variantExists = (service.packages || []).some((p) => String(p._id) === String(item.servicePackageId));
+    if (!variantExists) badRequest(`Izabrana varijanta ne pripada usluzi "${service.name}"`);
   }
 }
 
@@ -55,7 +65,7 @@ export async function createPackage(data) {
   if (!data) validationError("data");
   if (!data.name) validationError("name");
   if (data.totalPrice == null) validationError("totalPrice");
-  validateItems(data.items);
+  await validateItems(data.items);
 
   if (data.slug) {
     const existing = await packageRepo.findPackageBySlug(data.slug);
@@ -78,7 +88,7 @@ export async function updatePackageById(packageId, data) {
     const conflicting = await packageRepo.findPackageBySlug(data.slug);
     if (conflicting) conflict("Paket sa ovim slug-om već postoji");
   }
-  if (data.items) validateItems(data.items);
+  if (data.items) await validateItems(data.items);
 
   const updated = await packageRepo.updatePackageById(packageId, data);
   logInfo("Package updated", { packageId, updatedFields: Object.keys(data) });

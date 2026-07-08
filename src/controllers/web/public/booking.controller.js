@@ -96,7 +96,7 @@ export async function contactStep(req, res, next) {
 
     const isLoggedIn = !!req.session?.isLoggedIn;
     const usablePackagePurchase = isLoggedIn
-      ? await packagePurchaseService.findUsablePurchaseForService(req.session.user.id, service.id)
+      ? await packagePurchaseService.findUsablePurchaseForService(req.session.user.id, servicePackageId)
       : null;
 
     const viewData = prepareBookingContactStepData(
@@ -142,7 +142,7 @@ export async function confirmBooking(req, res, next) {
       const service = await serviceService.getServiceBySlug(serviceSlug);
       const variant = service.varijante.find((p) => p.id === servicePackageId);
       const usablePackagePurchase = isLoggedIn
-        ? await packagePurchaseService.findUsablePurchaseForService(req.session.user.id, service.id)
+        ? await packagePurchaseService.findUsablePurchaseForService(req.session.user.id, servicePackageId)
         : null;
       const viewData = prepareBookingContactStepData(
         service,
@@ -185,7 +185,7 @@ export async function confirmBooking(req, res, next) {
         const service = await serviceService.getServiceBySlug(serviceSlug);
         const variant = service.varijante.find((p) => p.id === servicePackageId);
         const usablePackagePurchase = isLoggedIn
-          ? await packagePurchaseService.findUsablePurchaseForService(req.session.user.id, service.id)
+          ? await packagePurchaseService.findUsablePurchaseForService(req.session.user.id, servicePackageId)
           : null;
         const viewData = prepareBookingContactStepData(
           service,

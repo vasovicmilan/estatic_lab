@@ -3,8 +3,10 @@ import { Schema, model } from "mongoose";
 const PackagePurchaseItemSchema = new Schema(
   {
     service: { type: Schema.Types.ObjectId, ref: "Service", required: true },
+    servicePackageId: { type: Schema.Types.ObjectId, required: true },
     sessionsTotal: { type: Number, required: true, min: 1 },
     sessionsUsed: { type: Number, default: 0, min: 0 },
+    sessionsReserved: { type: Number, default: 0, min: 0 },
   },
   { _id: false }
 );
@@ -40,5 +42,6 @@ const PackagePurchaseSchema = new Schema(
 
 PackagePurchaseSchema.index({ user: 1, status: 1 });
 PackagePurchaseSchema.index({ "items.service": 1 });
+PackagePurchaseSchema.index({ "items.servicePackageId": 1 });
 
 export default model("PackagePurchase", PackagePurchaseSchema);

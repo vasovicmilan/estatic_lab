@@ -65,7 +65,7 @@ describe("package-purchase.service", () => {
       t.mock.method(packageRepo, "findPackageById", async () => pkg);
       const coupon = buildCoupon({ discountType: "fixed", discountValue: 2000 });
       t.mock.method(couponService, "validateCouponForPackagePurchase", async () => ({ coupon, discountAmount: 2000 }));
-      const redeemMock = t.mock.method(couponService, "redeemCoupon", async () => {});
+      const redeemMock = t.mock.method(couponService, "redeemCoupon", async () => { });
 
       let created;
       t.mock.method(packagePurchaseRepo, "createPackagePurchase", async (data) => {
@@ -284,6 +284,51 @@ describe("package-purchase.service", () => {
     it("throws 404 for a nonexistent purchase", async (t) => {
       t.mock.method(packagePurchaseRepo, "updatePackagePurchaseById", async () => null);
       await assert.rejects(() => packagePurchaseService.cancelPurchase(id().toString(), id().toString()), (err) => err.statusCode === 404);
+    });
+  });
+
+  describe("createPackage — variant scoping", () => {
+    it("rejects an item with no servicePackageId", async (t) => {
+      t.mock.method(serviceRepo, "findServiceById", async () => buildService());
+      await assert.rejects(
+        () => packageService.createPackage({ name: "X", totalPrice: 1000, items: [{ service: id(), sessions: 1 }] }),
+        (err) => err.statusCode === 400
+      );
+    });
+
+    it("rejects a servicePackageId that doesn't belong to the referenced service's own variants", async (t) => {
+      const service = buildService({ packages: [buildServicePackageVariant({ _id: id() })] });
+      t.mock.method(serviceRepo, "findServiceById", async () => service);
+      await assert.rejects(
+        () =>
+          packageService.createPackage({
+            name: "X",
+            totalPrice: 1000,
+            items: [{ service: service._id.toString(), servicePackageId: id().toString(), sessions: 1 }],
+          }),
+        (err) => err.statusCode === 400
+      );
+    });
+
+    it("accepts an item whose servicePackageId is a real variant of the referenced service", async (t) => {
+      const variant = buildServicePackageVariant();
+      const service = buildService({ packages: [variant] });
+      t.mock.method(serviceRepo, "findServiceById", async () => service);
+      t.mock.method(packageRepo, "findPackageBySlug", async () => null);
+      let created;
+      t.mock.method(packageRepo, "createPackage", async (data) => {
+        created = { ...data, _id: id() };
+        return created;
+      });
+      t.mock.method(packageRepo, "findPackageById", async () => created);
+
+      await packageService.createPackage({
+        name: "Dan Za Sebe",
+        totalPrice: 8000,
+        items: [{ service: service._id.toString(), servicePackageId: variant._id.toString(), sessions: 1 }],
+      });
+
+      assert.equal(String(created.items[0].servicePackageId), variant._id.toString());
     });
   });
 });

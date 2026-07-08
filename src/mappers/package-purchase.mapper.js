@@ -5,12 +5,22 @@ function getServiceName(item) {
   return null;
 }
 
+function getVariantName(item) {
+  if (item.service && typeof item.service === "object" && Array.isArray(item.service.packages)) {
+    const variant = item.service.packages.find((p) => String(p._id) === String(item.servicePackageId));
+    return variant?.name || null;
+  }
+  return null;
+}
+
 function mapItems(items = []) {
   return items.map((item) => ({
     usluga: getServiceName(item) || item.service?.toString(),
+    varijanta: getVariantName(item) || item.servicePackageId?.toString(),
     ukupnoSeansi: item.sessionsTotal,
     iskorisceno: item.sessionsUsed,
-    preostalo: item.sessionsTotal - item.sessionsUsed,
+    rezervisano: item.sessionsReserved || 0,
+    preostalo: item.sessionsTotal - item.sessionsUsed - (item.sessionsReserved || 0),
   }));
 }
 
@@ -50,6 +60,7 @@ export function mapPackagePurchaseForAdminDetail(p) {
     status: translateStatus(p.status),
     statusRaw: p.status,
     napomena: p.notes || null,
+    expiresAtRaw: p.expiresAt ? new Date(p.expiresAt).toISOString().slice(0, 10) : "",
     vreme: {
       kupljeno: formatDateTime(p.purchasedAt),
       istice: p.expiresAt ? formatDateTime(p.expiresAt) : "Ne ističe",

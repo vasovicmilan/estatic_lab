@@ -51,7 +51,7 @@ export function preparePackageDetailsData(pkg) {
       {
         title: "Usluge u paketu",
         type: "table",
-        rows: pkg.stavke.map((s) => ({ label: s.usluga.naziv, value: `${s.brojSeansi} seansi` })),
+        rows: pkg.stavke.map((s) => ({ label: `${s.usluga.naziv} — ${s.varijanta.naziv}`, value: `${s.brojSeansi} seansi` })),
       },
       {
         title: "FAQ",
@@ -89,7 +89,7 @@ export function preparePackageDetailsData(pkg) {
   };
 }
 
-export function preparePackageFormData(pkg = null, { serviceOptions = [], categoryOptions = [], tagOptions = [] } = {}) {
+export function preparePackageFormData(pkg = null, { variantOptions = [], categoryOptions = [], tagOptions = [] } = {}) {
   const isEdit = !!pkg;
   const values = isEdit
     ? pkg
@@ -97,11 +97,6 @@ export function preparePackageFormData(pkg = null, { serviceOptions = [], catego
         name: "",
         description: "",
         shortDescription: "",
-        // was [{ service: "", sessions: 1 }] — that placeholder row with an empty
-        // service is exactly what was silently getting submitted with nothing to
-        // edit it, and is exactly what tripped "Svaka stavka paketa mora imati
-        // izabranu uslugu". Starts empty now; the repeater widget below is the
-        // only way rows get added, and every row it adds has a real service picker.
         items: [],
         totalPrice: 0,
         basePrice: null,
@@ -117,9 +112,6 @@ export function preparePackageFormData(pkg = null, { serviceOptions = [], catego
 
   const fields = [{ name: "name", label: "Naziv", type: "text", required: true, width: isEdit ? 6 : 12, value: values.name }];
 
-  // slug simply doesn't exist in the array on create — createPackage() already
-  // auto-generates one from the name when it's omitted (see slug.util.js). Shown on
-  // edit so an admin can deliberately change it.
   if (isEdit) {
     fields.push({
       name: "slug",
@@ -140,11 +132,18 @@ export function preparePackageFormData(pkg = null, { serviceOptions = [], catego
       label: "Usluge u paketu",
       type: "repeater",
       width: 12,
-      value: values.items || [],
+      // each row's "variantKey" encodes both service and the exact variant as
+      // "serviceId::servicePackageId" — the flattened list is the only clean way
+      // to offer "pick a specific variant" without a cascading select the repeater
+      // widget doesn't support. The controller splits this back apart on submit.
+      value: (values.items || []).map((item) => ({
+        variantKey: item.service && item.servicePackageId ? `${item.service}::${item.servicePackageId}` : "",
+        sessions: item.sessions,
+      })),
       addLabel: "Dodaj uslugu u paket",
-      help: "Paket mora sadržati bar jednu uslugu — izaberite je iz padajućeg menija za svaku stavku.",
+      help: "Izaberite tačno određenu varijantu — različite varijante iste usluge mogu imati različitu cenu, pa paket mora biti vezan za tačno jednu.",
       itemFields: [
-        { name: "service", label: "Usluga", type: "select", required: true, options: serviceOptions },
+        { name: "variantKey", label: "Usluga i varijanta", type: "select", required: true, options: variantOptions },
         { name: "sessions", label: "Broj seansi", type: "number", min: 1, value: 1, required: true },
       ],
     },

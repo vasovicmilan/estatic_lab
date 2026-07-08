@@ -31,6 +31,19 @@ export const validateCreatePackagePurchase = [
   collectValidationErrors,
 ];
 
+export const validateUpdatePackagePurchase = [
+  body("expiresAt")
+    .optional({ values: "falsy" })
+    .isISO8601().withMessage("Neispravan datum isteka"),
+
+  body("notes")
+    .optional()
+    .trim()
+    .isLength({ max: 500 }).withMessage("Napomena može imati najviše 500 karaktera"),
+
+  collectValidationErrors,
+];
+
 export const validatePackagePurchaseId = mongoIdParamValidator("packagePurchaseId", "kupljenog paketa");
 
-export default { validateCreatePackagePurchase, validatePackagePurchaseId };
+export default { validateCreatePackagePurchase, validateUpdatePackagePurchase, validatePackagePurchaseId };

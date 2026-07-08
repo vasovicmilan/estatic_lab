@@ -18,15 +18,42 @@ function parseJsonField(value, fallback = []) {
   }
 }
 
+// The items repeater can't do cascading "pick a service, then pick one of ITS
+// variants" dropdowns — so each row is one flattened select over every active
+// service's variants, encoded as "serviceId::servicePackageId". This splits that
+// back into the real {service, servicePackageId, sessions} shape the service layer
+// expects.
+function splitVariantKeys(items) {
+  return items.map((item) => {
+    if (item.variantKey) {
+      const [service, servicePackageId] = item.variantKey.split("::");
+      return { service, servicePackageId, sessions: Number(item.sessions) };
+    }
+    return item;
+  });
+}
+
 async function loadFormOptions() {
-  const [services, categories, tags] = await Promise.all([
+  const [servicesList, categories, tags] = await Promise.all([
     serviceService.listServices({ limit: 200 }),
     categoryService.getCategoriesForSelect("service"),
     tagService.getTagsForSelect("service"),
   ]);
 
+  // listServices() returns the admin-list shape (no variant details) — fetching each
+  // service's full detail is the only way to get its actual variant list/pricing.
+  // Admin-only, rarely-loaded form, so the N+1 cost here is fine.
+  const fullServices = await Promise.all(servicesList.data.map((s) => serviceService.getServiceById(s.id)));
+
+  const variantOptions = fullServices.flatMap((service) =>
+    (service.varijante || []).map((variant) => ({
+      value: `${service.id}::${variant.id}`,
+      label: `${service.naziv} — ${variant.naziv} (${variant.cena} RSD)`,
+    }))
+  );
+
   return {
-    serviceOptions: services.data.map((s) => ({ value: s.id, label: s.naziv })),
+    variantOptions,
     categoryOptions: categories,
     tagOptions: tags,
   };
@@ -35,8 +62,6 @@ async function loadFormOptions() {
 function buildPackagePayload(req, existing = {}) {
   const data = { ...req.body };
 
-  // imageDesc is required whenever a new image is uploaded — enforced by
-  // validatePackageCreate/validatePackageUpdate before this code ever runs.
   data.image = req.uploadedFiles?.packageImage
     ? { img: req.uploadedFiles.packageImage.img, imgDesc: req.body.imageDesc.trim() }
     : existing.image || null;
@@ -45,7 +70,7 @@ function buildPackagePayload(req, existing = {}) {
     ? req.uploadedFiles.gallery.map((f) => ({ img: f.img, imgDesc: f.imgDesc || "" }))
     : existing.gallery || [];
 
-  data.items = parseJsonField(req.body.items, existing.items || []);
+  data.items = splitVariantKeys(parseJsonField(req.body.items, existing.items || []));
   data.faq = parseJsonField(req.body.faq, existing.faq || []);
   data.categories = Array.isArray(req.body.categories) ? req.body.categories.filter(Boolean) : req.body.categories ? [req.body.categories] : [];
   data.tags = Array.isArray(req.body.tags) ? req.body.tags.filter(Boolean) : req.body.tags ? [req.body.tags] : [];

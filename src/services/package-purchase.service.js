@@ -8,7 +8,7 @@ import { logInfo } from "../utils/logger.util.js";
 const adminPopulate = [
   { path: "package", select: "name" },
   { path: "user", select: "firstName lastName" },
-  { path: "items.service", select: "name" },
+  { path: "items.service", select: "name packages" }, // packages needed to resolve the variant name in the mapper
 ];
 
 // Admin action: grant a user a package they paid for outside the system (cash, card
@@ -33,8 +33,10 @@ export async function createPurchaseForUser(userId, packageId, adminId, { expire
 
   const items = pkg.items.map((item) => ({
     service: item.service,
+    servicePackageId: item.servicePackageId,
     sessionsTotal: item.sessions,
     sessionsUsed: 0,
+    sessionsReserved: 0,
   }));
 
   const created = await packagePurchaseRepo.createPackagePurchase({
@@ -86,18 +88,25 @@ function isUsable(purchase, now = new Date()) {
   return true;
 }
 
-// Suggests a default for the booking UI (soonest-expiring first, nulls last; then
-// oldest-purchased first) — the client still sends back a specific packagePurchaseId,
-// which assertUsablePurchase() below re-validates server-side. Never trust this
-// suggestion alone as authorization.
-export async function findUsablePurchaseForService(userId, serviceId) {
-  const candidates = await packagePurchaseRepo.findActivePurchasesForUserAndService(userId, serviceId);
+function findItem(purchase, servicePackageId) {
+  return purchase.items.find((i) => String(i.servicePackageId) === String(servicePackageId));
+}
+
+function availableSessions(item) {
+  return item.sessionsTotal - item.sessionsUsed - (item.sessionsReserved || 0);
+}
+
+// Suggests a default for the booking UI — scoped to the EXACT variant being booked.
+// Client still sends back a specific packagePurchaseId, which assertUsablePurchase()/
+// reserveSession() below re-validate server-side. Never trust this alone as authorization.
+export async function findUsablePurchaseForService(userId, servicePackageId) {
+  const candidates = await packagePurchaseRepo.findActivePurchasesForUserAndVariant(userId, servicePackageId);
   const now = new Date();
 
   const usable = candidates.filter((p) => {
     if (!isUsable(p, now)) return false;
-    const item = p.items.find((i) => String(i.service) === String(serviceId));
-    return item && item.sessionsUsed < item.sessionsTotal;
+    const item = findItem(p, servicePackageId);
+    return item && availableSessions(item) > 0;
   });
 
   usable.sort((a, b) => {
@@ -110,42 +119,75 @@ export async function findUsablePurchaseForService(userId, serviceId) {
   return usable[0] || null;
 }
 
-// The actual server-side authorization check — called from appointment.service.js's
-// bookAppointment with whatever packagePurchaseId the client submitted (whether that
-// came from findUsablePurchaseForService's suggestion or a manual pick in the UI).
-export async function assertUsablePurchase(packagePurchaseId, userId, serviceId) {
+// Real server-side authorization check — called from appointment.service.js's
+// bookAppointment (read-only, before the transaction).
+export async function assertUsablePurchase(packagePurchaseId, userId, servicePackageId) {
   if (!packagePurchaseId) validationError("packagePurchaseId");
   const purchase = await packagePurchaseRepo.findPackagePurchaseById(packagePurchaseId);
   if (!purchase) notFound("Kupljeni paket");
   if (String(purchase.user) !== String(userId)) forbidden("Ovaj paket ne pripada vama");
   if (!isUsable(purchase)) badRequest("Ovaj paket više nije aktivan ili mu je istekao rok važenja");
 
-  const item = purchase.items.find((i) => String(i.service) === String(serviceId));
-  if (!item) badRequest("Ovaj paket ne pokriva izabranu uslugu");
-  if (item.sessionsUsed >= item.sessionsTotal) badRequest("Nema više preostalih seansi za ovu uslugu u paketu");
+  const item = findItem(purchase, servicePackageId);
+  if (!item) badRequest("Ovaj paket ne pokriva izabranu varijantu usluge");
+  if (availableSessions(item) <= 0) badRequest("Nema više preostalih seansi za ovu varijantu u paketu");
 
   return purchase;
 }
 
-// Called ONLY from appointment.service.js's transitionStatus, ONLY when an
-// appointment moves into "completed" and only has a packagePurchase attached.
-// "completed" is a terminal status in appointment-status-transitions.js, so this
-// never needs a symmetric "release"/un-consume path.
-export async function consumeSession(packagePurchaseId, serviceId, { session } = {}) {
+// Claims one session the moment a booking is actually made (pending/confirmed) —
+// called INSIDE appointment.service.js's booking transaction, so a reservation and
+// its Appointment always succeed or fail together. Doesn't touch sessionsUsed — that
+// only happens on completion (commitSession). A cancelled/rejected booking calls
+// releaseSession() to give the slot back.
+export async function reserveSession(packagePurchaseId, servicePackageId, { session } = {}) {
   const purchase = await packagePurchaseRepo.findPackagePurchaseDocById(packagePurchaseId, { session });
   if (!purchase) notFound("Kupljeni paket");
 
-  const item = purchase.items.find((i) => String(i.service) === String(serviceId));
-  if (!item) badRequest("Ovaj paket ne pokriva izabranu uslugu");
-  if (item.sessionsUsed >= item.sessionsTotal) badRequest("Nema više preostalih seansi za ovu uslugu u paketu");
+  const item = purchase.items.find((i) => String(i.servicePackageId) === String(servicePackageId));
+  if (!item) badRequest("Ovaj paket ne pokriva izabranu varijantu usluge");
+  if (availableSessions(item) <= 0) badRequest("Nema više preostalih seansi za ovu varijantu u paketu");
 
+  item.sessionsReserved += 1;
+  await purchase.save({ session });
+  logInfo("Package purchase session reserved", { packagePurchaseId, servicePackageId });
+  return purchase;
+}
+
+// Gives a reserved-but-undelivered session back — called when a package-covered
+// appointment is cancelled or rejected before ever being completed.
+export async function releaseSession(packagePurchaseId, servicePackageId, { session } = {}) {
+  const purchase = await packagePurchaseRepo.findPackagePurchaseDocById(packagePurchaseId, { session });
+  if (!purchase) notFound("Kupljeni paket");
+
+  const item = purchase.items.find((i) => String(i.servicePackageId) === String(servicePackageId));
+  if (!item) return purchase; // nothing to release — shouldn't normally happen
+
+  item.sessionsReserved = Math.max(0, item.sessionsReserved - 1);
+  await purchase.save({ session });
+  logInfo("Package purchase session released", { packagePurchaseId, servicePackageId });
+  return purchase;
+}
+
+// Converts a reservation into an actually-delivered session — called ONLY when an
+// appointment transitions into "completed". Moves 1 unit from reserved to used;
+// marks the whole purchase "completed" once every item is fully used.
+export async function commitSession(packagePurchaseId, servicePackageId, { session } = {}) {
+  const purchase = await packagePurchaseRepo.findPackagePurchaseDocById(packagePurchaseId, { session });
+  if (!purchase) notFound("Kupljeni paket");
+
+  const item = purchase.items.find((i) => String(i.servicePackageId) === String(servicePackageId));
+  if (!item) badRequest("Ovaj paket ne pokriva izabranu varijantu usluge");
+
+  item.sessionsReserved = Math.max(0, item.sessionsReserved - 1);
   item.sessionsUsed += 1;
+
   if (purchase.items.every((i) => i.sessionsUsed >= i.sessionsTotal)) {
     purchase.status = "completed";
   }
 
   await purchase.save({ session });
-  logInfo("Package purchase session consumed", { packagePurchaseId, serviceId, status: purchase.status });
+  logInfo("Package purchase session committed (delivered)", { packagePurchaseId, servicePackageId, status: purchase.status });
   return purchase;
 }
 
@@ -157,6 +199,27 @@ export async function cancelPurchase(packagePurchaseId, adminId) {
   return getPurchaseById(updated._id);
 }
 
+export async function updatePurchase(packagePurchaseId, { expiresAt, notes } = {}) {
+  if (!packagePurchaseId) validationError("packagePurchaseId");
+  const updateData = {};
+  if (expiresAt !== undefined) updateData.expiresAt = expiresAt || null;
+  if (notes !== undefined) updateData.notes = notes;
+
+  const updated = await packagePurchaseRepo.updatePackagePurchaseById(packagePurchaseId, updateData);
+  if (!updated) notFound("Kupljeni paket");
+  logInfo("Package purchase updated", { packagePurchaseId, updatedFields: Object.keys(updateData) });
+  return getPurchaseById(updated._id);
+}
+
+export async function deletePurchase(packagePurchaseId, adminId) {
+  if (!packagePurchaseId) validationError("packagePurchaseId");
+  const existing = await packagePurchaseRepo.findPackagePurchaseById(packagePurchaseId);
+  if (!existing) notFound("Kupljeni paket");
+  await packagePurchaseRepo.deletePackagePurchaseById(packagePurchaseId);
+  logInfo("Package purchase deleted", { packagePurchaseId, adminId });
+  return { success: true };
+}
+
 export default {
   createPurchaseForUser,
   getPurchaseById,
@@ -164,6 +227,10 @@ export default {
   listPurchases,
   findUsablePurchaseForService,
   assertUsablePurchase,
-  consumeSession,
+  reserveSession,
+  releaseSession,
+  commitSession,
   cancelPurchase,
+  updatePurchase,
+  deletePurchase,
 };

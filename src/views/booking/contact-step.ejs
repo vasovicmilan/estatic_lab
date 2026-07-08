@@ -81,7 +81,10 @@
         <% } %>
 
         <% if (data.couponFieldEnabled) { %>
-          <div class="mb-3" id="couponFieldWrapper" <%= (data.usablePackagePurchase && (typeof formData === 'undefined' || formData.packagePurchaseId)) ? 'class="mb-3 d-none"' : '' %>>
+          <%
+            const hideCoupon = data.usablePackagePurchase && (typeof formData === 'undefined' || formData.packagePurchaseId);
+          %>
+          <div class="mb-3 <%= hideCoupon ? 'd-none' : '' %>" id="couponFieldWrapper">
             <label class="form-label">Kod kupona</label>
             <input type="text" name="couponCode" class="form-control text-uppercase" value="<%= (typeof formData !== 'undefined' && formData.couponCode) || '' %>">
             <% if (data.usablePackagePurchase) { %>

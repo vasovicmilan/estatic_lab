@@ -12,8 +12,8 @@ export async function findPackagePurchaseById(id, { populateFields = [], session
   return query.lean();
 }
 
-// used by consumeSession() — needs a real (non-lean) doc so item.sessionsUsed can be
-// mutated in place before saving the whole items[] array back
+// used by reserveSession/releaseSession/commitSession — needs a real (non-lean) doc
+// so item counters can be mutated in place before saving the whole items[] array back
 export async function findPackagePurchaseDocById(id, { session } = {}) {
   return PackagePurchase.findById(id).session(session || null);
 }
@@ -24,13 +24,14 @@ export async function findPurchasesByUser(userId, { populateFields = [], session
   return query.lean();
 }
 
-// candidates for auto-selection / eligibility display — filtered further in the
-// service layer (status/expiry/remaining-sessions), this just narrows by service
-export async function findActivePurchasesForUserAndService(userId, serviceId, { session } = {}) {
+// candidates for auto-selection / eligibility display — scoped to the exact variant
+// (servicePackageId), not just the parent service. Filtered further in the service
+// layer (status/expiry/remaining-sessions).
+export async function findActivePurchasesForUserAndVariant(userId, servicePackageId, { session } = {}) {
   return PackagePurchase.find({
     user: userId,
     status: "active",
-    "items.service": serviceId,
+    "items.servicePackageId": servicePackageId,
   })
     .session(session || null)
     .lean();
@@ -56,12 +57,16 @@ export async function findPackagePurchases({ filters = {}, limit = 20, page = 1,
   return { data, ...buildPaginationMeta({ total, page, limit }) };
 }
 
+export async function deletePackagePurchaseById(id, { session } = {}) {
+  return PackagePurchase.findByIdAndDelete(id, { session }).lean();
+}
 export default {
   createPackagePurchase,
   findPackagePurchaseById,
   findPackagePurchaseDocById,
   findPurchasesByUser,
-  findActivePurchasesForUserAndService,
+  findActivePurchasesForUserAndVariant,
   updatePackagePurchaseById,
   findPackagePurchases,
+  deletePackagePurchaseById,
 };

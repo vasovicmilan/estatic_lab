@@ -5,6 +5,7 @@ import {
   preparePackagePurchaseListData,
   preparePackagePurchaseDetailsData,
   preparePackagePurchaseFormData,
+  preparePackagePurchaseEditFormData,
 } from "../../../../presenters/admin/marketing/package-purchase.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -79,6 +80,26 @@ export async function newPackagePurchaseForm(req, res, next) {
   }
 }
 
+export async function editPackagePurchaseForm(req, res, next) {
+  try {
+    const { packagePurchaseId } = req.params;
+    const purchase = await packagePurchaseService.getPurchaseById(packagePurchaseId);
+    const formData = preparePackagePurchaseEditFormData(purchase);
+
+    return res.render("admin/_form", {
+      pageTitle: `Izmena — ${purchase.paket}`,
+      pageDescription: purchase.korisnik,
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
+    });
+  } catch (error) {
+    logError("[editPackagePurchaseForm] Greška pri učitavanju forme za izmenu kupljenog paketa", error, {
+      packagePurchaseId: req.params.packagePurchaseId,
+      userId: req.session?.user?.id,
+    });
+    next(error);
+  }
+}
+
 export async function createPackagePurchase(req, res, next) {
   try {
     if (req.validationErrors) {
@@ -119,6 +140,51 @@ export async function createPackagePurchase(req, res, next) {
   }
 }
 
+export async function updatePackagePurchase(req, res, next) {
+  try {
+    const { packagePurchaseId } = req.params;
+
+    if (req.validationErrors) {
+      logWarn(`[updatePackagePurchase] Validacione greške za packagePurchaseId=${packagePurchaseId}`, {
+        validationErrors: req.validationErrors,
+        userId: req.session?.user?.id,
+      });
+      const purchase = await packagePurchaseService.getPurchaseById(packagePurchaseId);
+      const formData = preparePackagePurchaseEditFormData(purchase);
+      return res.status(400).render("admin/_form", {
+        pageTitle: `Izmena — ${purchase.paket}`,
+        pageDescription: purchase.korisnik,
+        data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
+      });
+    }
+
+    const { expiresAt, notes } = req.body;
+    const updated = await packagePurchaseService.updatePurchase(packagePurchaseId, { expiresAt: expiresAt || null, notes });
+    logInfo(`[updatePackagePurchase] Kupljeni paket #${packagePurchaseId} ažuriran`, { packagePurchaseId, adminId: req.session?.user?.id });
+
+    return flashAndRedirect(req, res, "success", "Kupljeni paket je uspešno ažuriran", `/admin/kupljeni-paketi/detalji/${updated.id}`);
+  } catch (error) {
+    logError("[updatePackagePurchase] Greška pri ažuriranju kupljenog paketa", error, {
+      packagePurchaseId: req.params.packagePurchaseId,
+      body: req.body,
+      userId: req.session?.user?.id,
+    });
+
+    if (error.statusCode === 400 || error.statusCode === 404) {
+      const purchase = await packagePurchaseService.getPurchaseById(req.params.packagePurchaseId).catch(() => null);
+      if (purchase) {
+        const formData = preparePackagePurchaseEditFormData(purchase);
+        return res.status(error.statusCode).render("admin/_form", {
+          pageTitle: `Izmena — ${purchase.paket}`,
+          pageDescription: purchase.korisnik,
+          data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
+        });
+      }
+    }
+    next(error);
+  }
+}
+
 export async function cancelPackagePurchase(req, res, next) {
   try {
     const { packagePurchaseId } = req.params;
@@ -137,10 +203,31 @@ export async function cancelPackagePurchase(req, res, next) {
   }
 }
 
+export async function deletePackagePurchase(req, res, next) {
+  try {
+    const { packagePurchaseId } = req.params;
+    await packagePurchaseService.deletePurchase(packagePurchaseId, req.session?.user?.id);
+    logInfo(`[deletePackagePurchase] Kupljeni paket #${packagePurchaseId} obrisan`, { packagePurchaseId, adminId: req.session?.user?.id });
+    return flashAndRedirect(req, res, "success", "Kupljeni paket je uspešno obrisan", "/admin/kupljeni-paketi");
+  } catch (error) {
+    logError("[deletePackagePurchase] Greška pri brisanju kupljenog paketa", error, {
+      packagePurchaseId: req.params.packagePurchaseId,
+      userId: req.session?.user?.id,
+    });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, "/admin/kupljeni-paketi");
+    }
+    next(error);
+  }
+}
+
 export default {
   listPackagePurchases,
   packagePurchaseDetails,
   newPackagePurchaseForm,
+  editPackagePurchaseForm,
   createPackagePurchase,
+  updatePackagePurchase,
   cancelPackagePurchase,
+  deletePackagePurchase,
 };

@@ -8,20 +8,34 @@ function formatImage(image) {
   };
 }
 
+function findVariant(item) {
+  if (item.service && typeof item.service === "object" && Array.isArray(item.service.packages)) {
+    return item.service.packages.find((p) => String(p._id) === String(item.servicePackageId)) || null;
+  }
+  return null;
+}
+
 function getItemsSummary(items = []) {
   return items
     .filter((item) => item.service && typeof item.service === "object")
-    .map((item) => `${item.service.name} x${item.sessions}`);
+    .map((item) => {
+      const variant = findVariant(item);
+      return `${item.service.name}${variant ? ` — ${variant.name}` : ""} x${item.sessions}`;
+    });
 }
 
 function mapItems(items = []) {
-  return items.map((item) => ({
-    usluga:
-      item.service && typeof item.service === "object"
-        ? { id: item.service._id.toString(), naziv: item.service.name, slug: item.service.slug }
-        : { id: item.service?.toString() },
-    brojSeansi: item.sessions,
-  }));
+  return items.map((item) => {
+    const variant = findVariant(item);
+    return {
+      usluga:
+        item.service && typeof item.service === "object"
+          ? { id: item.service._id.toString(), naziv: item.service.name, slug: item.service.slug }
+          : { id: item.service?.toString() },
+      varijanta: variant ? { id: variant._id.toString(), naziv: variant.name, cena: variant.totalPrice } : { id: item.servicePackageId?.toString() },
+      brojSeansi: item.sessions,
+    };
+  });
 }
 
 export function mapPackagesForAdminList(packages = []) {
@@ -80,6 +94,7 @@ export function mapPackageForEdit(pkg) {
     shortDescription: pkg.shortDescription || "",
     items: (pkg.items || []).map((item) => ({
       service: item.service?._id?.toString() || item.service?.toString(),
+      servicePackageId: item.servicePackageId?.toString(),
       sessions: item.sessions,
     })),
     totalPrice: pkg.totalPrice,

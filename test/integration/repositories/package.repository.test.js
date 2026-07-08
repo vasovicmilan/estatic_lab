@@ -9,7 +9,7 @@ function validPackage(overrides = {}) {
     name: "Dan Za Sebe",
     slug: "dan-za-sebe",
     description: "Kombinovani paket usluga",
-    items: [{ service: new mongoose.Types.ObjectId(), sessions: 1 }],
+    items: [{ service: new mongoose.Types.ObjectId(), servicePackageId: new mongoose.Types.ObjectId(), sessions: 1 }],
     totalPrice: 8000,
     ...overrides,
   };
@@ -52,6 +52,11 @@ describe("package.repository", () => {
     it("rejects an image missing the required imgDesc field when one is provided", async () => {
       await assert.rejects(() =>
         packageRepo.createPackage(validPackage({ image: { img: "/images/packages/dan.webp" } }))
+      );
+    });
+    it("rejects an item missing servicePackageId at the schema level", async () => {
+      await assert.rejects(() =>
+        packageRepo.createPackage(validPackage({ items: [{ service: new mongoose.Types.ObjectId(), sessions: 1 }] }))
       );
     });
   });

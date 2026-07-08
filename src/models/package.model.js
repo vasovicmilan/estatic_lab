@@ -10,6 +10,10 @@ const PackageItemSchema = new Schema(
       ref: "Service",
       required: true,
     },
+    servicePackageId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+    },
     sessions: {
       type: Number,
       required: true,
@@ -38,7 +42,7 @@ const PackageSchema = new Schema(
 
     totalPrice: { type: Number, required: true, min: 0 },
     basePrice: { type: Number, min: 0 },
-    totalDuration: { type: Number, min: 0 }, // minutes, informational (sum of item durations)
+    totalDuration: { type: Number, min: 0 },
 
     badge: { type: String, trim: true },
     isBest: { type: Boolean, default: false },
@@ -63,5 +67,6 @@ const PackageSchema = new Schema(
 PackageSchema.index({ categories: 1 });
 PackageSchema.index({ tags: 1 });
 PackageSchema.index({ "items.service": 1 });
+PackageSchema.index({ "items.servicePackageId": 1 });
 
 export default model("Package", PackageSchema);

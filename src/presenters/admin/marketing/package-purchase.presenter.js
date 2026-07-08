@@ -10,6 +10,8 @@ export function preparePackagePurchaseListData(result, query = {}) {
     ],
     actions: [
       { type: "view", url: "/admin/kupljeni-paketi/detalji/", icon: "eye" },
+      { type: "edit", url: "/admin/kupljeni-paketi/izmena/", icon: "pencil" },
+      { type: "delete", url: "/admin/kupljeni-paketi/", icon: "trash" },
     ],
     pagination: {
       currentPage: result.page,
@@ -48,6 +50,7 @@ export function preparePackagePurchaseListData(result, query = {}) {
 export function preparePackagePurchaseDetailsData(purchase) {
   return {
     backUrl: "/admin/kupljeni-paketi",
+    editUrl: `/admin/kupljeni-paketi/izmena/${purchase.id}`,
     sections: [
       {
         title: "Osnovni podaci",
@@ -63,8 +66,8 @@ export function preparePackagePurchaseDetailsData(purchase) {
         title: "Usluge u paketu",
         type: "table",
         rows: purchase.stavke.map((s) => ({
-          label: s.usluga,
-          value: `${s.iskorisceno} / ${s.ukupnoSeansi} iskorišćeno (${s.preostalo} preostalo)`,
+          label: `${s.usluga} — ${s.varijanta}`,
+          value: `${s.iskorisceno} iskorišćeno, ${s.rezervisano} rezervisano / ${s.ukupnoSeansi} ukupno (${s.preostalo} slobodno)`,
         })),
       },
     ],
@@ -133,8 +136,32 @@ export function preparePackagePurchaseFormData({ userOptions = [], packageOption
   };
 }
 
+// Deliberately editable fields only: expiresAt/notes. Items, pricing, and the coupon
+// used are the actual purchase record and stay immutable — see
+// package-purchase.service.js's updatePurchase() for why.
+export function preparePackagePurchaseEditFormData(purchase) {
+  return {
+    formAction: `/admin/kupljeni-paketi/${purchase.id}`,
+    formEnctype: "application/x-www-form-urlencoded",
+    isEdit: true,
+    fields: [
+      { name: "expiresAt", label: "Ističe (prazno = ne ističe)", type: "date", width: 6, value: purchase.expiresAtRaw || "" },
+      { name: "notes", label: "Napomena", type: "textarea", rows: 3, width: 12, value: purchase.napomena || "" },
+    ],
+    submitLabel: "Sačuvaj izmene",
+    cancelUrl: `/admin/kupljeni-paketi/detalji/${purchase.id}`,
+    breadcrumbs: [
+      { label: "Admin", url: "/admin" },
+      { label: "Kupljeni paketi", url: "/admin/kupljeni-paketi" },
+      { label: purchase.paket, url: `/admin/kupljeni-paketi/detalji/${purchase.id}` },
+      { label: "Izmena", url: null },
+    ],
+  };
+}
+
 export default {
   preparePackagePurchaseListData,
   preparePackagePurchaseDetailsData,
   preparePackagePurchaseFormData,
+  preparePackagePurchaseEditFormData,
 };

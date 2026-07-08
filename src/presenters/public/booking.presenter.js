@@ -50,10 +50,10 @@ export function prepareBookingContactStepData(
   // appointmentService.bookAppointment() regardless of what this suggests.
   const packageOption = usablePackagePurchase
     ? (() => {
-        const item = usablePackagePurchase.items.find((i) => String(i.service) === String(service.id));
+        const item = usablePackagePurchase.items.find((i) => String(i.servicePackageId) === String(variant.id));
         return {
           id: usablePackagePurchase._id.toString(),
-          preostaloSeansi: item ? item.sessionsTotal - item.sessionsUsed : 0,
+          preostaloSeansi: item ? item.sessionsTotal - item.sessionsUsed - (item.sessionsReserved || 0) : 0,
         };
       })()
     : null;
