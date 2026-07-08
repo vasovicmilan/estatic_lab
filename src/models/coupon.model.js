@@ -7,10 +7,18 @@ const CouponUsageSchema = new Schema(
       ref: "User",
       required: true,
     },
+    // exactly one of these two is set per redemption — a coupon either discounts a
+    // single booking or a package purchase, never both, but the same Coupon
+    // document/discount logic covers either kind
     appointment: {
       type: Schema.Types.ObjectId,
       ref: "Appointment",
-      required: true,
+      default: null,
+    },
+    packagePurchase: {
+      type: Schema.Types.ObjectId,
+      ref: "PackagePurchase",
+      default: null,
     },
     discountAmount: {
       type: Number,
@@ -52,13 +60,10 @@ const CouponSchema = new Schema(
       min: 0,
     },
 
-    // null = unlimited total uses across all users
     maxUses: {
       type: Number,
       default: null,
     },
-    // null = a single user may use this coupon an unlimited number of times
-    // (still bounded by maxUses overall, if that's set)
     maxUsesPerUser: {
       type: Number,
       default: 1,
@@ -68,14 +73,13 @@ const CouponSchema = new Schema(
       default: 0,
     },
 
-    // audit trail of every redemption — see file-level comment
     usageHistory: {
       type: [CouponUsageSchema],
       default: [],
     },
 
-    // restrict to specific services; empty = valid for any service
     applicableServices: [{ type: Schema.Types.ObjectId, ref: "Service" }],
+    applicablePackages: [{ type: Schema.Types.ObjectId, ref: "Package" }],
 
     validFrom: {
       type: Date,
@@ -98,5 +102,6 @@ const CouponSchema = new Schema(
 CouponSchema.index({ isActive: 1, validUntil: 1 });
 CouponSchema.index({ "usageHistory.user": 1 });
 CouponSchema.index({ "usageHistory.appointment": 1 });
+CouponSchema.index({ "usageHistory.packagePurchase": 1 });
 
 export default model("Coupon", CouponSchema);

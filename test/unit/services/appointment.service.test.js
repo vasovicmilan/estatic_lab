@@ -1,8 +1,21 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import mongoose from "mongoose";
 import appointmentRepo from "../../../src/repositories/appointment.repository.js";
+import userService from "../../../src/services/user.service.js";
+import serviceService from "../../../src/services/service.service.js";
+import availabilityService from "../../../src/services/availability.service.js";
+import couponService from "../../../src/services/coupon.service.js";
+import packagePurchaseService from "../../../src/services/package-purchase.service.js";
 import * as appointmentService from "../../../src/services/appointment.service.js";
-import { buildAppointment, buildEmployee, buildUser, id } from "../../helpers/factories.js";
+import {
+  buildAppointment,
+  buildEmployee,
+  buildUser,
+  buildPackagePurchase,
+  buildServicePackageVariant,
+  id,
+} from "../../helpers/factories.js";
 
 describe("appointment.service", () => {
   describe("getAppointmentById — access control", () => {
@@ -171,6 +184,18 @@ describe("appointment.service", () => {
   });
 });
 
+// Fakes mongoose's own session object — appointment.service.js's bookAppointment calls
+// mongoose.startSession()/session.withTransaction()/session.endSession() directly,
+// which is a real driver-level operation no repository/service mock can intercept.
+// Without this, any test that reaches the transaction (i.e. doesn't throw before it)
+// hangs waiting for a real DB connection that doesn't exist in a unit test.
+function fakeSession() {
+  return {
+    withTransaction: async (fn) => fn(),
+    endSession: async () => {},
+  };
+}
+
 describe("bookAppointment — package purchase payment", () => {
   it("rejects packagePurchaseId when the booker isn't logged in", async () => {
     await assert.rejects(
@@ -191,7 +216,8 @@ describe("bookAppointment — package purchase payment", () => {
     const purchase = buildPackagePurchase();
     const loggedInUser = buildUser({ _id: purchase.user });
 
-    t.mock.method(userRepo, "findUserById", async () => loggedInUser);
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(userService, "findUserById", async () => loggedInUser);
     t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 3000, duration: 60 }) }));
     t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => buildEmployee());
     t.mock.method(packagePurchaseService, "assertUsablePurchase", async () => purchase);
@@ -201,6 +227,7 @@ describe("bookAppointment — package purchase payment", () => {
       createdPayload = data;
       return { ...data, _id: id() };
     });
+    t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
     t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
 
     await appointmentService.bookAppointment({
@@ -222,7 +249,8 @@ describe("bookAppointment — package purchase payment", () => {
     const purchase = buildPackagePurchase();
     const loggedInUser = buildUser({ _id: purchase.user });
 
-    t.mock.method(userRepo, "findUserById", async () => loggedInUser);
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(userService, "findUserById", async () => loggedInUser);
     t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 3000, duration: 60 }) }));
     t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => buildEmployee());
     t.mock.method(packagePurchaseService, "assertUsablePurchase", async () => purchase);
@@ -230,6 +258,7 @@ describe("bookAppointment — package purchase payment", () => {
       throw new Error("should never be called");
     });
     t.mock.method(appointmentRepo, "createAppointment", async (data) => ({ ...data, _id: id() }));
+    t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
     t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
 
     await appointmentService.bookAppointment({

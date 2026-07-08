@@ -311,6 +311,11 @@ export async function verifyUserByAdmin(userId) {
   return mapUserForAdminDetail(updated);
 }
 
+export async function findUserById(userId) {
+  if (!userId) return null;
+  return userRepo.findUserById(userId, { populateFields: [{ path: "role", select: "name" }] });
+}
+
 export async function deleteUser(userId) {
   if (!userId) validationError("userId");
   const existing = await userRepo.findUserById(userId);
@@ -338,6 +343,7 @@ export default {
   updateUserStatus,
   updateUserRole,
   updateLastLogin,
+  findUserById,
   verifyUserByAdmin,
   deleteUser,
 };
