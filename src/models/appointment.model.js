@@ -73,6 +73,14 @@ const AppointmentSchema = new Schema(
       ref: "Coupon",
       default: null,
     },
+    // mutually exclusive with coupon in practice (a booking either pays in full,
+    // minus a coupon, OR is covered by a package — not both), but that's a business
+    // rule the service layer enforces, not something encoded at the schema level
+    packagePurchase: {
+      type: Schema.Types.ObjectId,
+      ref: "PackagePurchase",
+      default: null,
+    },
     discountApplied: {
       type: Number,
       default: 0,
@@ -104,8 +112,8 @@ AppointmentSchema.pre("save", function () {
       this.endTime = new Date(this.startTime.getTime() + this.variant.duration * 60000);
     }
   }
-  if (this.isModified("variant.price") || this.isModified("discountApplied")) {
-    this.finalPrice = Math.max(0, (this.variant?.price || 0) - (this.discountApplied || 0));
+  if (this.isModified("variant.price") || this.isModified("discountApplied") || this.isModified("packagePurchase")) {
+    this.finalPrice = this.packagePurchase ? 0 : Math.max(0, (this.variant?.price || 0) - (this.discountApplied || 0));
   }
 });
 

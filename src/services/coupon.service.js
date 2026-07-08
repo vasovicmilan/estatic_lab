@@ -62,15 +62,15 @@ export async function deleteCouponById(couponId) {
 }
 
 /**
- * Read-only validation used by appointment.service.js BEFORE it opens the booking
- * transaction. Returns { coupon, discountAmount } on success, throws AppError otherwise.
+ * Read-only validation shared by both redemption paths (appointment booking, package
+ * purchase). Returns { coupon, discountAmount } on success, throws AppError otherwise.
  * `userId` may be null (a brand-new guest hasn't been created yet at this point) — in
  * that case the per-user limit simply can't be checked yet and is skipped; it's re-verified
  * implicitly by `redeemCoupon`'s atomic push once the user does exist, so a determined
  * double-submit still can't bypass the global `maxUses` cap, only (in the rare
  * brand-new-guest edge case) the per-user cap on their very first booking.
  */
-export async function validateCouponForBooking(code, { userId = null, serviceId, appointmentValue } = {}) {
+async function validateCoupon(code, { userId = null, kind, targetId, value } = {}) {
   if (!code) validationError("code");
 
   const coupon = await couponRepo.findCouponByCode(code);
@@ -81,12 +81,18 @@ export async function validateCouponForBooking(code, { userId = null, serviceId,
   if (coupon.validFrom && now < new Date(coupon.validFrom)) badRequest("Kupon još nije aktivan");
   if (coupon.validUntil && now > new Date(coupon.validUntil)) badRequest("Kupon je istekao");
 
-  if (coupon.minAppointmentValue && appointmentValue < coupon.minAppointmentValue) {
-    badRequest(`Kupon važi za termine u vrednosti od najmanje ${coupon.minAppointmentValue} RSD`);
+  if (coupon.minAppointmentValue && value < coupon.minAppointmentValue) {
+    badRequest(`Kupon važi za iznos od najmanje ${coupon.minAppointmentValue} RSD`);
   }
 
-  if (coupon.applicableServices?.length && !coupon.applicableServices.some((s) => String(s) === String(serviceId))) {
-    badRequest("Kupon ne važi za izabranu uslugu");
+  if (kind === "appointment") {
+    if (coupon.applicableServices?.length && !coupon.applicableServices.some((s) => String(s) === String(targetId))) {
+      badRequest("Kupon ne važi za izabranu uslugu");
+    }
+  } else if (kind === "packagePurchase") {
+    if (coupon.applicablePackages?.length && !coupon.applicablePackages.some((p) => String(p) === String(targetId))) {
+      badRequest("Kupon ne važi za izabrani paket");
+    }
   }
 
   if (coupon.maxUses != null && coupon.usedCount >= coupon.maxUses) {
@@ -101,14 +107,24 @@ export async function validateCouponForBooking(code, { userId = null, serviceId,
   }
 
   const discountAmount =
-    coupon.discountType === "percentage" ? Math.round((appointmentValue * coupon.discountValue) / 100) : coupon.discountValue;
+    coupon.discountType === "percentage" ? Math.round((value * coupon.discountValue) / 100) : coupon.discountValue;
 
-  return { coupon, discountAmount: Math.min(discountAmount, appointmentValue) };
+  return { coupon, discountAmount: Math.min(discountAmount, value) };
 }
 
-// atomic redemption — called from inside appointment.service.js's booking transaction
-export async function redeemCoupon(couponId, { userId, appointmentId, discountAmount }, { session } = {}) {
-  return couponRepo.redeemCoupon(couponId, { userId, appointmentId, discountAmount }, { session });
+// unchanged external behavior/signature from before — every existing caller/test keeps working
+export async function validateCouponForBooking(code, { userId = null, serviceId, appointmentValue } = {}) {
+  return validateCoupon(code, { userId, kind: "appointment", targetId: serviceId, value: appointmentValue });
+}
+
+export async function validateCouponForPackagePurchase(code, { userId = null, packageId, purchaseValue } = {}) {
+  return validateCoupon(code, { userId, kind: "packagePurchase", targetId: packageId, value: purchaseValue });
+}
+
+// atomic redemption — called from inside appointment.service.js's booking transaction,
+// or from package-purchase.service.js when a coupon discounts a package purchase
+export async function redeemCoupon(couponId, { userId, appointmentId = null, packagePurchaseId = null, discountAmount }, { session } = {}) {
+  return couponRepo.redeemCoupon(couponId, { userId, appointmentId, packagePurchaseId, discountAmount }, { session });
 }
 
 export default {
@@ -119,5 +135,6 @@ export default {
   updateCouponById,
   deleteCouponById,
   validateCouponForBooking,
+  validateCouponForPackagePurchase,
   redeemCoupon,
 };

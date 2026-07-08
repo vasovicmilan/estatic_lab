@@ -20,11 +20,19 @@ export async function findCouponByCode(code, { session } = {}) {
 export async function countCouponUsagesByUser(couponId, userId, { session } = {}) {
   const result = await Coupon.aggregate([
     { $match: { _id: couponId } },
-    { $project: { count: { $size: { $filter: {
-      input: "$usageHistory",
-      as: "u",
-      cond: { $eq: ["$$u.user", userId] },
-    } } } } },
+    {
+      $project: {
+        count: {
+          $size: {
+            $filter: {
+              input: "$usageHistory",
+              as: "u",
+              cond: { $eq: ["$$u.user", userId] },
+            },
+          },
+        },
+      },
+    },
   ]).session(session || null);
   return result[0]?.count || 0;
 }
@@ -32,15 +40,15 @@ export async function countCouponUsagesByUser(couponId, userId, { session } = {}
 /**
  * Atomically records one redemption: pushes the usage entry and increments the running
  * counter in a single update, so it's safe to call inside the same transaction that
- * creates the Appointment — two concurrent redemptions can't silently overwrite each
- * other's $inc.
+ * creates the Appointment (or, now, the same flow that records a PackagePurchase) —
+ * two concurrent redemptions can't silently overwrite each other's $inc.
  */
-export async function redeemCoupon(couponId, { userId, appointmentId, discountAmount }, { session } = {}) {
+export async function redeemCoupon(couponId, { userId, appointmentId = null, packagePurchaseId = null, discountAmount }, { session } = {}) {
   return Coupon.findByIdAndUpdate(
     couponId,
     {
       $inc: { usedCount: 1 },
-      $push: { usageHistory: { user: userId, appointment: appointmentId, discountAmount, usedAt: new Date() } },
+      $push: { usageHistory: { user: userId, appointment: appointmentId, packagePurchase: packagePurchaseId, discountAmount, usedAt: new Date() } },
     },
     { returnDocument: "after", session }
   ).lean();
@@ -83,8 +91,7 @@ export default {
   countCouponUsagesByUser,
   redeemCoupon,
   findCoupons,
-  findCoupons,
   updateCouponById,
   deleteCouponById,
-  countCoupons
-}
+  countCoupons,
+};

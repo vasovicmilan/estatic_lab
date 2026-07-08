@@ -6,6 +6,7 @@ import userService from "./user.service.js";
 import serviceService from "./service.service.js";
 import couponService from "./coupon.service.js";
 import availabilityService from "./availability.service.js";
+import packagePurchaseService from "./package-purchase.service.js";
 import { mapAppointment, mapAppointmentsForAdminList } from "../mappers/appointment.mapper.js";
 import { getAllowedStatuses } from "../models/appointment-status-transitions.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
@@ -63,9 +64,27 @@ export async function getAppointmentById(appointmentId, requesterId, role) {
  * transaction; the guest-user creation (if any) and the Appointment write happen
  * inside one transaction; events fire only after commit. See appointment.model.js and
  * user.model.js for why a guest booking still produces a real User document.
+ *
+ * `packagePurchaseId` is only honored when `isLoggedIn` — a package purchase belongs
+ * to a real account, never a guest, so it's mutually exclusive with `couponCode`:
+ * a booking is either paid in full (minus an optional coupon) or fully covered by a
+ * package, never both. When a package purchase is used, no session is consumed here —
+ * that only happens once the appointment is later marked "completed" (see
+ * transitionStatus below and package-purchase.service.js's consumeSession()).
  */
 export async function bookAppointment(input) {
-  const { serviceId, servicePackageId, employeeId = null, startTime, isLoggedIn = false, userId = null, contact = {}, note = "", couponCode = null } = input;
+  const {
+    serviceId,
+    servicePackageId,
+    employeeId = null,
+    startTime,
+    isLoggedIn = false,
+    userId = null,
+    contact = {},
+    note = "",
+    couponCode = null,
+    packagePurchaseId = null,
+  } = input;
 
   if (!serviceId) validationError("serviceId");
   if (!servicePackageId) validationError("servicePackageId");
@@ -111,12 +130,19 @@ export async function bookAppointment(input) {
   }
 
   let couponResult = null;
-  if (couponCode) {
+  let resolvedPackagePurchase = null;
+  let discountApplied = 0;
+
+  if (packagePurchaseId) {
+    if (!isLoggedIn) badRequest("Plaćanje paketom je dostupno samo prijavljenim korisnicima");
+    resolvedPackagePurchase = await packagePurchaseService.assertUsablePurchase(packagePurchaseId, buyerId, serviceId);
+  } else if (couponCode) {
     couponResult = await couponService.validateCouponForBooking(couponCode, {
       userId: buyerId,
       serviceId,
       appointmentValue: variant.totalPrice,
     });
+    discountApplied = couponResult.discountAmount;
   }
 
   // ---- transaction ----
@@ -134,14 +160,6 @@ export async function bookAppointment(input) {
         buyerId = guestUser._id;
         accountJustCreated = true;
       }
-
-      // race guard — re-check right before the write in case two people booked the
-      // same slot within seconds of each other off the same availability list
-      const employeeToCheck = chosenEmployeeId || assignedEmployeeId;
-      const stillFree = await appointmentRepo.findOverlappingAppointments(employeeToCheck, start, end, null, { session });
-      if (stillFree.length > 0) badRequest("Izabrani termin je upravo zauzet, pokušajte ponovo");
-
-      const discountApplied = couponResult?.discountAmount || 0;
 
       created = await appointmentRepo.createAppointment(
         {
@@ -162,8 +180,9 @@ export async function bookAppointment(input) {
           status: "pending",
           note,
           coupon: couponResult?.coupon._id || null,
+          packagePurchase: resolvedPackagePurchase?._id || null,
           discountApplied,
-          finalPrice: Math.max(0, variant.totalPrice - discountApplied),
+          finalPrice: resolvedPackagePurchase ? 0 : Math.max(0, variant.totalPrice - discountApplied),
           contactSnapshot: {
             firstName: contact.firstName,
             lastName: contact.lastName || "",
@@ -220,6 +239,13 @@ async function transitionStatus(appointmentId, nextStatus, actorId, actorRole, e
   const allowed = getAllowedStatuses(appointment.status, actorRole);
   if (!allowed.includes(nextStatus)) {
     badRequest(`Prelaz iz statusa "${appointment.status}" u "${nextStatus}" nije dozvoljen`);
+  }
+
+  // "completed" is a terminal status (see appointment-status-transitions.js — nothing
+  // transitions out of it), so this only ever fires once per appointment, exactly when
+  // it should.
+  if (nextStatus === "completed" && appointment.packagePurchase) {
+    await packagePurchaseService.consumeSession(appointment.packagePurchase, appointment.service);
   }
 
   const updated = await appointmentRepo.updateAppointmentById(appointmentId, { status: nextStatus, ...extra });
