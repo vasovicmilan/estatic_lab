@@ -158,14 +158,17 @@ export function buildService(overrides = {}) {
   };
 }
 
+// items now carry servicePackageId (the exact variant this item covers, not just
+// "any variant of this service") — see package.model.js
 export function buildPackage(overrides = {}) {
+  const defaultVariant = buildServicePackageVariant();
   return {
     _id: id(),
     name: "Dan za sebe",
     slug: "dan-za-sebe",
     description: "Kombinovani paket usluga",
     shortDescription: "",
-    items: [{ service: buildService(), sessions: 1 }],
+    items: [{ service: buildService({ packages: [defaultVariant] }), servicePackageId: defaultVariant._id, sessions: 1 }],
     totalPrice: 8000,
     basePrice: null,
     totalDuration: 120,
@@ -209,6 +212,7 @@ export function buildAppointment(overrides = {}) {
     cancelledAt: null,
     cancellationReason: "",
     coupon: null,
+    packagePurchase: null,
     discountApplied: 0,
     finalPrice: 3000,
     note: "",
@@ -231,11 +235,35 @@ export function buildCoupon(overrides = {}) {
     usedCount: 0,
     usageHistory: [],
     applicableServices: [],
+    applicablePackages: [],
     validFrom: new Date("2026-01-01"),
     validUntil: new Date("2026-12-31"),
     isActive: true,
     createdAt: new Date(),
     updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+// items carry servicePackageId (matched exactly, not just the parent service) and
+// sessionsReserved (claimed-but-not-yet-delivered — see package-purchase.model.js)
+export function buildPackagePurchase(overrides = {}) {
+  const serviceId = overrides.serviceId || id();
+  const servicePackageId = overrides.servicePackageId || id();
+  return {
+    _id: id(),
+    user: id(),
+    package: id(),
+    items: [{ service: serviceId, servicePackageId, sessionsTotal: 3, sessionsUsed: 0, sessionsReserved: 0 }],
+    originalPrice: 9000,
+    discountApplied: 0,
+    pricePaid: 9000,
+    coupon: null,
+    purchasedAt: new Date(),
+    expiresAt: null,
+    purchasedBy: id(),
+    status: "active",
+    notes: "",
     ...overrides,
   };
 }
@@ -329,28 +357,9 @@ export default {
   buildPackage,
   buildAppointment,
   buildCoupon,
+  buildPackagePurchase,
   buildPost,
   buildContact,
   buildSubscriber,
   buildTestimonial,
 };
-
-export function buildPackagePurchase(overrides = {}) {
-  const serviceId = overrides.serviceId || id();
-  return {
-    _id: id(),
-    user: id(),
-    package: id(),
-    items: [{ service: serviceId, sessionsTotal: 3, sessionsUsed: 0 }],
-    originalPrice: 9000,
-    discountApplied: 0,
-    pricePaid: 9000,
-    coupon: null,
-    purchasedAt: new Date(),
-    expiresAt: null,
-    purchasedBy: id(),
-    status: "active",
-    notes: "",
-    ...overrides,
-  };
-}

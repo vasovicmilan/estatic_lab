@@ -94,6 +94,29 @@
                     <% }) %>
                   </select>
 
+                <% } else if (field.type === 'select-preview') { %>
+                  <select class="form-select <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'is-invalid' : '' %>"
+                          id="<%= field.name %>"
+                          name="<%= field.name %>"
+                          <% if (field.required) { %>required<% } %>
+                          data-select-preview="<%= field.name %>"
+                          data-field="<%= field.name %>">
+                    <option value="">Izaberite...</option>
+                    <% field.options.forEach(function(opt) { %>
+                      <option value="<%- opt.value %>" <%= (function() {
+                        const selected = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
+                        return selected === opt.value ? 'selected' : '';
+                      })() %>>
+                        <%= opt.label %>
+                      </option>
+                    <% }) %>
+                  </select>
+                  <div class="border rounded p-2 mt-2 bg-light small"
+                       data-select-preview-panel="<%= field.name %>"
+                       data-select-preview-data='<%- JSON.stringify(field.previewData || {}) %>'>
+                    <span class="text-muted">Izaberite paket da vidite šta sadrži.</span>
+                  </div>
+
                 <% } else if (field.type === 'multiselect') { %>
                   <%
                     let selectedValues = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
@@ -321,4 +344,5 @@
 <script src="/js/admin-comparison-table.js"></script>
 <script src="/js/admin-content-blocks.js"></script>
 <script src="/js/admin-schedule.js"></script>
+<script src="/js/admin-select-preview.js"></script>
 <%- include("../includes/footer") %>

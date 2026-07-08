@@ -60,16 +60,17 @@ export async function getAppointmentById(appointmentId, requesterId, role) {
 
 /**
  * The core booking flow. Reads that only inform a decision happen before the
- * transaction; the guest-user creation (if any) and the Appointment write happen
- * inside one transaction; events fire only after commit. See appointment.model.js and
- * user.model.js for why a guest booking still produces a real User document.
+ * transaction; the guest-user creation (if any), the Appointment write, and (when
+ * paying via a package) the session reservation all happen inside one transaction;
+ * events fire only after commit.
  *
  * `packagePurchaseId` is only honored when `isLoggedIn` — a package purchase belongs
  * to a real account, never a guest — and is mutually exclusive with `couponCode`: a
  * booking is either paid in full (minus an optional coupon) or fully covered by a
- * package, never both. No session is consumed here when a package is used — that
- * only happens once the appointment is later marked "completed" (see transitionStatus
- * below and package-purchase.service.js's consumeSession()).
+ * package, never both. Paying via a package RESERVES one session at booking time
+ * (not "consumes" — see package-purchase.service.js). The reservation is released if
+ * the appointment is later cancelled/rejected, and only actually committed (moved
+ * into sessionsUsed) once the appointment is marked completed — see transitionStatus.
  */
 export async function bookAppointment(input) {
   const {
@@ -133,7 +134,7 @@ export async function bookAppointment(input) {
   let resolvedPackagePurchase = null;
 
   if (packagePurchaseId) {
-    resolvedPackagePurchase = await packagePurchaseService.assertUsablePurchase(packagePurchaseId, buyerId, serviceId);
+    resolvedPackagePurchase = await packagePurchaseService.assertUsablePurchase(packagePurchaseId, buyerId, servicePackageId);
   } else if (couponCode) {
     couponResult = await couponService.validateCouponForBooking(couponCode, {
       userId: buyerId,
@@ -198,7 +199,12 @@ export async function bookAppointment(input) {
         { session }
       );
 
-      if (couponResult) {
+      if (resolvedPackagePurchase) {
+        // reserve, not consume — actual consumption happens on completion
+        // (transitionStatus below), and this reservation gets released if the
+        // appointment is cancelled/rejected first
+        await packagePurchaseService.reserveSession(resolvedPackagePurchase._id, servicePackageId, { session });
+      } else if (couponResult) {
         await couponService.redeemCoupon(
           couponResult.coupon._id,
           { userId: buyerId, appointmentId: created._id, discountAmount: discountApplied },
@@ -246,10 +252,16 @@ async function transitionStatus(appointmentId, nextStatus, actorId, actorRole, e
     badRequest(`Prelaz iz statusa "${appointment.status}" u "${nextStatus}" nije dozvoljen`);
   }
 
-  // "completed" is a terminal status (see appointment-status-transitions.js — nothing
-  // transitions out of it), so this only ever fires once per appointment.
-  if (nextStatus === "completed" && appointment.packagePurchase) {
-    await packagePurchaseService.consumeSession(appointment.packagePurchase, appointment.service);
+  // Package-purchase session lifecycle: "completed" delivers the reserved session
+  // (moves reserved -> used); "cancelled"/"rejected" gives the reservation back.
+  // "completed" is terminal (nothing transitions out of it — see
+  // appointment-status-transitions.js), so a session is never committed twice.
+  if (appointment.packagePurchase) {
+    if (nextStatus === "completed") {
+      await packagePurchaseService.commitSession(appointment.packagePurchase, appointment.variant.servicePackageId);
+    } else if (nextStatus === "cancelled" || nextStatus === "rejected") {
+      await packagePurchaseService.releaseSession(appointment.packagePurchase, appointment.variant.servicePackageId);
+    }
   }
 
   const updated = await appointmentRepo.updateAppointmentById(appointmentId, { status: nextStatus, ...extra });

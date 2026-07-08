@@ -98,7 +98,18 @@ export function preparePackagePurchaseDetailsData(purchase) {
   };
 }
 
-export function preparePackagePurchaseFormData({ userOptions = [], packageOptions = [], prefillUserId = "" } = {}) {
+// `packages` here is the raw admin-list shape from packageService.listPackages()
+// (each with .naziv, .stavke [an array of "ServiceName — VariantName xN" strings],
+// .cena) — used to build both the plain <select> options AND the live preview data
+// keyed by package id, since which variant a package covers is fixed by the Package
+// template and can't be chosen at assignment time, only shown.
+export function preparePackagePurchaseFormData({ userOptions = [], packages = [], prefillUserId = "" } = {}) {
+  const packageOptions = packages.map((p) => ({ value: p.id, label: p.naziv }));
+  const packagePreviewData = packages.reduce((acc, p) => {
+    acc[p.id] = { cena: p.cena, stavke: p.stavke };
+    return acc;
+  }, {});
+
   return {
     formAction: "/admin/kupljeni-paketi",
     formEnctype: "application/x-www-form-urlencoded",
@@ -116,10 +127,11 @@ export function preparePackagePurchaseFormData({ userOptions = [], packageOption
       {
         name: "packageId",
         label: "Paket",
-        type: "select",
+        type: "select-preview",
         required: true,
         width: 6,
         options: packageOptions,
+        previewData: packagePreviewData,
       },
       { name: "pricePaid", label: "Plaćena cena (opciono — podrazumevano cena paketa)", type: "number", min: 0, step: "0.01", width: 6 },
       { name: "expiresAt", label: "Ističe (opciono — prazno = ne ističe)", type: "date", width: 6 },

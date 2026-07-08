@@ -6,10 +6,11 @@ import packagePurchaseRepo from "../../../src/repositories/package-purchase.repo
 
 function validPurchase(overrides = {}) {
   const serviceId = new mongoose.Types.ObjectId();
+  const servicePackageId = new mongoose.Types.ObjectId();
   return {
     user: new mongoose.Types.ObjectId(),
     package: new mongoose.Types.ObjectId(),
-    items: [{ service: serviceId, sessionsTotal: 3, sessionsUsed: 0 }],
+    items: [{ service: serviceId, servicePackageId, sessionsTotal: 3, sessionsUsed: 0, sessionsReserved: 0 }],
     originalPrice: 9000,
     discountApplied: 0,
     pricePaid: 9000,
@@ -38,6 +39,14 @@ describe("package-purchase.repository", () => {
       assert.equal(created.status, "active");
       assert.equal(created.expiresAt, null);
     });
+
+    it("rejects an item missing servicePackageId at the schema level", async () => {
+      await assert.rejects(() =>
+        packagePurchaseRepo.createPackagePurchase(
+          validPurchase({ items: [{ service: new mongoose.Types.ObjectId(), sessionsTotal: 3, sessionsUsed: 0 }] })
+        )
+      );
+    });
   });
 
   describe("findPackagePurchaseById", () => {
@@ -58,41 +67,46 @@ describe("package-purchase.repository", () => {
       const created = await packagePurchaseRepo.createPackagePurchase(validPurchase());
       const doc = await packagePurchaseRepo.findPackagePurchaseDocById(created._id);
 
-      doc.items[0].sessionsUsed += 1;
+      doc.items[0].sessionsReserved += 1;
       await doc.save();
 
       const reloaded = await packagePurchaseRepo.findPackagePurchaseById(created._id);
-      assert.equal(reloaded.items[0].sessionsUsed, 1);
+      assert.equal(reloaded.items[0].sessionsReserved, 1);
     });
   });
 
-  describe("findActivePurchasesForUserAndService", () => {
-    it("only returns active purchases covering the given service", async () => {
+  describe("findActivePurchasesForUserAndVariant", () => {
+    it("only returns active purchases covering the given variant, not just the parent service", async () => {
       const userId = new mongoose.Types.ObjectId();
       const serviceId = new mongoose.Types.ObjectId();
-      const otherServiceId = new mongoose.Types.ObjectId();
+      const variantA = new mongoose.Types.ObjectId();
+      const variantB = new mongoose.Types.ObjectId(); // a DIFFERENT variant of the SAME service
 
       await packagePurchaseRepo.createPackagePurchase(
-        validPurchase({ user: userId, items: [{ service: serviceId, sessionsTotal: 2, sessionsUsed: 0 }] })
+        validPurchase({ user: userId, items: [{ service: serviceId, servicePackageId: variantA, sessionsTotal: 2, sessionsUsed: 0 }] })
       );
       await packagePurchaseRepo.createPackagePurchase(
-        validPurchase({ user: userId, items: [{ service: otherServiceId, sessionsTotal: 2, sessionsUsed: 0 }] })
+        validPurchase({ user: userId, items: [{ service: serviceId, servicePackageId: variantB, sessionsTotal: 2, sessionsUsed: 0 }] })
       );
 
-      const result = await packagePurchaseRepo.findActivePurchasesForUserAndService(userId, serviceId);
+      const result = await packagePurchaseRepo.findActivePurchasesForUserAndVariant(userId, variantA);
 
       assert.equal(result.length, 1);
     });
 
     it("excludes cancelled purchases", async () => {
       const userId = new mongoose.Types.ObjectId();
-      const serviceId = new mongoose.Types.ObjectId();
+      const servicePackageId = new mongoose.Types.ObjectId();
 
       await packagePurchaseRepo.createPackagePurchase(
-        validPurchase({ user: userId, status: "cancelled", items: [{ service: serviceId, sessionsTotal: 2, sessionsUsed: 0 }] })
+        validPurchase({
+          user: userId,
+          status: "cancelled",
+          items: [{ service: new mongoose.Types.ObjectId(), servicePackageId, sessionsTotal: 2, sessionsUsed: 0 }],
+        })
       );
 
-      const result = await packagePurchaseRepo.findActivePurchasesForUserAndService(userId, serviceId);
+      const result = await packagePurchaseRepo.findActivePurchasesForUserAndVariant(userId, servicePackageId);
 
       assert.equal(result.length, 0);
     });
@@ -117,6 +131,21 @@ describe("package-purchase.repository", () => {
       const created = await packagePurchaseRepo.createPackagePurchase(validPurchase());
       const updated = await packagePurchaseRepo.updatePackagePurchaseById(created._id, { status: "cancelled" });
       assert.equal(updated.status, "cancelled");
+    });
+
+    it("updates expiresAt and notes independently", async () => {
+      const created = await packagePurchaseRepo.createPackagePurchase(validPurchase());
+      const updated = await packagePurchaseRepo.updatePackagePurchaseById(created._id, { notes: "Ispravljena napomena" });
+      assert.equal(updated.notes, "Ispravljena napomena");
+    });
+  });
+
+  describe("deletePackagePurchaseById", () => {
+    it("deletes the purchase", async () => {
+      const created = await packagePurchaseRepo.createPackagePurchase(validPurchase());
+      await packagePurchaseRepo.deletePackagePurchaseById(created._id);
+      const found = await packagePurchaseRepo.findPackagePurchaseById(created._id);
+      assert.equal(found, null);
     });
   });
 

@@ -123,7 +123,7 @@ describe("appointment.service", () => {
 
   describe("cancelAppointment — the 24h rule", () => {
     it("blocks a user from cancelling less than 24h before the appointment", async (t) => {
-      const soon = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2h from now
+      const soon = new Date(Date.now() + 2 * 60 * 60 * 1000);
       const owner = buildUser();
       const appointment = buildAppointment({ status: "confirmed", user: owner, startTime: soon });
       t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
@@ -145,7 +145,7 @@ describe("appointment.service", () => {
     });
 
     it("the 24h rule does NOT apply to admin cancellations", async (t) => {
-      const soon = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes from now
+      const soon = new Date(Date.now() + 30 * 60 * 1000);
       const appointment = buildAppointment({ status: "confirmed", startTime: soon });
       t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
       t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "cancelled" }));
@@ -184,11 +184,9 @@ describe("appointment.service", () => {
   });
 });
 
-// Fakes mongoose's own session object — appointment.service.js's bookAppointment calls
-// mongoose.startSession()/session.withTransaction()/session.endSession() directly,
-// which is a real driver-level operation no repository/service mock can intercept.
-// Without this, any test that reaches the transaction (i.e. doesn't throw before it)
-// hangs waiting for a real DB connection that doesn't exist in a unit test.
+// Fakes mongoose's own session object — bookAppointment calls mongoose.startSession()/
+// session.withTransaction()/session.endSession() directly, a real driver-level
+// operation no repository/service mock can intercept.
 function fakeSession() {
   return {
     withTransaction: async (fn) => fn(),
@@ -221,6 +219,7 @@ describe("bookAppointment — package purchase payment", () => {
     t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 3000, duration: 60 }) }));
     t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => buildEmployee());
     t.mock.method(packagePurchaseService, "assertUsablePurchase", async () => purchase);
+    t.mock.method(packagePurchaseService, "reserveSession", async () => {});
 
     let createdPayload;
     t.mock.method(appointmentRepo, "createAppointment", async (data) => {
@@ -232,7 +231,7 @@ describe("bookAppointment — package purchase payment", () => {
 
     await appointmentService.bookAppointment({
       serviceId: purchase.items[0].service.toString(),
-      servicePackageId: id().toString(),
+      servicePackageId: purchase.items[0].servicePackageId.toString(),
       startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
       isLoggedIn: true,
       userId: purchase.user.toString(),
@@ -254,6 +253,7 @@ describe("bookAppointment — package purchase payment", () => {
     t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 3000, duration: 60 }) }));
     t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => buildEmployee());
     t.mock.method(packagePurchaseService, "assertUsablePurchase", async () => purchase);
+    t.mock.method(packagePurchaseService, "reserveSession", async () => {});
     const couponMock = t.mock.method(couponService, "validateCouponForBooking", async () => {
       throw new Error("should never be called");
     });
@@ -263,7 +263,7 @@ describe("bookAppointment — package purchase payment", () => {
 
     await appointmentService.bookAppointment({
       serviceId: purchase.items[0].service.toString(),
-      servicePackageId: id().toString(),
+      servicePackageId: purchase.items[0].servicePackageId.toString(),
       startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
       isLoggedIn: true,
       userId: purchase.user.toString(),
@@ -274,42 +274,132 @@ describe("bookAppointment — package purchase payment", () => {
 
     assert.equal(couponMock.mock.calls.length, 0);
   });
+
+  it("reserves a session at booking time — does NOT commit/consume it yet", async (t) => {
+    const purchase = buildPackagePurchase();
+    const loggedInUser = buildUser({ _id: purchase.user });
+
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(userService, "findUserById", async () => loggedInUser);
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 3000, duration: 60 }) }));
+    t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => buildEmployee());
+    t.mock.method(packagePurchaseService, "assertUsablePurchase", async () => purchase);
+    const reserveMock = t.mock.method(packagePurchaseService, "reserveSession", async () => {});
+    const commitMock = t.mock.method(packagePurchaseService, "commitSession", async () => {});
+    t.mock.method(appointmentRepo, "createAppointment", async (data) => ({ ...data, _id: id() }));
+    t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+
+    await appointmentService.bookAppointment({
+      serviceId: purchase.items[0].service.toString(),
+      servicePackageId: purchase.items[0].servicePackageId.toString(),
+      startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      isLoggedIn: true,
+      userId: purchase.user.toString(),
+      contact: { firstName: "Ana", email: "ana@example.com" },
+      packagePurchaseId: purchase._id.toString(),
+    });
+
+    assert.equal(reserveMock.mock.calls.length, 1);
+    assert.equal(String(reserveMock.mock.calls[0].arguments[0]), String(purchase._id));
+    assert.equal(commitMock.mock.calls.length, 0);
+  });
 });
 
-describe("completeAppointment — package session consumption", () => {
-  it("consumes a session when the appointment was paid via a package purchase", async (t) => {
+describe("completeAppointment / cancelAppointment / rejectAppointment — package session lifecycle", () => {
+  it("commits the reservation (reserved -> used) when completed", async (t) => {
     const purchaseId = id();
-    const appointment = buildAppointment({ status: "confirmed", packagePurchase: purchaseId });
+    const servicePackageId = id();
+    const appointment = buildAppointment({
+      status: "confirmed",
+      packagePurchase: purchaseId,
+      variant: { servicePackageId, name: "60 min", duration: 60, price: 3000 },
+    });
     t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
     t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "completed" }));
-    const consumeMock = t.mock.method(packagePurchaseService, "consumeSession", async () => {});
+    const commitMock = t.mock.method(packagePurchaseService, "commitSession", async () => {});
+    const releaseMock = t.mock.method(packagePurchaseService, "releaseSession", async () => {});
 
     await appointmentService.completeAppointment(appointment._id.toString(), id().toString(), "admin");
 
-    assert.equal(consumeMock.mock.calls.length, 1);
-    assert.equal(String(consumeMock.mock.calls[0].arguments[0]), String(purchaseId));
+    assert.equal(commitMock.mock.calls.length, 1);
+    assert.equal(String(commitMock.mock.calls[0].arguments[0]), String(purchaseId));
+    assert.equal(String(commitMock.mock.calls[0].arguments[1]), String(servicePackageId));
+    assert.equal(releaseMock.mock.calls.length, 0);
   });
 
-  it("does not touch package-purchase consumption for an appointment with no packagePurchase", async (t) => {
+  it("releases the reservation when cancelled by the user", async (t) => {
+    const purchaseId = id();
+    const servicePackageId = id();
+    const owner = buildUser();
+    const appointment = buildAppointment({
+      status: "confirmed",
+      user: owner,
+      packagePurchase: purchaseId,
+      variant: { servicePackageId, name: "60 min", duration: 60, price: 3000 },
+      startTime: new Date(Date.now() + 48 * 60 * 60 * 1000),
+    });
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+    t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "cancelled" }));
+    const releaseMock = t.mock.method(packagePurchaseService, "releaseSession", async () => {});
+    const commitMock = t.mock.method(packagePurchaseService, "commitSession", async () => {});
+
+    await appointmentService.cancelAppointment(appointment._id.toString(), "razlog", owner._id.toString(), "user");
+
+    assert.equal(releaseMock.mock.calls.length, 1);
+    assert.equal(String(releaseMock.mock.calls[0].arguments[0]), String(purchaseId));
+    assert.equal(commitMock.mock.calls.length, 0);
+  });
+
+  it("releases the reservation when rejected by the assigned employee", async (t) => {
+    const purchaseId = id();
+    const servicePackageId = id();
+    const employeeUser = buildEmployee();
+    const appointment = buildAppointment({
+      status: "pending",
+      employee: employeeUser,
+      assignedTo: null,
+      packagePurchase: purchaseId,
+      variant: { servicePackageId, name: "60 min", duration: 60, price: 3000 },
+    });
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+    t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "rejected" }));
+    const releaseMock = t.mock.method(packagePurchaseService, "releaseSession", async () => {});
+
+    await appointmentService.rejectAppointment(appointment._id.toString(), "razlog", employeeUser._id.toString(), "employee");
+
+    assert.equal(releaseMock.mock.calls.length, 1);
+  });
+
+  it("does not touch package-purchase lifecycle for an appointment with no packagePurchase", async (t) => {
     const appointment = buildAppointment({ status: "confirmed", packagePurchase: null });
     t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
     t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "completed" }));
-    const consumeMock = t.mock.method(packagePurchaseService, "consumeSession", async () => {});
+    const commitMock = t.mock.method(packagePurchaseService, "commitSession", async () => {});
+    const releaseMock = t.mock.method(packagePurchaseService, "releaseSession", async () => {});
 
     await appointmentService.completeAppointment(appointment._id.toString(), id().toString(), "admin");
 
-    assert.equal(consumeMock.mock.calls.length, 0);
+    assert.equal(commitMock.mock.calls.length, 0);
+    assert.equal(releaseMock.mock.calls.length, 0);
   });
 
-  it("does not consume a session for any transition other than 'completed'", async (t) => {
+  it("does not commit/release for a transition to 'confirmed' (only completed/cancelled/rejected touch the lifecycle)", async (t) => {
     const purchaseId = id();
-    const appointment = buildAppointment({ status: "pending", packagePurchase: purchaseId });
+    const servicePackageId = id();
+    const appointment = buildAppointment({
+      status: "pending",
+      packagePurchase: purchaseId,
+      variant: { servicePackageId, name: "60 min", duration: 60, price: 3000 },
+    });
     t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
     t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "confirmed" }));
-    const consumeMock = t.mock.method(packagePurchaseService, "consumeSession", async () => {});
+    const commitMock = t.mock.method(packagePurchaseService, "commitSession", async () => {});
+    const releaseMock = t.mock.method(packagePurchaseService, "releaseSession", async () => {});
 
     await appointmentService.confirmAppointment(appointment._id.toString(), id().toString(), "admin");
 
-    assert.equal(consumeMock.mock.calls.length, 0);
+    assert.equal(commitMock.mock.calls.length, 0);
+    assert.equal(releaseMock.mock.calls.length, 0);
   });
 });

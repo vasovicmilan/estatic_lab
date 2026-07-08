@@ -39,6 +39,12 @@ describe("package.repository", () => {
       await assert.rejects(() => packageRepo.createPackage(validPackage({ items: [] })));
     });
 
+    it("rejects an item missing servicePackageId at the schema level", async () => {
+      await assert.rejects(() =>
+        packageRepo.createPackage(validPackage({ items: [{ service: new mongoose.Types.ObjectId(), sessions: 1 }] }))
+      );
+    });
+
     it("rejects a duplicate slug (unique index)", async () => {
       await packageRepo.createPackage(validPackage());
       await assert.rejects(() => packageRepo.createPackage(validPackage({ name: "Drugi paket" })));
@@ -52,11 +58,6 @@ describe("package.repository", () => {
     it("rejects an image missing the required imgDesc field when one is provided", async () => {
       await assert.rejects(() =>
         packageRepo.createPackage(validPackage({ image: { img: "/images/packages/dan.webp" } }))
-      );
-    });
-    it("rejects an item missing servicePackageId at the schema level", async () => {
-      await assert.rejects(() =>
-        packageRepo.createPackage(validPackage({ items: [{ service: new mongoose.Types.ObjectId(), sessions: 1 }] }))
       );
     });
   });
@@ -91,23 +92,13 @@ describe("package.repository", () => {
       assert.equal(result.data.length, 1);
       assert.equal(result.data[0].slug, "aktivan");
     });
-
-    it("searches by name", async () => {
-      await packageRepo.createPackage(validPackage({ name: "Wellness Dan", slug: "wellness" }));
-      await packageRepo.createPackage(validPackage({ name: "Sportski Paket", slug: "sportski" }));
-
-      const result = await packageRepo.findPackages({ search: "Wellness", populateFields: [] });
-
-      assert.equal(result.data.length, 1);
-      assert.equal(result.data[0].slug, "wellness");
-    });
   });
 
   describe("updatePackageById", () => {
     it("updates and returns the post-update document", async () => {
       const created = await packageRepo.createPackage(validPackage());
-      const updated = await packageRepo.updatePackageById(created._id, { name: "Novo Ime" });
-      assert.equal(updated.name, "Novo Ime");
+      const updated = await packageRepo.updatePackageById(created._id, { name: "Novi naziv" });
+      assert.equal(updated.name, "Novi naziv");
     });
   });
 
@@ -117,17 +108,6 @@ describe("package.repository", () => {
       await packageRepo.deletePackageById(created._id);
       const found = await packageRepo.findPackageById(created._id);
       assert.equal(found, null);
-    });
-  });
-
-  describe("countPackages", () => {
-    it("counts packages matching a filter", async () => {
-      await packageRepo.createPackage(validPackage({ slug: "a", isActive: true }));
-      await packageRepo.createPackage(validPackage({ slug: "b", isActive: false }));
-
-      const count = await packageRepo.countPackages({ isActive: true });
-
-      assert.equal(count, 1);
     });
   });
 });

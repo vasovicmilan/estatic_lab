@@ -18,7 +18,7 @@ async function loadFormOptions() {
 
   return {
     userOptions: users.data.map((u) => ({ value: u.id, label: `${u.imePrezime} (${u.email})` })),
-    packageOptions: packages.data.map((p) => ({ value: p.id, label: p.naziv })),
+    packages: packages.data,
   };
 }
 
