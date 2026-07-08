@@ -170,3 +170,117 @@ describe("appointment.service", () => {
     });
   });
 });
+
+describe("bookAppointment — package purchase payment", () => {
+  it("rejects packagePurchaseId when the booker isn't logged in", async () => {
+    await assert.rejects(
+      () =>
+        appointmentService.bookAppointment({
+          serviceId: id().toString(),
+          servicePackageId: id().toString(),
+          startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          isLoggedIn: false,
+          contact: { firstName: "Gost", email: "gost@example.com" },
+          packagePurchaseId: id().toString(),
+        }),
+      (err) => err.statusCode === 400
+    );
+  });
+
+  it("sets finalPrice to 0 and stores the packagePurchase reference when payment is via package", async (t) => {
+    const purchase = buildPackagePurchase();
+    const loggedInUser = buildUser({ _id: purchase.user });
+
+    t.mock.method(userRepo, "findUserById", async () => loggedInUser);
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 3000, duration: 60 }) }));
+    t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => buildEmployee());
+    t.mock.method(packagePurchaseService, "assertUsablePurchase", async () => purchase);
+
+    let createdPayload;
+    t.mock.method(appointmentRepo, "createAppointment", async (data) => {
+      createdPayload = data;
+      return { ...data, _id: id() };
+    });
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+
+    await appointmentService.bookAppointment({
+      serviceId: purchase.items[0].service.toString(),
+      servicePackageId: id().toString(),
+      startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      isLoggedIn: true,
+      userId: purchase.user.toString(),
+      contact: { firstName: "Ana", email: "ana@example.com" },
+      packagePurchaseId: purchase._id.toString(),
+    });
+
+    assert.equal(createdPayload.finalPrice, 0);
+    assert.equal(String(createdPayload.packagePurchase), String(purchase._id));
+    assert.equal(createdPayload.coupon, null, "package payment and coupon are mutually exclusive");
+  });
+
+  it("skips coupon validation entirely when a packagePurchaseId is provided", async (t) => {
+    const purchase = buildPackagePurchase();
+    const loggedInUser = buildUser({ _id: purchase.user });
+
+    t.mock.method(userRepo, "findUserById", async () => loggedInUser);
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 3000, duration: 60 }) }));
+    t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => buildEmployee());
+    t.mock.method(packagePurchaseService, "assertUsablePurchase", async () => purchase);
+    const couponMock = t.mock.method(couponService, "validateCouponForBooking", async () => {
+      throw new Error("should never be called");
+    });
+    t.mock.method(appointmentRepo, "createAppointment", async (data) => ({ ...data, _id: id() }));
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+
+    await appointmentService.bookAppointment({
+      serviceId: purchase.items[0].service.toString(),
+      servicePackageId: id().toString(),
+      startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      isLoggedIn: true,
+      userId: purchase.user.toString(),
+      contact: { firstName: "Ana", email: "ana@example.com" },
+      packagePurchaseId: purchase._id.toString(),
+      couponCode: "SHOULDBEIGNORED",
+    });
+
+    assert.equal(couponMock.mock.calls.length, 0);
+  });
+});
+
+describe("completeAppointment — package session consumption", () => {
+  it("consumes a session when the appointment was paid via a package purchase", async (t) => {
+    const purchaseId = id();
+    const appointment = buildAppointment({ status: "confirmed", packagePurchase: purchaseId });
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+    t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "completed" }));
+    const consumeMock = t.mock.method(packagePurchaseService, "consumeSession", async () => {});
+
+    await appointmentService.completeAppointment(appointment._id.toString(), id().toString(), "admin");
+
+    assert.equal(consumeMock.mock.calls.length, 1);
+    assert.equal(String(consumeMock.mock.calls[0].arguments[0]), String(purchaseId));
+  });
+
+  it("does not touch package-purchase consumption for an appointment with no packagePurchase", async (t) => {
+    const appointment = buildAppointment({ status: "confirmed", packagePurchase: null });
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+    t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "completed" }));
+    const consumeMock = t.mock.method(packagePurchaseService, "consumeSession", async () => {});
+
+    await appointmentService.completeAppointment(appointment._id.toString(), id().toString(), "admin");
+
+    assert.equal(consumeMock.mock.calls.length, 0);
+  });
+
+  it("does not consume a session for any transition other than 'completed'", async (t) => {
+    const purchaseId = id();
+    const appointment = buildAppointment({ status: "pending", packagePurchase: purchaseId });
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+    t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "confirmed" }));
+    const consumeMock = t.mock.method(packagePurchaseService, "consumeSession", async () => {});
+
+    await appointmentService.confirmAppointment(appointment._id.toString(), id().toString(), "admin");
+
+    assert.equal(consumeMock.mock.calls.length, 0);
+  });
+});

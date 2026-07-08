@@ -334,3 +334,23 @@ export default {
   buildSubscriber,
   buildTestimonial,
 };
+
+export function buildPackagePurchase(overrides = {}) {
+  const serviceId = overrides.serviceId || id();
+  return {
+    _id: id(),
+    user: id(),
+    package: id(),
+    items: [{ service: serviceId, sessionsTotal: 3, sessionsUsed: 0 }],
+    originalPrice: 9000,
+    discountApplied: 0,
+    pricePaid: 9000,
+    coupon: null,
+    purchasedAt: new Date(),
+    expiresAt: null,
+    purchasedBy: id(),
+    status: "active",
+    notes: "",
+    ...overrides,
+  };
+}

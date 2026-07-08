@@ -63,6 +63,35 @@ describe("appointment.repository", () => {
 
       assert.equal(appointment.endTime.getTime(), newStart.getTime() + 60 * 60000);
     });
+
+    // packagePurchase/finalPrice interaction added alongside the package-consumption
+    // feature — a package-covered booking is always finalPrice: 0, regardless of
+    // whatever discountApplied/variant.price would otherwise compute to.
+    it("stores the packagePurchase reference", async () => {
+      const packagePurchaseId = new mongoose.Types.ObjectId();
+      const appointment = await appointmentRepo.createAppointment(
+        validAppointment({ packagePurchase: packagePurchaseId, finalPrice: 0 })
+      );
+
+      assert.equal(String(appointment.packagePurchase), String(packagePurchaseId));
+    });
+
+    it("defaults packagePurchase to null when not paid via a package", async () => {
+      const appointment = await appointmentRepo.createAppointment(validAppointment());
+      assert.equal(appointment.packagePurchase, null);
+    });
+
+    it("forces finalPrice to 0 via the pre-save hook once packagePurchase is set, even with a nonzero variant price", async () => {
+      const created = await appointmentRepo.createAppointment(
+        validAppointment({ variant: { name: "60 minuta", duration: 60, price: 3000 }, finalPrice: 3000 })
+      );
+      assert.equal(created.finalPrice, 3000, "sanity check: without a packagePurchase, finalPrice is untouched");
+
+      created.packagePurchase = new mongoose.Types.ObjectId();
+      await created.save();
+
+      assert.equal(created.finalPrice, 0);
+    });
   });
 
   describe("findAppointmentById", () => {

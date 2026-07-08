@@ -131,3 +131,67 @@ describe("coupon.service", () => {
     });
   });
 });
+
+describe("validateCouponForPackagePurchase", () => {
+  it("rejects a nonexistent code", async (t) => {
+    t.mock.method(couponRepo, "findCouponByCode", async () => null);
+    await assert.rejects(
+      () => couponService.validateCouponForPackagePurchase("NEPOSTOJI", { packageId: id(), purchaseValue: 8000 }),
+      (err) => err.statusCode === 400
+    );
+  });
+
+  it("rejects a package not on the coupon's applicablePackages allowlist", async (t) => {
+    const allowedPackageId = id();
+    t.mock.method(couponRepo, "findCouponByCode", async () => buildCoupon({ applicablePackages: [allowedPackageId] }));
+    await assert.rejects(
+      () => couponService.validateCouponForPackagePurchase("KOD", { packageId: id(), purchaseValue: 8000 }),
+      (err) => err.statusCode === 400
+    );
+  });
+
+  it("accepts a package that IS on the applicablePackages allowlist", async (t) => {
+    const packageId = id();
+    t.mock.method(couponRepo, "findCouponByCode", async () =>
+      buildCoupon({ applicablePackages: [packageId], discountType: "fixed", discountValue: 1000 })
+    );
+    const result = await couponService.validateCouponForPackagePurchase("KOD", { packageId, purchaseValue: 8000 });
+    assert.equal(result.discountAmount, 1000);
+  });
+
+  it("ignores applicableServices entirely — that allowlist is for bookings, not package purchases", async (t) => {
+    t.mock.method(couponRepo, "findCouponByCode", async () => buildCoupon({ applicableServices: [id()], discountType: "fixed", discountValue: 500 }));
+    const result = await couponService.validateCouponForPackagePurchase("KOD", { packageId: id(), purchaseValue: 8000 });
+    assert.equal(result.discountAmount, 500);
+  });
+
+  it("computes a percentage discount against the purchase value", async (t) => {
+    t.mock.method(couponRepo, "findCouponByCode", async () => buildCoupon({ discountType: "percentage", discountValue: 10 }));
+    const result = await couponService.validateCouponForPackagePurchase("KOD", { packageId: id(), purchaseValue: 8000 });
+    assert.equal(result.discountAmount, 800);
+  });
+
+  it("respects the same maxUses cap as booking redemptions", async (t) => {
+    t.mock.method(couponRepo, "findCouponByCode", async () => buildCoupon({ maxUses: 1, usedCount: 1 }));
+    await assert.rejects(
+      () => couponService.validateCouponForPackagePurchase("KOD", { packageId: id(), purchaseValue: 8000 }),
+      (err) => err.statusCode === 400
+    );
+  });
+});
+
+describe("redeemCoupon — packagePurchaseId pass-through", () => {
+  it("forwards packagePurchaseId to the repository alongside a null appointmentId", async (t) => {
+    const purchaseId = id();
+    let forwarded;
+    t.mock.method(couponRepo, "redeemCoupon", async (couponId, payload) => {
+      forwarded = payload;
+      return {};
+    });
+
+    await couponService.redeemCoupon(id(), { userId: id(), packagePurchaseId: purchaseId, discountAmount: 500 });
+
+    assert.equal(forwarded.packagePurchaseId, purchaseId);
+    assert.equal(forwarded.appointmentId, null);
+  });
+});

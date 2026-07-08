@@ -109,6 +109,18 @@ describe("coupon.repository", () => {
       assert.equal(updated.usedCount, 2);
       assert.equal(updated.usageHistory.length, 2);
     });
+
+    it("records a packagePurchase redemption with a null appointment field", async () => {
+      const coupon = await couponRepo.createCoupon(validCoupon());
+      const userId = new mongoose.Types.ObjectId();
+      const packagePurchaseId = new mongoose.Types.ObjectId();
+
+      const updated = await couponRepo.redeemCoupon(coupon._id, { userId, packagePurchaseId, discountAmount: 500 });
+
+      assert.equal(updated.usedCount, 1);
+      assert.equal(updated.usageHistory[0].appointment, null);
+      assert.equal(String(updated.usageHistory[0].packagePurchase), String(packagePurchaseId));
+    });
   });
 
   describe("findCoupons", () => {
