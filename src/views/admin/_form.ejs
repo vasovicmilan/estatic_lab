@@ -191,7 +191,21 @@
                     </div>
                     <div data-content-blocks-list></div>
                   </div>
-
+                <% } else if (field.type === 'schedule') { %>
+                  <%
+                    let scheduleValue = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
+                    if (typeof scheduleValue === 'string') {
+                      try { scheduleValue = JSON.parse(scheduleValue); } catch (e) { scheduleValue = []; }
+                    }
+                    if (!Array.isArray(scheduleValue)) scheduleValue = [];
+                  %>
+                  <input type="hidden" name="<%= field.name %>" value='<%- JSON.stringify(scheduleValue) %>' data-repeater-input="<%= field.name %>">
+                  <div class="border rounded p-3 <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'border-danger' : '' %>"
+                       data-schedule="<%= field.name %>"
+                       data-schedule-days='<%- JSON.stringify(field.days || []) %>'
+                       data-schedule-value='<%- JSON.stringify(scheduleValue) %>'>
+                    <div data-schedule-days-list></div>
+                  </div>
                 <% } else if (field.type === 'checkbox') { %>
                   <div class="form-check">
                     <input type="hidden" name="<%= field.name %>" value="0">
@@ -306,4 +320,5 @@
 <script src="/js/admin-repeater.js"></script>
 <script src="/js/admin-comparison-table.js"></script>
 <script src="/js/admin-content-blocks.js"></script>
+<script src="/js/admin-schedule.js"></script>
 <%- include("../includes/footer") %>

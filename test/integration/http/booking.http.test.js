@@ -19,6 +19,7 @@ async function createBookableService() {
     slug: "sportska-masaza",
     image: { img: "/images/services/masaza.webp", imgDesc: "Sportska masaza" },
     packages: [{ name: "60 minuta", slug: "60-minuta", duration: 60, totalPrice: 3000, isActive: true }],
+    isActive: true,
   });
 
   const role = await Role.create({ name: "employee", isDefault: false });
@@ -161,6 +162,7 @@ describe("public booking flow (HTTP)", () => {
         slug: "usluga-bez-terapeuta",
         image: { img: "/images/services/x.webp", imgDesc: "x" },
         packages: [{ name: "60 minuta", slug: "60-minuta", duration: 60, totalPrice: 2000, isActive: true }],
+        isActive: true,
       });
       const variantId = service.packages[0]._id.toString();
       const startTime = futureStartTime().toISOString();

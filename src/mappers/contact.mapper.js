@@ -1,5 +1,5 @@
 import { formatDateTime, formatDate } from "../utils/date.time.util.js";
-import { decrypt } from "../services/crypto.service.js";
+import { decryptField } from "../utils/encrypted-field.util.js";
 
 function translateStatus(status) {
   const map = {
@@ -17,7 +17,7 @@ export function mapContactsForAdminList(contacts = []) {
       if (!contact) return null;
       return {
         id: contact._id.toString(),
-        imePrezime: `${contact.firstName} ${contact.lastName}`,
+        imePrezime: `${contact.firstName} ${decryptField(contact.lastName) || ""}`.trim(),
         email: contact.email,
         tema: contact.topic || null,
         status: translateStatus(contact.status),
@@ -35,15 +35,15 @@ export function mapContactForAdminDetail(contact) {
     id: contact._id.toString(),
     osnovno: {
       ime: contact.firstName,
-      prezime: contact.lastName,
+      prezime: decryptField(contact.lastName),
       email: contact.email,
-      telefon: decrypt(contact.phone) || null,
+      telefon: decryptField(contact.phone),
       tema: contact.topic || null,
       status: translateStatus(contact.status),
       statusRaw: contact.status,
       saglasnost: contact.consent ? "Da" : "Ne",
     },
-    poruka: contact.message,
+    poruka: decryptField(contact.message),
     vreme: {
       kreirano: formatDateTime(contact.createdAt),
       azurirano: formatDateTime(contact.updatedAt),
@@ -56,7 +56,7 @@ export function mapContactForAdminDetail(contact) {
 export function mapContactForUserShort(contact) {
   if (!contact) return null;
   return {
-    imePrezime: `${contact.firstName} ${contact.lastName}`,
+    imePrezime: `${contact.firstName} ${decryptField(contact.lastName) || ""}`.trim(),
     email: contact.email,
     poslato: formatDate(contact.createdAt),
   };

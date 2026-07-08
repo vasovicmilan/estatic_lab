@@ -277,6 +277,7 @@ export async function updateProfile(userId, data) {
   if (data.phone !== undefined) {
     allowed.phone = buildPhoneRecord(data.phone);
   }
+  const updated = await userRepo.updateUserById(userId, allowed);
   if (!updated) notFound("Korisnik");
   return mapUserForProfile(updated);
 }

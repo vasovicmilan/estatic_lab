@@ -3,18 +3,21 @@ import { Schema, model } from "mongoose";
 const ContactSchema = new Schema(
   {
     firstName: { type: String, required: true, trim: true },
-    lastName: { type: String, required: true, trim: true },
+    // encrypted ciphertext at rest — trimming happens on the plaintext before
+    // encryption (encryptField()), not here, since trimming ciphertext is meaningless
+    lastName: { type: String, required: true },
     email: { type: String, required: true, trim: true, lowercase: true },
-    phone: { type: String, trim: true },
+    // optional — encrypted ciphertext when present, unset when not provided
+    phone: { type: String },
 
     topic: {
       type: String,
       trim: true,
     },
+    // encrypted ciphertext at rest
     message: {
       type: String,
       required: true,
-      trim: true,
     },
 
     consent: {

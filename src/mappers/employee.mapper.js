@@ -1,17 +1,18 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 import { decryptPhone } from "../utils/phone.util.js";
 
+const DAY_LABELS = {
+  monday: "Ponedeljak",
+  tuesday: "Utorak",
+  wednesday: "Sreda",
+  thursday: "Četvrtak",
+  friday: "Petak",
+  saturday: "Subota",
+  sunday: "Nedelja",
+};
+
 function translateDay(day) {
-  const map = {
-    monday: "Ponedeljak",
-    tuesday: "Utorak",
-    wednesday: "Sreda",
-    thursday: "Četvrtak",
-    friday: "Petak",
-    saturday: "Subota",
-    sunday: "Nedelja",
-  };
-  return map[day] || day;
+  return DAY_LABELS[day] || day;
 }
 
 function formatSlots(slots) {

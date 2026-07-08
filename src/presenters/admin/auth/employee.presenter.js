@@ -1,3 +1,17 @@
+const DAY_LABELS = {
+  monday: "Ponedeljak",
+  tuesday: "Utorak",
+  wednesday: "Sreda",
+  thursday: "Četvrtak",
+  friday: "Petak",
+  saturday: "Subota",
+  sunday: "Nedelja",
+};
+
+function translateDay(day) {
+  return DAY_LABELS[day] || day;
+}
+
 export function prepareEmployeeListData(result, query = {}) {
   return {
     items: result.data,
@@ -136,9 +150,15 @@ export function prepareEmployeeFormData(employee = null, { userOptions = [], ser
       value: (values.services || []).map((s) => (typeof s === "object" ? s.id ?? s._id?.toString() : s)),
       options: serviceOptions,
     },
-    // radno vreme (working hours) is a structured repeating widget already built
-    // client-side — hidden field seeds it with the current value
-    { name: "workingHours", label: "Radno vreme", type: "hidden", width: 12, value: JSON.stringify(values.workingHours || []) },
+    {
+      name: "workingHours",
+      label: "Radno vreme",
+      type: "schedule",
+      width: 12,
+      value: values.workingHours || [],
+      days: weekDays.map((d) => ({ value: d, label: translateDay(d) })),
+      help: "Dodajte jedan ili više termina za svaki radni dan. Dani bez termina se smatraju neradnim.",
+    },
     { name: "notes", label: "Napomena", type: "textarea", rows: 3, width: 12, value: values.notes, help: "Najviše 500 karaktera." },
     { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive }
   );

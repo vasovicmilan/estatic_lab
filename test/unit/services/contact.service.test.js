@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import contactRepo from "../../../src/repositories/contact.repository.js";
 import * as contactService from "../../../src/services/contact.service.js";
+import { decrypt } from "../../../src/services/crypto.service.js";
 import { buildContact, id } from "../../helpers/factories.js";
 
 describe("contact.service", () => {
@@ -33,6 +34,55 @@ describe("contact.service", () => {
       });
 
       assert.equal(result.email, created.email);
+    });
+
+    it("encrypts lastName, phone, and message before persisting", async (t) => {
+      let persisted;
+      t.mock.method(contactRepo, "createContact", async (data) => {
+        persisted = data;
+        return { ...data, _id: id() };
+      });
+
+      await contactService.submitContact({
+        firstName: "Ana",
+        lastName: "Anic",
+        email: "ana@example.com",
+        phone: "0641234567",
+        message: "Poruka sa osetljivim sadrzajem",
+        consent: true,
+      });
+
+      assert.notEqual(persisted.lastName, "Anic");
+      assert.equal(decrypt(persisted.lastName), "Anic");
+
+      assert.notEqual(persisted.phone, "0641234567");
+      assert.equal(decrypt(persisted.phone), "0641234567");
+
+      assert.notEqual(persisted.message, "Poruka sa osetljivim sadrzajem");
+      assert.equal(decrypt(persisted.message), "Poruka sa osetljivim sadrzajem");
+
+      // firstName/email/topic stay plaintext — no reason to encrypt fields nobody
+      // asked to protect, and email/firstName still need to work in admin search
+      assert.equal(persisted.firstName, "Ana");
+      assert.equal(persisted.email, "ana@example.com");
+    });
+
+    it("leaves phone unset when none was submitted", async (t) => {
+      let persisted;
+      t.mock.method(contactRepo, "createContact", async (data) => {
+        persisted = data;
+        return { ...data, _id: id() };
+      });
+
+      await contactService.submitContact({
+        firstName: "Ana",
+        lastName: "Anic",
+        email: "ana@example.com",
+        message: "Bez telefona",
+        consent: true,
+      });
+
+      assert.equal(persisted.phone, undefined);
     });
   });
 

@@ -6,7 +6,7 @@ import {
   mapServicesForPublic,
   mapServiceForPublicDetail,
 } from "../mappers/service.mapper.js";
-import * as categoryService from "./category.service.js";
+import categoryService from "./category.service.js";
 import { generateSlug, generateUniqueSlug } from "../utils/slug.util.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";

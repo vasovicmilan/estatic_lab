@@ -62,7 +62,7 @@ export async function serviceDetails(req, res, next) {
     const viewData = prepareServiceDetailData(service, { testimonials });
     const seo = await generateSeo("service", service, req);
 
-    return res.render("services/our-service-details", {
+    return res.render("services/service-details", {
       pageTitle: seo.title,
       pageDescription: seo.description,
       seo,

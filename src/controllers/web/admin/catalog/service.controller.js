@@ -135,8 +135,9 @@ export async function serviceDetails(req, res, next) {
   try {
     const { serviceId } = req.params;
     const service = await serviceService.getServiceById(serviceId);
-    const viewData = prepareServiceDetailsData(service);
 
+    const viewData = prepareServiceDetailsData(service);
+    
     return res.render("admin/_details", {
       pageTitle: `Usluga — ${service.naziv}`,
       pageDescription: service.kratakOpis || service.naziv,

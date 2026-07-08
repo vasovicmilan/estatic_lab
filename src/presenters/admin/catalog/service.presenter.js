@@ -67,9 +67,8 @@ export function prepareServiceDetailsData(service) {
       },
       {
         title: "Varijante (paketi usluge)",
-        type: "table",
-        rows: [],
-        customRows: service.varijante,
+        type: "variants",
+        variants: service.varijante,
       },
       {
         title: "Karakteristike",
@@ -117,15 +116,15 @@ export function prepareServiceFormData(service = null, { categoryOptions = [], t
   const values = isEdit
     ? service
     : {
-        name: "",
-        shortDescription: "",
-        longDescription: "",
-        categories: [],
-        tags: [],
-        defaultDuration: 60,
-        highlight: false,
-        ctaText: "Zakaži termin",
-      };
+      name: "",
+      shortDescription: "",
+      longDescription: "",
+      categories: [],
+      tags: [],
+      defaultDuration: 60,
+      highlight: false,
+      ctaText: "Zakaži termin",
+    };
 
   const fields = [{ name: "name", label: "Naziv", type: "text", required: true, width: isEdit ? 6 : 12, value: values.name }];
 

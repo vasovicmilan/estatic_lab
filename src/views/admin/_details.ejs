@@ -58,7 +58,42 @@
                   <video controls class="w-100 rounded mb-3" src="<%= block.video.url %>"></video>
                 <% } %>
               <% }) %>
-            <% } else if (section.type === 'custom') { %>
+              <% } else if (section.type === 'variants') { %>
+              <% if (!section.variants || section.variants.length === 0) { %>
+                <p class="text-muted mb-0">Nema varijanti.</p>
+              <% } else { %>
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>Naziv</th>
+                        <th>Trajanje</th>
+                        <th>Cena</th>
+                        <th>Najbolji izbor</th>
+                        <th>Aktivan</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                     <% section.variants.forEach(function(v) { %>
+                        <tr>
+                          <td>
+                            <%= v.naziv %>
+                            <% if (v.oznaka) { %><span class="badge text-bg-light border ms-1"><%= v.oznaka %></span><% } %>
+                          </td>
+                          <td><%= v.trajanje %> min</td>
+                          <td>
+                            <%= v.cena %> RSD
+                            <% if (v.staraCena) { %><span class="text-muted text-decoration-line-through ms-1 small"><%= v.staraCena %> RSD</span><% } %>
+                          </td>
+                          <td><%= v.najbolji ? "Da" : "Ne" %></td>
+                          <td><%= v.aktivan ? "Da" : "Ne" %></td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } %>
+           <% } else if (section.type === 'custom') { %>
               <%- section.content %>
             <% } %>
           </div>
