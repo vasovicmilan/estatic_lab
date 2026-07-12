@@ -253,13 +253,14 @@ async function transitionStatus(appointmentId, nextStatus, actorId, actorRole, e
   }
 
   // Package-purchase session lifecycle: "completed" delivers the reserved session
-  // (moves reserved -> used); "cancelled"/"rejected" gives the reservation back.
+  // (moves reserved -> used); "cancelled"/"rejected"/"no_show" gives the reservation
+  // back — none of those three represent the service actually being delivered.
   // "completed" is terminal (nothing transitions out of it — see
   // appointment-status-transitions.js), so a session is never committed twice.
   if (appointment.packagePurchase) {
     if (nextStatus === "completed") {
       await packagePurchaseService.commitSession(appointment.packagePurchase, appointment.variant.servicePackageId);
-    } else if (nextStatus === "cancelled" || nextStatus === "rejected") {
+    } else if (nextStatus === "cancelled" || nextStatus === "rejected" || nextStatus === "no_show") {
       await packagePurchaseService.releaseSession(appointment.packagePurchase, appointment.variant.servicePackageId);
     }
   }
@@ -307,6 +308,14 @@ export async function completeAppointment(appointmentId, actorId, actorRole) {
   return transitionStatus(appointmentId, "completed", actorId, actorRole);
 }
 
+export async function noShowAppointment(appointmentId, note, actorId, actorRole) {
+  return transitionStatus(appointmentId, "no_show", actorId, actorRole, {
+    noShowBy: actorRole === "admin" ? "admin" : "employee",
+    noShowAt: new Date(),
+    noShowNote: note || "",
+  });
+}
+
 export async function reassignAppointment(appointmentId, newEmployeeId, actorId) {
   if (!newEmployeeId) validationError("newEmployeeId");
 
@@ -336,5 +345,6 @@ export default {
   rejectAppointment,
   cancelAppointment,
   completeAppointment,
+  noShowAppointment,
   reassignAppointment,
 };

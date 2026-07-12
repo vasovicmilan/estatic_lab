@@ -40,6 +40,7 @@ export function prepareAppointmentListData(result, query = {}) {
             { value: "rejected", label: "Odbijeno" },
             { value: "cancelled", label: "Otkazano" },
             { value: "completed", label: "Završeno" },
+            { value: "no_show", label: "Nije se pojavio/la" },
           ],
         },
         { type: "text", name: "dateFrom", label: "Od datuma", value: query.dateFrom || "" },
@@ -57,7 +58,8 @@ export function prepareAppointmentDetailsData(appointment) {
     rejected: { label: "Odbij termin", url: `/admin/termini/${appointment.id}/odbij`, variant: "danger", needsReason: true },
     cancelled: { label: "Otkaži termin", url: `/admin/termini/${appointment.id}/otkazi`, variant: "warning", needsReason: true },
     completed: { label: "Označi kao završen", url: `/admin/termini/${appointment.id}/zavrsi`, variant: "primary", needsReason: false },
-    // NOTE: "pending" is a valid transition target from rejected/cancelled per
+    no_show: { label: "Klijent se nije pojavio", url: `/admin/termini/${appointment.id}/nije-se-pojavio`, variant: "warning", needsReason: true },
+    // NOTE: "pending" is a valid transition target from rejected/cancelled/no_show per
     // appointment-status-transitions.js, but no "reopen" route exists yet — omitted
     // here rather than pointed at the wrong endpoint. Add a route + this entry together.
   };
@@ -119,6 +121,9 @@ export function prepareAppointmentDetailsData(appointment) {
           { label: "Razlog odbijanja", value: appointment.razlogOdbijanja || "-" },
           { label: "Otkazao", value: appointment.otkazao || "-" },
           { label: "Razlog otkazivanja", value: appointment.razlogOtkazivanja || "-" },
+          { label: "Označio kao 'nije se pojavio'", value: appointment.oznacioNeDosao || "-" },
+          { label: "Vreme (nije se pojavio)", value: appointment.neDosaoU || "-" },
+          { label: "Napomena (nije se pojavio)", value: appointment.napomenaNeDosao || "-" },
           { label: "Dodelio", value: appointment.dodelio || "-" },
         ],
       },

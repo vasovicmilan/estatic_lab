@@ -12,6 +12,7 @@ export const APPOINTMENT_STATUSES = [
   "rejected", // declined by employee/admin/system
   "cancelled", // cancelled by the user (or admin, on their behalf)
   "completed", // the appointment happened
+  "no_show", // the appointment was confirmed but the client never arrived
 ];
 
 // currentStatus -> { role -> [allowed next statuses] }
@@ -22,8 +23,8 @@ const TRANSITIONS = {
     user: ["cancelled"],
   },
   confirmed: {
-    admin: ["completed", "cancelled", "rejected"],
-    employee: ["completed", "rejected"],
+    admin: ["completed", "no_show", "cancelled", "rejected"],
+    employee: ["completed", "no_show", "rejected"],
     user: ["cancelled"], // service layer additionally enforces the 24h-before-start rule
   },
   rejected: {
@@ -32,26 +33,18 @@ const TRANSITIONS = {
   cancelled: {
     admin: ["pending"], // admin can reinstate
   },
+  no_show: {
+    admin: ["pending"], // admin can reopen a mistakenly marked no-show
+  },
   completed: {
     // terminal — no role can transition out of "completed"
   },
 };
 
-/**
- * @param {string} currentStatus
- * @param {"admin"|"employee"|"user"} role
- * @returns {string[]} statuses this role may transition `currentStatus` into
- */
 export function getAllowedStatuses(currentStatus, role) {
   return TRANSITIONS[currentStatus]?.[role] ?? [];
 }
 
-/**
- * @param {string} currentStatus
- * @param {string} nextStatus
- * @param {"admin"|"employee"|"user"} role
- * @returns {boolean}
- */
 export function canTransition(currentStatus, nextStatus, role) {
   return getAllowedStatuses(currentStatus, role).includes(nextStatus);
 }

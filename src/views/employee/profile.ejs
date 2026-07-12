@@ -31,11 +31,16 @@
         <div class="card-body">
           <form action="<%= data.workingHoursEditUrl %>" method="POST">
             <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
-            <textarea name="workingHours" class="form-control font-monospace" rows="8"><%= JSON.stringify((data.employee.radnoVreme || []).map(function(wh) {
-              const dayMap = { "Ponedeljak": "monday", "Utorak": "tuesday", "Sreda": "wednesday", "Četvrtak": "thursday", "Petak": "friday", "Subota": "saturday", "Nedelja": "sunday" };
-              return { day: dayMap[wh.dan] || wh.dan, slots: (wh.termini || []).map(function(t) { const [from, to] = t.split(" - "); return { from, to }; }) };
-            }), null, 2) %></textarea>
-            <div class="form-text">Format: <code>[{ "day": "monday", "slots": [{ "from": "09:00", "to": "17:00" }] }]</code></div>
+
+            <input type="hidden" name="workingHours" value='<%- JSON.stringify(data.employee.workingHoursRaw || []) %>' data-repeater-input="workingHours">
+            <div class="border rounded p-3"
+                 data-schedule="workingHours"
+                 data-schedule-days='<%- JSON.stringify(data.scheduleDays || []) %>'
+                 data-schedule-value='<%- JSON.stringify(data.employee.workingHoursRaw || []) %>'>
+              <div data-schedule-days-list></div>
+            </div>
+
+            <div class="form-text mt-2">Za svaki dan dodajte jedan ili više termina rada. Dani bez termina se tretiraju kao neradni.</div>
             <button type="submit" class="btn btn-primary mt-3">Sačuvaj radno vreme</button>
           </form>
         </div>
@@ -43,5 +48,7 @@
     </div>
   </div>
 </main>
+
+<script src="/js/admin-schedule.js"></script>
 
 <%- include("../includes/footer") %>

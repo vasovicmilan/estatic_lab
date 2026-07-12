@@ -143,6 +143,28 @@ export async function completeAppointment(req, res, next) {
   }
 }
 
+export async function noShowAppointment(req, res, next) {
+  try {
+    const { appointmentId } = req.params;
+
+    if (req.validationErrors) {
+      logWarn(`[noShowAppointment] Validacione greške za appointmentId=${appointmentId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
+      return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), `/moj-nalog/termini/detalji/${appointmentId}`);
+    }
+
+    const employeeId = await getOwnEmployeeId(req);
+    await appointmentService.noShowAppointment(appointmentId, req.body.note, employeeId, "employee");
+    logInfo(`[noShowAppointment] Zaposleni označio termin #${appointmentId} kao 'nije se pojavio'`, { appointmentId, userId: req.session.user.id });
+    return flashAndRedirect(req, res, "success", "Termin je označen kao 'klijent se nije pojavio'", `/moj-nalog/termini/detalji/${appointmentId}`);
+  } catch (error) {
+    logError("[noShowAppointment] Greška pri označavanju termina kao 'nije se pojavio'", error, { appointmentId: req.params.appointmentId, userId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, `/moj-nalog/termini/detalji/${req.params.appointmentId}`);
+    }
+    next(error);
+  }
+}
+
 export async function profile(req, res, next) {
   try {
     const employee = await employeeService.findEmployeeProfile(req.session.user.id, "employee");
@@ -161,6 +183,11 @@ export async function profile(req, res, next) {
 
 export async function updateWorkingHours(req, res, next) {
   try {
+    if (req.validationErrors) {
+      logWarn(`[updateWorkingHours] Validacione greške za korisnika #${req.session?.user?.id}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
+      return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), "/moj-nalog/profil");
+    }
+
     const employeeId = await getOwnEmployeeId(req);
     await employeeService.manageWorkingHours(employeeId, req.body.workingHours || [], req.session.user.id, "employee");
     logInfo(`[updateWorkingHours] Zaposleni #${req.session.user.id} ažurirao radno vreme`, { userId: req.session.user.id });
@@ -181,6 +208,7 @@ export default {
   confirmAppointment,
   rejectAppointment,
   completeAppointment,
+  noShowAppointment,
   profile,
   updateWorkingHours,
 };

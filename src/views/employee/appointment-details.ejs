@@ -60,6 +60,27 @@
               <button type="submit" class="btn btn-primary w-100">Označi kao završen</button>
             </form>
           <% } %>
+          <% if (data.canNoShow) { %>
+            <button type="button" class="btn btn-outline-warning w-100" data-bs-toggle="modal" data-bs-target="#noShowModal">Klijent se nije pojavio</button>
+            <div class="modal fade" id="noShowModal" tabindex="-1">
+              <div class="modal-dialog">
+                <form action="/moj-nalog/termini/<%= data.appointment.id %>/nije-se-pojavio" method="POST">
+                  <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+                  <div class="modal-content">
+                    <div class="modal-header"><h5 class="modal-title">Klijent se nije pojavio</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body">
+                      <label class="form-label">Napomena (opciono)</label>
+                      <textarea name="note" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Otkaži</button>
+                      <button type="submit" class="btn btn-warning btn-sm">Potvrdi</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          <% } %>
           <a href="<%= data.backUrl %>" class="btn btn-outline-secondary w-100">Nazad</a>
         </div>
       </div>

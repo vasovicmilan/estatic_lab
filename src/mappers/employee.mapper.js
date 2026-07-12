@@ -58,6 +58,16 @@ function getWorkingHours(employee) {
   }));
 }
 
+// raw (English day/from/to keys) — used to seed the editable schedule widget,
+// as opposed to getWorkingHours() above which formats for read-only display
+function getWorkingHoursRaw(employee) {
+  if (!employee.workingHours || !Array.isArray(employee.workingHours)) return [];
+  return employee.workingHours.map((wh) => ({
+    day: wh.day,
+    slots: (wh.slots || []).map((slot) => ({ from: slot.from, to: slot.to })),
+  }));
+}
+
 // employee.expert links to a public Expert profile (see expert.mapper.js) — bio/photo
 // live there, this is just a "linked to" pointer for the admin screen
 function getLinkedExpert(employee) {
@@ -124,6 +134,7 @@ export function mapEmployeeForEmployeeDetail(employee) {
     telefon: getPhone(employee),
     usluge: getServiceNames(employee),
     radnoVreme: getWorkingHours(employee),
+    workingHoursRaw: getWorkingHoursRaw(employee),
   };
 }
 

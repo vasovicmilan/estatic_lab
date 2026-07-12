@@ -2,6 +2,7 @@ import { Router } from "express";
 import * as AppointmentController from "../../../controllers/web/admin/appointment/appointment.controller.js";
 import {
   validateAppointmentReject,
+  validateAppointmentNoShow,
   validateAppointmentCancel,
   validateAppointmentReassign,
   validateAppointmentId,
@@ -17,6 +18,7 @@ router.put("/:appointmentId/potvrdi", validateAppointmentId, AppointmentControll
 router.put("/:appointmentId/odbij", validateAppointmentId, validateAppointmentReject, AppointmentController.rejectAppointment);
 router.put("/:appointmentId/otkazi", validateAppointmentId, validateAppointmentCancel, AppointmentController.cancelAppointment);
 router.put("/:appointmentId/zavrsi", validateAppointmentId, AppointmentController.completeAppointment);
+router.put("/:appointmentId/nije-se-pojavio", validateAppointmentId, validateAppointmentNoShow, AppointmentController.noShowAppointment);
 router.put("/:appointmentId/preraspodeli", validateAppointmentId, validateAppointmentReassign, AppointmentController.reassignAppointment);
 
 export default router;

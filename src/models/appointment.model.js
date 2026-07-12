@@ -52,6 +52,10 @@ const AppointmentSchema = new Schema(
     rejectedAt: Date,
     rejectionReason: { type: String, trim: true },
 
+    noShowBy: { type: String, enum: ["admin", "employee"] },
+    noShowAt: Date,
+    noShowNote: { type: String, trim: true },
+
     confirmedBy: { type: String, enum: ["system", "admin", "employee"] },
     confirmedAt: Date,
 

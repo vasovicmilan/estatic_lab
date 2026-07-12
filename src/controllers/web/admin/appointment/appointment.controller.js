@@ -118,6 +118,27 @@ export async function completeAppointment(req, res, next) {
   }
 }
 
+export async function noShowAppointment(req, res, next) {
+  try {
+    const { appointmentId } = req.params;
+
+    if (req.validationErrors) {
+      logWarn(`[noShowAppointment] Validacione greške za appointmentId=${appointmentId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
+      return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), `/admin/termini/detalji/${appointmentId}`);
+    }
+
+    await appointmentService.noShowAppointment(appointmentId, req.body.note, req.session?.user?.id, "admin");
+    logInfo(`[noShowAppointment] Termin #${appointmentId} označen kao 'nije se pojavio'`, { appointmentId, adminId: req.session?.user?.id });
+    return flashAndRedirect(req, res, "success", "Termin je označen kao 'klijent se nije pojavio'", `/admin/termini/detalji/${appointmentId}`);
+  } catch (error) {
+    logError("[noShowAppointment] Greška pri označavanju termina kao 'nije se pojavio'", error, { appointmentId: req.params.appointmentId, userId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, `/admin/termini/detalji/${req.params.appointmentId}`);
+    }
+    next(error);
+  }
+}
+
 export async function reassignAppointment(req, res, next) {
   try {
     const { appointmentId } = req.params;
@@ -146,5 +167,6 @@ export default {
   rejectAppointment,
   cancelAppointment,
   completeAppointment,
+  noShowAppointment,
   reassignAppointment,
 };

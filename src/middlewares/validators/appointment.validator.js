@@ -11,6 +11,15 @@ export const validateAppointmentReject = [
   collectValidationErrors,
 ];
 
+export const validateAppointmentNoShow = [
+  body("note")
+    .optional()
+    .trim()
+    .isLength({ max: 500 }).withMessage("Napomena može imati najviše 500 karaktera"),
+
+  collectValidationErrors,
+];
+
 export const validateAppointmentCancel = [
   body("reason")
     .optional()
@@ -32,6 +41,7 @@ export const validateAppointmentId = mongoIdParamValidator("appointmentId", "ter
 
 export default {
   validateAppointmentReject,
+  validateAppointmentNoShow,
   validateAppointmentCancel,
   validateAppointmentReassign,
   validateAppointmentId,

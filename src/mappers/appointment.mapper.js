@@ -8,6 +8,7 @@ function translateStatus(status) {
     rejected: "Odbijeno",
     cancelled: "Otkazano",
     completed: "Završeno",
+    no_show: "Nije se pojavio/la",
   };
   return map[status] || status;
 }
@@ -100,6 +101,10 @@ export function mapAppointmentForAdminDetail(appointment) {
     odbio: appointment.rejectedBy ? translateActor(appointment.rejectedBy) : null,
     odbijenU: formatDateTime(appointment.rejectedAt),
     razlogOdbijanja: appointment.rejectionReason || null,
+
+    oznacioNeDosao: appointment.noShowBy ? translateActor(appointment.noShowBy) : null,
+    neDosaoU: formatDateTime(appointment.noShowAt),
+    napomenaNeDosao: appointment.noShowNote || null,
 
     potvrdio: appointment.confirmedBy ? translateActor(appointment.confirmedBy) : null,
     potvrdjenU: formatDateTime(appointment.confirmedAt),
