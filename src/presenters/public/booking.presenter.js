@@ -14,13 +14,14 @@ export function prepareBookingServiceStepData(service) {
 
 // Step 2: date/employee selection + available slots (slots come pre-computed from the
 // availability service — this presenter only arranges them for the calendar widget)
-export function prepareBookingSlotsStepData(service, variant, { date, employees = [], slots = [] } = {}) {
+export function prepareBookingSlotsStepData(service, variant, { date, employeeId = "", employees = [], slots = [] } = {}) {
   return {
     service,
     variant,
     step: 2,
     date,
-    employees, // includes an "Nema preferenciju" / system-assign option, added by the controller
+    employeeId,
+    employees,
     slots: slots.map((s) => ({
       pocetak: s.startTime,
       kraj: s.endTime,

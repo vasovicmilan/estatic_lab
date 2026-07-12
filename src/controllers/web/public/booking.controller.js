@@ -59,6 +59,7 @@ export async function slotsStep(req, res, next) {
 
     const viewData = prepareBookingSlotsStepData(service, variant, {
       date: targetDate.toISOString().slice(0, 10),
+      employeeId: employeeId || "",
       employees: await Promise.all(employees),
       slots: slots.map((s) => ({
         startTime: s.startTime,
