@@ -1,7 +1,7 @@
 import employeeRepo from "../repositories/employee.repository.js";
 import userRepo from "../repositories/user.repository.js";
 import roleService from "./role.service.js";
-import { mapEmployee, mapEmployeesForAdminList } from "../mappers/employee.mapper.js";
+import { mapEmployee, mapEmployeesForAdminList, mapEmployeeForEdit } from "../mappers/employee.mapper.js";
 import { validationError, notFound, conflict, forbidden, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 
@@ -44,6 +44,15 @@ export async function getEmployeeById(employeeId, role = "admin", viewType = "de
   const employee = await employeeRepo.findEmployeeById(employeeId, { populateFields: defaultPopulate });
   if (!employee) notFound("Zaposleni");
   return mapEmployee(employee, role, viewType);
+}
+
+// raw-shaped (IDs, not display strings) — used to pre-fill the admin edit form,
+// as opposed to getEmployeeById(..., "admin", "detail") which formats for display
+export async function getEmployeeForEdit(employeeId) {
+  if (!employeeId) validationError("employeeId");
+  const employee = await employeeRepo.findEmployeeById(employeeId, { populateFields: defaultPopulate });
+  if (!employee) notFound("Zaposleni");
+  return mapEmployeeForEdit(employee);
 }
 
 export async function findEmployeeByUserId(userId) {
@@ -129,6 +138,7 @@ export async function findEmployeesByServiceRaw(serviceId) {
 export default {
   listEmployees,
   getEmployeeById,
+  getEmployeeForEdit,
   findEmployeeByUserId,
   findEmployeeProfile,
   createEmployee,

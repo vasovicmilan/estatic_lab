@@ -1,13 +1,21 @@
 import { body } from "express-validator";
-import { PERMISSIONS, ROLE_NAMES } from "../../models/role.model.js";
+import { PERMISSIONS } from "../../models/role.model.js";
 import { collectValidationErrors } from "./collect-validation-errors.js";
 import { booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
+
+// matches the schema-level format check in role.model.js — kept in sync deliberately
+// so a bad name fails here with a clean validation message instead of a raw
+// Mongoose ValidationError further down
+const ROLE_NAME_FORMAT = /^[a-z][a-z0-9_-]{1,31}$/;
+const ROLE_NAME_FORMAT_MESSAGE =
+  "Naziv mora počinjati slovom i sadržati samo mala slova, brojeve, crtice ili donje crte (2-32 karaktera)";
 
 export const validateRoleCreate = [
   body("name")
     .trim()
+    .toLowerCase()
     .notEmpty().withMessage("Naziv role je obavezan")
-    .isIn(ROLE_NAMES).withMessage(`Naziv mora biti jedan od: ${ROLE_NAMES.join(", ")}`),
+    .matches(ROLE_NAME_FORMAT).withMessage(ROLE_NAME_FORMAT_MESSAGE),
 
   body("description")
     .optional()
@@ -35,7 +43,8 @@ export const validateRoleUpdate = [
   body("name")
     .optional()
     .trim()
-    .isIn(ROLE_NAMES).withMessage(`Naziv mora biti jedan od: ${ROLE_NAMES.join(", ")}`),
+    .toLowerCase()
+    .matches(ROLE_NAME_FORMAT).withMessage(ROLE_NAME_FORMAT_MESSAGE),
 
   body("description")
     .optional()

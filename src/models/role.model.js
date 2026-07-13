@@ -8,7 +8,7 @@ import { Schema, model } from "mongoose";
  * `permissions` is deliberately an enum too, so a typo in a permission string fails
  * at the schema level instead of silently never matching an `admin.middleware.js` check.
  */
-export const ROLE_NAMES = ["admin", "employee", "user"];
+export const RESERVED_ROLE_NAMES = ["admin", "employee", "user"];
 
 export const PERMISSIONS = [
   "manage_users",
@@ -32,7 +32,7 @@ const RoleSchema = new Schema(
       type: String,
       required: true,
       unique: true,
-      enum: ROLE_NAMES,
+      enum: RESERVED_ROLE_NAMES,
     },
 
     description: {

@@ -81,13 +81,13 @@ export async function newEmployeeForm(req, res, next) {
 export async function editEmployeeForm(req, res, next) {
   try {
     const { employeeId } = req.params;
-    const employee = await employeeService.getEmployeeById(employeeId, "admin", "detail");
+    const employee = await employeeService.getEmployeeForEdit(employeeId);
     const options = await loadFormOptions();
     const formData = prepareEmployeeFormData(employee, options);
 
     return res.render("admin/_form", {
-      pageTitle: `Izmena — ${employee.korisnik.imePrezime}`,
-      pageDescription: employee.korisnik.email,
+      pageTitle: `Izmena — ${employee.imePrezime}`,
+      pageDescription: employee.email,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -138,12 +138,12 @@ export async function updateEmployee(req, res, next) {
 
     if (req.validationErrors) {
       logWarn(`[updateEmployee] Validacione greške za employeeId=${employeeId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
-      const employee = await employeeService.getEmployeeById(employeeId, "admin", "detail");
+      const employee = await employeeService.getEmployeeForEdit(employeeId);
       const options = await loadFormOptions();
       const formData = prepareEmployeeFormData(employee, options);
       return res.status(400).render("admin/_form", {
-        pageTitle: `Izmena — ${employee.korisnik.imePrezime}`,
-        pageDescription: employee.korisnik.email,
+        pageTitle: `Izmena — ${employee.imePrezime}`,
+        pageDescription: employee.email,
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
@@ -160,12 +160,12 @@ export async function updateEmployee(req, res, next) {
     });
 
     if (error.statusCode === 400 || error.statusCode === 404 || error.statusCode === 409) {
-      const employee = await employeeService.getEmployeeById(req.params.employeeId, "admin", "detail").catch(() => null);
+      const employee = await employeeService.getEmployeeForEdit(req.params.employeeId).catch(() => null);
       const options = await loadFormOptions();
       const formData = prepareEmployeeFormData(employee, options);
       return res.status(error.statusCode).render("admin/_form", {
-        pageTitle: employee ? `Izmena — ${employee.korisnik.imePrezime}` : "Izmena zaposlenog",
-        pageDescription: employee?.korisnik?.email || "",
+        pageTitle: employee ? `Izmena — ${employee.imePrezime}` : "Izmena zaposlenog",
+        pageDescription: employee?.email || "",
         data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }

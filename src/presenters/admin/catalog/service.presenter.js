@@ -48,7 +48,7 @@ export function prepareServiceListData(result, query = {}) {
   };
 }
 
-export function prepareServiceDetailsData(service) {
+export function prepareServiceDetailsData(service, { employeeCount = 0 } = {}) {
   return {
     backUrl: "/admin/usluge",
     editUrl: `/admin/usluge/izmena/${service.id}`,
@@ -88,7 +88,9 @@ export function prepareServiceDetailsData(service) {
         rows: [
           { label: "Istaknuto", value: service.istaknuto ? "Da" : "Ne" },
           { label: "Aktivna", value: service.aktivna ? "Da" : "Ne (nacrt)" },
-          { label: "Broj terapeuta", value: service.terapeuti.length },
+          // count comes from Employee.services (see serviceDetails controller) —
+          // Service no longer stores its own employees list, see employee.model.js
+          { label: "Broj terapeuta", value: employeeCount },
         ],
       },
       {
@@ -111,7 +113,7 @@ export function prepareServiceDetailsData(service) {
 // ---------------------------------------------------------------------------
 // Phase 1: core info + image
 // ---------------------------------------------------------------------------
-export function prepareServiceFormData(service = null, { categoryOptions = [], tagOptions = [], employeeOptions = [] } = {}) {
+export function prepareServiceFormData(service = null, { categoryOptions = [], tagOptions = [] } = {}) {
   const isEdit = !!service;
   const values = isEdit
     ? service
@@ -152,8 +154,8 @@ export function prepareServiceFormData(service = null, { categoryOptions = [], t
     { name: "highlight", label: "Istakni ovu uslugu", type: "checkbox", width: 6, value: values.highlight }
   );
 
-  // packages/features/comparison/faq/employees/isActive only show on the single-shot
-  // EDIT form now — first-time creation handles those across phases 2 and 3.
+  // packages/features/comparison/faq/isActive only show on the single-shot EDIT
+  // form now — first-time creation handles those across phases 2 and 3.
   if (isEdit) {
     fields.push(
       {
@@ -202,14 +204,6 @@ export function prepareServiceFormData(service = null, { categoryOptions = [], t
           { name: "question", label: "Pitanje", type: "text", required: true },
           { name: "answer", label: "Odgovor", type: "textarea", required: true },
         ],
-      },
-      {
-        name: "employees",
-        label: "Zaposleni koji pružaju uslugu",
-        type: "multiselect",
-        width: 12,
-        value: (values.employees || []).map((e) => (typeof e === "object" ? e.id ?? e._id?.toString() : e)),
-        options: employeeOptions,
       }
     );
   }
@@ -289,7 +283,7 @@ export function prepareServicePackagesStepData(service) {
 // ---------------------------------------------------------------------------
 // Phase 3: optional extras + publish
 // ---------------------------------------------------------------------------
-export function prepareServiceExtrasStepData(service, { employeeOptions = [] } = {}) {
+export function prepareServiceExtrasStepData(service) {
   const fields = [
     {
       name: "features",
@@ -323,14 +317,6 @@ export function prepareServiceExtrasStepData(service, { employeeOptions = [] } =
         { name: "question", label: "Pitanje", type: "text", required: true },
         { name: "answer", label: "Odgovor", type: "textarea", required: true },
       ],
-    },
-    {
-      name: "employees",
-      label: "Zaposleni koji pružaju uslugu",
-      type: "multiselect",
-      width: 12,
-      value: (service.employees || []).map((e) => (typeof e === "object" ? e.id ?? e._id?.toString() : e)),
-      options: employeeOptions,
     },
     { name: "highlight", label: "Istakni ovu uslugu", type: "checkbox", width: 6, value: service.highlight },
     {

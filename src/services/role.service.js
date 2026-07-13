@@ -1,4 +1,5 @@
 import roleRepo from "../repositories/role.repository.js";
+import { RESERVED_ROLE_NAMES } from "../models/role.model.js";
 import {
   mapRolesForAdminList,
   mapRoleForAdminDetail,
@@ -60,6 +61,9 @@ export async function updateRoleById(roleId, data) {
   if (!existing) notFound("Rola");
 
   if (data.name && data.name !== existing.name) {
+    if (RESERVED_ROLE_NAMES.includes(existing.name)) {
+      badRequest(`Rola "${existing.name}" je rezervisana i ne može biti preimenovana — koristi se po nazivu na više mesta u sistemu`);
+    }
     const conflicting = await roleRepo.findRoleByName(data.name);
     if (conflicting) conflict("Rola sa ovim nazivom već postoji");
   }
@@ -74,6 +78,9 @@ export async function deleteRoleById(roleId) {
   const existing = await roleRepo.findRoleById(roleId);
   if (!existing) notFound("Rola");
   if (existing.isDefault) badRequest("Podrazumevana rola ne može biti obrisana");
+  if (RESERVED_ROLE_NAMES.includes(existing.name)) {
+    badRequest(`Rola "${existing.name}" je rezervisana i ne može biti obrisana — koristi se po nazivu na više mesta u sistemu`);
+  }
 
   await roleRepo.deleteRoleById(roleId);
   logInfo("Role deleted", { roleId });

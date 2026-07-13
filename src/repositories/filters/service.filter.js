@@ -5,7 +5,6 @@ export function buildServiceFilter({
   search = "",
   category = null,
   tag = null,
-  employee = null,
   isActive = null,
   highlight = null,
 } = {}) {
@@ -20,7 +19,6 @@ export function buildServiceFilter({
 
   if (category) filter.categories = category;
   if (tag) filter.tags = tag;
-  if (employee) filter.employees = employee;
   if (isActive !== null && isActive !== undefined) filter.isActive = isActive;
   if (highlight !== null && highlight !== undefined) filter.highlight = highlight;
 

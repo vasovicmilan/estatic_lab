@@ -12,16 +12,14 @@ import { validateSearch } from "../../../middlewares/validators/search.validator
 
 const router = Router();
 
-router.post("/", sanitizeArrayFields("services"), parseJsonFields("workingHours"), validateEmployeeCreate, EmployeeController.createEmployee);
-
-
+router.get("/", validateSearch, EmployeeController.listEmployees);
 router.get("/dodavanje", EmployeeController.newEmployeeForm);
 router.get("/detalji/:employeeId", validateEmployeeId, EmployeeController.employeeDetails);
+router.get("/izmena/:employeeId", validateEmployeeId, EmployeeController.editEmployeeForm);
+
+router.post("/", sanitizeArrayFields("services"), parseJsonFields("workingHours"), validateEmployeeCreate, EmployeeController.createEmployee);
+
 router.put("/:employeeId", validateEmployeeId, sanitizeArrayFields("services"), parseJsonFields("workingHours"), validateEmployeeUpdate, EmployeeController.updateEmployee);
-
-router.post("/", validateEmployeeCreate, EmployeeController.createEmployee);
-
-router.put("/:employeeId", validateEmployeeId, parseJsonFields("workingHours"), validateEmployeeUpdate, EmployeeController.updateEmployee);
 router.put("/:employeeId/radno-vreme", validateEmployeeId, parseJsonFields("workingHours"), validateWorkingHoursUpdate, EmployeeController.updateWorkingHours);
 
 router.delete("/:employeeId", validateEmployeeId, EmployeeController.deleteEmployee);

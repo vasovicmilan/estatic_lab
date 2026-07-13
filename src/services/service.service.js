@@ -150,7 +150,6 @@ export async function addExtrasAndPublish(serviceId, data) {
     comparisonColumns: data.comparisonColumns ?? existing.comparisonColumns ?? [],
     comparisonTable: data.comparisonTable ?? existing.comparisonTable ?? [],
     faq: data.faq ?? existing.faq ?? [],
-    employees: data.employees ?? existing.employees ?? [],
     highlight: data.highlight ?? existing.highlight ?? false,
     isActive: data.isActive ?? true,
   };

@@ -50,22 +50,14 @@ export async function findUserProfile(userId) {
 
 export async function findUserByEmail(email) {
   if (!email) return null;
-  return userRepo.findUserByEmail(email, { populateFields: [{ path: "role", select: "name" }] });
+  return userRepo.findUserByEmail(email, { populateFields: [{ path: "role", select: "name permissions" }] });
 }
 
-// raw (unmapped, password included) — used only by auth.service.js for credential checks
 export async function findUserForLogin(email) {
   if (!email) validationError("email");
-  return userRepo.findUserByEmailWithPassword(email, { populateFields: [{ path: "role", select: "name" }] });
+  return userRepo.findUserByEmailWithPassword(email, { populateFields: [{ path: "role", select: "name permissions" }] });
 }
 
-/**
- * The very first account ever created becomes admin and is auto-activated/confirmed
- * (no one exists yet to click "verify" or "approve" them) — matches e_commerce's
- * pattern. Every subsequent signup gets the normal "user" role and pending flow.
- * Deliberately NOT used by createGuestUser() below — an anonymous booking should never
- * be able to grant itself admin just by being first through the door.
- */
 async function resolveRegistrationRole() {
   const userCount = await userRepo.countUsers();
   const isFirstUser = userCount === 0;

@@ -117,6 +117,26 @@ export function mapEmployeeForAdminDetail(employee) {
   };
 }
 
+// used to pre-fill the admin edit form — raw IDs and raw workingHours (not the
+// translated/formatted shape mapEmployeeForAdminDetail returns for display), so
+// prepareEmployeeFormData's `values.expert`/`values.services`/`values.workingHours`
+// lookups actually find something. imePrezime/email are included purely for the
+// page title/breadcrumb, not as form fields — mirrors mapServiceForEdit's convention.
+export function mapEmployeeForEdit(employee) {
+  if (!employee) return null;
+  return {
+    id: employee._id.toString(),
+    imePrezime: getFullName(employee),
+    email: getEmail(employee),
+    userId: employee.userId?._id?.toString() || employee.userId?.toString(),
+    expert: employee.expert?._id?.toString() || employee.expert?.toString() || null,
+    services: (employee.services || []).map((s) => s._id?.toString() || s.toString()),
+    workingHours: getWorkingHoursRaw(employee),
+    isActive: employee.isActive,
+    notes: employee.notes || "",
+  };
+}
+
 export function mapEmployeeForEmployeeShort(employee) {
   return {
     id: employee._id.toString(),
@@ -167,6 +187,7 @@ export default {
   mapEmployeeForAdminShort,
   mapEmployeesForAdminList,
   mapEmployeeForAdminDetail,
+  mapEmployeeForEdit,
   mapEmployeeForEmployeeShort,
   mapEmployeeForEmployeeDetail,
   mapEmployeeForPublic,

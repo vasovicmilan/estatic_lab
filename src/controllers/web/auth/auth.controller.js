@@ -53,6 +53,7 @@ function setSessionUser(req, user) {
     lastName: user.lastName,
     roleId: user.roleId,
     roleName: user.roleName,
+    permissions: user.permissions || [],
   };
 }
 

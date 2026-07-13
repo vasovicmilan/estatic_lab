@@ -6,6 +6,7 @@ const defaultRoles = [
     name: "admin",
     description: "Pun pristup svim funkcionalnostima admin panela",
     permissions: [
+      "access_admin_panel",
       "view_dashboard",
       "manage_users",
       "manage_roles",
@@ -37,14 +38,6 @@ const defaultRoles = [
   },
 ];
 
-/**
- * Upserts the three closed roles by name — safe to run multiple times (won't duplicate
- * or wipe out permission edits made from the admin panel on repeat runs, since upsert
- * only fills in fields, it doesn't delete extras... note: findOneAndUpdate with a full
- * replacement object below DOES overwrite `permissions` etc. back to these defaults on
- * every run. Run once at initial setup; if you customize permissions afterward via the
- * admin UI, don't re-run this without adjusting the defaults above to match.
- */
 export async function seedRoles() {
   const results = [];
 

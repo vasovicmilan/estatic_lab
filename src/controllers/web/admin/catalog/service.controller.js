@@ -27,17 +27,18 @@ function parseJsonField(value, fallback = []) {
   }
 }
 
+// employeeService is still imported for serviceDetails' "Broj terapeuta" count below —
+// which employees can perform a service now lives only on Employee.services, assigned
+// from the employee's own edit form, not here (see service.model.js)
 async function loadFormOptions() {
-  const [categories, tags, employees] = await Promise.all([
+  const [categories, tags] = await Promise.all([
     categoryService.getCategoriesForSelect("service"),
     tagService.getTagsForSelect("service"),
-    employeeService.listEmployees({ limit: 200 }),
   ]);
 
   return {
     categoryOptions: categories,
     tagOptions: tags,
-    employeeOptions: employees.data.map((e) => ({ value: e.id, label: e.imePrezime })),
   };
 }
 
@@ -67,7 +68,6 @@ function buildStep3Payload(req) {
     : undefined;
   data.comparisonTable = parseJsonField(req.body.comparisonTable);
   data.faq = parseJsonField(req.body.faq);
-  data.employees = Array.isArray(req.body.employees) ? req.body.employees.filter(Boolean) : req.body.employees ? [req.body.employees] : [];
   data.highlight = parseCheckbox(req.body.highlight, false);
   data.isActive = parseCheckbox(req.body.isActive);
 
@@ -88,7 +88,6 @@ function buildServicePayload(req, existing = {}) {
 
   data.categories = Array.isArray(req.body.categories) ? req.body.categories.filter(Boolean) : req.body.categories ? [req.body.categories] : [];
   data.tags = Array.isArray(req.body.tags) ? req.body.tags.filter(Boolean) : req.body.tags ? [req.body.tags] : [];
-  data.employees = Array.isArray(req.body.employees) ? req.body.employees.filter(Boolean) : req.body.employees ? [req.body.employees] : [];
 
   data.features = parseJsonField(req.body.features, existing.features || []);
   data.packages = parseJsonField(req.body.packages, existing.packages || []);
@@ -135,8 +134,9 @@ export async function serviceDetails(req, res, next) {
   try {
     const { serviceId } = req.params;
     const service = await serviceService.getServiceById(serviceId);
+    const employees = await employeeService.findEmployeesByServiceRaw(serviceId);
 
-    const viewData = prepareServiceDetailsData(service);
+    const viewData = prepareServiceDetailsData(service, { employeeCount: employees.length });
     
     return res.render("admin/_details", {
       pageTitle: `Usluga — ${service.naziv}`,
@@ -267,8 +267,7 @@ export async function newServiceExtrasForm(req, res, next) {
   try {
     const { serviceId } = req.params;
     const service = await serviceService.getServiceForEdit(serviceId);
-    const options = await loadFormOptions();
-    const formData = prepareServiceExtrasStepData(service, options);
+    const formData = prepareServiceExtrasStepData(service);
     return res.render("admin/_form", {
       pageTitle: `${service.name} — detalji i objava`,
       pageDescription: "Dodatni detalji i objava — korak 3 od 3",
@@ -287,8 +286,7 @@ export async function publishServiceStep(req, res, next) {
     if (req.validationErrors) {
       logWarn(`[publishServiceStep] Validacione greške u fazi 3 za serviceId=${serviceId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
       const service = await serviceService.getServiceForEdit(serviceId);
-      const options = await loadFormOptions();
-      const formData = prepareServiceExtrasStepData(service, options);
+      const formData = prepareServiceExtrasStepData(service);
       return res.status(400).render("admin/_form", {
         pageTitle: `${service.name} — detalji i objava`,
         pageDescription: "Dodatni detalji i objava — korak 3 od 3",
@@ -309,8 +307,7 @@ export async function publishServiceStep(req, res, next) {
     if (statusCode === 400 || statusCode === 404) {
       const service = await serviceService.getServiceForEdit(req.params.serviceId).catch(() => null);
       if (service) {
-        const options = await loadFormOptions();
-        const formData = prepareServiceExtrasStepData(service, options);
+        const formData = prepareServiceExtrasStepData(service);
         return res.status(statusCode).render("admin/_form", {
           pageTitle: `${service.name} — detalji i objava`,
           pageDescription: "Dodatni detalji i objava — korak 3 od 3",

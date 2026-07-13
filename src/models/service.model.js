@@ -76,8 +76,6 @@ const ServiceSchema = new Schema(
 
     faq: [FAQSchema],
 
-    employees: [{ type: Schema.Types.ObjectId, ref: "Employee" }],
-
     isActive: {
       type: Boolean,
       default: false,
@@ -129,6 +127,5 @@ ServiceSchema.pre("findOneAndUpdate", async function () {
 
 ServiceSchema.index({ categories: 1 });
 ServiceSchema.index({ tags: 1 });
-ServiceSchema.index({ employees: 1 });
 
 export default model("Service", ServiceSchema);

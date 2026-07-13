@@ -112,7 +112,6 @@ export function mapServiceForAdminDetail(service) {
       redovi: service.comparisonTable || [],
     },
     faq: (service.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
-    terapeuti: (service.employees || []).map((e) => (typeof e === "object" ? e._id?.toString() : e?.toString())),
     seoKljucneReci: service.seoKeywords || [],
     aktivna: service.isActive,
     vreme: {
@@ -145,7 +144,6 @@ export function mapServiceForEdit(service) {
     comparisonColumns: service.comparisonColumns || [],
     comparisonTable: service.comparisonTable || [],
     faq: service.faq || [],
-    employees: (service.employees || []).map((e) => e._id?.toString() || e.toString()),
     isActive: service.isActive,
   };
 }

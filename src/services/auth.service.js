@@ -51,6 +51,7 @@ export async function login(email, password) {
     lastName: user.lastName,
     roleId: (user.role?._id || user.role).toString(),
     roleName: user.role?.name || "user",
+    permissions: user.role?.permissions || [],
     token,
   };
 }
@@ -80,6 +81,7 @@ export async function googleAuth(googleData) {
       lastName: user.lastName,
       roleId: (user.role?._id || user.role).toString(),
       roleName: user.role?.name || "user",
+      permissions: user.role?.permissions || [],
       token,
     },
     isNewUser,
