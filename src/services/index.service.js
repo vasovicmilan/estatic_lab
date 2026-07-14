@@ -2,6 +2,7 @@ import serviceService from "./service.service.js";
 import expertService from "./expert.service.js";
 import testimonialService from "./testimonial.service.js";
 import postService from "./post.service.js";
+import packageService from "./package.service.js";
 import contactService from "./contact.service.js";
 import newsLetterService from "./news-letter.service.js";
 import { buildPageSeo } from "../seo/index.js";
@@ -12,12 +13,14 @@ export async function getLandingPageData({
   featuredExpertLimit = 4,
   testimonialLimit = 6,
   latestPostLimit = 3,
+  bestPackageLimit = 3,
 } = {}) {
-  const [highlightedServices, allExperts, testimonials, latestPosts] = await Promise.all([
+  const [highlightedServices, allExperts, testimonials, latestPosts, packagesResult] = await Promise.all([
     serviceService.findHighlightedServices({ limit: highlightedServiceLimit }),
     expertService.getActiveExperts(),
     testimonialService.getApprovedTestimonials({ limit: testimonialLimit, featuredOnly: true }),
     postService.findPublishedPosts({ limit: latestPostLimit }),
+    packageService.findActivePackages({ limit: bestPackageLimit }),
   ]);
 
   const seo = buildPageSeo({
@@ -33,6 +36,7 @@ export async function getLandingPageData({
     featuredExperts: allExperts.slice(0, featuredExpertLimit),
     testimonials,
     latestPosts: latestPosts.data || [],
+    bestPackages: packagesResult.data || [],
     seo,
   };
 }

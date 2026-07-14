@@ -1,0 +1,95 @@
+/*
+  Estatic Lab — design tokens.
+  Wellness / beauty / massage palette: warm terracotta as the primary accent, warm
+  taupe/brown as secondary, muted sage/gold/brick for the semantic colors, warm
+  cream/near-black neutrals instead of Bootstrap's stark gray scale.
+
+  Everything here overrides Bootstrap 5.3's own CSS custom properties — no new
+  classes are introduced anywhere. Bootstrap 5.3 derives most utilities (text-*,
+  bg-*, border-*, alert-*, text-bg-*) directly from these variables at runtime, so
+  overriding them here re-themes those utilities automatically. The exceptions are
+  buttons, which Bootstrap bakes hover/active shades into at build time — those get
+  a small, explicit override in styles.css.
+*/
+
+:root {
+  /* ---- Core theme colors ---- */
+  --bs-primary: #a8735c;
+  --bs-primary-rgb: 168, 115, 92;
+  --bs-secondary: #6b5b4d;
+  --bs-secondary-rgb: 107, 91, 77;
+  --bs-success: #7a8b6f;
+  --bs-success-rgb: 122, 139, 111;
+  --bs-info: #7c93a0;
+  --bs-info-rgb: 124, 147, 160;
+  --bs-warning: #d9a441;
+  --bs-warning-rgb: 217, 164, 65;
+  --bs-danger: #b24c43;
+  --bs-danger-rgb: 178, 76, 67;
+  --bs-light: #fbf6f1;
+  --bs-light-rgb: 251, 246, 241;
+  --bs-dark: #2e2a24;
+  --bs-dark-rgb: 46, 42, 36;
+
+  /* ---- Subtle / emphasis tokens (drive alert-*, text-bg-*-subtle, etc.) ---- */
+  --bs-primary-text-emphasis: #5c3d2e;
+  --bs-primary-bg-subtle: #f3e6e0;
+  --bs-primary-border-subtle: #e4c9bc;
+
+  --bs-secondary-text-emphasis: #3a312a;
+  --bs-secondary-bg-subtle: #eae5df;
+  --bs-secondary-border-subtle: #d8d0c6;
+
+  --bs-success-text-emphasis: #3d4636;
+  --bs-success-bg-subtle: #e7ece3;
+  --bs-success-border-subtle: #cbd6c3;
+
+  --bs-info-text-emphasis: #38434a;
+  --bs-info-bg-subtle: #e6ecef;
+  --bs-info-border-subtle: #c7d3d9;
+
+  --bs-warning-text-emphasis: #5c4419;
+  --bs-warning-bg-subtle: #faf0dc;
+  --bs-warning-border-subtle: #f0dbac;
+
+  --bs-danger-text-emphasis: #4a201c;
+  --bs-danger-bg-subtle: #f5e1df;
+  --bs-danger-border-subtle: #e7bab5;
+
+  /* ---- Body / typography ---- */
+  --bs-body-bg: #fffdfb;
+  --bs-body-color: #2e2a24;
+  --bs-body-font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --bs-emphasis-color: #2e2a24;
+  --bs-secondary-color: rgba(46, 42, 36, 0.65);
+  --bs-secondary-bg: #f1eae3;
+  --bs-tertiary-color: rgba(46, 42, 36, 0.45);
+  --bs-tertiary-bg: #f6f1eb;
+
+  /* heading font — applied via element selectors in styles.css, not a new class */
+  --font-heading: "Playfair Display", Georgia, serif;
+
+  /* ---- Links ---- */
+  --bs-link-color: var(--bs-primary);
+  --bs-link-color-rgb: var(--bs-primary-rgb);
+  --bs-link-hover-color: #875740;
+  --bs-link-hover-color-rgb: 135, 87, 64;
+
+  /* ---- Shape ---- */
+  --bs-border-radius: 0.6rem;
+  --bs-border-radius-sm: 0.4rem;
+  --bs-border-radius-lg: 0.9rem;
+  --bs-border-radius-xl: 1.25rem;
+  --bs-border-radius-2xl: 1.75rem;
+  --bs-border-radius-pill: 50rem;
+  --bs-border-color: #e7ddd3;
+  --bs-border-color-translucent: rgba(46, 42, 36, 0.1);
+
+  /* ---- Shadows (referenced directly by .shadow / .shadow-sm / .shadow-lg) ---- */
+  --bs-box-shadow: 0 0.75rem 2rem rgba(46, 42, 36, 0.1);
+  --bs-box-shadow-sm: 0 0.25rem 0.75rem rgba(46, 42, 36, 0.08);
+  --bs-box-shadow-lg: 0 1.5rem 3rem rgba(46, 42, 36, 0.14);
+
+  /* ---- Focus ring ---- */
+  --bs-focus-ring-color: rgba(168, 115, 92, 0.25);
+}

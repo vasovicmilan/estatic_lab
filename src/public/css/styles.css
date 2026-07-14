@@ -1,0 +1,237 @@
+/*
+  Estatic Lab — component-level overrides.
+  Every selector below is an EXISTING Bootstrap class or plain HTML element — nothing
+  new is introduced. This file exists because Bootstrap 5.3 bakes button hover/active
+  shades and a few other things into the compiled CSS at build time (hardcoded hex
+  values), rather than deriving them from the root --bs-* variables at runtime, so
+  those specific pieces need a direct override to follow the palette in variables.css.
+  Alerts, badges (text-bg-*), text/bg/border utilities, and list-group styling are all
+  properly variable-driven in 5.3 and re-theme automatically from variables.css alone.
+*/
+
+/* ---- Typography ---- */
+h1, h2, h3, h4, h5, h6,
+.display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+/* ---- Buttons — hover/active shades re-declared per variant to follow the palette ---- */
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #a8735c;
+  --bs-btn-border-color: #a8735c;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #96634e;
+  --bs-btn-hover-border-color: #875740;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #875740;
+  --bs-btn-active-border-color: #7a4e39;
+  --bs-btn-disabled-bg: #a8735c;
+  --bs-btn-disabled-border-color: #a8735c;
+  --bs-btn-focus-shadow-rgb: 168, 115, 92;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: #a8735c;
+  --bs-btn-border-color: #a8735c;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #a8735c;
+  --bs-btn-hover-border-color: #a8735c;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #96634e;
+  --bs-btn-active-border-color: #96634e;
+  --bs-btn-focus-shadow-rgb: 168, 115, 92;
+}
+
+.btn-secondary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #6b5b4d;
+  --bs-btn-border-color: #6b5b4d;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #5e4f43;
+  --bs-btn-hover-border-color: #54473c;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #54473c;
+  --bs-btn-active-border-color: #4a3e35;
+  --bs-btn-disabled-bg: #6b5b4d;
+  --bs-btn-disabled-border-color: #6b5b4d;
+  --bs-btn-focus-shadow-rgb: 107, 91, 77;
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: #6b5b4d;
+  --bs-btn-border-color: #6b5b4d;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #6b5b4d;
+  --bs-btn-hover-border-color: #6b5b4d;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #5e4f43;
+  --bs-btn-active-border-color: #5e4f43;
+  --bs-btn-focus-shadow-rgb: 107, 91, 77;
+}
+
+.btn-success {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #7a8b6f;
+  --bs-btn-border-color: #7a8b6f;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #6e7e64;
+  --bs-btn-hover-border-color: #63715a;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #63715a;
+  --bs-btn-active-border-color: #586452;
+  --bs-btn-disabled-bg: #7a8b6f;
+  --bs-btn-disabled-border-color: #7a8b6f;
+  --bs-btn-focus-shadow-rgb: 122, 139, 111;
+}
+
+.btn-outline-success {
+  --bs-btn-color: #7a8b6f;
+  --bs-btn-border-color: #7a8b6f;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #7a8b6f;
+  --bs-btn-hover-border-color: #7a8b6f;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #6e7e64;
+  --bs-btn-active-border-color: #6e7e64;
+  --bs-btn-focus-shadow-rgb: 122, 139, 111;
+}
+
+.btn-warning {
+  --bs-btn-color: #2e2a24;
+  --bs-btn-bg: #d9a441;
+  --bs-btn-border-color: #d9a441;
+  --bs-btn-hover-color: #2e2a24;
+  --bs-btn-hover-bg: #c6933a;
+  --bs-btn-hover-border-color: #b98a36;
+  --bs-btn-active-color: #2e2a24;
+  --bs-btn-active-bg: #b98a36;
+  --bs-btn-active-border-color: #ad8132;
+  --bs-btn-disabled-bg: #d9a441;
+  --bs-btn-disabled-border-color: #d9a441;
+  --bs-btn-focus-shadow-rgb: 217, 164, 65;
+}
+
+.btn-outline-warning {
+  --bs-btn-color: #ad7c1f;
+  --bs-btn-border-color: #d9a441;
+  --bs-btn-hover-color: #2e2a24;
+  --bs-btn-hover-bg: #d9a441;
+  --bs-btn-hover-border-color: #d9a441;
+  --bs-btn-active-color: #2e2a24;
+  --bs-btn-active-bg: #d9a441;
+  --bs-btn-active-border-color: #d9a441;
+  --bs-btn-focus-shadow-rgb: 217, 164, 65;
+}
+
+.btn-danger {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #b24c43;
+  --bs-btn-border-color: #b24c43;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #9f433b;
+  --bs-btn-hover-border-color: #953f37;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #953f37;
+  --bs-btn-active-border-color: #8a3a33;
+  --bs-btn-disabled-bg: #b24c43;
+  --bs-btn-disabled-border-color: #b24c43;
+  --bs-btn-focus-shadow-rgb: 178, 76, 67;
+}
+
+.btn-outline-danger {
+  --bs-btn-color: #b24c43;
+  --bs-btn-border-color: #b24c43;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #b24c43;
+  --bs-btn-hover-border-color: #b24c43;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #9f433b;
+  --bs-btn-active-border-color: #9f433b;
+  --bs-btn-focus-shadow-rgb: 178, 76, 67;
+}
+
+.btn-outline-light {
+  --bs-btn-color: #fff;
+  --bs-btn-border-color: #fff;
+  --bs-btn-hover-color: #2e2a24;
+  --bs-btn-hover-bg: #fff;
+  --bs-btn-hover-border-color: #fff;
+  --bs-btn-active-color: #2e2a24;
+  --bs-btn-active-bg: #f3efe9;
+  --bs-btn-active-border-color: #f3efe9;
+}
+
+/* ---- Navbar ---- */
+.navbar-brand {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: var(--bs-primary) !important;
+}
+
+.navbar-light .navbar-nav .nav-link.active,
+.navbar-light .navbar-nav .nav-link:hover {
+  color: var(--bs-primary) !important;
+}
+
+/* ---- Badges — soft pill shape, slightly heavier weight ---- */
+.badge {
+  border-radius: var(--bs-border-radius-pill);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* ---- Forms ---- */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.25rem var(--bs-focus-ring-color);
+}
+
+/* ---- Cards ---- */
+.card {
+  border-color: var(--bs-border-color);
+}
+
+/* ---- Pagination ---- */
+.page-link {
+  color: var(--bs-primary);
+}
+.page-item.active .page-link {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+
+/* ---- Homepage hero ----
+   .hero-section alone renders the gradient fallback. When the presenter provides a
+   real photo (see index.presenter.js's hero.image), landing/home.ejs additionally
+   applies .hero-section-with-image, which overrides just background-image with the
+   darkened photo — background-size/position from the base rule still apply. This
+   keeps the template free of any inline style while still supporting an optional,
+   presenter-driven hero photo. */
+.hero-section {
+  background-color: var(--bs-dark);
+  background-image: linear-gradient(135deg, var(--bs-primary), var(--bs-dark));
+  background-size: cover;
+  background-position: center;
+}
+
+.hero-section-with-image {
+  background-image: linear-gradient(rgba(46, 42, 36, 0.6), rgba(46, 42, 36, 0.55)), url("/img/hero.jpg");
+}
+
+.hero-inner {
+  min-height: 70vh;
+}
+
+.hero-eyebrow {
+  letter-spacing: 0.08em;
+}
+
+/* ---- Package card (card-package.ejs) ---- */
+.package-card-img {
+  height: 180px;
+  object-fit: cover;
+}

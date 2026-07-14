@@ -1,30 +1,75 @@
 <%- include("../includes/head") %>
 <%- include("../includes/navigation") %>
 
-<header class="bg-light py-5 text-center">
-  <div class="container">
-    <h1 class="display-5 fw-bold"><%= data.hero.title %></h1>
-    <a href="<%= data.hero.ctaUrl %>" class="btn btn-primary btn-lg mt-3"><%= data.hero.ctaLabel %></a>
+<header class="position-relative text-white hero-section <%= data.hero.image ? 'hero-section-with-image' : '' %>">
+  <div class="container hero-inner">
+    <div class="row align-items-center hero-inner">
+      <div class="col-lg-7 py-5">
+        <p class="text-uppercase small fw-semibold mb-2 hero-eyebrow"><%= data.hero.eyebrow %></p>
+        <h1 class="display-4 fw-bold mb-3"><%= data.hero.title %></h1>
+        <p class="lead mb-4"><%= data.hero.subtitle %></p>
+        <div class="d-flex flex-wrap gap-3">
+          <a href="<%= data.hero.ctaUrl %>" class="btn btn-primary btn-lg"><%= data.hero.ctaLabel %></a>
+          <a href="<%= data.hero.secondaryCtaUrl %>" class="btn btn-outline-light btn-lg"><%= data.hero.secondaryCtaLabel %></a>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 
 <main>
   <%- include("../includes/flash-messages") %>
 
-  <% if (data.highlightedServices && data.highlightedServices.length > 0) { %>
+  <!-- Why us -->
+  <% if (data.whyUs && data.whyUs.length > 0) { %>
     <section class="container py-5">
-      <h2 class="h3 mb-4 text-center">Naše usluge</h2>
-      <div class="row g-4">
-        <% data.highlightedServices.forEach(function(service) { %>
-          <div class="col-md-4">
-            <%- include("../includes/components/card-service", { service: service }) %>
+      <div class="row g-4 text-center">
+        <% data.whyUs.forEach(function(item) { %>
+          <div class="col-6 col-md-3">
+            <i class="bi <%= item.icon %> display-6 text-primary d-block mb-2"></i>
+            <h3 class="h6"><%= item.title %></h3>
+            <p class="text-muted small"><%= item.text %></p>
           </div>
         <% }) %>
       </div>
-      <div class="text-center mt-4"><a href="/usluge" class="btn btn-outline-primary">Sve usluge</a></div>
     </section>
   <% } %>
 
+  <!-- Featured services -->
+  <% if (data.highlightedServices && data.highlightedServices.length > 0) { %>
+    <section class="bg-light py-5">
+      <div class="container">
+        <h2 class="h3 mb-2 text-center">Naše usluge</h2>
+        <p class="text-muted text-center mb-4">Masaže, ESMA tretmani i nega lica i tela — prilagođeno vama</p>
+        <div class="row g-4">
+          <% data.highlightedServices.forEach(function(service) { %>
+            <div class="col-md-4">
+              <%- include("../includes/components/card-service", { service: service }) %>
+            </div>
+          <% }) %>
+        </div>
+        <div class="text-center mt-4"><a href="/usluge" class="btn btn-outline-primary">Sve usluge</a></div>
+      </div>
+    </section>
+  <% } %>
+
+  <!-- Best packages -->
+  <% if (data.bestPackages && data.bestPackages.length > 0) { %>
+    <section class="container py-5">
+      <h2 class="h3 mb-2 text-center">Naši paketi</h2>
+      <p class="text-muted text-center mb-4">Uštedite uz pakete od više tretmana</p>
+      <div class="row g-4">
+        <% data.bestPackages.forEach(function(pkg) { %>
+          <div class="col-md-4">
+            <%- include("../includes/components/card-package", { pkg: pkg }) %>
+          </div>
+        <% }) %>
+      </div>
+      <div class="text-center mt-4"><a href="/paketi" class="btn btn-outline-primary">Svi paketi</a></div>
+    </section>
+  <% } %>
+
+  <!-- Our team -->
   <% if (data.featuredExperts && data.featuredExperts.length > 0) { %>
     <section class="bg-light py-5">
       <div class="container">
@@ -41,19 +86,65 @@
     </section>
   <% } %>
 
-  <% if (data.testimonials && data.testimonials.length > 0) { %>
-    <section class="container py-5">
-      <h2 class="h3 mb-4 text-center">Šta kažu naši klijenti</h2>
-      <div class="row g-4">
+  <!-- Social proof: testimonials + leave-a-review form -->
+  <section class="container py-5">
+    <h2 class="h3 mb-4 text-center">Šta kažu naši klijenti</h2>
+
+    <% if (data.testimonials && data.testimonials.length > 0) { %>
+      <div class="row g-4 mb-5">
         <% data.testimonials.forEach(function(t) { %>
           <div class="col-md-4">
             <%- include("../includes/components/card-testimonial", { testimonial: t }) %>
           </div>
         <% }) %>
       </div>
-    </section>
-  <% } %>
+    <% } %>
 
+    <div class="row justify-content-center">
+      <div class="col-lg-7">
+        <div class="card shadow-sm">
+          <div class="card-body p-4">
+            <h3 class="h5 mb-3 text-center">Podelite vaš utisak</h3>
+            <form action="<%= data.testimonialFormAction %>" method="POST">
+              <input type="text" name="nickname" class="d-none" tabindex="-1" autocomplete="off">
+              <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Ime</label>
+                  <input type="text" name="name" class="form-control" required minlength="2" maxlength="100">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Email (opciono)</label>
+                  <input type="email" name="email" class="form-control">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Ocena</label>
+                  <select name="rating" class="form-select" required>
+                    <option value="">Izaberite</option>
+                    <option value="5">5 — Odlično</option>
+                    <option value="4">4 — Vrlo dobro</option>
+                    <option value="3">3 — Dobro</option>
+                    <option value="2">2 — Osrednje</option>
+                    <option value="1">1 — Loše</option>
+                  </select>
+                </div>
+                <div class="col-md-8">
+                  <label class="form-label">Komentar</label>
+                  <textarea name="message" class="form-control" rows="1" required minlength="10" maxlength="1000" placeholder="Recite nam kako je bilo..."></textarea>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100 mt-4">Pošaljite utisak</button>
+              <p class="text-muted small text-center mt-2 mb-0">Utisak se objavljuje nakon provere.</p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Blog -->
   <% if (data.latestPosts && data.latestPosts.length > 0) { %>
     <section class="bg-light py-5">
       <div class="container">
@@ -65,9 +156,19 @@
             </div>
           <% }) %>
         </div>
+        <div class="text-center mt-4"><a href="/blog" class="btn btn-outline-primary">Svi tekstovi</a></div>
       </div>
     </section>
   <% } %>
+
+  <!-- Closing CTA -->
+  <section class="py-5 text-white text-center bg-primary">
+    <div class="container">
+      <h2 class="h3 fw-bold mb-3">Spremni za trenutak opuštanja?</h2>
+      <p class="mb-4">Zakažite svoj termin danas i prepustite se nezi koju zaslužujete.</p>
+      <a href="<%= data.hero.ctaUrl %>" class="btn btn-light btn-lg">Zakažite termin</a>
+    </div>
+  </section>
 </main>
 
 <%- include("../includes/footer") %>
