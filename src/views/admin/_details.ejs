@@ -94,7 +94,11 @@
                 </div>
               <% } %>
            <% } else if (section.type === 'custom') { %>
-              <%- section.content %>
+              <% if (typeof section.data !== 'undefined') { %>
+                <%- include("components/" + section.content, { data: section.data }) %>
+              <% } else { %>
+                <%- section.content %>
+              <% } %>
             <% } %>
           </div>
         </div>
@@ -114,7 +118,11 @@
                 <% }) %>
               </dl>
             <% } else if (section.type === 'custom') { %>
-              <%- section.content %>
+              <% if (typeof section.data !== 'undefined') { %>
+                <%- include("components/" + section.content, { data: section.data }) %>
+              <% } else { %>
+                <%- section.content %>
+              <% } %>
             <% } %>
           </div>
         </div>

@@ -21,4 +21,6 @@ router.put("/:appointmentId/zavrsi", validateAppointmentId, AppointmentControlle
 router.put("/:appointmentId/nije-se-pojavio", validateAppointmentId, validateAppointmentNoShow, AppointmentController.noShowAppointment);
 router.put("/:appointmentId/preraspodeli", validateAppointmentId, validateAppointmentReassign, AppointmentController.reassignAppointment);
 
+router.delete("/:appointmentId", validateAppointmentId, AppointmentController.deleteAppointment);
+
 export default router;

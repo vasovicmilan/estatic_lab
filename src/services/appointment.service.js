@@ -338,6 +338,24 @@ export async function reassignAppointment(appointmentId, newEmployeeId, actorId)
   return mapAppointment(populated, "admin", "detail");
 }
 
+export async function deleteAppointmentById(appointmentId, actorId) {
+  if (!appointmentId) validationError("appointmentId");
+  const appointment = await appointmentRepo.findAppointmentById(appointmentId);
+  if (!appointment) notFound("Termin");
+
+  // if this appointment still holds a reserved (not yet committed/released) package
+  // session, give it back before deleting — otherwise the customer's package would
+  // show a phantom reservation that can never be used or released (see
+  // package-purchase.service.js's reserveSession/releaseSession/commitSession)
+  if (appointment.packagePurchase && (appointment.status === "pending" || appointment.status === "confirmed")) {
+    await packagePurchaseService.releaseSession(appointment.packagePurchase, appointment.variant.servicePackageId);
+  }
+
+  await appointmentRepo.deleteAppointmentById(appointmentId);
+  logInfo("Appointment deleted", { appointmentId, actorId });
+  return { success: true };
+}
+
 export default {
   findAppointments,
   getAppointmentById,
@@ -348,4 +366,5 @@ export default {
   completeAppointment,
   noShowAppointment,
   reassignAppointment,
+  deleteAppointmentById,
 };

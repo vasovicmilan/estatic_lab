@@ -58,7 +58,7 @@ describe("availability.service", () => {
       assert.equal(slots[2].startTime.getHours(), 11);
     });
 
-    it("removes exactly the busy interval from the middle of the day", async (t) => {
+    it("removes the busy interval PLUS a 30-minute buffer on both sides", async (t) => {
       const { date, dayName } = futureDateOnDay();
       const variant = buildServicePackageVariant({ duration: 60 });
       t.mock.method(serviceService, "getActiveVariant", async () => ({ variant, service: {} }));
@@ -79,9 +79,13 @@ describe("availability.service", () => {
         date,
       });
 
-      const hours = slots.map((s) => s.startTime.getHours());
-      assert.ok(!hours.includes(10), "10:00 should be blocked by the busy interval");
-      assert.deepEqual(hours, [9, 11, 12]);
+      // busy 10:00-11:00 + 30min buffer on each side -> effectively blocked 09:30-11:30.
+      // Working hours are 09:00-13:00, so: [09:00-09:30] is only 30min (too short for a
+      // 60min slot, so 09:00 must NOT appear), and [11:30-13:00] fits exactly one 60min
+      // slot at 11:30 (not 11:00 — that would leave only a 30min gap after the busy
+      // interval, violating the buffer).
+      const slotTimes = slots.map((s) => `${s.startTime.getHours()}:${String(s.startTime.getMinutes()).padStart(2, "0")}`);
+      assert.deepEqual(slotTimes, ["11:30"]);
     });
 
     it("returns no slots on a day the employee doesn't work", async (t) => {

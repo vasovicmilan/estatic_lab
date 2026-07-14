@@ -160,6 +160,21 @@ export async function reassignAppointment(req, res, next) {
   }
 }
 
+export async function deleteAppointment(req, res, next) {
+  try {
+    const { appointmentId } = req.params;
+    await appointmentService.deleteAppointmentById(appointmentId, req.session?.user?.id);
+    logInfo(`[deleteAppointment] Termin #${appointmentId} obrisan`, { appointmentId, adminId: req.session?.user?.id });
+    return flashAndRedirect(req, res, "success", "Termin je uspešno obrisan", "/admin/termini");
+  } catch (error) {
+    logError("[deleteAppointment] Greška pri brisanju termina", error, { appointmentId: req.params.appointmentId, userId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, "/admin/termini");
+    }
+    next(error);
+  }
+}
+
 export default {
   listAppointments,
   appointmentDetails,
@@ -169,4 +184,5 @@ export default {
   completeAppointment,
   noShowAppointment,
   reassignAppointment,
+  deleteAppointment,
 };

@@ -6,6 +6,7 @@ const router = Router();
 
 router.get("/", ServiceController.serviceList);
 router.get("/kategorija/:categorySlug", ServiceController.serviceCategory);
+router.get("/tag/:tagSlug", ServiceController.serviceTag);
 router.get("/:slug", searchLimiter, ServiceController.serviceDetails);
 
 export default router;

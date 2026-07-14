@@ -390,7 +390,7 @@ export async function editServiceSeoForm(req, res, next) {
     const service = await serviceService.getServiceById(serviceId);
     const formData = prepareServiceSeoFormData(service);
 
-    return res.render("admin/our-service/seo", {
+    return res.render("admin/_form", {
       pageTitle: `SEO — ${service.naziv}`,
       pageDescription: service.naziv,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
@@ -418,7 +418,7 @@ export async function updateServiceSeo(req, res, next) {
       const service = await serviceService.getServiceById(req.params.serviceId).catch(() => null);
       if (service) {
         const formData = prepareServiceSeoFormData(service);
-        return res.status(error.statusCode).render("admin/our-service/seo", {
+        return res.status(error.statusCode).render("admin/_form", {
           pageTitle: `SEO — ${service.naziv}`,
           pageDescription: service.naziv,
           data: { ...formData, errors: { general: error.message }, csrfToken: res.locals.csrfToken },
