@@ -2,6 +2,9 @@ import employeeRepo from "../repositories/employee.repository.js";
 import appointmentRepo from "../repositories/appointment.repository.js";
 import serviceService from "./service.service.js";
 import { validationError, badRequest } from "../utils/error.util.js";
+import { BOOKING_BUFFER_MINUTES } from "../config/booking.config.js";
+
+const BUFFER_MS = BOOKING_BUFFER_MINUTES * 60000;
 
 const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
@@ -78,7 +81,14 @@ async function getEmployeeFreeSlotsForDay(employee, date, durationMinutes) {
 
   const { start: dayStart, end: dayEnd } = dayBounds(date);
   const busyRaw = await appointmentRepo.findBusyIntervals(employee._id, dayStart, dayEnd);
-  const busyIntervals = busyRaw.map((a) => ({ start: new Date(a.startTime), end: new Date(a.endTime) }));
+  // pad every existing appointment by the required buffer on both sides before
+  // subtracting — this is what actually keeps a gap before/after each appointment,
+  // not just prevents literal overlap. Matches the buffer applied at write time in
+  // findOverlappingAppointments (appointment.repository.js).
+  const busyIntervals = busyRaw.map((a) => ({
+    start: new Date(new Date(a.startTime).getTime() - BUFFER_MS),
+    end: new Date(new Date(a.endTime).getTime() + BUFFER_MS),
+  }));
 
   const allSlots = [];
   for (const workSlot of workingHoursEntry.slots) {

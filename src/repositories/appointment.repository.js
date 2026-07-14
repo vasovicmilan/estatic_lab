@@ -1,9 +1,11 @@
 import Appointment from "../models/appointment.model.js";
 import { buildAppointmentFilter } from "./filters/appointment.filter.js";
 import { resolveLimit, resolveSkip, buildPaginationMeta } from "../utils/pagination.util.js";
+import { BOOKING_BUFFER_MINUTES } from "../config/booking.config.js";
 
 // statuses that actually hold a slot busy — cancelled/rejected appointments free the slot back up
 const BLOCKING_STATUSES = ["pending", "confirmed"];
+const BUFFER_MS = BOOKING_BUFFER_MINUTES * 60000;
 
 function applyPopulate(query, populateFields = []) {
   for (const field of populateFields) {
@@ -77,14 +79,17 @@ export async function findBusyIntervals(employeeId, rangeStart, rangeEnd, { sess
 /**
  * Write-time race guard — re-checked right before the transactional insert in case two
  * people booked the same slot within seconds of each other off the same availability list.
+ * Requires a BOOKING_BUFFER_MINUTES gap on both sides of every existing appointment, not
+ * just a literal non-overlap — matches the padding applied in availability.service.js so
+ * a slot the visitor saw as free can never be rejected here (or vice versa).
  */
 export async function findOverlappingAppointments(employeeId, startTime, endTime, excludeId = null, { session } = {}) {
   if (!employeeId) return [];
   const filter = {
     $or: [{ employee: employeeId }, { assignedTo: employeeId }],
     status: { $in: BLOCKING_STATUSES },
-    startTime: { $lt: endTime },
-    endTime: { $gt: startTime },
+    startTime: { $lt: new Date(endTime.getTime() + BUFFER_MS) },
+    endTime: { $gt: new Date(startTime.getTime() - BUFFER_MS) },
   };
   if (excludeId) filter._id = { $ne: excludeId };
   return Appointment.find(filter).session(session || null).lean();
