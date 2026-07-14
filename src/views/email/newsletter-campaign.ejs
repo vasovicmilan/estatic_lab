@@ -1,0 +1,10 @@
+<%- include("_layout", {
+  title: campaign.subject || "Novosti",
+  preheader: campaign.subject || "",
+  body: `
+    ${campaign.body || ""}
+    <p style="font-size:12px; color:#999; line-height:1.6; margin:24px 0 0;">
+      Ne želite više da primate ove poruke? <a href="${unsubscribeUrl}" style="color:#7a5c3e;">Odjavite se ovde</a>.
+    </p>
+  `
+}) %>

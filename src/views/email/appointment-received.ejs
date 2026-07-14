@@ -1,0 +1,20 @@
+<%- include("_layout", {
+  title: "Zahtev za termin primljen",
+  preheader: "Vaš zahtev za termin je primljen i čeka potvrdu",
+  body: `
+    <h1 style="font-size:20px; color:#333; margin:0 0 16px;">Zahtev primljen${typeof firstName !== 'undefined' && firstName ? ', ' + firstName : ''}!</h1>
+    <p style="font-size:14px; color:#555; line-height:1.6; margin:0 0 16px;">
+      Primili smo vaš zahtev za termin. Javićemo vam se čim ga terapeut potvrdi.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9f7f5; border-radius:6px; margin:0 0 16px;">
+      <tr><td style="padding:16px; font-size:14px; color:#333;">
+        <strong>Usluga:</strong> ${appointment.usluga?.naziv || "-"}<br>
+        <strong>Termin:</strong> ${appointment.termin?.pocetak || "-"}<br>
+        <strong>Cena:</strong> ${appointment.konacnaCena || "-"}
+      </td></tr>
+    </table>
+    <p style="text-align:center; margin:32px 0;">
+      <a href="${manageUrl}" style="background-color:#7a5c3e; color:#ffffff; padding:12px 28px; border-radius:4px; text-decoration:none; font-size:14px; font-weight:bold; display:inline-block;">Pregledaj moje termine</a>
+    </p>
+  `
+}) %>

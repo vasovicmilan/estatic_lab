@@ -1,0 +1,13 @@
+<%- include("_layout", {
+  title: "Dobrodošli u newsletter",
+  preheader: "Uspešno ste se prijavili na naš newsletter",
+  body: `
+    <h1 style="font-size:20px; color:#333; margin:0 0 16px;">Dobrodošli!</h1>
+    <p style="font-size:14px; color:#555; line-height:1.6; margin:0 0 16px;">
+      Uspešno ste se prijavili na ${SITE_NAME} newsletter. Javljaćemo vam se sa novostima, akcijama i savetima.
+    </p>
+    <p style="font-size:12px; color:#999; line-height:1.6; margin:0;">
+      Ako se predomislite, možete se <a href="${unsubscribeUrl}" style="color:#7a5c3e;">odjaviti ovde</a> u bilo kom trenutku.
+    </p>
+  `
+}) %>

@@ -1,0 +1,17 @@
+<%- include("_layout", {
+  title: "Termin otkazan",
+  preheader: "Vaš termin je otkazan",
+  body: `
+    <h1 style="font-size:20px; color:#333; margin:0 0 16px;">Termin otkazan${typeof firstName !== 'undefined' && firstName ? ', ' + firstName : ''}</h1>
+    <p style="font-size:14px; color:#555; line-height:1.6; margin:0 0 16px;">
+      Vaš termin je otkazan. Ako želite, možete zakazati novi termin u bilo kom trenutku.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9f7f5; border-radius:6px; margin:0 0 16px;">
+      <tr><td style="padding:16px; font-size:14px; color:#333;">
+        <strong>Usluga:</strong> ${appointment.usluga?.naziv || "-"}<br>
+        <strong>Termin:</strong> ${appointment.termin?.pocetak || "-"}
+        ${appointment.razlogOtkazivanja ? `<br><strong>Razlog:</strong> ${appointment.razlogOtkazivanja}` : ""}
+      </td></tr>
+    </table>
+  `
+}) %>

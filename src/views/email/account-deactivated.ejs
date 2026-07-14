@@ -1,0 +1,11 @@
+<%- include("_layout", {
+  title: "Nalog deaktiviran",
+  preheader: "Vaš nalog je deaktiviran",
+  body: `
+    <h1 style="font-size:20px; color:#333; margin:0 0 16px;">Nalog deaktiviran${typeof firstName !== 'undefined' && firstName ? ', ' + firstName : ''}</h1>
+    <p style="font-size:14px; color:#555; line-height:1.6; margin:0 0 16px;">
+      Vaš nalog je uspešno deaktiviran. Žao nam je što odlazite — ako se predomislite ili je ovo bila greška,
+      kontaktirajte nas na <a href="mailto:${SUPPORT_EMAIL}" style="color:#7a5c3e;">${SUPPORT_EMAIL}</a>.
+    </p>
+  `
+}) %>
