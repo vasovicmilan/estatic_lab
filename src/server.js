@@ -1,6 +1,8 @@
 import "dotenv/config";
 import mongoose from "mongoose";
 import app from "./app.js";
+import "./events/listeners/email.listener.js";
+import "./events/listeners/telegram.listener.js";
 import { initTelegramBot, stopTelegramBot } from "./integrations/telegram/telegram.provider.js";
 import { logInfo, logError } from "./utils/logger.util.js";
 

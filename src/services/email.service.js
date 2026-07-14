@@ -87,10 +87,16 @@ export async function sendAppointmentCancelledEmail({ email, firstName }, appoin
   return sendEmail({ to: email, subject: `Termin otkazan — ${SITE_NAME}`, html });
 }
 
-// generic fallback for rejected/completed status changes
+// generic fallback for rejected/completed/no_show status changes
 export async function sendAppointmentStatusUpdateEmail({ email, firstName }, appointment, status) {
   const html = await renderTemplate("appointment-status-update", { firstName, appointment, status });
   return sendEmail({ to: email, subject: `Status termina ažuriran — ${SITE_NAME}`, html });
+}
+
+// sent to the EMPLOYEE when an appointment is (re)assigned to them by an admin
+export async function sendAppointmentReassignedEmail({ email, firstName }, appointment) {
+  const html = await renderTemplate("appointment-reassigned-employee", { firstName, appointment, manageUrl: `${BASE_URL}/moj-nalog/termini` });
+  return sendEmail({ to: email, subject: `Novi termin dodeljen — ${SITE_NAME}`, html });
 }
 
 export async function notifyAdminNewAppointment(appointment) {
@@ -101,6 +107,18 @@ export async function notifyAdminNewAppointment(appointment) {
 export async function notifyAdminAppointmentCancelled(appointment) {
   const html = await renderTemplate("admin-appointment-cancelled", { appointment });
   return sendEmail({ to: ADMIN_EMAIL, subject: `Termin otkazan — ${SITE_NAME}`, html });
+}
+
+// ==================== PACKAGES ====================
+
+export async function sendPackagePurchaseCreatedEmail({ email, firstName }, purchase) {
+  const html = await renderTemplate("package-purchase-created", { firstName, purchase, manageUrl: `${BASE_URL}/nalog/paketi` });
+  return sendEmail({ to: email, subject: `Vaš paket je aktiviran — ${SITE_NAME}`, html });
+}
+
+export async function sendPackagePurchaseCancelledEmail({ email, firstName }, purchase) {
+  const html = await renderTemplate("package-purchase-cancelled", { firstName, purchase });
+  return sendEmail({ to: email, subject: `Paket otkazan — ${SITE_NAME}`, html });
 }
 
 // ==================== MARKETING ====================
@@ -115,8 +133,8 @@ export async function notifyAdminNewTestimonial(testimonial) {
   return sendEmail({ to: ADMIN_EMAIL, subject: `Novi testimonijal čeka odobrenje — ${SITE_NAME}`, html });
 }
 
-export async function sendNewsletterWelcomeEmail({ email }) {
-  const html = await renderTemplate("newsletter-welcome", { unsubscribeUrl: `${BASE_URL}/newsletter/odjava?email=${encodeURIComponent(email)}` });
+export async function sendNewsletterWelcomeEmail({ email }, unsubscribeToken) {
+  const html = await renderTemplate("newsletter-welcome", { unsubscribeUrl: `${BASE_URL}/newsletter/odjava/${unsubscribeToken}` });
   return sendEmail({ to: email, subject: `Dobrodošli u ${SITE_NAME} newsletter`, html });
 }
 
@@ -127,7 +145,7 @@ export async function sendNewsletterCampaign(subscribers, campaign) {
       const html = await renderTemplate("newsletter-campaign", {
         email: subscriber.email,
         campaign,
-        unsubscribeUrl: `${BASE_URL}/newsletter/odjava?email=${encodeURIComponent(subscriber.email)}`,
+        unsubscribeUrl: `${BASE_URL}/newsletter/odjava/${subscriber.unsubscribeToken}`,
       });
       const result = await sendEmail({ to: subscriber.email, subject: campaign.subject, html });
       results.push({ email: subscriber.email, sent: true, messageId: result.messageId });
@@ -148,8 +166,11 @@ export default {
   sendAppointmentConfirmedEmail,
   sendAppointmentCancelledEmail,
   sendAppointmentStatusUpdateEmail,
+  sendAppointmentReassignedEmail,
   notifyAdminNewAppointment,
   notifyAdminAppointmentCancelled,
+  sendPackagePurchaseCreatedEmail,
+  sendPackagePurchaseCancelledEmail,
   notifyAdminNewContact,
   notifyAdminNewTestimonial,
   sendNewsletterWelcomeEmail,

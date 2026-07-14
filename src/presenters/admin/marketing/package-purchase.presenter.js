@@ -57,6 +57,7 @@ export function preparePackagePurchaseDetailsData(purchase) {
         type: "table",
         rows: [
           { label: "Korisnik", value: purchase.korisnik },
+          { label: "Email", value: purchase.korisnikEmail || "-" },
           { label: "Paket", value: purchase.paket },
           { label: "Status", value: purchase.status },
           { label: "Napomena", value: purchase.napomena || "-" },

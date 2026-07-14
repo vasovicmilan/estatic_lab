@@ -268,7 +268,7 @@ async function transitionStatus(appointmentId, nextStatus, actorId, actorRole, e
   const updated = await appointmentRepo.updateAppointmentById(appointmentId, { status: nextStatus, ...extra });
   logInfo("Appointment status changed", { appointmentId, from: appointment.status, to: nextStatus, actorId, actorRole });
 
-  eventEmitter.emit("appointment:status_changed", { appointmentId, status: nextStatus });
+  eventEmitter.emit("appointment:status_changed", { appointmentId, status: nextStatus, previousStatus: appointment.status });
 
   const populated = await getPopulatedAppointment(appointmentId);
   return mapAppointment(populated, actorRole, "detail");
@@ -333,6 +333,7 @@ export async function reassignAppointment(appointmentId, newEmployeeId, actorId)
   });
 
   logInfo("Appointment reassigned", { appointmentId, newEmployeeId, actorId });
+  eventEmitter.emit("appointment:reassigned", { appointmentId, newEmployeeId: newEmployeeId.toString() });
   const populated = await getPopulatedAppointment(updated._id);
   return mapAppointment(populated, "admin", "detail");
 }

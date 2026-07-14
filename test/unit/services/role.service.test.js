@@ -65,14 +65,34 @@ describe("role.service", () => {
     });
 
     it("rejects renaming to an already-taken name", async (t) => {
-      const existing = buildRole({ name: "employee" });
+      const existing = buildRole({ name: "editor" });
       t.mock.method(roleRepo, "findRoleById", async () => existing);
-      t.mock.method(roleRepo, "findRoleByName", async () => buildRole({ name: "admin" }));
+      t.mock.method(roleRepo, "findRoleByName", async () => buildRole({ name: "seo" }));
 
       await assert.rejects(
-        () => roleService.updateRoleById(existing._id.toString(), { name: "admin" }),
+        () => roleService.updateRoleById(existing._id.toString(), { name: "seo" }),
         (err) => err.statusCode === 409
       );
+    });
+
+    it("refuses to rename a reserved role (admin/employee/user)", async (t) => {
+      const existing = buildRole({ name: "employee" });
+      t.mock.method(roleRepo, "findRoleById", async () => existing);
+
+      await assert.rejects(
+        () => roleService.updateRoleById(existing._id.toString(), { name: "not-employee-anymore" }),
+        (err) => err.statusCode === 400
+      );
+    });
+
+    it("allows updating a reserved role's other fields (permissions, description) without renaming it", async (t) => {
+      const existing = buildRole({ name: "employee" });
+      t.mock.method(roleRepo, "findRoleById", async () => existing);
+      t.mock.method(roleRepo, "updateRoleById", async () => buildRole({ name: "employee", description: "updated" }));
+
+      const result = await roleService.updateRoleById(existing._id.toString(), { description: "updated" });
+
+      assert.equal(result.osnovno.naziv, "employee");
     });
   });
 
@@ -82,13 +102,18 @@ describe("role.service", () => {
       await assert.rejects(() => roleService.deleteRoleById("x"), (err) => err.statusCode === 400);
     });
 
-    it("deletes a non-default role", async (t) => {
-      t.mock.method(roleRepo, "findRoleById", async () => buildRole({ isDefault: false }));
+    it("deletes a non-default, non-reserved role", async (t) => {
+      t.mock.method(roleRepo, "findRoleById", async () => buildRole({ name: "editor", isDefault: false }));
       t.mock.method(roleRepo, "deleteRoleById", async () => true);
 
       const result = await roleService.deleteRoleById("x");
 
       assert.equal(result.success, true);
+    });
+
+    it("refuses to delete a reserved role (admin/employee/user) even if not marked isDefault", async (t) => {
+      t.mock.method(roleRepo, "findRoleById", async () => buildRole({ name: "admin", isDefault: false }));
+      await assert.rejects(() => roleService.deleteRoleById("x"), (err) => err.statusCode === 400);
     });
   });
 

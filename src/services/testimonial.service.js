@@ -41,7 +41,7 @@ export async function submitTestimonial(data) {
   });
 
   logInfo("Testimonial submitted", { testimonialId: created._id, name: created.name });
-  eventEmitter.emit("testimonial:submitted", { testimonialId: created._id, name: created.name, rating: created.rating });
+  eventEmitter.emit("testimonial:submitted", { testimonialId: created._id, name: created.name, rating: created.rating, message: created.message });
 
   return { message: "Hvala na utisku! Biće objavljen nakon provere." };
 }

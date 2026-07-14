@@ -24,8 +24,14 @@ describe("role.repository", () => {
       assert.equal(role.name, "admin");
     });
 
-    it("rejects a name outside the closed enum at the schema level", async () => {
-      await assert.rejects(() => roleRepo.createRole({ name: "superadmin" }));
+    it("accepts a custom role name outside the old closed set", async () => {
+      const role = await roleRepo.createRole({ name: "superadmin" });
+      assert.ok(role._id);
+      assert.equal(role.name, "superadmin");
+    });
+
+    it("rejects a name with an invalid format at the schema level", async () => {
+      await assert.rejects(() => roleRepo.createRole({ name: "Bad Name!" }));
     });
 
     it("rejects a duplicate role name (unique index)", async () => {

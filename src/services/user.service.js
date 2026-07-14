@@ -101,7 +101,7 @@ export async function registerUser(data) {
 
   logInfo("User registered", { userId: created._id, email: created.email, isFirstUser, roleName: role.name });
 
-  return { id: created._id.toString(), email: created.email, firstName: created.firstName, confirmToken: isFirstUser ? null : confirmToken, isFirstUser };
+  return { id: created._id.toString(), email: created.email, firstName: created.firstName, lastName: created.lastName, confirmToken: isFirstUser ? null : confirmToken, isFirstUser };
 }
 
 export async function findOrCreateGoogleUser(googleData) {

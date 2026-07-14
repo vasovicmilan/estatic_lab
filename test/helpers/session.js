@@ -1,12 +1,16 @@
 import { getCsrfToken } from "./csrf.js";
 import Role from "../../src/models/role.model.js";
 import userRepo from "../../src/repositories/user.repository.js";
+import { PERMISSIONS } from "../../src/models/role.model.js";
 
 export async function ensureRole(name) {
   const existing = await Role.findOne({ name });
   if (existing) return existing;
+
   const priority = name === "admin" ? 100 : name === "employee" ? 50 : 0;
-  return Role.create({ name, isDefault: name === "user", priority });
+  const permissions = name === "admin" ? PERMISSIONS : [];
+
+  return Role.create({ name, isDefault: name === "user", priority, permissions });
 }
 
 export async function registerAndLogin(agent, { email, roleName, firstName = "Test", lastName = "Korisnik" }) {

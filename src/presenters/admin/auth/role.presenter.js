@@ -1,3 +1,5 @@
+import { RESERVED_ROLE_NAMES } from "../../../models/role.model.js";
+
 export function prepareRoleListData(result, query = {}) {
   return {
     items: result.data,
@@ -75,6 +77,7 @@ export function prepareRoleDetailsData(role) {
 export function prepareRoleFormData(role = null, availablePermissions = []) {
   const isEdit = !!role;
   const values = isEdit ? role : { name: "", description: "", permissions: [], isDefault: false, priority: 0 };
+  const isReserved = isEdit && RESERVED_ROLE_NAMES.includes(values.name);
 
   return {
     formAction: isEdit ? `/admin/role/${role.id}` : "/admin/role",
@@ -83,15 +86,14 @@ export function prepareRoleFormData(role = null, availablePermissions = []) {
       {
         name: "name",
         label: "Naziv role",
-        type: "select",
+        type: "text",
         required: true,
         width: 6,
         value: values.name,
-        options: [
-          { value: "admin", label: "Admin" },
-          { value: "employee", label: "Zaposleni" },
-          { value: "user", label: "Korisnik" },
-        ],
+        disabled: isReserved,
+        help: isReserved
+          ? `"${values.name}" je rezervisan naziv i ne može biti promenjen — koristi se po nazivu na više mesta u sistemu.`
+          : "Malim slovima — brojevi, crtice i donje crte su dozvoljeni (2-32 karaktera), npr. \"seo\" ili \"blog-urednik\".",
       },
       { name: "priority", label: "Prioritet", type: "number", min: 0, width: 6, value: values.priority },
       { name: "description", label: "Opis", type: "textarea", rows: 3, width: 12, value: values.description, help: "Najviše 300 karaktera." },
@@ -102,6 +104,7 @@ export function prepareRoleFormData(role = null, availablePermissions = []) {
         width: 12,
         value: (values.permissions || []).map((p) => (typeof p === "object" ? p.value : p)),
         options: availablePermissions,
+        help: "\"Pristup admin panelu\" je obavezan da bi rola uopšte mogla da uđe u /admin — bez njega, ni jedna od ostalih permisija ovde neće imati efekta.",
       },
       { name: "isDefault", label: "Podrazumevana rola za nove korisnike", type: "checkbox", width: 6, value: values.isDefault },
     ],

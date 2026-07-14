@@ -2,6 +2,7 @@ import { formatDateTime, formatDate } from "../utils/date.time.util.js";
 
 export function translatePermission(permission) {
   const map = {
+    access_admin_panel: "Pristup Admin Panelu",
     view_dashboard: "Pregled dashboard-a",
 
     manage_users: "Upravljanje korisnicima",

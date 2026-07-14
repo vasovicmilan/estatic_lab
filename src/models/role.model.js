@@ -1,27 +1,20 @@
 import { Schema, model } from "mongoose";
 
-/**
- * Roles are a closed set on purpose — estatic_lab has exactly three kinds of actor
- * (admin, employee, user). Guests are not a role: an unauthenticated booking creates
- * a real User with status "guest" (see user.model.js) rather than a separate identity.
- *
- * `permissions` is deliberately an enum too, so a typo in a permission string fails
- * at the schema level instead of silently never matching an `admin.middleware.js` check.
- */
 export const RESERVED_ROLE_NAMES = ["admin", "employee", "user"];
 
 export const PERMISSIONS = [
+  "access_admin_panel",
   "manage_users",
   "manage_roles",
   "manage_employees",
   "manage_services",
   "manage_packages",
-  "manage_taxonomy", // categories & tags
+  "manage_taxonomy",
   "manage_blog",
-  "manage_appointments_all", // see/act on every appointment
-  "manage_appointments_assigned", // employee: only appointments assigned to them
-  "manage_own_appointments", // user: only their own appointments
-  "manage_marketing", // contact, newsletter, testimonials
+  "manage_appointments_all",
+  "manage_appointments_assigned",
+  "manage_own_appointments",
+  "manage_marketing",
   "manage_coupons",
   "view_dashboard",
 ];
@@ -32,7 +25,12 @@ const RoleSchema = new Schema(
       type: String,
       required: true,
       unique: true,
-      enum: RESERVED_ROLE_NAMES,
+      trim: true,
+      lowercase: true,
+      match: [
+        /^[a-z][a-z0-9 _-]{1,49}$/,
+        "Naziv role mora počinjati slovom i sadržati samo mala slova, brojeve, razmake, crtice ili donje crte (2-50 karaktera).",
+      ],
     },
 
     description: {
@@ -47,7 +45,6 @@ const RoleSchema = new Schema(
       },
     ],
 
-    // used by user.service.js to pick a role when none is specified at registration
     isDefault: {
       type: Boolean,
       default: false,

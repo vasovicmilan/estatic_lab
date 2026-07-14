@@ -3,12 +3,9 @@ import { PERMISSIONS } from "../../models/role.model.js";
 import { collectValidationErrors } from "./collect-validation-errors.js";
 import { booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
 
-// matches the schema-level format check in role.model.js — kept in sync deliberately
-// so a bad name fails here with a clean validation message instead of a raw
-// Mongoose ValidationError further down
-const ROLE_NAME_FORMAT = /^[a-z][a-z0-9_-]{1,31}$/;
-const ROLE_NAME_FORMAT_MESSAGE =
-  "Naziv mora počinjati slovom i sadržati samo mala slova, brojeve, crtice ili donje crte (2-32 karaktera)";
+
+const ROLE_NAME_FORMAT = /^[a-z][a-z0-9 _-]{1,49}$/;
+const ROLE_NAME_FORMAT_MESSAGE = "Naziv mora počinjati slovom i sadržati samo mala slova, brojeve, razmake, crtice ili donje crte (2-50 karaktera)";
 
 export const validateRoleCreate = [
   body("name")

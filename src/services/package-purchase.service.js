@@ -1,3 +1,4 @@
+import eventEmitter from "../events/event.emitter.js";
 import packagePurchaseRepo from "../repositories/package-purchase.repository.js";
 import packageRepo from "../repositories/package.repository.js";
 import couponService from "./coupon.service.js";
@@ -7,7 +8,7 @@ import { logInfo } from "../utils/logger.util.js";
 
 const adminPopulate = [
   { path: "package", select: "name" },
-  { path: "user", select: "firstName lastName" },
+  { path: "user", select: "firstName lastName email" },
   { path: "items.service", select: "name packages" }, // packages needed to resolve the variant name in the mapper
 ];
 
@@ -61,7 +62,9 @@ export async function createPurchaseForUser(userId, packageId, adminId, { expire
   }
 
   logInfo("Package purchase recorded", { packagePurchaseId: created._id, userId, packageId, adminId });
-  return getPurchaseById(created._id);
+  const purchase = await getPurchaseById(created._id);
+  eventEmitter.emit("package_purchase:created", { packagePurchaseId: created._id.toString() });
+  return purchase;
 }
 
 export async function getPurchaseById(packagePurchaseId) {
@@ -196,7 +199,9 @@ export async function cancelPurchase(packagePurchaseId, adminId) {
   const updated = await packagePurchaseRepo.updatePackagePurchaseById(packagePurchaseId, { status: "cancelled" });
   if (!updated) notFound("Kupljeni paket");
   logInfo("Package purchase cancelled", { packagePurchaseId, adminId });
-  return getPurchaseById(updated._id);
+  const purchase = await getPurchaseById(updated._id);
+  eventEmitter.emit("package_purchase:cancelled", { packagePurchaseId: updated._id.toString() });
+  return purchase;
 }
 
 export async function updatePurchase(packagePurchaseId, { expiresAt, notes } = {}) {

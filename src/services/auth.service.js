@@ -11,6 +11,7 @@ export async function register(data) {
     eventEmitter.emit("user:registered", {
       email: result.email,
       firstName: result.firstName,
+      lastName: result.lastName,
       userId: result.id,
       confirmToken: result.confirmToken,
     });
@@ -70,7 +71,7 @@ export async function googleAuth(googleData) {
   const token = signJwt({ id: user._id, email: user.email, role: user.role?._id || user.role });
 
   if (isNewUser) {
-    eventEmitter.emit("user:registered", { email: user.email, firstName: user.firstName, userId: user._id, provider: "google" });
+    eventEmitter.emit("user:registered", { email: user.email, firstName: user.firstName, lastName: user.lastName, userId: user._id, provider: "google" });
   }
 
   return {

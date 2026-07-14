@@ -1,7 +1,7 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 import { decryptPhone } from "../utils/phone.util.js";
 
-function translateStatus(status) {
+export function translateStatus(status) {
   const map = {
     pending: "Na čekanju",
     confirmed: "Potvrđeno",
@@ -230,6 +230,7 @@ export function mapAppointment(appointment, role, viewType = "short") {
 }
 
 export default {
+  translateStatus,
   mapAppointmentForAdminShort,
   mapAppointmentsForAdminList,
   mapAppointmentForAdminDetail,

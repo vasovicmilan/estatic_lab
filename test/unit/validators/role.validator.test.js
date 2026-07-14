@@ -23,9 +23,15 @@ describe("role.validator", () => {
       assert.ok(res.body.errors.name);
     });
 
-    it("rejects a name outside the closed role set", async () => {
+    it("accepts a custom role name outside the old closed set", async () => {
       const agent = buildValidatorHarness(validateRoleCreate);
-      const res = await agent.post("/test").send({ name: "superadmin" });
+      const res = await agent.post("/test").send({ name: "seo" });
+      assert.equal(res.status, 200);
+    });
+
+    it("rejects a name with an invalid format (spaces, uppercase, symbols)", async () => {
+      const agent = buildValidatorHarness(validateRoleCreate);
+      const res = await agent.post("/test").send({ name: "Blog Editor!" });
       assert.equal(res.status, 400);
       assert.ok(res.body.errors.name);
     });
@@ -64,9 +70,15 @@ describe("role.validator", () => {
       assert.equal(res.status, 200);
     });
 
-    it("rejects an invalid name when one is given", async () => {
+    it("accepts a custom role name when one is given", async () => {
       const agent = buildValidatorHarness(validateRoleUpdate);
-      const res = await agent.post("/test").send({ name: "superadmin" });
+      const res = await agent.post("/test").send({ name: "blog-editor" });
+      assert.equal(res.status, 200);
+    });
+
+    it("rejects a name with an invalid format when one is given", async () => {
+      const agent = buildValidatorHarness(validateRoleUpdate);
+      const res = await agent.post("/test").send({ name: "Blog Editor!" });
       assert.equal(res.status, 400);
     });
   });

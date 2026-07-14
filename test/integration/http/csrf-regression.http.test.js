@@ -2,25 +2,7 @@ import { describe, it, before, after, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import request from "supertest";
 import { createTestApp, closeTestApp, clearTestDatabase } from "../setup/test-app.js";
-import { getCsrfToken } from "../../helpers/csrf.js";
-import Role from "../../../src/models/role.model.js";
-import userRepo from "../../../src/repositories/user.repository.js";
-
-async function loginAsAdmin(agent) {
-  await Role.create({ name: "admin", isDefault: false, priority: 100 });
-  const { token } = await getCsrfToken(agent, "/registracija");
-  await agent.post("/registracija").type("form").send({
-    CSRFToken: token,
-    email: "admin@example.com",
-    password: "lozinka123",
-    passwordConfirm: "lozinka123",
-    firstName: "Admin",
-    lastName: "Adminovic",
-  });
-
-  const { token: loginToken } = await getCsrfToken(agent, "/prijava");
-  await agent.post("/prijava").type("form").send({ email: "admin@example.com", password: "lozinka123", CSRFToken: loginToken });
-}
+import { registerAndLogin } from "../../helpers/session.js";
 
 function assertRealCsrfToken(html, pageLabel) {
   const matches = [...html.matchAll(/name="CSRFToken" value="([^"]*)"/g)];
@@ -58,7 +40,10 @@ describe("CSRF token regression sweep (HTTP)", () => {
 
   it("every admin 'new record' form page renders a real CSRF token", async () => {
     const agent = request.agent(app);
-    await loginAsAdmin(agent);
+    // registerAndLogin's ensureRole("admin") grants every permission in PERMISSIONS
+    // (see test/helpers/session.js) — needed now that /admin is permission-gated,
+    // not roleName-gated (see admin.middleware.js / admin.routes.js)
+    await registerAndLogin(agent, { email: "admin@example.com", roleName: "admin" });
 
     const adminPages = [
       "/admin/kategorije/dodavanje",

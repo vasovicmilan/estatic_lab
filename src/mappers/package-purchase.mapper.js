@@ -52,6 +52,7 @@ export function mapPackagePurchaseForAdminDetail(p) {
   return {
     id: p._id.toString(),
     korisnik: p.user?.firstName ? `${p.user.firstName} ${p.user.lastName || ""}`.trim() : p.user?.toString(),
+    korisnikEmail: p.user?.email || null,
     paket: p.package?.name || p.package?.toString(),
     stavke: mapItems(p.items),
     originalnaCena: p.originalPrice,
