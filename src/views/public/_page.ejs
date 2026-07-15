@@ -22,49 +22,70 @@
         <%- include("../includes/components/faq", { faq: placeholderFaq }) %>
 
       <% } else if (typeof showForm !== 'undefined' && showForm) { %>
-        <% if (data.errors && data.errors.general) { %><div class="alert alert-danger"><%= data.errors.general %></div><% } %>
-        <form action="/kontakt" method="POST">
-          <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
-          <input type="text" name="nickname" class="d-none" tabindex="-1" autocomplete="off">
-          <div class="row g-3 mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Ime</label>
-              <input type="text" name="firstName" class="form-control" value="<%= data.formData.firstName || '' %>" required>
-              <% if (data.errors && data.errors.firstName) { %><div class="text-danger small mt-1"><%= data.errors.firstName %></div><% } %>
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <div class="card shadow-sm">
+              <div class="card-body p-4">
+                <% if (data.errors && data.errors.general) { %><div class="alert alert-danger"><%= data.errors.general %></div><% } %>
+                <form action="/kontakt" method="POST">
+                  <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+                  <input type="text" name="nickname" class="d-none" tabindex="-1" autocomplete="off">
+                  <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Ime</label>
+                      <input type="text" name="firstName" class="form-control" value="<%= data.formData.firstName || '' %>" required>
+                      <% if (data.errors && data.errors.firstName) { %><div class="text-danger small mt-1"><%= data.errors.firstName %></div><% } %>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Prezime</label>
+                      <input type="text" name="lastName" class="form-control" value="<%= data.formData.lastName || '' %>" required>
+                      <% if (data.errors && data.errors.lastName) { %><div class="text-danger small mt-1"><%= data.errors.lastName %></div><% } %>
+                    </div>
+                  </div>
+                  <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Email</label>
+                      <input type="email" name="email" class="form-control" value="<%= data.formData.email || '' %>" required>
+                      <% if (data.errors && data.errors.email) { %><div class="text-danger small mt-1"><%= data.errors.email %></div><% } %>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Telefon</label>
+                      <input type="text" name="phone" class="form-control" value="<%= data.formData.phone || '' %>">
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Tema</label>
+                    <input type="text" name="topic" class="form-control" value="<%= data.formData.topic || '' %>">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Poruka</label>
+                    <textarea name="message" class="form-control" rows="5" required><%= data.formData.message || '' %></textarea>
+                    <% if (data.errors && data.errors.message) { %><div class="text-danger small mt-1"><%= data.errors.message %></div><% } %>
+                  </div>
+                  <div class="form-check mb-3">
+                    <input type="checkbox" name="consent" value="true" class="form-check-input" id="consentCheck" required>
+                    <label class="form-check-label small" for="consentCheck">Slažem se sa <a href="/politika-privatnosti">politikom privatnosti</a>.</label>
+                    <% if (data.errors && data.errors.consent) { %><div class="text-danger small mt-1"><%= data.errors.consent %></div><% } %>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Pošalji poruku</button>
+                </form>
+              </div>
             </div>
-            <div class="col-md-6">
-              <label class="form-label">Prezime</label>
-              <input type="text" name="lastName" class="form-control" value="<%= data.formData.lastName || '' %>" required>
-              <% if (data.errors && data.errors.lastName) { %><div class="text-danger small mt-1"><%= data.errors.lastName %></div><% } %>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="card shadow-sm">
+              <div class="card-body p-4">
+                <h2 class="h5 mb-3">Kontakt podaci</h2>
+                <ul class="list-unstyled mb-0">
+                  <li class="mb-3"><i class="bi bi-geo-alt text-primary me-2"></i>Novi Sad, Srbija</li>
+                  <li class="mb-3"><i class="bi bi-envelope text-primary me-2"></i><a href="mailto:info@estaticlab.rs" class="text-decoration-none">info@estaticlab.rs</a></li>
+                  <li><i class="bi bi-telephone text-primary me-2"></i><a href="tel:+381600000000" class="text-decoration-none">+381 60 000 0000</a></li>
+                </ul>
+              </div>
             </div>
           </div>
-          <div class="row g-3 mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Email</label>
-              <input type="email" name="email" class="form-control" value="<%= data.formData.email || '' %>" required>
-              <% if (data.errors && data.errors.email) { %><div class="text-danger small mt-1"><%= data.errors.email %></div><% } %>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Telefon</label>
-              <input type="text" name="phone" class="form-control" value="<%= data.formData.phone || '' %>">
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Tema</label>
-            <input type="text" name="topic" class="form-control" value="<%= data.formData.topic || '' %>">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Poruka</label>
-            <textarea name="message" class="form-control" rows="5" required><%= data.formData.message || '' %></textarea>
-            <% if (data.errors && data.errors.message) { %><div class="text-danger small mt-1"><%= data.errors.message %></div><% } %>
-          </div>
-          <div class="form-check mb-3">
-            <input type="checkbox" name="consent" value="true" class="form-check-input" id="consentCheck" required>
-            <label class="form-check-label small" for="consentCheck">Slažem se sa <a href="/politika-privatnosti">politikom privatnosti</a>.</label>
-            <% if (data.errors && data.errors.consent) { %><div class="text-danger small mt-1"><%= data.errors.consent %></div><% } %>
-          </div>
-          <button type="submit" class="btn btn-primary">Pošalji poruku</button>
-        </form>
+        </div>
 
       <% } else { %>
         <p class="text-muted"><%= pageDescription %></p>

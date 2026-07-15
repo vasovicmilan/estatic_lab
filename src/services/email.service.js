@@ -9,9 +9,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const TEMPLATES_PATH = path.join(__dirname, "..", "views", "emails");
 
-const BASE_URL = process.env.BASE_URL || "https://www.estaticlab.rs";
+const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
 const SITE_NAME = process.env.SITE_NAME || "Estatic Lab";
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "podrska@estaticlab.rs";
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "estetik.lab.ns@gmail.com";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || SUPPORT_EMAIL;
 
 async function renderTemplate(templateName, data) {

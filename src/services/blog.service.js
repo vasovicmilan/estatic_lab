@@ -24,7 +24,11 @@ export async function getBlogLandingData({ limit = 9, page = 1, search = "" } = 
 export async function getBlogCategoryData(categorySlug, { limit = 9, page = 1 } = {}) {
   if (!categorySlug) validationError("categorySlug");
 
-  const category = await categoryService.getCategoryBySlugAndDomain(categorySlug, "post");
+  const [category, categories, tags] = await Promise.all([
+    categoryService.getCategoryBySlugAndDomain(categorySlug, "post"),
+    categoryService.getPublicCategories("post"),
+    tagService.getPublicTags("post"),
+  ]);
   const posts = await postService.findPublishedPosts({ limit, page, filters: { category: category._id } });
 
   const seo = buildPageSeo({
@@ -37,6 +41,8 @@ export async function getBlogCategoryData(categorySlug, { limit = 9, page = 1 } 
   return {
     ...posts,
     category: { id: category._id.toString(), naziv: category.name, slug: category.slug },
+    categories,
+    tags,
     seo,
   };
 }
@@ -44,7 +50,11 @@ export async function getBlogCategoryData(categorySlug, { limit = 9, page = 1 } 
 export async function getBlogTagData(tagSlug, { limit = 9, page = 1 } = {}) {
   if (!tagSlug) validationError("tagSlug");
 
-  const tag = await tagService.getTagBySlugAndDomain(tagSlug, "post");
+  const [tag, categories, tags] = await Promise.all([
+    tagService.getTagBySlugAndDomain(tagSlug, "post"),
+    categoryService.getPublicCategories("post"),
+    tagService.getPublicTags("post"),
+  ]);
   const posts = await postService.findPublishedPosts({ limit, page, filters: { tag: tag._id } });
 
   const seo = buildPageSeo({
@@ -57,6 +67,8 @@ export async function getBlogTagData(tagSlug, { limit = 9, page = 1 } = {}) {
   return {
     ...posts,
     tag: { id: tag._id.toString(), naziv: tag.name, slug: tag.slug },
+    categories,
+    tags,
     seo,
   };
 }

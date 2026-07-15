@@ -169,6 +169,26 @@
       <a href="<%= data.hero.ctaUrl %>" class="btn btn-light btn-lg">Zakažite termin</a>
     </div>
   </section>
+
+  <!-- Location -->
+  <% if (data.map && data.map.embedUrl) { %>
+    <section class="container py-5">
+        <h2 class="h3 mb-4 text-center">Gde se nalazimo</h2>
+        <p class="text-center mt-3">
+          <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+          <strong><%= data.map.address %></strong>
+        </p>
+        <div class="ratio ratio-21x9">
+          <iframe
+            src="<%= data.map.embedUrl %>"
+            title="<%= data.map.address %>"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </section>
+  <% } %>
 </main>
 
 <%- include("../includes/footer") %>

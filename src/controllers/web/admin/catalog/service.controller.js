@@ -46,7 +46,7 @@ function buildStep1Payload(req) {
   const data = { ...req.body };
 
   data.image = req.uploadedFiles?.serviceImage
-    ? { img: req.uploadedFiles.serviceImage.img, imgDesc: req.body.imageDesc.trim() }
+    ? { img: req.uploadedFiles.serviceImage.img, imgDesc: (req.body.imageDesc || "").trim() }
     : null;
 
   data.gallery = req.uploadedFiles?.gallery
@@ -79,7 +79,7 @@ function buildServicePayload(req, existing = {}) {
   const data = { ...req.body };
 
   data.image = req.uploadedFiles?.serviceImage
-    ? { img: req.uploadedFiles.serviceImage.img, imgDesc: req.body.imageDesc.trim() }
+    ? { img: req.uploadedFiles.serviceImage.img, imgDesc: (req.body.imageDesc || "").trim() }
     : existing.image || null;
 
   data.gallery = req.uploadedFiles?.gallery

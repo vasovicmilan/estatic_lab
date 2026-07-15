@@ -3,6 +3,7 @@ import ImageSchema from "./schemas/image.schema.js";
 import VideoSchema from "./schemas/video.schema.js";
 import FAQSchema from "./schemas/faq.schema.js";
 import ServiceFeatureSchema from "./schemas/service-feature.schema.js";
+import { badRequest } from "../utils/error.util.js";
 import ServicePackageSchema from "./schemas/service-package.schema.js";
 import ComparisonRowSchema from "./schemas/comparison-row.schema.js";
 
@@ -89,9 +90,7 @@ function validateComparisonTable(doc) {
   if (doc.comparisonTable?.length && doc.comparisonColumns?.length) {
     for (const row of doc.comparisonTable) {
       if (row.values.length !== doc.comparisonColumns.length) {
-        throw new Error(
-          `Red "${row.label}" ima ${row.values.length} vrednosti, a očekivano je ${doc.comparisonColumns.length}.`
-        );
+        badRequest(`Red "${row.label}" ima ${row.values.length} vrednosti, a očekivano je ${doc.comparisonColumns.length}.`);
       }
     }
   }
@@ -99,9 +98,9 @@ function validateComparisonTable(doc) {
 
 function validatePublishInvariants(doc) {
   if (!doc.isActive) return;
-  if (!doc.image) throw new Error("Objavljena usluga mora imati sliku.");
+  if (!doc.image) badRequest("Objavljena usluga mora imati sliku.");
   if (!doc.packages?.length) {
-    throw new Error("Objavljena usluga mora imati bar jednu varijantu (paket) za zakazivanje.");
+    badRequest("Objavljena usluga mora imati bar jednu varijantu (paket) za zakazivanje.");
   }
 }
 

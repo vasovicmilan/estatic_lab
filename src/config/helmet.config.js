@@ -35,14 +35,26 @@ export function setupHelmet(app) {
 
     const csp = {
       "default-src": ["'self'"],
-      "script-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://accounts.google.com/gsi/client"],
+      "script-src": [
+        "'self'",
+        "'unsafe-inline'",
+        "https://cdn.jsdelivr.net",
+        "https://accounts.google.com/gsi/client",
+      ],
       "style-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
       "font-src": ["'self'", "https://cdn.jsdelivr.net", "data:"],
       "img-src": ["'self'", "data:", "blob:", "https:"],
       "media-src": ["'self'", "blob:"],
       "connect-src": ["'self'", "https://accounts.google.com"],
       "base-uri": ["'self'"],
-      "frame-src": ["'self'", "https://accounts.google.com"],
+      // ★ ADD Google Maps domains to frame-src ★
+      "frame-src": [
+        "'self'",
+        "https://accounts.google.com",
+        "https://www.google.com",      // main Google Maps embed
+        "https://maps.google.com",     // alternative
+        "https://maps.gstatic.com",    // sometimes used for static resources
+      ],
       "object-src": ["'none'"],
       "frame-ancestors": ["'self'"],
       "form-action": ["'self'"],

@@ -195,6 +195,27 @@ h1, h2, h3, h4, h5, h6,
   border-color: var(--bs-border-color);
 }
 
+/* ---- Active state (list-group, nav-pills, dropdown-item) — these default to
+   Bootstrap's blue and aren't derived from --bs-primary at runtime. Scoped to
+   contexts where "active" fills a background (list-group category/tag sidebars,
+   nav-pills account tabs, dropdowns) — deliberately NOT a blanket .nav-link.active
+   rule, since a plain top-nav link's active state is just a color change, not a
+   filled pill (see the .navbar-light rule above for that case). ---- */
+.list-group-item.active {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+  background-color: var(--bs-primary);
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+  background-color: var(--bs-primary);
+}
+
 /* ---- Pagination ---- */
 .page-link {
   color: var(--bs-primary);

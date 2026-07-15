@@ -1,6 +1,3 @@
-// Static marketing copy — no service/DB backing needed, these are fixed selling
-// points rather than content an admin manages. Icons are Bootstrap Icons classes
-// (already loaded site-wide via head.ejs), rendered with the existing `bi` classes.
 const WHY_US = [
   {
     icon: "bi-cpu",
@@ -31,19 +28,24 @@ export function prepareHomeData({
   latestPosts = [],
   bestPackages = [],
 } = {}) {
+  const addressText = "Maksima Gorkog 6b, Novi Sad 21120";
+
+  const mapParam =
+    "!1m18!1m12!1m3!1d2808.909996570131!2d19.843611977018323!3d45.24961274772971!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x475b106c892d2953%3A0x78a7de03d4dbf444!2sMaksima%20Gorkog%206b%2C%20Novi%20Sad%2021120!5e0!3m2!1sen!2srs!4v1784121266023!5m2!1sen!2srs";
+
   return {
     hero: {
-      eyebrow: "Estatic Lab wellness centar",
+      eyebrow: "Estatik Lab wellness centar",
       title: "Vaš prostor za opuštanje i negu",
-      subtitle: "Masaže, ESMA tretmani i nega lica i tela u mirnom, opuštajućem ambijentu — uz stručan tim i individualan pristup svakom klijentu.",
+      subtitle:
+        "Masaže, ESMA tretmani i nega lica i tela u mirnom, opuštajućem ambijentu — uz stručan tim i individualan pristup svakom klijentu.",
       ctaLabel: "Zakažite termin",
       ctaUrl: "/usluge",
       secondaryCtaLabel: "Pogledajte pakete",
       secondaryCtaUrl: "/paketi",
-      // drop a real photo at this path (src/public/img/hero.jpg) — the hero section
-      // gracefully falls back to a plain gradient background if it's missing
       image: "/img/hero.jpg",
     },
+
     whyUs: WHY_US,
     highlightedServices,
     featuredExperts,
@@ -51,6 +53,11 @@ export function prepareHomeData({
     bestPackages,
     latestPosts,
     testimonialFormAction: "/testimonials/posalji",
+
+    map: {
+      address: addressText,
+      embedUrl: `https://www.google.com/maps/embed?pb=${mapParam}`,
+    },
   };
 }
 
