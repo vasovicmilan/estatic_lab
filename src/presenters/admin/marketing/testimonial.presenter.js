@@ -72,6 +72,13 @@ export function prepareTestimonialDetailsData(testimonial) {
           { label: "Povezan korisnik", value: testimonial.korisnik?.ime || "Anonimni gost" },
         ],
       },
+      {
+        title: "Slika",
+        type: "custom",
+        content: testimonial.osnovno.slika
+          ? `<img src="${testimonial.osnovno.slika.url}" alt="${testimonial.osnovno.slika.alt || ""}" width="120" class="img-fluid rounded-circle">`
+          : "Nema slike",
+      },
     ],
     sidebar: [
       {

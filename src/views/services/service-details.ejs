@@ -81,12 +81,18 @@
 
   <% if (data.testimonials && data.testimonials.length > 0) { %>
     <h2 class="h4 mb-3">Utisci klijenata</h2>
-    <div class="row g-4">
+    <div class="row g-4 mb-5">
       <% data.testimonials.forEach(function(t) { %>
         <div class="col-md-4"><%- include("../includes/components/card-testimonial", { testimonial: t }) %></div>
       <% }) %>
     </div>
   <% } %>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <%- include("../includes/components/testimonial-form", { serviceId: data.service.id }) %>
+    </div>
+  </div>
 </main>
 
 <%- include("../includes/footer") %>

@@ -72,6 +72,15 @@ export function prepareUserDetailsData(user, roleOptions = []) {
           },
         ],
       },
+      ...(user.avatar
+        ? [
+            {
+              title: "Avatar",
+              type: "custom",
+              content: `<img src="${user.avatar}" alt="${user.imePrezime}" width="80" class="img-fluid rounded-circle">`,
+            },
+          ]
+        : []),
     ],
     sidebar: [
       {

@@ -66,6 +66,22 @@ export function prepareServiceDetailsData(service, { employeeCount = 0 } = {}) {
         ],
       },
       {
+        title: "Slika",
+        type: "custom",
+        content: service.slika ? `<img src="${service.slika.url}" alt="${service.slika.alt || ""}" width="200" class="img-fluid rounded">` : "Nema slike",
+      },
+      ...(service.galerija && service.galerija.length > 0
+        ? [
+            {
+              title: "Galerija",
+              type: "custom",
+              content: service.galerija
+                .map((img) => `<img src="${img.url}" alt="${img.alt || ""}" width="120" class="img-fluid rounded me-2 mb-2">`)
+                .join(""),
+            },
+          ]
+        : []),
+      {
         title: "Varijante (paketi usluge)",
         type: "variants",
         variants: service.varijante,

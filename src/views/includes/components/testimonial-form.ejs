@@ -1,0 +1,59 @@
+<%
+  // Optional locals passed in via include("...", { serviceId, packageId }) —
+  // ties the testimonial to whichever service/package detail page it's on.
+  // Neither is required: on general pages (e.g. home) both are simply omitted.
+  const _serviceId = typeof serviceId !== "undefined" ? serviceId : null;
+  const _packageId = typeof packageId !== "undefined" ? packageId : null;
+%>
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <h2 class="h5 mb-3">Ostavite utisak</h2>
+
+    <form action="/testimonials/posalji" method="POST">
+      <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+      <input type="text" name="nickname" class="d-none" tabindex="-1" autocomplete="off">
+      <% if (_serviceId) { %><input type="hidden" name="service" value="<%= _serviceId %>"><% } %>
+      <% if (_packageId) { %><input type="hidden" name="package" value="<%= _packageId %>"><% } %>
+
+      <% if (typeof isLoggedIn !== "undefined" && isLoggedIn && user) { %>
+        <%
+          const _fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+        %>
+        <input type="hidden" name="name" value="<%= _fullName %>">
+        <input type="hidden" name="email" value="<%= user.email %>">
+        <p class="text-muted small mb-3">Ostavljate utisak kao <strong><%= _fullName %></strong>.</p>
+      <% } else { %>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Ime</label>
+            <input type="text" name="name" class="form-control" required minlength="2" maxlength="100">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Email (opciono)</label>
+            <input type="email" name="email" class="form-control">
+          </div>
+        </div>
+      <% } %>
+
+      <div class="mb-3">
+        <label class="form-label">Ocena</label>
+        <select name="rating" class="form-select" required>
+          <option value="" selected disabled>Izaberite ocenu</option>
+          <option value="5">5 — Odlično</option>
+          <option value="4">4 — Vrlo dobro</option>
+          <option value="3">3 — Dobro</option>
+          <option value="2">2 — Osrednje</option>
+          <option value="1">1 — Loše</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Vaš utisak</label>
+        <textarea name="message" class="form-control" rows="4" required minlength="10" maxlength="1000"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Pošalji utisak</button>
+      <p class="text-muted small mt-2 mb-0">Utisak će biti objavljen nakon provere.</p>
+    </form>
+  </div>
+</div>

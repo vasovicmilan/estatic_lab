@@ -28,6 +28,15 @@ const TestimonialSchema = new Schema(
       default: null,
     },
 
+    // optional link to which package the review is about — mutually exclusive
+    // with `service` in practice (set by whichever detail page the form was on),
+    // but not enforced at the schema level
+    package: {
+      type: Schema.Types.ObjectId,
+      ref: "Package",
+      default: null,
+    },
+
     rating: {
       type: Number,
       required: true,

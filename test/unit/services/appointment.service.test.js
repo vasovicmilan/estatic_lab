@@ -250,6 +250,7 @@ describe("bookAppointment — employee assignment", () => {
     t.mock.method(mongoose, "startSession", async () => fakeSession());
     t.mock.method(userService, "findUserByEmail", async () => null);
     t.mock.method(userService, "createGuestUser", async () => buildUser());
+    t.mock.method(userService, "findUserById", async () => buildUser());
     t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
     t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
     t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());

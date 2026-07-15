@@ -38,9 +38,11 @@ export async function findTestimonials({
 }
 
 // public "what our clients say" widget — approved only, featured first
-export async function findApprovedTestimonials({ limit = 10, featuredOnly = false, session } = {}) {
+export async function findApprovedTestimonials({ limit = 10, featuredOnly = false, service = null, package: pkg = null, session } = {}) {
   const filter = { status: "approved" };
   if (featuredOnly) filter.isFeatured = true;
+  if (service) filter.service = service;
+  if (pkg) filter.package = pkg;
   return Testimonial.find(filter)
     .sort({ isFeatured: -1, createdAt: -1 })
     .limit(limit)

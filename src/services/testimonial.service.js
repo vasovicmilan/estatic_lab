@@ -33,7 +33,8 @@ export async function submitTestimonial(data) {
     name: data.name,
     email: data.email || "",
     user: data.userId || null,
-    service: data.serviceId || null,
+    service: data.service || null,
+    package: data.package || null,
     rating: data.rating,
     message: data.message,
     image: data.image || null,
@@ -72,8 +73,8 @@ export async function deleteTestimonialById(testimonialId) {
 }
 
 // public "what our clients say" widget
-export async function getApprovedTestimonials({ limit = 10, featuredOnly = false } = {}) {
-  const testimonials = await testimonialRepo.findApprovedTestimonials({ limit, featuredOnly });
+export async function getApprovedTestimonials({ limit = 10, featuredOnly = false, service = null, package: pkg = null } = {}) {
+  const testimonials = await testimonialRepo.findApprovedTestimonials({ limit, featuredOnly, service, package: pkg });
   return mapTestimonialsForPublic(testimonials);
 }
 

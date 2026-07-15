@@ -67,6 +67,22 @@ export function preparePostDetailsData(post) {
         ],
       },
       {
+        title: "Naslovna slika",
+        type: "custom",
+        content: post.slika ? `<img src="${post.slika.url}" alt="${post.slika.alt || ""}" width="200" class="img-fluid rounded">` : "Nema slike",
+      },
+      ...(post.galerija && post.galerija.length > 0
+        ? [
+            {
+              title: "Galerija",
+              type: "custom",
+              content: post.galerija
+                .map((img) => `<img src="${img.url}" alt="${img.alt || ""}" width="120" class="img-fluid rounded me-2 mb-2">`)
+                .join(""),
+            },
+          ]
+        : []),
+      {
         title: "Sadržaj",
         type: "blocks",
         blocks: post.sadrzaj,

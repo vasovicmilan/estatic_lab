@@ -29,6 +29,8 @@ describe("blog.service", () => {
     it("resolves the category then filters posts by its id", async (t) => {
       const categoryId = id();
       t.mock.method(categoryService, "getCategoryBySlugAndDomain", async () => ({ _id: categoryId, name: "Masaze", slug: "masaze", shortDescription: "" }));
+      t.mock.method(categoryService, "getPublicCategories", async () => []);
+      t.mock.method(tagService, "getPublicTags", async () => []);
       let filtersUsed;
       t.mock.method(postService, "findPublishedPosts", async ({ filters }) => {
         filtersUsed = filters;

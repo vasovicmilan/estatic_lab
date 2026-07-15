@@ -1,4 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // multi-phase form progress bar (see admin/_form.ejs) — the width has to be
+  // applied via JS because Bootstrap's .progress-bar has no width without it
+  document.querySelectorAll("[data-progress-bar]").forEach((bar) => {
+    const wrapper = bar.closest("[data-progress]");
+    if (!wrapper) return;
+    const percent = parseFloat(wrapper.dataset.progress);
+    if (!isNaN(percent)) bar.style.width = `${percent}%`;
+  });
+
   const modalEl = document.getElementById("confirmActionModal");
   if (!modalEl || typeof bootstrap === "undefined") return;
 
@@ -7,15 +16,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const confirmBtn = document.getElementById("confirmActionButton");
   let pendingForm = null;
 
-  // Intercepts submission of ANY form with data-confirm="..." anywhere on the page —
-  // shows the shared modal with that message instead of submitting immediately.
   document.addEventListener("submit", (event) => {
     const form = event.target;
     if (!(form instanceof HTMLFormElement)) return;
 
     const message = form.dataset.confirm;
     if (!message) return;
-    if (form.dataset.confirmed === "true") return; // already confirmed once — let it through
+    if (form.dataset.confirmed === "true") return;
 
     event.preventDefault();
     pendingForm = form;
@@ -36,8 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
     pendingForm = null;
   });
 
-  // if the modal is dismissed (Cancel, backdrop click, Esc) without confirming,
-  // just drop the pending form — nothing submits
   modalEl.addEventListener("hidden.bs.modal", () => {
     pendingForm = null;
   });

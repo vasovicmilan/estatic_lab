@@ -18,6 +18,10 @@ export const validateTestimonialSubmit = [
     .optional({ values: "falsy" })
     .isMongoId().withMessage("Neispravna usluga"),
 
+  body("package")
+    .optional({ values: "falsy" })
+    .isMongoId().withMessage("Neispravan paket"),
+
   body("rating")
     .notEmpty().withMessage("Ocena je obavezna")
     .isInt({ min: 1, max: 5 }).withMessage("Ocena mora biti između 1 i 5"),

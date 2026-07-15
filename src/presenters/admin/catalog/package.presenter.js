@@ -49,6 +49,22 @@ export function preparePackageDetailsData(pkg) {
         ],
       },
       {
+        title: "Slika",
+        type: "custom",
+        content: pkg.slika ? `<img src="${pkg.slika.url}" alt="${pkg.slika.alt || ""}" width="200" class="img-fluid rounded">` : "Nema slike",
+      },
+      ...(pkg.galerija && pkg.galerija.length > 0
+        ? [
+            {
+              title: "Galerija",
+              type: "custom",
+              content: pkg.galerija
+                .map((img) => `<img src="${img.url}" alt="${img.alt || ""}" width="120" class="img-fluid rounded me-2 mb-2">`)
+                .join(""),
+            },
+          ]
+        : []),
+      {
         title: "Usluge u paketu",
         type: "table",
         rows: pkg.stavke.map((s) => ({ label: `${s.usluga.naziv} — ${s.varijanta.naziv}`, value: `${s.brojSeansi} seansi` })),

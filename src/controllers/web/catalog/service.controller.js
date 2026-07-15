@@ -90,7 +90,7 @@ export async function serviceDetails(req, res, next) {
     const { slug } = req.params;
 
     const service = await serviceService.getServiceBySlug(slug);
-    const testimonials = await testimonialService.getApprovedTestimonials({ limit: 6 });
+    const testimonials = await testimonialService.getApprovedTestimonials({ limit: 6, service: service.id });
 
     const viewData = prepareServiceDetailData(service, { testimonials });
     const seo = await generateSeo("service", service, req);

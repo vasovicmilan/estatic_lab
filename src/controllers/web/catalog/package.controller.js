@@ -1,4 +1,5 @@
 import * as packageService from "../../../services/package.service.js";
+import * as testimonialService from "../../../services/testimonial.service.js";
 import { preparePackageListData, preparePackageDetailData } from "../../../presenters/catalog/package.presenter.js";
 import { generateSeo } from "../../../seo/index.js";
 import { logError } from "../../../utils/logger.util.js";
@@ -26,7 +27,8 @@ export async function packageDetails(req, res, next) {
   try {
     const { slug } = req.params;
     const pkg = await packageService.getPackageBySlug(slug);
-    const viewData = preparePackageDetailData(pkg);
+    const testimonials = await testimonialService.getApprovedTestimonials({ limit: 6, package: pkg.id });
+    const viewData = preparePackageDetailData(pkg, { testimonials });
     const seo = await generateSeo("page", { title: pkg.naziv, description: pkg.kratakOpis, slug: `/paketi/${pkg.slug}` }, req);
 
     return res.render("services/package-details", {

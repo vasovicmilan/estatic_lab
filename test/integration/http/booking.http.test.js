@@ -90,7 +90,7 @@ describe("public booking flow (HTTP)", () => {
   });
 
   describe("POST /zakazivanje/potvrda", () => {
-    it("books an appointment as a guest, auto-assigning the only available employee", async () => {
+    it("books an appointment as a guest, leaving it unassigned even though an employee is available", async () => {
       const service = await createBookableService();
       const variantId = service.packages[0]._id.toString();
       const startTime = futureStartTime().toISOString();
@@ -119,7 +119,10 @@ describe("public booking flow (HTTP)", () => {
       const appointments = await appointmentRepo.findAppointments({});
       assert.equal(appointments.data.length, 1);
       assert.equal(appointments.data[0].contactSnapshot.email, "gost@example.com");
-      assert.ok(appointments.data[0].assignedTo, "the only available employee should have been auto-assigned");
+      // assignment is admin-driven now, not automatic — the booking only checks that
+      // SOMEONE is free before accepting it, but doesn't commit to whoever that is
+      assert.equal(appointments.data[0].employee, null, "no employee should be auto-assigned at booking time");
+      assert.equal(appointments.data[0].assignedTo, null, "the appointment should stay unassigned until an admin assigns it");
 
       const guest = await userRepo.findUserByEmail("gost@example.com");
       assert.ok(guest, "a guest account should have been created for a first-time booker");
