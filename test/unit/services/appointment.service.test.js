@@ -194,6 +194,85 @@ function fakeSession() {
   };
 }
 
+describe("bookAppointment — employee assignment", () => {
+  it("leaves the appointment unassigned when the customer doesn't choose a specific employee, even though someone is free", async (t) => {
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(userService, "findUserByEmail", async () => null);
+    t.mock.method(userService, "createGuestUser", async () => buildUser());
+    t.mock.method(userService, "findUserById", async () => buildUser());
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
+    // someone IS free (a valid slot to book) — but nothing should ever write that
+    // employee onto the appointment; assignment is admin-driven now, not automatic
+    t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => buildEmployee());
+    t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+
+    let createdPayload;
+    t.mock.method(appointmentRepo, "createAppointment", async (data) => {
+      createdPayload = data;
+      return { ...data, _id: id() };
+    });
+
+    await appointmentService.bookAppointment({
+      serviceId: id().toString(),
+      servicePackageId: id().toString(),
+      startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      contact: { firstName: "Ana", email: "ana@example.com" },
+    });
+
+    assert.equal(createdPayload.employee, null);
+    assert.equal(createdPayload.assignedTo, null);
+    assert.equal(createdPayload.assignedBy, null);
+    assert.equal(createdPayload.assignedAt, null);
+  });
+
+  it("rejects the booking when no employee is free at all, even though nobody was explicitly chosen", async (t) => {
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(userService, "findUserByEmail", async () => null);
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
+    t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => null);
+
+    await assert.rejects(
+      () =>
+        appointmentService.bookAppointment({
+          serviceId: id().toString(),
+          servicePackageId: id().toString(),
+          startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          contact: { firstName: "Ana", email: "ana@example.com" },
+        }),
+      (err) => err.statusCode === 400
+    );
+  });
+
+  it("honors an explicitly chosen employee — that's a real customer choice, not automatic assignment", async (t) => {
+    const chosen = buildEmployee();
+
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(userService, "findUserByEmail", async () => null);
+    t.mock.method(userService, "createGuestUser", async () => buildUser());
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
+    t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+
+    let createdPayload;
+    t.mock.method(appointmentRepo, "createAppointment", async (data) => {
+      createdPayload = data;
+      return { ...data, _id: id() };
+    });
+
+    await appointmentService.bookAppointment({
+      serviceId: id().toString(),
+      servicePackageId: id().toString(),
+      employeeId: chosen._id.toString(),
+      startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      contact: { firstName: "Ana", email: "ana@example.com" },
+    });
+
+    assert.equal(String(createdPayload.employee), String(chosen._id));
+    assert.equal(createdPayload.assignedTo, null);
+  });
+});
+
 describe("bookAppointment — package purchase payment", () => {
   it("rejects packagePurchaseId when the booker isn't logged in", async () => {
     await assert.rejects(

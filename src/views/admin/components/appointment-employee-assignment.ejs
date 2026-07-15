@@ -1,0 +1,18 @@
+<% if (!data.employeeOptions || data.employeeOptions.length === 0) { %>
+  <p class="text-muted small mb-0">Nijedan zaposleni trenutno ne pruža ovu uslugu.</p>
+<% } else { %>
+  <form action="/admin/termini/<%= data.appointmentId %>/preraspodeli" method="POST">
+    <input type="hidden" name="_method" value="PUT">
+    <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+    <label class="form-label small text-muted" for="assignEmployeeSelect">
+      <%= data.currentEmployeeId ? "Promeni terapeuta" : "Dodeli terapeuta" %>
+    </label>
+    <select name="employeeId" id="assignEmployeeSelect" class="form-select form-select-sm mb-2" required>
+      <option value="">Izaberite terapeuta</option>
+      <% data.employeeOptions.forEach(function(employee) { %>
+        <option value="<%= employee.id %>" <%= data.currentEmployeeId === employee.id ? "selected" : "" %>><%= employee.name %></option>
+      <% }) %>
+    </select>
+    <button type="submit" class="btn btn-outline-primary btn-sm w-100"><%= data.currentEmployeeId ? "Promeni" : "Dodeli" %></button>
+  </form>
+<% } %>

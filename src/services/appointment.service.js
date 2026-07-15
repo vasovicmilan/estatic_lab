@@ -118,16 +118,20 @@ export async function bookAppointment(input) {
   }
 
   let chosenEmployeeId = null;
-  let assignedEmployeeId = null;
 
   if (employeeId) {
     const overlapping = await appointmentRepo.findOverlappingAppointments(employeeId, start, end);
     if (overlapping.length > 0) badRequest("Izabrani termin više nije dostupan, izaberite drugi");
     chosenEmployeeId = employeeId;
   } else {
-    const freeEmployee = await availabilityService.findFirstAvailableEmployee(serviceId, start, end);
-    if (!freeEmployee) badRequest("Nijedan terapeut nije dostupan za izabrani termin, izaberite drugi");
-    assignedEmployeeId = freeEmployee._id;
+    // no employee explicitly chosen by the customer — verify the slot is actually
+    // deliverable by SOMEONE before accepting the booking, but don't silently commit
+    // to whichever employee happens to be free first. The appointment is created
+    // unassigned; an admin picks the therapist from the appointment details page
+    // (see reassignAppointment) — see appointment-status-transitions.js/admin.routes.js
+    // for why this moved from automatic to admin-driven.
+    const someoneFree = await availabilityService.findFirstAvailableEmployee(serviceId, start, end);
+    if (!someoneFree) badRequest("Nijedan terapeut nije dostupan za izabrani termin, izaberite drugi");
   }
 
   let couponResult = null;
@@ -161,9 +165,13 @@ export async function bookAppointment(input) {
 
       // race guard — re-check right before the write in case two people booked the
       // same slot within seconds of each other off the same availability list
-      const employeeToCheck = chosenEmployeeId || assignedEmployeeId;
-      const stillFree = await appointmentRepo.findOverlappingAppointments(employeeToCheck, start, end, null, { session });
-      if (stillFree.length > 0) badRequest("Izabrani termin je upravo zauzet, pokušajte ponovo");
+      if (chosenEmployeeId) {
+        const stillFree = await appointmentRepo.findOverlappingAppointments(chosenEmployeeId, start, end, null, { session });
+        if (stillFree.length > 0) badRequest("Izabrani termin je upravo zauzet, pokušajte ponovo");
+      } else {
+        const stillSomeoneFree = await availabilityService.findFirstAvailableEmployee(serviceId, start, end, { session });
+        if (!stillSomeoneFree) badRequest("Izabrani termin je upravo zauzet, pokušajte ponovo");
+      }
 
       const discountApplied = couponResult?.discountAmount || 0;
 
@@ -178,9 +186,9 @@ export async function bookAppointment(input) {
             price: variant.totalPrice,
           },
           employee: chosenEmployeeId,
-          assignedTo: assignedEmployeeId,
-          assignedBy: assignedEmployeeId ? "system" : null,
-          assignedAt: assignedEmployeeId ? new Date() : null,
+          assignedTo: null,
+          assignedBy: null,
+          assignedAt: null,
           startTime: start,
           endTime: end,
           status: "pending",

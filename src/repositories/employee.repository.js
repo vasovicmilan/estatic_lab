@@ -26,11 +26,15 @@ export async function findEmployeeByUserId(userId, { populateFields = [], sessio
   return query.lean();
 }
 
-// used by the availability engine to find every employee who can perform a given service
-export async function findEmployeesByService(serviceId, { onlyActive = true, session } = {}) {
+// used by the availability engine to find every employee who can perform a given
+// service, and by the admin appointment-assignment dropdown (which passes
+// populateFields to get display names)
+export async function findEmployeesByService(serviceId, { onlyActive = true, populateFields = [], session } = {}) {
   const filter = { services: serviceId };
   if (onlyActive) filter.isActive = true;
-  return Employee.find(filter).session(session || null).lean();
+  let query = Employee.find(filter).session(session || null);
+  query = applyPopulate(query, populateFields);
+  return query.lean();
 }
 
 export async function findEmployees({

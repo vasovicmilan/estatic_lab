@@ -81,6 +81,7 @@ export function mapAppointmentForAdminDetail(appointment) {
       telefon: getUserPhone(appointment),
     },
     usluga: {
+      id: appointment.service?._id?.toString() || appointment.service?.toString() || null,
       naziv: appointment.variant?.name || appointment.service?.name,
       trajanje: appointment.variant?.duration ? `${appointment.variant.duration} min` : null,
       cena: appointment.variant?.price != null ? `${appointment.variant.price.toFixed(2)} RSD` : null,
@@ -91,6 +92,7 @@ export function mapAppointmentForAdminDetail(appointment) {
     },
     status: translateStatus(appointment.status),
     statusRaw: appointment.status,
+    terapeutId: appointment.employee?._id?.toString() || appointment.employee?.toString() || null,
     terapeut: appointment.employee ? getEmployeeName(appointment.employee) : null,
     dodeljenTerapeut: appointment.assignedTo ? getEmployeeName(appointment.assignedTo) : null,
     napomena: appointment.note || null,

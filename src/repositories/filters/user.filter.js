@@ -1,7 +1,7 @@
 /**
  * Builds the Mongo filter object for User list queries.
  */
-export function buildUserFilter({ search = "", role = null, status = null, provider = null } = {}) {
+export function buildUserFilter({ search = "", role = null, status = null, provider = null, excludeId = null } = {}) {
   const filter = {};
 
   if (search) {
@@ -15,6 +15,7 @@ export function buildUserFilter({ search = "", role = null, status = null, provi
   if (role) filter.role = role;
   if (status) filter.status = status;
   if (provider) filter.provider = provider;
+  if (excludeId) filter._id = { $ne: excludeId };
 
   return filter;
 }

@@ -14,6 +14,7 @@ export async function listUsers(req, res, next) {
       status: status || undefined,
       role: role || undefined,
       provider: provider || undefined,
+      excludeUserId: req.session?.user?.id,
       page: parseInt(page, 10) || 1,
       limit: parseInt(limit, 10) || 10,
     });

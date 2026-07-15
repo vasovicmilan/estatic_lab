@@ -23,12 +23,12 @@ function validateRegistrationData(data) {
   }
 }
 
-export async function listUsers({ search = "", status, role, provider, limit = 10, page = 1 } = {}) {
+export async function listUsers({ search = "", status, role, provider, excludeUserId = null, limit = 10, page = 1 } = {}) {
   const result = await userRepo.findUsers({
     search,
     limit,
     page,
-    filters: { status, role, provider },
+    filters: { status, role, provider, excludeId: excludeUserId },
     populateFields: [{ path: "role", select: "name permissions" }],
   });
   return { data: mapUsersForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };

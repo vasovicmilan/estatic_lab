@@ -135,6 +135,19 @@ export async function findEmployeesByServiceRaw(serviceId) {
   return employeeRepo.findEmployeesByService(serviceId);
 }
 
+// {id, name} pairs for the admin appointment-assignment dropdown — only employees
+// who can actually perform this specific service
+export async function getEmployeeOptionsForService(serviceId) {
+  if (!serviceId) validationError("serviceId");
+  const employees = await employeeRepo.findEmployeesByService(serviceId, {
+    populateFields: [{ path: "userId", select: "firstName lastName" }],
+  });
+  return employees.map((e) => ({
+    id: e._id.toString(),
+    name: `${e.userId?.firstName || ""} ${e.userId?.lastName || ""}`.trim() || "Nepoznato",
+  }));
+}
+
 export default {
   listEmployees,
   getEmployeeById,
@@ -146,4 +159,5 @@ export default {
   manageWorkingHours,
   deleteEmployeeById,
   findEmployeesByServiceRaw,
+  getEmployeeOptionsForService,
 };

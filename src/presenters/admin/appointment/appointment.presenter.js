@@ -50,7 +50,7 @@ export function prepareAppointmentListData(result, query = {}) {
   };
 }
 
-export function prepareAppointmentDetailsData(appointment) {
+export function prepareAppointmentDetailsData(appointment, { employeeOptions = [] } = {}) {
   const allowedNextStatuses = getAllowedStatuses(appointment.statusRaw, "admin");
 
   const actionMap = {
@@ -87,7 +87,6 @@ export function prepareAppointmentDetailsData(appointment) {
           { label: "Početak", value: appointment.termin.pocetak },
           { label: "Kraj", value: appointment.termin.kraj },
           { label: "Terapeut", value: appointment.terapeut || "Nije dodeljen" },
-          { label: "Dodeljeni terapeut (sistem)", value: appointment.dodeljenTerapeut || "-" },
         ],
       },
       {
@@ -109,6 +108,16 @@ export function prepareAppointmentDetailsData(appointment) {
           appointmentId: appointment.id,
           currentStatus: appointment.status,
           actions: statusActions,
+        },
+      },
+      {
+        title: "Terapeut",
+        type: "custom",
+        content: "appointment-employee-assignment",
+        data: {
+          appointmentId: appointment.id,
+          currentEmployeeId: appointment.terapeutId || null,
+          employeeOptions,
         },
       },
       {
