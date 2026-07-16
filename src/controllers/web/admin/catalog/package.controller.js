@@ -3,6 +3,8 @@ import * as serviceService from "../../../../services/service.service.js";
 import * as categoryService from "../../../../services/category.service.js";
 import * as tagService from "../../../../services/tag.service.js";
 import { preparePackageListData, preparePackageDetailsData, preparePackageFormData } from "../../../../presenters/admin/catalog/package.presenter.js";
+import { prepareMediaFormData } from "../../../../presenters/admin/media-form.presenter.js";
+import { buildGalleryPayload, buildVideosPayload } from "../../../../utils/media-form.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
@@ -240,6 +242,91 @@ export async function updatePackage(req, res, next) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Galerija i video — separate page from the main edit form (see admin/_details.ejs)
+// ---------------------------------------------------------------------------
+export async function editPackageGalleryForm(req, res, next) {
+  try {
+    const { packageId } = req.params;
+    const pkg = await packageService.getPackageForEdit(packageId);
+    const formData = prepareMediaFormData(pkg, {
+      entityLabel: "paketa",
+        listUrl: "/admin/paketi",
+        listLabel: "Paketi",
+      backUrl: `/admin/paketi/detalji/${packageId}`,
+      submitUrl: `/admin/paketi/${packageId}/galerija`,
+    });
+
+    return res.render("admin/_media-form", {
+      pageTitle: `Galerija i video — ${pkg.name}`,
+      pageDescription: pkg.shortDescription || pkg.name,
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
+    });
+  } catch (error) {
+    logError("[editPackageGalleryForm] Greška pri učitavanju forme za galeriju", error, {
+      packageId: req.params.packageId,
+      userId: req.session?.user?.id,
+    });
+    next(error);
+  }
+}
+
+export async function updatePackageGallery(req, res, next) {
+  const { packageId } = req.params;
+  try {
+    if (req.validationErrors) {
+      logWarn(`[updatePackageGallery] Validacione greške za packageId=${packageId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
+      const pkg = await packageService.getPackageForEdit(packageId);
+      const formData = prepareMediaFormData(pkg, {
+        entityLabel: "paketa",
+        listUrl: "/admin/paketi",
+        listLabel: "Paketi",
+        backUrl: `/admin/paketi/detalji/${packageId}`,
+        submitUrl: `/admin/paketi/${packageId}/galerija`,
+      });
+      return res.status(400).render("admin/_media-form", {
+        pageTitle: `Galerija i video — ${pkg.name}`,
+        pageDescription: pkg.shortDescription || pkg.name,
+        data: { ...formData, errors: req.validationErrors, csrfToken: res.locals.csrfToken },
+      });
+    }
+
+    const gallery = buildGalleryPayload(req);
+    const videos = buildVideosPayload(req);
+
+    const updated = await packageService.updatePackageById(packageId, { gallery, videos });
+    logInfo(`[updatePackageGallery] Galerija/video paketa #${packageId} ažurirani`, { packageId, adminId: req.session?.user?.id });
+
+    return flashAndRedirect(req, res, "success", "Galerija i video su uspešno ažurirani", `/admin/paketi/detalji/${updated.id}`);
+  } catch (error) {
+    logError("[updatePackageGallery] Greška pri ažuriranju galerije/videa", error, {
+      packageId,
+      body: req.body,
+      userId: req.session?.user?.id,
+    });
+
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode === 400 || statusCode === 404) {
+      const pkg = await packageService.getPackageForEdit(packageId).catch(() => null);
+      if (pkg) {
+        const formData = prepareMediaFormData(pkg, {
+          entityLabel: "paketa",
+        listUrl: "/admin/paketi",
+        listLabel: "Paketi",
+          backUrl: `/admin/paketi/detalji/${packageId}`,
+          submitUrl: `/admin/paketi/${packageId}/galerija`,
+        });
+        return res.status(statusCode).render("admin/_media-form", {
+          pageTitle: `Galerija i video — ${pkg.name}`,
+          pageDescription: pkg.shortDescription || pkg.name,
+          data: { ...formData, errors: { general: message }, csrfToken: res.locals.csrfToken },
+        });
+      }
+    }
+    next(error);
+  }
+}
+
 export async function deletePackage(req, res, next) {
   try {
     const { packageId } = req.params;
@@ -262,5 +349,7 @@ export default {
   editPackageForm,
   createPackage,
   updatePackage,
+  editPackageGalleryForm,
+  updatePackageGallery,
   deletePackage,
 };

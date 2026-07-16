@@ -106,6 +106,40 @@ describe("employee.service", () => {
     });
   });
 
+  describe("updateEmployeeById", () => {
+    it("converts an empty-string expert (unselected <select>) to null instead of passing it to Mongoose", async (t) => {
+      let capturedUpdate;
+      t.mock.method(employeeRepo, "updateEmployeeById", async (id, data) => {
+        capturedUpdate = data;
+        return buildEmployee();
+      });
+      t.mock.method(employeeRepo, "findEmployeeById", async () => buildEmployee());
+
+      await employeeService.updateEmployeeById(id().toString(), { expert: "", services: [] });
+
+      assert.equal(capturedUpdate.expert, null, "empty string must be sanitized to null, not passed through as-is");
+    });
+
+    it("filters out falsy entries from services without dropping valid ids", async (t) => {
+      let capturedUpdate;
+      t.mock.method(employeeRepo, "updateEmployeeById", async (id, data) => {
+        capturedUpdate = data;
+        return buildEmployee();
+      });
+      t.mock.method(employeeRepo, "findEmployeeById", async () => buildEmployee());
+
+      const validId = id().toString();
+      await employeeService.updateEmployeeById(id().toString(), { services: [validId, ""] });
+
+      assert.deepEqual(capturedUpdate.services, [validId]);
+    });
+
+    it("throws 404 when the employee doesn't exist", async (t) => {
+      t.mock.method(employeeRepo, "updateEmployeeById", async () => null);
+      await assert.rejects(() => employeeService.updateEmployeeById(id().toString(), {}), (err) => err.statusCode === 404);
+    });
+  });
+
   describe("manageWorkingHours", () => {
     it("forbids a non-admin employee from editing someone else's working hours", async (t) => {
       const targetEmployee = buildEmployee({ userId: id() });

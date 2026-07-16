@@ -2,9 +2,10 @@ import employeeRepo from "../repositories/employee.repository.js";
 import appointmentRepo from "../repositories/appointment.repository.js";
 import serviceService from "./service.service.js";
 import { validationError, badRequest } from "../utils/error.util.js";
-import { BOOKING_BUFFER_MINUTES } from "../config/booking.config.js";
+import { BOOKING_BUFFER_MINUTES, SLOT_GRID_MINUTES } from "../config/booking.config.js";
 
 const BUFFER_MS = BOOKING_BUFFER_MINUTES * 60000;
+const GRID_MS = SLOT_GRID_MINUTES * 60000;
 
 const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
@@ -57,18 +58,39 @@ function subtractBusyIntervals(freeInterval, busyIntervals) {
 }
 
 /**
- * Steps through a free interval in `durationMinutes` increments, keeping only steps
- * that fully fit before the interval's end.
+ * Rounds a Date up to the next SLOT_GRID_MINUTES boundary (relative to local
+ * midnight, so it lines up with the HH:MM working-hour strings regardless of
+ * timezone offset), e.g. 09:07 -> 09:30, 09:30 -> 09:30 (already aligned).
+ */
+function ceilToGrid(date) {
+  const rounded = new Date(date);
+  const totalMinutes = rounded.getHours() * 60 + rounded.getMinutes();
+  const remainder = totalMinutes % SLOT_GRID_MINUTES;
+  const hasSubMinutePart = rounded.getSeconds() > 0 || rounded.getMilliseconds() > 0;
+
+  if (remainder === 0 && !hasSubMinutePart) return rounded;
+
+  const minutesToAdd = remainder === 0 ? SLOT_GRID_MINUTES : SLOT_GRID_MINUTES - remainder;
+  rounded.setMinutes(rounded.getMinutes() + minutesToAdd, 0, 0);
+  return rounded;
+}
+
+/**
+ * Steps through a free interval on the fixed SLOT_GRID_MINUTES grid, offering
+ * a start time wherever a full `durationMinutes` booking still fits before the
+ * interval ends — independent of the service's own duration, so start times
+ * always land on a clean grid mark (09:00, 09:30, 10:00...) rather than
+ * drifting by whatever the service happens to last.
  */
 function sliceIntoSlots(interval, durationMinutes) {
   const slots = [];
-  const stepMs = durationMinutes * 60000;
-  let cursor = new Date(interval.start);
+  const durationMs = durationMinutes * 60000;
+  let cursor = ceilToGrid(interval.start);
 
-  while (cursor.getTime() + stepMs <= interval.end.getTime()) {
-    const slotEnd = new Date(cursor.getTime() + stepMs);
+  while (cursor.getTime() + durationMs <= interval.end.getTime()) {
+    const slotEnd = new Date(cursor.getTime() + durationMs);
     slots.push({ startTime: new Date(cursor), endTime: slotEnd });
-    cursor = slotEnd;
+    cursor = new Date(cursor.getTime() + GRID_MS);
   }
 
   return slots;

@@ -9,6 +9,8 @@ import {
   validateServiceId,
 } from "../../../middlewares/validators/service.validator.js";
 import { validateSearch } from "../../../middlewares/validators/search.validator.js";
+import { validateMediaUpdate } from "../../../middlewares/validators/media.validator.js";
+import { parseJsonFields } from "../../../middlewares/parse-json-fields.middleware.js";
 import { csrfAfterMulter } from "../../../config/csrf.config.js";
 import { processMultipleUploads } from "../../../config/multer.config.js";
 
@@ -17,6 +19,11 @@ const router = Router();
 const serviceUploads = processMultipleUploads([
   { name: "serviceImage", maxCount: 1, type: "services" },
   { name: "gallery", maxCount: 10, type: "services" },
+]);
+
+const serviceGalleryUploads = processMultipleUploads([
+  { name: "gallery", maxCount: 10, type: "services" },
+  { name: "video", maxCount: 5, type: "services" },
 ]);
 
 router.get("/", validateSearch, ServiceController.listServices);
@@ -64,6 +71,18 @@ router.put(
 );
 
 router.put("/:serviceId/seo", validateServiceId, validateServiceSeo, ServiceController.updateServiceSeo);
+
+// --- gallery & video, managed separately from the main edit form ---
+router.get("/:serviceId/galerija", validateServiceId, ServiceController.editServiceGalleryForm);
+router.put(
+  "/:serviceId/galerija",
+  validateServiceId,
+  ...serviceGalleryUploads,
+  csrfAfterMulter,
+  parseJsonFields("videos"),
+  validateMediaUpdate,
+  ServiceController.updateServiceGallery
+);
 
 router.delete("/:serviceId", validateServiceId, ServiceController.deleteService);
 

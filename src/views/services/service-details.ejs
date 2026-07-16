@@ -56,6 +56,8 @@
     </div>
   <% } %>
 
+  <%- include("../includes/components/gallery-video", { galerija: data.service.galerija, videi: data.service.videi }) %>
+
   <% if (data.service.tabelaPoredjenja && data.service.tabelaPoredjenja.redovi && data.service.tabelaPoredjenja.redovi.length > 0) { %>
     <h2 class="h4 mb-3">Poređenje</h2>
     <div class="table-responsive mb-5">

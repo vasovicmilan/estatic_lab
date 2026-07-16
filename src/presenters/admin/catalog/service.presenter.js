@@ -52,6 +52,7 @@ export function prepareServiceDetailsData(service, { employeeCount = 0 } = {}) {
   return {
     backUrl: "/admin/usluge",
     editUrl: `/admin/usluge/izmena/${service.id}`,
+    galleryUrl: `/admin/usluge/${service.id}/galerija`,
     sections: [
       {
         title: "Osnovni podaci",

@@ -1,0 +1,35 @@
+<% if (galerija && galerija.length > 0) { %>
+  <h2 class="h4 mb-3">Galerija</h2>
+  <div class="row g-3 mb-5">
+    <% galerija.forEach(function(img) { %>
+      <% if (img && img.url) { %>
+        <div class="col-md-4 col-6">
+          <img src="<%= img.url %>" alt="<%= img.alt || '' %>" class="img-fluid rounded" style="aspect-ratio:4/3;object-fit:cover;width:100%;">
+        </div>
+      <% } %>
+    <% }) %>
+  </div>
+<% } %>
+
+<% if (videi && videi.length > 0) { %>
+  <h2 class="h4 mb-3">Video</h2>
+  <div class="row g-3 mb-5">
+    <% videi.forEach(function(v) { %>
+      <% if (v && v.url) { %>
+        <div class="col-md-6">
+          <% if (v.isExternal) { %>
+            <div class="ratio ratio-16x9 rounded overflow-hidden">
+              <iframe src="<%= v.url %>" title="<%= v.title || 'Video' %>" allowfullscreen loading="lazy"></iframe>
+            </div>
+          <% } else { %>
+            <video controls class="w-100 rounded" <% if (v.thumbnail) { %>poster="<%= v.thumbnail %>"<% } %>>
+              <source src="<%= v.url %>">
+              Vaš browser ne podržava prikaz videa.
+            </video>
+          <% } %>
+          <% if (v.title) { %><p class="small text-muted mt-1 mb-0"><%= v.title %></p><% } %>
+        </div>
+      <% } %>
+    <% }) %>
+  </div>
+<% } %>

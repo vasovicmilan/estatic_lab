@@ -37,6 +37,7 @@ export function preparePackageDetailsData(pkg) {
   return {
     backUrl: "/admin/paketi",
     editUrl: `/admin/paketi/izmena/${pkg.id}`,
+    galleryUrl: `/admin/paketi/${pkg.id}/galerija`,
     sections: [
       {
         title: "Osnovni podaci",

@@ -1,0 +1,111 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container-fluid py-4">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <% if (typeof data.errors !== 'undefined' && data.errors.general) { %>
+        <div class="alert alert-danger"><%= data.errors.general %></div>
+      <% } %>
+
+      <form method="POST" action="<%= data.submitUrl %>?_method=PUT" enctype="multipart/form-data" novalidate>
+        <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+        <input type="hidden" name="_method" value="PUT">
+
+        <!-- Glavna slika (samo prikaz — menja se sa glavne forme za izmenu) -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Glavna slika</h2>
+            <% if (data.image && data.image.img) { %>
+              <img src="<%= data.image.img %>" alt="<%= data.image.imgDesc || data.name %>" class="rounded" style="max-width:200px;">
+              <p class="text-muted small mt-2 mb-0">Glavna slika se menja sa <a href="<%= data.backUrl %>">stranice detalja</a>, u glavnoj formi za izmenu.</p>
+            <% } else { %>
+              <p class="text-muted small mb-0">Nema glavne slike.</p>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Galerija -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Galerija</h2>
+
+            <% if (data.gallery && data.gallery.length > 0) { %>
+              <div class="row g-3 mb-3">
+                <% data.gallery.forEach(function(img, i) { %>
+                  <div class="col-md-4">
+                    <div class="card h-100">
+                      <img src="<%= img.img %>" alt="<%= img.imgDesc || '' %>" class="card-img-top" style="height:140px;object-fit:cover;">
+                      <div class="card-body p-2">
+                        <input type="hidden" name="existingGalleryImg[]" value="<%= img.img %>">
+                        <input type="text" name="existingGalleryDesc[]" class="form-control form-control-sm mb-2" placeholder="Opis slike (alt tekst)" value="<%= img.imgDesc || '' %>">
+                        <div class="form-check">
+                          <input type="checkbox" class="form-check-input" name="removeGallery[]" value="<%= i %>" id="removeGallery<%= i %>">
+                          <label class="form-check-label small text-danger" for="removeGallery<%= i %>">Ukloni ovu sliku</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            <% } else { %>
+              <p class="text-muted small">Galerija je prazna.</p>
+            <% } %>
+
+            <hr>
+
+            <label class="form-label">Dodaj nove slike</label>
+            <input type="file" name="gallery" class="form-control mb-2" accept="image/*" multiple>
+            <input type="text" name="newGalleryDesc" class="form-control" placeholder="Opis za nove slike (isti opis za sve dodate slike u ovom koraku)">
+            <small class="text-muted d-block mt-1">Do 10 slika odjednom. Ako želiš poseban opis za svaku, dodaj ih u više navrata.</small>
+          </div>
+        </div>
+
+        <!-- Video -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Video</h2>
+
+            <%
+              let videosValue = data.videos || [];
+              const videoSchema = [
+                { name: "title", label: "Naslov", type: "text", placeholder: "Naslov videa" },
+                { name: "url", label: "URL", type: "text", required: true, placeholder: "https:// ili /videos/..." },
+                { name: "thumbnail", label: "Thumbnail URL", type: "text", placeholder: "Opciono" },
+                { name: "isExternal", label: "Eksterni?", type: "select", options: [{ value: "false", label: "Ne (sopstveni video)" }, { value: "true", label: "Da (YouTube/Vimeo/...)" }] },
+              ];
+            %>
+            <input type="hidden" name="videos" value='<%- JSON.stringify(videosValue) %>' data-repeater-input="videos">
+            <div class="border rounded p-3"
+                 data-repeater="videos"
+                 data-repeater-schema='<%- JSON.stringify(videoSchema) %>'
+                 data-repeater-value='<%- JSON.stringify(videosValue) %>'>
+              <div data-repeater-rows></div>
+              <button type="button" class="btn btn-sm btn-outline-primary mt-2" data-repeater-add>
+                <i class="bi bi-plus-lg"></i> Dodaj eksterni video (URL)
+              </button>
+              <small class="text-muted d-block mt-2" data-repeater-empty <%= videosValue.length ? 'style="display:none"' : '' %>>Nijedan video nije dodat.</small>
+            </div>
+
+            <hr>
+
+            <label class="form-label">Otpremi sopstveni video fajl</label>
+            <input type="file" name="video" class="form-control" accept="video/mp4,video/webm" multiple>
+            <small class="text-muted d-block mt-1">MP4 ili WebM, do 10MB po fajlu. Thumbnail se generiše automatski. Do 5 fajlova odjednom.</small>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Sačuvaj galeriju i video</button>
+          <a href="<%= data.backUrl %>" class="btn btn-outline-secondary">Nazad</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script src="/js/admin-repeater.js"></script>
+<%- include("../includes/footer") %>

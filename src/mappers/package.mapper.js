@@ -105,6 +105,7 @@ export function mapPackageForEdit(pkg) {
     order: pkg.order || 0,
     image: pkg.image || null,
     gallery: pkg.gallery || [],
+    videos: pkg.videos || [],
     categories: (pkg.categories || []).map((c) => c._id?.toString() || c.toString()),
     tags: (pkg.tags || []).map((t) => t._id?.toString() || t.toString()),
     faq: pkg.faq || [],
@@ -150,6 +151,7 @@ export function mapPackageForPublicDetail(pkg) {
     najbolji: pkg.isBest,
     slika: formatImage(pkg.image),
     galerija: (pkg.gallery || []).map(formatImage),
+    videi: pkg.videos || [],
     faq: (pkg.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
   };
 }

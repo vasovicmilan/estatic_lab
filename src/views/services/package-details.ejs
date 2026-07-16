@@ -33,6 +33,8 @@
     </div>
   </div>
 
+  <%- include("../includes/components/gallery-video", { galerija: data.package.galerija, videi: data.package.videi }) %>
+
   <% if (data.package.faq && data.package.faq.length > 0) { %>
     <h2 class="h4 mt-5 mb-3">Česta pitanja</h2>
     <%- include("../includes/components/faq", { faq: data.package.faq }) %>

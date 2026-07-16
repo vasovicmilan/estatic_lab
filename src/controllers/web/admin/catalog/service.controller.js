@@ -10,6 +10,8 @@ import {
   prepareServiceExtrasStepData,
   prepareServiceSeoFormData,
 } from "../../../../presenters/admin/catalog/service.presenter.js";
+import { prepareMediaFormData } from "../../../../presenters/admin/media-form.presenter.js";
+import { buildGalleryPayload, buildVideosPayload } from "../../../../utils/media-form.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
@@ -384,6 +386,91 @@ export async function updateService(req, res, next) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Galerija i video — separate page from the main edit form (see admin/_details.ejs)
+// ---------------------------------------------------------------------------
+export async function editServiceGalleryForm(req, res, next) {
+  try {
+    const { serviceId } = req.params;
+    const service = await serviceService.getServiceForEdit(serviceId);
+    const formData = prepareMediaFormData(service, {
+      entityLabel: "usluge",
+        listUrl: "/admin/usluge",
+        listLabel: "Usluge",
+      backUrl: `/admin/usluge/detalji/${serviceId}`,
+      submitUrl: `/admin/usluge/${serviceId}/galerija`,
+    });
+
+    return res.render("admin/_media-form", {
+      pageTitle: `Galerija i video — ${service.name}`,
+      pageDescription: service.shortDescription || service.name,
+      data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
+    });
+  } catch (error) {
+    logError("[editServiceGalleryForm] Greška pri učitavanju forme za galeriju", error, {
+      serviceId: req.params.serviceId,
+      userId: req.session?.user?.id,
+    });
+    next(error);
+  }
+}
+
+export async function updateServiceGallery(req, res, next) {
+  const { serviceId } = req.params;
+  try {
+    if (req.validationErrors) {
+      logWarn(`[updateServiceGallery] Validacione greške za serviceId=${serviceId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
+      const service = await serviceService.getServiceForEdit(serviceId);
+      const formData = prepareMediaFormData(service, {
+        entityLabel: "usluge",
+        listUrl: "/admin/usluge",
+        listLabel: "Usluge",
+        backUrl: `/admin/usluge/detalji/${serviceId}`,
+        submitUrl: `/admin/usluge/${serviceId}/galerija`,
+      });
+      return res.status(400).render("admin/_media-form", {
+        pageTitle: `Galerija i video — ${service.name}`,
+        pageDescription: service.shortDescription || service.name,
+        data: { ...formData, errors: req.validationErrors, csrfToken: res.locals.csrfToken },
+      });
+    }
+
+    const gallery = buildGalleryPayload(req);
+    const videos = buildVideosPayload(req);
+
+    const updated = await serviceService.updateServiceById(serviceId, { gallery, videos });
+    logInfo(`[updateServiceGallery] Galerija/video usluge #${serviceId} ažurirani`, { serviceId, adminId: req.session?.user?.id });
+
+    return flashAndRedirect(req, res, "success", "Galerija i video su uspešno ažurirani", `/admin/usluge/detalji/${updated.id}`);
+  } catch (error) {
+    logError("[updateServiceGallery] Greška pri ažuriranju galerije/videa", error, {
+      serviceId,
+      body: req.body,
+      userId: req.session?.user?.id,
+    });
+
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode === 400 || statusCode === 404) {
+      const service = await serviceService.getServiceForEdit(serviceId).catch(() => null);
+      if (service) {
+        const formData = prepareMediaFormData(service, {
+          entityLabel: "usluge",
+        listUrl: "/admin/usluge",
+        listLabel: "Usluge",
+          backUrl: `/admin/usluge/detalji/${serviceId}`,
+          submitUrl: `/admin/usluge/${serviceId}/galerija`,
+        });
+        return res.status(statusCode).render("admin/_media-form", {
+          pageTitle: `Galerija i video — ${service.name}`,
+          pageDescription: service.shortDescription || service.name,
+          data: { ...formData, errors: { general: message }, csrfToken: res.locals.csrfToken },
+        });
+      }
+    }
+    next(error);
+  }
+}
+
 export async function editServiceSeoForm(req, res, next) {
   try {
     const { serviceId } = req.params;
@@ -455,6 +542,8 @@ export default {
   publishServiceStep,
   editServiceForm,
   updateService,
+  editServiceGalleryForm,
+  updateServiceGallery,
   editServiceSeoForm,
   updateServiceSeo,
   deleteService,

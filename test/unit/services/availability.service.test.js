@@ -52,10 +52,32 @@ describe("availability.service", () => {
         date,
       });
 
-      // 09:00-12:00 in 60-minute steps -> 09:00, 10:00, 11:00 (12:00 itself doesn't fit another full hour)
-      assert.equal(slots.length, 3);
-      assert.equal(slots[0].startTime.getHours(), 9);
-      assert.equal(slots[2].startTime.getHours(), 11);
+      // 09:00-12:00 on the 30-min grid, 60-min service -> 09:00, 09:30, 10:00,
+      // 10:30, 11:00 (11:30 would end at 12:30, past the 12:00 close, so it's excluded)
+      const slotTimes = slots.map((s) => `${s.startTime.getHours()}:${String(s.startTime.getMinutes()).padStart(2, "0")}`);
+      assert.deepEqual(slotTimes, ["9:00", "9:30", "10:00", "10:30", "11:00"]);
+    });
+
+    it("offers grid-aligned start times independent of the service's own duration (e.g. a 45-min service still starts on :00/:30)", async (t) => {
+      const { date, dayName } = futureDateOnDay();
+      const variant = buildServicePackageVariant({ duration: 45 });
+      t.mock.method(serviceService, "getActiveVariant", async () => ({ variant, service: {} }));
+
+      const employee = buildEmployee({ workingHours: [{ day: dayName, slots: [{ from: "09:00", to: "10:30" }] }] });
+      t.mock.method(employeeRepo, "findEmployeeById", async () => employee);
+      t.mock.method(appointmentRepo, "findBusyIntervals", async () => []);
+
+      const slots = await availabilityService.getAvailableSlots({
+        serviceId: id().toString(),
+        servicePackageId: id().toString(),
+        employeeId: employee._id.toString(),
+        date,
+      });
+
+      // 09:00-10:30, 45-min service, 30-min grid -> 09:00 (ends 09:45), 09:30
+      // (ends 10:15). NOT 09:45/10:30 — those would be off-grid start times.
+      const slotTimes = slots.map((s) => `${s.startTime.getHours()}:${String(s.startTime.getMinutes()).padStart(2, "0")}`);
+      assert.deepEqual(slotTimes, ["9:00", "9:30"]);
     });
 
     it("removes the busy interval PLUS a 30-minute buffer on both sides", async (t) => {
@@ -81,11 +103,10 @@ describe("availability.service", () => {
 
       // busy 10:00-11:00 + 30min buffer on each side -> effectively blocked 09:30-11:30.
       // Working hours are 09:00-13:00, so: [09:00-09:30] is only 30min (too short for a
-      // 60min slot, so 09:00 must NOT appear), and [11:30-13:00] fits exactly one 60min
-      // slot at 11:30 (not 11:00 — that would leave only a 30min gap after the busy
-      // interval, violating the buffer).
+      // 60min slot, so 09:00 must NOT appear), and [11:30-13:00] is 90min — on the 30-min
+      // grid that fits two 60-min slots: 11:30 (ends 12:30) and 12:00 (ends 13:00 exactly).
       const slotTimes = slots.map((s) => `${s.startTime.getHours()}:${String(s.startTime.getMinutes()).padStart(2, "0")}`);
-      assert.deepEqual(slotTimes, ["11:30"]);
+      assert.deepEqual(slotTimes, ["11:30", "12:00"]);
     });
 
     it("returns no slots on a day the employee doesn't work", async (t) => {

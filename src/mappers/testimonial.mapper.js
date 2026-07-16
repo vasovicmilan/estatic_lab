@@ -29,6 +29,19 @@ function formatImage(image) {
   };
 }
 
+function getAvatar(testimonial) {
+  const own = formatImage(testimonial.image);
+  if (own?.url) return own;
+  if (testimonial.user && typeof testimonial.user === "object" && testimonial.user.avatar) {
+    return { url: testimonial.user.avatar, alt: getDisplayName(testimonial) };
+  }
+  return null;
+}
+
+function isRegisteredUser(testimonial) {
+  return Boolean(testimonial.user);
+}
+
 function getServiceInfo(testimonial) {
   if (!testimonial.service) return null;
   if (typeof testimonial.service === "object") {
@@ -82,7 +95,7 @@ export function mapTestimonialForAdminDetail(testimonial) {
     osnovno: {
       ime: getDisplayName(testimonial),
       email: testimonial.email || "",
-      slika: formatImage(testimonial.image),
+      slika: getAvatar(testimonial),
       ocena: testimonial.rating,
       ocenaZvezdice: renderStars(testimonial.rating),
       komentar: testimonial.message,
@@ -135,7 +148,8 @@ export function mapTestimonialForPublic(testimonial) {
   return {
     id: testimonial._id.toString(),
     ime: getDisplayName(testimonial),
-    slika: formatImage(testimonial.image),
+    slika: getAvatar(testimonial),
+    registrovaniKorisnik: isRegisteredUser(testimonial),
     ocena: testimonial.rating,
     ocenaZvezdice: renderStars(testimonial.rating),
     komentar: testimonial.message,

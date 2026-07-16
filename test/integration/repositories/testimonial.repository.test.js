@@ -3,6 +3,9 @@ import assert from "node:assert/strict";
 import mongoose from "mongoose";
 import * as dbHandler from "../setup/db-handler.js";
 import testimonialRepo from "../../../src/repositories/testimonial.repository.js";
+import "../../../src/models/service.model.js";
+import "../../../src/models/package.model.js";
+import "../../../src/models/user.model.js";
 
 function validTestimonial(overrides = {}) {
   return {

@@ -97,9 +97,19 @@ export async function updateEmployeeById(employeeId, data) {
   if (!employeeId) validationError("employeeId");
   if (data.workingHours) validateWorkingHours(data.workingHours);
 
-  const updated = await employeeRepo.updateEmployeeById(employeeId, data);
+  // Mirror createEmployee's sanitization — an unselected <select name="expert">
+  // submits "" (falsy), which the validator correctly lets through since expert
+  // is optional, but Mongoose can't cast "" to an ObjectId. Same defensive
+  // treatment for services in case something upstream ever sends a stray "".
+  const sanitized = {
+    ...data,
+    expert: data.expert || null,
+    ...(data.services ? { services: data.services.filter(Boolean) } : {}),
+  };
+
+  const updated = await employeeRepo.updateEmployeeById(employeeId, sanitized);
   if (!updated) notFound("Zaposleni");
-  logInfo("Employee updated", { employeeId, updatedFields: Object.keys(data) });
+  logInfo("Employee updated", { employeeId, updatedFields: Object.keys(sanitized) });
   return getEmployeeById(employeeId);
 }
 
