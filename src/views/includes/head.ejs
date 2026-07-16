@@ -25,6 +25,11 @@
     <% } %>
   <% } %>
 
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#a8735c">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
@@ -32,5 +37,22 @@
   <link href="/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
   <link href="/css/variables.css" rel="stylesheet">
   <link href="/css/styles.css" rel="stylesheet">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HealthAndBeautyBusiness",
+    "name": "Estatic Lab",
+    "url": "<%= typeof seo !== 'undefined' && seo ? seo.canonical : '/' %>",
+    "email": "estetik.lab.ns@gmail.com",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Maksima Gorkog 6b",
+      "addressLocality": "Novi Sad",
+      "postalCode": "21120",
+      "addressCountry": "RS"
+    }
+  }
+  </script>
 </head>
 <body class="d-flex flex-column min-vh-100">

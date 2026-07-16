@@ -24,8 +24,52 @@ const WHY_US = [
 const LEGAL_CONTACT = {
   company: "Estatic Lab wellness centar",
   address: "Maksima Gorkog 6b, 21120 Novi Sad, Republika Srbija",
-  email: "info@estaticlab.rs",
+  email: "estetik.lab.ns@gmail.com",
 };
+
+export function prepareAboutPageData() {
+  return {
+    intro:
+      "Estatic Lab je wellness centar u Novom Sadu posvećen nezi tela i lica kroz stručne tretmane, modernu opremu i pažljiv, individualni pristup svakom klijentu.",
+    contact: LEGAL_CONTACT,
+    sections: [
+      {
+        title: "Naša priča",
+        paragraphs: [
+          "Estatic Lab je nastao iz želje da opuštanje i nega tela ne budu luksuz rezervisan za posebne prilike, već deo redovne rutine brige o sebi. Od osnivanja gradimo prostor u kojem se prepliću stručnost, mirna atmosfera i pažnja posvećena svakom detalju.",
+          "Danas naš tim čine obučeni terapeuti koji svakodnevno rade na tome da svaki tretman bude prilagođen potrebama klijenta — bez univerzalnih rešenja i na brzinu odrađenih usluga.",
+        ],
+      },
+      {
+        title: "Čime se bavimo",
+        paragraphs: [
+          "Nudimo masaže, tretmane lica i tela, kao i estetske tretmane na profesionalnoj ESMA Favorit opremi — od miostimulacije i limfne drenaže do mikrostrujnog liftinga i laserske biorevitalizacije.",
+        ],
+        list: [
+          "Masaže — relaksacione, terapeutske i sportske",
+          "Tretmani lica — nega, čišćenje i anti-age tretmani",
+          "Tretmani tela — modelovanje, drenaža i regeneracija kože",
+          "Estetski tretmani — miostimulacija, mikrostrujni lifting, laserska biorevitalizacija",
+        ],
+      },
+      {
+        title: "Zašto Estatic Lab",
+        list: [
+          "Profesionalna ESMA oprema — miostimulacija, limfna drenaža, mikrostrujni lifting i laserska biorevitalizacija u jednom mestu",
+          "Sertifikovani terapeuti sa iskustvom u masaži i estetskim tretmanima",
+          "Individualni pristup — svaki tretman prilagođavamo vašoj koži, telu i cilju",
+          "Opuštajući, miran i negovan ambijent osmišljen za pravi predah od svakodnevice",
+        ],
+      },
+      {
+        title: "Upoznajte naš tim",
+        paragraphs: [
+          "Iza svakog tretmana stoji tim ljudi koji svoj posao radi sa pažnjom i posvećenošću. Pogledajte ko čini <a href=\"/nas-tim\">naš tim</a> i upoznajte se sa njihovim iskustvom i specijalnostima.",
+        ],
+      },
+    ],
+  };
+}
 
 export function preparePrivacyPolicyData() {
   return {
@@ -38,7 +82,7 @@ export function preparePrivacyPolicyData() {
         title: "1. Ko je rukovalac podacima",
         paragraphs: [
           "Rukovalac podataka o ličnosti je <strong>Estatic Lab wellness centar</strong>, sa sedištem na adresi Maksima Gorkog 6b, 21120 Novi Sad, Republika Srbija.",
-          "Za sva pitanja u vezi sa zaštitom podataka možete nas kontaktirati putem email adrese <a href=\"mailto:info@estaticlab.rs\">info@estaticlab.rs</a>.",
+          "Za sva pitanja u vezi sa zaštitom podataka možete nas kontaktirati putem email adrese <a href=\"mailto:estetik.lab.ns@gmail.com\">estetik.lab.ns@gmail.com</a>.",
         ],
       },
       {
@@ -157,7 +201,7 @@ export function preparePrivacyPolicyData() {
           "podnesete pritužbu Povereniku za informacije od javnog značaja i zaštitu podataka o ličnosti",
         ],
         paragraphs: [
-          "Za ostvarivanje prava pošaljite zahtev na <a href=\"mailto:info@estaticlab.rs\">info@estaticlab.rs</a>. Odgovorićemo u roku propisanom zakonom.",
+          "Za ostvarivanje prava pošaljite zahtev na <a href=\"mailto:estetik.lab.ns@gmail.com\">estetik.lab.ns@gmail.com</a>. Odgovorićemo u roku propisanom zakonom.",
         ],
       },
       {
@@ -334,7 +378,7 @@ export function prepareTermsAndConditionsData() {
       {
         title: "13. Reklamacije",
         paragraphs: [
-          "Za pritužbe u vezi sa terminima, tretmanima, paketima ili radom sajta, kontaktirajte nas na <a href=\"mailto:info@estaticlab.rs\">info@estaticlab.rs</a> ili putem <a href=\"/kontakt\">kontakt stranice</a>. Potrudićemo se da odgovorimo u razumnom roku.",
+          "Za pritužbe u vezi sa terminima, tretmanima, paketima ili radom sajta, kontaktirajte nas na <a href=\"mailto:estetik.lab.ns@gmail.com\">estetik.lab.ns@gmail.com</a> ili putem <a href=\"/kontakt\">kontakt stranice</a>. Potrudićemo se da odgovorimo u razumnom roku.",
         ],
       },
       {

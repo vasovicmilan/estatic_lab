@@ -3,3 +3,6 @@ node_modules
 logs
 src/public/images
 src/public/videos
+src/public/icons
+site.webmanifest
+favicon.ico

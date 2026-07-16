@@ -2,7 +2,7 @@ import { truncate, escape, buildCanonical } from "../utils.seo.js";
 
 export async function buildPostSeo(post, req, siteConfig = {}) {
   const siteName = siteConfig.siteName || "Estatic Lab";
-  const defaultImage = siteConfig.defaultImage || "/images/default-og.jpg";
+  const defaultImage = siteConfig.defaultImage || "/images/site/default-og.webp";
   const title = post.naslov ? `${escape(post.naslov)} | ${siteName}` : siteName;
   const description = truncate(post.seo?.opis || post.kratakOpis || siteConfig.defaultDescription || "");
   const robots = "index, follow";

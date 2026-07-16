@@ -1,5 +1,7 @@
 import eventEmitter from "../events/event.emitter.js";
 import testimonialRepo from "../repositories/testimonial.repository.js";
+import serviceService from "./service.service.js";
+import packageService from "./package.service.js";
 import {
   mapTestimonialsForAdminList,
   mapTestimonialForAdminDetail,
@@ -8,10 +10,8 @@ import {
 import { validationError, notFound, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 
-const populate = [{ path: "service", select: "name slug" }];
-
 export async function listTestimonials({ filters = {}, limit = 10, page = 1 } = {}) {
-  const result = await testimonialRepo.findTestimonials({ limit, page, filters, populateFields: populate });
+  const result = await testimonialRepo.findTestimonials({ limit, page, filters });
   return { data: mapTestimonialsForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 
@@ -42,7 +42,30 @@ export async function submitTestimonial(data) {
   });
 
   logInfo("Testimonial submitted", { testimonialId: created._id, name: created.name });
-  eventEmitter.emit("testimonial:submitted", { testimonialId: created._id, name: created.name, rating: created.rating, message: created.message });
+
+  // Best-effort lookup so Telegram/email notifications can show what the review is
+  // actually about — the raw submitted `data` only has a bare service/package ObjectId,
+  // which is useless to read at a glance in a chat message or email subject.
+  let subject = null;
+  try {
+    if (data.service) {
+      const service = await serviceService.getServiceById(data.service);
+      subject = service?.naziv || null;
+    } else if (data.package) {
+      const pkg = await packageService.getPackageById(data.package);
+      subject = pkg?.naziv || null;
+    }
+  } catch {
+    subject = null;
+  }
+
+  eventEmitter.emit("testimonial:submitted", {
+    testimonialId: created._id,
+    name: created.name,
+    rating: created.rating,
+    message: created.message,
+    subject,
+  });
 
   return { message: "Hvala na utisku! Biće objavljen nakon provere." };
 }
@@ -72,7 +95,6 @@ export async function deleteTestimonialById(testimonialId) {
   return { success: true };
 }
 
-// public "what our clients say" widget
 export async function getApprovedTestimonials({ limit = 10, featuredOnly = false, service = null, package: pkg = null } = {}) {
   const testimonials = await testimonialRepo.findApprovedTestimonials({ limit, featuredOnly, service, package: pkg });
   return mapTestimonialsForPublic(testimonials);

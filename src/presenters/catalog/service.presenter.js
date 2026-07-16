@@ -1,6 +1,7 @@
 export function prepareServiceListData(result, { query = {}, categories = [], tags = [] } = {}) {
   return {
     services: result.data,
+    subtitle: "Svaki tretman vodi naš tim sertifikovanih terapeuta — birajte prema potrebi, o ostalom brinemo mi.",
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
@@ -16,6 +17,7 @@ export function prepareServiceCategoryData(category, result, query = {}, { categ
   return {
     category,
     services: result.data,
+    subtitle: `Usluge iz kategorije „${category.naziv}“, birane i izvedene sa istom pažnjom kao i sve ostalo kod nas.`,
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
@@ -34,6 +36,7 @@ export function prepareServiceTagData(tag, result, query = {}, { categories = []
   return {
     tag,
     services: result.data,
+    subtitle: `Usluge označene sa „${tag.naziv}“ — pažljivo odabrane da odgovore na ono što vam treba.`,
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,

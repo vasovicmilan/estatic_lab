@@ -12,52 +12,74 @@ function formatPrice(value) {
 export function buildNewAppointmentMessage(appointment) {
   const fullName = `${appointment.firstName || ""} ${appointment.lastName || ""}`.trim();
 
-  return [
+  const lines = [
     `📅 <b>Novi termin zakazan</b>`,
     "",
     `👤 <b>Klijent:</b> ${escapeHtml(fullName || "-")}`,
     `📧 <b>Email:</b> ${escapeHtml(appointment.email || "-")}`,
-    `💆 <b>Usluga:</b> ${escapeHtml(appointment.serviceName || "-")}`,
-    `🕐 <b>Termin:</b> ${escapeHtml(appointment.startTime || "-")}`,
-    `💰 <b>Cena:</b> ${formatPrice(appointment.finalPrice)} RSD`,
-  ].join("\n");
+  ];
+  if (appointment.phone) lines.push(`📱 <b>Telefon:</b> ${escapeHtml(appointment.phone)}`);
+  lines.push(`💆 <b>Usluga:</b> ${escapeHtml(appointment.serviceName || "-")}`);
+  if (appointment.duration) lines.push(`⏱ <b>Trajanje:</b> ${escapeHtml(appointment.duration)}`);
+  lines.push(`🕐 <b>Termin:</b> ${escapeHtml(appointment.startTime || "-")}`);
+  if (appointment.therapist) lines.push(`🧑‍⚕️ <b>Terapeut:</b> ${escapeHtml(appointment.therapist)}`);
+  lines.push(`💰 <b>Cena:</b> ${formatPrice(appointment.finalPrice)} RSD`);
+  if (appointment.coupon) lines.push(`🏷 <b>Kupon:</b> ${escapeHtml(appointment.coupon)}`);
+  if (appointment.note) lines.push(`📝 <b>Napomena klijenta:</b> ${escapeHtml(appointment.note)}`);
+  if (appointment.adminUrl) lines.push("", `🔗 <a href="${appointment.adminUrl}">Otvori u adminu</a>`);
+
+  return lines.join("\n");
 }
 
 export function buildAppointmentCancelledMessage(appointment) {
   const base = buildNewAppointmentMessage(appointment);
-  return base.replace("📅 <b>Novi termin zakazan", "❌ <b>Termin otkazan");
+  let msg = base.replace("📅 <b>Novi termin zakazan", "❌ <b>Termin otkazan");
+  if (appointment.cancelledBy) msg += `\n🙋 <b>Otkazao:</b> ${escapeHtml(appointment.cancelledBy)}`;
+  if (appointment.cancelReason) msg += `\n🚫 <b>Razlog:</b> ${escapeHtml(appointment.cancelReason)}`;
+  return msg;
 }
 
 export function buildAppointmentStatusChangeMessage(appointment, oldStatus, newStatus) {
   const fullName = `${appointment.firstName || ""} ${appointment.lastName || ""}`.trim();
 
-  return [
+  const lines = [
     `🔄 <b>Status termina promenjen</b>`,
     "",
     `👤 <b>Klijent:</b> ${escapeHtml(fullName || "-")}`,
     `💆 <b>Usluga:</b> ${escapeHtml(appointment.serviceName || "-")}`,
     `📊 <b>Status:</b> ${escapeHtml(oldStatus)} → <b>${escapeHtml(newStatus)}</b>`,
-  ].join("\n");
+  ];
+  if (appointment.note) lines.push(`📝 <b>Napomena:</b> ${escapeHtml(appointment.note)}`);
+  if (appointment.adminUrl) lines.push("", `🔗 <a href="${appointment.adminUrl}">Otvori u adminu</a>`);
+
+  return lines.join("\n");
 }
 
 export function buildNewContactMessage(contact) {
-  return [
+  const lines = [
     `📩 <b>Nova kontakt poruka</b>`,
     "",
     `👤 <b>Ime:</b> ${escapeHtml(`${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "-")}`,
     `📧 <b>Email:</b> ${escapeHtml(contact.email || "-")}`,
-    `💬 <b>Poruka:</b> ${escapeHtml((contact.message || "").substring(0, 200))}`,
-  ].join("\n");
+  ];
+  if (contact.phone) lines.push(`📱 <b>Telefon:</b> ${escapeHtml(contact.phone)}`);
+  if (contact.topic) lines.push(`🏷 <b>Tema:</b> ${escapeHtml(contact.topic)}`);
+  lines.push(`💬 <b>Poruka:</b> ${escapeHtml((contact.message || "").substring(0, 200))}`);
+
+  return lines.join("\n");
 }
 
 export function buildNewTestimonialMessage(testimonial) {
-  return [
+  const lines = [
     `⭐ <b>Novi testimonijal — čeka odobrenje</b>`,
     "",
     `👤 <b>Ime:</b> ${escapeHtml(testimonial.name || "-")}`,
-    `⭐ <b>Ocena:</b> ${"★".repeat(testimonial.rating || 0)}${"☆".repeat(5 - (testimonial.rating || 0))}`,
-    `💬 <b>Komentar:</b> ${escapeHtml((testimonial.message || "").substring(0, 200))}`,
-  ].join("\n");
+  ];
+  if (testimonial.subject) lines.push(`💆 <b>Povodom:</b> ${escapeHtml(testimonial.subject)}`);
+  lines.push(`⭐ <b>Ocena:</b> ${"★".repeat(testimonial.rating || 0)}${"☆".repeat(5 - (testimonial.rating || 0))}`);
+  lines.push(`💬 <b>Komentar:</b> ${escapeHtml((testimonial.message || "").substring(0, 200))}`);
+
+  return lines.join("\n");
 }
 
 export function buildNewUserMessage(user) {
@@ -91,10 +113,6 @@ export function buildAppointmentReassignedMessage(appointment, employeeName) {
   ].join("\n");
 }
 
-// intentionally generic — the caller decides what "message" and "context" mean.
-// Used only by the listener modules' own error-handling paths (see
-// events/*.listeners.js), never wired into the general-purpose logger — see the note
-// on telegram.service.js's notifyError-equivalent usage.
 export function buildErrorAlertMessage(message, context = {}) {
   const contextStr = Object.keys(context).length ? `\n<code>${escapeHtml(JSON.stringify(context))}</code>` : "";
   return [`🚨 <b>Greška</b>`, "", escapeHtml(message) + contextStr].join("\n");

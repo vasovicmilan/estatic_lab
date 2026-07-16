@@ -33,14 +33,34 @@ export async function generateSeo(type, source, req, siteConfig = {}) {
  * already use this for their `seo` field). Kept separate from `generateSeo` rather than
  * unified, since forcing every static-page service call to thread `req` through for no
  * real benefit (no rich OG data on an About page) isn't worth the churn.
+ *
+ * NOTE: now also returns a `twitter` block and richer `og` (site_name/image) so static
+ * pages (home, about, faq, etc.) get the same OG/Twitter coverage entity pages already have.
  */
-export function buildPageSeo({ title, description, canonical, isIndexable = true, type = "website" } = {}) {
+export function buildPageSeo({ title, description, canonical, isIndexable = true, type = "website", image, siteName = "Estatic Lab" } = {}) {
+  const pageTitle = title || siteName;
+  const pageDescription = description || "";
+  const ogImage = image || "/images/site/default-og.webp";
+
   return {
-    pageTitle: title || "Estatic Lab",
-    pageDescription: description || "",
+    pageTitle,
+    pageDescription,
     canonical: canonical || "/",
     robots: isIndexable ? "index, follow" : "noindex, follow",
-    og: { title: title || "Estatic Lab", description: description || "", type, url: canonical || "/" },
+    og: {
+      title: pageTitle,
+      description: pageDescription,
+      type,
+      url: canonical || "/",
+      site_name: siteName,
+      image: ogImage,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: pageTitle,
+      description: pageDescription,
+      image: ogImage,
+    },
   };
 }
 

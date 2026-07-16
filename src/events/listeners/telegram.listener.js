@@ -48,9 +48,17 @@ function toFlatAppointment(appointment) {
     firstName,
     lastName: rest.join(" "),
     email: appointment.korisnik?.email,
+    phone: appointment.korisnik?.telefon,
     serviceName: appointment.usluga?.naziv,
+    duration: appointment.usluga?.trajanje,
     startTime: appointment.termin?.pocetak,
     finalPrice: parseFloat(appointment.konacnaCena) || 0,
+    therapist: appointment.terapeut || appointment.dodeljenTerapeut || null,
+    note: appointment.napomena,
+    coupon: appointment.kupon,
+    cancelledBy: appointment.otkazao || null,
+    cancelReason: appointment.razlogOtkazivanja || null,
+    adminUrl: appointment.id ? `${BASE_URL}/admin/termini/detalji/${appointment.id}` : null,
   };
 }
 

@@ -6,7 +6,7 @@ export async function buildPageSeoWithReq(pageConfig, req, siteConfig = {}) {
   const description = pageConfig.description || siteConfig.defaultDescription || "";
   const robots = pageConfig.noIndex ? "noindex, follow" : "index, follow";
   const canonical = buildCanonical(req, pageConfig.slug || "/");
-  const imageUrl = pageConfig.image || siteConfig.defaultImage || "/images/default-og.jpg";
+  const imageUrl = pageConfig.image || siteConfig.defaultImage || "/images/site/default-og.webp";
 
   return {
     title,

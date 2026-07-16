@@ -4,7 +4,9 @@
     <% galerija.forEach(function(img) { %>
       <% if (img && img.url) { %>
         <div class="col-md-4 col-6">
-          <img src="<%= img.url %>" alt="<%= img.alt || '' %>" class="img-fluid rounded" style="aspect-ratio:4/3;object-fit:cover;width:100%;">
+          <img src="<%= img.url %>" alt="<%= img.alt || '' %>" class="img-fluid rounded gallery-thumb img-clickable"
+               data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
+               data-full-src="<%= img.url %>" data-full-alt="<%= img.alt || '' %>">
         </div>
       <% } %>
     <% }) %>

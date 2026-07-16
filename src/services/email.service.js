@@ -30,6 +30,13 @@ async function renderTemplate(templateName, data) {
   }
 }
 
+// Admin-facing notifications all get a "[SiteName] [TAG] ..." subject instead of a
+// free-form sentence, so a Gmail filter matching subject:"[TERMIN]" (etc.) can
+// auto-label/auto-file them — one filter per category instead of guessing at wording.
+function adminSubject(tag, summary) {
+  return `[${SITE_NAME}] [${tag}] ${summary}`;
+}
+
 // ==================== ACCOUNT ====================
 
 export async function sendAccountConfirmationEmail({ email, firstName }, confirmToken) {
@@ -101,12 +108,14 @@ export async function sendAppointmentReassignedEmail({ email, firstName }, appoi
 
 export async function notifyAdminNewAppointment(appointment) {
   const html = await renderTemplate("admin-new-appointment", { appointment, adminUrl: `${BASE_URL}/admin/termini/detalji/${appointment.id}` });
-  return sendEmail({ to: ADMIN_EMAIL, subject: `Novi termin zakazan — ${SITE_NAME}`, html });
+  const summary = `${appointment.korisnik?.ime || "Klijent"} — ${appointment.usluga?.naziv || "usluga"} (${appointment.termin?.pocetak || ""})`;
+  return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("TERMIN", summary), html });
 }
 
 export async function notifyAdminAppointmentCancelled(appointment) {
   const html = await renderTemplate("admin-appointment-cancelled", { appointment });
-  return sendEmail({ to: ADMIN_EMAIL, subject: `Termin otkazan — ${SITE_NAME}`, html });
+  const summary = `Otkazan — ${appointment.korisnik?.ime || "Klijent"} (${appointment.usluga?.naziv || "usluga"})`;
+  return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("TERMIN", summary), html });
 }
 
 // ==================== PACKAGES ====================
@@ -125,12 +134,16 @@ export async function sendPackagePurchaseCancelledEmail({ email, firstName }, pu
 
 export async function notifyAdminNewContact(contact) {
   const html = await renderTemplate("admin-new-contact", { contact, adminUrl: `${BASE_URL}/admin/kontakt/detalji/${contact.contactId}` });
-  return sendEmail({ to: ADMIN_EMAIL, subject: `Nova kontakt poruka — ${SITE_NAME}`, html });
+  const fullName = `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Nepoznat pošiljalac";
+  const summary = contact.topic ? `${fullName} — ${contact.topic}` : fullName;
+  return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("KONTAKT", summary), html });
 }
 
 export async function notifyAdminNewTestimonial(testimonial) {
   const html = await renderTemplate("admin-new-testimonial", { testimonial });
-  return sendEmail({ to: ADMIN_EMAIL, subject: `Novi testimonijal čeka odobrenje — ${SITE_NAME}`, html });
+  const stars = "★".repeat(testimonial.rating || 0);
+  const summary = testimonial.subject ? `${testimonial.name || "Anonimno"} — ${testimonial.subject} (${stars})` : `${testimonial.name || "Anonimno"} (${stars})`;
+  return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("TESTIMONIJAL", summary), html });
 }
 
 export async function sendNewsletterWelcomeEmail({ email }, unsubscribeToken) {

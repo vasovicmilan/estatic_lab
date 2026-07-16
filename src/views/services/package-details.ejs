@@ -8,7 +8,9 @@
   <div class="row g-4">
     <div class="col-md-6">
       <% if (data.package.slika && data.package.slika.url) { %>
-        <img src="<%= data.package.slika.url %>" class="img-fluid rounded" alt="<%= data.package.naziv %>">
+        <img src="<%= data.package.slika.url %>" class="img-fluid rounded img-clickable" alt="<%= data.package.naziv %>"
+             data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
+             data-full-src="<%= data.package.slika.url %>" data-full-alt="<%= data.package.naziv %>">
       <% } %>
     </div>
     <div class="col-md-6">

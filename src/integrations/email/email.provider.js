@@ -22,7 +22,7 @@ function getTransporter() {
 export async function sendEmail({ to, subject, html, attachments = [] }) {
   try {
     const mailOptions = {
-      from: `"${process.env.EMAIL_FROM_NAME || "Estatic Lab"}" <${process.env.EMAIL_FROM || "noreply@estaticlab.rs"}>`,
+      from: `"${process.env.EMAIL_FROM_NAME || "Estatic Lab"}" <${process.env.EMAIL_FROM || "estetik.lab.ns@gmail.com"}>`,
       to,
       subject,
       html,

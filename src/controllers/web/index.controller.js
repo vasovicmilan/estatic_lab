@@ -3,6 +3,7 @@ import {
   prepareHomeData,
   preparePrivacyPolicyData,
   prepareTermsAndConditionsData,
+  prepareAboutPageData,
 } from "../../presenters/public/index.presenter.js";
 import { logError, logWarn, logInfo } from "../../utils/logger.util.js";
 import { flashAndRedirect } from "../../utils/flash.util.js";
@@ -15,6 +16,7 @@ export async function homePage(req, res, next) {
     return res.render("landing/home", {
       pageTitle: serviceData.seo.pageTitle,
       pageDescription: serviceData.seo.pageDescription,
+      seo: serviceData.seo,
       data: viewData,
     });
   } catch (error) {
@@ -29,7 +31,9 @@ export async function aboutPage(req, res, next) {
     return res.render("public/_page", {
       pageTitle: serviceData.seo.pageTitle,
       pageDescription: serviceData.seo.pageDescription,
-      data: {},
+      seo: serviceData.seo,
+      showLegalContent: true,
+      data: prepareAboutPageData(),
     });
   } catch (error) {
     logError("[aboutPage] Greška pri učitavanju stranice o nama", error);
@@ -43,6 +47,7 @@ export async function privacyPage(req, res, next) {
     return res.render("public/_page", {
       pageTitle: serviceData.seo.pageTitle,
       pageDescription: serviceData.seo.pageDescription,
+      seo: serviceData.seo,
       showLegalContent: true,
       data: preparePrivacyPolicyData(),
     });
@@ -58,6 +63,7 @@ export async function termsPage(req, res, next) {
     return res.render("public/_page", {
       pageTitle: serviceData.seo.pageTitle,
       pageDescription: serviceData.seo.pageDescription,
+      seo: serviceData.seo,
       showLegalContent: true,
       data: prepareTermsAndConditionsData(),
     });
@@ -73,6 +79,7 @@ export async function faqPage(req, res, next) {
     return res.render("public/_page", {
       pageTitle: serviceData.seo.pageTitle,
       pageDescription: serviceData.seo.pageDescription,
+      seo: serviceData.seo,
       showFaq: true,
       data: {},
     });
@@ -88,6 +95,7 @@ export async function contactPage(req, res, next) {
     return res.render("public/_page", {
       pageTitle: serviceData.seo.pageTitle,
       pageDescription: serviceData.seo.pageDescription,
+      seo: serviceData.seo,
       showForm: true,
       data: { formData: { topic: req.query.tema || "" }, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -105,6 +113,7 @@ export async function submitContact(req, res, next) {
       return res.status(400).render("public/_page", {
         pageTitle: serviceData.seo.pageTitle,
         pageDescription: serviceData.seo.pageDescription,
+        seo: serviceData.seo,
         showForm: true,
         data: { formData: req.body, errors: req.validationErrors, csrfToken: res.locals.csrfToken },
       });
@@ -122,6 +131,7 @@ export async function submitContact(req, res, next) {
       return res.status(400).render("public/_page", {
         pageTitle: serviceData.seo.pageTitle,
         pageDescription: serviceData.seo.pageDescription,
+        seo: serviceData.seo,
         showForm: true,
         data: { formData: req.body, errors: { general: error.message }, csrfToken: res.locals.csrfToken },
       });

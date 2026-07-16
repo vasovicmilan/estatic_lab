@@ -5,7 +5,8 @@
   <%- include("../includes/breadcrumbs") %>
   <%- include("../includes/flash-messages") %>
 
-  <h1 class="h3 mb-4 text-center">Paketi</h1>
+  <h1 class="h3 mb-2 text-center">Paketi</h1>
+  <% if (data.subtitle) { %><p class="text-muted text-center mb-4"><%= data.subtitle %></p><% } %>
 
   <% if (data.packages && data.packages.length > 0) { %>
     <div class="row g-4">

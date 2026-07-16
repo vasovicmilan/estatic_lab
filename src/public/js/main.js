@@ -8,6 +8,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!isNaN(percent)) bar.style.width = `${percent}%`;
   });
 
+  // image lightbox — click any .img-clickable[data-full-src] to view it full-size
+  // in the shared #imageLightboxModal (see includes/footer.ejs)
+  if (typeof bootstrap !== "undefined") {
+    const lightboxEl = document.getElementById("imageLightboxModal");
+    if (lightboxEl) {
+      lightboxEl.addEventListener("show.bs.modal", (event) => {
+        const trigger = event.relatedTarget;
+        if (!trigger) return;
+        const img = document.getElementById("imageLightboxImg");
+        img.src = trigger.dataset.fullSrc || trigger.src || "";
+        img.alt = trigger.dataset.fullAlt || trigger.alt || "";
+      });
+    }
+  }
+
   const modalEl = document.getElementById("confirmActionModal");
   if (!modalEl || typeof bootstrap === "undefined") return;
 

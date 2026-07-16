@@ -8,7 +8,9 @@
   <div class="row g-4 mb-5">
     <div class="col-md-6">
       <% if (data.service.slika && data.service.slika.url) { %>
-        <img src="<%= data.service.slika.url %>" class="img-fluid rounded" alt="<%= data.service.naziv %>">
+        <img src="<%= data.service.slika.url %>" class="img-fluid rounded img-clickable" alt="<%= data.service.naziv %>"
+             data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
+             data-full-src="<%= data.service.slika.url %>" data-full-alt="<%= data.service.naziv %>">
       <% } %>
     </div>
     <div class="col-md-6">

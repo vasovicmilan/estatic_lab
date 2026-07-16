@@ -2,7 +2,7 @@ import { truncate, escape, buildCanonical } from "../utils.seo.js";
 
 export async function buildExpertSeo(expert, req, siteConfig = {}) {
   const siteName = siteConfig.siteName || "Estatic Lab";
-  const defaultImage = siteConfig.defaultImage || "/images/default-og.jpg";
+  const defaultImage = siteConfig.defaultImage || "/images/site/default-og.webp";
   const fullName = expert.imePrezime || `${expert.firstName || ""} ${expert.lastName || ""}`.trim();
   const title = fullName ? `${escape(fullName)} | ${siteName}` : siteName;
   const description = truncate(expert.kratkaBiografija || expert.shortBio || siteConfig.defaultDescription || "");

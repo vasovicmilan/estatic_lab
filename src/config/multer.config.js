@@ -24,24 +24,23 @@ await fs.ensureDir(path.join(PUBLIC_PATH, "videos", "thumbnails"));
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/avif"];
 const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm"];
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+// shared across images and videos — images get resized down by sharp regardless
+// of upload size, so raising this mainly exists to give video uploads real room
+// (10MB was only ever going to fit a few seconds of video)
+const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 
-const FIELD_DESTINATION_MAP = {
-  serviceImage: "services",
-  galleryImage: "services",
-  packageImage: "packages",
-  categoryImage: "categories",
-  postImage: "posts",
-  coverImage: "posts",
-  contentImage: "posts",
-  testimonialImage: "testimonials",
-  expertImage: "experts",
-  siteImage: "site",
-  video: "videos",
-};
+// Physical save folder is keyed by `type` (services/packages/posts/...), not by
+// field name — field names like "gallery" are deliberately reused across
+// several entities (services, packages, posts all upload to a field literally
+// named "gallery"), so keying off fieldname collapsed all of them into the same
+// folder regardless of which entity actually owns the upload. `type` is already
+// passed explicitly at every call site (see the routes files) and is what the
+// returned URL (/images/${type}/...) is built from too — so this makes the
+// folder actually written to match the URL that gets saved to the database.
+const KNOWN_IMAGE_TYPES = new Set(["services", "packages", "categories", "posts", "testimonials", "experts", "site"]);
 
-function getDestination(fieldname) {
-  const subfolder = FIELD_DESTINATION_MAP[fieldname] || "site";
+function getDestination(type) {
+  const subfolder = KNOWN_IMAGE_TYPES.has(type) ? type : "site";
   return path.join(PUBLIC_PATH, "images", subfolder);
 }
 
@@ -140,7 +139,7 @@ function processUpload(fieldName, type = "site") {
       try {
         if (!req.file) return next();
 
-        const destination = getDestination(fieldName);
+        const destination = getDestination(type);
         const isVideo = ALLOWED_VIDEO_TYPES.includes(req.file.mimetype);
 
         if (isVideo) {
@@ -175,8 +174,8 @@ function processMultipleUploads(fieldsConfig = []) {
           const files = req.files[config.name];
           if (!files || files.length === 0) continue;
 
-          const destination = getDestination(config.name);
           const type = config.type || "site";
+          const destination = getDestination(type);
           const results = [];
 
           for (const file of files) {
