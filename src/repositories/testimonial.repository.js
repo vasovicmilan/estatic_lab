@@ -2,20 +2,34 @@ import Testimonial from "../models/testimonial.model.js";
 import { buildTestimonialFilter } from "./filters/testimonial.filter.js";
 import { resolveLimit, resolveSkip, buildPaginationMeta } from "../utils/pagination.util.js";
 
+// shared populate set — every read path (admin list/detail, public widget) needs
+// the same three relations resolved, or the mapper has nothing to work with:
+// service/package for "usluga"/"paket" name+slug, user for the "registered
+// customer" badge + avatar fallback. Previously only `service` was populated,
+// and only on the admin list — package, user, and the public-facing reads
+// never got it, so those fields silently rendered empty everywhere else.
+const TESTIMONIAL_POPULATE = [
+  { path: "service", select: "name slug" },
+  { path: "package", select: "name slug" },
+  { path: "user", select: "firstName lastName avatar" },
+];
+
 export async function createTestimonial(data, { session } = {}) {
   const [testimonial] = await Testimonial.create([data], { session });
   return testimonial;
 }
 
 export async function findTestimonialById(id, { session } = {}) {
-  return Testimonial.findById(id).session(session || null).lean();
+  let query = Testimonial.findById(id).session(session || null);
+  for (const field of TESTIMONIAL_POPULATE) query = query.populate(field);
+  return query.lean();
 }
 
 export async function findTestimonials({
   limit = 20,
   page = 1,
   filters = {},
-  populateFields = [{ path: "service", select: "name slug" }],
+  populateFields = TESTIMONIAL_POPULATE,
   session,
 } = {}) {
   const filter = buildTestimonialFilter(filters);
@@ -43,11 +57,14 @@ export async function findApprovedTestimonials({ limit = 10, featuredOnly = fals
   if (featuredOnly) filter.isFeatured = true;
   if (service) filter.service = service;
   if (pkg) filter.package = pkg;
-  return Testimonial.find(filter)
+
+  let query = Testimonial.find(filter)
     .sort({ isFeatured: -1, createdAt: -1 })
     .limit(limit)
-    .session(session || null)
-    .lean();
+    .session(session || null);
+  for (const field of TESTIMONIAL_POPULATE) query = query.populate(field);
+
+  return query.lean();
 }
 
 export async function updateTestimonialById(id, updateData, { session } = {}) {
@@ -70,4 +87,4 @@ export default {
   updateTestimonialById,
   deleteTestimonialById,
   countTestimonials,
-}
+};
