@@ -102,44 +102,7 @@
 
     <div class="row justify-content-center">
       <div class="col-lg-7">
-        <div class="card shadow-sm">
-          <div class="card-body p-4">
-            <h3 class="h5 mb-3 text-center">Podelite vaš utisak</h3>
-            <form action="<%= data.testimonialFormAction %>" method="POST">
-              <input type="text" name="nickname" class="d-none" tabindex="-1" autocomplete="off">
-              <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
-
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <label class="form-label">Ime</label>
-                  <input type="text" name="name" class="form-control" required minlength="2" maxlength="100">
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Email (opciono)</label>
-                  <input type="email" name="email" class="form-control">
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label">Ocena</label>
-                  <select name="rating" class="form-select" required>
-                    <option value="">Izaberite</option>
-                    <option value="5">5 — Odlično</option>
-                    <option value="4">4 — Vrlo dobro</option>
-                    <option value="3">3 — Dobro</option>
-                    <option value="2">2 — Osrednje</option>
-                    <option value="1">1 — Loše</option>
-                  </select>
-                </div>
-                <div class="col-md-8">
-                  <label class="form-label">Komentar</label>
-                  <textarea name="message" class="form-control" rows="1" required minlength="10" maxlength="1000" placeholder="Recite nam kako je bilo..."></textarea>
-                </div>
-              </div>
-
-              <button type="submit" class="btn btn-primary w-100 mt-4">Pošaljite utisak</button>
-              <p class="text-muted small text-center mt-2 mb-0">Utisak se objavljuje nakon provere.</p>
-            </form>
-          </div>
-        </div>
+        <%- include("../includes/components/testimonial-form") %>
       </div>
     </div>
   </section>

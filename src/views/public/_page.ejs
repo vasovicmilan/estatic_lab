@@ -87,6 +87,9 @@
           </div>
         </div>
 
+      <% } else if (typeof showLegalContent !== 'undefined' && showLegalContent) { %>
+        <%- include("../includes/components/legal-content", { data }) %>
+
       <% } else { %>
         <p class="text-muted"><%= pageDescription %></p>
         <p class="text-muted fst-italic">Sadržaj ove stranice će uskoro biti dopunjen.</p>

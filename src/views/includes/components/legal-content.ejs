@@ -1,0 +1,68 @@
+<% if (data && data.sections && data.sections.length > 0) { %>
+  <% if (data.intro) { %>
+    <p class="lead text-muted mb-4"><%= data.intro %></p>
+  <% } %>
+
+  <% if (data.lastUpdated) { %>
+    <p class="small text-muted mb-4">Poslednje ažuriranje: <strong><%= data.lastUpdated %></strong></p>
+  <% } %>
+
+  <div class="legal-content">
+    <% data.sections.forEach(function(section) { %>
+      <section class="mb-4 pb-2 border-bottom">
+        <h2 class="h5 mb-3"><%= section.title %></h2>
+
+        <% if (section.paragraphs) { %>
+          <% section.paragraphs.forEach(function(paragraph) { %>
+            <p class="text-secondary"><%- paragraph %></p>
+          <% }) %>
+        <% } %>
+
+        <% if (section.list && section.list.length > 0) { %>
+          <ul class="text-secondary">
+            <% section.list.forEach(function(item) { %>
+              <li><%- item %></li>
+            <% }) %>
+          </ul>
+        <% } %>
+
+        <% if (section.closingParagraphs) { %>
+          <% section.closingParagraphs.forEach(function(paragraph) { %>
+            <p class="text-secondary"><%- paragraph %></p>
+          <% }) %>
+        <% } %>
+
+        <% if (section.subsections) { %>
+          <% section.subsections.forEach(function(sub) { %>
+            <div class="mt-3">
+              <h3 class="h6 mb-2"><%= sub.title %></h3>
+              <% if (sub.paragraphs) { %>
+                <% sub.paragraphs.forEach(function(paragraph) { %>
+                  <p class="text-secondary mb-2"><%- paragraph %></p>
+                <% }) %>
+              <% } %>
+              <% if (sub.list && sub.list.length > 0) { %>
+                <ul class="text-secondary mb-0">
+                  <% sub.list.forEach(function(item) { %>
+                    <li><%- item %></li>
+                  <% }) %>
+                </ul>
+              <% } %>
+            </div>
+          <% }) %>
+        <% } %>
+      </section>
+    <% }) %>
+  </div>
+
+  <% if (data.contact) { %>
+    <div class="alert alert-light border mt-4 mb-0">
+      <h2 class="h6 mb-2">Kontakt za pitanja</h2>
+      <p class="small text-secondary mb-1"><strong><%= data.contact.company %></strong></p>
+      <p class="small text-secondary mb-1"><%= data.contact.address %></p>
+      <p class="small text-secondary mb-0">
+        Email: <a href="mailto:<%= data.contact.email %>"><%= data.contact.email %></a>
+      </p>
+    </div>
+  <% } %>
+<% } %>

@@ -1,5 +1,9 @@
 import * as indexService from "../../services/index.service.js";
-import { prepareHomeData } from "../../presenters/public/index.presenter.js";
+import {
+  prepareHomeData,
+  preparePrivacyPolicyData,
+  prepareTermsAndConditionsData,
+} from "../../presenters/public/index.presenter.js";
 import { logError, logWarn, logInfo } from "../../utils/logger.util.js";
 import { flashAndRedirect } from "../../utils/flash.util.js";
 
@@ -39,7 +43,8 @@ export async function privacyPage(req, res, next) {
     return res.render("public/_page", {
       pageTitle: serviceData.seo.pageTitle,
       pageDescription: serviceData.seo.pageDescription,
-      data: {},
+      showLegalContent: true,
+      data: preparePrivacyPolicyData(),
     });
   } catch (error) {
     logError("[privacyPage] Greška pri učitavanju politike privatnosti", error);
@@ -53,7 +58,8 @@ export async function termsPage(req, res, next) {
     return res.render("public/_page", {
       pageTitle: serviceData.seo.pageTitle,
       pageDescription: serviceData.seo.pageDescription,
-      data: {},
+      showLegalContent: true,
+      data: prepareTermsAndConditionsData(),
     });
   } catch (error) {
     logError("[termsPage] Greška pri učitavanju uslova korišćenja", error);
