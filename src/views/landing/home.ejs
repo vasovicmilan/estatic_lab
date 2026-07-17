@@ -35,6 +35,32 @@
     </section>
   <% } %>
 
+    <% if (data.intro) { %>
+    <section class="container py-5">
+      <div class="row justify-content-center">
+        <div class="col-lg-9">
+          <h2 class="h3 mb-3 text-center"><%= data.intro.title %></h2>
+          <p class="lead text-center mb-4"><%= data.intro.lead %></p>
+          <p class="mb-4"><%= data.intro.who %></p>
+
+          <div class="row g-3 mb-4">
+            <% data.intro.massages.forEach(function(m) { %>
+              <div class="col-6 col-md-3">
+                <div class="border rounded p-3 h-100 text-center">
+                  <h3 class="h6 mb-1"><%= m.title %></h3>
+                  <p class="text-muted small mb-0"><%= m.text %></p>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+
+          <p class="mb-4"><%= data.intro.packages %></p>
+          <p class="fst-italic text-center mb-0"><%= data.intro.closing %></p>
+        </div>
+      </div>
+    </section>
+  <% } %>
+
   <!-- Featured services -->
   <% if (data.highlightedServices && data.highlightedServices.length > 0) { %>
     <section class="bg-light py-5">
@@ -151,6 +177,18 @@
           ></iframe>
         </div>
       </section>
+  <% } %>
+  <% if (data.googleDataNotice) { %>
+    <section class="container pb-5">
+      <div class="row justify-content-center">
+        <div class="col-lg-9">
+          <div class="border rounded p-3 p-md-4 bg-light small">
+            <p class="mb-1"><%= data.googleDataNotice.text %></p>
+            <a href="<%= data.googleDataNotice.privacyUrl %>">Pročitajte više u našoj Politici privatnosti</a>
+          </div>
+        </div>
+      </div>
+    </section>
   <% } %>
 </main>
 

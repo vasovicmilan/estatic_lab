@@ -422,6 +422,24 @@ export function prepareHomeData({
       image: "/img/hero.jpg",
     },
 
+    intro: {
+      title: "Šta je Estetik Lab",
+      lead:
+        "Estetik Lab je kozmetički salon u Novom Sadu posvećen estetskim tretmanima lica i tela. Naš rad se oslanja na profesionalni ESMA aparat koji kombinuje tretmane strujom, laser i ultrazvuk, kako bismo na jednom mestu ponudili sveobuhvatnu negu prilagođenu potrebama svakog klijenta.",
+      who:
+        "Ovi tretmani su namenjeni svima koji žele da poboljšaju izgled i elastičnost kože, smanje celulit, zategnu telo ili ubrzaju regeneraciju — bez obzira da li se prvi put upoznajete sa estetskim tretmanima ili već imate iskustva sa negom ovog tipa.",
+      massages: [
+        { title: "Relax masaža", text: "Za opuštanje tela i uma nakon napornog perioda." },
+        { title: "Anticelulit masaža", text: "Za modelovanje tela i zatezanje kože." },
+        { title: "Terapeutska masaža", text: "Za ublažavanje napetosti, bolova i ukočenosti." },
+        { title: "Sportska masaža", text: "Za regeneraciju i pripremu mišića." },
+      ],
+      packages:
+        "Sve tretmane i masaže možete kombinovati kroz naše pakete usluga, prilagođene vašim ciljevima i dinamici poseta, čime ostvarujete bolju vrednost i kontinuitet nege.",
+      closing:
+        "Naš cilj je da svakom klijentu pomognemo da prevaziđe izazove sa kojima se suočava i postigne željeni izgled i osećaj u sopstvenom telu — uz stručnost, pažnju i individualan pristup.",
+    },
+
     whyUs: WHY_US,
     highlightedServices,
     featuredExperts,
@@ -433,6 +451,11 @@ export function prepareHomeData({
     map: {
       address: addressText,
       embedUrl: `https://www.google.com/maps/embed?pb=${mapParam}`,
+    },
+    googleDataNotice: {
+      text:
+        "Ukoliko se registrujete ili prijavite putem Google naloga, sa Google-a primamo samo osnovne podatke vašeg profila — ime, prezime i email adresu. Ove podatke koristimo isključivo za kreiranje i povezivanje vašeg korisničkog naloga na Estetik Lab platformi, kako biste mogli da zakazujete termine i pratite svoje rezervacije. Ne delimo ih sa trećim licima niti ih koristimo u druge svrhe bez vaše saglasnosti.",
+      privacyUrl: "/politika-privatnosti",
     },
   };
 }
