@@ -24,7 +24,7 @@ export async function getLandingPageData({
   ]);
 
   const seo = buildPageSeo({
-    title: "Estatic Lab | Vaš prostor za opuštanje i negu",
+    title: "Estatik Lab | Vaš prostor za opuštanje i negu",
     description: "Zakažite termin za masažu, tretmane lica i tela u opuštajućem ambijentu Estatic Lab wellness centra.",
     canonical: "/",
     isIndexable: true,

@@ -1,7 +1,7 @@
 import { escape, buildCanonical } from "../utils.seo.js";
 
 export async function buildPageSeoWithReq(pageConfig, req, siteConfig = {}) {
-  const siteName = siteConfig.siteName || "Estatic Lab";
+  const siteName = siteConfig.siteName || "Estatik Lab";
   const title = pageConfig.title ? `${escape(pageConfig.title)} | ${siteName}` : siteName;
   const description = pageConfig.description || siteConfig.defaultDescription || "";
   const robots = pageConfig.noIndex ? "noindex, follow" : "index, follow";

@@ -27,39 +27,54 @@ export async function generateSeo(type, source, req, siteConfig = {}) {
   return builder(source, req, siteConfig);
 }
 
+// Static/informational pages (home, about, FAQ, etc.) are rendered from the service
+// layer, which has no `req` to build an absolute URL from the way buildCanonical()
+// does for entity pages — so this reads BASE_URL directly instead. IMPORTANT: this
+// was previously missing entirely, which is why canonical/og:url on every static page
+// rendered as a bare relative path ("/", "/o-nama", ...) instead of a real URL.
+const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
+
+function toAbsoluteUrl(pathOrUrl) {
+  if (!pathOrUrl) return BASE_URL;
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+  return `${BASE_URL}${pathOrUrl.startsWith("/") ? pathOrUrl : `/${pathOrUrl}`}`;
+}
+
 /**
- * Simple relative-URL SEO for static/informational pages and homepage aggregation —
- * no `req` needed, safe to call from the service layer (index.service.js, blog.service.js
+ * Simple SEO for static/informational pages and homepage aggregation — no `req`
+ * needed, safe to call from the service layer (index.service.js, blog.service.js
  * already use this for their `seo` field). Kept separate from `generateSeo` rather than
  * unified, since forcing every static-page service call to thread `req` through for no
  * real benefit (no rich OG data on an About page) isn't worth the churn.
  *
- * NOTE: now also returns a `twitter` block and richer `og` (site_name/image) so static
- * pages (home, about, faq, etc.) get the same OG/Twitter coverage entity pages already have.
+ * NOTE: canonical/og.url/twitter.image are now resolved to absolute URLs via BASE_URL
+ * — previously these were passed straight through as relative paths, which produced
+ * an invalid canonical tag and OG/Twitter tags social platforms can't resolve at all.
  */
-export function buildPageSeo({ title, description, canonical, isIndexable = true, type = "website", image, siteName = "Estatic Lab" } = {}) {
+export function buildPageSeo({ title, description, canonical, isIndexable = true, type = "website", image, siteName = "Estatik Lab" } = {}) {
   const pageTitle = title || siteName;
   const pageDescription = description || "";
-  const ogImage = image || "/images/site/default-og.webp";
+  const absoluteCanonical = toAbsoluteUrl(canonical || "/");
+  const absoluteImage = toAbsoluteUrl(image || "/images/site/default-og.webp");
 
   return {
     pageTitle,
     pageDescription,
-    canonical: canonical || "/",
+    canonical: absoluteCanonical,
     robots: isIndexable ? "index, follow" : "noindex, follow",
     og: {
       title: pageTitle,
       description: pageDescription,
       type,
-      url: canonical || "/",
+      url: absoluteCanonical,
       site_name: siteName,
-      image: ogImage,
+      image: absoluteImage,
     },
     twitter: {
       card: "summary_large_image",
       title: pageTitle,
       description: pageDescription,
-      image: ogImage,
+      image: absoluteImage,
     },
   };
 }
