@@ -1,7 +1,7 @@
 import { truncate, escape, buildCanonical } from "../utils.seo.js";
 
 export async function buildServiceSeo(service, req, siteConfig = {}) {
-  const siteName = siteConfig.siteName || "Estatik Lab";
+  const siteName = siteConfig.siteName || "Estetik Lab";
   const defaultImage = siteConfig.defaultImage || "/images/site/default-og.webp";
   const title = service.naziv ? `${escape(service.naziv)} | ${siteName}` : siteName;
   const description = truncate(service.kratakOpis || service.dugiOpis || siteConfig.defaultDescription || "");

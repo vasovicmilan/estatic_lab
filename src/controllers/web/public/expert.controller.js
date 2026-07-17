@@ -7,7 +7,7 @@ export async function expertList(req, res, next) {
   try {
     const experts = await expertService.getActiveExperts();
     const viewData = prepareExpertListData(experts);
-    const seo = await generateSeo("page", { title: "Naš tim", description: "Upoznajte stručnjake Estatik Lab wellness centra.", slug: "/nas-tim" }, req);
+    const seo = await generateSeo("page", { title: "Naš tim", description: "Upoznajte stručnjake Estetik Lab wellness centra.", slug: "/nas-tim" }, req);
 
     return res.render("landing/team", {
       pageTitle: seo.title,

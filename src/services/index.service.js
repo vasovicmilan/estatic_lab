@@ -24,8 +24,8 @@ export async function getLandingPageData({
   ]);
 
   const seo = buildPageSeo({
-    title: "Estatik Lab | Vaš prostor za opuštanje i negu",
-    description: "Zakažite termin za masažu, tretmane lica i tela u opuštajućem ambijentu Estatik Lab wellness centra.",
+    title: "Estetik Lab | Vaš prostor za opuštanje i negu",
+    description: "Zakažite termin za masažu, tretmane lica i tela u opuštajućem ambijentu Estetik Lab wellness centra.",
     canonical: "/",
     isIndexable: true,
     type: "website",
@@ -43,8 +43,8 @@ export async function getLandingPageData({
 
 export async function getAboutPageData() {
   const seo = buildPageSeo({
-    title: "O nama | Estatik Lab",
-    description: "Saznajte više o Estatik Lab wellness centru, našem timu i filozofiji nege.",
+    title: "O nama | Estetik Lab",
+    description: "Saznajte više o Estetik Lab wellness centru, našem timu i filozofiji nege.",
     canonical: "/o-nama",
     isIndexable: true,
   });
@@ -53,8 +53,8 @@ export async function getAboutPageData() {
 
 export async function getPrivacyPolicyPageData() {
   const seo = buildPageSeo({
-    title: "Politika privatnosti | Estatik Lab",
-    description: "Informacije o zaštiti podataka o ličnosti i privatnosti korisnika Estatik Lab sajta.",
+    title: "Politika privatnosti | Estetik Lab",
+    description: "Informacije o zaštiti podataka o ličnosti i privatnosti korisnika Estetik Lab sajta.",
     canonical: "/politika-privatnosti",
     isIndexable: true,
   });
@@ -63,8 +63,8 @@ export async function getPrivacyPolicyPageData() {
 
 export async function getTermsAndConditionsPageData() {
   const seo = buildPageSeo({
-    title: "Uslovi korišćenja | Estatik Lab",
-    description: "Uslovi korišćenja Estatik Lab sajta i pravila zakazivanja termina.",
+    title: "Uslovi korišćenja | Estetik Lab",
+    description: "Uslovi korišćenja Estetik Lab sajta i pravila zakazivanja termina.",
     canonical: "/uslovi-koriscenja",
     isIndexable: true,
   });
@@ -73,7 +73,7 @@ export async function getTermsAndConditionsPageData() {
 
 export async function getFaqPageData() {
   const seo = buildPageSeo({
-    title: "Česta pitanja (FAQ) | Estatik Lab",
+    title: "Česta pitanja (FAQ) | Estetik Lab",
     description: "Odgovori na najčešća pitanja o zakazivanju, uslugama, plaćanju i otkazivanju termina.",
     canonical: "/faq",
     isIndexable: true,
@@ -83,8 +83,8 @@ export async function getFaqPageData() {
 
 export async function getContactPageData() {
   const seo = buildPageSeo({
-    title: "Kontakt | Estatik Lab",
-    description: "Kontaktirajte Estatik Lab tim za pitanja o uslugama, terminima ili saradnji.",
+    title: "Kontakt | Estetik Lab",
+    description: "Kontaktirajte Estetik Lab tim za pitanja o uslugama, terminima ili saradnji.",
     canonical: "/kontakt",
     isIndexable: false,
   });

@@ -1,7 +1,7 @@
 import { truncate, escape, buildCanonical } from "../utils.seo.js";
 
 export async function buildCategorySeo(category, req, siteConfig = {}) {
-  const siteName = siteConfig.siteName || "Estatik Lab";
+  const siteName = siteConfig.siteName || "Estetik Lab";
   const title = category.name ? `${escape(category.name)} | ${siteName}` : siteName;
   const description = truncate(category.shortDescription || category.longDescription || siteConfig.defaultDescription || "");
   const robots = category.meta?.isActive !== false && category.isIndexable !== false ? "index, follow" : "noindex, follow";

@@ -12,8 +12,8 @@ export async function getBlogLandingData({ limit = 9, page = 1, search = "" } = 
   ]);
 
   const seo = buildPageSeo({
-    title: "Blog | Estatik Lab",
-    description: "Saveti o nezi, wellness rutinama i tretmanima — pratite Estatik Lab blog.",
+    title: "Blog | Estetik Lab",
+    description: "Saveti o nezi, wellness rutinama i tretmanima — pratite Estetik Lab blog.",
     canonical: "/blog",
     isIndexable: true,
   });
@@ -32,7 +32,7 @@ export async function getBlogCategoryData(categorySlug, { limit = 9, page = 1 } 
   const posts = await postService.findPublishedPosts({ limit, page, filters: { category: category._id } });
 
   const seo = buildPageSeo({
-    title: `${category.name} | Blog | Estatik Lab`,
+    title: `${category.name} | Blog | Estetik Lab`,
     description: category.shortDescription || `Pročitajte sve blog objave iz kategorije ${category.name}.`,
     canonical: `/blog/kategorija/${category.slug}`,
     isIndexable: true,
@@ -58,7 +58,7 @@ export async function getBlogTagData(tagSlug, { limit = 9, page = 1 } = {}) {
   const posts = await postService.findPublishedPosts({ limit, page, filters: { tag: tag._id } });
 
   const seo = buildPageSeo({
-    title: `#${tag.name} | Blog | Estatik Lab`,
+    title: `#${tag.name} | Blog | Estetik Lab`,
     description: `Blog objave označene sa ${tag.name}.`,
     canonical: `/blog/tag/${tag.slug}`,
     isIndexable: true,
@@ -86,7 +86,7 @@ export async function getBlogPostData(slug) {
   }
 
   const seo = buildPageSeo({
-    title: post.seo?.naslov || `${post.naslov} | Blog | Estatik Lab`,
+    title: post.seo?.naslov || `${post.naslov} | Blog | Estetik Lab`,
     description: post.seo?.opis || post.kratakOpis,
     canonical: `/blog/${post.slug}`,
     isIndexable: true,
@@ -102,8 +102,8 @@ export async function searchBlogPosts(search, { limit = 9, page = 1 } = {}) {
   const posts = await postService.findPublishedPosts({ limit, page, search });
 
   const seo = buildPageSeo({
-    title: `Pretraga: ${search} | Blog | Estatik Lab`,
-    description: `Rezultati pretrage za "${search}" na Estatik Lab blogu.`,
+    title: `Pretraga: ${search} | Blog | Estetik Lab`,
+    description: `Rezultati pretrage za "${search}" na Estetik Lab blogu.`,
     canonical: `/blog/pretraga?q=${encodeURIComponent(search)}`,
     isIndexable: false,
   });

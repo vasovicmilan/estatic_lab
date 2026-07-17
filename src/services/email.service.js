@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 const TEMPLATES_PATH = path.join(__dirname, "..", "views", "emails");
 
 const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
-const SITE_NAME = process.env.SITE_NAME || "Estatik Lab";
+const SITE_NAME = process.env.SITE_NAME || "Estetik Lab";
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "estetik.lab.ns@gmail.com";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || SUPPORT_EMAIL;
 

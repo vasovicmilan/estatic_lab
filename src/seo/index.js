@@ -51,7 +51,7 @@ function toAbsoluteUrl(pathOrUrl) {
  * — previously these were passed straight through as relative paths, which produced
  * an invalid canonical tag and OG/Twitter tags social platforms can't resolve at all.
  */
-export function buildPageSeo({ title, description, canonical, isIndexable = true, type = "website", image, siteName = "Estatik Lab" } = {}) {
+export function buildPageSeo({ title, description, canonical, isIndexable = true, type = "website", image, siteName = "Estetik Lab" } = {}) {
   const pageTitle = title || siteName;
   const pageDescription = description || "";
   const absoluteCanonical = toAbsoluteUrl(canonical || "/");

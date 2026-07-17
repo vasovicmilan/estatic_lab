@@ -17,7 +17,7 @@ export async function serviceList(req, res, next) {
     ]);
 
     const viewData = prepareServiceListData(result, { query: req.query, categories, tags });
-    const seo = await generateSeo("page", { title: "Usluge", description: "Pregledajte sve usluge Estatik Lab wellness centra.", slug: "/usluge" }, req);
+    const seo = await generateSeo("page", { title: "Usluge", description: "Pregledajte sve usluge Estetik Lab wellness centra.", slug: "/usluge" }, req);
 
     return res.render("services/services", {
       pageTitle: seo.title,

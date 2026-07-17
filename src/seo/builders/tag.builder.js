@@ -1,7 +1,7 @@
 import { truncate, escape, buildCanonical } from "../utils.seo.js";
 
 export async function buildTagSeo(tag, req, siteConfig = {}) {
-  const siteName = siteConfig.siteName || "Estatik Lab";
+  const siteName = siteConfig.siteName || "Estetik Lab";
   const title = tag.name ? `#${escape(tag.name)} | ${siteName}` : siteName;
   const description = truncate(siteConfig.defaultDescription || `Sadržaj označen sa "${tag.name}".`);
   const robots = tag.isActive !== false ? "index, follow" : "noindex, follow";

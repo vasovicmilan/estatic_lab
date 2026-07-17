@@ -22,7 +22,7 @@ const WHY_US = [
 ];
 
 const LEGAL_CONTACT = {
-  company: "Estatik Lab wellness centar",
+  company: "Estetik Lab wellness centar",
   address: "Maksima Gorkog 6b, 21120 Novi Sad, Republika Srbija",
   email: "estetik.lab.ns@gmail.com",
 };
@@ -30,13 +30,13 @@ const LEGAL_CONTACT = {
 export function prepareAboutPageData() {
   return {
     intro:
-      "Estatik Lab je wellness centar u Novom Sadu posvećen nezi tela i lica kroz stručne tretmane, modernu opremu i pažljiv, individualni pristup svakom klijentu.",
+      "Estetik Lab je wellness centar u Novom Sadu posvećen nezi tela i lica kroz stručne tretmane, modernu opremu i pažljiv, individualni pristup svakom klijentu.",
     contact: LEGAL_CONTACT,
     sections: [
       {
         title: "Naša priča",
         paragraphs: [
-          "Estatik Lab je nastao iz želje da opuštanje i nega tela ne budu luksuz rezervisan za posebne prilike, već deo redovne rutine brige o sebi. Od osnivanja gradimo prostor u kojem se prepliću stručnost, mirna atmosfera i pažnja posvećena svakom detalju.",
+          "Estetik Lab je nastao iz želje da opuštanje i nega tela ne budu luksuz rezervisan za posebne prilike, već deo redovne rutine brige o sebi. Od osnivanja gradimo prostor u kojem se prepliću stručnost, mirna atmosfera i pažnja posvećena svakom detalju.",
           "Danas naš tim čine obučeni terapeuti koji svakodnevno rade na tome da svaki tretman bude prilagođen potrebama klijenta — bez univerzalnih rešenja i na brzinu odrađenih usluga.",
         ],
       },
@@ -53,7 +53,7 @@ export function prepareAboutPageData() {
         ],
       },
       {
-        title: "Zašto Estatik Lab",
+        title: "Zašto Estetik Lab",
         list: [
           "Profesionalna ESMA oprema — miostimulacija, limfna drenaža, mikrostrujni lifting i laserska biorevitalizacija u jednom mestu",
           "Sertifikovani terapeuti sa iskustvom u masaži i estetskim tretmanima",
@@ -75,13 +75,13 @@ export function preparePrivacyPolicyData() {
   return {
     lastUpdated: "16. jul 2026.",
     intro:
-      "Ova Politika privatnosti objašnjava kako Estatik Lab prikuplja, koristi, čuva i štiti vaše podatke prilikom korišćenja našeg sajta, online zakazivanja termina i drugih usluga koje pružamo u našem wellness centru u Novom Sadu.",
+      "Ova Politika privatnosti objašnjava kako Estetik Lab prikuplja, koristi, čuva i štiti vaše podatke prilikom korišćenja našeg sajta, online zakazivanja termina i drugih usluga koje pružamo u našem wellness centru u Novom Sadu.",
     contact: LEGAL_CONTACT,
     sections: [
       {
         title: "1. Ko je rukovalac podacima",
         paragraphs: [
-          "Rukovalac podataka o ličnosti je <strong>Estatik Lab wellness centar</strong>, sa sedištem na adresi Maksima Gorkog 6b, 21120 Novi Sad, Republika Srbija.",
+          "Rukovalac podataka o ličnosti je <strong>Estetik Lab wellness centar</strong>, sa sedištem na adresi Maksima Gorkog 6b, 21120 Novi Sad, Republika Srbija.",
           "Za sva pitanja u vezi sa zaštitom podataka možete nas kontaktirati putem email adrese <a href=\"mailto:estetik.lab.ns@gmail.com\">estetik.lab.ns@gmail.com</a>.",
         ],
       },
@@ -173,7 +173,7 @@ export function preparePrivacyPolicyData() {
           "<strong>pružaocem hostinga i baze podataka</strong> — za tehničko skladištenje i rad aplikacije",
         ],
         paragraphs: [
-          "Interne obaveštenja našem timu mogu se slati putem Telegram servisa u svrhu operativnog praćenja termina i poruka klijenata. Ovi podaci se koriste isključivo u poslovne svrhe Estatik Lab-a.",
+          "Interne obaveštenja našem timu mogu se slati putem Telegram servisa u svrhu operativnog praćenja termina i poruka klijenata. Ovi podaci se koriste isključivo u poslovne svrhe Estetik Lab-a.",
           "Pojedini osetljivi podaci iz kontakt poruka (prezime, telefon, tekst poruke) čuvaju se u šifrovanom obliku radi dodatne zaštite.",
         ],
       },
@@ -231,21 +231,21 @@ export function prepareTermsAndConditionsData() {
   return {
     lastUpdated: "16. jul 2026.",
     intro:
-      "Korišćenjem sajta Estatik Lab, online zakazivanja termina i usluga našeg wellness centra, prihvatate sledeće Uslove korišćenja. Molimo vas da ih pažljivo pročitate pre registracije, zakazivanja termina ili slanja poruke putem sajta.",
+      "Korišćenjem sajta Estetik Lab, online zakazivanja termina i usluga našeg wellness centra, prihvatate sledeće Uslove korišćenja. Molimo vas da ih pažljivo pročitate pre registracije, zakazivanja termina ili slanja poruke putem sajta.",
     contact: LEGAL_CONTACT,
     sections: [
       {
         title: "1. Opšte odredbe",
         paragraphs: [
-          "Ovi Uslovi korišćenja regulišu korišćenje web sajta i online usluga koje pruža <strong>Estatik Lab wellness centar</strong>, Maksima Gorkog 6b, 21120 Novi Sad.",
+          "Ovi Uslovi korišćenja regulišu korišćenje web sajta i online usluga koje pruža <strong>Estetik Lab wellness centar</strong>, Maksima Gorkog 6b, 21120 Novi Sad.",
           "Sajt omogućava pregled usluga, paketa tretmana, blog sadržaja, informacija o timu, online zakazivanje termina, registraciju korisničkog naloga i komunikaciju sa našim timom.",
           "Korišćenjem sajta potvrđujete da imate puno poslovnu sposobnost ili da delujete u ime lica koje je ovlašćeno da prihvati ove uslove.",
         ],
       },
       {
-        title: "2. Usluge Estatik Lab-a",
+        title: "2. Usluge Estetik Lab-a",
         paragraphs: [
-          "Estatik Lab pruža usluge nege tela i lica, masaže i estetske tretmane, uključujući tretmane na ESMA opremi (miostimulacija, limfna drenaža, mikrostrujni lifting, laserska biorevitalizacija i slično), u skladu sa aktuelnom ponudom objavljenom na sajtu.",
+          "Estetik Lab pruža usluge nege tela i lica, masaže i estetske tretmane, uključujući tretmane na ESMA opremi (miostimulacija, limfna drenaža, mikrostrujni lifting, laserska biorevitalizacija i slično), u skladu sa aktuelnom ponudom objavljenom na sajtu.",
           "Opis, trajanje i cena usluga prikazani na sajtu su informativnog karaktera. Pre samog tretmana, naš stručni tim može dati preporuku prilagođenu vašem stanju, uz vašu saglasnost.",
           "Sajt služi za informisanje i zakazivanje. Sam tretman obavlja se u našem objektu, pod nadzorom sertifikovanih terapeuta.",
         ],
@@ -279,7 +279,7 @@ export function prepareTermsAndConditionsData() {
             list: [
               "Korisnik može samostalno otkazati termin iz svog naloga, najkasnije <strong>24 sata pre</strong> zakazanog vremena.",
               "Otkazivanje nakon isteka roka od 24 sata može biti moguće isključivo kontaktiranjem našeg tima, u zavisnosti od okolnosti.",
-              "Estatik Lab zadržava pravo da otkaže termin u slučaju više sile, bolesti terapeuta, tehničkih problema ili drugih opravdanih razloga, uz obaveštenje klijenta.",
+              "Estetik Lab zadržava pravo da otkaže termin u slučaju više sile, bolesti terapeuta, tehničkih problema ili drugih opravdanih razloga, uz obaveštenje klijenta.",
             ],
           },
           {
@@ -309,7 +309,7 @@ export function prepareTermsAndConditionsData() {
         paragraphs: [
           "Na sajtu možete primeniti kupon prilikom zakazivanja termina ili kupovine paketa, ukoliko je kupon aktivan i ispunjava uslove korišćenja.",
           "Kupon i plaćanje putem paketa sesija ne mogu se kombinovati za isti termin — primenjuje se jedan način popusta.",
-          "Estatik Lab zadržava pravo da odbije, izmeni ili povuče kupon u slučaju zloupotrebe ili greške u sistemu.",
+          "Estetik Lab zadržava pravo da odbije, izmeni ili povuče kupon u slučaju zloupotrebe ili greške u sistemu.",
         ],
       },
       {
@@ -331,7 +331,7 @@ export function prepareTermsAndConditionsData() {
             title: "Utisci klijenata",
             paragraphs: [
               "Utisci koje pošaljete prolaze moderaciju pre objave. Zadržavamo pravo da ne objavimo utisak koji sadrži uvredljiv, neistinit, reklamni ili na drugi način neprimeren sadržaj.",
-              "Slanjem utiska dajete Estatik Lab-u dozvolu da vaš komentar, ocenu i ime (ili inicijale) objavi na sajtu, ukoliko bude odobren.",
+              "Slanjem utiska dajete Estetik Lab-u dozvolu da vaš komentar, ocenu i ime (ili inicijale) objavi na sajtu, ukoliko bude odobren.",
             ],
           },
         ],
@@ -340,14 +340,14 @@ export function prepareTermsAndConditionsData() {
         title: "8. Zdravstvene napomene i odgovornost klijenta",
         paragraphs: [
           "Pre tretmana dužni ste da naš tim obavestite o postojećim zdravstvenim stanjima, alergijama, trudnoći, implantima, pejsmejkerima, upotrebi lekova ili drugim okolnostima koje mogu uticati na tretman.",
-          "Estatik Lab ne snosi odgovornost za posledice ukoliko ste dali nepotpune ili netačne zdravstvene informacije.",
+          "Estetik Lab ne snosi odgovornost za posledice ukoliko ste dali nepotpune ili netačne zdravstvene informacije.",
           "Tretmani estetske i wellness prirode ne zamenjuju lekarsku dijagnostiku ili medicinski tretman.",
         ],
       },
       {
         title: "9. Intelektualna svojina",
         paragraphs: [
-          "Sav sadržaj na sajtu — tekstovi, fotografije, grafike, logo, dizajn, video materijali i softverski kod — zaštićen je autorskim pravom i pripada Estatik Lab-u ili odgovarajućim nosiocima prava.",
+          "Sav sadržaj na sajtu — tekstovi, fotografije, grafike, logo, dizajn, video materijali i softverski kod — zaštićen je autorskim pravom i pripada Estetik Lab-u ili odgovarajućim nosiocima prava.",
           "Zabranjeno je kopiranje, distribucija ili komercijalna upotreba sadržaja bez prethodne pisane saglasnosti.",
         ],
       },
@@ -364,7 +364,7 @@ export function prepareTermsAndConditionsData() {
       {
         title: "11. Ograničenje odgovornosti",
         paragraphs: [
-          "Estatik Lab ulaže razumne napore da sajt bude dostupan i da informacije budu tačne, ali ne garantujemo da sajt u svakom trenutku radi bez prekida ili grešaka.",
+          "Estetik Lab ulaže razumne napore da sajt bude dostupan i da informacije budu tačne, ali ne garantujemo da sajt u svakom trenutku radi bez prekida ili grešaka.",
           "Nismo odgovorni za indirektnu štetu, gubitak podataka ili propuštene koristi nastale korišćenjem sajta, osim u meri propisanoj primenjivim zakonima.",
           "Spoljni linkovi (npr. Google Maps) vode ka servisima trećih strana čiji uslovi važe nezavisno od naših.",
         ],
@@ -384,7 +384,7 @@ export function prepareTermsAndConditionsData() {
       {
         title: "14. Izmene uslova",
         paragraphs: [
-          "Estatik Lab zadržava pravo da izmeni ove Uslove korišćenja. Ažurirana verzija stupa na snagu objavljivanjem na ovoj stranici. Nastavak korišćenja sajta nakon izmene podrazumeva prihvatanje novih uslova.",
+          "Estetik Lab zadržava pravo da izmeni ove Uslove korišćenja. Ažurirana verzija stupa na snagu objavljivanjem na ovoj stranici. Nastavak korišćenja sajta nakon izmene podrazumeva prihvatanje novih uslova.",
         ],
       },
       {
@@ -411,7 +411,7 @@ export function prepareHomeData({
 
   return {
     hero: {
-      eyebrow: "Estatik Lab wellness centar",
+      eyebrow: "Estetik Lab wellness centar",
       title: "Vaš prostor za opuštanje i negu",
       subtitle:
         "Masaže, ESMA tretmani i nega lica i tela u mirnom, opuštajućem ambijentu — uz stručan tim i individualan pristup svakom klijentu.",

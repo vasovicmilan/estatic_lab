@@ -12,7 +12,7 @@ export async function createTestApp() {
   mongoServer = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   process.env.MONGO_URI = mongoServer.getUri();
 
-    uploadTempDir = await fs.mkdtemp(path.join(os.tmpdir(), "Estatik-lab-uploads-"));
+    uploadTempDir = await fs.mkdtemp(path.join(os.tmpdir(), "Estetik-lab-uploads-"));
   for (const sub of ["services", "packages", "categories", "posts", "testimonials", "experts", "site", "videos/thumbnails"]) {
     await fs.ensureDir(path.join(uploadTempDir, "images", sub));
   }

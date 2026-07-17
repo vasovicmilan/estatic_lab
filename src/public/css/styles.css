@@ -1,5 +1,5 @@
 /*
-  Estatik Lab — component-level overrides.
+  Estetik Lab — component-level overrides.
   Every selector below is an EXISTING Bootstrap class or plain HTML element — nothing
   new is introduced. This file exists because Bootstrap 5.3 bakes button hover/active
   shades and a few other things into the compiled CSS at build time (hardcoded hex
