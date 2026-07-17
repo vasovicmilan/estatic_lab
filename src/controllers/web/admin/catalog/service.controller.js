@@ -29,7 +29,7 @@ function parseJsonField(value, fallback = []) {
   }
 }
 
-// employeeService is still imported for serviceDetails' "Broj terapeuta" count below —
+// employeeService is still imported for serviceDetails' "Broj terapeuta" count below -
 // which employees can perform a service now lives only on Employee.services, assigned
 // from the employee's own edit form, not here (see service.model.js)
 async function loadFormOptions() {
@@ -141,7 +141,7 @@ export async function serviceDetails(req, res, next) {
     const viewData = prepareServiceDetailsData(service, { employeeCount: employees.length });
     
     return res.render("admin/_details", {
-      pageTitle: `Usluga — ${service.naziv}`,
+      pageTitle: `Usluga - ${service.naziv}`,
       pageDescription: service.kratakOpis || service.naziv,
       data: viewData,
     });
@@ -160,7 +160,7 @@ export async function newServiceForm(req, res, next) {
     const formData = prepareServiceFormData(null, options);
     return res.render("admin/_form", {
       pageTitle: "Nova usluga",
-      pageDescription: "Kreiraj novu uslugu — korak 1 od 3",
+      pageDescription: "Kreiraj novu uslugu - korak 1 od 3",
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -177,7 +177,7 @@ export async function createServiceDraft(req, res, next) {
       const formData = prepareServiceFormData(null, options);
       return res.status(400).render("admin/_form", {
         pageTitle: "Nova usluga",
-        pageDescription: "Kreiraj novu uslugu — korak 1 od 3",
+        pageDescription: "Kreiraj novu uslugu - korak 1 od 3",
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
@@ -186,7 +186,7 @@ export async function createServiceDraft(req, res, next) {
     const service = await serviceService.createDraftService(data);
     logInfo(`[createServiceDraft] Nacrt usluge kreiran: "${service.name}"`, { serviceId: service.id, adminId: req.session?.user?.id });
 
-    return flashAndRedirect(req, res, "success", "Osnovni podaci sačuvani — dodajte varijante", `/admin/usluge/${service.id}/dodavanje/paketi`);
+    return flashAndRedirect(req, res, "success", "Osnovni podaci sačuvani - dodajte varijante", `/admin/usluge/${service.id}/dodavanje/paketi`);
   } catch (error) {
     logError("[createServiceDraft] Greška u fazi 1 kreiranja usluge", error, { body: req.body, userId: req.session?.user?.id });
 
@@ -196,7 +196,7 @@ export async function createServiceDraft(req, res, next) {
       const formData = prepareServiceFormData(null, options);
       return res.status(statusCode).render("admin/_form", {
         pageTitle: "Nova usluga",
-        pageDescription: "Kreiraj novu uslugu — korak 1 od 3",
+        pageDescription: "Kreiraj novu uslugu - korak 1 od 3",
         data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
@@ -213,8 +213,8 @@ export async function newServicePackagesForm(req, res, next) {
     const service = await serviceService.getServiceForEdit(serviceId);
     const formData = prepareServicePackagesStepData(service);
     return res.render("admin/_form", {
-      pageTitle: `${service.name} — varijante`,
-      pageDescription: "Dodaj varijante (pakete) — korak 2 od 3",
+      pageTitle: `${service.name} - varijante`,
+      pageDescription: "Dodaj varijante (pakete) - korak 2 od 3",
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -232,8 +232,8 @@ export async function addServicePackages(req, res, next) {
       const service = await serviceService.getServiceForEdit(serviceId);
       const formData = prepareServicePackagesStepData(service);
       return res.status(400).render("admin/_form", {
-        pageTitle: `${service.name} — varijante`,
-        pageDescription: "Dodaj varijante (pakete) — korak 2 od 3",
+        pageTitle: `${service.name} - varijante`,
+        pageDescription: "Dodaj varijante (pakete) - korak 2 od 3",
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
@@ -242,7 +242,7 @@ export async function addServicePackages(req, res, next) {
     const service = await serviceService.addPackagesToService(serviceId, packages);
     logInfo(`[addServicePackages] Varijante sačuvane za uslugu #${serviceId}`, { serviceId, adminId: req.session?.user?.id });
 
-    return flashAndRedirect(req, res, "success", "Varijante sačuvane — dodaj još detalja ili objavi uslugu", `/admin/usluge/${service.id}/dodavanje/detalji`);
+    return flashAndRedirect(req, res, "success", "Varijante sačuvane - dodaj još detalja ili objavi uslugu", `/admin/usluge/${service.id}/dodavanje/detalji`);
   } catch (error) {
     logError("[addServicePackages] Greška u fazi 2 kreiranja usluge", error, { serviceId: req.params.serviceId, body: req.body, userId: req.session?.user?.id });
 
@@ -252,8 +252,8 @@ export async function addServicePackages(req, res, next) {
       if (service) {
         const formData = prepareServicePackagesStepData(service);
         return res.status(statusCode).render("admin/_form", {
-          pageTitle: `${service.name} — varijante`,
-          pageDescription: "Dodaj varijante (pakete) — korak 2 od 3",
+          pageTitle: `${service.name} - varijante`,
+          pageDescription: "Dodaj varijante (pakete) - korak 2 od 3",
           data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
         });
       }
@@ -271,8 +271,8 @@ export async function newServiceExtrasForm(req, res, next) {
     const service = await serviceService.getServiceForEdit(serviceId);
     const formData = prepareServiceExtrasStepData(service);
     return res.render("admin/_form", {
-      pageTitle: `${service.name} — detalji i objava`,
-      pageDescription: "Dodatni detalji i objava — korak 3 od 3",
+      pageTitle: `${service.name} - detalji i objava`,
+      pageDescription: "Dodatni detalji i objava - korak 3 od 3",
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -290,8 +290,8 @@ export async function publishServiceStep(req, res, next) {
       const service = await serviceService.getServiceForEdit(serviceId);
       const formData = prepareServiceExtrasStepData(service);
       return res.status(400).render("admin/_form", {
-        pageTitle: `${service.name} — detalji i objava`,
-        pageDescription: "Dodatni detalji i objava — korak 3 od 3",
+        pageTitle: `${service.name} - detalji i objava`,
+        pageDescription: "Dodatni detalji i objava - korak 3 od 3",
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
@@ -311,8 +311,8 @@ export async function publishServiceStep(req, res, next) {
       if (service) {
         const formData = prepareServiceExtrasStepData(service);
         return res.status(statusCode).render("admin/_form", {
-          pageTitle: `${service.name} — detalji i objava`,
-          pageDescription: "Dodatni detalji i objava — korak 3 od 3",
+          pageTitle: `${service.name} - detalji i objava`,
+          pageDescription: "Dodatni detalji i objava - korak 3 od 3",
           data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
         });
       }
@@ -329,7 +329,7 @@ export async function editServiceForm(req, res, next) {
     const formData = prepareServiceFormData(service, options);
 
     return res.render("admin/_form", {
-      pageTitle: `Izmena — ${service.name}`,
+      pageTitle: `Izmena - ${service.name}`,
       pageDescription: service.shortDescription || service.name,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -352,7 +352,7 @@ export async function updateService(req, res, next) {
       const options = await loadFormOptions();
       const formData = prepareServiceFormData(service, options);
       return res.status(400).render("admin/_form", {
-        pageTitle: `Izmena — ${service.name}`,
+        pageTitle: `Izmena - ${service.name}`,
         pageDescription: service.shortDescription || service.name,
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -377,7 +377,7 @@ export async function updateService(req, res, next) {
       const options = await loadFormOptions();
       const formData = prepareServiceFormData(service, options);
       return res.status(statusCode).render("admin/_form", {
-        pageTitle: service ? `Izmena — ${service.name}` : "Izmena usluge",
+        pageTitle: service ? `Izmena - ${service.name}` : "Izmena usluge",
         pageDescription: service?.shortDescription || "",
         data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -387,7 +387,7 @@ export async function updateService(req, res, next) {
 }
 
 // ---------------------------------------------------------------------------
-// Galerija i video — separate page from the main edit form (see admin/_details.ejs)
+// Galerija i video - separate page from the main edit form (see admin/_details.ejs)
 // ---------------------------------------------------------------------------
 export async function editServiceGalleryForm(req, res, next) {
   try {
@@ -402,7 +402,7 @@ export async function editServiceGalleryForm(req, res, next) {
     });
 
     return res.render("admin/_media-form", {
-      pageTitle: `Galerija i video — ${service.name}`,
+      pageTitle: `Galerija i video - ${service.name}`,
       pageDescription: service.shortDescription || service.name,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -429,7 +429,7 @@ export async function updateServiceGallery(req, res, next) {
         submitUrl: `/admin/usluge/${serviceId}/galerija`,
       });
       return res.status(400).render("admin/_media-form", {
-        pageTitle: `Galerija i video — ${service.name}`,
+        pageTitle: `Galerija i video - ${service.name}`,
         pageDescription: service.shortDescription || service.name,
         data: { ...formData, errors: req.validationErrors, csrfToken: res.locals.csrfToken },
       });
@@ -461,7 +461,7 @@ export async function updateServiceGallery(req, res, next) {
           submitUrl: `/admin/usluge/${serviceId}/galerija`,
         });
         return res.status(statusCode).render("admin/_media-form", {
-          pageTitle: `Galerija i video — ${service.name}`,
+          pageTitle: `Galerija i video - ${service.name}`,
           pageDescription: service.shortDescription || service.name,
           data: { ...formData, errors: { general: message }, csrfToken: res.locals.csrfToken },
         });
@@ -478,7 +478,7 @@ export async function editServiceSeoForm(req, res, next) {
     const formData = prepareServiceSeoFormData(service);
 
     return res.render("admin/_form", {
-      pageTitle: `SEO — ${service.naziv}`,
+      pageTitle: `SEO - ${service.naziv}`,
       pageDescription: service.naziv,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -506,7 +506,7 @@ export async function updateServiceSeo(req, res, next) {
       if (service) {
         const formData = prepareServiceSeoFormData(service);
         return res.status(error.statusCode).render("admin/_form", {
-          pageTitle: `SEO — ${service.naziv}`,
+          pageTitle: `SEO - ${service.naziv}`,
           pageDescription: service.naziv,
           data: { ...formData, errors: { general: error.message }, csrfToken: res.locals.csrfToken },
         });

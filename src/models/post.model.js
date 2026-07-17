@@ -30,7 +30,7 @@ const PostSchema = new Schema(
       maxlength: 300,
     },
 
-    // structured, block-based body — see schemas/content.blog.schema.js
+    // structured, block-based body - see schemas/content.blog.schema.js
     content: {
       type: [ContentBlogSchema],
       default: [],
@@ -45,7 +45,7 @@ const PostSchema = new Schema(
     categories: [{ type: Schema.Types.ObjectId, ref: "Category" }],
     tags: [{ type: Schema.Types.ObjectId, ref: "Tag" }],
 
-    // authored by a staff member — either an admin or an employee (e.g. a therapist
+    // authored by a staff member - either an admin or an employee (e.g. a therapist
     // writing about their specialty). Not a public User to avoid guest accounts authoring posts.
     author: {
       type: Schema.Types.ObjectId,

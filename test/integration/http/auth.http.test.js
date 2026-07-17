@@ -129,7 +129,7 @@ describe("auth flow (HTTP)", () => {
       assert.equal(res.status, 302);
       assert.equal(res.headers.location, "/");
 
-      // the session should now consider us logged in — a protected admin route should
+      // the session should now consider us logged in - a protected admin route should
       // no longer redirect us away to the login page
       const adminRes = await loginAgent.get("/admin");
       assert.notEqual(adminRes.status, 302, "an authenticated admin should not be redirected away from /admin");

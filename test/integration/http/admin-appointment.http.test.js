@@ -94,7 +94,7 @@ describe("admin appointment actions (HTTP)", () => {
   it("cancels a confirmed appointment, bypassing the 24h rule that applies to plain users", async () => {
     const agent = request.agent(app);
     await registerAndLogin(agent, { email: "admin@example.com", roleName: "admin" });
-    const soonStart = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes out — would fail the 24h rule for a "user"
+    const soonStart = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes out - would fail the 24h rule for a "user"
     const appointment = await appointmentRepo.createAppointment(
       validAppointmentData({ status: "confirmed", startTime: soonStart, endTime: new Date(soonStart.getTime() + 60 * 60000) })
     );

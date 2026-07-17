@@ -87,7 +87,7 @@ export async function postDetails(req, res, next) {
     const viewData = preparePostDetailsData(post);
 
     return res.render("admin/_details", {
-      pageTitle: `Post — ${post.naslov}`,
+      pageTitle: `Post - ${post.naslov}`,
       pageDescription: post.kratakOpis,
       data: viewData,
     });
@@ -120,7 +120,7 @@ export async function editPostForm(req, res, next) {
     const formData = preparePostFormData(post, options);
 
     return res.render("admin/_form", {
-      pageTitle: `Izmena — ${post.title}`,
+      pageTitle: `Izmena - ${post.title}`,
       pageDescription: post.excerpt,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -176,7 +176,7 @@ export async function updatePost(req, res, next) {
       const options = await loadFormOptions();
       const formData = preparePostFormData(post, options);
       return res.status(400).render("admin/_form", {
-        pageTitle: `Izmena — ${post.title}`,
+        pageTitle: `Izmena - ${post.title}`,
         pageDescription: post.excerpt,
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -196,7 +196,7 @@ export async function updatePost(req, res, next) {
       const options = await loadFormOptions();
       const formData = preparePostFormData(post, options);
       return res.status(error.statusCode).render("admin/_form", {
-        pageTitle: post ? `Izmena — ${post.title}` : "Izmena posta",
+        pageTitle: post ? `Izmena - ${post.title}` : "Izmena posta",
         pageDescription: post?.excerpt || "",
         data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -227,7 +227,7 @@ export async function editPostSeoForm(req, res, next) {
     const formData = preparePostSeoFormData(post);
 
     return res.render("admin/post/seo", {
-      pageTitle: `SEO — ${post.naslov}`,
+      pageTitle: `SEO - ${post.naslov}`,
       pageDescription: post.naslov,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });

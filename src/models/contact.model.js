@@ -3,11 +3,11 @@ import { Schema, model } from "mongoose";
 const ContactSchema = new Schema(
   {
     firstName: { type: String, required: true, trim: true },
-    // encrypted ciphertext at rest — trimming happens on the plaintext before
+    // encrypted ciphertext at rest - trimming happens on the plaintext before
     // encryption (encryptField()), not here, since trimming ciphertext is meaningless
     lastName: { type: String, required: true },
     email: { type: String, required: true, trim: true, lowercase: true },
-    // optional — encrypted ciphertext when present, unset when not provided
+    // optional - encrypted ciphertext when present, unset when not provided
     phone: { type: String },
 
     topic: {
@@ -33,7 +33,7 @@ const ContactSchema = new Schema(
       index: true,
     },
 
-    // abuse/audit trail — not shown in the UI
+    // abuse/audit trail - not shown in the UI
     ip: String,
     userAgent: String,
   },

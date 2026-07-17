@@ -13,7 +13,7 @@ export async function getBlogLandingData({ limit = 9, page = 1, search = "" } = 
 
   const seo = buildPageSeo({
     title: "Blog | Estetik Lab",
-    description: "Saveti o nezi, wellness rutinama i tretmanima — pratite Estetik Lab blog.",
+    description: "Saveti o nezi, wellness rutinama i tretmanima - pratite Estetik Lab blog.",
     canonical: "/blog",
     isIndexable: true,
   });

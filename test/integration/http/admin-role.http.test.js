@@ -6,10 +6,10 @@ import { getCsrfToken } from "../../helpers/csrf.js";
 import { registerAndLogin, ensureRole } from "../../helpers/session.js";
 import roleRepo from "../../../src/repositories/role.repository.js";
 
-// Uses "recepcija" as a throwaway generic role name for ordinary CRUD tests —
+// Uses "recepcija" as a throwaway generic role name for ordinary CRUD tests -
 // deliberately NOT "employee"/"admin"/"user". Those three are RESERVED
 // (role.service.js blocks renaming/deleting them, since they're looked up by literal
-// string elsewhere — see role.model.js), so using one of them as a generic "some role
+// string elsewhere - see role.model.js), so using one of them as a generic "some role
 // to create/rename/delete" fixture will correctly fail those operations now. The
 // reserved-name protection itself gets its own dedicated test below instead.
 describe("admin role CRUD (HTTP)", () => {

@@ -144,7 +144,7 @@ describe("user.service", () => {
   });
 
   describe("createGuestUser", () => {
-    it("always uses the plain 'user' role, never admin — even if it would technically be the first user", async (t) => {
+    it("always uses the plain 'user' role, never admin - even if it would technically be the first user", async (t) => {
       const userRole = buildRole({ name: "user" });
       t.mock.method(roleService, "findRoleByName", async (name) => (name === "user" ? userRole : null));
 

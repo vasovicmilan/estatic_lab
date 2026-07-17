@@ -71,7 +71,7 @@ describe("coupon.validator", () => {
     });
 
     it("rejects a negative maxUses when one is given", async () => {
-      // note: maxUses uses optional({ values: "falsy" }) so 0 would be skipped entirely — use -1
+      // note: maxUses uses optional({ values: "falsy" }) so 0 would be skipped entirely - use -1
       const agent = buildValidatorHarness(validateCouponCreate);
       const res = await agent.post("/test").send(validCoupon({ maxUses: -1 }));
       assert.equal(res.status, 400);

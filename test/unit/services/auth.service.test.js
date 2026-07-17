@@ -18,7 +18,7 @@ describe("auth.service", () => {
       assert.equal(registeredCalls.length, 1);
     });
 
-    it("does NOT emit user:registered for the first (admin) user — no one to send a confirmation email to", async (t) => {
+    it("does NOT emit user:registered for the first (admin) user - no one to send a confirmation email to", async (t) => {
       t.mock.method(userService, "registerUser", async () => ({ id: "1", email: "admin@b.com", firstName: "Admin", isFirstUser: true, confirmToken: null }));
       const emitMock = t.mock.method(eventEmitter, "emit");
 

@@ -16,7 +16,7 @@ async function createAppointmentForUser(userId) {
     packages: [{ name: "60 minuta", slug: "60-minuta", duration: 60, totalPrice: 3000, isActive: true }],
   });
 
-  const start = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48h out — safely inside the cancellation window
+  const start = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48h out - safely inside the cancellation window
 
   const appointment = await appointmentRepo.createAppointment({
     user: userId,

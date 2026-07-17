@@ -40,7 +40,7 @@ export async function userDetails(req, res, next) {
     const viewData = prepareUserDetailsData(user, roleOptions);
 
     return res.render("admin/_details", {
-      pageTitle: `Korisnik — ${user.imePrezime}`,
+      pageTitle: `Korisnik - ${user.imePrezime}`,
       pageDescription: user.email,
       data: viewData,
     });
@@ -142,7 +142,7 @@ export async function editUserForm(req, res, next) {
     const formData = prepareUserEditFormData(user);
 
     return res.render("admin/_form", {
-      pageTitle: `Izmena — ${user.imePrezime}`,
+      pageTitle: `Izmena - ${user.imePrezime}`,
       pageDescription: user.email,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -161,7 +161,7 @@ export async function updateUser(req, res, next) {
       const user = await userService.getUserById(userId);
       const formData = prepareUserEditFormData(user);
       return res.status(400).render("admin/_form", {
-        pageTitle: `Izmena — ${user.imePrezime}`,
+        pageTitle: `Izmena - ${user.imePrezime}`,
         pageDescription: user.email,
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -178,7 +178,7 @@ export async function updateUser(req, res, next) {
       const user = await userService.getUserById(req.params.userId).catch(() => null);
       const formData = prepareUserEditFormData(user || { id: req.params.userId });
       return res.status(error.statusCode).render("admin/_form", {
-        pageTitle: user ? `Izmena — ${user.imePrezime}` : "Izmena korisnika",
+        pageTitle: user ? `Izmena - ${user.imePrezime}` : "Izmena korisnika",
         pageDescription: user?.email || "",
         data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });

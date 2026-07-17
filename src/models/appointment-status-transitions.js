@@ -37,7 +37,7 @@ const TRANSITIONS = {
     admin: ["pending"], // admin can reopen a mistakenly marked no-show
   },
   completed: {
-    // terminal — no role can transition out of "completed"
+    // terminal - no role can transition out of "completed"
   },
 };
 

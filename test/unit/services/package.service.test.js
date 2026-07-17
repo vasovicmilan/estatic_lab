@@ -6,7 +6,7 @@ import * as packageService from "../../../src/services/package.service.js";
 import { buildPackage, buildService, buildServicePackageVariant, id } from "../../helpers/factories.js";
 
 describe("package.service", () => {
-  describe("createPackage — item validation", () => {
+  describe("createPackage - item validation", () => {
     it("rejects a package with no items", async () => {
       await assert.rejects(
         () => packageService.createPackage({ name: "X", totalPrice: 1000, items: [] }),
@@ -30,7 +30,7 @@ describe("package.service", () => {
     });
   });
 
-  describe("createPackage — variant scoping", () => {
+  describe("createPackage - variant scoping", () => {
     it("rejects an item with no servicePackageId", async (t) => {
       t.mock.method(serviceRepo, "findServiceById", async () => buildService());
       await assert.rejects(
@@ -75,7 +75,7 @@ describe("package.service", () => {
     });
   });
 
-  describe("createPackage — slug generation", () => {
+  describe("createPackage - slug generation", () => {
     it("auto-generates a slug from the name when omitted", async (t) => {
       const variant = buildServicePackageVariant();
       const service = buildService({ packages: [variant] });

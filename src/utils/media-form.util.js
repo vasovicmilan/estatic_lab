@@ -7,7 +7,7 @@ function toArray(value) {
 /**
  * Rebuilds the gallery array from the media-management form submission:
  * - existing images round-trip as parallel arrays (img URL + alt text),
- *   since ImageSchema entries have no _id to key off — index position is
+ *   since ImageSchema entries have no _id to key off - index position is
  *   how we match a checked "remove" box back to the right image.
  * - newly uploaded files (req.uploadedFiles.gallery) get appended, all
  *   sharing the single "newGalleryDesc" alt-text field from this submission.
@@ -31,7 +31,7 @@ export function buildGalleryPayload(req) {
 
 /**
  * Rebuilds the videos array: existing/edited external videos come through
- * the JSON repeater as req.body.videos (already an array — parseJsonFields
+ * the JSON repeater as req.body.videos (already an array - parseJsonFields
  * must run before this), and any newly uploaded self-hosted video files
  * (req.uploadedFiles.video, processed+thumbnailed by multer.config.js) get
  * appended as isExternal: false entries.

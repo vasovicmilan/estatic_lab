@@ -1,6 +1,6 @@
 /**
  * Builds the Mongo filter object for Category list queries. `domain` is required in
- * practice (post vs service) — callers should always pass it, but it's not enforced
+ * practice (post vs service) - callers should always pass it, but it's not enforced
  * here since the repository/service layer is the right place for that validation.
  */
 export function buildCategoryFilter({ search = "", domain = null, parent = undefined, isActive = null } = {}) {

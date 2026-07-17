@@ -2,11 +2,11 @@ import Testimonial from "../models/testimonial.model.js";
 import { buildTestimonialFilter } from "./filters/testimonial.filter.js";
 import { resolveLimit, resolveSkip, buildPaginationMeta } from "../utils/pagination.util.js";
 
-// shared populate set — every read path (admin list/detail, public widget) needs
+// shared populate set - every read path (admin list/detail, public widget) needs
 // the same three relations resolved, or the mapper has nothing to work with:
 // service/package for "usluga"/"paket" name+slug, user for the "registered
 // customer" badge + avatar fallback. Previously only `service` was populated,
-// and only on the admin list — package, user, and the public-facing reads
+// and only on the admin list - package, user, and the public-facing reads
 // never got it, so those fields silently rendered empty everywhere else.
 const TESTIMONIAL_POPULATE = [
   { path: "service", select: "name slug" },
@@ -51,7 +51,7 @@ export async function findTestimonials({
   return { data, ...buildPaginationMeta({ total, page, limit }) };
 }
 
-// public "what our clients say" widget — approved only, featured first
+// public "what our clients say" widget - approved only, featured first
 export async function findApprovedTestimonials({ limit = 10, featuredOnly = false, service = null, package: pkg = null, session } = {}) {
   const filter = { status: "approved" };
   if (featuredOnly) filter.isFeatured = true;

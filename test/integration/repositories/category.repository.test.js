@@ -38,7 +38,7 @@ describe("category.repository", () => {
   });
 
   describe("findCategoryBySlug", () => {
-    it("scopes lookups by domain — same slug can exist in two domains", async () => {
+    it("scopes lookups by domain - same slug can exist in two domains", async () => {
       await categoryRepo.createCategory(validCategory({ domain: "post" }));
       await categoryRepo.createCategory(validCategory({ domain: "service" }));
 
@@ -74,7 +74,7 @@ describe("category.repository", () => {
       assert.equal(result.data[0].domain, "service");
     });
 
-    it("filters by parent — explicit null means top-level only", async () => {
+    it("filters by parent - explicit null means top-level only", async () => {
       const parent = await categoryRepo.createCategory(validCategory({ slug: "roditelj" }));
       await categoryRepo.createCategory(validCategory({ slug: "dete", parent: parent._id }));
       await categoryRepo.createCategory(validCategory({ slug: "drugi-top-level", parent: null }));

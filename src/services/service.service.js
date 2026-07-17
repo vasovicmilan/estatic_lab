@@ -29,7 +29,7 @@ function validatePackages(packages = []) {
  * Each Service.packages[] entry (see service-package.schema.js) needs its own slug.
  * Collisions here only matter *within this one service's own list* (two variants of the
  * SAME service can't share a slug, but a slug can repeat across different services fine)
- * — so uniqueness is checked against sibling entries in the same array, not the database.
+ * - so uniqueness is checked against sibling entries in the same array, not the database.
  */
 function assignPackageSlugs(packages = []) {
   const usedSlugs = new Set();
@@ -52,7 +52,7 @@ function assignPackageSlugs(packages = []) {
   });
 }
 
-// Reused by both the schema-level publish guard's callers (phase 3) — same rules,
+// Reused by both the schema-level publish guard's callers (phase 3) - same rules,
 // thrown as our own badRequest() here so the controller gets a normal 400 instead of
 // a raw Mongoose ValidationError when the check fails before we even hit the DB.
 function assertPublishable(service) {

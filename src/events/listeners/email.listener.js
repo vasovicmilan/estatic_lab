@@ -6,7 +6,7 @@ import * as packagePurchaseService from "../../services/package-purchase.service
 import { logError } from "../../utils/logger.util.js";
 
 /**
- * This module's only job is registering `eventEmitter.on(...)` handlers — importing it
+ * This module's only job is registering `eventEmitter.on(...)` handlers - importing it
  * once (see server.js) is enough, nothing needs to be called. Split out from
  * event.emitter.js itself so the emitter stays a dumb, dependency-free singleton that
  * every service can import without pulling in email/appointment/etc. services
@@ -15,7 +15,7 @@ import { logError } from "../../utils/logger.util.js";
  * Every handler is wrapped in `safe()`: by the time any of these events fire, the
  * action they're reacting to (booking, registration, password reset...) has already
  * succeeded and already returned a response to the user. A failed notification email
- * must never surface as a 500 to someone who successfully booked an appointment — it
+ * must never surface as a 500 to someone who successfully booked an appointment - it
  * gets logged instead.
  */
 function safe(eventName, handler) {
@@ -33,7 +33,7 @@ function safe(eventName, handler) {
 eventEmitter.on(
   "user:registered",
   safe("user:registered", async ({ email, firstName, confirmToken }) => {
-    // Google sign-ins emit this too but with no confirmToken — their email is already
+    // Google sign-ins emit this too but with no confirmToken - their email is already
     // verified by Google, so there's nothing to confirm and nothing to send.
     if (!confirmToken) return;
     await emailService.sendAccountConfirmationEmail({ email, firstName }, confirmToken);
@@ -68,7 +68,7 @@ eventEmitter.on(
   })
 );
 
-// user:confirmed fires when the confirmation link is actually clicked — the
+// user:confirmed fires when the confirmation link is actually clicked - the
 // confirmation email itself was already sent on user:registered, and there's no
 // "welcome, you're verified" email defined, so intentionally no listener here.
 
@@ -84,7 +84,7 @@ eventEmitter.on(
 eventEmitter.on(
   "appointment:created",
   safe("appointment:created", async ({ appointmentId, email, firstName }) => {
-    // event payload only carries the booker's contact info — admin role bypasses the
+    // event payload only carries the booker's contact info - admin role bypasses the
     // usual requester ownership check (see appointment.service.js's canAccessAppointment),
     // which is fine here since this is a trusted, system-triggered read, not a user request
     const appointment = await appointmentService.getAppointmentById(appointmentId, null, "admin");
@@ -107,7 +107,7 @@ eventEmitter.on(
       await emailService.sendAppointmentCancelledEmail({ email, firstName }, appointment);
       await emailService.notifyAdminAppointmentCancelled(appointment);
     } else {
-      // rejected, completed, no_show — generic fallback template
+      // rejected, completed, no_show - generic fallback template
       await emailService.sendAppointmentStatusUpdateEmail({ email, firstName }, appointment, appointment.status);
     }
   })

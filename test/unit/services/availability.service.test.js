@@ -18,7 +18,7 @@ function futureDateOnDay() {
 }
 
 describe("availability.service", () => {
-  describe("getAvailableSlots — input validation", () => {
+  describe("getAvailableSlots - input validation", () => {
     it("requires serviceId, servicePackageId, and date", async () => {
       await assert.rejects(() => availabilityService.getAvailableSlots({ servicePackageId: "x", date: new Date() }), (err) => err.statusCode === 400);
       await assert.rejects(() => availabilityService.getAvailableSlots({ serviceId: "x", date: new Date() }), (err) => err.statusCode === 400);
@@ -35,7 +35,7 @@ describe("availability.service", () => {
     });
   });
 
-  describe("getAvailableSlots — single employee slot math", () => {
+  describe("getAvailableSlots - single employee slot math", () => {
     it("returns evenly-stepped slots covering the full working window when nothing is booked", async (t) => {
       const { date, dayName } = futureDateOnDay();
       const variant = buildServicePackageVariant({ duration: 60 });
@@ -75,7 +75,7 @@ describe("availability.service", () => {
       });
 
       // 09:00-10:30, 45-min service, 30-min grid -> 09:00 (ends 09:45), 09:30
-      // (ends 10:15). NOT 09:45/10:30 — those would be off-grid start times.
+      // (ends 10:15). NOT 09:45/10:30 - those would be off-grid start times.
       const slotTimes = slots.map((s) => `${s.startTime.getHours()}:${String(s.startTime.getMinutes()).padStart(2, "0")}`);
       assert.deepEqual(slotTimes, ["9:00", "9:30"]);
     });
@@ -103,7 +103,7 @@ describe("availability.service", () => {
 
       // busy 10:00-11:00 + 30min buffer on each side -> effectively blocked 09:30-11:30.
       // Working hours are 09:00-13:00, so: [09:00-09:30] is only 30min (too short for a
-      // 60min slot, so 09:00 must NOT appear), and [11:30-13:00] is 90min — on the 30-min
+      // 60min slot, so 09:00 must NOT appear), and [11:30-13:00] is 90min - on the 30-min
       // grid that fits two 60-min slots: 11:30 (ends 12:30) and 12:00 (ends 13:00 exactly).
       const slotTimes = slots.map((s) => `${s.startTime.getHours()}:${String(s.startTime.getMinutes()).padStart(2, "0")}`);
       assert.deepEqual(slotTimes, ["11:30", "12:00"]);
@@ -129,7 +129,7 @@ describe("availability.service", () => {
     });
   });
 
-  describe("getAvailableSlots — multi-employee merge", () => {
+  describe("getAvailableSlots - multi-employee merge", () => {
     it("merges slots across employees, deduplicating identical start times", async (t) => {
       const { date, dayName } = futureDateOnDay();
       const variant = buildServicePackageVariant({ duration: 60 });

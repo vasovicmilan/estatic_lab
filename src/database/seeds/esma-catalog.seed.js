@@ -11,13 +11,13 @@ const DOMAIN = "service";
 // ---------------------------------------------------------------------------
 // Prethodna verzija ovog seed-a je na više mesta tvrdila da ESMA Favorit ima
 // tačno "24 nezavisna kanala". Proverio sam ovo kod zvaničnog proizvođača
-// (esma.ru) i kod više nezavisnih prodavaca opreme — svi navode da uređaj
+// (esma.ru) i kod više nezavisnih prodavaca opreme - svi navode da uređaj
 // (zvanično: ESMA 12.48 Favorit) ima "veliki broj nezavisnih izlaznih
 // kanala" i omogućava do 3-4 nezavisne procedure/klijenta istovremeno, ali
 // NIGDE se ne navodi konkretan broj "24". Taj broj je uklonjen iz opisa
 // tretmana ispod. Nazivi tretmana (npr. "Tesla-Tone 24", "Aqua-Drain 360")
 // su ostavljeni nepromenjeni jer deluju kao stilizovani nazivi proizvoda, a
-// ne kao tehnička specifikacija — ali ako želite da i to promenite radi
+// ne kao tehnička specifikacija - ali ako želite da i to promenite radi
 // doslednosti, javite mi.
 //
 // Takođe sam ublažio par prejakih tvrdnji (npr. "kontrahuje 100% mišićnih
@@ -26,7 +26,7 @@ const DOMAIN = "service";
 // ne može garantovano da ispuni. Broj gotovih programa/šablona (koji se u
 // marketinškim porukama pominjao kao "300+") je kod većine zvaničnih
 // prodavaca naveden kao "100", pa taj broj namerno NIJE naveden nigde u
-// tekstu ispod — ako želite da ga ipak istaknete, preporučujem "preko 100"
+// tekstu ispod - ako želite da ga ipak istaknete, preporučujem "preko 100"
 // jer je to najčešće potvrđena vrednost.
 // ---------------------------------------------------------------------------
 
@@ -38,12 +38,12 @@ const topLevelCategories = [
   {
     slug: "masaze",
     name: "Masaže",
-    shortDescription: "Klasične ručne masaže — opuštanje, antistres, sport, terapeutska masaža i anticelulit tretmani.",
+    shortDescription: "Klasične ručne masaže - opuštanje, antistres, sport, terapeutska masaža i anticelulit tretmani.",
   },
   {
     slug: "struja",
     name: "Struja",
-    shortDescription: "Tretmani zasnovani na električnoj stimulaciji — miostimulacija, mikrostrujna terapija, limfna drenaža strujom.",
+    shortDescription: "Tretmani zasnovani na električnoj stimulaciji - miostimulacija, mikrostrujna terapija, limfna drenaža strujom.",
   },
   {
     slug: "esma",
@@ -74,7 +74,7 @@ const childCategories = [
 const tagDefs = [
   // Tagovi referencirani u tagSlugs 6 ESMA usluga (tesla-tone-24,
   // aqua-drain-360, lipolise-russian-max, tri-active-cellu-erase,
-  // laser-sonic-face-sculpt, medicinski-bio-reset) — moraju postojati
+  // laser-sonic-face-sculpt, medicinski-bio-reset) - moraju postojati
   // ovde ili će upsertServices baciti grešku "nepostojeći tagSlug".
   { slug: "miostimulacija", name: "Miostimulacija" },
   { slug: "tonus-misica", name: "Tonus mišića" },
@@ -133,7 +133,7 @@ const serviceDefs = [
     longDescription:
       "Tesla‑Tone 24 je tretman miostimulacije na ESMA Favorit aparatu koji simulira intenzivan trening za celo telo. Kroz veliki broj nezavisnih kanala, aparat šalje impulse koji izazivaju snažne kontrakcije mišićnih vlakana, uključujući i duboke stabilizatore koje je teško aktivirati klasičnim treningom u teretani. Rezultat je čvršća muskulatura, poboljšano držanje tela i osećaj tonusa – bez znojenja i opterećenja zglobova. Ovaj tretman je pogodan za sve koji žele brži osećaj tonusa mišića, definisane ruke, čvršću zadnjicu i stomak, uz redovnu fizičku aktivnost i zdravu ishranu. Preporučuje se serija od 5 do 10 tretmana.",
     defaultDuration: 45,
-    image: { img: "https://placehold.co/800x600?text=Tesla-Tone%2024", imgDesc: "Tesla-Tone 24 — privremena placeholder slika, zameniti pravom fotografijom" },
+    image: { img: "https://placehold.co/800x600?text=Tesla-Tone%2024", imgDesc: "Tesla-Tone 24 - privremena placeholder slika, zameniti pravom fotografijom" },
     features: [
       { name: "💪 Simulacija treninga", description: "Kontrakcija mišićnih vlakana bez znojenja i intenzivne upale mišića.", icon: "bi bi-lightning-charge", order: 1 },
       { name: "🎯 Duboki stabilizatori", description: "Cilja i mišiće koje je teško aktivirati klasičnim vežbanjem u teretani.", icon: "bi bi-bullseye", order: 2 },
@@ -174,7 +174,7 @@ const serviceDefs = [
     longDescription:
       "Aqua‑Drain 360 je limfna drenaža na ESMA Favorit aparatu. Kroz veliki broj mikro-strujnih kanala kreira se ritmični talasni pritisak koji nežno potiskuje nakupljenu tečnost iz tkiva ka limfnim čvorovima, podstičući cirkulaciju i izbacivanje viška tečnosti. Ovaj tretman je pogodan za osobe sa sindromom „teških nogu“, oticanjem, zadržavanjem vode, kao i za regeneraciju nakon napornih treninga. Rezultat je olakšanje, smanjenje obima usled izbačene tečnosti i osećaj svežije kože. Preporučuje se serija od 5 do 10 tretmana.",
     defaultDuration: 45,
-    image: { img: "https://placehold.co/800x600?text=Aqua-Drain%20360", imgDesc: "Aqua-Drain 360 — privremena placeholder slika, zameniti pravom fotografijom" },
+    image: { img: "https://placehold.co/800x600?text=Aqua-Drain%20360", imgDesc: "Aqua-Drain 360 - privremena placeholder slika, zameniti pravom fotografijom" },
     features: [
       { name: "💧 Limfni reset", description: "Ritmični talasi potiskuju tečnost iz tkiva i smanjuju otoke.", icon: "bi bi-droplet", order: 1 },
       { name: "🧹 Podsticanje cirkulacije", description: "Ubrzava cirkulaciju i pomaže izbacivanju viška tečnosti iz organizma.", icon: "bi bi-arrow-repeat", order: 2 },
@@ -214,7 +214,7 @@ const serviceDefs = [
     longDescription:
       "Lipolise Russian‑Max je tretman elektrolipolize na ESMA Favorit aparatu. Struje deluju na masne ćelije (adipocite) u tretiranoj zoni, podstičući oslobađanje masnih naslaga koje se dalje prirodno metabolišu i izbacuju putem limfnog sistema. Ovaj tretman je pogodan za klijente sa lokalizovanim masnim naslagama na stomaku, bokovima i jahaćim pantalonama, kao i za tvrdokorni celulit. Rezultat je postepeno smanjenje obima na tretiranim zonama i utisak glađe kože. Preporučuje se serija od 5 do 10 tretmana, uz zdravu ishranu i fizičku aktivnost za najbolje i dugotrajnije rezultate.",
     defaultDuration: 45,
-    image: { img: "https://placehold.co/800x600?text=Lipolise%20Russian-Max", imgDesc: "Lipolise Russian-Max — privremena placeholder slika, zameniti pravom fotografijom" },
+    image: { img: "https://placehold.co/800x600?text=Lipolise%20Russian-Max", imgDesc: "Lipolise Russian-Max - privremena placeholder slika, zameniti pravom fotografijom" },
     features: [
       { name: "🔥 Deluje na masne ćelije", description: "Struja podstiče oslobađanje masnih naslaga u tretiranoj zoni.", icon: "bi bi-water", order: 1 },
       { name: "🎯 Lokalizovane zone", description: "Fokus na stomak, bokove, butine i jahaće pantalone.", icon: "bi bi-bullseye", order: 2 },
@@ -255,7 +255,7 @@ const serviceDefs = [
     longDescription:
       "Tri‑Active Cellu‑Erase je kombinovani tretman na ESMA Favorit aparatu koji u jednoj proceduri objedinjuje tri tehnologije: ultrazvuk, interferentnu struju i svetlosnu (lasersku) terapiju. Tretman započinje ultrazvukom koji radi mikromasažu tkiva i priprema zonu za dalju obradu. Zatim se uključuje interferentna struja (elektrolipoliza) koja deluje na masne naslage kroz veliki broj nezavisnih kanala. Tretman se završava svetlosnom terapijom koja podstiče lokalnu cirkulaciju i doprinosi osećaju zategnutije kože na tretiranoj regiji. Pogodno za klijente sa dugotrajnim celulitom na bedrima i tvrdokornim masnim naslagama na stomaku. Preporučuje se serija od 5 do 10 tretmana.",
     defaultDuration: 75,
-    image: { img: "https://placehold.co/800x600?text=Tri-Active%20Cellu-Erase", imgDesc: "Tri-Active Cellu-Erase — privremena placeholder slika, zameniti pravom fotografijom" },
+    image: { img: "https://placehold.co/800x600?text=Tri-Active%20Cellu-Erase", imgDesc: "Tri-Active Cellu-Erase - privremena placeholder slika, zameniti pravom fotografijom" },
     features: [
       { name: "🌊 Ultrazvučna mikromasaža", description: "Priprema tkivo i tvrđi, fibrozni celulit za dalju obradu.", icon: "bi bi-water", order: 1 },
       { name: "⚡ Elektrolipoliza strujom", description: "Deluje na masne naslage kroz veliki broj nezavisnih kanala.", icon: "bi bi-lightning-charge", order: 2 },
@@ -295,7 +295,7 @@ const serviceDefs = [
     longDescription:
       "Laser‑Sonic Face Sculpt je neinvazivni tretman za lice na ESMA Favorit aparatu koji kombinuje mikrostruje, ultrazvuk i svetlosnu (lasersku) terapiju, bez igala i bez perioda oporavka. Mikrostruje rade nežan miolifting lica – podstiču tonus mišića obraza i podbratka. Ultrazvučna fonoforeza pomaže unosu kozmetičkih aktivnih sastojaka (npr. hijaluron, vitamini) u kožu. Svetlosna terapija na kraju umiruje kožu i podstiče osećaj svežine i sjaja. Rezultat je vidljiv odmah nakon tretmana – zategnutije konture, svež ten i blistaviji izgled kože. Preporučuje se serija od 5 do 10 tretmana za dugotrajniji efekat.",
     defaultDuration: 45,
-    image: { img: "https://placehold.co/800x600?text=Laser-Sonic%20Face%20Sculpt", imgDesc: "Laser-Sonic Face Sculpt — privremena placeholder slika, zameniti pravom fotografijom" },
+    image: { img: "https://placehold.co/800x600?text=Laser-Sonic%20Face%20Sculpt", imgDesc: "Laser-Sonic Face Sculpt - privremena placeholder slika, zameniti pravom fotografijom" },
     features: [
       { name: "😊 Miolifting lica", description: "Podstiče tonus mišića obraza i podbratka.", icon: "bi bi-emoji-smile", order: 1 },
       { name: "💧 Ultrazvučna fonoforeza", description: "Pomaže unosu kozmetičkih aktivnih sastojaka u kožu, bez igala.", icon: "bi bi-droplet", order: 2 },
@@ -336,7 +336,7 @@ const serviceDefs = [
     longDescription:
       "Medicinski Bio‑Reset je fizikalni tretman na ESMA Favorit aparatu koji kombinuje interferentne struje, ultrazvuk i svetlosnu terapiju radi ublažavanja bolova i mišićne napetosti. Interferentne struje deluju na zglob ili mišić i mogu doprineti smanjenju osećaja bola i mišićnog spazma. Ultrazvuk se koristi za mikromasažu tkiva, dok svetlosna terapija podstiče lokalnu cirkulaciju. Tretman je namenjen sportistima i osobama sa bolovima u leđima, vratu ili nakon manjih povreda zglobova, kao dopuna – ne zamena – redovnoj fizikalnoj terapiji i lekarskom tretmanu. Preporučuje se serija od 5 do 10 tretmana.",
     defaultDuration: 45,
-    image: { img: "https://placehold.co/800x600?text=Medicinski%20Bio-Reset", imgDesc: "Medicinski Bio-Reset — privremena placeholder slika, zameniti pravom fotografijom" },
+    image: { img: "https://placehold.co/800x600?text=Medicinski%20Bio-Reset", imgDesc: "Medicinski Bio-Reset - privremena placeholder slika, zameniti pravom fotografijom" },
     features: [
       { name: "💊 Ublažavanje bola", description: "Interferentne struje mogu doprineti smanjenju osećaja bola i mišićnog spazma.", icon: "bi bi-heart-pulse", order: 1 },
       { name: "🛡️ Podrška cirkulaciji", description: "Ultrazvuk radi mikromasažu tkiva u zoni bola.", icon: "bi bi-water", order: 2 },
@@ -385,7 +385,7 @@ const serviceDefs = [
     longDescription:
       "Relaks masaža je klasična ručna masaža blagim, ritmičnim pokretima namenjena opštem opuštanju tela i uma. Tretman pomaže u smanjenju napetosti u mišićima nastale usled stresa, dugog sedenja ili svakodnevnog fizičkog opterećenja, i podstiče lokalnu cirkulaciju krvi. Redovna relaks masaža može doprineti boljem kvalitetu sna i opštem osećaju odmornosti. Varijanta od 30 minuta obuhvata gornji (vrat, ramena, leđa, ruke) ili donji deo tela (noge, stopala, donji deo leđa) po izboru klijenta, dok varijanta od 60 minuta obuhvata masažu celog tela.",
     defaultDuration: 60,
-    image: { img: "https://placehold.co/800x600?text=Relaks%20masaza", imgDesc: "Relaks masaza — privremena placeholder slika, zameniti pravom fotografijom" },
+    image: { img: "https://placehold.co/800x600?text=Relaks%20masaza", imgDesc: "Relaks masaza - privremena placeholder slika, zameniti pravom fotografijom" },
     skipBundlePackages: true,
     features: [
       { name: "🌿 Smanjenje stresa", description: "Blagi, ritmični pokreti podstiču opuštanje nervnog sistema.", icon: "bi bi-flower1", order: 1 },
@@ -416,7 +416,7 @@ const serviceDefs = [
     longDescription:
       "Sportska masaža koristi dublje, ciljane tehnike (gnječenje, kompresija, istezanje) prilagođene fizički aktivnim osobama. Masaža pre treninga može pomoći u pripremi mišića i poboljšanju fleksibilnosti, dok masaža nakon napora pomaže u smanjenju osećaja ukočenosti i zamora, podržavajući oporavak. Sportska masaža je pogodna i za rekreativce i za sportiste, kao deo redovne pripreme ili oporavka. Varijanta od 30 minuta pokriva gornji ili donji deo tela (npr. samo noge nakon trčanja), dok varijanta od 60 minuta obuhvata celo telo.",
     defaultDuration: 60,
-    image: { img: "https://placehold.co/800x600?text=Sportska%20masaza", imgDesc: "Sportska masaza — privremena placeholder slika, zameniti pravom fotografijom" },
+    image: { img: "https://placehold.co/800x600?text=Sportska%20masaza", imgDesc: "Sportska masaza - privremena placeholder slika, zameniti pravom fotografijom" },
     skipBundlePackages: true,
     features: [
       { name: "🏃 Priprema pre treninga", description: "Podstiče protok krvi u mišiće i doprinosi boljoj fleksibilnosti.", icon: "bi bi-activity", order: 1 },
@@ -447,7 +447,7 @@ const serviceDefs = [
     longDescription:
       "Terapeutska masaža koristi tehnike dubinskog rada na mišićima i rad na zategnutim zonama radi ublažavanja hronične napetosti u vratu, ramenima i leđima, kao i posledica dugotrajnog sedenja i lošeg držanja tela. Terapeut identifikuje zategnute zone i mišićne čvoriće i radi na njihovom postepenom otpuštanju kroz kombinaciju pritiska i istezanja. Ovaj tretman može biti koristan dodatak fizikalnoj terapiji, ali je ne zamenjuje niti predstavlja medicinsko lečenje. Dostupna je varijanta od 30 minuta (gornji ili donji deo tela) ili 60 minuta (celo telo).",
     defaultDuration: 60,
-    image: { img: "https://placehold.co/800x600?text=Terapeutska%20masaza", imgDesc: "Terapeutska masaza — privremena placeholder slika, zameniti pravom fotografijom" },
+    image: { img: "https://placehold.co/800x600?text=Terapeutska%20masaza", imgDesc: "Terapeutska masaza - privremena placeholder slika, zameniti pravom fotografijom" },
     skipBundlePackages: true,
     features: [
       { name: "🎯 Rad na zategnutim zonama", description: "Ciljano otpuštanje zategnutih mišićnih čvorića.", icon: "bi bi-bullseye", order: 1 },
@@ -478,7 +478,7 @@ const serviceDefs = [
     longDescription:
       "Anticelulit masaža koristi intenzivnije tehnike gnječenja i rolanja kože u zonama sklonim celulitu – najčešće na butinama, bokovima i stomaku – kako bi podstakla lokalnu cirkulaciju krvi i limfe. Redovni tretmani mogu doprineti boljoj teksturi kože i privremenom poboljšanju izgleda kože sklone celulitu, naročito u kombinaciji sa zdravom ishranom i fizičkom aktivnošću. Važno je napomenuti da ručna masaža ne menja trajno strukturu vezivnog tkiva niti uklanja masne naslage – za izraženiji rad na masnim naslagama pogledajte i naše ESMA tretmane poput Lipolise Russian-Max. Dostupna je varijanta od 30 minuta (gornji ili donji deo tela) i 60 minuta (celo telo).",
     defaultDuration: 60,
-    image: { img: "https://placehold.co/800x600?text=Anticelulit%20masaza", imgDesc: "Anticelulit masaza — privremena placeholder slika, zameniti pravom fotografijom" },
+    image: { img: "https://placehold.co/800x600?text=Anticelulit%20masaza", imgDesc: "Anticelulit masaza - privremena placeholder slika, zameniti pravom fotografijom" },
     skipBundlePackages: true,
     features: [
       { name: "🤲 Ručna tehnika gnječenja", description: "Intenzivniji pokreti podstiču mikrocirkulaciju u zonama sklonim celulitu.", icon: "bi bi-water", order: 1 },
@@ -641,7 +641,7 @@ async function upsertServices(categoriesBySlug, tagsBySlug) {
     const categories = def.categorySlugs.map((slug) => {
       const cat = categoriesBySlug[slug];
       if (!cat) {
-        throw new Error(`Usluga "${def.slug}" referenciše nepostojeći categorySlug "${slug}" — proveri topLevelCategories/childCategories.`);
+        throw new Error(`Usluga "${def.slug}" referenciše nepostojeći categorySlug "${slug}" - proveri topLevelCategories/childCategories.`);
       }
       return cat._id;
     });
@@ -649,7 +649,7 @@ async function upsertServices(categoriesBySlug, tagsBySlug) {
     const tags = def.tagSlugs.map((slug) => {
       const tag = tagsBySlug[slug];
       if (!tag) {
-        throw new Error(`Usluga "${def.slug}" referenciše nepostojeći tagSlug "${slug}" — proveri tagDefs.`);
+        throw new Error(`Usluga "${def.slug}" referenciše nepostojeći tagSlug "${slug}" - proveri tagDefs.`);
       }
       return tag._id;
     });

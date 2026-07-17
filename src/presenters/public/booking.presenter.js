@@ -13,7 +13,7 @@ export function prepareBookingServiceStepData(service) {
 }
 
 // Step 2: date/employee selection + available slots (slots come pre-computed from the
-// availability service — this presenter only arranges them for the calendar widget)
+// availability service - this presenter only arranges them for the calendar widget)
 export function prepareBookingSlotsStepData(service, variant, { date, employeeId = "", employees = [], slots = [] } = {}) {
   return {
     service,
@@ -44,7 +44,7 @@ export function prepareBookingContactStepData(
   { isLoggedIn = false, user = null, errors = {}, usablePackagePurchase = null } = {}
 ) {
   // usablePackagePurchase is a raw (lean) PackagePurchase doc from
-  // package-purchase.service.js's findUsablePurchaseForService — only ever passed
+  // package-purchase.service.js's findUsablePurchaseForService - only ever passed
   // when isLoggedIn, since a package purchase belongs to a real account. Trimmed
   // down here to just what the contact-step view needs to render the "pay with my
   // package" option; the actual authorization check happens again server-side in
@@ -69,7 +69,7 @@ export function prepareBookingContactStepData(
       ? { firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.telefon || "" }
       : { firstName: "", lastName: "", email: "", phone: "" },
     errors,
-    // a package-covered booking is already prepaid — the coupon field only makes
+    // a package-covered booking is already prepaid - the coupon field only makes
     // sense when the visitor is actually paying for this booking
     couponFieldEnabled: true,
     usablePackagePurchase: packageOption,
@@ -85,7 +85,7 @@ export function prepareBookingContactStepData(
 export function prepareBookingConfirmationData(appointment, { accountJustCreated = false } = {}) {
   return {
     appointment,
-    accountJustCreated, // true when a guest User was auto-created — prompts a "claim your account" banner
+    accountJustCreated, // true when a guest User was auto-created - prompts a "claim your account" banner
     breadcrumbs: [{ label: "Termin zakazan", url: null }],
   };
 }

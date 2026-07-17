@@ -24,18 +24,18 @@ await fs.ensureDir(path.join(PUBLIC_PATH, "videos", "thumbnails"));
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/avif"];
 const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm"];
-// shared across images and videos — images get resized down by sharp regardless
+// shared across images and videos - images get resized down by sharp regardless
 // of upload size, so raising this mainly exists to give video uploads real room
 // (10MB was only ever going to fit a few seconds of video)
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 
 // Physical save folder is keyed by `type` (services/packages/posts/...), not by
-// field name — field names like "gallery" are deliberately reused across
+// field name - field names like "gallery" are deliberately reused across
 // several entities (services, packages, posts all upload to a field literally
 // named "gallery"), so keying off fieldname collapsed all of them into the same
 // folder regardless of which entity actually owns the upload. `type` is already
 // passed explicitly at every call site (see the routes files) and is what the
-// returned URL (/images/${type}/...) is built from too — so this makes the
+// returned URL (/images/${type}/...) is built from too - so this makes the
 // folder actually written to match the URL that gets saved to the database.
 const KNOWN_IMAGE_TYPES = new Set(["services", "packages", "categories", "posts", "testimonials", "experts", "site"]);
 
@@ -104,7 +104,7 @@ async function handleImageUpload(file, destination, type) {
   };
 }
 
-// =============== VIDEO (ffmpeg — thumbnail only, no re-encode) ===============
+// =============== VIDEO (ffmpeg - thumbnail only, no re-encode) ===============
 
 async function processVideo(buffer, baseFilename) {
   const videoDir = path.join(PUBLIC_PATH, "videos");

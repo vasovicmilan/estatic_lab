@@ -159,7 +159,7 @@ export function buildService(overrides = {}) {
 }
 
 // items now carry servicePackageId (the exact variant this item covers, not just
-// "any variant of this service") — see package.model.js
+// "any variant of this service") - see package.model.js
 export function buildPackage(overrides = {}) {
   const defaultVariant = buildServicePackageVariant();
   return {
@@ -246,7 +246,7 @@ export function buildCoupon(overrides = {}) {
 }
 
 // items carry servicePackageId (matched exactly, not just the parent service) and
-// sessionsReserved (claimed-but-not-yet-delivered — see package-purchase.model.js)
+// sessionsReserved (claimed-but-not-yet-delivered - see package-purchase.model.js)
 export function buildPackagePurchase(overrides = {}) {
   const serviceId = overrides.serviceId || id();
   const servicePackageId = overrides.servicePackageId || id();

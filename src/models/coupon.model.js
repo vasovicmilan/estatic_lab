@@ -7,7 +7,7 @@ const CouponUsageSchema = new Schema(
       ref: "User",
       required: true,
     },
-    // exactly one of these two is set per redemption — a coupon either discounts a
+    // exactly one of these two is set per redemption - a coupon either discounts a
     // single booking or a package purchase, never both, but the same Coupon
     // document/discount logic covers either kind
     appointment: {

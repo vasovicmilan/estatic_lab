@@ -76,7 +76,7 @@ export async function appointmentDetails(req, res, next) {
     const viewData = prepareEmployeeAppointmentDetailData(appointment);
 
     return res.render("employee/appointment-details", {
-      pageTitle: `Termin — ${appointment.klijent.ime}`,
+      pageTitle: `Termin - ${appointment.klijent.ime}`,
       pageDescription: appointment.usluga.naziv,
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });

@@ -37,7 +37,7 @@
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                   <div>
                     <div class="fw-semibold"><%= a.korisnik %></div>
-                    <div class="text-muted small"><%= a.usluga %> — <%= a.datum %></div>
+                    <div class="text-muted small"><%= a.usluga %> - <%= a.datum %></div>
                   </div>
                   <a href="/admin/termini/detalji/<%= a.id %>" class="btn btn-sm btn-outline-primary">Pregled</a>
                 </li>
@@ -63,7 +63,7 @@
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                   <div>
                     <div class="fw-semibold"><%= c.imePrezime %></div>
-                    <div class="text-muted small"><%= c.email %> — <%= c.datum %></div>
+                    <div class="text-muted small"><%= c.email %> - <%= c.datum %></div>
                   </div>
                   <a href="/admin/kontakt/detalji/<%= c.id %>" class="btn btn-sm btn-outline-primary">Pregled</a>
                 </li>

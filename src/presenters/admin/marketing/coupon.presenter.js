@@ -126,7 +126,7 @@ export function prepareCouponFormData(coupon = null, { serviceOptions = [] } = {
         isActive: true,
       };
 
-  // Unlike name/slug elsewhere, a coupon code has no auto-generation — it's always a
+  // Unlike name/slug elsewhere, a coupon code has no auto-generation - it's always a
   // deliberate value the admin chooses, so it's required on both create and edit.
   return {
     formAction: isEdit ? `/admin/kuponi/${coupon.id}` : "/admin/kuponi",
@@ -151,7 +151,7 @@ export function prepareCouponFormData(coupon = null, { serviceOptions = [] } = {
       { name: "maxUsesPerUser", label: "Maksimalan broj upotreba po korisniku", type: "number", min: 1, width: 6, value: values.maxUsesPerUser },
       {
         name: "applicableServices",
-        label: "Važi samo za usluge (opciono — prazno = sve usluge)",
+        label: "Važi samo za usluge (opciono - prazno = sve usluge)",
         type: "multiselect",
         width: 12,
         value: (values.applicableServices || []).map((s) => (typeof s === "object" ? s.id ?? s._id?.toString() : s)),

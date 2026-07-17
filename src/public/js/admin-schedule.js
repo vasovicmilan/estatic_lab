@@ -90,7 +90,7 @@
     const name = container.dataset.schedule;
     const dayEls = Array.from(container.querySelectorAll("[data-schedule-day]"));
     // days with zero slots are dropped entirely rather than sent as {day, slots: []}
-    // — an empty entry and a missing entry mean the same thing ("not working that
+    // - an empty entry and a missing entry mean the same thing ("not working that
     // day"), and the validator/service side only ever expects days that have hours.
     const value = dayEls.map(readDay).filter((d) => d.slots.length > 0);
     const hiddenInput = container.parentElement.querySelector(`[data-repeater-input="${name}"]`);

@@ -64,7 +64,7 @@ export async function deleteCouponById(couponId) {
 /**
  * Read-only validation shared by both redemption paths (appointment booking, package
  * purchase). Returns { coupon, discountAmount } on success, throws AppError otherwise.
- * `userId` may be null (a brand-new guest hasn't been created yet at this point) — in
+ * `userId` may be null (a brand-new guest hasn't been created yet at this point) - in
  * that case the per-user limit simply can't be checked yet and is skipped; it's re-verified
  * implicitly by `redeemCoupon`'s atomic push once the user does exist, so a determined
  * double-submit still can't bypass the global `maxUses` cap, only (in the rare
@@ -112,7 +112,7 @@ async function validateCoupon(code, { userId = null, kind, targetId, value } = {
   return { coupon, discountAmount: Math.min(discountAmount, value) };
 }
 
-// unchanged external behavior/signature from before — every existing caller/test keeps working
+// unchanged external behavior/signature from before - every existing caller/test keeps working
 export async function validateCouponForBooking(code, { userId = null, serviceId, appointmentValue } = {}) {
   return validateCoupon(code, { userId, kind: "appointment", targetId: serviceId, value: appointmentValue });
 }
@@ -121,7 +121,7 @@ export async function validateCouponForPackagePurchase(code, { userId = null, pa
   return validateCoupon(code, { userId, kind: "packagePurchase", targetId: packageId, value: purchaseValue });
 }
 
-// atomic redemption — called from inside appointment.service.js's booking transaction,
+// atomic redemption - called from inside appointment.service.js's booking transaction,
 // or from package-purchase.service.js when a coupon discounts a package purchase
 export async function redeemCoupon(couponId, { userId, appointmentId = null, packagePurchaseId = null, discountAmount }, { session } = {}) {
   return couponRepo.redeemCoupon(couponId, { userId, appointmentId, packagePurchaseId, discountAmount }, { session });

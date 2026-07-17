@@ -105,7 +105,7 @@ export function prepareServiceDetailsData(service, { employeeCount = 0 } = {}) {
         rows: [
           { label: "Istaknuto", value: service.istaknuto ? "Da" : "Ne" },
           { label: "Aktivna", value: service.aktivna ? "Da" : "Ne (nacrt)" },
-          // count comes from Employee.services (see serviceDetails controller) —
+          // count comes from Employee.services (see serviceDetails controller) -
           // Service no longer stores its own employees list, see employee.model.js
           { label: "Broj terapeuta", value: employeeCount },
         ],
@@ -172,7 +172,7 @@ export function prepareServiceFormData(service = null, { categoryOptions = [], t
   );
 
   // packages/features/comparison/faq/isActive only show on the single-shot EDIT
-  // form now — first-time creation handles those across phases 2 and 3.
+  // form now - first-time creation handles those across phases 2 and 3.
   if (isEdit) {
     fields.push(
       {
@@ -270,7 +270,7 @@ export function prepareServicePackagesStepData(service) {
       width: 12,
       value: service.packages || [],
       addLabel: "Dodaj varijantu",
-      help: "Dodajte bar jednu varijantu (paket) — bez ovoga usluga ne može biti objavljena.",
+      help: "Dodajte bar jednu varijantu (paket) - bez ovoga usluga ne može biti objavljena.",
       itemFields: [
         { name: "name", label: "Naziv varijante", type: "text", required: true },
         { name: "duration", label: "Trajanje (min)", type: "number", min: 5, required: true },
@@ -285,7 +285,7 @@ export function prepareServicePackagesStepData(service) {
     formMethod: "POST",
     isEdit: false,
     fields,
-    phaseInfo: { label: `Nova usluga — ${service.name}`, current: 2, total: 3 },
+    phaseInfo: { label: `Nova usluga - ${service.name}`, current: 2, total: 3 },
     submitLabel: "Sačuvaj i nastavi",
     cancelUrl: `/admin/usluge/detalji/${service.id}`,
     breadcrumbs: [
@@ -352,7 +352,7 @@ export function prepareServiceExtrasStepData(service) {
     formMethod: "POST",
     isEdit: false,
     fields,
-    phaseInfo: { label: `Nova usluga — ${service.name}`, current: 3, total: 3 },
+    phaseInfo: { label: `Nova usluga - ${service.name}`, current: 3, total: 3 },
     submitLabel: "Sačuvaj",
     cancelUrl: `/admin/usluge/detalji/${service.id}`,
     breadcrumbs: [

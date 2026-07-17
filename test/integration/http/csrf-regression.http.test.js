@@ -41,7 +41,7 @@ describe("CSRF token regression sweep (HTTP)", () => {
   it("every admin 'new record' form page renders a real CSRF token", async () => {
     const agent = request.agent(app);
     // registerAndLogin's ensureRole("admin") grants every permission in PERMISSIONS
-    // (see test/helpers/session.js) — needed now that /admin is permission-gated,
+    // (see test/helpers/session.js) - needed now that /admin is permission-gated,
     // not roleName-gated (see admin.middleware.js / admin.routes.js)
     await registerAndLogin(agent, { email: "admin@example.com", roleName: "admin" });
 

@@ -58,7 +58,7 @@ function getWorkingHours(employee) {
   }));
 }
 
-// raw (English day/from/to keys) — used to seed the editable schedule widget,
+// raw (English day/from/to keys) - used to seed the editable schedule widget,
 // as opposed to getWorkingHours() above which formats for read-only display
 function getWorkingHoursRaw(employee) {
   if (!employee.workingHours || !Array.isArray(employee.workingHours)) return [];
@@ -68,7 +68,7 @@ function getWorkingHoursRaw(employee) {
   }));
 }
 
-// employee.expert links to a public Expert profile (see expert.mapper.js) — bio/photo
+// employee.expert links to a public Expert profile (see expert.mapper.js) - bio/photo
 // live there, this is just a "linked to" pointer for the admin screen
 function getLinkedExpert(employee) {
   if (!employee.expert) return null;
@@ -117,11 +117,11 @@ export function mapEmployeeForAdminDetail(employee) {
   };
 }
 
-// used to pre-fill the admin edit form — raw IDs and raw workingHours (not the
+// used to pre-fill the admin edit form - raw IDs and raw workingHours (not the
 // translated/formatted shape mapEmployeeForAdminDetail returns for display), so
 // prepareEmployeeFormData's `values.expert`/`values.services`/`values.workingHours`
 // lookups actually find something. imePrezime/email are included purely for the
-// page title/breadcrumb, not as form fields — mirrors mapServiceForEdit's convention.
+// page title/breadcrumb, not as form fields - mirrors mapServiceForEdit's convention.
 export function mapEmployeeForEdit(employee) {
   if (!employee) return null;
   return {
@@ -158,7 +158,7 @@ export function mapEmployeeForEmployeeDetail(employee) {
   };
 }
 
-// used by the booking flow to offer "choose your therapist" — name + hours only
+// used by the booking flow to offer "choose your therapist" - name + hours only
 export function mapEmployeeForPublic(employee) {
   return {
     id: employee._id.toString(),

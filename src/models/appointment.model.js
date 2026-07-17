@@ -78,7 +78,7 @@ const AppointmentSchema = new Schema(
       default: null,
     },
     // mutually exclusive with coupon in practice (a booking either pays in full,
-    // minus a coupon, OR is covered by a package — not both), but that's a business
+    // minus a coupon, OR is covered by a package - not both), but that's a business
     // rule the service layer enforces, not something encoded at the schema level
     packagePurchase: {
       type: Schema.Types.ObjectId,

@@ -43,7 +43,7 @@ describe("appointment.repository", () => {
     });
 
     // Note: `endTime` and `finalPrice` are `required: true` on the schema, and Mongoose
-    // runs field validation BEFORE the pre('save') hook that derives them — so that hook
+    // runs field validation BEFORE the pre('save') hook that derives them - so that hook
     // can never fill in a *missing* endTime at creation time, only recompute it on an
     // already-valid document being re-saved. Callers must always pass both explicitly at
     // creation (which appointment.service.js's bookAppointment already does).
@@ -65,7 +65,7 @@ describe("appointment.repository", () => {
     });
 
     // packagePurchase/finalPrice interaction added alongside the package-consumption
-    // feature — a package-covered booking is always finalPrice: 0, regardless of
+    // feature - a package-covered booking is always finalPrice: 0, regardless of
     // whatever discountApplied/variant.price would otherwise compute to.
     it("stores the packagePurchase reference", async () => {
       const packagePurchaseId = new mongoose.Types.ObjectId();

@@ -14,7 +14,7 @@ import { logInfo } from "../utils/logger.util.js";
 const populate = [{ path: "items.service", select: "name slug packages" }];
 
 // Cross-checks that each item's servicePackageId actually belongs to the service it
-// claims to — without this, nothing would stop an item from pointing at a variant
+// claims to - without this, nothing would stop an item from pointing at a variant
 // that belongs to a totally different service.
 async function validateItems(items = []) {
   if (!items.length) badRequest("Paket mora sadržati bar jednu uslugu");

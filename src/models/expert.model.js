@@ -2,12 +2,12 @@ import { Schema, model } from "mongoose";
 import ImageSchema from "./schemas/image.schema.js";
 
 /**
- * A public-facing "our experts" profile. Deliberately independent of User/Employee —
+ * A public-facing "our experts" profile. Deliberately independent of User/Employee -
  * you should be able to populate a full team page with zero login accounts behind it
  * (e.g. the studio owner running everything solo while the site shows a full expert roster).
  *
  * If/when an Expert becomes real staff who logs in and takes appointments, create an
- * Employee document and set Employee.expert to this document's _id — the bio/photo/title
+ * Employee document and set Employee.expert to this document's _id - the bio/photo/title
  * stay canonical here, Employee only adds the auth+scheduling concerns on top.
  * See employee.model.js for the other side of that link.
  */
@@ -51,7 +51,7 @@ const ExpertSchema = new Schema(
     },
     gallery: [ImageSchema],
 
-    // purely informational/display — NOT used by the booking/availability engine.
+    // purely informational/display - NOT used by the booking/availability engine.
     // Real bookability is driven entirely by Employee.services[] once (if) this
     // expert gets a staff account.
     specializations: [String],

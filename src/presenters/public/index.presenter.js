@@ -2,7 +2,7 @@ const WHY_US = [
   {
     icon: "bi-cpu",
     title: "Profesionalna ESMA oprema",
-    text: "Tretmani na ESMA Favorit aparatu — miostimulacija, limfna drenaža, mikrostrujni lifting i laserska biorevitalizacija u jednom mestu.",
+    text: "Tretmani na ESMA Favorit aparatu - miostimulacija, limfna drenaža, mikrostrujni lifting i laserska biorevitalizacija u jednom mestu.",
   },
   {
     icon: "bi-patch-check",
@@ -12,7 +12,7 @@ const WHY_US = [
   {
     icon: "bi-person-heart",
     title: "Individualni pristup",
-    text: "Svaki tretman prilagođavamo vašoj koži, telu i cilju — bez univerzalnih rešenja.",
+    text: "Svaki tretman prilagođavamo vašoj koži, telu i cilju - bez univerzalnih rešenja.",
   },
   {
     icon: "bi-flower1",
@@ -37,27 +37,27 @@ export function prepareAboutPageData() {
         title: "Naša priča",
         paragraphs: [
           "Estetik Lab je nastao iz želje da opuštanje i nega tela ne budu luksuz rezervisan za posebne prilike, već deo redovne rutine brige o sebi. Od osnivanja gradimo prostor u kojem se prepliću stručnost, mirna atmosfera i pažnja posvećena svakom detalju.",
-          "Danas naš tim čine obučeni terapeuti koji svakodnevno rade na tome da svaki tretman bude prilagođen potrebama klijenta — bez univerzalnih rešenja i na brzinu odrađenih usluga.",
+          "Danas naš tim čine obučeni terapeuti koji svakodnevno rade na tome da svaki tretman bude prilagođen potrebama klijenta - bez univerzalnih rešenja i na brzinu odrađenih usluga.",
         ],
       },
       {
         title: "Čime se bavimo",
         paragraphs: [
-          "Nudimo masaže, tretmane lica i tela, kao i estetske tretmane na profesionalnoj ESMA Favorit opremi — od miostimulacije i limfne drenaže do mikrostrujnog liftinga i laserske biorevitalizacije.",
+          "Nudimo masaže, tretmane lica i tela, kao i estetske tretmane na profesionalnoj ESMA Favorit opremi - od miostimulacije i limfne drenaže do mikrostrujnog liftinga i laserske biorevitalizacije.",
         ],
         list: [
-          "Masaže — relaksacione, terapeutske i sportske",
-          "Tretmani lica — nega, čišćenje i anti-age tretmani",
-          "Tretmani tela — modelovanje, drenaža i regeneracija kože",
-          "Estetski tretmani — miostimulacija, mikrostrujni lifting, laserska biorevitalizacija",
+          "Masaže - relaksacione, terapeutske i sportske",
+          "Tretmani lica - nega, čišćenje i anti-age tretmani",
+          "Tretmani tela - modelovanje, drenaža i regeneracija kože",
+          "Estetski tretmani - miostimulacija, mikrostrujni lifting, laserska biorevitalizacija",
         ],
       },
       {
         title: "Zašto Estetik Lab",
         list: [
-          "Profesionalna ESMA oprema — miostimulacija, limfna drenaža, mikrostrujni lifting i laserska biorevitalizacija u jednom mestu",
+          "Profesionalna ESMA oprema - miostimulacija, limfna drenaža, mikrostrujni lifting i laserska biorevitalizacija u jednom mestu",
           "Sertifikovani terapeuti sa iskustvom u masaži i estetskim tretmanima",
-          "Individualni pristup — svaki tretman prilagođavamo vašoj koži, telu i cilju",
+          "Individualni pristup - svaki tretman prilagođavamo vašoj koži, telu i cilju",
           "Opuštajući, miran i negovan ambijent osmišljen za pravi predah od svakodnevice",
         ],
       },
@@ -132,7 +132,7 @@ export function preparePrivacyPolicyData() {
         title: "3. Kako prikupljamo podatke",
         paragraphs: [
           "Podatke dobijamo direktno od vas kada se registrujete, prijavite, zakažete termin, pošaljete kontakt poruku, ostavite utisak, prijavite se na newsletter ili ažurirate profil.",
-          "Termin možete zakazati i kao gost, bez registracije — u tom slučaju koristimo podatke koje unesete u formi za zakazivanje. Ako email adresa već postoji u našem sistemu, termin će biti povezan sa postojećim nalogom.",
+          "Termin možete zakazati i kao gost, bez registracije - u tom slučaju koristimo podatke koje unesete u formi za zakazivanje. Ako email adresa već postoji u našem sistemu, termin će biti povezan sa postojećim nalogom.",
           "Ako se registrujete ili prijavite putem Google naloga, od Google-a primamo osnovne podatke profila (email, ime, prezime i identifikator naloga) u skladu sa vašim dozvolama.",
         ],
       },
@@ -168,9 +168,9 @@ export function preparePrivacyPolicyData() {
           "Vaše podatke ne prodajemo i ne iznajmljujemo. Deljenje podataka vršimo samo u neophodnoj meri, i to sa:",
         ],
         list: [
-          "<strong>Google LLC</strong> — ako koristite prijavu putem Google naloga",
-          "<strong>pružaocem email usluge</strong> — za slanje transakcionih poruka (potvrde termina, reset lozinke i sl.)",
-          "<strong>pružaocem hostinga i baze podataka</strong> — za tehničko skladištenje i rad aplikacije",
+          "<strong>Google LLC</strong> - ako koristite prijavu putem Google naloga",
+          "<strong>pružaocem email usluge</strong> - za slanje transakcionih poruka (potvrde termina, reset lozinke i sl.)",
+          "<strong>pružaocem hostinga i baze podataka</strong> - za tehničko skladištenje i rad aplikacije",
         ],
         paragraphs: [
           "Interne obaveštenja našem timu mogu se slati putem Telegram servisa u svrhu operativnog praćenja termina i poruka klijenata. Ovi podaci se koriste isključivo u poslovne svrhe Estetik Lab-a.",
@@ -180,11 +180,11 @@ export function preparePrivacyPolicyData() {
       {
         title: "7. Period čuvanja podataka",
         list: [
-          "podaci o nalogu — dok nalog postoji, odnosno dok ne zatražite brisanje",
-          "podaci o terminima — u periodu neophodnom za poslovanje, knjigovodstvo i rešavanje eventualnih reklamacija",
-          "kontakt poruke — dok je potrebno da odgovorimo i rešimo vaš upit",
-          "newsletter pretplata — dok ste prijavljeni; nakon odjave podaci se arhiviraju ili brišu u razumnom roku",
-          "tehnički logovi — u ograničenom periodu radi bezbednosti i dijagnostike",
+          "podaci o nalogu - dok nalog postoji, odnosno dok ne zatražite brisanje",
+          "podaci o terminima - u periodu neophodnom za poslovanje, knjigovodstvo i rešavanje eventualnih reklamacija",
+          "kontakt poruke - dok je potrebno da odgovorimo i rešimo vaš upit",
+          "newsletter pretplata - dok ste prijavljeni; nakon odjave podaci se arhiviraju ili brišu u razumnom roku",
+          "tehnički logovi - u ograničenom periodu radi bezbednosti i dijagnostike",
         ],
       },
       {
@@ -257,13 +257,13 @@ export function prepareTermsAndConditionsData() {
           "Dužni ste da prilikom registracije unesete tačne i ažurne podatke.",
           "Lozinka mora imati najmanje 8 karaktera. Odgovorni ste za čuvanje pristupnih podataka i sve aktivnosti na vašem nalogu.",
           "Nalog može biti privremeno onemogućen ili suspendovan u slučaju kršenja ovih uslova ili zloupotrebe sistema.",
-          "Registracija nije obavezna za zakazivanje termina — možete zakazati termin i kao gost.",
+          "Registracija nije obavezna za zakazivanje termina - možete zakazati termin i kao gost.",
         ],
       },
       {
         title: "4. Online zakazivanje termina",
         paragraphs: [
-          "Termin možete zakazati putem stranice <a href=\"/zakazivanje\">/zakazivanje</a>, izborom usluge, varijante tretmana, datuma, vremena i — po potrebi — terapeuta.",
+          "Termin možete zakazati putem stranice <a href=\"/zakazivanje\">/zakazivanje</a>, izborom usluge, varijante tretmana, datuma, vremena i - po potrebi - terapeuta.",
         ],
         subsections: [
           {
@@ -301,14 +301,14 @@ export function prepareTermsAndConditionsData() {
           "Sesije iz paketa mogu se koristiti za online zakazivanje, isključivo ako ste prijavljeni na nalog povezan sa paketom.",
           "Rezervacija sesije iz paketa vrši se u trenutku zakazivanja; sesija se definitivno iskorišćava tek nakon obavljenog tretmana.",
           "Ako otkažete termin rezervisan iz paketa u dozvoljenom roku, rezervisana sesija se vraća na raspolaganje.",
-          "Paketi mogu imati rok važenja — proverite uslove konkretnog paketa prilikom kupovine.",
+          "Paketi mogu imati rok važenja - proverite uslove konkretnog paketa prilikom kupovine.",
         ],
       },
       {
         title: "6. Kuponi za popust",
         paragraphs: [
           "Na sajtu možete primeniti kupon prilikom zakazivanja termina ili kupovine paketa, ukoliko je kupon aktivan i ispunjava uslove korišćenja.",
-          "Kupon i plaćanje putem paketa sesija ne mogu se kombinovati za isti termin — primenjuje se jedan način popusta.",
+          "Kupon i plaćanje putem paketa sesija ne mogu se kombinovati za isti termin - primenjuje se jedan način popusta.",
           "Estetik Lab zadržava pravo da odbije, izmeni ili povuče kupon u slučaju zloupotrebe ili greške u sistemu.",
         ],
       },
@@ -347,7 +347,7 @@ export function prepareTermsAndConditionsData() {
       {
         title: "9. Intelektualna svojina",
         paragraphs: [
-          "Sav sadržaj na sajtu — tekstovi, fotografije, grafike, logo, dizajn, video materijali i softverski kod — zaštićen je autorskim pravom i pripada Estetik Lab-u ili odgovarajućim nosiocima prava.",
+          "Sav sadržaj na sajtu - tekstovi, fotografije, grafike, logo, dizajn, video materijali i softverski kod - zaštićen je autorskim pravom i pripada Estetik Lab-u ili odgovarajućim nosiocima prava.",
           "Zabranjeno je kopiranje, distribucija ili komercijalna upotreba sadržaja bez prethodne pisane saglasnosti.",
         ],
       },
@@ -412,9 +412,9 @@ export function prepareHomeData({
   return {
     hero: {
           eyebrow: "Estetik Lab wellness centar",
-          title: "Estetik Lab — kozmetički salon za negu lica, tela i opuštanje",
+          title: "Estetik Lab kozmetički salon za negu lica, tela i opuštanje",
           subtitle:
-            "Masaže, ESMA tretmani i nega lica i tela u mirnom, opuštajućem ambijentu — uz stručan tim i individualan pristup svakom klijentu.",
+            "Masaže, ESMA tretmani i nega lica i tela u mirnom, opuštajućem ambijentu - uz stručan tim i individualan pristup svakom klijentu.",
           ctaLabel: "Zakažite termin",
           ctaUrl: "/usluge",
           secondaryCtaLabel: "Pogledajte pakete",
@@ -427,7 +427,7 @@ export function prepareHomeData({
       lead:
         "Estetik Lab je kozmetički salon u Novom Sadu posvećen estetskim tretmanima lica i tela. Naš rad se oslanja na profesionalni ESMA aparat koji kombinuje tretmane strujom, laser i ultrazvuk, kako bismo na jednom mestu ponudili sveobuhvatnu negu prilagođenu potrebama svakog klijenta.",
       who:
-        "Ovi tretmani su namenjeni svima koji žele da poboljšaju izgled i elastičnost kože, smanje celulit, zategnu telo ili ubrzaju regeneraciju — bez obzira da li se prvi put upoznajete sa estetskim tretmanima ili već imate iskustva sa negom ovog tipa.",
+        "Ovi tretmani su namenjeni svima koji žele da poboljšaju izgled i elastičnost kože, smanje celulit, zategnu telo ili ubrzaju regeneraciju - bez obzira da li se prvi put upoznajete sa estetskim tretmanima ili već imate iskustva sa negom ovog tipa.",
       massages: [
         { title: "Relax masaža", text: "Za opuštanje tela i uma nakon napornog perioda." },
         { title: "Anticelulit masaža", text: "Za modelovanje tela i zatezanje kože." },
@@ -437,7 +437,7 @@ export function prepareHomeData({
       packages:
         "Sve tretmane i masaže možete kombinovati kroz naše pakete usluga, prilagođene vašim ciljevima i dinamici poseta, čime ostvarujete bolju vrednost i kontinuitet nege.",
       closing:
-        "Naš cilj je da svakom klijentu pomognemo da prevaziđe izazove sa kojima se suočava i postigne željeni izgled i osećaj u sopstvenom telu — uz stručnost, pažnju i individualan pristup.",
+        "Naš cilj je da svakom klijentu pomognemo da prevaziđe izazove sa kojima se suočava i postigne željeni izgled i osećaj u sopstvenom telu - uz stručnost, pažnju i individualan pristup.",
     },
 
     whyUs: WHY_US,
@@ -454,7 +454,7 @@ export function prepareHomeData({
     },
     googleDataNotice: {
       text:
-        "Ukoliko se registrujete ili prijavite putem Google naloga, sa Google-a primamo samo osnovne podatke vašeg profila — ime, prezime i email adresu. Ove podatke koristimo isključivo za kreiranje i povezivanje vašeg korisničkog naloga na Estetik Lab platformi, kako biste mogli da zakazujete termine i pratite svoje rezervacije. Ne delimo ih sa trećim licima niti ih koristimo u druge svrhe bez vaše saglasnosti.",
+        "Ukoliko se registrujete ili prijavite putem Google naloga, sa Google-a primamo samo osnovne podatke vašeg profila - ime, prezime i email adresu. Ove podatke koristimo isključivo za kreiranje i povezivanje vašeg korisničkog naloga na Estetik Lab platformi, kako biste mogli da zakazujete termine i pratite svoje rezervacije. Ne delimo ih sa trećim licima niti ih koristimo u druge svrhe bez vaše saglasnosti.",
       privacyUrl: "/politika-privatnosti",
     },
   };

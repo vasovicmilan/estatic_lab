@@ -148,7 +148,7 @@ export function mapServiceForEdit(service) {
   };
 }
 
-// public listing card — no comparison table/full faq, just enough to render a grid
+// public listing card - no comparison table/full faq, just enough to render a grid
 export function mapServiceForPublicCard(service) {
   if (!service) return null;
 

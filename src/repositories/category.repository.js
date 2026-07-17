@@ -40,7 +40,7 @@ export async function findCategories({
   return { data, ...buildPaginationMeta({ total, page, limit }) };
 }
 
-// unpaginated — used to build a full category tree (dropdowns, nav menus) for one domain
+// unpaginated - used to build a full category tree (dropdowns, nav menus) for one domain
 export async function findAllCategoriesByDomain(domain, { onlyActive = true, session } = {}) {
   const filter = { domain };
   if (onlyActive) filter["meta.isActive"] = true;

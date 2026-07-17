@@ -13,7 +13,7 @@ import {
 
 describe("service.validator", () => {
   describe("validateServiceStep1", () => {
-    it("accepts core info with no packages field at all — that's phase 2's job now", async () => {
+    it("accepts core info with no packages field at all - that's phase 2's job now", async () => {
       const agent = buildValidatorHarness(validateServiceStep1);
       const res = await agent.post("/test").send({ name: "Sportska Masaza" });
       assert.equal(res.status, 200);
@@ -62,7 +62,7 @@ describe("service.validator", () => {
       assert.equal(res.status, 200);
     });
 
-    it("rejects a missing packages field — this is now the ONE hard requirement to publish", async () => {
+    it("rejects a missing packages field - this is now the ONE hard requirement to publish", async () => {
       const agent = buildValidatorHarness(validateServicePackagesStep);
       const res = await agent.post("/test").send({});
       assert.equal(res.status, 400);
@@ -78,7 +78,7 @@ describe("service.validator", () => {
   });
 
   describe("validateServiceExtrasStep", () => {
-    it("accepts a completely empty body — everything here is optional", async () => {
+    it("accepts a completely empty body - everything here is optional", async () => {
       const agent = buildValidatorHarness(validateServiceExtrasStep);
       const res = await agent.post("/test").send({});
       assert.equal(res.status, 200);
@@ -105,13 +105,13 @@ describe("service.validator", () => {
       assert.ok(res.body.errors.faq);
     });
 
-    it("accepts isActive as '1' — what the admin checkbox markup actually sends when checked", async () => {
+    it("accepts isActive as '1' - what the admin checkbox markup actually sends when checked", async () => {
       const agent = buildValidatorHarness(validateServiceExtrasStep);
       const res = await agent.post("/test").send({ isActive: "1" });
       assert.equal(res.status, 200);
     });
 
-    it("accepts isActive as '0' — the hidden fallback input for unchecked", async () => {
+    it("accepts isActive as '0' - the hidden fallback input for unchecked", async () => {
       const agent = buildValidatorHarness(validateServiceExtrasStep);
       const res = await agent.post("/test").send({ isActive: "0" });
       assert.equal(res.status, 200);

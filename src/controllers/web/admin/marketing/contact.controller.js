@@ -39,7 +39,7 @@ export async function contactDetails(req, res, next) {
     }
 
     return res.render("admin/_details", {
-      pageTitle: `Poruka — ${contact.osnovno.ime}`,
+      pageTitle: `Poruka - ${contact.osnovno.ime}`,
       pageDescription: contact.osnovno.email,
       data: viewData,
     });

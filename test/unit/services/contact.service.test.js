@@ -61,7 +61,7 @@ describe("contact.service", () => {
       assert.notEqual(persisted.message, "Poruka sa osetljivim sadrzajem");
       assert.equal(decrypt(persisted.message), "Poruka sa osetljivim sadrzajem");
 
-      // firstName/email/topic stay plaintext — no reason to encrypt fields nobody
+      // firstName/email/topic stay plaintext - no reason to encrypt fields nobody
       // asked to protect, and email/firstName still need to work in admin search
       assert.equal(persisted.firstName, "Ana");
       assert.equal(persisted.email, "ana@example.com");

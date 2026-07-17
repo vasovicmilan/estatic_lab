@@ -48,7 +48,7 @@ export function prepareResetPasswordFormData(token, { errors = {}, isAccountClai
   };
 }
 
-// shown after a guest booking creates a lightweight account — invites them to set a
+// shown after a guest booking creates a lightweight account - invites them to set a
 // password via the same reset-token flow used for "forgot password"
 export function prepareClaimAccountData(user) {
   return {

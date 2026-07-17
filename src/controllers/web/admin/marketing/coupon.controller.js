@@ -55,7 +55,7 @@ export async function couponDetails(req, res, next) {
     const viewData = prepareCouponDetailsData(coupon);
 
     return res.render("admin/_details", {
-      pageTitle: `Kupon — ${coupon.osnovno.kod}`,
+      pageTitle: `Kupon - ${coupon.osnovno.kod}`,
       pageDescription: coupon.osnovno.popust,
       data: viewData,
     });
@@ -88,7 +88,7 @@ export async function editCouponForm(req, res, next) {
     const formData = prepareCouponFormData(coupon, { serviceOptions });
 
     return res.render("admin/_form", {
-      pageTitle: `Izmena — ${coupon.code}`,
+      pageTitle: `Izmena - ${coupon.code}`,
       pageDescription: coupon.code,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -142,7 +142,7 @@ export async function updateCoupon(req, res, next) {
       const serviceOptions = await loadServiceOptions();
       const formData = prepareCouponFormData(coupon, { serviceOptions });
       return res.status(400).render("admin/_form", {
-        pageTitle: `Izmena — ${coupon.code}`,
+        pageTitle: `Izmena - ${coupon.code}`,
         pageDescription: coupon.code,
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -161,7 +161,7 @@ export async function updateCoupon(req, res, next) {
       const serviceOptions = await loadServiceOptions();
       const formData = prepareCouponFormData(coupon, { serviceOptions });
       return res.status(error.statusCode).render("admin/_form", {
-        pageTitle: coupon ? `Izmena — ${coupon.code}` : "Izmena kupona",
+        pageTitle: coupon ? `Izmena - ${coupon.code}` : "Izmena kupona",
         pageDescription: coupon?.code || "",
         data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });

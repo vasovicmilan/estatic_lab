@@ -21,7 +21,7 @@ export function apiAuthMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {
-    return res.status(401).json({ success: false, message: "Unauthorized — no token provided" });
+    return res.status(401).json({ success: false, message: "Unauthorized - no token provided" });
   }
 
   try {
@@ -29,7 +29,7 @@ export function apiAuthMiddleware(req, res, next) {
     req.user = jwt.verify(token, process.env.JWT_SECRET);
     next();
   } catch (error) {
-    return res.status(401).json({ success: false, message: "Unauthorized — invalid token" });
+    return res.status(401).json({ success: false, message: "Unauthorized - invalid token" });
   }
 }
 
@@ -40,7 +40,7 @@ export function optionalApiAuth(req, res, next) {
     try {
       req.user = jwt.verify(authHeader.split(" ")[1], process.env.JWT_SECRET);
     } catch (error) {
-      // not logged in — ignore, this is optional
+      // not logged in - ignore, this is optional
     }
   }
   next();

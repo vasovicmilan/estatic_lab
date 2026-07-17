@@ -16,7 +16,7 @@ const STATIC_PAGES = [
   { path: "/uslovi-koriscenja", changefreq: "yearly", priority: "0.2" },
 ];
 
-// Each data source is fetched defensively — if one repository call fails, the
+// Each data source is fetched defensively - if one repository call fails, the
 // rest of the sitemap should still render instead of a 500 on the whole file.
 async function safeList(fn, label) {
   try {

@@ -11,12 +11,12 @@
 
       <% if (typeof showFaq !== 'undefined' && showFaq) { %>
         <%
-          // Placeholder content — indexService.getFaqPageData() currently only returns
+          // Placeholder content - indexService.getFaqPageData() currently only returns
           // SEO data, no actual FAQ entries. Replace with real content when available.
           const placeholderFaq = [
-            { pitanje: "Kako mogu da zakažem termin?", odgovor: "Izaberite uslugu na stranici \"Usluge\", zatim varijantu i termin koji vam odgovara. Nije potrebno da imate nalog — dovoljno je da unesete vaše podatke za kontakt." },
+            { pitanje: "Kako mogu da zakažem termin?", odgovor: "Izaberite uslugu na stranici \"Usluge\", zatim varijantu i termin koji vam odgovara. Nije potrebno da imate nalog - dovoljno je da unesete vaše podatke za kontakt." },
             { pitanje: "Da li mogu da otkažem termin?", odgovor: "Da, termin možete otkazati najkasnije 24h pre zakazanog vremena, iz vašeg naloga." },
-            { pitanje: "Da li je potrebna registracija?", odgovor: "Ne — možete zakazati termin kao gost. Ako se vaš email već koristi za postojeći nalog, termin će biti povezan sa tim nalogom." },
+            { pitanje: "Da li je potrebna registracija?", odgovor: "Ne - možete zakazati termin kao gost. Ako se vaš email već koristi za postojeći nalog, termin će biti povezan sa tim nalogom." },
           ];
         %>
         <%- include("../includes/components/faq", { faq: placeholderFaq }) %>

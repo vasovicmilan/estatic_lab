@@ -18,7 +18,7 @@ import {
 } from "../../helpers/factories.js";
 
 describe("appointment.service", () => {
-  describe("getAppointmentById — access control", () => {
+  describe("getAppointmentById - access control", () => {
     it("throws 404 when the appointment doesn't exist", async (t) => {
       t.mock.method(appointmentRepo, "findAppointmentById", async () => null);
       await assert.rejects(() => appointmentService.getAppointmentById("missing", id(), "user"), (err) => err.statusCode === 404);
@@ -121,7 +121,7 @@ describe("appointment.service", () => {
     });
   });
 
-  describe("cancelAppointment — the 24h rule", () => {
+  describe("cancelAppointment - the 24h rule", () => {
     it("blocks a user from cancelling less than 24h before the appointment", async (t) => {
       const soon = new Date(Date.now() + 2 * 60 * 60 * 1000);
       const owner = buildUser();
@@ -184,7 +184,7 @@ describe("appointment.service", () => {
   });
 });
 
-// Fakes mongoose's own session object — bookAppointment calls mongoose.startSession()/
+// Fakes mongoose's own session object - bookAppointment calls mongoose.startSession()/
 // session.withTransaction()/session.endSession() directly, a real driver-level
 // operation no repository/service mock can intercept.
 function fakeSession() {
@@ -194,14 +194,14 @@ function fakeSession() {
   };
 }
 
-describe("bookAppointment — employee assignment", () => {
+describe("bookAppointment - employee assignment", () => {
   it("leaves the appointment unassigned when the customer doesn't choose a specific employee, even though someone is free", async (t) => {
     t.mock.method(mongoose, "startSession", async () => fakeSession());
     t.mock.method(userService, "findUserByEmail", async () => null);
     t.mock.method(userService, "createGuestUser", async () => buildUser());
     t.mock.method(userService, "findUserById", async () => buildUser());
     t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
-    // someone IS free (a valid slot to book) — but nothing should ever write that
+    // someone IS free (a valid slot to book) - but nothing should ever write that
     // employee onto the appointment; assignment is admin-driven now, not automatic
     t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => buildEmployee());
     t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
@@ -244,7 +244,7 @@ describe("bookAppointment — employee assignment", () => {
     );
   });
 
-  it("honors an explicitly chosen employee — that's a real customer choice, not automatic assignment", async (t) => {
+  it("honors an explicitly chosen employee - that's a real customer choice, not automatic assignment", async (t) => {
     const chosen = buildEmployee();
 
     t.mock.method(mongoose, "startSession", async () => fakeSession());
@@ -274,7 +274,7 @@ describe("bookAppointment — employee assignment", () => {
   });
 });
 
-describe("bookAppointment — package purchase payment", () => {
+describe("bookAppointment - package purchase payment", () => {
   it("rejects packagePurchaseId when the booker isn't logged in", async () => {
     await assert.rejects(
       () =>
@@ -355,7 +355,7 @@ describe("bookAppointment — package purchase payment", () => {
     assert.equal(couponMock.mock.calls.length, 0);
   });
 
-  it("reserves a session at booking time — does NOT commit/consume it yet", async (t) => {
+  it("reserves a session at booking time - does NOT commit/consume it yet", async (t) => {
     const purchase = buildPackagePurchase();
     const loggedInUser = buildUser({ _id: purchase.user });
 
@@ -386,7 +386,7 @@ describe("bookAppointment — package purchase payment", () => {
   });
 });
 
-describe("completeAppointment / cancelAppointment / rejectAppointment — package session lifecycle", () => {
+describe("completeAppointment / cancelAppointment / rejectAppointment - package session lifecycle", () => {
   it("commits the reservation (reserved -> used) when completed", async (t) => {
     const purchaseId = id();
     const servicePackageId = id();

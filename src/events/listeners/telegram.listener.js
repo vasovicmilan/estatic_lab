@@ -20,12 +20,12 @@ import { logError } from "../../utils/logger.util.js";
  * Same shape and reasoning as email.listeners.js: this module's only job is
  * registering eventEmitter.on(...) handlers (imported once in server.js). The
  * message-building logic already existed in telegram-message.util.js and the raw
- * sender already existed in telegram.service.js — neither was ever actually wired to
+ * sender already existed in telegram.service.js - neither was ever actually wired to
  * a domain event, exactly the same gap email had.
  *
  * Every handler is wrapped in safe(): a failed Telegram alert must never surface as a
  * 500 to whoever triggered the underlying action (it's a side notification, not part
- * of the request/response cycle) — logged instead.
+ * of the request/response cycle) - logged instead.
  */
 function safe(eventName, handler) {
   return async (payload) => {
@@ -38,7 +38,7 @@ function safe(eventName, handler) {
 }
 
 // telegram-message.util.js's builders expect a flat shape (firstName, lastName,
-// email, serviceName, startTime, finalPrice as a raw number) — the admin-mapped
+// email, serviceName, startTime, finalPrice as a raw number) - the admin-mapped
 // appointment (appointment.mapper.js) is nested and HTML-formatted for display in
 // admin views instead. This adapts one into the other rather than duplicating a
 // second appointment-shaping path.
@@ -132,7 +132,7 @@ eventEmitter.on(
 );
 
 // ==================== PACKAGES ====================
-// no dedicated PACKAGES thread in telegram.config.js — routed to APPOINTMENTS, same
+// no dedicated PACKAGES thread in telegram.config.js - routed to APPOINTMENTS, same
 // reasoning as the email side. Add a PACKAGES thread env var + config entry if you'd
 // rather split it out (see telegram.config.js).
 

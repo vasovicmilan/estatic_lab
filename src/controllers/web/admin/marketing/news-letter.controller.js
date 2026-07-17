@@ -34,7 +34,7 @@ export async function subscriberDetails(req, res, next) {
     const viewData = prepareNewsletterDetailsData(subscriber);
 
     return res.render("admin/_details", {
-      pageTitle: `Pretplatnik — ${subscriber.osnovno.email}`,
+      pageTitle: `Pretplatnik - ${subscriber.osnovno.email}`,
       pageDescription: subscriber.osnovno.email,
       data: viewData,
     });

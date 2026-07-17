@@ -200,7 +200,7 @@ export function mapAppointmentForUserDetail(appointment) {
   };
 }
 
-// public availability calendar — zero personal data, just occupied slots
+// public availability calendar - zero personal data, just occupied slots
 export function mapAppointmentForPublicCalendar(appointment) {
   if (!appointment) return null;
   return {
@@ -215,7 +215,7 @@ export function mapAppointmentRaw(appointment) {
 }
 
 /**
- * Dispatcher used by appointment.service.js — picks the right shape by who's asking.
+ * Dispatcher used by appointment.service.js - picks the right shape by who's asking.
  */
 export function mapAppointment(appointment, role, viewType = "short") {
   if (!appointment) return null;

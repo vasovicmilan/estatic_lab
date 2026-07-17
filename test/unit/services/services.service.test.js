@@ -6,7 +6,7 @@ import * as serviceService from "../../../src/services/service.service.js";
 import { buildService, buildServicePackageVariant, buildCategory, id } from "../../helpers/factories.js";
 
 describe("service.service", () => {
-  describe("createDraftService — phase 1", () => {
+  describe("createDraftService - phase 1", () => {
     it("forces isActive:false regardless of what's passed in", async (t) => {
       t.mock.method(serviceRepo, "findServiceBySlug", async () => null);
       let created;
@@ -44,7 +44,7 @@ describe("service.service", () => {
     });
   });
 
-  describe("addPackagesToService — phase 2", () => {
+  describe("addPackagesToService - phase 2", () => {
     it("rejects zero packages", async (t) => {
       t.mock.method(serviceRepo, "findServiceById", async () => buildService());
       await assert.rejects(
@@ -127,7 +127,7 @@ describe("service.service", () => {
     });
   });
 
-  describe("addExtrasAndPublish — phase 3", () => {
+  describe("addExtrasAndPublish - phase 3", () => {
     it("publishes by default (isActive defaults to true) when image + packages already exist", async (t) => {
       t.mock.method(serviceRepo, "findServiceById", async () => buildService({ isActive: false }));
       let updated;
@@ -182,7 +182,7 @@ describe("service.service", () => {
         return { ...existing, ...data };
       });
 
-      // only sending faq — features should be preserved from `existing`, not dropped
+      // only sending faq - features should be preserved from `existing`, not dropped
       await serviceService.addExtrasAndPublish(id().toString(), { faq: [{ question: "Nova", answer: "Odgovor" }] });
       assert.deepEqual(updated.features, existing.features);
       assert.equal(updated.faq[0].question, "Nova");

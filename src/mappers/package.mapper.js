@@ -20,7 +20,7 @@ function getItemsSummary(items = []) {
     .filter((item) => item.service && typeof item.service === "object")
     .map((item) => {
       const variant = findVariant(item);
-      return `${item.service.name}${variant ? ` — ${variant.name}` : ""} x${item.sessions}`;
+      return `${item.service.name}${variant ? ` - ${variant.name}` : ""} x${item.sessions}`;
     });
 }
 

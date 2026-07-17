@@ -12,7 +12,7 @@ import {
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 
-// Step 1 — GET /zakazivanje/:serviceSlug
+// Step 1 - GET /zakazivanje/:serviceSlug
 export async function serviceStep(req, res, next) {
   try {
     const { serviceSlug } = req.params;
@@ -20,7 +20,7 @@ export async function serviceStep(req, res, next) {
     const viewData = prepareBookingServiceStepData(service);
 
     return res.render("booking/service-step", {
-      pageTitle: `Zakazivanje — ${service.naziv}`,
+      pageTitle: `Zakazivanje - ${service.naziv}`,
       pageDescription: "Izaberite varijantu usluge",
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
@@ -30,7 +30,7 @@ export async function serviceStep(req, res, next) {
   }
 }
 
-// Step 2 — GET /zakazivanje/:serviceSlug/termin?servicePackageId=&date=&employeeId=
+// Step 2 - GET /zakazivanje/:serviceSlug/termin?servicePackageId=&date=&employeeId=
 export async function slotsStep(req, res, next) {
   try {
     const { serviceSlug } = req.params;
@@ -69,7 +69,7 @@ export async function slotsStep(req, res, next) {
     });
 
     return res.render("booking/slots-step", {
-      pageTitle: `Zakazivanje — ${service.naziv}`,
+      pageTitle: `Zakazivanje - ${service.naziv}`,
       pageDescription: "Izaberite datum i termin",
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
@@ -79,7 +79,7 @@ export async function slotsStep(req, res, next) {
   }
 }
 
-// Step 3 — GET /zakazivanje/:serviceSlug/podaci?servicePackageId=&startTime=&employeeId=
+// Step 3 - GET /zakazivanje/:serviceSlug/podaci?servicePackageId=&startTime=&employeeId=
 export async function contactStep(req, res, next) {
   try {
     const { serviceSlug } = req.params;
@@ -108,7 +108,7 @@ export async function contactStep(req, res, next) {
     );
 
     return res.render("booking/contact-step", {
-      pageTitle: `Zakazivanje — ${service.naziv}`,
+      pageTitle: `Zakazivanje - ${service.naziv}`,
       pageDescription: "Unesite podatke za kontakt",
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
@@ -118,7 +118,7 @@ export async function contactStep(req, res, next) {
   }
 }
 
-// Step 4 — POST /zakazivanje/potvrda
+// Step 4 - POST /zakazivanje/potvrda
 export async function confirmBooking(req, res, next) {
   const {
     serviceSlug,
@@ -152,7 +152,7 @@ export async function confirmBooking(req, res, next) {
         { isLoggedIn, user: req.session?.user, errors: req.validationErrors, usablePackagePurchase }
       );
       return res.status(400).render("booking/contact-step", {
-        pageTitle: `Zakazivanje — ${service.naziv}`,
+        pageTitle: `Zakazivanje - ${service.naziv}`,
         pageDescription: "Unesite podatke za kontakt",
         data: { ...viewData, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -179,7 +179,7 @@ export async function confirmBooking(req, res, next) {
     logError("[confirmBooking] Greška pri zakazivanju termina", error, { serviceId, servicePackageId, startTime, email });
 
     if (error.statusCode === 400) {
-      // never lose what the visitor already typed — re-render the same step with their
+      // never lose what the visitor already typed - re-render the same step with their
       // contact details intact and the specific reason the booking failed
       try {
         const isLoggedIn = !!req.session?.isLoggedIn;
@@ -195,7 +195,7 @@ export async function confirmBooking(req, res, next) {
           { isLoggedIn, user: req.session?.user, errors: { general: error.message }, usablePackagePurchase }
         );
         return res.status(400).render("booking/contact-step", {
-          pageTitle: `Zakazivanje — ${service.naziv}`,
+          pageTitle: `Zakazivanje - ${service.naziv}`,
           pageDescription: "Unesite podatke za kontakt",
           data: { ...viewData, formData: req.body, csrfToken: res.locals.csrfToken },
         });
@@ -208,7 +208,7 @@ export async function confirmBooking(req, res, next) {
   }
 }
 
-// GET /zakazivanje/potvrda/:appointmentId — one-time confirmation view
+// GET /zakazivanje/potvrda/:appointmentId - one-time confirmation view
 export async function confirmation(req, res, next) {
   try {
     const pending = req.session.pendingBookingConfirmation;

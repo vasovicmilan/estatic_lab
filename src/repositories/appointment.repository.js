@@ -3,7 +3,7 @@ import { buildAppointmentFilter } from "./filters/appointment.filter.js";
 import { resolveLimit, resolveSkip, buildPaginationMeta } from "../utils/pagination.util.js";
 import { BOOKING_BUFFER_MINUTES } from "../config/booking.config.js";
 
-// statuses that actually hold a slot busy — cancelled/rejected appointments free the slot back up
+// statuses that actually hold a slot busy - cancelled/rejected appointments free the slot back up
 const BLOCKING_STATUSES = ["pending", "confirmed"];
 const BUFFER_MS = BOOKING_BUFFER_MINUTES * 60000;
 
@@ -60,7 +60,7 @@ export async function findAppointments({
 /**
  * Every busy interval for one employee within [rangeStart, rangeEnd), regardless of
  * whether they're the direct `employee` or the system-`assignedTo` therapist. This is
- * the direct input to the availability engine's slot-subtraction step — it returns the
+ * the direct input to the availability engine's slot-subtraction step - it returns the
  * raw list of {startTime, endTime}, not a boolean, so the caller can subtract many
  * intervals from the working-hours grid at once instead of querying per candidate slot.
  */
@@ -77,10 +77,10 @@ export async function findBusyIntervals(employeeId, rangeStart, rangeEnd, { sess
 }
 
 /**
- * Write-time race guard — re-checked right before the transactional insert in case two
+ * Write-time race guard - re-checked right before the transactional insert in case two
  * people booked the same slot within seconds of each other off the same availability list.
  * Requires a BOOKING_BUFFER_MINUTES gap on both sides of every existing appointment, not
- * just a literal non-overlap — matches the padding applied in availability.service.js so
+ * just a literal non-overlap - matches the padding applied in availability.service.js so
  * a slot the visitor saw as free can never be rejected here (or vice versa).
  */
 export async function findOverlappingAppointments(employeeId, startTime, endTime, excludeId = null, { session } = {}) {

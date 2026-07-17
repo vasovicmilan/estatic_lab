@@ -44,7 +44,7 @@ export async function submitTestimonial(data) {
   logInfo("Testimonial submitted", { testimonialId: created._id, name: created.name });
 
   // Best-effort lookup so Telegram/email notifications can show what the review is
-  // actually about — the raw submitted `data` only has a bare service/package ObjectId,
+  // actually about - the raw submitted `data` only has a bare service/package ObjectId,
   // which is useless to read at a glance in a chat message or email subject.
   let subject = null;
   try {

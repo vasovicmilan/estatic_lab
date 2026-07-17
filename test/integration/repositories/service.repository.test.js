@@ -34,7 +34,7 @@ describe("service.repository", () => {
       assert.equal(service.isActive, true);
     });
 
-    // image/packages are no longer unconditionally required — a 3-phase draft can
+    // image/packages are no longer unconditionally required - a 3-phase draft can
     // now be saved with neither, as long as isActive stays at its default (false).
     it("persists a draft (isActive:false) service with no image and no packages", async () => {
       const service = await serviceRepo.createService({ name: "Nova Usluga U Izradi", slug: "nova-usluga-u-izradi" });
@@ -69,7 +69,7 @@ describe("service.repository", () => {
     });
   });
 
-  describe("updateServiceById — publish invariants via pre('findOneAndUpdate')", () => {
+  describe("updateServiceById - publish invariants via pre('findOneAndUpdate')", () => {
     it("allows a draft update that clears packages while isActive stays false", async () => {
       const created = await serviceRepo.createService(validService());
       const updated = await serviceRepo.updateServiceById(created._id, { packages: [] });
@@ -97,7 +97,7 @@ describe("service.repository", () => {
     });
 
     // this is the pre-existing bug the new findOneAndUpdate hook fixes: this check
-    // used to only run inside pre('save'), which findByIdAndUpdate never triggers —
+    // used to only run inside pre('save'), which findByIdAndUpdate never triggers -
     // so a mismatched comparisonTable could previously be saved via any update.
     it("rejects a mismatched comparisonTable row length on update (previously not checked at all)", async () => {
       const created = await serviceRepo.createService(validService({ comparisonColumns: ["Osnovno", "Premium"] }));

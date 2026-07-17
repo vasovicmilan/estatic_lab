@@ -1,11 +1,11 @@
 import { Schema } from "mongoose";
 
 /**
- * A bookable variant of a Service — e.g. "60 min classic massage" vs "90 min classic massage",
+ * A bookable variant of a Service - e.g. "60 min classic massage" vs "90 min classic massage",
  * or "single session" vs "package of 5". This is what the visitor actually picks when booking,
  * and what gets snapshotted onto Appointment.variant at booking time (see appointment.model.js).
  *
- * Not to be confused with the top-level `Package` model, which *combines* multiple Services —
+ * Not to be confused with the top-level `Package` model, which *combines* multiple Services -
  * this schema only ever describes variants of a single Service.
  */
 const ServicePackageSchema = new Schema(
@@ -30,7 +30,7 @@ const ServicePackageSchema = new Schema(
       default: 1,
     },
 
-    // duration of a single session, in minutes — drives the availability engine
+    // duration of a single session, in minutes - drives the availability engine
     duration: {
       type: Number,
       required: true,

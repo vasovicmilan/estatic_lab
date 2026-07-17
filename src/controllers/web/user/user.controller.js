@@ -57,7 +57,7 @@ export async function appointmentDetails(req, res, next) {
     const viewData = prepareAppointmentDetailData(appointment);
 
     return res.render("user/appointment-details", {
-      pageTitle: `Termin — ${appointment.usluga.naziv}`,
+      pageTitle: `Termin - ${appointment.usluga.naziv}`,
       pageDescription: appointment.termin.pocetak,
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });

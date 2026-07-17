@@ -35,7 +35,7 @@ export async function tagDetails(req, res, next) {
     const viewData = prepareTagDetailsData(tag);
 
     return res.render("admin/_details", {
-      pageTitle: `Tag — ${tag.naziv}`,
+      pageTitle: `Tag - ${tag.naziv}`,
       pageDescription: tag.naziv,
       data: viewData,
     });
@@ -66,7 +66,7 @@ export async function editTagForm(req, res, next) {
     const formData = prepareTagFormData(tag);
 
     return res.render("admin/_form", {
-      pageTitle: `Izmena — ${tag.name}`,
+      pageTitle: `Izmena - ${tag.name}`,
       pageDescription: tag.name,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -116,7 +116,7 @@ export async function updateTag(req, res, next) {
       const tag = await tagService.getTagForEdit(tagId);
       const formData = prepareTagFormData(tag);
       return res.status(400).render("admin/_form", {
-        pageTitle: `Izmena — ${tag.name}`,
+        pageTitle: `Izmena - ${tag.name}`,
         pageDescription: tag.name,
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -133,7 +133,7 @@ export async function updateTag(req, res, next) {
       const tag = await tagService.getTagForEdit(req.params.tagId).catch(() => null);
       const formData = prepareTagFormData(tag);
       return res.status(error.statusCode).render("admin/_form", {
-        pageTitle: tag ? `Izmena — ${tag.name}` : "Izmena taga",
+        pageTitle: tag ? `Izmena - ${tag.name}` : "Izmena taga",
         pageDescription: tag?.name || "",
         data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });

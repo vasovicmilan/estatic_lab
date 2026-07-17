@@ -4,7 +4,7 @@ import { isJsonArrayOrArray, booleanishField } from "./helpers/common.validator.
 
 // Existing gallery images are round-tripped as parallel arrays (img URL + alt
 // text), since ImageSchema entries have no _id to key off (see image.schema.js,
-// { _id: false }) — index position is how the controller matches them back up.
+// { _id: false }) - index position is how the controller matches them back up.
 export const validateMediaUpdate = [
   body("existingGalleryImg")
     .optional()

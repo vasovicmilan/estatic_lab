@@ -8,7 +8,7 @@ import { logInfo, logError } from "../../utils/logger.util.js";
  *
  * IMPORTANT: run this after deploying the permission-based roles change. The
  * existing "admin" role document in your database doesn't have the new
- * "access_admin_panel" permission yet — without it, admin.middleware.js will lock
+ * "access_admin_panel" permission yet - without it, admin.middleware.js will lock
  * your own admin account out of /admin the next time you log in.
  */
 async function run() {

@@ -40,7 +40,7 @@ export async function expertDetails(req, res, next) {
     const viewData = prepareExpertDetailsData(expert);
 
     return res.render("admin/_details", {
-      pageTitle: `Ekspert — ${expert.osnovno.ime} ${expert.osnovno.prezime}`,
+      pageTitle: `Ekspert - ${expert.osnovno.ime} ${expert.osnovno.prezime}`,
       pageDescription: expert.osnovno.titula || "",
       data: viewData,
     });
@@ -76,7 +76,7 @@ export async function editExpertForm(req, res, next) {
     const formData = prepareExpertFormData(expert, { serviceOptions });
 
     return res.render("admin/_form", {
-      pageTitle: `Izmena — ${expert.firstName} ${expert.lastName}`,
+      pageTitle: `Izmena - ${expert.firstName} ${expert.lastName}`,
       pageDescription: expert.title || "",
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -96,7 +96,7 @@ function parseSpecializations(csv) {
 
 function buildImageFromUpload(req, existingImage) {
   if (req.uploadedFile) {
-    // imageDesc is required whenever a new image is uploaded — enforced by
+    // imageDesc is required whenever a new image is uploaded - enforced by
     // validateExpertCreate/validateExpertUpdate before this code ever runs, so
     // req.body.imageDesc is guaranteed non-empty here. No silent "" fallback.
     return { img: req.uploadedFile.img, imgDesc: req.body.imageDesc.trim() };
@@ -153,7 +153,7 @@ export async function updateExpert(req, res, next) {
       const serviceOptions = await loadServiceOptions();
       const formData = prepareExpertFormData(expert, { serviceOptions });
       return res.status(400).render("admin/_form", {
-        pageTitle: `Izmena — ${expert.firstName} ${expert.lastName}`,
+        pageTitle: `Izmena - ${expert.firstName} ${expert.lastName}`,
         pageDescription: expert.title || "",
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -182,7 +182,7 @@ export async function updateExpert(req, res, next) {
       const serviceOptions = await loadServiceOptions();
       const formData = prepareExpertFormData(expert, { serviceOptions });
       return res.status(statusCode).render("admin/_form", {
-        pageTitle: expert ? `Izmena — ${expert.firstName} ${expert.lastName}` : "Izmena eksperta",
+        pageTitle: expert ? `Izmena - ${expert.firstName} ${expert.lastName}` : "Izmena eksperta",
         pageDescription: expert?.title || "",
         data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });

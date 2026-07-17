@@ -41,7 +41,7 @@ export async function getCategoryBySlugAndDomain(slug, domain) {
   return category;
 }
 
-// unpaginated, active-only — nav menus, filter dropdowns
+// unpaginated, active-only - nav menus, filter dropdowns
 export async function getPublicCategories(domain) {
   ensureValidDomain(domain);
   const categories = await categoryRepo.findAllCategoriesByDomain(domain, { onlyActive: true });
@@ -60,11 +60,11 @@ export async function createCategory(data) {
   ensureValidDomain(data.domain);
 
   if (data.slug) {
-    // caller typed a slug on purpose — tell them loudly if it's taken, don't silently change it
+    // caller typed a slug on purpose - tell them loudly if it's taken, don't silently change it
     const existing = await categoryRepo.findCategoryBySlug(data.slug, data.domain);
     if (existing) conflict("Kategorija sa istim slug-om i domenom već postoji");
   } else {
-    // no slug given — derive one from the name and resolve any collision automatically
+    // no slug given - derive one from the name and resolve any collision automatically
     data.slug = await generateUniqueSlug(data.name, (candidate) => categoryRepo.findCategoryBySlug(candidate, data.domain));
   }
 
@@ -94,7 +94,7 @@ export async function deleteCategoryById(categoryId) {
   if (!existing) notFound("Kategorija");
 
   const children = await categoryRepo.findCategories({ filters: { parent: categoryId }, limit: 1 });
-  if (children.total > 0) badRequest("Kategorija ima podkategorije — premestite ih ili obrišite prvo");
+  if (children.total > 0) badRequest("Kategorija ima podkategorije - premestite ih ili obrišite prvo");
 
   await categoryRepo.deleteCategoryById(categoryId);
   logInfo("Category deleted", { categoryId });

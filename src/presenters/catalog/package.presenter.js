@@ -1,7 +1,7 @@
 export function preparePackageListData(result, query = {}) {
   return {
     packages: result.data,
-    subtitle: "Kombinacije tretmana osmišljene da vam donesu više za manje — bez žurbe, uz naš tim koji brine o detaljima.",
+    subtitle: "Kombinacije tretmana osmišljene da vam donesu više za manje - bez žurbe, uz naš tim koji brine o detaljima.",
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,

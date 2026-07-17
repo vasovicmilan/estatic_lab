@@ -40,7 +40,7 @@ export async function submitContact(data, { ip, userAgent } = {}) {
   logInfo("Contact message submitted", { contactId: created._id, email: created.email });
 
   // NOTE: deliberately using the original plaintext data.lastName/data.phone/data.message
-  // here, not created.*  — those are now ciphertext, and this event feeds the admin
+  // here, not created.*  - those are now ciphertext, and this event feeds the admin
   // Telegram/email notifications, which need the real text. phone/topic were previously
   // dropped entirely here, leaving notifications with no way to call back or triage by
   // topic even though both were captured on the form.

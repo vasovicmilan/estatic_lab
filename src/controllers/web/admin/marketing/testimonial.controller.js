@@ -36,7 +36,7 @@ export async function testimonialDetails(req, res, next) {
     const viewData = prepareTestimonialDetailsData(testimonial);
 
     return res.render("admin/_details", {
-      pageTitle: `Testimonijal — ${testimonial.osnovno.ime}`,
+      pageTitle: `Testimonijal - ${testimonial.osnovno.ime}`,
       pageDescription: testimonial.osnovno.komentar,
       data: viewData,
     });

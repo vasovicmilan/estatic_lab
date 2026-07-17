@@ -43,7 +43,7 @@ export async function roleDetails(req, res, next) {
     const viewData = prepareRoleDetailsData(role);
 
     return res.render("admin/_details", {
-      pageTitle: `Rola — ${role.osnovno.naziv}`,
+      pageTitle: `Rola - ${role.osnovno.naziv}`,
       pageDescription: role.osnovno.opis || role.osnovno.naziv,
       data: viewData,
     });
@@ -77,7 +77,7 @@ export async function editRoleForm(req, res, next) {
     const formData = prepareRoleFormData(role, getAvailablePermissions());
 
     return res.render("admin/_form", {
-      pageTitle: `Izmena — ${role.name}`,
+      pageTitle: `Izmena - ${role.name}`,
       pageDescription: role.description || role.name,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -130,7 +130,7 @@ export async function updateRole(req, res, next) {
       const role = await roleService.getRoleForEdit(roleId);
       const formData = prepareRoleFormData(role, getAvailablePermissions());
       return res.status(400).render("admin/_form", {
-        pageTitle: `Izmena — ${role.name}`,
+        pageTitle: `Izmena - ${role.name}`,
         pageDescription: role.description || role.name,
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -147,7 +147,7 @@ export async function updateRole(req, res, next) {
       const role = await roleService.getRoleForEdit(req.params.roleId).catch(() => null);
       const formData = prepareRoleFormData(role, getAvailablePermissions());
       return res.status(error.statusCode).render("admin/_form", {
-        pageTitle: role ? `Izmena — ${role.name}` : "Izmena role",
+        pageTitle: role ? `Izmena - ${role.name}` : "Izmena role",
         pageDescription: role?.description || "",
         data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });

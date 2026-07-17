@@ -25,7 +25,7 @@ async function createAppointmentForEmployee(employeeId) {
   const start = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   const appointment = await appointmentRepo.createAppointment({
-    user: employeeId, // arbitrary valid ObjectId — the client identity isn't what this test exercises
+    user: employeeId, // arbitrary valid ObjectId - the client identity isn't what this test exercises
     service: service._id,
     variant: { name: "60 minuta", duration: 60, price: 3000 },
     employee: employeeId,
@@ -102,7 +102,7 @@ describe("employee account routes (HTTP)", () => {
 
   // See the note above this file: employee.controller.js's confirmAppointment passes
   // req.session.user.id (a User id) to appointmentService.confirmAppointment, but
-  // appointment.employee/assignedTo store Employee ids — a different document. If that
+  // appointment.employee/assignedTo store Employee ids - a different document. If that
   // analysis is right, this test should fail with the appointment still "pending".
   it("confirms an appointment assigned to this employee", async () => {
     const agent = request.agent(app);

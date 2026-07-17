@@ -92,8 +92,8 @@ export function prepareRoleFormData(role = null, availablePermissions = []) {
         value: values.name,
         disabled: isReserved,
         help: isReserved
-          ? `"${values.name}" je rezervisan naziv i ne može biti promenjen — koristi se po nazivu na više mesta u sistemu.`
-          : "Malim slovima — brojevi, crtice i donje crte su dozvoljeni (2-32 karaktera), npr. \"seo\" ili \"blog-urednik\".",
+          ? `"${values.name}" je rezervisan naziv i ne može biti promenjen - koristi se po nazivu na više mesta u sistemu.`
+          : "Malim slovima - brojevi, crtice i donje crte su dozvoljeni (2-32 karaktera), npr. \"seo\" ili \"blog-urednik\".",
       },
       { name: "priority", label: "Prioritet", type: "number", min: 0, width: 6, value: values.priority },
       { name: "description", label: "Opis", type: "textarea", rows: 3, width: 12, value: values.description, help: "Najviše 300 karaktera." },
@@ -104,7 +104,7 @@ export function prepareRoleFormData(role = null, availablePermissions = []) {
         width: 12,
         value: (values.permissions || []).map((p) => (typeof p === "object" ? p.value : p)),
         options: availablePermissions,
-        help: "\"Pristup admin panelu\" je obavezan da bi rola uopšte mogla da uđe u /admin — bez njega, ni jedna od ostalih permisija ovde neće imati efekta.",
+        help: "\"Pristup admin panelu\" je obavezan da bi rola uopšte mogla da uđe u /admin - bez njega, ni jedna od ostalih permisija ovde neće imati efekta.",
       },
       { name: "isDefault", label: "Podrazumevana rola za nove korisnike", type: "checkbox", width: 6, value: values.isDefault },
     ],

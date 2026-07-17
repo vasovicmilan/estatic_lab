@@ -28,7 +28,7 @@ const TestimonialSchema = new Schema(
       default: null,
     },
 
-    // optional link to which package the review is about — mutually exclusive
+    // optional link to which package the review is about - mutually exclusive
     // with `service` in practice (set by whichever detail page the form was on),
     // but not enforced at the schema level
     package: {
@@ -52,7 +52,7 @@ const TestimonialSchema = new Schema(
 
     image: ImageSchema,
 
-    // every testimonial starts pending and requires admin approval before it's public —
+    // every testimonial starts pending and requires admin approval before it's public -
     // prevents spam/abuse from showing up on the site immediately
     status: {
       type: String,

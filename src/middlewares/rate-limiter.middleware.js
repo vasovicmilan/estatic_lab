@@ -25,7 +25,7 @@ export const globalLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => skipInTest() || skipStatic(req),
-  handler: handleRateLimitExceeded("Previše zahteva — pokušajte ponovo kasnije."),
+  handler: handleRateLimitExceeded("Previše zahteva - pokušajte ponovo kasnije."),
 });
 
 export const loginLimiter = rateLimit({
@@ -35,7 +35,7 @@ export const loginLimiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: true,
   skip: skipInTest,
-  handler: handleRateLimitExceeded("Previše pokušaja prijave — pokušajte ponovo za 15 minuta."),
+  handler: handleRateLimitExceeded("Previše pokušaja prijave - pokušajte ponovo za 15 minuta."),
 });
 
 export const registerLimiter = rateLimit({
@@ -44,7 +44,7 @@ export const registerLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,
-  handler: handleRateLimitExceeded("Previše pokušaja registracije — pokušajte ponovo za 1 sat."),
+  handler: handleRateLimitExceeded("Previše pokušaja registracije - pokušajte ponovo za 1 sat."),
 });
 
 export const passwordResetLimiter = rateLimit({
@@ -53,7 +53,7 @@ export const passwordResetLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,
-  handler: handleRateLimitExceeded("Previše zahteva za reset lozinke — pokušajte ponovo za 1 sat."),
+  handler: handleRateLimitExceeded("Previše zahteva za reset lozinke - pokušajte ponovo za 1 sat."),
 });
 
 export const verificationLimiter = rateLimit({
@@ -62,7 +62,7 @@ export const verificationLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,
-  handler: handleRateLimitExceeded("Previše pokušaja verifikacije — pokušajte ponovo za 1 sat."),
+  handler: handleRateLimitExceeded("Previše pokušaja verifikacije - pokušajte ponovo za 1 sat."),
 });
 
 export const contactLimiter = rateLimit({
@@ -80,7 +80,7 @@ export const newsletterLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,
-  handler: handleRateLimitExceeded("Previše pokušaja — pokušajte ponovo kasnije."),
+  handler: handleRateLimitExceeded("Previše pokušaja - pokušajte ponovo kasnije."),
 });
 
 export const testimonialLimiter = rateLimit({
@@ -89,7 +89,7 @@ export const testimonialLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,
-  handler: handleRateLimitExceeded("Previše testimoniala — pokušajte ponovo za 1 sat."),
+  handler: handleRateLimitExceeded("Previše testimoniala - pokušajte ponovo za 1 sat."),
 });
 
 export const searchLimiter = rateLimit({
@@ -98,7 +98,7 @@ export const searchLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,
-  handler: handleRateLimitExceeded("Previše pretraga — pokušajte ponovo kasnije."),
+  handler: handleRateLimitExceeded("Previše pretraga - pokušajte ponovo kasnije."),
 });
 
 export const bookingLimiter = rateLimit({
@@ -107,7 +107,7 @@ export const bookingLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,
-  handler: handleRateLimitExceeded("Previše pokušaja zakazivanja — pokušajte ponovo za 1 minut."),
+  handler: handleRateLimitExceeded("Previše pokušaja zakazivanja - pokušajte ponovo za 1 minut."),
 });
 
 export const availabilityLimiter = rateLimit({
@@ -116,7 +116,7 @@ export const availabilityLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,
-  handler: handleRateLimitExceeded("Previše zahteva za proveru dostupnosti — pokušajte ponovo kasnije."),
+  handler: handleRateLimitExceeded("Previše zahteva za proveru dostupnosti - pokušajte ponovo kasnije."),
 });
 
 export const apiLimiter = rateLimit({

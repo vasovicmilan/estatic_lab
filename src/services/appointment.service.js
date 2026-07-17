@@ -64,13 +64,13 @@ export async function getAppointmentById(appointmentId, requesterId, role) {
  * paying via a package) the session reservation all happen inside one transaction;
  * events fire only after commit.
  *
- * `packagePurchaseId` is only honored when `isLoggedIn` — a package purchase belongs
- * to a real account, never a guest — and is mutually exclusive with `couponCode`: a
+ * `packagePurchaseId` is only honored when `isLoggedIn` - a package purchase belongs
+ * to a real account, never a guest - and is mutually exclusive with `couponCode`: a
  * booking is either paid in full (minus an optional coupon) or fully covered by a
  * package, never both. Paying via a package RESERVES one session at booking time
- * (not "consumes" — see package-purchase.service.js). The reservation is released if
+ * (not "consumes" - see package-purchase.service.js). The reservation is released if
  * the appointment is later cancelled/rejected, and only actually committed (moved
- * into sessionsUsed) once the appointment is marked completed — see transitionStatus.
+ * into sessionsUsed) once the appointment is marked completed - see transitionStatus.
  */
 export async function bookAppointment(input) {
   const {
@@ -124,11 +124,11 @@ export async function bookAppointment(input) {
     if (overlapping.length > 0) badRequest("Izabrani termin više nije dostupan, izaberite drugi");
     chosenEmployeeId = employeeId;
   } else {
-    // no employee explicitly chosen by the customer — verify the slot is actually
+    // no employee explicitly chosen by the customer - verify the slot is actually
     // deliverable by SOMEONE before accepting the booking, but don't silently commit
     // to whichever employee happens to be free first. The appointment is created
     // unassigned; an admin picks the therapist from the appointment details page
-    // (see reassignAppointment) — see appointment-status-transitions.js/admin.routes.js
+    // (see reassignAppointment) - see appointment-status-transitions.js/admin.routes.js
     // for why this moved from automatic to admin-driven.
     const someoneFree = await availabilityService.findFirstAvailableEmployee(serviceId, start, end);
     if (!someoneFree) badRequest("Nijedan terapeut nije dostupan za izabrani termin, izaberite drugi");
@@ -163,7 +163,7 @@ export async function bookAppointment(input) {
         accountJustCreated = true;
       }
 
-      // race guard — re-check right before the write in case two people booked the
+      // race guard - re-check right before the write in case two people booked the
       // same slot within seconds of each other off the same availability list
       if (chosenEmployeeId) {
         const stillFree = await appointmentRepo.findOverlappingAppointments(chosenEmployeeId, start, end, null, { session });
@@ -208,7 +208,7 @@ export async function bookAppointment(input) {
       );
 
       if (resolvedPackagePurchase) {
-        // reserve, not consume — actual consumption happens on completion
+        // reserve, not consume - actual consumption happens on completion
         // (transitionStatus below), and this reservation gets released if the
         // appointment is cancelled/rejected first
         await packagePurchaseService.reserveSession(resolvedPackagePurchase._id, servicePackageId, { session });
@@ -262,8 +262,8 @@ async function transitionStatus(appointmentId, nextStatus, actorId, actorRole, e
 
   // Package-purchase session lifecycle: "completed" delivers the reserved session
   // (moves reserved -> used); "cancelled"/"rejected"/"no_show" gives the reservation
-  // back — none of those three represent the service actually being delivered.
-  // "completed" is terminal (nothing transitions out of it — see
+  // back - none of those three represent the service actually being delivered.
+  // "completed" is terminal (nothing transitions out of it - see
   // appointment-status-transitions.js), so a session is never committed twice.
   if (appointment.packagePurchase) {
     if (nextStatus === "completed") {
@@ -352,7 +352,7 @@ export async function deleteAppointmentById(appointmentId, actorId) {
   if (!appointment) notFound("Termin");
 
   // if this appointment still holds a reserved (not yet committed/released) package
-  // session, give it back before deleting — otherwise the customer's package would
+  // session, give it back before deleting - otherwise the customer's package would
   // show a phantom reservation that can never be used or released (see
   // package-purchase.service.js's reserveSession/releaseSession/commitSession)
   if (appointment.packagePurchase && (appointment.status === "pending" || appointment.status === "confirmed")) {

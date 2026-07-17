@@ -46,7 +46,7 @@ export async function getEmployeeById(employeeId, role = "admin", viewType = "de
   return mapEmployee(employee, role, viewType);
 }
 
-// raw-shaped (IDs, not display strings) — used to pre-fill the admin edit form,
+// raw-shaped (IDs, not display strings) - used to pre-fill the admin edit form,
 // as opposed to getEmployeeById(..., "admin", "detail") which formats for display
 export async function getEmployeeForEdit(employeeId) {
   if (!employeeId) validationError("employeeId");
@@ -97,7 +97,7 @@ export async function updateEmployeeById(employeeId, data) {
   if (!employeeId) validationError("employeeId");
   if (data.workingHours) validateWorkingHours(data.workingHours);
 
-  // Mirror createEmployee's sanitization — an unselected <select name="expert">
+  // Mirror createEmployee's sanitization - an unselected <select name="expert">
   // submits "" (falsy), which the validator correctly lets through since expert
   // is optional, but Mongoose can't cast "" to an ObjectId. Same defensive
   // treatment for services in case something upstream ever sends a stray "".
@@ -139,13 +139,13 @@ export async function deleteEmployeeById(employeeId) {
   return { success: true };
 }
 
-// raw (unmapped) — used internally by the availability engine
+// raw (unmapped) - used internally by the availability engine
 export async function findEmployeesByServiceRaw(serviceId) {
   if (!serviceId) validationError("serviceId");
   return employeeRepo.findEmployeesByService(serviceId);
 }
 
-// {id, name} pairs for the admin appointment-assignment dropdown — only employees
+// {id, name} pairs for the admin appointment-assignment dropdown - only employees
 // who can actually perform this specific service
 export async function getEmployeeOptionsForService(serviceId) {
   if (!serviceId) validationError("serviceId");

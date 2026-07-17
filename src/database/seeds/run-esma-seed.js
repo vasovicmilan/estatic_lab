@@ -8,14 +8,14 @@ import { seedEsmaCatalog } from "./esma-catalog.seed.js";
  *
  * NOTE: this deliberately uses plain console.log/console.error instead of
  * the app's logInfo/logError. Those go through pino with a pino-pretty
- * transport that runs in a worker thread — for a short-lived CLI script
+ * transport that runs in a worker thread - for a short-lived CLI script
  * like this one, the process can exit before that worker thread flushes
  * its buffered writes, so both success AND error messages can silently
  * disappear. Plain console output is synchronous, so nothing gets lost.
  */
 async function run() {
   const uri = process.env.MONGO_URI;
-  console.log(`→ MONGO_URI set: ${uri ? "yes" : "NO — missing from .env!"}`);
+  console.log(`→ MONGO_URI set: ${uri ? "yes" : "NO - missing from .env!"}`);
   if (!uri) {
     console.error("✗ MONGO_URI is not set. Check your .env file (project root) and that dotenv is picking it up.");
     process.exit(1);

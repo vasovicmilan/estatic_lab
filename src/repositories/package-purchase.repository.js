@@ -12,7 +12,7 @@ export async function findPackagePurchaseById(id, { populateFields = [], session
   return query.lean();
 }
 
-// used by reserveSession/releaseSession/commitSession — needs a real (non-lean) doc
+// used by reserveSession/releaseSession/commitSession - needs a real (non-lean) doc
 // so item counters can be mutated in place before saving the whole items[] array back
 export async function findPackagePurchaseDocById(id, { session } = {}) {
   return PackagePurchase.findById(id).session(session || null);
@@ -24,7 +24,7 @@ export async function findPurchasesByUser(userId, { populateFields = [], session
   return query.lean();
 }
 
-// candidates for auto-selection / eligibility display — scoped to the exact variant
+// candidates for auto-selection / eligibility display - scoped to the exact variant
 // (servicePackageId), not just the parent service. Filtered further in the service
 // layer (status/expiry/remaining-sessions).
 export async function findActivePurchasesForUserAndVariant(userId, servicePackageId, { session } = {}) {

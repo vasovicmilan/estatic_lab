@@ -57,7 +57,7 @@ describe("admin user management actions (HTTP)", () => {
   // See the note above: verifyUser calls authService.verifyAccountByAdmin(userId), but
   // the function actually defined (in user.service.js) is verifyUserByAdmin, exported
   // from a different module than the controller imports it from. If auth.service.js
-  // doesn't separately provide a same-named function, this should 500 instead of 302 —
+  // doesn't separately provide a same-named function, this should 500 instead of 302 -
   // documenting actual behavior rather than assuming.
   it("manually verifies a pending user's account", async () => {
     const agent = request.agent(app);

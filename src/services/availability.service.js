@@ -38,12 +38,12 @@ function subtractBusyIntervals(freeInterval, busyIntervals) {
   for (const busy of busyIntervals) {
     const next = [];
     for (const interval of remaining) {
-      // no overlap — interval survives untouched
+      // no overlap - interval survives untouched
       if (busy.end <= interval.start || busy.start >= interval.end) {
         next.push(interval);
         continue;
       }
-      // overlap — keep the piece(s) of `interval` not covered by `busy`
+      // overlap - keep the piece(s) of `interval` not covered by `busy`
       if (busy.start > interval.start) {
         next.push({ start: interval.start, end: new Date(Math.min(busy.start, interval.end)) });
       }
@@ -78,7 +78,7 @@ function ceilToGrid(date) {
 /**
  * Steps through a free interval on the fixed SLOT_GRID_MINUTES grid, offering
  * a start time wherever a full `durationMinutes` booking still fits before the
- * interval ends — independent of the service's own duration, so start times
+ * interval ends - independent of the service's own duration, so start times
  * always land on a clean grid mark (09:00, 09:30, 10:00...) rather than
  * drifting by whatever the service happens to last.
  */
@@ -104,7 +104,7 @@ async function getEmployeeFreeSlotsForDay(employee, date, durationMinutes) {
   const { start: dayStart, end: dayEnd } = dayBounds(date);
   const busyRaw = await appointmentRepo.findBusyIntervals(employee._id, dayStart, dayEnd);
   // pad every existing appointment by the required buffer on both sides before
-  // subtracting — this is what actually keeps a gap before/after each appointment,
+  // subtracting - this is what actually keeps a gap before/after each appointment,
   // not just prevents literal overlap. Matches the buffer applied at write time in
   // findOverlappingAppointments (appointment.repository.js).
   const busyIntervals = busyRaw.map((a) => ({
@@ -129,7 +129,7 @@ async function getEmployeeFreeSlotsForDay(employee, date, durationMinutes) {
  * - `employeeId` given: slots for that one employee only.
  * - `employeeId` omitted: slots merged across every employee who can perform the
  *   service, deduplicated by start time (so "9:00, 9:30, 10:00..." shows once even if
- *   multiple therapists are free then) — each entry keeps the list of employee ids
+ *   multiple therapists are free then) - each entry keeps the list of employee ids
  *   actually free at that time, for auto-assignment at booking time.
  */
 export async function getAvailableSlots({ serviceId, servicePackageId, employeeId = null, date }) {
@@ -174,7 +174,7 @@ export async function getAvailableSlots({ serviceId, servicePackageId, employeeI
 }
 
 /**
- * Write-time resolution — given a chosen start time and no specific employee
+ * Write-time resolution - given a chosen start time and no specific employee
  * preference, picks the first candidate who is (still) actually free right now. Used
  * inside the booking transaction as the final source of truth, since the slot list the
  * visitor saw may be a few seconds stale.

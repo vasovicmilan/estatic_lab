@@ -90,7 +90,7 @@ export function prepareCategoryFormData(category = null, { parentOptions = [] } 
 
   const fields = [{ name: "name", label: "Naziv", type: "text", required: true, width: isEdit ? 6 : 12, value: values.name }];
 
-  // slug simply doesn't exist in the array on create — createCategory() already
+  // slug simply doesn't exist in the array on create - createCategory() already
   // auto-generates one from the name when it's omitted (see slug.util.js). Shown on
   // edit so an admin can deliberately change it.
   if (isEdit) {
@@ -101,7 +101,7 @@ export function prepareCategoryFormData(category = null, { parentOptions = [] } 
       required: true,
       width: 6,
       value: values.slug,
-      help: "Menjajte pažljivo — postojeći linkovi ka ovoj kategoriji mogu prestati da rade.",
+      help: "Menjajte pažljivo - postojeći linkovi ka ovoj kategoriji mogu prestati da rade.",
     });
   }
 

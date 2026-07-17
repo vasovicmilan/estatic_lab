@@ -50,7 +50,7 @@ export async function employeeDetails(req, res, next) {
     const viewData = prepareEmployeeDetailsData(employee);
 
     return res.render("admin/_details", {
-      pageTitle: `Zaposleni — ${employee.korisnik.imePrezime}`,
+      pageTitle: `Zaposleni - ${employee.korisnik.imePrezime}`,
       pageDescription: employee.korisnik.email,
       data: viewData,
     });
@@ -86,7 +86,7 @@ export async function editEmployeeForm(req, res, next) {
     const formData = prepareEmployeeFormData(employee, options);
 
     return res.render("admin/_form", {
-      pageTitle: `Izmena — ${employee.imePrezime}`,
+      pageTitle: `Izmena - ${employee.imePrezime}`,
       pageDescription: employee.email,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -142,7 +142,7 @@ export async function updateEmployee(req, res, next) {
       const options = await loadFormOptions();
       const formData = prepareEmployeeFormData(employee, options);
       return res.status(400).render("admin/_form", {
-        pageTitle: `Izmena — ${employee.imePrezime}`,
+        pageTitle: `Izmena - ${employee.imePrezime}`,
         pageDescription: employee.email,
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -164,7 +164,7 @@ export async function updateEmployee(req, res, next) {
       const options = await loadFormOptions();
       const formData = prepareEmployeeFormData(employee, options);
       return res.status(error.statusCode).render("admin/_form", {
-        pageTitle: employee ? `Izmena — ${employee.imePrezime}` : "Izmena zaposlenog",
+        pageTitle: employee ? `Izmena - ${employee.imePrezime}` : "Izmena zaposlenog",
         pageDescription: employee?.email || "",
         data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });

@@ -15,7 +15,7 @@
             <dt class="col-4 text-muted">Telefon</dt><dd class="col-8"><%= data.appointment.klijent.telefon || "-" %></dd>
             <dt class="col-4 text-muted">Usluga</dt><dd class="col-8"><%= data.appointment.usluga.naziv %></dd>
             <dt class="col-4 text-muted">Trajanje</dt><dd class="col-8"><%= data.appointment.usluga.trajanje %></dd>
-            <dt class="col-4 text-muted">Termin</dt><dd class="col-8"><%= data.appointment.termin.pocetak %> — <%= data.appointment.termin.kraj %></dd>
+            <dt class="col-4 text-muted">Termin</dt><dd class="col-8"><%= data.appointment.termin.pocetak %> - <%= data.appointment.termin.kraj %></dd>
             <dt class="col-4 text-muted">Status</dt><dd class="col-8"><%= data.appointment.status %></dd>
             <dt class="col-4 text-muted">Cena</dt><dd class="col-8"><%= data.appointment.konacnaCena %></dd>
             <% if (data.appointment.napomenaKlijenta) { %><dt class="col-4 text-muted">Napomena</dt><dd class="col-8"><%= data.appointment.napomenaKlijenta %></dd><% } %>

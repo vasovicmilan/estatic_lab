@@ -52,7 +52,7 @@ export async function packagePurchaseDetails(req, res, next) {
     const viewData = preparePackagePurchaseDetailsData(purchase);
 
     return res.render("admin/_details", {
-      pageTitle: `Kupljeni paket — ${purchase.paket}`,
+      pageTitle: `Kupljeni paket - ${purchase.paket}`,
       pageDescription: purchase.korisnik,
       data: viewData,
     });
@@ -87,7 +87,7 @@ export async function editPackagePurchaseForm(req, res, next) {
     const formData = preparePackagePurchaseEditFormData(purchase);
 
     return res.render("admin/_form", {
-      pageTitle: `Izmena — ${purchase.paket}`,
+      pageTitle: `Izmena - ${purchase.paket}`,
       pageDescription: purchase.korisnik,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -152,7 +152,7 @@ export async function updatePackagePurchase(req, res, next) {
       const purchase = await packagePurchaseService.getPurchaseById(packagePurchaseId);
       const formData = preparePackagePurchaseEditFormData(purchase);
       return res.status(400).render("admin/_form", {
-        pageTitle: `Izmena — ${purchase.paket}`,
+        pageTitle: `Izmena - ${purchase.paket}`,
         pageDescription: purchase.korisnik,
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -175,7 +175,7 @@ export async function updatePackagePurchase(req, res, next) {
       if (purchase) {
         const formData = preparePackagePurchaseEditFormData(purchase);
         return res.status(error.statusCode).render("admin/_form", {
-          pageTitle: `Izmena — ${purchase.paket}`,
+          pageTitle: `Izmena - ${purchase.paket}`,
           pageDescription: purchase.korisnik,
           data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
         });

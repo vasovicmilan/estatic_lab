@@ -119,7 +119,7 @@ describe("public booking flow (HTTP)", () => {
       const appointments = await appointmentRepo.findAppointments({});
       assert.equal(appointments.data.length, 1);
       assert.equal(appointments.data[0].contactSnapshot.email, "gost@example.com");
-      // assignment is admin-driven now, not automatic — the booking only checks that
+      // assignment is admin-driven now, not automatic - the booking only checks that
       // SOMEONE is free before accepting it, but doesn't commit to whoever that is
       assert.equal(appointments.data[0].employee, null, "no employee should be auto-assigned at booking time");
       assert.equal(appointments.data[0].assignedTo, null, "the appointment should stay unassigned until an admin assigns it");

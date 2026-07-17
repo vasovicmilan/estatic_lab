@@ -41,7 +41,7 @@ export async function appointmentDetails(req, res, next) {
     const viewData = prepareAppointmentDetailsData(appointment, { employeeOptions });
 
     return res.render("admin/_details", {
-      pageTitle: `Termin — ${appointment.korisnik.ime}`,
+      pageTitle: `Termin - ${appointment.korisnik.ime}`,
       pageDescription: appointment.usluga.naziv,
       data: viewData,
     });

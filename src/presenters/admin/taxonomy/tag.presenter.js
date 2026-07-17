@@ -85,7 +85,7 @@ export function prepareTagFormData(tag = null) {
 
   const fields = [{ name: "name", label: "Naziv", type: "text", required: true, width: isEdit ? 6 : 12, value: values.name }];
 
-  // slug simply doesn't exist in the array on create — createTag() already
+  // slug simply doesn't exist in the array on create - createTag() already
   // auto-generates one from the name when it's omitted (see slug.util.js). Shown on
   // edit so an admin can deliberately change it.
   if (isEdit) {
@@ -96,7 +96,7 @@ export function prepareTagFormData(tag = null) {
       required: true,
       width: 6,
       value: values.slug,
-      help: "Menjajte pažljivo — postojeći linkovi mogu prestati da rade.",
+      help: "Menjajte pažljivo - postojeći linkovi mogu prestati da rade.",
     });
   }
 

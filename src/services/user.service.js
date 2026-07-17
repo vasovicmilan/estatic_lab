@@ -64,7 +64,7 @@ async function resolveRegistrationRole() {
 
   if (isFirstUser) {
     const adminRole = await roleService.findRoleByName("admin");
-    if (!adminRole) badRequest("Rola 'admin' nije konfigurisana — pokrenite seed rola pre registracije");
+    if (!adminRole) badRequest("Rola 'admin' nije konfigurisana - pokrenite seed rola pre registracije");
     return { role: adminRole, isFirstUser: true };
   }
 
@@ -111,7 +111,7 @@ export async function findOrCreateGoogleUser(googleData) {
   let user = await userRepo.findUserByGoogleId(googleData.googleId);
   if (user) return user;
 
-  // an account may already exist locally under the same email — link the Google id
+  // an account may already exist locally under the same email - link the Google id
   // instead of creating a duplicate account
   user = await userRepo.findUserByEmail(googleData.email);
   if (user) {
@@ -136,7 +136,7 @@ export async function findOrCreateGoogleUser(googleData) {
   });
 
   if (isFirstUser) {
-    logInfo("First user registered via Google — auto-promoted to admin", { userId: created._id, email: created.email });
+    logInfo("First user registered via Google - auto-promoted to admin", { userId: created._id, email: created.email });
   }
 
   logInfo("User registered via Google", { userId: created._id, email: created.email });
@@ -147,7 +147,7 @@ export async function findOrCreateGoogleUser(googleData) {
  * Core of the guest-booking flow (see appointment.service.js). Looked up BEFORE the
  * booking transaction starts (read-only); if no account exists, the caller creates one
  * INSIDE the same transaction as the appointment write, passing the session through here.
- * `status: "guest"` + resetToken doubles as the "claim your account" link — same email
+ * `status: "guest"` + resetToken doubles as the "claim your account" link - same email
  * flow as a normal password reset.
  */
 export async function createGuestUser({ firstName, lastName, email, phone }, { session } = {}) {

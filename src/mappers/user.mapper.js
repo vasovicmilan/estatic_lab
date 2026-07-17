@@ -17,7 +17,7 @@ function getRoleName(user) {
   return "Nepoznato";
 }
 
-// raw role ObjectId — needed to pre-select the current role in an admin edit dropdown,
+// raw role ObjectId - needed to pre-select the current role in an admin edit dropdown,
 // since `uloga` above is a translated display label, not usable for value matching
 function getRoleId(user) {
   if (!user.role) return null;
@@ -137,7 +137,7 @@ export function mapUserRaw(user) {
 }
 
 /**
- * Dispatcher used by user.service.js — picks the right shape by who's asking and
+ * Dispatcher used by user.service.js - picks the right shape by who's asking and
  * whether it's their own profile.
  */
 export function mapUser(user, role, viewType = "short", isOwnProfile = false) {

@@ -159,7 +159,7 @@ describe("validateCouponForPackagePurchase", () => {
     assert.equal(result.discountAmount, 1000);
   });
 
-  it("ignores applicableServices entirely — that allowlist is for bookings, not package purchases", async (t) => {
+  it("ignores applicableServices entirely - that allowlist is for bookings, not package purchases", async (t) => {
     t.mock.method(couponRepo, "findCouponByCode", async () => buildCoupon({ applicableServices: [id()], discountType: "fixed", discountValue: 500 }));
     const result = await couponService.validateCouponForPackagePurchase("KOD", { packageId: id(), purchaseValue: 8000 });
     assert.equal(result.discountAmount, 500);
@@ -180,7 +180,7 @@ describe("validateCouponForPackagePurchase", () => {
   });
 });
 
-describe("redeemCoupon — packagePurchaseId pass-through", () => {
+describe("redeemCoupon - packagePurchaseId pass-through", () => {
   it("forwards packagePurchaseId to the repository alongside a null appointmentId", async (t) => {
     const purchaseId = id();
     let forwarded;

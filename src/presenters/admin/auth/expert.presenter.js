@@ -118,7 +118,7 @@ export function prepareExpertFormData(expert = null, { serviceOptions = [] } = {
     { name: "lastName", label: "Prezime", type: "text", required: true, width: 6, value: values.lastName },
   ];
 
-  // slug simply doesn't exist in the array on create — createExpert() already
+  // slug simply doesn't exist in the array on create - createExpert() already
   // auto-generates one from the name when it's omitted. Shown on edit so an admin can
   // deliberately change it.
   if (isEdit) {
@@ -129,7 +129,7 @@ export function prepareExpertFormData(expert = null, { serviceOptions = [] } = {
       required: true,
       width: 6,
       value: values.slug,
-      help: "Menjajte pažljivo — postojeći linkovi ka ovom ekspertu mogu prestati da rade.",
+      help: "Menjajte pažljivo - postojeći linkovi ka ovom ekspertu mogu prestati da rade.",
     });
   }
 

@@ -42,7 +42,7 @@ export async function categoryDetails(req, res, next) {
     const viewData = prepareCategoryDetailsData(category);
 
     return res.render("admin/_details", {
-      pageTitle: `Kategorija — ${category.naziv}`,
+      pageTitle: `Kategorija - ${category.naziv}`,
       pageDescription: category.kratakOpis || category.naziv,
       data: viewData,
     });
@@ -78,7 +78,7 @@ export async function editCategoryForm(req, res, next) {
     const formData = prepareCategoryFormData(category, { parentOptions });
 
     return res.render("admin/_form", {
-      pageTitle: `Izmena — ${category.name}`,
+      pageTitle: `Izmena - ${category.name}`,
       pageDescription: category.shortDescription || category.name,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -93,7 +93,7 @@ export async function editCategoryForm(req, res, next) {
 
 function buildFeatureImage(req, existing) {
   if (req.uploadedFile) {
-    // categoryImageDesc is required whenever a new image is uploaded — enforced by
+    // categoryImageDesc is required whenever a new image is uploaded - enforced by
     // validateCategoryCreate/validateCategoryUpdate before this code ever runs.
     return { img: req.uploadedFile.img, imgDesc: req.body.categoryImageDesc.trim() };
   }
@@ -148,7 +148,7 @@ export async function updateCategory(req, res, next) {
       const parentOptions = await loadParentOptions(category.domain, categoryId);
       const formData = prepareCategoryFormData(category, { parentOptions });
       return res.status(400).render("admin/_form", {
-        pageTitle: `Izmena — ${category.name}`,
+        pageTitle: `Izmena - ${category.name}`,
         pageDescription: category.shortDescription || category.name,
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -176,7 +176,7 @@ export async function updateCategory(req, res, next) {
       const parentOptions = await loadParentOptions(category?.domain, req.params.categoryId);
       const formData = prepareCategoryFormData(category, { parentOptions });
       return res.status(statusCode).render("admin/_form", {
-        pageTitle: category ? `Izmena — ${category.name}` : "Izmena kategorije",
+        pageTitle: category ? `Izmena - ${category.name}` : "Izmena kategorije",
         pageDescription: category?.shortDescription || "",
         data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });

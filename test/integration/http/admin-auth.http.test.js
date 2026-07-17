@@ -5,7 +5,7 @@ import { createTestApp, closeTestApp, clearTestDatabase } from "../setup/test-ap
 import { registerAndLogin } from "../../helpers/session.js";
 
 // Uses the shared registerAndLogin/ensureRole helper (test/helpers/session.js)
-// instead of hand-rolling its own Role.create() calls — a locally duplicated
+// instead of hand-rolling its own Role.create() calls - a locally duplicated
 // "admin" role with no permissions was exactly the bug that caused
 // "allows a logged-in admin through to the admin panel" to fail with 403 instead
 // of 200 once access became permission-based (see admin.middleware.js). Routing

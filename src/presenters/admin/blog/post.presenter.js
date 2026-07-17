@@ -144,7 +144,7 @@ export function preparePostFormData(post = null, { categoryOptions = [], tagOpti
       required: true,
       width: 6,
       value: values.slug,
-      help: "Menjajte pažljivo — postojeći linkovi ka ovom postu mogu prestati da rade.",
+      help: "Menjajte pažljivo - postojeći linkovi ka ovom postu mogu prestati da rade.",
     });
   }
 

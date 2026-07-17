@@ -7,7 +7,7 @@ import { parseJsonFields } from "../../middlewares/parse-json-fields.middleware.
 
 const router = Router();
 
-// mounted at /moj-nalog in web.routes.js — symmetric with the customer's /nalog.
+// mounted at /moj-nalog in web.routes.js - symmetric with the customer's /nalog.
 // employeeMiddleware lives here (not in web.routes.js) so this router is self-contained:
 // anyone mounting it elsewhere gets the same guard for free.
 router.use(employeeMiddleware);

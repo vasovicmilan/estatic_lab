@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { parseCheckbox } from "../../../src/utils/form-bool.util.js";
 
-describe("form-bool.util — parseCheckbox", () => {
+describe("form-bool.util - parseCheckbox", () => {
   it("treats '1' as true (what the admin checkbox markup actually submits when checked)", () => {
     assert.equal(parseCheckbox("1"), true);
   });

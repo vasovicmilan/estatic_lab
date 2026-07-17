@@ -116,7 +116,7 @@ export function prepareEmployeeFormData(employee = null, { userOptions = [], ser
   const values = isEdit ? employee : { userId: "", expert: null, services: [], workingHours: [], isActive: true, notes: "" };
   const weekDays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
-  // employee has no slug at all — nothing to hide here, included for consistency
+  // employee has no slug at all - nothing to hide here, included for consistency
   // with the rest of the admin presenter sweep
   const fields = [];
 

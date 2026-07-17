@@ -88,7 +88,7 @@ describe("package-purchase.service", () => {
     });
   });
 
-  describe("findUsablePurchaseForService — auto-pick ordering, scoped to the exact variant", () => {
+  describe("findUsablePurchaseForService - auto-pick ordering, scoped to the exact variant", () => {
     it("prefers a purchase that expires sooner over one that expires later", async (t) => {
       const servicePackageId = id();
       const expiresLater = buildPackagePurchase({ servicePackageId, expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) });
@@ -152,7 +152,7 @@ describe("package-purchase.service", () => {
     });
   });
 
-  describe("assertUsablePurchase — the server-side check a client selection alone can never bypass", () => {
+  describe("assertUsablePurchase - the server-side check a client selection alone can never bypass", () => {
     it("rejects a purchase belonging to a different user", async (t) => {
       const purchase = buildPackagePurchase();
       t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => purchase);

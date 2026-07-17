@@ -67,7 +67,7 @@ export function preparePackagePurchaseDetailsData(purchase) {
         title: "Usluge u paketu",
         type: "table",
         rows: purchase.stavke.map((s) => ({
-          label: `${s.usluga} — ${s.varijanta}`,
+          label: `${s.usluga} - ${s.varijanta}`,
           value: `${s.iskorisceno} iskorišćeno, ${s.rezervisano} rezervisano / ${s.ukupnoSeansi} ukupno (${s.preostalo} slobodno)`,
         })),
       },
@@ -100,8 +100,8 @@ export function preparePackagePurchaseDetailsData(purchase) {
 }
 
 // `packages` here is the raw admin-list shape from packageService.listPackages()
-// (each with .naziv, .stavke [an array of "ServiceName — VariantName xN" strings],
-// .cena) — used to build both the plain <select> options AND the live preview data
+// (each with .naziv, .stavke [an array of "ServiceName - VariantName xN" strings],
+// .cena) - used to build both the plain <select> options AND the live preview data
 // keyed by package id, since which variant a package covers is fixed by the Package
 // template and can't be chosen at assignment time, only shown.
 export function preparePackagePurchaseFormData({ userOptions = [], packages = [], prefillUserId = "" } = {}) {
@@ -134,8 +134,8 @@ export function preparePackagePurchaseFormData({ userOptions = [], packages = []
         options: packageOptions,
         previewData: packagePreviewData,
       },
-      { name: "pricePaid", label: "Plaćena cena (opciono — podrazumevano cena paketa)", type: "number", min: 0, step: "0.01", width: 6 },
-      { name: "expiresAt", label: "Ističe (opciono — prazno = ne ističe)", type: "date", width: 6 },
+      { name: "pricePaid", label: "Plaćena cena (opciono - podrazumevano cena paketa)", type: "number", min: 0, step: "0.01", width: 6 },
+      { name: "expiresAt", label: "Ističe (opciono - prazno = ne ističe)", type: "date", width: 6 },
       { name: "couponCode", label: "Kupon kod (opciono)", type: "text", width: 6 },
       { name: "notes", label: "Napomena", type: "textarea", rows: 3, width: 12, help: "npr. „plaćeno gotovinom”, „popust 10% dobre volje”" },
     ],
@@ -150,7 +150,7 @@ export function preparePackagePurchaseFormData({ userOptions = [], packages = []
 }
 
 // Deliberately editable fields only: expiresAt/notes. Items, pricing, and the coupon
-// used are the actual purchase record and stay immutable — see
+// used are the actual purchase record and stay immutable - see
 // package-purchase.service.js's updatePurchase() for why.
 export function preparePackagePurchaseEditFormData(purchase) {
   return {

@@ -37,7 +37,7 @@ export async function findSubscribers({ search = "", limit = 20, page = 1, filte
   return { data, ...buildPaginationMeta({ total, page, limit }) };
 }
 
-// unpaginated — used by the campaign-send job to fetch every active recipient
+// unpaginated - used by the campaign-send job to fetch every active recipient
 export async function findAllActiveSubscribers({ session } = {}) {
   return NewsLetter.find({ status: "subscribed" }).session(session || null).lean();
 }

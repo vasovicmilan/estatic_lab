@@ -16,7 +16,7 @@ export async function register(data) {
       confirmToken: result.confirmToken,
     });
   } else {
-    logInfo("First user registered — auto-activated as admin, no confirmation email needed", { userId: result.id, email: result.email });
+    logInfo("First user registered - auto-activated as admin, no confirmation email needed", { userId: result.id, email: result.email });
   }
 
   return result;
@@ -64,7 +64,7 @@ export async function googleAuth(googleData) {
   const created = await userService.findOrCreateGoogleUser(googleData);
   await userService.updateLastLogin(created._id);
 
-  // findOrCreateGoogleUser doesn't populate role — re-fetch so the session gets a role name
+  // findOrCreateGoogleUser doesn't populate role - re-fetch so the session gets a role name
   const user = await userService.findUserByEmail(created.email);
 
   const isNewUser = !user.createdAt || Date.now() - new Date(user.createdAt).getTime() < 5000;
@@ -99,7 +99,7 @@ export async function verifyAccount(token) {
 export async function requestPasswordReset(email) {
   if (!email) validationError("email");
   const user = await userService.findUserByEmail(email);
-  // deliberately the same response whether or not the email exists — don't leak
+  // deliberately the same response whether or not the email exists - don't leak
   // account existence through response timing/content
   if (!user) return { message: "Ako email postoji, poslat je link za reset lozinke" };
 

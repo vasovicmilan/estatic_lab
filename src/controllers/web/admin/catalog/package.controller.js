@@ -21,7 +21,7 @@ function parseJsonField(value, fallback = []) {
 }
 
 // The items repeater can't do cascading "pick a service, then pick one of ITS
-// variants" dropdowns — so each row is one flattened select over every active
+// variants" dropdowns - so each row is one flattened select over every active
 // service's variants, encoded as "serviceId::servicePackageId". This splits that
 // back into the real {service, servicePackageId, sessions} shape the service layer
 // expects.
@@ -42,7 +42,7 @@ async function loadFormOptions() {
     tagService.getTagsForSelect("service"),
   ]);
 
-  // listServices() returns the admin-list shape (no variant details) — fetching each
+  // listServices() returns the admin-list shape (no variant details) - fetching each
   // service's full detail is the only way to get its actual variant list/pricing.
   // Admin-only, rarely-loaded form, so the N+1 cost here is fine.
   const fullServices = await Promise.all(servicesList.data.map((s) => serviceService.getServiceById(s.id)));
@@ -50,7 +50,7 @@ async function loadFormOptions() {
   const variantOptions = fullServices.flatMap((service) =>
     (service.varijante || []).map((variant) => ({
       value: `${service.id}::${variant.id}`,
-      label: `${service.naziv} — ${variant.naziv} (${variant.cena} RSD)`,
+      label: `${service.naziv} - ${variant.naziv} (${variant.cena} RSD)`,
     }))
   );
 
@@ -117,7 +117,7 @@ export async function packageDetails(req, res, next) {
     const viewData = preparePackageDetailsData(pkg);
 
     return res.render("admin/_details", {
-      pageTitle: `Paket — ${pkg.naziv}`,
+      pageTitle: `Paket - ${pkg.naziv}`,
       pageDescription: pkg.kratakOpis || pkg.naziv,
       data: viewData,
     });
@@ -150,7 +150,7 @@ export async function editPackageForm(req, res, next) {
     const formData = preparePackageFormData(pkg, options);
 
     return res.render("admin/_form", {
-      pageTitle: `Izmena — ${pkg.name}`,
+      pageTitle: `Izmena - ${pkg.name}`,
       pageDescription: pkg.shortDescription || pkg.name,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -208,7 +208,7 @@ export async function updatePackage(req, res, next) {
       const options = await loadFormOptions();
       const formData = preparePackageFormData(pkg, options);
       return res.status(400).render("admin/_form", {
-        pageTitle: `Izmena — ${pkg.name}`,
+        pageTitle: `Izmena - ${pkg.name}`,
         pageDescription: pkg.shortDescription || pkg.name,
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -233,7 +233,7 @@ export async function updatePackage(req, res, next) {
       const options = await loadFormOptions();
       const formData = preparePackageFormData(pkg, options);
       return res.status(statusCode).render("admin/_form", {
-        pageTitle: pkg ? `Izmena — ${pkg.name}` : "Izmena paketa",
+        pageTitle: pkg ? `Izmena - ${pkg.name}` : "Izmena paketa",
         pageDescription: pkg?.shortDescription || "",
         data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
@@ -243,7 +243,7 @@ export async function updatePackage(req, res, next) {
 }
 
 // ---------------------------------------------------------------------------
-// Galerija i video — separate page from the main edit form (see admin/_details.ejs)
+// Galerija i video - separate page from the main edit form (see admin/_details.ejs)
 // ---------------------------------------------------------------------------
 export async function editPackageGalleryForm(req, res, next) {
   try {
@@ -258,7 +258,7 @@ export async function editPackageGalleryForm(req, res, next) {
     });
 
     return res.render("admin/_media-form", {
-      pageTitle: `Galerija i video — ${pkg.name}`,
+      pageTitle: `Galerija i video - ${pkg.name}`,
       pageDescription: pkg.shortDescription || pkg.name,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
@@ -285,7 +285,7 @@ export async function updatePackageGallery(req, res, next) {
         submitUrl: `/admin/paketi/${packageId}/galerija`,
       });
       return res.status(400).render("admin/_media-form", {
-        pageTitle: `Galerija i video — ${pkg.name}`,
+        pageTitle: `Galerija i video - ${pkg.name}`,
         pageDescription: pkg.shortDescription || pkg.name,
         data: { ...formData, errors: req.validationErrors, csrfToken: res.locals.csrfToken },
       });
@@ -317,7 +317,7 @@ export async function updatePackageGallery(req, res, next) {
           submitUrl: `/admin/paketi/${packageId}/galerija`,
         });
         return res.status(statusCode).render("admin/_media-form", {
-          pageTitle: `Galerija i video — ${pkg.name}`,
+          pageTitle: `Galerija i video - ${pkg.name}`,
           pageDescription: pkg.shortDescription || pkg.name,
           data: { ...formData, errors: { general: message }, csrfToken: res.locals.csrfToken },
         });

@@ -3,7 +3,7 @@
  *
  * Role-scoping lives here (not ad hoc in the service) because "what can this role see"
  * is a query-shape concern: an employee needs appointments where they're the assigned
- * OR chosen therapist, OR appointments still unassigned — that's filter logic, not
+ * OR chosen therapist, OR appointments still unassigned - that's filter logic, not
  * business logic, so it belongs next to the other filter builders.
  */
 export function buildAppointmentFilter({

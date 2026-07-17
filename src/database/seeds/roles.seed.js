@@ -24,14 +24,14 @@ const defaultRoles = [
   },
   {
     name: "employee",
-    description: "Zaposleni — pristup sopstvenom kalendaru i dodeljenim terminima",
+    description: "Zaposleni - pristup sopstvenom kalendaru i dodeljenim terminima",
     permissions: ["view_dashboard", "manage_appointments_assigned"],
     isDefault: false,
     priority: 50,
   },
   {
     name: "user",
-    description: "Registrovani korisnik — zakazivanje i upravljanje sopstvenim terminima",
+    description: "Registrovani korisnik - zakazivanje i upravljanje sopstvenim terminima",
     permissions: ["view_dashboard", "manage_own_appointments"],
     isDefault: true,
     priority: 0,

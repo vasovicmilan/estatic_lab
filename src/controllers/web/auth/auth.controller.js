@@ -177,7 +177,7 @@ export async function googleCallback(req, res, next) {
     delete req.session.googleOAuthState;
 
     if (!state || state !== expectedState) {
-      logWarn("[googleCallback] State parametar se ne poklapa — moguć CSRF pokušaj");
+      logWarn("[googleCallback] State parametar se ne poklapa - moguć CSRF pokušaj");
       return flashAndRedirect(req, res, "error", "Sesija je istekla, pokušajte ponovo.", "/prijava");
     }
 

@@ -68,7 +68,7 @@ export function preparePackageDetailsData(pkg) {
       {
         title: "Usluge u paketu",
         type: "table",
-        rows: pkg.stavke.map((s) => ({ label: `${s.usluga.naziv} — ${s.varijanta.naziv}`, value: `${s.brojSeansi} seansi` })),
+        rows: pkg.stavke.map((s) => ({ label: `${s.usluga.naziv} - ${s.varijanta.naziv}`, value: `${s.brojSeansi} seansi` })),
       },
       {
         title: "FAQ",
@@ -137,7 +137,7 @@ export function preparePackageFormData(pkg = null, { variantOptions = [], catego
       required: true,
       width: 6,
       value: values.slug,
-      help: "Menjajte pažljivo — postojeći linkovi ka ovom paketu mogu prestati da rade.",
+      help: "Menjajte pažljivo - postojeći linkovi ka ovom paketu mogu prestati da rade.",
     });
   }
 
@@ -150,7 +150,7 @@ export function preparePackageFormData(pkg = null, { variantOptions = [], catego
       type: "repeater",
       width: 12,
       // each row's "variantKey" encodes both service and the exact variant as
-      // "serviceId::servicePackageId" — the flattened list is the only clean way
+      // "serviceId::servicePackageId" - the flattened list is the only clean way
       // to offer "pick a specific variant" without a cascading select the repeater
       // widget doesn't support. The controller splits this back apart on submit.
       value: (values.items || []).map((item) => ({
@@ -158,7 +158,7 @@ export function preparePackageFormData(pkg = null, { variantOptions = [], catego
         sessions: item.sessions,
       })),
       addLabel: "Dodaj uslugu u paket",
-      help: "Izaberite tačno određenu varijantu — različite varijante iste usluge mogu imati različitu cenu, pa paket mora biti vezan za tačno jednu.",
+      help: "Izaberite tačno određenu varijantu - različite varijante iste usluge mogu imati različitu cenu, pa paket mora biti vezan za tačno jednu.",
       itemFields: [
         { name: "variantKey", label: "Usluga i varijanta", type: "select", required: true, options: variantOptions },
         { name: "sessions", label: "Broj seansi", type: "number", min: 1, value: 1, required: true },

@@ -71,7 +71,7 @@ export function buildNewContactMessage(contact) {
 
 export function buildNewTestimonialMessage(testimonial) {
   const lines = [
-    `⭐ <b>Novi testimonijal — čeka odobrenje</b>`,
+    `⭐ <b>Novi testimonijal - čeka odobrenje</b>`,
     "",
     `👤 <b>Ime:</b> ${escapeHtml(testimonial.name || "-")}`,
   ];

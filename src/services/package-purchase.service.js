@@ -14,7 +14,7 @@ const adminPopulate = [
 
 // Admin action: grant a user a package they paid for outside the system (cash, card
 // terminal, bank transfer). This is the ONLY way a PackagePurchase comes into
-// existence — there is no self-serve purchase flow, by design (no payment integration).
+// existence - there is no self-serve purchase flow, by design (no payment integration).
 export async function createPurchaseForUser(userId, packageId, adminId, { expiresAt = null, pricePaid = null, notes = "", couponCode = null } = {}) {
   if (!userId) validationError("userId");
   if (!packageId) validationError("packageId");
@@ -99,7 +99,7 @@ function availableSessions(item) {
   return item.sessionsTotal - item.sessionsUsed - (item.sessionsReserved || 0);
 }
 
-// Suggests a default for the booking UI — scoped to the EXACT variant being booked.
+// Suggests a default for the booking UI - scoped to the EXACT variant being booked.
 // Client still sends back a specific packagePurchaseId, which assertUsablePurchase()/
 // reserveSession() below re-validate server-side. Never trust this alone as authorization.
 export async function findUsablePurchaseForService(userId, servicePackageId) {
@@ -122,7 +122,7 @@ export async function findUsablePurchaseForService(userId, servicePackageId) {
   return usable[0] || null;
 }
 
-// Real server-side authorization check — called from appointment.service.js's
+// Real server-side authorization check - called from appointment.service.js's
 // bookAppointment (read-only, before the transaction).
 export async function assertUsablePurchase(packagePurchaseId, userId, servicePackageId) {
   if (!packagePurchaseId) validationError("packagePurchaseId");
@@ -138,9 +138,9 @@ export async function assertUsablePurchase(packagePurchaseId, userId, servicePac
   return purchase;
 }
 
-// Claims one session the moment a booking is actually made (pending/confirmed) —
+// Claims one session the moment a booking is actually made (pending/confirmed) -
 // called INSIDE appointment.service.js's booking transaction, so a reservation and
-// its Appointment always succeed or fail together. Doesn't touch sessionsUsed — that
+// its Appointment always succeed or fail together. Doesn't touch sessionsUsed - that
 // only happens on completion (commitSession). A cancelled/rejected booking calls
 // releaseSession() to give the slot back.
 export async function reserveSession(packagePurchaseId, servicePackageId, { session } = {}) {
@@ -157,14 +157,14 @@ export async function reserveSession(packagePurchaseId, servicePackageId, { sess
   return purchase;
 }
 
-// Gives a reserved-but-undelivered session back — called when a package-covered
+// Gives a reserved-but-undelivered session back - called when a package-covered
 // appointment is cancelled or rejected before ever being completed.
 export async function releaseSession(packagePurchaseId, servicePackageId, { session } = {}) {
   const purchase = await packagePurchaseRepo.findPackagePurchaseDocById(packagePurchaseId, { session });
   if (!purchase) notFound("Kupljeni paket");
 
   const item = purchase.items.find((i) => String(i.servicePackageId) === String(servicePackageId));
-  if (!item) return purchase; // nothing to release — shouldn't normally happen
+  if (!item) return purchase; // nothing to release - shouldn't normally happen
 
   item.sessionsReserved = Math.max(0, item.sessionsReserved - 1);
   await purchase.save({ session });
@@ -172,7 +172,7 @@ export async function releaseSession(packagePurchaseId, servicePackageId, { sess
   return purchase;
 }
 
-// Converts a reservation into an actually-delivered session — called ONLY when an
+// Converts a reservation into an actually-delivered session - called ONLY when an
 // appointment transitions into "completed". Moves 1 unit from reserved to used;
 // marks the whole purchase "completed" once every item is fully used.
 export async function commitSession(packagePurchaseId, servicePackageId, { session } = {}) {

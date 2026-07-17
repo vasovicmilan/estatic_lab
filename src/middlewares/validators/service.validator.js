@@ -3,7 +3,7 @@ import { collectValidationErrors } from "./collect-validation-errors.js";
 import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
 import { isJsonArrayOrArray, isArrayOrString, slugField, booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
 
-// Phase 1 — core info + image. No `packages` rule here anymore: that's phase 2's job.
+// Phase 1 - core info + image. No `packages` rule here anymore: that's phase 2's job.
 export const validateServiceStep1 = [
   body("name")
     .trim()
@@ -40,7 +40,7 @@ export const validateServiceStep1 = [
   collectValidationErrors,
 ];
 
-// Phase 2 — packages/variants. The one field that's actually required to publish.
+// Phase 2 - packages/variants. The one field that's actually required to publish.
 export const validateServicePackagesStep = [
   body("packages")
     .notEmpty().withMessage("Usluga mora imati bar jednu varijantu")
@@ -49,7 +49,7 @@ export const validateServicePackagesStep = [
   collectValidationErrors,
 ];
 
-// Phase 3 — everything optional, plus the publish toggle.
+// Phase 3 - everything optional, plus the publish toggle.
 export const validateServiceExtrasStep = [
   body("features")
     .optional()
@@ -70,13 +70,13 @@ export const validateServiceExtrasStep = [
   booleanishField("highlight", true),
 
   // default true when the field is present-but-empty-ish is handled in the controller
-  // (nullish coalescing to `true`) — this rule just validates the shape if it's sent.
+  // (nullish coalescing to `true`) - this rule just validates the shape if it's sent.
   booleanishField("isActive", true),
 
   collectValidationErrors,
 ];
 
-// Kept for the existing single-shot edit flow (PUT /:serviceId) — editing an
+// Kept for the existing single-shot edit flow (PUT /:serviceId) - editing an
 // already-published service isn't the pain point, only first-time creation was.
 export const validateServiceUpdate = [
   body("name")

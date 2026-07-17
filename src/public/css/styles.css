@@ -1,6 +1,6 @@
 /*
-  Estetik Lab — component-level overrides.
-  Every selector below is an EXISTING Bootstrap class or plain HTML element — nothing
+  Estetik Lab - component-level overrides.
+  Every selector below is an EXISTING Bootstrap class or plain HTML element - nothing
   new is introduced. This file exists because Bootstrap 5.3 bakes button hover/active
   shades and a few other things into the compiled CSS at build time (hardcoded hex
   values), rather than deriving them from the root --bs-* variables at runtime, so
@@ -16,7 +16,7 @@ h1, h2, h3, h4, h5, h6,
   font-weight: 700;
 }
 
-/* ---- Buttons — hover/active shades re-declared per variant to follow the palette ---- */
+/* ---- Buttons - hover/active shades re-declared per variant to follow the palette ---- */
 .btn-primary {
   --bs-btn-color: #fff;
   --bs-btn-bg: #a8735c;
@@ -176,7 +176,7 @@ h1, h2, h3, h4, h5, h6,
   color: var(--bs-primary) !important;
 }
 
-/* ---- Badges — soft pill shape, slightly heavier weight ---- */
+/* ---- Badges - soft pill shape, slightly heavier weight ---- */
 .badge {
   border-radius: var(--bs-border-radius-pill);
   font-weight: 600;
@@ -195,10 +195,10 @@ h1, h2, h3, h4, h5, h6,
   border-color: var(--bs-border-color);
 }
 
-/* ---- Active state (list-group, nav-pills, dropdown-item) — these default to
+/* ---- Active state (list-group, nav-pills, dropdown-item) - these default to
    Bootstrap's blue and aren't derived from --bs-primary at runtime. Scoped to
    contexts where "active" fills a background (list-group category/tag sidebars,
-   nav-pills account tabs, dropdowns) — deliberately NOT a blanket .nav-link.active
+   nav-pills account tabs, dropdowns) - deliberately NOT a blanket .nav-link.active
    rule, since a plain top-nav link's active state is just a color change, not a
    filled pill (see the .navbar-light rule above for that case). ---- */
 .list-group-item.active {
@@ -229,7 +229,7 @@ h1, h2, h3, h4, h5, h6,
    .hero-section alone renders the gradient fallback. When the presenter provides a
    real photo (see index.presenter.js's hero.image), landing/home.ejs additionally
    applies .hero-section-with-image, which overrides just background-image with the
-   darkened photo — background-size/position from the base rule still apply. This
+   darkened photo - background-size/position from the base rule still apply. This
    keeps the template free of any inline style while still supporting an optional,
    presenter-driven hero photo. */
 .hero-section {
