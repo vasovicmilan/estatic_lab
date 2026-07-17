@@ -53,7 +53,7 @@ export function prepareAboutPageData() {
         ],
       },
       {
-        title: "Zašto Estatic Lab",
+        title: "Zašto Estatik Lab",
         list: [
           "Profesionalna ESMA oprema — miostimulacija, limfna drenaža, mikrostrujni lifting i laserska biorevitalizacija u jednom mestu",
           "Sertifikovani terapeuti sa iskustvom u masaži i estetskim tretmanima",
@@ -75,13 +75,13 @@ export function preparePrivacyPolicyData() {
   return {
     lastUpdated: "16. jul 2026.",
     intro:
-      "Ova Politika privatnosti objašnjava kako Estatic Lab prikuplja, koristi, čuva i štiti vaše podatke prilikom korišćenja našeg sajta, online zakazivanja termina i drugih usluga koje pružamo u našem wellness centru u Novom Sadu.",
+      "Ova Politika privatnosti objašnjava kako Estatik Lab prikuplja, koristi, čuva i štiti vaše podatke prilikom korišćenja našeg sajta, online zakazivanja termina i drugih usluga koje pružamo u našem wellness centru u Novom Sadu.",
     contact: LEGAL_CONTACT,
     sections: [
       {
         title: "1. Ko je rukovalac podacima",
         paragraphs: [
-          "Rukovalac podataka o ličnosti je <strong>Estatic Lab wellness centar</strong>, sa sedištem na adresi Maksima Gorkog 6b, 21120 Novi Sad, Republika Srbija.",
+          "Rukovalac podataka o ličnosti je <strong>Estatik Lab wellness centar</strong>, sa sedištem na adresi Maksima Gorkog 6b, 21120 Novi Sad, Republika Srbija.",
           "Za sva pitanja u vezi sa zaštitom podataka možete nas kontaktirati putem email adrese <a href=\"mailto:estetik.lab.ns@gmail.com\">estetik.lab.ns@gmail.com</a>.",
         ],
       },
@@ -173,7 +173,7 @@ export function preparePrivacyPolicyData() {
           "<strong>pružaocem hostinga i baze podataka</strong> — za tehničko skladištenje i rad aplikacije",
         ],
         paragraphs: [
-          "Interne obaveštenja našem timu mogu se slati putem Telegram servisa u svrhu operativnog praćenja termina i poruka klijenata. Ovi podaci se koriste isključivo u poslovne svrhe Estatic Lab-a.",
+          "Interne obaveštenja našem timu mogu se slati putem Telegram servisa u svrhu operativnog praćenja termina i poruka klijenata. Ovi podaci se koriste isključivo u poslovne svrhe Estatik Lab-a.",
           "Pojedini osetljivi podaci iz kontakt poruka (prezime, telefon, tekst poruke) čuvaju se u šifrovanom obliku radi dodatne zaštite.",
         ],
       },
@@ -231,19 +231,19 @@ export function prepareTermsAndConditionsData() {
   return {
     lastUpdated: "16. jul 2026.",
     intro:
-      "Korišćenjem sajta Estatic Lab, online zakazivanja termina i usluga našeg wellness centra, prihvatate sledeće Uslove korišćenja. Molimo vas da ih pažljivo pročitate pre registracije, zakazivanja termina ili slanja poruke putem sajta.",
+      "Korišćenjem sajta Estatik Lab, online zakazivanja termina i usluga našeg wellness centra, prihvatate sledeće Uslove korišćenja. Molimo vas da ih pažljivo pročitate pre registracije, zakazivanja termina ili slanja poruke putem sajta.",
     contact: LEGAL_CONTACT,
     sections: [
       {
         title: "1. Opšte odredbe",
         paragraphs: [
-          "Ovi Uslovi korišćenja regulišu korišćenje web sajta i online usluga koje pruža <strong>Estatic Lab wellness centar</strong>, Maksima Gorkog 6b, 21120 Novi Sad.",
+          "Ovi Uslovi korišćenja regulišu korišćenje web sajta i online usluga koje pruža <strong>Estatik Lab wellness centar</strong>, Maksima Gorkog 6b, 21120 Novi Sad.",
           "Sajt omogućava pregled usluga, paketa tretmana, blog sadržaja, informacija o timu, online zakazivanje termina, registraciju korisničkog naloga i komunikaciju sa našim timom.",
           "Korišćenjem sajta potvrđujete da imate puno poslovnu sposobnost ili da delujete u ime lica koje je ovlašćeno da prihvati ove uslove.",
         ],
       },
       {
-        title: "2. Usluge Estatic Lab-a",
+        title: "2. Usluge Estatik Lab-a",
         paragraphs: [
           "Estatik Lab pruža usluge nege tela i lica, masaže i estetske tretmane, uključujući tretmane na ESMA opremi (miostimulacija, limfna drenaža, mikrostrujni lifting, laserska biorevitalizacija i slično), u skladu sa aktuelnom ponudom objavljenom na sajtu.",
           "Opis, trajanje i cena usluga prikazani na sajtu su informativnog karaktera. Pre samog tretmana, naš stručni tim može dati preporuku prilagođenu vašem stanju, uz vašu saglasnost.",
@@ -331,7 +331,7 @@ export function prepareTermsAndConditionsData() {
             title: "Utisci klijenata",
             paragraphs: [
               "Utisci koje pošaljete prolaze moderaciju pre objave. Zadržavamo pravo da ne objavimo utisak koji sadrži uvredljiv, neistinit, reklamni ili na drugi način neprimeren sadržaj.",
-              "Slanjem utiska dajete Estatic Lab-u dozvolu da vaš komentar, ocenu i ime (ili inicijale) objavi na sajtu, ukoliko bude odobren.",
+              "Slanjem utiska dajete Estatik Lab-u dozvolu da vaš komentar, ocenu i ime (ili inicijale) objavi na sajtu, ukoliko bude odobren.",
             ],
           },
         ],
@@ -347,7 +347,7 @@ export function prepareTermsAndConditionsData() {
       {
         title: "9. Intelektualna svojina",
         paragraphs: [
-          "Sav sadržaj na sajtu — tekstovi, fotografije, grafike, logo, dizajn, video materijali i softverski kod — zaštićen je autorskim pravom i pripada Estatic Lab-u ili odgovarajućim nosiocima prava.",
+          "Sav sadržaj na sajtu — tekstovi, fotografije, grafike, logo, dizajn, video materijali i softverski kod — zaštićen je autorskim pravom i pripada Estatik Lab-u ili odgovarajućim nosiocima prava.",
           "Zabranjeno je kopiranje, distribucija ili komercijalna upotreba sadržaja bez prethodne pisane saglasnosti.",
         ],
       },
