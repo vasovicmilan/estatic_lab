@@ -93,6 +93,15 @@ async function validateCoupon(code, { userId = null, kind, targetId, value } = {
     if (coupon.applicablePackages?.length && !coupon.applicablePackages.some((p) => String(p) === String(targetId))) {
       badRequest("Kupon ne važi za izabrani paket");
     }
+  } else if (kind === "order") {
+    // targetId is an array of product ids for an order (multiple line items,
+    // unlike appointment/packagePurchase which only ever have one target) - valid
+    // if the coupon has no restriction, or at least one item in the cart matches
+    if (coupon.applicableProducts?.length) {
+      const targetIds = Array.isArray(targetId) ? targetId : [targetId];
+      const matches = targetIds.some((id) => coupon.applicableProducts.some((p) => String(p) === String(id)));
+      if (!matches) badRequest("Kupon ne važi ni za jedan proizvod u porudžbini");
+    }
   }
 
   if (coupon.maxUses != null && coupon.usedCount >= coupon.maxUses) {
@@ -121,10 +130,19 @@ export async function validateCouponForPackagePurchase(code, { userId = null, pa
   return validateCoupon(code, { userId, kind: "packagePurchase", targetId: packageId, value: purchaseValue });
 }
 
+export async function validateCouponForOrder(code, { userId = null, productIds = [], orderValue } = {}) {
+  return validateCoupon(code, { userId, kind: "order", targetId: productIds, value: orderValue });
+}
+
 // atomic redemption - called from inside appointment.service.js's booking transaction,
-// or from package-purchase.service.js when a coupon discounts a package purchase
-export async function redeemCoupon(couponId, { userId, appointmentId = null, packagePurchaseId = null, discountAmount }, { session } = {}) {
-  return couponRepo.redeemCoupon(couponId, { userId, appointmentId, packagePurchaseId, discountAmount }, { session });
+// package-purchase.service.js when a coupon discounts a package purchase, or
+// order.service.js when a coupon discounts an order
+export async function redeemCoupon(
+  couponId,
+  { userId, appointmentId = null, packagePurchaseId = null, orderId = null, discountAmount },
+  { session } = {}
+) {
+  return couponRepo.redeemCoupon(couponId, { userId, appointmentId, packagePurchaseId, orderId, discountAmount }, { session });
 }
 
 export default {
@@ -136,5 +154,6 @@ export default {
   deleteCouponById,
   validateCouponForBooking,
   validateCouponForPackagePurchase,
+  validateCouponForOrder,
   redeemCoupon,
 };

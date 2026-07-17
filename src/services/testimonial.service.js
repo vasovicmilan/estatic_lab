@@ -2,6 +2,7 @@ import eventEmitter from "../events/event.emitter.js";
 import testimonialRepo from "../repositories/testimonial.repository.js";
 import serviceService from "./service.service.js";
 import packageService from "./package.service.js";
+import productService from "./product.service.js";
 import {
   mapTestimonialsForAdminList,
   mapTestimonialForAdminDetail,
@@ -35,6 +36,7 @@ export async function submitTestimonial(data) {
     user: data.userId || null,
     service: data.service || null,
     package: data.package || null,
+    product: data.product || null,
     rating: data.rating,
     message: data.message,
     image: data.image || null,
@@ -54,6 +56,9 @@ export async function submitTestimonial(data) {
     } else if (data.package) {
       const pkg = await packageService.getPackageById(data.package);
       subject = pkg?.naziv || null;
+    } else if (data.product) {
+      const product = await productService.getProductById(data.product);
+      subject = product?.naziv || null;
     }
   } catch {
     subject = null;
@@ -95,8 +100,8 @@ export async function deleteTestimonialById(testimonialId) {
   return { success: true };
 }
 
-export async function getApprovedTestimonials({ limit = 10, featuredOnly = false, service = null, package: pkg = null } = {}) {
-  const testimonials = await testimonialRepo.findApprovedTestimonials({ limit, featuredOnly, service, package: pkg });
+export async function getApprovedTestimonials({ limit = 10, featuredOnly = false, service = null, package: pkg = null, product = null } = {}) {
+  const testimonials = await testimonialRepo.findApprovedTestimonials({ limit, featuredOnly, service, package: pkg, product });
   return mapTestimonialsForPublic(testimonials);
 }
 

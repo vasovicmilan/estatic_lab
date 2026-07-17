@@ -7,9 +7,9 @@ const CouponUsageSchema = new Schema(
       ref: "User",
       required: true,
     },
-    // exactly one of these two is set per redemption - a coupon either discounts a
-    // single booking or a package purchase, never both, but the same Coupon
-    // document/discount logic covers either kind
+    // exactly one of these three is set per redemption - a coupon discounts a
+    // single booking, a package purchase, or an order, never more than one, but the
+    // same Coupon document/discount logic covers any of them
     appointment: {
       type: Schema.Types.ObjectId,
       ref: "Appointment",
@@ -18,6 +18,11 @@ const CouponUsageSchema = new Schema(
     packagePurchase: {
       type: Schema.Types.ObjectId,
       ref: "PackagePurchase",
+      default: null,
+    },
+    order: {
+      type: Schema.Types.ObjectId,
+      ref: "Order",
       default: null,
     },
     discountAmount: {
@@ -80,6 +85,7 @@ const CouponSchema = new Schema(
 
     applicableServices: [{ type: Schema.Types.ObjectId, ref: "Service" }],
     applicablePackages: [{ type: Schema.Types.ObjectId, ref: "Package" }],
+    applicableProducts: [{ type: Schema.Types.ObjectId, ref: "Product" }],
 
     validFrom: {
       type: Date,
@@ -103,5 +109,6 @@ CouponSchema.index({ isActive: 1, validUntil: 1 });
 CouponSchema.index({ "usageHistory.user": 1 });
 CouponSchema.index({ "usageHistory.appointment": 1 });
 CouponSchema.index({ "usageHistory.packagePurchase": 1 });
+CouponSchema.index({ "usageHistory.order": 1 });
 
 export default model("Coupon", CouponSchema);

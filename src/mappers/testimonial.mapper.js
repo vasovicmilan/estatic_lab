@@ -66,6 +66,18 @@ function getPackageInfo(testimonial) {
   return { id: testimonial.package.toString() };
 }
 
+function getProductInfo(testimonial) {
+  if (!testimonial.product) return null;
+  if (typeof testimonial.product === "object") {
+    return {
+      id: testimonial.product._id.toString(),
+      naziv: testimonial.product.name || "",
+      slug: testimonial.product.slug || "",
+    };
+  }
+  return { id: testimonial.product.toString() };
+}
+
 export function mapTestimonialsForAdminList(testimonials = []) {
   return testimonials
     .map((t) => {
@@ -77,7 +89,7 @@ export function mapTestimonialsForAdminList(testimonials = []) {
         ocena: renderStars(t.rating),
         ocenaRaw: t.rating,
         komentar: t.message?.substring(0, 100) || "",
-        usluga: getServiceInfo(t)?.naziv || getPackageInfo(t)?.naziv || "",
+        usluga: getServiceInfo(t)?.naziv || getPackageInfo(t)?.naziv || getProductInfo(t)?.naziv || "",
         status: translateStatus(t.status),
         statusRaw: t.status,
         istaknut: t.isFeatured ? "Da" : "Ne",
@@ -102,6 +114,7 @@ export function mapTestimonialForAdminDetail(testimonial) {
     },
     usluga: getServiceInfo(testimonial),
     paket: getPackageInfo(testimonial),
+    proizvod: getProductInfo(testimonial),
     korisnik: testimonial.user
       ? {
           userId: typeof testimonial.user === "object" ? testimonial.user._id?.toString() : testimonial.user.toString(),
@@ -133,6 +146,7 @@ export function mapTestimonialForEdit(testimonial) {
     email: testimonial.email || "",
     service: testimonial.service?._id?.toString() || testimonial.service?.toString() || null,
     package: testimonial.package?._id?.toString() || testimonial.package?.toString() || null,
+    product: testimonial.product?._id?.toString() || testimonial.product?.toString() || null,
     rating: testimonial.rating,
     message: testimonial.message,
     image: testimonial.image || null,
@@ -157,6 +171,8 @@ export function mapTestimonialForPublic(testimonial) {
     uslugaSlug: getServiceInfo(testimonial)?.slug || null,
     paket: getPackageInfo(testimonial)?.naziv || null,
     paketSlug: getPackageInfo(testimonial)?.slug || null,
+    proizvod: getProductInfo(testimonial)?.naziv || null,
+    proizvodSlug: getProductInfo(testimonial)?.slug || null,
     datum: formatDate(testimonial.createdAt),
   };
 }

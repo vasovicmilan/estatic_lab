@@ -102,6 +102,83 @@ export async function countUsers(filters = {}, { session } = {}) {
   return User.countDocuments(buildUserFilter(filters)).session(session || null);
 }
 
+// ==================== CART ====================
+// {product, variant, quantity} lines only - see cart-item.schema.js. No snapshot
+// fields here, so nothing to keep in sync when a product's price or title changes.
+
+export async function incrementCartItemQuantity(userId, product, variant, amount, { session } = {}) {
+  return User.findOneAndUpdate(
+    { _id: userId, cart: { $elemMatch: { product, variant } } },
+    { $inc: { "cart.$[elem].quantity": amount } },
+    { arrayFilters: [{ "elem.product": product, "elem.variant": variant }], returnDocument: "after", session }
+  ).lean();
+}
+
+export async function addCartItem(userId, { product, variant = null, quantity = 1 }, { session } = {}) {
+  return User.findByIdAndUpdate(
+    userId,
+    { $push: { cart: { product, variant, quantity } } },
+    { returnDocument: "after", session }
+  ).lean();
+}
+
+export async function setCartItemQuantity(userId, cartItemId, quantity, { session } = {}) {
+  return User.findOneAndUpdate(
+    { _id: userId, "cart._id": cartItemId },
+    { $set: { "cart.$.quantity": quantity } },
+    { returnDocument: "after", session }
+  ).lean();
+}
+
+export async function removeCartItem(userId, cartItemId, { session } = {}) {
+  return User.findByIdAndUpdate(
+    userId,
+    { $pull: { cart: { _id: cartItemId } } },
+    { returnDocument: "after", session }
+  ).lean();
+}
+
+export async function clearCart(userId, { session } = {}) {
+  return User.findByIdAndUpdate(userId, { $set: { cart: [] } }, { returnDocument: "after", session }).lean();
+}
+
+// used when merging a guest session cart into a just-logged-in user's own cart -
+// the merge/dedup arithmetic (matching lines by product+variant, summing quantities)
+// belongs in the service layer; this just persists whatever final array it computed
+export async function replaceCart(userId, cartItems, { session } = {}) {
+  return User.findByIdAndUpdate(userId, { $set: { cart: cartItems } }, { returnDocument: "after", session }).lean();
+}
+
+// ==================== ADDRESSES ====================
+
+export async function addAddressToUser(userId, addressRecord, { session } = {}) {
+  return User.findByIdAndUpdate(
+    userId,
+    { $push: { addresses: addressRecord } },
+    { returnDocument: "after", session }
+  ).lean();
+}
+
+export async function removeAddressFromUser(userId, addressId, { session } = {}) {
+  return User.findByIdAndUpdate(
+    userId,
+    { $pull: { addresses: { _id: addressId } } },
+    { returnDocument: "after", session }
+  ).lean();
+}
+
+// Two separate writes, not atomic across both - acceptable here since this is a
+// low-contention, single-user-initiated action, same tradeoff already made for
+// other admin-side multi-step mutations in this codebase.
+export async function setDefaultAddress(userId, addressId, { session } = {}) {
+  await User.updateOne({ _id: userId }, { $set: { "addresses.$[].isDefault": false } }, { session });
+  return User.findOneAndUpdate(
+    { _id: userId, "addresses._id": addressId },
+    { $set: { "addresses.$.isDefault": true } },
+    { returnDocument: "after", session }
+  ).lean();
+}
+
 export default {
   createUser,
   findUserById,
@@ -116,4 +193,13 @@ export default {
   updateLastLogin,
   deleteUserById,
   countUsers,
+  incrementCartItemQuantity,
+  addCartItem,
+  setCartItemQuantity,
+  removeCartItem,
+  clearCart,
+  replaceCart,
+  addAddressToUser,
+  removeAddressFromUser,
+  setDefaultAddress,
 }

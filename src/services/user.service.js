@@ -1,10 +1,12 @@
 import userRepo from "../repositories/user.repository.js";
 import roleService from "./role.service.js";
-import { mapUser, mapUsersForAdminList, mapUserForAdminDetail, mapUserForProfile } from "../mappers/user.mapper.js";
+import productService from "./product.service.js";
+import { mapUser, mapUsersForAdminList, mapUserForAdminDetail, mapUserForProfile, mapUserAddresses, mapUserCart } from "../mappers/user.mapper.js";
 import { hashPassword, comparePasswords, generateRandomToken, encrypt, sha256 } from "./crypto.service.js";
 import { validationError, notFound, conflict, unauthorized, badRequest } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 import { buildPhoneRecord } from "../utils/phone.util.js";
+import { buildAddressRecord } from "../utils/address.util.js";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1h
 const CONFIRM_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24h
@@ -317,6 +319,145 @@ export async function deleteUser(userId) {
   return { success: true };
 }
 
+// ==================== CART ====================
+// Cart lines are deliberately NOT a stock reservation - stock is only actually
+// reserved at checkout (see temporary-order.service.js). Adding to cart just checks
+// the variant currently exists and is active; a soft "prekoracenje" flag (see
+// mapUserCart) tells the UI when a line now exceeds available stock, but nothing
+// here blocks it - the authoritative check happens once, at checkout.
+
+const CART_PRODUCT_POPULATE = [{ path: "cart.product", select: "name slug sku image isActive variations" }];
+
+export async function getCart(userId) {
+  if (!userId) validationError("userId");
+  const user = await userRepo.findUserById(userId, { populateFields: CART_PRODUCT_POPULATE });
+  if (!user) notFound("Korisnik");
+  return mapUserCart(user);
+}
+
+export async function addToCart(userId, { productId, variantId, quantity = 1 }) {
+  if (!userId) validationError("userId");
+  if (!productId) validationError("productId");
+  if (!variantId) validationError("variantId");
+  if (!quantity || quantity <= 0) validationError("quantity");
+
+  // throws if the variant doesn't exist or isn't active
+  await productService.getVariationRaw(productId, variantId);
+
+  const incremented = await userRepo.incrementCartItemQuantity(userId, productId, variantId, quantity);
+  if (!incremented) {
+    await userRepo.addCartItem(userId, { product: productId, variant: variantId, quantity });
+  }
+
+  logInfo("Cart item added", { userId, productId, variantId, quantity });
+  return getCart(userId);
+}
+
+export async function updateCartItemQuantity(userId, cartItemId, quantity) {
+  if (!userId) validationError("userId");
+  if (!cartItemId) validationError("cartItemId");
+  if (quantity == null) validationError("quantity");
+
+  if (quantity <= 0) {
+    await userRepo.removeCartItem(userId, cartItemId);
+  } else {
+    const updated = await userRepo.setCartItemQuantity(userId, cartItemId, quantity);
+    if (!updated) notFound("Stavka korpe");
+  }
+
+  return getCart(userId);
+}
+
+export async function removeFromCart(userId, cartItemId) {
+  if (!userId) validationError("userId");
+  if (!cartItemId) validationError("cartItemId");
+  await userRepo.removeCartItem(userId, cartItemId);
+  return getCart(userId);
+}
+
+export async function clearCart(userId) {
+  if (!userId) validationError("userId");
+  await userRepo.clearCart(userId);
+  return { success: true };
+}
+
+/**
+ * Merges a guest's session-held cart into their own cart at login - matching
+ * quantities of matching (product, variant) pairs are summed, everything else is
+ * appended. The merge arithmetic lives here deliberately (not in the repository -
+ * see user.repository.js's replaceCart comment): it's business logic, the
+ * repository just persists whatever this computes.
+ */
+export async function mergeGuestCart(userId, guestCartItems = []) {
+  if (!userId) validationError("userId");
+  if (!guestCartItems.length) return getCart(userId);
+
+  const user = await userRepo.findUserById(userId);
+  if (!user) notFound("Korisnik");
+
+  const merged = (user.cart || []).map((line) => ({
+    product: line.product.toString(),
+    variant: line.variant?.toString() || null,
+    quantity: line.quantity,
+  }));
+
+  for (const guestLine of guestCartItems) {
+    const existing = merged.find(
+      (l) => l.product === String(guestLine.productId) && l.variant === (guestLine.variantId ? String(guestLine.variantId) : null)
+    );
+    if (existing) {
+      existing.quantity += guestLine.quantity;
+    } else {
+      merged.push({ product: guestLine.productId, variant: guestLine.variantId || null, quantity: guestLine.quantity });
+    }
+  }
+
+  await userRepo.replaceCart(userId, merged);
+  logInfo("Guest cart merged", { userId, mergedLines: guestCartItems.length });
+  return getCart(userId);
+}
+
+// ==================== ADDRESSES ====================
+
+export async function getAddresses(userId) {
+  if (!userId) validationError("userId");
+  const user = await userRepo.findUserById(userId);
+  if (!user) notFound("Korisnik");
+  return mapUserAddresses(user);
+}
+
+export async function addAddress(userId, addressData) {
+  if (!userId) validationError("userId");
+  const record = buildAddressRecord(addressData);
+  if (!record) badRequest("Nepotpuna adresa");
+
+  await userRepo.addAddressToUser(userId, record);
+
+  if (addressData.isDefault) {
+    const user = await userRepo.findUserById(userId);
+    const justAdded = (user.addresses || []).find((a) => a.hash === record.hash);
+    if (justAdded) await userRepo.setDefaultAddress(userId, justAdded._id);
+  }
+
+  logInfo("Address added", { userId });
+  return getAddresses(userId);
+}
+
+export async function removeAddress(userId, addressId) {
+  if (!userId) validationError("userId");
+  if (!addressId) validationError("addressId");
+  await userRepo.removeAddressFromUser(userId, addressId);
+  return getAddresses(userId);
+}
+
+export async function setDefaultAddress(userId, addressId) {
+  if (!userId) validationError("userId");
+  if (!addressId) validationError("addressId");
+  const updated = await userRepo.setDefaultAddress(userId, addressId);
+  if (!updated) notFound("Adresa");
+  return getAddresses(userId);
+}
+
 export default {
   listUsers,
   getUserById,
@@ -338,4 +479,14 @@ export default {
   findUserById,
   verifyUserByAdmin,
   deleteUser,
+  getCart,
+  addToCart,
+  updateCartItemQuantity,
+  removeFromCart,
+  clearCart,
+  mergeGuestCart,
+  getAddresses,
+  addAddress,
+  removeAddress,
+  setDefaultAddress,
 };

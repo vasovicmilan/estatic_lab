@@ -1,4 +1,5 @@
 import categoryRepo from "../repositories/category.repository.js";
+import { CATEGORY_DOMAINS } from "../models/category.model.js";
 import {
   mapCategoriesForAdminList,
   mapCategoryForAdminDetail,
@@ -11,7 +12,7 @@ import { validationError, notFound, conflict, badRequest } from "../utils/error.
 import { logInfo } from "../utils/logger.util.js";
 
 function ensureValidDomain(domain) {
-  if (!["post", "service"].includes(domain)) badRequest("Domen mora biti 'post' ili 'service'");
+  if (!CATEGORY_DOMAINS.includes(domain)) badRequest(`Domen mora biti jedan od: ${CATEGORY_DOMAINS.join(", ")}`);
 }
 
 export async function listCategories({ search = "", domain, parent, isActive, limit = 10, page = 1 } = {}) {

@@ -37,6 +37,15 @@ const TestimonialSchema = new Schema(
       default: null,
     },
 
+    // optional link to which product the review is about - same convention as
+    // service/package: whichever detail page the form was submitted from sets
+    // exactly one of the three
+    product: {
+      type: Schema.Types.ObjectId,
+      ref: "Product",
+      default: null,
+    },
+
     rating: {
       type: Number,
       required: true,
@@ -76,5 +85,6 @@ const TestimonialSchema = new Schema(
 
 TestimonialSchema.index({ status: 1, isFeatured: 1 });
 TestimonialSchema.index({ service: 1 });
+TestimonialSchema.index({ product: 1 });
 
 export default model("Testimonial", TestimonialSchema);

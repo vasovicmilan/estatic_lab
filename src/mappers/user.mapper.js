@@ -1,5 +1,6 @@
 import { formatDateTime, formatDate } from "../utils/date.time.util.js";
 import { decryptPhone } from "../utils/phone.util.js";
+import { decryptAddress } from "../utils/address.util.js";
 
 function getFullName(user) {
   return `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Nepoznato";
@@ -132,6 +133,67 @@ export function mapUserForSelect(user) {
   };
 }
 
+export function mapUserAddresses(user) {
+  return (user.addresses || [])
+    .map((a) => {
+      const decrypted = decryptAddress(a);
+      if (!decrypted) return null;
+      return {
+        id: decrypted.id,
+        naziv: decrypted.label || null,
+        grad: decrypted.city,
+        postanskiBroj: decrypted.postalCode,
+        ulica: decrypted.street,
+        broj: decrypted.number,
+        podrazumevana: decrypted.isDefault,
+      };
+    })
+    .filter(Boolean);
+}
+
+function formatImage(image) {
+  if (!image) return null;
+  return { url: image.img || null, alt: image.imgDesc || null };
+}
+
+// cart.product needs to already be populated (see user.service.js's getCart) - the
+// variant is a bare ObjectId (not a ref, just a subdocument id), so it's resolved
+// against the populated product's own variations array here
+export function mapUserCart(user) {
+  const lines = (user.cart || [])
+    .map((line) => {
+      const product = line.product;
+      if (!product || typeof product !== "object") return null;
+
+      const variation = (product.variations || []).find((v) => String(v._id) === String(line.variant));
+      if (!variation) return null;
+
+      return {
+        id: line._id.toString(),
+        productId: product._id.toString(),
+        productSlug: product.slug,
+        variantId: variation._id.toString(),
+        naziv: product.name,
+        varijanta: variation.label,
+        sku: variation.sku || product.sku,
+        cena: variation.price,
+        kolicina: line.quantity,
+        ukupno: variation.price * line.quantity,
+        slika: formatImage(variation.image || product.image),
+        naStanju: variation.stock > 0,
+        dostupnaKolicina: variation.stock,
+        prekoracenje: line.quantity > variation.stock,
+      };
+    })
+    .filter(Boolean);
+
+  return {
+    stavke: lines,
+    brojStavki: lines.reduce((sum, l) => sum + l.kolicina, 0),
+    ukupnaCena: lines.reduce((sum, l) => sum + l.ukupno, 0),
+  };
+}
+
 export function mapUserRaw(user) {
   return user;
 }
@@ -167,6 +229,8 @@ export default {
   mapUserForEmployeeDetail,
   mapUserForProfile,
   mapUserForSelect,
+  mapUserAddresses,
+  mapUserCart,
   mapUserRaw,
   mapUser,
 };

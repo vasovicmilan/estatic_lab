@@ -1,5 +1,7 @@
 import { Schema, model } from "mongoose";
 import PhoneSchema from "./schemas/phone.schema.js";
+import AddressSchema from "./schemas/address.schema.js";
+import CartItemSchema from "./schemas/cart-item.schema.js";
 
 const UserSchema = new Schema(
   {
@@ -33,6 +35,21 @@ const UserSchema = new Schema(
     },
 
     phone: PhoneSchema,
+
+    addresses: {
+      type: [AddressSchema],
+      default: [],
+    },
+
+    // guest carts live in the session (see cart.service.js) until login/checkout, at
+    // which point they're merged into this array - see mergeGuestCart. Deliberately
+    // holds only {product, variant, quantity}, never a title/price/image snapshot -
+    // the cart always reflects the product's current price and stock, not what it
+    // was when the item was added.
+    cart: {
+      type: [CartItemSchema],
+      default: [],
+    },
 
     googleId: {
       type: String,

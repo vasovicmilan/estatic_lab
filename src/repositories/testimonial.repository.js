@@ -11,6 +11,7 @@ import { resolveLimit, resolveSkip, buildPaginationMeta } from "../utils/paginat
 const TESTIMONIAL_POPULATE = [
   { path: "service", select: "name slug" },
   { path: "package", select: "name slug" },
+  { path: "product", select: "name slug" },
   { path: "user", select: "firstName lastName avatar" },
 ];
 
@@ -52,11 +53,12 @@ export async function findTestimonials({
 }
 
 // public "what our clients say" widget - approved only, featured first
-export async function findApprovedTestimonials({ limit = 10, featuredOnly = false, service = null, package: pkg = null, session } = {}) {
+export async function findApprovedTestimonials({ limit = 10, featuredOnly = false, service = null, package: pkg = null, product = null, session } = {}) {
   const filter = { status: "approved" };
   if (featuredOnly) filter.isFeatured = true;
   if (service) filter.service = service;
   if (pkg) filter.package = pkg;
+  if (product) filter.product = product;
 
   let query = Testimonial.find(filter)
     .sort({ isFeatured: -1, createdAt: -1 })

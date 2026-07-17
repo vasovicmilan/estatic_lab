@@ -43,12 +43,25 @@ export async function countCouponUsagesByUser(couponId, userId, { session } = {}
  * creates the Appointment (or, now, the same flow that records a PackagePurchase) -
  * two concurrent redemptions can't silently overwrite each other's $inc.
  */
-export async function redeemCoupon(couponId, { userId, appointmentId = null, packagePurchaseId = null, discountAmount }, { session } = {}) {
+export async function redeemCoupon(
+  couponId,
+  { userId, appointmentId = null, packagePurchaseId = null, orderId = null, discountAmount },
+  { session } = {}
+) {
   return Coupon.findByIdAndUpdate(
     couponId,
     {
       $inc: { usedCount: 1 },
-      $push: { usageHistory: { user: userId, appointment: appointmentId, packagePurchase: packagePurchaseId, discountAmount, usedAt: new Date() } },
+      $push: {
+        usageHistory: {
+          user: userId,
+          appointment: appointmentId,
+          packagePurchase: packagePurchaseId,
+          order: orderId,
+          discountAmount,
+          usedAt: new Date(),
+        },
+      },
     },
     { returnDocument: "after", session }
   ).lean();

@@ -1,12 +1,14 @@
 import { Schema, model } from "mongoose";
 
 /**
- * One Category model serves both the blog and the service catalogue, scoped by `domain`.
- * This is the same "one generic thing driven by data" principle the reference project
- * applies to admin views via presenters - here applied to taxonomy so we don't maintain
- * two near-identical Category schemas.
+ * One Category model serves the blog, the service catalogue, and (now) the product
+ * catalogue, scoped by `domain`. This is the same "one generic thing driven by data"
+ * principle the reference project applies to admin views via presenters - here applied
+ * to taxonomy so we don't maintain three near-identical Category schemas. Tag mirrors
+ * this same domain scoping (see tag.model.js) by importing CATEGORY_DOMAINS directly,
+ * so adding "product" here is the only change needed for both models.
  */
-export const CATEGORY_DOMAINS = ["post", "service"];
+export const CATEGORY_DOMAINS = ["post", "service", "product"];
 
 const CategorySchema = new Schema(
   {

@@ -3,20 +3,37 @@ import * as contactService from "../../../services/contact.service.js";
 import * as employeeService from "../../../services/employee.service.js";
 import * as userService from "../../../services/user.service.js";
 import packagePurchaseService from "../../../services/package-purchase.service.js";
+import orderService from "../../../services/order.service.js";
+import productService from "../../../services/product.service.js";
 import { prepareDashboardData } from "../../../presenters/admin/dashboard.presenter.js";
 import { logError } from "../../../utils/logger.util.js";
 
 export async function dashboard(req, res, next) {
   try {
-    const [pending, confirmed, contacts, employees, users, purchases, recentPending, recentContacts] = await Promise.all([
+    const [
+      pending,
+      confirmed,
+      contacts,
+      employees,
+      users,
+      purchases,
+      pendingOrders,
+      outOfStockProducts,
+      recentPending,
+      recentContacts,
+      recentOrders,
+    ] = await Promise.all([
       appointmentService.findAppointments({ role: "admin", filters: { status: "pending" }, limit: 1 }),
       appointmentService.findAppointments({ role: "admin", filters: { status: "confirmed" }, limit: 1 }),
       contactService.listContacts({ filters: { status: "new" }, limit: 1 }),
       employeeService.listEmployees({ filters: { isActive: true }, limit: 1 }),
       userService.listUsers({ limit: 1 }),
       packagePurchaseService.listPurchases({ filters: { status: "active" }, limit: 1 }),
+      orderService.findOrders({ role: "admin", filters: { status: "pending" }, limit: 1 }),
+      productService.listProducts({ filters: { inStock: false, isActive: true }, limit: 1 }),
       appointmentService.findAppointments({ role: "admin", filters: { status: "pending" }, limit: 5 }),
       contactService.listContacts({ filters: { status: "new" }, limit: 5 }),
+      orderService.findOrders({ role: "admin", filters: { status: "pending" }, limit: 5 }),
     ]);
 
     const stats = {
@@ -26,11 +43,14 @@ export async function dashboard(req, res, next) {
       activeEmployees: employees.total,
       totalUsers: users.total,
       activePackagePurchases: purchases.total,
+      pendingOrders: pendingOrders.total,
+      outOfStockProducts: outOfStockProducts.total,
     };
 
     const viewData = prepareDashboardData(stats, {
       appointments: recentPending.data,
       contacts: recentContacts.data,
+      orders: recentOrders.data,
     });
 
     return res.render("admin/dashboard", {
