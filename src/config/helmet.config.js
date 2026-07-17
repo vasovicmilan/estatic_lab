@@ -40,6 +40,7 @@ export function setupHelmet(app) {
         "'unsafe-inline'",
         "https://cdn.jsdelivr.net",
         "https://accounts.google.com/gsi/client",
+        "https://static.cloudflareinsights.com",
       ],
       "style-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
       "font-src": ["'self'", "https://cdn.jsdelivr.net", "https://fonts.gstatic.com", "data:"],
