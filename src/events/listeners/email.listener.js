@@ -120,8 +120,11 @@ eventEmitter.on(
       appointmentService.getAppointmentById(appointmentId, null, "admin"),
       employeeService.getEmployeeById(newEmployeeId, "admin", "detail"),
     ]);
-    if (!employee?.email) return;
-    await emailService.sendAppointmentReassignedEmail({ email: employee.email, firstName: employee.imePrezime }, appointment);
+    if (!employee?.korisnik?.email) return;
+    await emailService.sendAppointmentReassignedEmail(
+      { email: employee.korisnik.email, firstName: employee.korisnik.imePrezime },
+      appointment
+    );
   })
 );
 

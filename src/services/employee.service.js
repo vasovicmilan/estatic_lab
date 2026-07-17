@@ -87,7 +87,20 @@ export async function createEmployee(data) {
     notes: data.notes || "",
   });
 
-  await userRepo.updateUserById(data.userId, { role: employeeRole._id });
+  // Only promote the user's role to "employee" - never downgrade someone who
+  // already holds a role of equal or higher priority (e.g. admin). Without this
+  // check, giving an admin an employee profile silently stripped their admin
+  // role, since role is a single field on User, not a set of roles.
+  const targetUser = await userRepo.findUserById(data.userId, { populateFields: ["role"] });
+  const currentPriority = targetUser?.role?.priority ?? 0;
+  if (currentPriority < employeeRole.priority) {
+    await userRepo.updateUserById(data.userId, { role: employeeRole._id });
+  } else {
+    logInfo("Employee profile created without changing role (existing role has equal/higher priority)", {
+      userId: data.userId,
+      currentRole: targetUser?.role?.name,
+    });
+  }
 
   logInfo("Employee created", { employeeId: created._id, userId: data.userId });
   return getEmployeeById(created._id);

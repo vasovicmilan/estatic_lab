@@ -1,3 +1,5 @@
+import { canUserCancelAppointment } from "../../utils/appointment-cancellation.util.js";
+
 export function prepareProfileTabData(user) {
   return {
     user,
@@ -27,7 +29,7 @@ export function prepareAppointmentTabData(result, query = {}) {
 export function prepareAppointmentDetailData(appointment) {
   return {
     appointment,
-    canCancel: ["pending", "confirmed"].includes(appointment.status),
+    canCancel: canUserCancelAppointment(appointment.statusRaw, appointment.termin?.pocetakRaw),
     backUrl: "/nalog/termini",
   };
 }

@@ -8,6 +8,8 @@ import availabilityService from "./availability.service.js";
 import packagePurchaseService from "./package-purchase.service.js";
 import { mapAppointment, mapAppointmentsForAdminList } from "../mappers/appointment.mapper.js";
 import { getAllowedStatuses } from "../models/appointment-status-transitions.js";
+import { canUserCancelAppointment } from "../utils/appointment-cancellation.util.js";
+import { USER_CANCELLATION_CUTOFF_HOURS } from "../config/booking.config.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 
@@ -301,8 +303,9 @@ export async function cancelAppointment(appointmentId, reason, actorId, actorRol
   if (actorRole === "user") {
     const appointment = await appointmentRepo.findAppointmentById(appointmentId);
     if (!appointment) notFound("Termin");
-    const hoursUntilStart = (new Date(appointment.startTime).getTime() - Date.now()) / 3600000;
-    if (hoursUntilStart < 24) badRequest("Termin se može otkazati najkasnije 24h unapred");
+    if (!canUserCancelAppointment(appointment.status, appointment.startTime)) {
+      badRequest(`Termin se može otkazati najkasnije ${USER_CANCELLATION_CUTOFF_HOURS}h unapred`);
+    }
   }
 
   return transitionStatus(appointmentId, "cancelled", actorId, actorRole, {

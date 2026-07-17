@@ -182,8 +182,10 @@ export function mapAppointmentForUserDetail(appointment) {
     termin: {
       pocetak: formatDateTime(appointment.startTime),
       kraj: formatDateTime(appointment.endTime),
+      pocetakRaw: appointment.startTime,
     },
     status: translateStatus(appointment.status),
+    statusRaw: appointment.status,
     terapeut: appointment.employee
       ? getEmployeeName(appointment.employee)
       : appointment.assignedTo

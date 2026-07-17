@@ -16,6 +16,8 @@ import {
 } from "../../utils/telegram-message.util.js";
 import { logError } from "../../utils/logger.util.js";
 
+const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
+
 /**
  * Same shape and reasoning as email.listeners.js: this module's only job is
  * registering eventEmitter.on(...) handlers (imported once in server.js). The
@@ -96,7 +98,7 @@ eventEmitter.on(
       appointmentService.getAppointmentById(appointmentId, null, "admin"),
       employeeService.getEmployeeById(newEmployeeId, "admin", "detail"),
     ]);
-    const text = buildAppointmentReassignedMessage(appointment, employee?.imePrezime);
+    const text = buildAppointmentReassignedMessage(appointment, employee?.korisnik?.imePrezime);
     await telegramService.sendTelegramMessage("APPOINTMENTS", text);
   })
 );

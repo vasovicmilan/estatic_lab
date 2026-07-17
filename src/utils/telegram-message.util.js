@@ -49,6 +49,9 @@ export function buildAppointmentStatusChangeMessage(appointment, oldStatus, newS
     `💆 <b>Usluga:</b> ${escapeHtml(appointment.serviceName || "-")}`,
     `📊 <b>Status:</b> ${escapeHtml(oldStatus)} → <b>${escapeHtml(newStatus)}</b>`,
   ];
+  if (appointment.startTime) lines.push(`🕐 <b>Termin:</b> ${escapeHtml(appointment.startTime)}`);
+  if (appointment.therapist) lines.push(`🧑‍⚕️ <b>Terapeut:</b> ${escapeHtml(appointment.therapist)}`);
+  lines.push(`💰 <b>Cena:</b> ${formatPrice(appointment.finalPrice)} RSD`);
   if (appointment.note) lines.push(`📝 <b>Napomena:</b> ${escapeHtml(appointment.note)}`);
   if (appointment.adminUrl) lines.push("", `🔗 <a href="${appointment.adminUrl}">Otvori u adminu</a>`);
 
