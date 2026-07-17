@@ -411,16 +411,16 @@ export function prepareHomeData({
 
   return {
     hero: {
-      eyebrow: "Estetik Lab wellness centar",
-      title: "Vaš prostor za opuštanje i negu",
-      subtitle:
-        "Masaže, ESMA tretmani i nega lica i tela u mirnom, opuštajućem ambijentu — uz stručan tim i individualan pristup svakom klijentu.",
-      ctaLabel: "Zakažite termin",
-      ctaUrl: "/usluge",
-      secondaryCtaLabel: "Pogledajte pakete",
-      secondaryCtaUrl: "/paketi",
-      image: "/img/hero.jpg",
-    },
+          eyebrow: "Estetik Lab wellness centar",
+          title: "Estetik Lab — kozmetički salon za negu lica, tela i opuštanje",
+          subtitle:
+            "Masaže, ESMA tretmani i nega lica i tela u mirnom, opuštajućem ambijentu — uz stručan tim i individualan pristup svakom klijentu.",
+          ctaLabel: "Zakažite termin",
+          ctaUrl: "/usluge",
+          secondaryCtaLabel: "Pogledajte pakete",
+          secondaryCtaUrl: "/paketi",
+          image: "/img/hero.jpg",
+        },
 
     intro: {
       title: "Šta je Estetik Lab",
