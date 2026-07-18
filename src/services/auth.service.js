@@ -1,5 +1,6 @@
 import eventEmitter from "../events/event.emitter.js";
 import userService from "./user.service.js";
+import employeeService from "./employee.service.js";
 import { comparePasswords, signJwt } from "./crypto.service.js";
 import { validationError, unauthorized, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
@@ -43,6 +44,12 @@ export async function login(email, password) {
 
   const token = signJwt({ id: user._id, email: user.email, role: user.role?._id || user.role });
 
+  // an admin (or anyone) can also have an Employee profile - see employee.service.js's
+  // createEmployee, which no longer overwrites an existing higher-priority role when
+  // that happens. Checked here, once, at login, same snapshot-into-session convention
+  // already used for roleName/permissions, rather than a DB lookup on every request.
+  const employee = await employeeService.findEmployeeByUserId(user._id).catch(() => null);
+
   logInfo("User logged in", { userId: user._id, email: user.email });
 
   return {
@@ -53,6 +60,7 @@ export async function login(email, password) {
     roleId: (user.role?._id || user.role).toString(),
     roleName: user.role?.name || "user",
     permissions: user.role?.permissions || [],
+    isEmployee: !!employee,
     token,
   };
 }
@@ -69,6 +77,7 @@ export async function googleAuth(googleData) {
 
   const isNewUser = !user.createdAt || Date.now() - new Date(user.createdAt).getTime() < 5000;
   const token = signJwt({ id: user._id, email: user.email, role: user.role?._id || user.role });
+  const employee = await employeeService.findEmployeeByUserId(user._id).catch(() => null);
 
   if (isNewUser) {
     eventEmitter.emit("user:registered", { email: user.email, firstName: user.firstName, lastName: user.lastName, userId: user._id, provider: "google" });
@@ -83,6 +92,7 @@ export async function googleAuth(googleData) {
       roleId: (user.role?._id || user.role).toString(),
       roleName: user.role?.name || "user",
       permissions: user.role?.permissions || [],
+      isEmployee: !!employee,
       token,
     },
     isNewUser,

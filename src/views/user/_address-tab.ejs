@@ -1,0 +1,87 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/flash-messages") %>
+  <h1 class="h3 mb-4">Moj nalog</h1>
+  <%- include("../includes/components/account-nav") %>
+
+  <div class="row g-4">
+    <div class="col-md-7">
+      <h2 class="h5 mb-3">Sačuvane adrese</h2>
+
+      <% if (data.addresses && data.addresses.length > 0) { %>
+        <div class="list-group mb-4">
+          <% data.addresses.forEach(function(a) { %>
+            <div class="list-group-item">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <% if (a.podrazumevana) { %><span class="badge bg-primary mb-1">Podrazumevana</span><% } %>
+                  <% if (a.naziv) { %><div class="fw-semibold"><%= a.naziv %></div><% } %>
+                  <div><%= a.ulica %> <%= a.broj %>, <%= a.grad %> <%= a.postanskiBroj %></div>
+                </div>
+                <div class="d-flex flex-column gap-1">
+                  <% if (!a.podrazumevana) { %>
+                    <form action="/nalog/adrese/<%= a.id %>/podrazumevana" method="POST">
+                      <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+                      <button type="submit" class="btn btn-outline-secondary btn-sm">Postavi kao podrazumevanu</button>
+                    </form>
+                  <% } %>
+                  <form action="/nalog/adrese/<%= a.id %>/ukloni" method="POST" data-confirm="Da li ste sigurni da želite da uklonite ovu adresu?">
+                    <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">Ukloni</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <p class="text-muted">Nemate sačuvanih adresa.</p>
+      <% } %>
+    </div>
+
+    <div class="col-md-5">
+      <h2 class="h5 mb-3">Dodaj adresu</h2>
+      <form action="<%= data.addUrl %>" method="POST">
+        <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+
+        <div class="mb-3">
+          <label class="form-label">Naziv (opciono)</label>
+          <input type="text" name="label" class="form-control" placeholder="npr. Kuća, Posao" maxlength="50">
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-8">
+            <label class="form-label">Ulica <span class="text-danger">*</span></label>
+            <input type="text" name="street" class="form-control" required>
+          </div>
+          <div class="col-4">
+            <label class="form-label">Broj <span class="text-danger">*</span></label>
+            <input type="text" name="number" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="form-label">Grad <span class="text-danger">*</span></label>
+            <input type="text" name="city" class="form-control" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Poštanski broj <span class="text-danger">*</span></label>
+            <input type="text" name="postalCode" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-check mb-3">
+          <input type="checkbox" class="form-check-input" id="isDefault" name="isDefault" value="true">
+          <label class="form-check-label" for="isDefault">Postavi kao podrazumevanu</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Sačuvaj adresu</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>

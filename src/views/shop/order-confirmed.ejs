@@ -1,0 +1,48 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/flash-messages") %>
+
+  <div class="row justify-content-center text-center mb-4">
+    <div class="col-md-7">
+      <i class="bi bi-check-circle display-3 text-success mb-3"></i>
+      <h1 class="h3 mb-3">Porudžbina je potvrđena</h1>
+      <p class="text-muted">Hvala vam - vaša porudžbina je uspešno potvrđena i uskoro će biti obrađena.</p>
+
+      <% if (data.accountJustCreated) { %>
+        <div class="alert alert-info text-start mt-3">
+          Kreirali smo vam nalog kako biste mogli da pratite ovu i buduće porudžbine.
+          Proverite email da postavite lozinku i preuzmete nalog.
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header"><h2 class="h6 mb-0">Detalji porudžbine</h2></div>
+        <ul class="list-group list-group-flush">
+          <% data.order.stavke.forEach(function(item) { %>
+            <li class="list-group-item d-flex justify-content-between">
+              <span><%= item.naziv %> (<%= item.varijanta %>) &times; <%= item.kolicina %></span>
+              <strong><%= item.ukupno %> RSD</strong>
+            </li>
+          <% }) %>
+        </ul>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-5 text-muted">Status</dt><dd class="col-7"><%= data.order.status %></dd>
+            <dt class="col-5 text-muted">Dostava</dt><dd class="col-7"><%= data.order.dostava %> RSD</dd>
+            <% if (data.order.kupon) { %><dt class="col-5 text-muted">Kupon</dt><dd class="col-7"><%= data.order.kupon %></dd><% } %>
+            <dt class="col-5 text-muted">Ukupno</dt><dd class="col-7"><strong><%= data.order.ukupnaCena %></strong></dd>
+          </dl>
+        </div>
+      </div>
+      <a href="/" class="btn btn-outline-primary mt-3 w-100">Nazad na početnu</a>
+    </div>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>

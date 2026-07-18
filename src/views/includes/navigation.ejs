@@ -11,6 +11,7 @@
         <li class="nav-item"><a class="nav-link <%= currentPath === '/' ? 'active' : '' %>" href="/">Početna</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/usluge') ? 'active' : '' %>" href="/usluge">Usluge</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/paketi') ? 'active' : '' %>" href="/paketi">Paketi</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/prodavnica') ? 'active' : '' %>" href="/prodavnica">Prodavnica</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/blog') ? 'active' : '' %>" href="/blog">Blog</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/nas-tim') ? 'active' : '' %>" href="/nas-tim">Naš tim</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/kontakt') ? 'active' : '' %>" href="/kontakt">Kontakt</a></li>
@@ -19,24 +20,38 @@
       <div class="d-flex align-items-center gap-2">
         <a href="/usluge" class="btn btn-primary btn-sm">Zakažite termin</a>
 
+        <a href="/korpa" class="btn btn-outline-secondary btn-sm <%= currentPath?.startsWith('/korpa') ? 'active' : '' %>" title="Korpa">
+          <i class="bi bi-cart3"></i>
+        </a>
+
         <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
           <div class="dropdown">
             <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
               <i class="bi bi-person-circle"></i> <%= user?.firstName %>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-              <% if (user?.roleName === 'admin') { %>
+              <% if (user?.roleName === 'admin' || user?.permissions?.includes('access_admin_panel')) { %>
                 <li><a class="dropdown-item" href="/admin">Admin panel</a></li>
-                <li><a class="dropdown-item" href="/admin/profil">Moj profil</a></li>
-              <% } else if (user?.roleName === 'employee') { %>
-                <li><a class="dropdown-item" href="/moj-nalog">Moj kalendar</a></li>
-                <li><a class="dropdown-item" href="/moj-nalog/termini">Moji termini</a></li>
-                <li><a class="dropdown-item" href="/moj-nalog/profil">Moj profil</a></li>
-              <% } else { %>
-                <li><a class="dropdown-item" href="/nalog">Moj profil</a></li>
-                <li><a class="dropdown-item" href="/nalog/termini">Moji termini</a></li>
-                <li><a class="dropdown-item" href="/nalog/podesavanja">Podešavanja</a></li>
+                <li><a class="dropdown-item" href="/admin/profil">Admin profil</a></li>
               <% } %>
+
+              <% if (user?.isEmployee) { %>
+                <li><a class="dropdown-item" href="/moj-nalog">Moj kalendar</a></li>
+                <li><a class="dropdown-item" href="/moj-nalog/termini">Moji termini (zaposleni)</a></li>
+                <li><a class="dropdown-item" href="/moj-nalog/profil">Profil zaposlenog</a></li>
+              <% } %>
+
+              <% if (user?.roleName === 'admin' || user?.permissions?.includes('access_admin_panel') || user?.isEmployee) { %>
+                <li><hr class="dropdown-divider"></li>
+              <% } %>
+
+              <li><a class="dropdown-item" href="/nalog">Moj profil</a></li>
+              <li><a class="dropdown-item" href="/nalog/termini">Moji termini</a></li>
+              <li><a class="dropdown-item" href="/nalog/porudzbine">Moje porudžbine</a></li>
+              <li><a class="dropdown-item" href="/nalog/adrese">Moje adrese</a></li>
+              <li><a class="dropdown-item" href="/korpa">Korpa</a></li>
+              <li><a class="dropdown-item" href="/nalog/podesavanja">Podešavanja</a></li>
+
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="/odjava">Odjava</a></li>
             </ul>
@@ -63,6 +78,9 @@
         <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/usluge') ? 'active' : '' %>" href="/admin/usluge"><i class="bi bi-heart-pulse me-1"></i>Usluge</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/paketi') ? 'active' : '' %>" href="/admin/paketi"><i class="bi bi-box-seam me-1"></i>Paketi</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/kupljeni-paketi') ? 'active' : '' %>" href="/admin/kupljeni-paketi"><i class="bi bi-bag-check me-1"></i>Kupljeni paketi</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/proizvodi') ? 'active' : '' %>" href="/admin/proizvodi"><i class="bi bi-box2-heart me-1"></i>Proizvodi</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/porudzbine') ? 'active' : '' %>" href="/admin/porudzbine"><i class="bi bi-receipt me-1"></i>Porudžbine</a></li>
+        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/privremene-porudzbine') ? 'active' : '' %>" href="/admin/privremene-porudzbine"><i class="bi bi-hourglass-split me-1"></i>Privremene porudžbine</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/kategorije') ? 'active' : '' %>" href="/admin/kategorije"><i class="bi bi-tags me-1"></i>Kategorije</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/tagovi') ? 'active' : '' %>" href="/admin/tagovi"><i class="bi bi-tag me-1"></i>Tagovi</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/blog') ? 'active' : '' %>" href="/admin/blog"><i class="bi bi-newspaper me-1"></i>Blog</a></li>

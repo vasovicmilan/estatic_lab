@@ -1,0 +1,92 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <div class="row g-4 mb-5">
+    <div class="col-md-6">
+      <% if (data.product.slika && data.product.slika.url) { %>
+        <img src="<%= data.product.slika.url %>" class="img-fluid rounded img-clickable" alt="<%= data.product.naziv %>"
+             data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
+             data-full-src="<%= data.product.slika.url %>" data-full-alt="<%= data.product.naziv %>">
+      <% } %>
+    </div>
+    <div class="col-md-6">
+      <h1 class="h2"><%= data.product.naziv %></h1>
+      <p class="text-muted"><%= data.product.kratakOpis %></p>
+      <div class="mb-3">
+        <% (data.product.kategorije || []).forEach(function(cat) { %><span class="badge bg-light text-dark border me-1"><%= cat %></span><% }) %>
+      </div>
+      <p><%= data.product.dugiOpis %></p>
+    </div>
+  </div>
+
+  <h2 class="h4 mb-3">Izaberite varijantu</h2>
+  <div class="row g-3 mb-5">
+    <% (data.product.varijante || []).forEach(function(variant) { %>
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-body text-center d-flex flex-column">
+            <h3 class="h5"><%= variant.naziv %></h3>
+            <p class="h4"><%= variant.cena %> RSD</p>
+            <% if (variant.staraCena) { %><p class="text-muted text-decoration-line-through small"><%= variant.staraCena %> RSD</p><% } %>
+
+            <% if (variant.naStanju) { %>
+              <form action="/korpa/dodaj" method="POST" class="mt-auto d-flex gap-2 justify-content-center">
+                <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+                <input type="hidden" name="productId" value="<%= data.product.id %>">
+                <input type="hidden" name="variantId" value="<%= variant.id %>">
+                <input type="number" name="quantity" value="1" min="1" max="<%= variant.dostupnaKolicina %>" class="form-control form-control-sm" style="width:70px;">
+                <button type="submit" class="btn btn-primary btn-sm">Dodaj u korpu</button>
+              </form>
+            <% } else { %>
+              <button type="button" class="btn btn-outline-secondary btn-sm mt-auto" disabled>Nema na stanju</button>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+
+  <% if (data.relatedProducts && data.relatedProducts.length > 0) { %>
+    <h2 class="h4 mb-3">Povezani proizvodi</h2>
+    <div class="row g-3 mb-5">
+      <% data.relatedProducts.forEach(function(p) { %>
+        <div class="col-md-3">
+          <div class="card h-100">
+            <% if (p.slika && p.slika.url) { %><img src="<%= p.slika.url %>" class="card-img-top" style="height:140px;object-fit:cover;" alt="<%= p.naziv %>"><% } %>
+            <div class="card-body">
+              <a href="/prodavnica/<%= p.slug %>" class="text-decoration-none text-dark h6"><%= p.naziv %></a>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (data.product.faq && data.product.faq.length > 0) { %>
+    <h2 class="h4 mb-3">Česta pitanja</h2>
+    <div class="mb-5">
+      <%- include("../includes/components/faq", { faq: data.product.faq }) %>
+    </div>
+  <% } %>
+
+  <% if (data.testimonials && data.testimonials.length > 0) { %>
+    <h2 class="h4 mb-3">Utisci kupaca</h2>
+    <div class="row g-4 mb-5">
+      <% data.testimonials.forEach(function(t) { %>
+        <div class="col-md-4"><%- include("../includes/components/card-testimonial", { testimonial: t }) %></div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <%- include("../includes/components/testimonial-form", { productId: data.product.id }) %>
+    </div>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>

@@ -54,6 +54,7 @@ function setSessionUser(req, user) {
     roleId: user.roleId,
     roleName: user.roleName,
     permissions: user.permissions || [],
+    isEmployee: !!user.isEmployee,
   };
 }
 

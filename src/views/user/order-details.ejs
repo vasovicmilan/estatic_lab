@@ -1,0 +1,48 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/flash-messages") %>
+  <h1 class="h3 mb-4">Detalji porudžbine</h1>
+
+  <div class="card mb-3" style="max-width: 600px;">
+    <div class="card-body">
+      <h2 class="h6">Stavke</h2>
+      <ul class="list-group list-group-flush mb-3">
+        <% data.order.stavke.forEach(function(item) { %>
+          <li class="list-group-item d-flex justify-content-between px-0">
+            <span><%= item.naziv %> (<%= item.varijanta %>) &times; <%= item.kolicina %></span>
+            <strong><%= item.ukupno %> RSD</strong>
+          </li>
+        <% }) %>
+      </ul>
+
+      <dl class="row mb-0">
+        <% if (data.order.adresa) { %>
+          <dt class="col-5 text-muted">Adresa</dt>
+          <dd class="col-7"><%= data.order.adresa.ulica %> <%= data.order.adresa.broj %>, <%= data.order.adresa.grad %> <%= data.order.adresa.postanskiBroj %></dd>
+        <% } %>
+        <dt class="col-5 text-muted">Status</dt><dd class="col-7"><%= data.order.status %></dd>
+        <dt class="col-5 text-muted">Subtotal</dt><dd class="col-7"><%= data.order.subtotal %> RSD</dd>
+        <dt class="col-5 text-muted">Dostava</dt><dd class="col-7"><%= data.order.dostava %> RSD</dd>
+        <% if (data.order.kupon) { %><dt class="col-5 text-muted">Kupon</dt><dd class="col-7"><%= data.order.kupon %> (-<%= data.order.popust %> RSD)</dd><% } %>
+        <dt class="col-5 text-muted">Ukupno</dt><dd class="col-7"><strong><%= data.order.ukupnaCena %></strong></dd>
+        <dt class="col-5 text-muted">Datum</dt><dd class="col-7"><%= data.order.datum %></dd>
+        <% if (data.order.napomena) { %><dt class="col-5 text-muted">Napomena</dt><dd class="col-7"><%= data.order.napomena %></dd><% } %>
+        <% if (data.order.razlogOtkazivanja) { %><dt class="col-5 text-muted">Razlog otkazivanja</dt><dd class="col-7"><%= data.order.razlogOtkazivanja %></dd><% } %>
+      </dl>
+    </div>
+  </div>
+
+  <div class="mt-3 d-flex gap-2">
+    <a href="<%= data.backUrl %>" class="btn btn-outline-secondary">Nazad</a>
+    <% if (data.canCancel) { %>
+      <form action="/nalog/porudzbine/<%= data.order.id %>/otkazi" method="POST" data-confirm="Da li ste sigurni da želite da otkažete porudžbinu?">
+        <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+        <button type="submit" class="btn btn-outline-danger">Otkaži porudžbinu</button>
+      </form>
+    <% } %>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>

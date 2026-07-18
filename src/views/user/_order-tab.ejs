@@ -1,0 +1,38 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/flash-messages") %>
+  <h1 class="h3 mb-4">Moj nalog</h1>
+  <%- include("../includes/components/account-nav") %>
+
+  <form method="GET" class="mb-4" style="max-width: 250px;">
+    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+      <% data.filters.forEach(function(f) { %>
+        <option value="<%= f.value %>"><%= f.label %></option>
+      <% }) %>
+    </select>
+  </form>
+
+  <% if (data.orders && data.orders.length > 0) { %>
+    <div class="list-group">
+      <% data.orders.forEach(function(o) { %>
+        <a href="/nalog/porudzbine/detalji/<%= o.id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold"><%= o.brojStavki %> stavki</div>
+            <div class="text-muted small"><%= o.datum %></div>
+          </div>
+          <div class="text-end">
+            <span class="badge bg-secondary"><%= o.status %></span>
+            <div class="small"><%= o.ukupnaCena %></div>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+    <%- include("../includes/pagination", { pagination: data.pagination }) %>
+  <% } else { %>
+    <p class="text-muted">Nemate porudžbina. <a href="/prodavnica">Posetite prodavnicu</a>.</p>
+  <% } %>
+</main>
+
+<%- include("../includes/footer") %>

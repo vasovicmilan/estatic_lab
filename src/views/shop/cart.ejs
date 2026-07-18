@@ -1,0 +1,87 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <h1 class="h3 mb-4">Korpa</h1>
+
+  <% if (data.isEmpty) { %>
+    <p class="text-muted">Vaša korpa je prazna. <a href="<%= data.continueShoppingUrl %>">Nastavite kupovinu</a>.</p>
+  <% } else { %>
+    <div class="table-responsive mb-4">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Proizvod</th>
+            <th>Cena</th>
+            <th>Količina</th>
+            <th>Ukupno</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% data.cart.stavke.forEach(function(item) { %>
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <% if (item.slika && item.slika.url) { %><img src="<%= item.slika.url %>" alt="<%= item.slika.alt || item.naziv %>" style="width:50px;height:50px;object-fit:cover;" class="rounded"><% } %>
+                  <div>
+                    <a href="/prodavnica/<%= item.productSlug %>" class="text-decoration-none text-dark fw-semibold"><%= item.naziv %></a>
+                    <div class="text-muted small"><%= item.varijanta %></div>
+                    <% if (item.prekoracenje) { %><div class="text-danger small">Dostupno samo <%= item.dostupnaKolicina %> na stanju</div><% } %>
+                    <% if (!item.naStanju) { %><div class="text-danger small">Nema na stanju</div><% } %>
+                  </div>
+                </div>
+              </td>
+              <td><%= item.cena %> RSD</td>
+              <td style="max-width:120px;">
+                <form action="/korpa/azuriraj" method="POST" class="d-flex gap-2">
+                  <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+                  <% if (item.id) { %>
+                    <input type="hidden" name="cartItemId" value="<%= item.id %>">
+                  <% } else { %>
+                    <input type="hidden" name="productId" value="<%= item.productId %>">
+                    <input type="hidden" name="variantId" value="<%= item.variantId %>">
+                  <% } %>
+                  <input type="number" name="quantity" value="<%= item.kolicina %>" min="0" max="99" class="form-control form-control-sm" onchange="this.form.submit()">
+                </form>
+              </td>
+              <td><%= item.ukupno %> RSD</td>
+              <td>
+                <form action="/korpa/ukloni" method="POST">
+                  <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+                  <% if (item.id) { %>
+                    <input type="hidden" name="cartItemId" value="<%= item.id %>">
+                  <% } else { %>
+                    <input type="hidden" name="productId" value="<%= item.productId %>">
+                    <input type="hidden" name="variantId" value="<%= item.variantId %>">
+                  <% } %>
+                  <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="row justify-content-end">
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Ukupno</span>
+              <strong><%= data.cart.ukupnaCena %> RSD</strong>
+            </div>
+            <a href="<%= data.checkoutUrl %>" class="btn btn-primary w-100">Nastavi na naplatu</a>
+            <a href="<%= data.continueShoppingUrl %>" class="btn btn-outline-secondary w-100 mt-2">Nastavi kupovinu</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</main>
+
+<%- include("../includes/footer") %>

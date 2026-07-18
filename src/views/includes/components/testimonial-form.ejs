@@ -1,9 +1,10 @@
 <%
-  // Optional locals passed in via include("...", { serviceId, packageId }) -
-  // ties the testimonial to whichever service/package detail page it's on.
-  // Neither is required: on general pages (e.g. home) both are simply omitted.
+  // Optional locals passed in via include("...", { serviceId, packageId, productId }) -
+  // ties the testimonial to whichever service/package/product detail page it's on.
+  // None are required: on general pages (e.g. home) all three are simply omitted.
   const _serviceId = typeof serviceId !== "undefined" ? serviceId : null;
   const _packageId = typeof packageId !== "undefined" ? packageId : null;
+  const _productId = typeof productId !== "undefined" ? productId : null;
 %>
 <div class="card shadow-sm">
   <div class="card-body p-4">
@@ -14,6 +15,7 @@
       <input type="text" name="nickname" class="d-none" tabindex="-1" autocomplete="off">
       <% if (_serviceId) { %><input type="hidden" name="service" value="<%= _serviceId %>"><% } %>
       <% if (_packageId) { %><input type="hidden" name="package" value="<%= _packageId %>"><% } %>
+      <% if (_productId) { %><input type="hidden" name="product" value="<%= _productId %>"><% } %>
 
       <% if (typeof isLoggedIn !== "undefined" && isLoggedIn && user) { %>
         <%
