@@ -11,7 +11,11 @@
     "start-dev": "NODE_ENV=development nodemon src/server.js",
     "test": "node --env-file=.env.test --test",
     "test:watch": "node --env-file=.env.test --test --watch",
-    "test:coverage": "node --env-file=.env.test --test --experimental-test-coverage"
+    "test:coverage": "node --env-file=.env.test --test --experimental-test-coverage",
+    "report:daily": "NODE_ENV=production node scripts/daily-log-report.js",
+    "report:weekly": "NODE_ENV=production node scripts/weekly-log-report.js",
+    "report:monthly": "NODE_ENV=production node scripts/monthly-log-report.js",
+    "report:yearly": "NODE_ENV=production node scripts/yearly-log-report.js"
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
