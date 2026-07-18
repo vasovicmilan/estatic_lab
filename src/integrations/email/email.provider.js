@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { logInfo, logWarn, logError } from "../../utils/logger.util.js";
+import { alertError } from "../../utils/telegram-alert.util.js";
 
 let transporter = null;
 
@@ -84,5 +85,10 @@ export async function sendEmail({ to, subject, html, attachments = [] }) {
   }
 
   logError(`[EMAIL] Failed to send email to ${to} after ${MAX_SEND_ATTEMPTS} attempt(s)`, lastError, { to, subject });
+  alertError(`Slanje emaila trajno neuspešno nakon ${MAX_SEND_ATTEMPTS} pokušaja`, {
+    to,
+    subject,
+    errorCode: lastError?.code || lastError?.responseCode,
+  });
   throw lastError;
 }

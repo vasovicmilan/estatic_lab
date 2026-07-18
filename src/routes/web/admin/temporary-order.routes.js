@@ -7,5 +7,6 @@ const router = Router();
 
 router.get("/", validateSearch, TemporaryOrderController.listTemporaryOrders);
 router.get("/detalji/:orderId", validateOrderId, TemporaryOrderController.temporaryOrderDetails);
+router.put("/:orderId/potvrdi", validateOrderId, TemporaryOrderController.confirmTemporaryOrderByAdmin);
 
 export default router;

@@ -26,12 +26,12 @@ function canAccessOrder(order, requesterId, requesterRole) {
  * The coupon, if any, IS redeemed here (not at checkout) - see the note on
  * temporary-order.service.js for why redemption is deliberately deferred to this point.
  * Deleting the temp order acts as the idempotency guard: if two confirm requests race
- * (e.g. a double-clicked email link), the second delete finds nothing, throws, and
- * the transaction aborts - only one Order is ever created.
+ * (e.g. a double-clicked email link, or a customer confirming right as an admin does
+ * it manually), the second delete finds nothing, throws, and the transaction aborts -
+ * only one Order is ever created. Shared by both confirmOrder (customer, token-gated)
+ * and confirmOrderByAdmin (admin, ID-gated) below.
  */
-export async function confirmOrder(orderId, token, { ignoreExpiration = false } = {}) {
-  const tempOrder = await tempOrderService.verifyToken(orderId, token, { ignoreExpiration });
-
+async function createOrderFromTemporaryOrder(tempOrder) {
   const session = await mongoose.startSession();
   let created;
   const cancelToken = generateRandomToken(24);
@@ -81,8 +81,36 @@ export async function confirmOrder(orderId, token, { ignoreExpiration = false } 
     firstName: tempOrder.contactSnapshot.firstName,
   });
 
+  return created;
+}
+
+export async function confirmOrder(orderId, token, { ignoreExpiration = false } = {}) {
+  const tempOrder = await tempOrderService.verifyToken(orderId, token, { ignoreExpiration });
+  const created = await createOrderFromTemporaryOrder(tempOrder);
+
   const populated = await orderRepo.findOrderById(created._id);
   return mapOrder(populated, "user", "detail");
+}
+
+/**
+ * Admin-triggered confirmation - for the "customer missed the email / token expired,
+ * but reached out and still wants the order" case. Deliberately does NOT require the
+ * token: an admin looking at a temporary order in the admin panel has no practical way
+ * to know the emailed token value, and shouldn't need it - admin access to the route
+ * itself is the authorization here, same as every other admin action in this app.
+ * Only works while the record still exists, i.e. within the retention window (see
+ * shop.config.js's TEMP_ORDER_RETENTION_HOURS and the cleanup job) - once that passes
+ * and stock has been released back, there's nothing left to confirm.
+ */
+export async function confirmOrderByAdmin(orderId, adminId) {
+  const rawTempOrder = await tempOrderService.getTemporaryOrderRawById(orderId);
+  const tempOrder = { ...rawTempOrder, temporaryOrderId: rawTempOrder._id.toString() };
+  const created = await createOrderFromTemporaryOrder(tempOrder);
+
+  logInfo("Order confirmed by admin", { orderId: created._id, adminId });
+
+  const populated = await orderRepo.findOrderById(created._id);
+  return mapOrder(populated, "admin", "detail");
 }
 
 // ==================== READ ====================
@@ -227,6 +255,7 @@ export async function updateOrderContactInfo(orderId, { phone, address } = {}) {
 
 export default {
   confirmOrder,
+  confirmOrderByAdmin,
   findOrders,
   getOrderById,
   getOrderByCancelToken,

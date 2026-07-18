@@ -7,7 +7,7 @@ import couponService from "./coupon.service.js";
 import { buildPhoneRecord } from "../utils/phone.util.js";
 import { buildAddressRecord } from "../utils/address.util.js";
 import { generateRandomToken } from "./crypto.service.js";
-import { DEFAULT_SHIPPING_PRICE, TEMP_ORDER_TOKEN_TTL_MINUTES } from "../config/shop.config.js";
+import { DEFAULT_SHIPPING_PRICE, TEMP_ORDER_TOKEN_TTL_MINUTES, TEMP_ORDER_RETENTION_HOURS } from "../config/shop.config.js";
 import {
   mapTemporaryOrdersForAdminList,
   mapTemporaryOrderForAdminDetail,
@@ -227,13 +227,19 @@ export async function getTemporaryOrderRawById(orderId) {
 }
 
 /**
- * Releases stock for every checkout nobody confirmed in time - meant to run on a
- * schedule, not from a request. No coupon release needed: coupons are only ever
- * actually redeemed at confirm time (see order.service.js), never at checkout time,
- * so an expired temp order never held a real redemption to give back.
+ * Releases stock for checkouts nobody confirmed within the full retention window -
+ * not the moment the token expires, but TEMP_ORDER_RETENTION_HOURS after that. The
+ * token itself stops working at expiration (see verifyToken above), but the record
+ * sticks around much longer so a customer can still ask an admin to push it through
+ * (see order.service.js's confirmOrderByAdmin) or an admin can reach out to ask if
+ * they still want it. Meant to run on a schedule, not from a request. No coupon
+ * release needed: coupons are only ever actually redeemed at confirm time (see
+ * order.service.js), never at checkout time, so an expired temp order never held a
+ * real redemption to give back.
  */
 export async function cleanupExpiredTemporaryOrders() {
-  const expired = await tempOrderRepo.findExpiredTemporaryOrders();
+  const cutoff = new Date(Date.now() - TEMP_ORDER_RETENTION_HOURS * 60 * 60 * 1000);
+  const expired = await tempOrderRepo.findTemporaryOrdersPastRetention(cutoff);
   let cleaned = 0;
 
   for (const order of expired) {
@@ -253,7 +259,7 @@ export async function cleanupExpiredTemporaryOrders() {
     }
   }
 
-  logInfo("Expired temporary orders cleaned up", { count: cleaned, total: expired.length });
+  logInfo("Expired temporary orders cleaned up", { count: cleaned, total: expired.length, retentionHours: TEMP_ORDER_RETENTION_HOURS });
   return { cleaned, total: expired.length };
 }
 

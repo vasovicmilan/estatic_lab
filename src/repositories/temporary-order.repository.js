@@ -29,10 +29,12 @@ export async function findTemporaryOrders({ search = "", limit = 20, page = 1, f
 }
 
 // unpaginated on purpose - this feeds the cleanup job that releases stock/coupon
-// reservations for checkouts nobody confirmed in time, which runs on a schedule,
-// not from a request
-export async function findExpiredTemporaryOrders({ session } = {}) {
-  return TemporaryOrder.find({ tokenExpiration: { $lt: new Date() } }).session(session || null).lean();
+// reservations for checkouts nobody confirmed within the full retention window
+// (token TTL + grace period - see shop.config.js), which runs on a schedule, not
+// from a request. `cutoff` is "now minus the grace period" - orders whose token
+// expired before that point are past retention and safe to remove.
+export async function findTemporaryOrdersPastRetention(cutoff, { session } = {}) {
+  return TemporaryOrder.find({ tokenExpiration: { $lt: cutoff } }).session(session || null).lean();
 }
 
 export async function deleteTemporaryOrderById(id, { session } = {}) {
@@ -48,7 +50,7 @@ export default {
   findTemporaryOrderById,
   findTemporaryOrderByToken,
   findTemporaryOrders,
-  findExpiredTemporaryOrders,
+  findTemporaryOrdersPastRetention,
   deleteTemporaryOrderById,
   countTemporaryOrders,
 };

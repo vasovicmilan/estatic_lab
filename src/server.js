@@ -4,6 +4,7 @@ import app from "./app.js";
 import "./events/listeners/email.listener.js";
 import "./events/listeners/telegram.listener.js";
 import { initTelegramBot, stopTelegramBot } from "./integrations/telegram/telegram.provider.js";
+import { startScheduler } from "./jobs/scheduler.js";
 import { logInfo, logError } from "./utils/logger.util.js";
 
 const PORT = process.env.PORT || 3000;
@@ -14,6 +15,7 @@ async function start() {
     logInfo("MongoDB connected");
 
     initTelegramBot();
+    startScheduler();
 
     const server = app.listen(PORT, "0.0.0.0", () => {
       logInfo(`Server running on port ${PORT}`);

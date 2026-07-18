@@ -1,0 +1,8 @@
+<form action="/admin/privremene-porudzbine/<%= data.orderId %>/potvrdi" method="POST" data-confirm="Da li ste sigurni da želite da potvrdite ovu porudžbinu u ime kupca? Ovo će kreirati konačnu porudžbinu i skinuti je sa liste privremenih.">
+  <input type="hidden" name="_method" value="PUT">
+  <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+  <p class="small text-muted mb-2">
+    Ako je kupac propustio email ili mu je link istekao, a naknadno je potvrdio da i dalje želi porudžbinu, možete je ručno potvrditi u njegovo ime.
+  </p>
+  <button type="submit" class="btn btn-success btn-sm w-100">Potvrdi porudžbinu u ime kupca</button>
+</form>

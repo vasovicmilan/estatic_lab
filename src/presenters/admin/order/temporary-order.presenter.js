@@ -71,11 +71,17 @@ export function prepareTempOrderDetailsData(order) {
     ],
     sidebar: [
       {
+        title: "Potvrdi porudžbinu",
+        type: "custom",
+        content: "temporary-order-confirm-action",
+        data: { orderId: order.id },
+      },
+      {
         title: "Potvrda",
         type: "table",
         rows: [
           { label: "Ističe", value: order.token.istice },
-          { label: "Istekao", value: order.token.istekao ? "Da - čeka na uklanjanje" : "Ne" },
+          { label: "Istekao", value: order.token.istekao ? "Da - kupac više ne može sam da potvrdi" : "Ne" },
         ],
       },
       {

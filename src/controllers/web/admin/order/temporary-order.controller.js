@@ -1,9 +1,11 @@
 import * as tempOrderService from "../../../../services/temporary-order.service.js";
+import * as orderService from "../../../../services/order.service.js";
 import {
   prepareTempOrderListData,
   prepareTempOrderDetailsData,
 } from "../../../../presenters/admin/order/temporary-order.presenter.js";
-import { logError } from "../../../../utils/logger.util.js";
+import { logError, logInfo } from "../../../../utils/logger.util.js";
+import { flashAndRedirect } from "../../../../utils/flash.util.js";
 
 export async function listTemporaryOrders(req, res, next) {
   try {
@@ -45,4 +47,20 @@ export async function temporaryOrderDetails(req, res, next) {
   }
 }
 
-export default { listTemporaryOrders, temporaryOrderDetails };
+export async function confirmTemporaryOrderByAdmin(req, res, next) {
+  try {
+    const { orderId } = req.params;
+    const order = await orderService.confirmOrderByAdmin(orderId, req.session?.user?.id);
+    logInfo(`[confirmTemporaryOrderByAdmin] Privremena porudžbina #${orderId} potvrđena od strane admina`, { orderId, adminId: req.session?.user?.id });
+
+    return flashAndRedirect(req, res, "success", "Porudžbina je potvrđena", `/admin/porudzbine/detalji/${order.id}`);
+  } catch (error) {
+    logError("[confirmTemporaryOrderByAdmin] Greška pri potvrđivanju porudžbine od strane admina", error, { orderId: req.params.orderId, userId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, `/admin/privremene-porudzbine/detalji/${req.params.orderId}`);
+    }
+    next(error);
+  }
+}
+
+export default { listTemporaryOrders, temporaryOrderDetails, confirmTemporaryOrderByAdmin };
