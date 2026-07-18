@@ -41,4 +41,31 @@ export const validateProfileUpdate = [
   collectValidationErrors,
 ];
 
-export default { validateUserStatus, validateUserRole, validateUserId, validateProfileUpdate };
+export const validateAddressCreate = [
+  body("label")
+    .optional({ values: "falsy" })
+    .trim()
+    .isLength({ max: 50 }).withMessage("Naziv adrese može imati najviše 50 karaktera"),
+
+  body("city")
+    .trim()
+    .notEmpty().withMessage("Grad je obavezan"),
+
+  body("postalCode")
+    .trim()
+    .notEmpty().withMessage("Poštanski broj je obavezan"),
+
+  body("street")
+    .trim()
+    .notEmpty().withMessage("Ulica je obavezna"),
+
+  body("number")
+    .trim()
+    .notEmpty().withMessage("Broj je obavezan"),
+
+  collectValidationErrors,
+];
+
+export const validateAddressId = mongoIdParamValidator("addressId", "adrese");
+
+export default { validateUserStatus, validateUserRole, validateUserId, validateProfileUpdate, validateAddressCreate, validateAddressId };

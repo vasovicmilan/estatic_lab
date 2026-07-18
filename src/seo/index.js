@@ -4,6 +4,7 @@ import { buildCategorySeo } from "./builders/category.builder.js";
 import { buildTagSeo } from "./builders/tag.builder.js";
 import { buildExpertSeo } from "./builders/expert.builder.js";
 import { buildPageSeoWithReq } from "./builders/page.builder.js";
+import { buildProductSeo } from "./builders/product.builder.js";
 
 const builders = {
   service: buildServiceSeo,
@@ -12,6 +13,7 @@ const builders = {
   tag: buildTagSeo,
   expert: buildExpertSeo,
   page: buildPageSeoWithReq,
+  product: buildProductSeo,
 };
 
 /**

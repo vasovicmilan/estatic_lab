@@ -20,6 +20,9 @@ import contactRoutes from "./admin/contact.routes.js";
 import couponRoutes from "./admin/coupon.routes.js";
 import newsletterRoutes from "./admin/news-letter.routes.js";
 import testimonialRoutes from "./admin/testimonial.routes.js";
+import productRoutes from "./admin/product.routes.js";
+import orderRoutes from "./admin/order.routes.js";
+import temporaryOrderRoutes from "./admin/temporary-order.routes.js";
 
 const router = Router();
 
@@ -44,5 +47,8 @@ router.use("/kontakt", requirePermission("manage_marketing"), contactRoutes);
 router.use("/kuponi", requirePermission("manage_coupons"), couponRoutes);
 router.use("/newsletter", requirePermission("manage_marketing"), newsletterRoutes);
 router.use("/testimoniali", requirePermission("manage_marketing"), testimonialRoutes);
+router.use("/proizvodi", requirePermission("manage_products"), productRoutes);
+router.use("/porudzbine", requirePermission("manage_orders"), orderRoutes);
+router.use("/privremene-porudzbine", requirePermission("manage_orders"), temporaryOrderRoutes);
 
 export default router;

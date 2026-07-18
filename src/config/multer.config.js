@@ -14,6 +14,7 @@ const PUBLIC_PATH = process.env.UPLOAD_PUBLIC_PATH || path.join(__dirname, "..",
 
 await fs.ensureDir(path.join(PUBLIC_PATH, "images", "services"));
 await fs.ensureDir(path.join(PUBLIC_PATH, "images", "packages"));
+await fs.ensureDir(path.join(PUBLIC_PATH, "images", "products"));
 await fs.ensureDir(path.join(PUBLIC_PATH, "images", "categories"));
 await fs.ensureDir(path.join(PUBLIC_PATH, "images", "posts"));
 await fs.ensureDir(path.join(PUBLIC_PATH, "images", "testimonials"));
@@ -37,7 +38,7 @@ const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 // passed explicitly at every call site (see the routes files) and is what the
 // returned URL (/images/${type}/...) is built from too - so this makes the
 // folder actually written to match the URL that gets saved to the database.
-const KNOWN_IMAGE_TYPES = new Set(["services", "packages", "categories", "posts", "testimonials", "experts", "site"]);
+const KNOWN_IMAGE_TYPES = new Set(["services", "packages", "products", "categories", "posts", "testimonials", "experts", "site"]);
 
 function getDestination(type) {
   const subfolder = KNOWN_IMAGE_TYPES.has(type) ? type : "site";

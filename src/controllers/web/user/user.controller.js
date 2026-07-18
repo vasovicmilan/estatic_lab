@@ -1,10 +1,14 @@
 import * as userService from "../../../services/user.service.js";
 import * as appointmentService from "../../../services/appointment.service.js";
+import * as orderService from "../../../services/order.service.js";
 import {
   prepareProfileTabData,
   prepareAppointmentTabData,
   prepareAppointmentDetailData,
   prepareSettingsTabData,
+  prepareOrdersTabData,
+  prepareOrderDetailData,
+  prepareAddressesTabData,
 } from "../../../presenters/user/user.presenter.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
@@ -141,6 +145,149 @@ export async function updateSettings(req, res, next) {
   }
 }
 
+// ==================== ORDERS ====================
+
+export async function orders(req, res, next) {
+  try {
+    const { status, page = 1, limit = 10 } = req.query;
+
+    const result = await orderService.findOrders({
+      requesterId: req.session.user.id,
+      role: "user",
+      filters: { status: status || undefined },
+      page: parseInt(page, 10) || 1,
+      limit: parseInt(limit, 10) || 10,
+    });
+
+    const viewData = prepareOrdersTabData(result, req.query);
+
+    return res.render("user/_order-tab", {
+      pageTitle: "Moje porudžbine",
+      pageDescription: "Pregled vaših porudžbina",
+      data: viewData,
+    });
+  } catch (error) {
+    logError("[orders] Greška pri učitavanju porudžbina korisnika", error, { userId: req.session?.user?.id, ...req.query });
+    next(error);
+  }
+}
+
+export async function orderDetails(req, res, next) {
+  try {
+    const { orderId } = req.params;
+    const order = await orderService.getOrderById(orderId, req.session.user.id, "user");
+    const viewData = prepareOrderDetailData(order);
+
+    return res.render("user/order-details", {
+      pageTitle: "Detalji porudžbine",
+      pageDescription: order.ukupnaCena,
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
+    });
+  } catch (error) {
+    logError("[orderDetails] Greška pri učitavanju detalja porudžbine", error, {
+      orderId: req.params.orderId,
+      userId: req.session?.user?.id,
+    });
+    next(error);
+  }
+}
+
+export async function cancelOrder(req, res, next) {
+  try {
+    const { orderId } = req.params;
+    await orderService.cancelOrder(orderId, req.body.reason, req.session.user.id, "user");
+    logInfo(`[cancelOrder] Korisnik otkazao porudžbinu #${orderId}`, { orderId, userId: req.session.user.id });
+
+    return flashAndRedirect(req, res, "success", "Porudžbina je uspešno otkazana", "/nalog/porudzbine");
+  } catch (error) {
+    logError("[cancelOrder] Greška pri otkazivanju porudžbine", error, {
+      orderId: req.params.orderId,
+      userId: req.session?.user?.id,
+    });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, `/nalog/porudzbine/detalji/${req.params.orderId}`);
+    }
+    next(error);
+  }
+}
+
+// ==================== ADDRESSES ====================
+
+export async function addresses(req, res, next) {
+  try {
+    const addressList = await userService.getAddresses(req.session.user.id);
+    const viewData = prepareAddressesTabData(addressList);
+
+    return res.render("user/_addresses-tab", {
+      pageTitle: "Moje adrese",
+      pageDescription: "Upravljajte sačuvanim adresama za dostavu",
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
+    });
+  } catch (error) {
+    logError("[addresses] Greška pri učitavanju adresa korisnika", error, { userId: req.session?.user?.id });
+    next(error);
+  }
+}
+
+export async function addAddress(req, res, next) {
+  try {
+    if (req.validationErrors) {
+      logWarn("[addAddress] Validacione greške pri dodavanju adrese", { validationErrors: req.validationErrors, userId: req.session?.user?.id });
+      return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), "/nalog/adrese");
+    }
+
+    await userService.addAddress(req.session.user.id, {
+      label: req.body.label,
+      city: req.body.city,
+      postalCode: req.body.postalCode,
+      street: req.body.street,
+      number: req.body.number,
+      isDefault: req.body.isDefault === "true" || req.body.isDefault === "on",
+    });
+    logInfo("[addAddress] Adresa dodata", { userId: req.session.user.id });
+
+    return flashAndRedirect(req, res, "success", "Adresa je uspešno dodata", "/nalog/adrese");
+  } catch (error) {
+    logError("[addAddress] Greška pri dodavanju adrese", error, { userId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, "/nalog/adrese");
+    }
+    next(error);
+  }
+}
+
+export async function removeAddress(req, res, next) {
+  try {
+    const { addressId } = req.params;
+    await userService.removeAddress(req.session.user.id, addressId);
+    logInfo("[removeAddress] Adresa uklonjena", { userId: req.session.user.id, addressId });
+
+    return flashAndRedirect(req, res, "success", "Adresa je uklonjena", "/nalog/adrese");
+  } catch (error) {
+    logError("[removeAddress] Greška pri uklanjanju adrese", error, { addressId: req.params.addressId, userId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, "/nalog/adrese");
+    }
+    next(error);
+  }
+}
+
+export async function setDefaultAddress(req, res, next) {
+  try {
+    const { addressId } = req.params;
+    await userService.setDefaultAddress(req.session.user.id, addressId);
+    logInfo("[setDefaultAddress] Podrazumevana adresa promenjena", { userId: req.session.user.id, addressId });
+
+    return flashAndRedirect(req, res, "success", "Podrazumevana adresa je ažurirana", "/nalog/adrese");
+  } catch (error) {
+    logError("[setDefaultAddress] Greška pri postavljanju podrazumevane adrese", error, { addressId: req.params.addressId, userId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, "/nalog/adrese");
+    }
+    next(error);
+  }
+}
+
 export default {
   profile,
   appointments,
@@ -148,4 +295,11 @@ export default {
   cancelAppointment,
   settingsForm,
   updateSettings,
+  orders,
+  orderDetails,
+  cancelOrder,
+  addresses,
+  addAddress,
+  removeAddress,
+  setDefaultAddress,
 };

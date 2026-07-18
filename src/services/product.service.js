@@ -44,6 +44,71 @@ export async function getProductForEdit(productId) {
   return mapProductForEdit(product);
 }
 
+// ---- Phase 1: core info + image ---------------------------------------------------
+export async function createDraftProduct(data) {
+  if (!data) validationError("data");
+  if (!data.name) validationError("name");
+  if (!data.sku) validationError("sku");
+
+  const existingSku = await productRepo.findProductBySku(data.sku);
+  if (existingSku) conflict("Proizvod sa ovim SKU već postoji");
+
+  const payload = { ...data, sku: data.sku.toLowerCase().trim(), isActive: false, variations: [] };
+
+  if (payload.slug) {
+    const existingSlug = await productRepo.findProductBySlug(payload.slug);
+    if (existingSlug) conflict("Proizvod sa ovim slug-om već postoji");
+  } else {
+    payload.slug = await generateUniqueSlug(payload.name, (candidate) => productRepo.findProductBySlug(candidate).then(Boolean));
+  }
+
+  const created = await productRepo.createProduct(payload);
+  logInfo("Product draft created (phase 1)", { productId: created._id, name: created.name, sku: created.sku });
+  return mapProductForEdit(created);
+}
+
+// ---- Phase 2: variations -----------------------------------------------------------
+export async function addVariationsToProduct(productId, variations) {
+  if (!productId) validationError("productId");
+  const existing = await productRepo.findProductById(productId);
+  if (!existing) notFound("Proizvod");
+
+  validateVariations(variations || []);
+
+  const updated = await productRepo.updateProductById(productId, { variations: variations || [] });
+  logInfo("Product variations saved (phase 2)", { productId, variationCount: (variations || []).length });
+  return mapProductForEdit(updated);
+}
+
+// ---- Phase 3: optional extras + publish --------------------------------------------
+export async function addExtrasAndPublishProduct(productId, data) {
+  if (!productId) validationError("productId");
+  const existing = await productRepo.findProductById(productId);
+  if (!existing) notFound("Proizvod");
+
+  const merged = {
+    relatedProducts: data.relatedProducts ?? existing.relatedProducts ?? [],
+    faq: data.faq ?? existing.faq ?? [],
+    isActive: data.isActive ?? true,
+  };
+
+  if (merged.isActive) {
+    if (!existing.image) badRequest("Objavljen proizvod mora imati sliku.");
+    if (!existing.variations?.length) badRequest("Objavljen proizvod mora imati bar jednu varijantu za prodaju.");
+  }
+
+  const updated = await productRepo.updateProductById(productId, merged);
+  logInfo("Product extras saved" + (merged.isActive ? " and published (phase 3)" : " as draft (phase 3)"), { productId });
+  return mapProductForAdminDetail(updated);
+}
+
+export async function updateProductSeo(productId, seoKeywords) {
+  if (!productId) validationError("productId");
+  const updated = await productRepo.updateProductById(productId, { seoKeywords: seoKeywords || [] });
+  if (!updated) notFound("Proizvod");
+  return getProductById(updated._id);
+}
+
 export async function createProduct(data) {
   if (!data) validationError("data");
   if (!data.name) validationError("name");
@@ -191,6 +256,10 @@ export default {
   getProductById,
   getProductForEdit,
   createProduct,
+  createDraftProduct,
+  addVariationsToProduct,
+  addExtrasAndPublishProduct,
+  updateProductSeo,
   updateProductById,
   deleteProductById,
   listPublicProducts,

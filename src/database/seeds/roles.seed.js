@@ -18,6 +18,8 @@ const defaultRoles = [
       "manage_appointments_all",
       "manage_marketing",
       "manage_coupons",
+      "manage_products",
+      "manage_orders",
     ],
     isDefault: false,
     priority: 100,

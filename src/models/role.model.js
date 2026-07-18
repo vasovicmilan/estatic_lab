@@ -16,6 +16,8 @@ export const PERMISSIONS = [
   "manage_own_appointments",
   "manage_marketing",
   "manage_coupons",
+  "manage_products",
+  "manage_orders",
   "view_dashboard",
 ];
 

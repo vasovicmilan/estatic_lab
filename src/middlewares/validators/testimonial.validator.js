@@ -22,6 +22,10 @@ export const validateTestimonialSubmit = [
     .optional({ values: "falsy" })
     .isMongoId().withMessage("Neispravan paket"),
 
+  body("product")
+    .optional({ values: "falsy" })
+    .isMongoId().withMessage("Neispravan proizvod"),
+
   body("rating")
     .notEmpty().withMessage("Ocena je obavezna")
     .isInt({ min: 1, max: 5 }).withMessage("Ocena mora biti između 1 i 5"),
