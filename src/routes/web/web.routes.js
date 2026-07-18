@@ -17,6 +17,8 @@ import bookingRoutes from "./booking.routes.js";
 import teamRoutes from "./team.routes.js";
 import userRoutes from "./user.routes.js";
 import employeeRoutes from "./employee.routes.js";
+import productRoutes from "./product.routes.js";
+import shopRoutes from "./shop.routes.js";
 
 const router = Router();
 
@@ -65,6 +67,8 @@ router.use("/usluge", serviceRoutes);
 router.use("/paketi", packageRoutes);
 router.use("/blog", blogRoutes);
 router.use("/zakazivanje", bookingRoutes);
+router.use("/prodavnica", productRoutes);
+router.use("/korpa", shopRoutes);
 
 router.use("/", authRoutes);
 
