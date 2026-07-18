@@ -53,6 +53,7 @@ export function prepareOrderDetailsData(order) {
   const allowedNextStatuses = getAllowedStatuses(order.statusRaw, "admin");
 
   const actionMap = {
+    pending: { label: "Ponovo otvori porudžbinu", url: `/admin/porudzbine/${order.id}/ponovo-otvori`, variant: "secondary", needsReason: false },
     processing: { label: "Označi kao u obradi", url: `/admin/porudzbine/${order.id}/obradi`, variant: "primary", needsReason: false },
     shipped: { label: "Označi kao poslato", url: `/admin/porudzbine/${order.id}/posalji`, variant: "primary", needsReason: false },
     delivered: { label: "Označi kao dostavljeno", url: `/admin/porudzbine/${order.id}/dostavi`, variant: "success", needsReason: false },
@@ -60,9 +61,6 @@ export function prepareOrderDetailsData(order) {
     cancelled: { label: "Otkaži porudžbinu", url: `/admin/porudzbine/${order.id}/otkazi`, variant: "danger", needsReason: true },
     returned: { label: "Označi kao vraćeno", url: `/admin/porudzbine/${order.id}/vrati`, variant: "warning", needsReason: true },
     refunded: { label: "Označi kao refundirano", url: `/admin/porudzbine/${order.id}/refundiraj`, variant: "warning", needsReason: false },
-    // "pending" is a valid re-open target from "cancelled" per order-status-transitions.js,
-    // but no "reopen" route exists yet - omitted here rather than pointed at the wrong
-    // endpoint, same convention as appointment.presenter.js's note on this exact gap.
   };
   const statusActions = allowedNextStatuses.map((status) => actionMap[status]).filter(Boolean);
 

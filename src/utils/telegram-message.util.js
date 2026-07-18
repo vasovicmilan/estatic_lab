@@ -58,6 +58,54 @@ export function buildAppointmentStatusChangeMessage(appointment, oldStatus, newS
   return lines.join("\n");
 }
 
+export function buildNewOrderMessage(order) {
+  const fullName = `${order.firstName || ""} ${order.lastName || ""}`.trim();
+
+  const lines = [
+    `📦 <b>Nova porudžbina potvrđena</b>`,
+    "",
+    `👤 <b>Klijent:</b> ${escapeHtml(fullName || "-")}`,
+    `📧 <b>Email:</b> ${escapeHtml(order.email || "-")}`,
+  ];
+  if (order.phone) lines.push(`📱 <b>Telefon:</b> ${escapeHtml(order.phone)}`);
+  if (order.items?.length) {
+    lines.push(`🛒 <b>Stavke:</b>`);
+    for (const item of order.items) {
+      lines.push(`&nbsp;&nbsp;- ${escapeHtml(item)}`);
+    }
+  }
+  lines.push(`💰 <b>Ukupno:</b> ${escapeHtml(order.total || "-")}`);
+  if (order.coupon) lines.push(`🏷 <b>Kupon:</b> ${escapeHtml(order.coupon)}`);
+  if (order.note) lines.push(`📝 <b>Napomena klijenta:</b> ${escapeHtml(order.note)}`);
+  if (order.adminUrl) lines.push("", `🔗 <a href="${order.adminUrl}">Otvori u adminu</a>`);
+
+  return lines.join("\n");
+}
+
+export function buildOrderCancelledMessage(order) {
+  const base = buildNewOrderMessage(order);
+  let msg = base.replace("📦 <b>Nova porudžbina potvrđena", "❌ <b>Porudžbina otkazana");
+  if (order.cancelledBy) msg += `\n🙋 <b>Otkazao:</b> ${escapeHtml(order.cancelledBy)}`;
+  if (order.cancelReason) msg += `\n🚫 <b>Razlog:</b> ${escapeHtml(order.cancelReason)}`;
+  return msg;
+}
+
+export function buildOrderStatusChangeMessage(order, oldStatus, newStatus) {
+  const fullName = `${order.firstName || ""} ${order.lastName || ""}`.trim();
+
+  const lines = [
+    `🔄 <b>Status porudžbine promenjen</b>`,
+    "",
+    `👤 <b>Klijent:</b> ${escapeHtml(fullName || "-")}`,
+    `📊 <b>Status:</b> ${escapeHtml(oldStatus)} → <b>${escapeHtml(newStatus)}</b>`,
+  ];
+  lines.push(`💰 <b>Ukupno:</b> ${escapeHtml(order.total || "-")}`);
+  if (order.note) lines.push(`📝 <b>Napomena:</b> ${escapeHtml(order.note)}`);
+  if (order.adminUrl) lines.push("", `🔗 <a href="${order.adminUrl}">Otvori u adminu</a>`);
+
+  return lines.join("\n");
+}
+
 export function buildNewContactMessage(contact) {
   const lines = [
     `📩 <b>Nova kontakt poruka</b>`,
@@ -143,5 +191,8 @@ export default {
   buildNewUserMessage,
   buildNewPackagePurchaseMessage,
   buildAppointmentReassignedMessage,
+  buildNewOrderMessage,
+  buildOrderCancelledMessage,
+  buildOrderStatusChangeMessage,
   buildErrorAlertMessage,
 };

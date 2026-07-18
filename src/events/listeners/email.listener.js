@@ -155,6 +155,11 @@ eventEmitter.on(
     const order = await orderService.getOrderById(orderId, null, "admin");
     const email = order.korisnik?.email;
     const firstName = order.korisnik?.ime;
+
+    if (status === "cancelled" && order.otkazaoRaw === "user") {
+      await emailService.notifyAdminOrderCancelled(order);
+    }
+
     if (!email) return;
 
     // "pending" is only reachable by an admin re-opening a cancelled order - not

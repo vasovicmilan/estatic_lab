@@ -101,6 +101,7 @@ export function mapOrderForAdminDetail(order) {
     cancelToken: order.cancelToken || null,
 
     otkazao: order.cancelledBy ? translateActor(order.cancelledBy) : null,
+    otkazaoRaw: order.cancelledBy || null,
     otkazanoU: formatDateTime(order.cancelledAt),
     razlogOtkazivanja: order.cancellationReason || null,
 

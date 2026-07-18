@@ -3,7 +3,9 @@ import * as telegramService from "../../services/telegram.service.js";
 import * as appointmentService from "../../services/appointment.service.js";
 import * as employeeService from "../../services/employee.service.js";
 import * as packagePurchaseService from "../../services/package-purchase.service.js";
+import * as orderService from "../../services/order.service.js";
 import { translateStatus } from "../../mappers/appointment.mapper.js";
+import { translateStatus as translateOrderStatus } from "../../mappers/order.mapper.js";
 import {
   buildNewAppointmentMessage,
   buildAppointmentCancelledMessage,
@@ -13,6 +15,9 @@ import {
   buildNewUserMessage,
   buildNewPackagePurchaseMessage,
   buildAppointmentReassignedMessage,
+  buildNewOrderMessage,
+  buildOrderCancelledMessage,
+  buildOrderStatusChangeMessage,
 } from "../../utils/telegram-message.util.js";
 import { logError } from "../../utils/logger.util.js";
 
@@ -100,6 +105,53 @@ eventEmitter.on(
     ]);
     const text = buildAppointmentReassignedMessage(appointment, employee?.korisnik?.imePrezime);
     await telegramService.sendTelegramMessage("APPOINTMENTS", text);
+  })
+);
+
+// ==================== ORDERS ====================
+
+// telegram-message.util.js's order builders expect the same kind of flat shape as
+// toFlatAppointment above - this adapts the admin-mapped order (order.mapper.js,
+// nested/HTML-formatted for admin views) into that flat shape.
+function toFlatOrder(order) {
+  const [firstName, ...rest] = (order.korisnik?.ime || "").split(" ");
+  return {
+    firstName,
+    lastName: rest.join(" "),
+    email: order.korisnik?.email,
+    phone: order.korisnik?.telefon,
+    items: (order.stavke || []).map((item) => `${item.naziv} (${item.varijanta}) x${item.kolicina}`),
+    total: order.ukupnaCena,
+    coupon: order.kupon,
+    note: order.napomena,
+    cancelledBy: order.otkazao || null,
+    cancelReason: order.razlogOtkazivanja || null,
+    adminUrl: order.id ? `${BASE_URL}/admin/porudzbine/detalji/${order.id}` : null,
+  };
+}
+
+eventEmitter.on(
+  "order:confirmed",
+  safe("order:confirmed", async ({ orderId }) => {
+    const order = await orderService.getOrderById(orderId, null, "admin");
+    const text = buildNewOrderMessage(toFlatOrder(order));
+    await telegramService.sendTelegramMessage("ORDERS", text);
+  })
+);
+
+eventEmitter.on(
+  "order:status_changed",
+  safe("order:status_changed", async ({ orderId, status, previousStatus }) => {
+    const order = await orderService.getOrderById(orderId, null, "admin");
+    const flat = toFlatOrder(order);
+
+    if (status === "cancelled") {
+      await telegramService.sendTelegramMessage("ORDERS", buildOrderCancelledMessage(flat));
+      return;
+    }
+
+    const text = buildOrderStatusChangeMessage(flat, translateOrderStatus(previousStatus), translateOrderStatus(status));
+    await telegramService.sendTelegramMessage("ORDERS", text);
   })
 );
 

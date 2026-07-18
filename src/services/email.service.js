@@ -147,6 +147,14 @@ export async function notifyAdminNewOrder(order) {
   return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("PORUDŽBINA", summary), html });
 }
 
+// only fired when the CUSTOMER cancels their own order - admin already knows about
+// cancellations they trigger themselves, same reasoning as notifyAdminAppointmentCancelled
+export async function notifyAdminOrderCancelled(order) {
+  const html = await renderTemplate("admin-order-cancelled", { order, adminUrl: `${BASE_URL}/admin/porudzbine/detalji/${order.id}` });
+  const summary = `Otkazano od kupca - ${order.korisnik?.ime || "Klijent"} (${order.ukupnaCena || ""})`;
+  return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("PORUDŽBINA", summary), html });
+}
+
 // ==================== PACKAGES ====================
 
 export async function sendPackagePurchaseCreatedEmail({ email, firstName }, purchase) {
@@ -222,6 +230,7 @@ export default {
   sendOrderReceivedEmail,
   sendOrderStatusUpdateEmail,
   notifyAdminNewOrder,
+  notifyAdminOrderCancelled,
   sendPackagePurchaseCreatedEmail,
   sendPackagePurchaseCancelledEmail,
   notifyAdminNewContact,

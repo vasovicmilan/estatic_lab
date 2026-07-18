@@ -1,0 +1,18 @@
+<%- include("_layout", {
+  title: "Potvrdite porudžbinu",
+  preheader: "Kliknite na link da potvrdite porudžbinu",
+  body: `
+    <h1 style="font-size:20px; color:#333; margin:0 0 16px;">Potvrdite porudžbinu${typeof firstName !== 'undefined' && firstName ? ', ' + firstName : ''}</h1>
+    <p style="font-size:14px; color:#555; line-height:1.6; margin:0 0 16px;">
+      Hvala na porudžbini! Da bismo je obradili, potrebno je da je potvrdite klikom na dugme ispod.
+    </p>
+    <p style="text-align:center; margin:32px 0;">
+      <a href="${confirmUrl}" style="background-color:#7a5c3e; color:#ffffff; padding:12px 28px; border-radius:4px; text-decoration:none; font-size:14px; font-weight:bold; display:inline-block;">Potvrdi porudžbinu</a>
+    </p>
+    <p style="font-size:12px; color:#999; line-height:1.6; margin:0;">
+      Link važi do: ${tokenExpiration}. Ako ne potvrdite porudžbinu do tada, rezervisane zalihe se oslobađaju - ali nam se slobodno javite i pomoći ćemo vam da je ipak završimo.<br>
+      Ako dugme ne radi, kopirajte ovaj link u vaš pregledač:<br>
+      <a href="${confirmUrl}" style="color:#7a5c3e; word-break:break-all;">${confirmUrl}</a>
+    </p>
+  `
+}) %>
