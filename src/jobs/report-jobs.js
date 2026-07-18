@@ -1,7 +1,7 @@
 import logReportService from "../services/log-report.service.js";
 import emailService from "../services/email.service.js";
 import tempOrderService from "../services/temporary-order.service.js";
-import { formatDate } from "../utils/date.time.util.js";
+import { formatDate, toDateKey } from "../utils/date.time.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 import { alertError } from "../utils/telegram-alert.util.js";
 
@@ -27,7 +27,7 @@ export async function runDailyLogReport() {
   return runJob("daily-log-report", async () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const dateStr = yesterday.toISOString().slice(0, 10);
+    const dateStr = toDateKey(yesterday);
 
     const summary = await logReportService.generateDailySummary(dateStr);
     await emailService.sendLogReportEmail("Dnevni izveštaj", formatDate(yesterday), summary);
@@ -38,7 +38,7 @@ export async function runWeeklyLogReport() {
   return runJob("weekly-log-report", async () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const endDateStr = yesterday.toISOString().slice(0, 10);
+    const endDateStr = toDateKey(yesterday);
 
     const summary = await logReportService.getWeeklySummary(endDateStr);
     const rangeLabel = `${formatDate(summary.startDate)} - ${formatDate(summary.endDate)}`;

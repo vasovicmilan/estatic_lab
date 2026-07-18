@@ -3,6 +3,7 @@ import * as emailService from "../../services/email.service.js";
 import * as appointmentService from "../../services/appointment.service.js";
 import * as employeeService from "../../services/employee.service.js";
 import * as packagePurchaseService from "../../services/package-purchase.service.js";
+import * as orderService from "../../services/order.service.js";
 import { logError } from "../../utils/logger.util.js";
 
 /**
@@ -125,6 +126,40 @@ eventEmitter.on(
       { email: employee.korisnik.email, firstName: employee.korisnik.imePrezime },
       appointment
     );
+  })
+);
+
+// ==================== ORDERS ====================
+
+eventEmitter.on(
+  "temporary-order:created",
+  safe("temporary-order:created", async ({ temporaryOrderId, email, firstName, verificationToken, tokenExpiration }) => {
+    await emailService.sendOrderConfirmationRequestEmail({ email, firstName }, { temporaryOrderId, verificationToken, tokenExpiration });
+  })
+);
+
+eventEmitter.on(
+  "order:confirmed",
+  safe("order:confirmed", async ({ orderId, email, firstName }) => {
+    // admin role bypasses the usual requester ownership check, same reasoning as
+    // appointment:created above - trusted, system-triggered read, not a user request
+    const order = await orderService.getOrderById(orderId, null, "admin");
+    await emailService.sendOrderReceivedEmail({ email, firstName }, order);
+    await emailService.notifyAdminNewOrder(order);
+  })
+);
+
+eventEmitter.on(
+  "order:status_changed",
+  safe("order:status_changed", async ({ orderId, status }) => {
+    const order = await orderService.getOrderById(orderId, null, "admin");
+    const email = order.korisnik?.email;
+    const firstName = order.korisnik?.ime;
+    if (!email) return;
+
+    // "pending" is only reachable by an admin re-opening a cancelled order - not
+    // worth a customer-facing email of its own, falls through to the generic template
+    await emailService.sendOrderStatusUpdateEmail({ email, firstName }, order, order.status);
   })
 );
 

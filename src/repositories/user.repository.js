@@ -179,6 +179,13 @@ export async function setDefaultAddress(userId, addressId, { session } = {}) {
   ).lean();
 }
 
+// Projects only `cart` instead of the full document - this runs on every page load
+// (see locals.config.js's nav cart-count badge), so it stays as cheap as possible
+// rather than reusing the full findUserById + populate path getCart() uses.
+export async function findUserCartQuantities(userId, { session } = {}) {
+  return User.findById(userId).select("cart").session(session || null).lean();
+}
+
 export default {
   createUser,
   findUserById,
@@ -202,4 +209,5 @@ export default {
   addAddressToUser,
   removeAddressFromUser,
   setDefaultAddress,
+  findUserCartQuantities,
 }

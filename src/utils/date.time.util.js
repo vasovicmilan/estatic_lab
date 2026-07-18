@@ -1,3 +1,17 @@
+// "YYYY-MM-DD" in the server's LOCAL timezone - deliberately NOT date.toISOString(),
+// which converts to UTC first and silently shifts the date whenever the server isn't
+// running in UTC. pino-roll's rotated log filenames are stamped using local time (see
+// logger.config.js), so anything matching a date against those filenames (see
+// log-analysis.util.js / log-report.service.js) needs to compute "today"/"yesterday"
+// the same local-time way, or the dates just won't line up.
+export function toDateKey(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function formatDateTime(date) {
   if (!date) return null;
 

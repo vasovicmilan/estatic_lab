@@ -20,8 +20,14 @@
       <div class="d-flex align-items-center gap-2">
         <a href="/usluge" class="btn btn-primary btn-sm">Zakažite termin</a>
 
-        <a href="/korpa" class="btn btn-outline-secondary btn-sm <%= currentPath?.startsWith('/korpa') ? 'active' : '' %>" title="Korpa">
+        <a href="/korpa" class="btn btn-outline-secondary btn-sm position-relative <%= currentPath?.startsWith('/korpa') ? 'active' : '' %>" title="Korpa">
           <i class="bi bi-cart3"></i>
+          <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+              <%= cartCount > 99 ? '99+' : cartCount %>
+              <span class="visually-hidden">stavki u korpi</span>
+            </span>
+          <% } %>
         </a>
 
         <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>

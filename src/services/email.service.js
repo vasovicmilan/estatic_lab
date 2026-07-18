@@ -118,6 +118,35 @@ export async function notifyAdminAppointmentCancelled(appointment) {
   return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("TERMIN", summary), html });
 }
 
+// ==================== ORDERS ====================
+
+export async function sendOrderConfirmationRequestEmail({ email, firstName }, { temporaryOrderId, verificationToken, tokenExpiration }) {
+  const expirationDate = new Date(tokenExpiration);
+  const html = await renderTemplate("order-confirmation-request", {
+    firstName,
+    confirmUrl: `${BASE_URL}/korpa/potvrda/${temporaryOrderId}/${verificationToken}`,
+    tokenExpiration: expirationDate.toLocaleString("sr-RS", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }),
+  });
+  return sendEmail({ to: email, subject: `Potvrdite porudžbinu - ${SITE_NAME}`, html });
+}
+
+export async function sendOrderReceivedEmail({ email, firstName }, order) {
+  const html = await renderTemplate("order-received", { firstName, order, manageUrl: `${BASE_URL}/nalog/porudzbine` });
+  return sendEmail({ to: email, subject: `Porudžbina potvrđena - ${SITE_NAME}`, html });
+}
+
+// generic fallback for processing/shipped/delivered/completed/cancelled/returned/refunded
+export async function sendOrderStatusUpdateEmail({ email, firstName }, order, status) {
+  const html = await renderTemplate("order-status-update", { firstName, order, status });
+  return sendEmail({ to: email, subject: `Status porudžbine ažuriran - ${SITE_NAME}`, html });
+}
+
+export async function notifyAdminNewOrder(order) {
+  const html = await renderTemplate("admin-new-order", { order, adminUrl: `${BASE_URL}/admin/porudzbine/detalji/${order.id}` });
+  const summary = `${order.korisnik?.ime || "Klijent"} - ${order.ukupnaCena || ""}`;
+  return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("PORUDŽBINA", summary), html });
+}
+
 // ==================== PACKAGES ====================
 
 export async function sendPackagePurchaseCreatedEmail({ email, firstName }, purchase) {
@@ -189,6 +218,10 @@ export default {
   sendAppointmentReassignedEmail,
   notifyAdminNewAppointment,
   notifyAdminAppointmentCancelled,
+  sendOrderConfirmationRequestEmail,
+  sendOrderReceivedEmail,
+  sendOrderStatusUpdateEmail,
+  notifyAdminNewOrder,
   sendPackagePurchaseCreatedEmail,
   sendPackagePurchaseCancelledEmail,
   notifyAdminNewContact,

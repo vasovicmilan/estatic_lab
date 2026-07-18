@@ -1,10 +1,7 @@
 import logSummaryRepo from "../repositories/log-summary.repository.js";
 import { analyzeDay } from "../utils/log-analysis.util.js";
+import { toDateKey } from "../utils/date.time.util.js";
 import { logInfo } from "../utils/logger.util.js";
-
-function toDateStr(date) {
-  return date.toISOString().slice(0, 10);
-}
 
 function addDays(date, days) {
   const d = new Date(date);
@@ -78,10 +75,10 @@ export async function aggregateRange(startDateStr, endDateStr) {
   };
 }
 
-export async function getWeeklySummary(endDateStr = toDateStr(new Date())) {
+export async function getWeeklySummary(endDateStr = toDateKey(new Date())) {
   const endDate = new Date(endDateStr);
   const startDate = addDays(endDate, -6);
-  return aggregateRange(toDateStr(startDate), endDateStr);
+  return aggregateRange(toDateKey(startDate), endDateStr);
 }
 
 export async function getMonthlySummary(year, month) {
