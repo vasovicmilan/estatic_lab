@@ -24,13 +24,14 @@ const SHOP_FAQ = [
   },
 ];
 
-export function prepareProductListData(result, { query = {}, categories = [], tags = [], featured = [], sale = [], latestPosts = [], isLandingView = false } = {}) {
+export function prepareProductListData(result, { query = {}, categories = [], tags = [], featured = [], sale = [], latestPosts = [], isLandingView = false, badgeTitle = null } = {}) {
   return {
     products: result.data,
     subtitle: "Oprema, delovi i potrošni materijal za profesionalnu kozmetičku negu.",
     // shown above the main grid only on the plain, unfiltered /prodavnica landing -
-    // category/tag/search views (and page 2+) go straight to the filtered grid instead
+    // category/tag/search/badge views (and page 2+) go straight to the filtered grid
     isLandingView,
+    badgeTitle,
     featured,
     sale,
     categoryTiles: isLandingView ? categories : [],

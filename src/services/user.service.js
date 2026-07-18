@@ -335,6 +335,17 @@ export async function getCart(userId) {
   return mapUserCart(user);
 }
 
+// Cheap total-item-count for the nav cart badge - no product population, just sums
+// quantities from the raw cart array. Never throws on a missing user (returns 0
+// instead) since this runs on every page load via locals.config.js, not from a
+// request a user can retry.
+export async function getCartItemCount(userId) {
+  if (!userId) return 0;
+  const user = await userRepo.findUserCartQuantities(userId);
+  if (!user) return 0;
+  return (user.cart || []).reduce((sum, line) => sum + (line.quantity || 0), 0);
+}
+
 export async function addToCart(userId, { productId, variantId, quantity = 1 }) {
   if (!userId) validationError("userId");
   if (!productId) validationError("productId");
@@ -480,6 +491,7 @@ export default {
   verifyUserByAdmin,
   deleteUser,
   getCart,
+  getCartItemCount,
   addToCart,
   updateCartItemQuantity,
   removeFromCart,

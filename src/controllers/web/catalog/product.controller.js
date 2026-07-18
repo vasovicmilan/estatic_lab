@@ -12,14 +12,20 @@ import {
 import { generateSeo } from "../../../seo/index.js";
 import { logError } from "../../../utils/logger.util.js";
 
+const BADGE_LABELS = {
+  featured: "Istaknuti proizvodi",
+  sale: "Proizvodi na akciji",
+};
+
 export async function productList(req, res, next) {
   try {
-    const { page = 1, search = "" } = req.query;
+    const { page = 1, search = "", badge = "" } = req.query;
     const pageNum = parseInt(page, 10) || 1;
-    const isLandingView = pageNum === 1 && !search;
+    const badgeFilter = ["featured", "sale"].includes(badge) ? badge : null;
+    const isLandingView = pageNum === 1 && !search && !badgeFilter;
 
     const [result, categories, tags, featuredResult, saleResult, latestPostsResult] = await Promise.all([
-      productService.listPublicProducts({ page: pageNum, search }),
+      productService.listPublicProducts({ page: pageNum, search, filters: badgeFilter ? { badge: badgeFilter } : {} }),
       categoryService.getPublicCategories("product"),
       tagService.getPublicTags("product"),
       isLandingView ? productService.listPublicProducts({ filters: { badge: "featured" }, limit: 4 }) : null,
@@ -35,8 +41,10 @@ export async function productList(req, res, next) {
       sale: saleResult?.data || [],
       latestPosts: latestPostsResult?.data || [],
       isLandingView,
+      badgeTitle: badgeFilter ? BADGE_LABELS[badgeFilter] : null,
     });
-    const seo = await generateSeo("page", { title: "Prodavnica", description: "Oprema, delovi i potrošni materijal za profesionalnu kozmetičku negu.", slug: "/prodavnica" }, req);
+    const pageTitleBase = badgeFilter ? BADGE_LABELS[badgeFilter] : "Prodavnica";
+    const seo = await generateSeo("page", { title: pageTitleBase, description: "Oprema, delovi i potrošni materijal za profesionalnu kozmetičku negu.", slug: "/prodavnica", noIndex: !!badgeFilter }, req);
 
     return res.render("shop/products", {
       pageTitle: seo.title,

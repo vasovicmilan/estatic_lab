@@ -27,7 +27,10 @@
 
     <% if (data.featured && data.featured.length > 0) { %>
       <section class="mb-5">
-        <h2 class="h4 mb-3">Istaknuto</h2>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h4 mb-0">Istaknuto</h2>
+          <a href="/prodavnica?badge=featured" class="small">Vidi sve &rarr;</a>
+        </div>
         <div class="row g-4">
           <% data.featured.forEach(function(product) { %>
             <div class="col-md-3">
@@ -40,7 +43,10 @@
 
     <% if (data.sale && data.sale.length > 0) { %>
       <section class="mb-5">
-        <h2 class="h4 mb-3">Na akciji</h2>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h4 mb-0">Na akciji</h2>
+          <a href="/prodavnica?badge=sale" class="small">Vidi sve &rarr;</a>
+        </div>
         <div class="row g-4">
           <% data.sale.forEach(function(product) { %>
             <div class="col-md-3">
@@ -66,7 +72,7 @@
 
     <h2 class="h4 mb-3">Svi proizvodi</h2>
   <% } else { %>
-    <h1 class="h3 mb-2"><%= data.category ? data.category.naziv : (data.tag ? data.tag.naziv : "Prodavnica") %></h1>
+    <h1 class="h3 mb-2"><%= data.badgeTitle || (data.category ? data.category.naziv : (data.tag ? data.tag.naziv : "Prodavnica")) %></h1>
     <% if (data.subtitle) { %><p class="text-muted mb-4"><%= data.subtitle %></p><% } %>
   <% } %>
 
