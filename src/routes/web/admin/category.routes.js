@@ -13,7 +13,7 @@ router.get("/detalji/:categoryId", validateCategoryId, CategoryController.catego
 router.get("/izmena/:categoryId", validateCategoryId, CategoryController.editCategoryForm);
 
 router.post(
-  "/dodavanje",
+  "/",
   ...processUpload("categoryImage", "categories"),
   csrfAfterMulter,
   validateCategoryCreate,
