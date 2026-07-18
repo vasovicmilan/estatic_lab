@@ -2,6 +2,7 @@ import * as productService from "../../../services/product.service.js";
 import * as categoryService from "../../../services/category.service.js";
 import * as tagService from "../../../services/tag.service.js";
 import * as testimonialService from "../../../services/testimonial.service.js";
+import * as postService from "../../../services/post.service.js";
 import {
   prepareProductListData,
   prepareProductCategoryData,
@@ -17,12 +18,13 @@ export async function productList(req, res, next) {
     const pageNum = parseInt(page, 10) || 1;
     const isLandingView = pageNum === 1 && !search;
 
-    const [result, categories, tags, featuredResult, saleResult] = await Promise.all([
+    const [result, categories, tags, featuredResult, saleResult, latestPostsResult] = await Promise.all([
       productService.listPublicProducts({ page: pageNum, search }),
       categoryService.getPublicCategories("product"),
       tagService.getPublicTags("product"),
       isLandingView ? productService.listPublicProducts({ filters: { badge: "featured" }, limit: 4 }) : null,
       isLandingView ? productService.listPublicProducts({ filters: { badge: "sale" }, limit: 4 }) : null,
+      isLandingView ? postService.findPublishedPosts({ limit: 3 }) : null,
     ]);
 
     const viewData = prepareProductListData(result, {
@@ -31,6 +33,8 @@ export async function productList(req, res, next) {
       tags,
       featured: featuredResult?.data || [],
       sale: saleResult?.data || [],
+      latestPosts: latestPostsResult?.data || [],
+      isLandingView,
     });
     const seo = await generateSeo("page", { title: "Prodavnica", description: "Oprema, delovi i potrošni materijal za profesionalnu kozmetičku negu.", slug: "/prodavnica" }, req);
 

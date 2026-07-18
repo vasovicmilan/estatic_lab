@@ -2,6 +2,7 @@ import serviceService from "./service.service.js";
 import packageService from "./package.service.js";
 import postService from "./post.service.js";
 import expertService from "./expert.service.js";
+import productService from "./product.service.js";
 import { logError } from "../utils/logger.util.js";
 
 const STATIC_PAGES = [
@@ -9,6 +10,7 @@ const STATIC_PAGES = [
   { path: "/o-nama", changefreq: "monthly", priority: "0.6" },
   { path: "/usluge", changefreq: "weekly", priority: "0.8" },
   { path: "/paketi", changefreq: "weekly", priority: "0.8" },
+  { path: "/prodavnica", changefreq: "weekly", priority: "0.8" },
   { path: "/blog", changefreq: "weekly", priority: "0.7" },
   { path: "/nas-tim", changefreq: "monthly", priority: "0.6" },
   { path: "/faq", changefreq: "monthly", priority: "0.4" },
@@ -28,11 +30,12 @@ async function safeList(fn, label) {
 }
 
 export async function getSitemapUrls(base) {
-  const [services, packages, posts, experts] = await Promise.all([
+  const [services, packages, posts, experts, products] = await Promise.all([
     safeList(async () => (await serviceService.findActiveServices({ page: 1, limit: 500 })).data || [], "usluge"),
     safeList(async () => (await packageService.findActivePackages({ page: 1, limit: 500 })).data || [], "paketi"),
     safeList(async () => (await postService.findPublishedPosts({ page: 1, limit: 500 })).data || [], "blog"),
     safeList(async () => expertService.getActiveExperts(), "eksperti"),
+    safeList(async () => (await productService.listPublicProducts({ page: 1, limit: 500 })).data || [], "prodavnica"),
   ]);
 
   const urls = STATIC_PAGES.map((page) => ({
@@ -56,6 +59,10 @@ export async function getSitemapUrls(base) {
   for (const expert of experts) {
     if (!expert?.slug) continue;
     urls.push({ loc: `${base}/nas-tim/${expert.slug}`, changefreq: "yearly", priority: "0.5" });
+  }
+  for (const product of products) {
+    if (!product?.slug) continue;
+    urls.push({ loc: `${base}/prodavnica/${product.slug}`, changefreq: "weekly", priority: "0.7" });
   }
 
   return urls;

@@ -6,6 +6,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const LOGS_DIR = path.join(__dirname, "..", "..", "logs");
 
+// Must match logger.config.js's own naming exactly: app.log/error.log/http.log in
+// production, app-dev.log/etc. otherwise. This file previously always searched for
+// the production-style name regardless of NODE_ENV - if the running server process
+// wasn't actually started with NODE_ENV=production (e.g. PM2 launched directly on
+// src/server.js instead of through the npm "start" script), the logger would be
+// writing app-dev.<date>.*.log while this searched for app.<date>.*.log, guaranteeing
+// zero matches on every single report regardless of how much real traffic/errors
+// there actually was.
+const IS_PROD = process.env.NODE_ENV === "production";
+const baseFileName = (name) => (IS_PROD ? name : `${name}-dev`);
+
 // logger.config.js's custom formatters.level() writes the string label
 // ("info"/"warn"/"error"), not pino's default numeric level - match that.
 const LEVEL_INFO = "info";
@@ -72,8 +83,8 @@ function increment(map, key) {
  * the app wasn't running, or logs were already cleaned up past retention).
  */
 export function analyzeDay(dateStr) {
-  const appLines = findLogFiles("app", dateStr).flatMap(readJsonLines);
-  const httpLines = findLogFiles("http", dateStr).flatMap(readJsonLines);
+  const appLines = findLogFiles(baseFileName("app"), dateStr).flatMap(readJsonLines);
+  const httpLines = findLogFiles(baseFileName("http"), dateStr).flatMap(readJsonLines);
 
   let infoCount = 0;
   let warnCount = 0;

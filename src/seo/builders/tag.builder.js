@@ -6,7 +6,12 @@ export async function buildTagSeo(tag, req, siteConfig = {}) {
   const description = truncate(siteConfig.defaultDescription || `Sadržaj označen sa "${tag.name}".`);
   const robots = tag.isActive !== false ? "index, follow" : "noindex, follow";
 
-  const basePath = tag.domain === "post" ? `/blog/tag/${tag.slug}` : `/usluge/tag/${tag.slug}`;
+  const basePath =
+    tag.domain === "post"
+      ? `/blog/tag/${tag.slug}`
+      : tag.domain === "product"
+      ? `/prodavnica/tag/${tag.slug}`
+      : `/usluge/tag/${tag.slug}`;
   const canonical = buildCanonical(req, basePath);
 
   return {

@@ -6,7 +6,12 @@ export async function buildCategorySeo(category, req, siteConfig = {}) {
   const description = truncate(category.shortDescription || category.longDescription || siteConfig.defaultDescription || "");
   const robots = category.meta?.isActive !== false && category.isIndexable !== false ? "index, follow" : "noindex, follow";
 
-  const basePath = category.domain === "post" ? `/blog/kategorija/${category.slug}` : `/usluge/kategorija/${category.slug}`;
+  const basePath =
+    category.domain === "post"
+      ? `/blog/kategorija/${category.slug}`
+      : category.domain === "product"
+      ? `/prodavnica/kategorija/${category.slug}`
+      : `/usluge/kategorija/${category.slug}`;
   const canonical = buildCanonical(req, basePath);
 
   return {
