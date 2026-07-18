@@ -1,7 +1,15 @@
-export function prepareProductListData(result, { query = {}, categories = [], tags = [] } = {}) {
+export function prepareProductListData(result, { query = {}, categories = [], tags = [], featured = [], sale = [] } = {}) {
+  const isLandingView = featured.length > 0 || sale.length > 0;
+
   return {
     products: result.data,
     subtitle: "Oprema, delovi i potrošni materijal za profesionalnu kozmetičku negu.",
+    // shown above the main grid only on the plain, unfiltered /prodavnica landing -
+    // category/tag/search views (and page 2+) go straight to the filtered grid instead
+    isLandingView,
+    featured,
+    sale,
+    categoryTiles: isLandingView ? categories : [],
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,

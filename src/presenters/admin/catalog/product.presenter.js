@@ -7,6 +7,7 @@ export function prepareProductListData(result, query = {}) {
       { key: "kategorije", label: "Kategorije" },
       { key: "cena", label: "Cena" },
       { key: "stanje", label: "Zalihe" },
+      { key: "oznaka", label: "Oznaka" },
       { key: "aktivan", label: "Aktivan" },
       { key: "kreiran", label: "Kreiran" },
     ],
@@ -119,6 +120,7 @@ export function prepareProductDetailsData(product) {
         type: "table",
         rows: [
           { label: "Aktivan", value: product.aktivan ? "Da" : "Ne (nacrt)" },
+          { label: "Oznaka", value: product.oznaka || "Bez oznake" },
           { label: "Ukupno na stanju", value: product.stanjeUkupno },
           { label: "Broj varijanti", value: product.varijante.length },
         ],
@@ -194,6 +196,22 @@ export function prepareProductFormData(product, { categoryOptions = [], tagOptio
       options: tagOptions.map((t) => ({ value: t.id, label: t.naziv })),
     },
     {
+      name: "variations",
+      label: "Varijante",
+      type: "repeater",
+      width: 12,
+      value: values.variations || [],
+      addLabel: "Dodaj varijantu",
+      help: "Proizvod mora imati bar jednu varijantu da bi ostao objavljen.",
+      itemFields: [
+        { name: "label", label: "Naziv varijante", type: "text", required: true },
+        { name: "sku", label: "SKU varijante (opciono)", type: "text" },
+        { name: "price", label: "Cena", type: "number", min: 0, step: "0.01", required: true },
+        { name: "stock", label: "Zalihe", type: "number", min: 0, required: true },
+        { name: "lowStockThreshold", label: "Prag niskog stanja", type: "number", min: 0 },
+      ],
+    },
+    {
       name: "faq",
       label: "Česta pitanja",
       type: "repeater",
@@ -215,6 +233,19 @@ export function prepareProductFormData(product, { categoryOptions = [], tagOptio
       preview: values.image?.url,
     },
     { name: "imageDesc", label: "Opis slike (alt tekst)", type: "text", width: 6, required: true, value: values.image?.imgDesc || "" },
+    {
+      name: "badge",
+      label: "Oznaka",
+      type: "select",
+      width: 6,
+      value: values.badge || "none",
+      options: [
+        { value: "none", label: "Bez oznake" },
+        { value: "featured", label: "Istaknuto" },
+        { value: "sale", label: "Na akciji" },
+      ],
+      help: "Prikazuje se kao značka na kartici proizvoda i određuje da li se proizvod pojavljuje u odgovarajućoj sekciji na naslovnoj strani prodavnice.",
+    },
     { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive },
   ];
 
@@ -353,6 +384,19 @@ export function prepareProductSeoPublishStepData(product, { productOptions = [] 
         { name: "question", label: "Pitanje", type: "text", required: true },
         { name: "answer", label: "Odgovor", type: "textarea", required: true },
       ],
+    },
+    {
+      name: "badge",
+      label: "Oznaka",
+      type: "select",
+      width: 6,
+      value: product.badge || "none",
+      options: [
+        { value: "none", label: "Bez oznake" },
+        { value: "featured", label: "Istaknuto" },
+        { value: "sale", label: "Na akciji" },
+      ],
+      help: "Prikazuje se kao značka na kartici proizvoda i određuje da li se proizvod pojavljuje u odgovarajućoj sekciji na naslovnoj strani prodavnice.",
     },
     {
       name: "isActive",

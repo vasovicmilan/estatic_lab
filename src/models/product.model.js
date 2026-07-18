@@ -62,6 +62,18 @@ const ProductSchema = new Schema(
 
     faq: [FAQSchema],
 
+    // Independent of isActive (published/draft) - this is purely a merchandising
+    // classification for the shop landing page (featured section, sale section),
+    // not a stock/availability signal. "sale" doesn't compute a discount itself -
+    // pair it with a variation's compareAtPrice to actually show a struck-through
+    // price; this field is just "should this show up in the sale section".
+    badge: {
+      type: String,
+      enum: ["none", "featured", "sale"],
+      default: "none",
+      index: true,
+    },
+
     isActive: {
       type: Boolean,
       default: false,

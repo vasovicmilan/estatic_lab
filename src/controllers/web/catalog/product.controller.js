@@ -13,15 +13,25 @@ import { logError } from "../../../utils/logger.util.js";
 
 export async function productList(req, res, next) {
   try {
-    const { page = 1 } = req.query;
+    const { page = 1, search = "" } = req.query;
+    const pageNum = parseInt(page, 10) || 1;
+    const isLandingView = pageNum === 1 && !search;
 
-    const [result, categories, tags] = await Promise.all([
-      productService.listPublicProducts({ page: parseInt(page, 10) || 1 }),
+    const [result, categories, tags, featuredResult, saleResult] = await Promise.all([
+      productService.listPublicProducts({ page: pageNum, search }),
       categoryService.getPublicCategories("product"),
       tagService.getPublicTags("product"),
+      isLandingView ? productService.listPublicProducts({ filters: { badge: "featured" }, limit: 4 }) : null,
+      isLandingView ? productService.listPublicProducts({ filters: { badge: "sale" }, limit: 4 }) : null,
     ]);
 
-    const viewData = prepareProductListData(result, { query: req.query, categories, tags });
+    const viewData = prepareProductListData(result, {
+      query: req.query,
+      categories,
+      tags,
+      featured: featuredResult?.data || [],
+      sale: saleResult?.data || [],
+    });
     const seo = await generateSeo("page", { title: "Prodavnica", description: "Oprema, delovi i potrošni materijal za profesionalnu kozmetičku negu.", slug: "/prodavnica" }, req);
 
     return res.render("shop/products", {

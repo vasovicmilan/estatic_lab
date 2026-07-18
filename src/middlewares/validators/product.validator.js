@@ -94,6 +94,10 @@ export const validateProductUpdate = [
     .optional()
     .custom(isJsonArrayOrArray).withMessage("FAQ nije u ispravnom formatu"),
 
+  body("variations")
+    .optional()
+    .custom(isJsonArrayOrArray).withMessage("Varijante nisu u ispravnom formatu"),
+
   booleanishField("isActive", true),
 
   body("imageDesc")

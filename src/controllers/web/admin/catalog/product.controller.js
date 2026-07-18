@@ -81,6 +81,7 @@ function buildPhase3Payload(req) {
     seoKeywords,
     relatedProducts: toIdArray(req.body.relatedProducts),
     faq: parseJsonField(req.body.faq),
+    badge: ["none", "featured", "sale"].includes(req.body.badge) ? req.body.badge : "none",
     isActive: parseCheckbox(req.body.isActive),
   };
 }
@@ -95,7 +96,9 @@ function buildProductPayload(req, existing = {}) {
 
   data.categories = toIdArray(req.body.categories);
   data.tags = toIdArray(req.body.tags);
+  data.variations = parseJsonField(req.body.variations, existing.variations || []);
   data.faq = parseJsonField(req.body.faq, existing.faq || []);
+  data.badge = ["none", "featured", "sale"].includes(req.body.badge) ? req.body.badge : existing.badge || "none";
   data.isActive = parseCheckbox(req.body.isActive, existing.isActive ?? false);
 
   return data;

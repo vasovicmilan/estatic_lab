@@ -1,7 +1,12 @@
 <div class="card h-100 shadow-sm">
-  <% if (product.slika && product.slika.url) { %>
-    <img src="<%= product.slika.url %>" class="card-img-top" alt="<%= product.slika.alt || product.naziv %>" style="height:200px;object-fit:cover;">
-  <% } %>
+  <div class="position-relative">
+    <% if (product.slika && product.slika.url) { %>
+      <img src="<%= product.slika.url %>" class="card-img-top" alt="<%= product.slika.alt || product.naziv %>" style="height:200px;object-fit:cover;">
+    <% } %>
+    <% if (product.oznaka) { %>
+      <span class="position-absolute top-0 start-0 m-2 badge <%= product.oznakaRaw === 'sale' ? 'bg-danger' : 'bg-primary' %>"><%= product.oznaka %></span>
+    <% } %>
+  </div>
   <div class="card-body d-flex flex-column">
     <% if (!product.naStanju) { %><span class="badge bg-secondary mb-2 align-self-start">Nema na stanju</span><% } %>
     <h3 class="h5"><a href="/prodavnica/<%= product.slug %>" class="text-decoration-none text-dark"><%= product.naziv %></a></h3>

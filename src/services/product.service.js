@@ -113,6 +113,7 @@ export async function addSeoAndPublish(productId, data) {
     seoKeywords: data.seoKeywords ?? existing.seoKeywords ?? [],
     relatedProducts: data.relatedProducts ?? existing.relatedProducts ?? [],
     faq: data.faq ?? existing.faq ?? [],
+    badge: data.badge ?? existing.badge ?? "none",
     isActive: data.isActive ?? true,
   };
 

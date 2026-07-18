@@ -5,11 +5,59 @@
   <%- include("../includes/breadcrumbs") %>
   <%- include("../includes/flash-messages") %>
 
+  <% if (data.isLandingView) { %>
+    <div class="text-center mb-5">
+      <h1 class="display-6 mb-2">Prodavnica</h1>
+      <p class="text-muted col-lg-8 mx-auto"><%= data.subtitle %></p>
+    </div>
+
+    <% if (data.featured && data.featured.length > 0) { %>
+      <section class="mb-5">
+        <h2 class="h4 mb-3">Istaknuto</h2>
+        <div class="row g-4">
+          <% data.featured.forEach(function(product) { %>
+            <div class="col-md-3">
+              <%- include("../includes/components/card-product", { product: product }) %>
+            </div>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+
+    <% if (data.sale && data.sale.length > 0) { %>
+      <section class="mb-5">
+        <h2 class="h4 mb-3">Na akciji</h2>
+        <div class="row g-4">
+          <% data.sale.forEach(function(product) { %>
+            <div class="col-md-3">
+              <%- include("../includes/components/card-product", { product: product }) %>
+            </div>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+
+    <% if (data.categoryTiles && data.categoryTiles.length > 0) { %>
+      <section class="mb-5">
+        <h2 class="h4 mb-3">Po kategorijama</h2>
+        <div class="row g-3">
+          <% data.categoryTiles.forEach(function(cat) { %>
+            <div class="col-md-3 col-6">
+              <a href="/prodavnica/kategorija/<%= cat.slug %>" class="btn btn-outline-secondary w-100 py-3 text-decoration-none"><%= cat.naziv %></a>
+            </div>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+
+    <h2 class="h4 mb-3">Svi proizvodi</h2>
+  <% } else { %>
+    <h1 class="h3 mb-2"><%= data.category ? data.category.naziv : (data.tag ? data.tag.naziv : "Prodavnica") %></h1>
+    <% if (data.subtitle) { %><p class="text-muted mb-4"><%= data.subtitle %></p><% } %>
+  <% } %>
+
   <div class="row">
     <div class="col-lg-9">
-      <h1 class="h3 mb-2"><%= data.category ? data.category.naziv : (data.tag ? data.tag.naziv : "Prodavnica") %></h1>
-      <% if (data.subtitle) { %><p class="text-muted mb-4"><%= data.subtitle %></p><% } %>
-
       <% if (data.products && data.products.length > 0) { %>
         <div class="row g-4">
           <% data.products.forEach(function(product) { %>

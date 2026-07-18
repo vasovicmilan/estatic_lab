@@ -1,5 +1,15 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 
+const BADGE_LABELS = {
+  none: null,
+  featured: "Istaknuto",
+  sale: "Na akciji",
+};
+
+function translateBadge(badge) {
+  return BADGE_LABELS[badge] ?? null;
+}
+
 function formatImage(image) {
   if (!image) return null;
   return {
@@ -59,6 +69,7 @@ export function mapProductsForAdminList(products = []) {
         cena: getPriceRange(product),
         stanje: getTotalStock(product),
         brojVarijanti: product.variations?.length || 0,
+        oznaka: translateBadge(product.badge),
         aktivan: product.isActive ? "Da" : "Ne",
         kreiran: formatDateTime(product.createdAt),
       };
@@ -88,6 +99,8 @@ export function mapProductForAdminDetail(product) {
       .map((p) => ({ id: p._id?.toString(), naziv: p.name, slug: p.slug })),
     faq: (product.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
     seoKljucneReci: product.seoKeywords || [],
+    oznaka: translateBadge(product.badge),
+    oznakaRaw: product.badge || "none",
     aktivan: product.isActive,
     vreme: {
       kreiran: formatDateTime(product.createdAt),
@@ -117,6 +130,7 @@ export function mapProductForEdit(product) {
     variations: product.variations || [],
     relatedProducts: (product.relatedProducts || []).map((p) => p._id?.toString() || p.toString()),
     faq: product.faq || [],
+    badge: product.badge || "none",
     isActive: product.isActive,
   };
 }
@@ -134,6 +148,8 @@ export function mapProductForPublicCard(product) {
     kategorije: getCategoryNames(product),
     cena: getPriceRange(product),
     naStanju: getTotalStock(product) > 0,
+    oznaka: translateBadge(product.badge),
+    oznakaRaw: product.badge || "none",
   };
 }
 
@@ -160,6 +176,7 @@ export function mapProductForPublicDetail(product) {
       .filter((p) => p && typeof p === "object")
       .map((p) => ({ id: p._id?.toString(), naziv: p.name, slug: p.slug, slika: formatImage(p.image) })),
     faq: (product.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
+    oznaka: translateBadge(product.badge),
   };
 }
 

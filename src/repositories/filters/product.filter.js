@@ -10,6 +10,7 @@ export function buildProductFilter({
   minPrice = undefined,
   maxPrice = undefined,
   sku = null,
+  badge = null,
   ids = null,
 } = {}) {
   const filter = {};
@@ -26,6 +27,7 @@ export function buildProductFilter({
   if (category) filter.categories = category;
   if (tag) filter.tags = tag;
   if (isActive !== null && isActive !== undefined) filter.isActive = isActive;
+  if (badge) filter.badge = badge;
 
   // "in stock" means at least one active variation still has stock - not a
   // product-level field, since price/stock only ever live on variations
