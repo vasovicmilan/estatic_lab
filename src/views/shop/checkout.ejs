@@ -5,83 +5,136 @@
   <%- include("../includes/breadcrumbs") %>
   <%- include("../includes/flash-messages") %>
 
-  <h1 class="h3 mb-4">Korpa</h1>
+  <div class="row">
+    <div class="col-md-7">
+      <h1 class="h4 mb-3">Naplata</h1>
+      <% if (data.errors && data.errors.general) { %><div class="alert alert-danger"><%= data.errors.general %></div><% } %>
 
-  <% if (data.isEmpty) { %>
-    <p class="text-muted">Vaša korpa je prazna. <a href="<%= data.continueShoppingUrl %>">Nastavite kupovinu</a>.</p>
-  <% } else { %>
-    <div class="table-responsive mb-4">
-      <table class="table align-middle">
-        <thead>
-          <tr>
-            <th>Proizvod</th>
-            <th>Cena</th>
-            <th>Količina</th>
-            <th>Ukupno</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% data.cart.stavke.forEach(function(item) { %>
-            <tr>
-              <td>
-                <div class="d-flex align-items-center gap-2">
-                  <% if (item.slika && item.slika.url) { %><img src="<%= item.slika.url %>" alt="<%= item.slika.alt || item.naziv %>" style="width:50px;height:50px;object-fit:cover;" class="rounded"><% } %>
-                  <div>
-                    <a href="/prodavnica/<%= item.productSlug %>" class="text-decoration-none text-dark fw-semibold"><%= item.naziv %></a>
-                    <div class="text-muted small"><%= item.varijanta %></div>
-                    <% if (item.prekoracenje) { %><div class="text-danger small">Dostupno samo <%= item.dostupnaKolicina %> na stanju</div><% } %>
-                    <% if (!item.naStanju) { %><div class="text-danger small">Nema na stanju</div><% } %>
-                  </div>
-                </div>
-              </td>
-              <td><%= item.cena %> RSD</td>
-              <td style="max-width:120px;">
-                <form action="/korpa/azuriraj" method="POST" class="d-flex gap-2">
-                  <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
-                  <% if (item.id) { %>
-                    <input type="hidden" name="cartItemId" value="<%= item.id %>">
-                  <% } else { %>
-                    <input type="hidden" name="productId" value="<%= item.productId %>">
-                    <input type="hidden" name="variantId" value="<%= item.variantId %>">
-                  <% } %>
-                  <input type="number" name="quantity" value="<%= item.kolicina %>" min="0" max="99" class="form-control form-control-sm" onchange="this.form.submit()">
-                </form>
-              </td>
-              <td><%= item.ukupno %> RSD</td>
-              <td>
-                <form action="/korpa/ukloni" method="POST">
-                  <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
-                  <% if (item.id) { %>
-                    <input type="hidden" name="cartItemId" value="<%= item.id %>">
-                  <% } else { %>
-                    <input type="hidden" name="productId" value="<%= item.productId %>">
-                    <input type="hidden" name="variantId" value="<%= item.variantId %>">
-                  <% } %>
-                  <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
-                </form>
-              </td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
+      <form action="/korpa/naplata" method="POST">
+        <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+        <input type="text" name="nickname" class="d-none" tabindex="-1" autocomplete="off">
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Ime <span class="text-danger">*</span></label>
+            <input type="text" name="firstName" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.firstName) || data.prefill.firstName %>" required>
+            <% if (data.errors && data.errors.firstName) { %><div class="text-danger small mt-1"><%= data.errors.firstName %></div><% } %>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Prezime</label>
+            <input type="text" name="lastName" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.lastName) || data.prefill.lastName %>">
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Email <span class="text-danger">*</span></label>
+            <input type="email" name="email" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.email) || data.prefill.email %>" <%= data.isLoggedIn ? 'readonly' : '' %> required>
+            <% if (data.errors && data.errors.email) { %><div class="text-danger small mt-1"><%= data.errors.email %></div><% } %>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Telefon <span class="text-danger">*</span></label>
+            <input type="text" name="phone" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.phone) || data.prefill.phone %>" required>
+            <% if (data.errors && data.errors.phone) { %><div class="text-danger small mt-1"><%= data.errors.phone %></div><% } %>
+          </div>
+        </div>
+
+        <% if (!data.isLoggedIn) { %>
+          <p class="text-muted small">
+            Ako nemate nalog, automatski ćemo vam kreirati jedan da biste mogli da pratite vašu porudžbinu - poslaćemo vam email sa uputstvom.
+          </p>
+        <% } %>
+
+        <h2 class="h6 mt-4 mb-3">Adresa za dostavu</h2>
+
+        <% if (data.addresses && data.addresses.length > 0) { %>
+          <div class="mb-3">
+            <label class="form-label">Sačuvana adresa</label>
+            <select class="form-select" onchange="
+              const opt = this.options[this.selectedIndex];
+              document.getElementById('addr-city').value = opt.dataset.city || '';
+              document.getElementById('addr-postalCode').value = opt.dataset.postalCode || '';
+              document.getElementById('addr-street').value = opt.dataset.street || '';
+              document.getElementById('addr-number').value = opt.dataset.number || '';
+            ">
+              <option value="">Unesite novu adresu</option>
+              <% data.addresses.forEach(function(a) { %>
+                <option
+                  value="<%= a.id %>"
+                  data-city="<%= a.grad %>"
+                  data-postal-code="<%= a.postanskiBroj %>"
+                  data-street="<%= a.ulica %>"
+                  data-number="<%= a.broj %>"
+                  <%= a.podrazumevana ? 'selected' : '' %>
+                >
+                  <%= a.naziv ? a.naziv + ' - ' : '' %><%= a.ulica %> <%= a.broj %>, <%= a.grad %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
+        <% } %>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-8">
+            <label class="form-label">Ulica <span class="text-danger">*</span></label>
+            <input type="text" id="addr-street" name="street" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.street) || data.addressPrefill.street %>" required>
+            <% if (data.errors && data.errors.street) { %><div class="text-danger small mt-1"><%= data.errors.street %></div><% } %>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Broj <span class="text-danger">*</span></label>
+            <input type="text" id="addr-number" name="number" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.number) || data.addressPrefill.number %>" required>
+            <% if (data.errors && data.errors.number) { %><div class="text-danger small mt-1"><%= data.errors.number %></div><% } %>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Grad <span class="text-danger">*</span></label>
+            <input type="text" id="addr-city" name="city" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.city) || data.addressPrefill.city %>" required>
+            <% if (data.errors && data.errors.city) { %><div class="text-danger small mt-1"><%= data.errors.city %></div><% } %>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Poštanski broj <span class="text-danger">*</span></label>
+            <input type="text" id="addr-postalCode" name="postalCode" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.postalCode) || data.addressPrefill.postalCode %>" required>
+            <% if (data.errors && data.errors.postalCode) { %><div class="text-danger small mt-1"><%= data.errors.postalCode %></div><% } %>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Napomena</label>
+          <textarea name="note" class="form-control" rows="3"><%= (typeof formData !== 'undefined' && formData.note) || '' %></textarea>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Kod kupona</label>
+          <input type="text" name="couponCode" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.couponCode) || '' %>" style="max-width:250px;">
+          <% if (data.errors && data.errors.couponCode) { %><div class="text-danger small mt-1"><%= data.errors.couponCode %></div><% } %>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg">Potvrdi porudžbinu</button>
+      </form>
     </div>
 
-    <div class="row justify-content-end">
-      <div class="col-md-4">
-        <div class="card">
-          <div class="card-body">
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-muted">Ukupno</span>
-              <strong><%= data.cart.ukupnaCena %> RSD</strong>
-            </div>
-            <a href="<%= data.checkoutUrl %>" class="btn btn-primary w-100">Nastavi na naplatu</a>
-            <a href="<%= data.continueShoppingUrl %>" class="btn btn-outline-secondary w-100 mt-2">Nastavi kupovinu</a>
+    <div class="col-md-5">
+      <div class="card">
+        <div class="card-header"><h2 class="h6 mb-0">Vaša porudžbina</h2></div>
+        <ul class="list-group list-group-flush">
+          <% data.cart.stavke.forEach(function(item) { %>
+            <li class="list-group-item d-flex justify-content-between">
+              <span><%= item.naziv %> (<%= item.varijanta %>) &times; <%= item.kolicina %></span>
+              <strong><%= item.ukupno %> RSD</strong>
+            </li>
+          <% }) %>
+        </ul>
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Ukupno</span>
+            <strong><%= data.cart.ukupnaCena %> RSD</strong>
           </div>
         </div>
       </div>
     </div>
-  <% } %>
+  </div>
 </main>
 
 <%- include("../includes/footer") %>
