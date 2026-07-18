@@ -216,7 +216,7 @@ export async function checkoutPending(req, res, next) {
 
     const viewData = prepareCheckoutPendingData(pending);
 
-    return res.render("shop/checkout-pending", {
+    return res.render("shop/order-pending", {
       pageTitle: "Potvrdite porudžbinu",
       pageDescription: "Proverite email da potvrdite porudžbinu",
       data: viewData,
