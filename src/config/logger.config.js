@@ -13,6 +13,19 @@ const LOGS_DIR = path.join(__dirname, "..", "..", "logs");
 const logFile = (name) =>
   path.join(LOGS_DIR, isProd ? `${name}.log` : `${name}-dev.log`);
 
+const ROTATE_OPTIONS = {
+  frequency: "daily",
+  dateFormat: "yyyy-MM-dd",
+  mkdir: true,
+  limit: { count: 30 }, // keep 30 rotated days + the active file
+};
+
+const rollTransport = (name) =>
+  pino.transport({
+    target: "pino-roll",
+    options: { file: logFile(name).replace(/\.log$/, ""), ...ROTATE_OPTIONS },
+  });
+
 const streams = [];
 
 if (isTest) {
@@ -40,29 +53,17 @@ if (isTest) {
 
   streams.push({
     level: "info",
-    stream: pino.destination({
-      dest: logFile("app"),
-      mkdir: true,
-      sync: false,
-    }),
+    stream: rollTransport("app"),
   });
 
   streams.push({
     level: "error",
-    stream: pino.destination({
-      dest: logFile("error"),
-      mkdir: true,
-      sync: false,
-    }),
+    stream: rollTransport("error"),
   });
 
   streams.push({
     level: "info",
-    stream: pino.destination({
-      dest: logFile("http"),
-      mkdir: true,
-      sync: false,
-    }),
+    stream: rollTransport("http"),
   });
 }
 

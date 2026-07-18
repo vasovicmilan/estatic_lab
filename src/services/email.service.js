@@ -169,6 +169,13 @@ export async function sendNewsletterCampaign(subscribers, campaign) {
   return results;
 }
 
+// ==================== ADMIN REPORTS ====================
+
+export async function sendLogReportEmail(periodLabel, dateRangeLabel, summary) {
+  const html = await renderTemplate("admin-log-report", { periodLabel, dateRangeLabel, ...summary });
+  return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("IZVEŠTAJ", `${periodLabel} (${dateRangeLabel})`), html });
+}
+
 export default {
   sendAccountConfirmationEmail,
   sendClaimAccountEmail,
@@ -188,4 +195,5 @@ export default {
   notifyAdminNewTestimonial,
   sendNewsletterWelcomeEmail,
   sendNewsletterCampaign,
+  sendLogReportEmail,
 };

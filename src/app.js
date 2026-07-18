@@ -23,8 +23,8 @@ setupCors(app);
 setupStatic(app);
 setupMorgan(app);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "5mb" }));
+app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
 setupMethodOverride(app);
 setupSanitize(app);
@@ -35,6 +35,13 @@ setupFlash(app);
 app.use(localsMiddleware);
 app.use(csrfLocals);
 app.use(csrfWebProtection);
+
+app.use((req, res, next) => {
+  if (!req.originalUrl.startsWith("/api")) {
+    res.setHeader("Cache-Control", "no-store, private");
+  }
+  next();
+});
 
 setupViewEngine(app);
 app.use(globalLimiter);

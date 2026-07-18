@@ -117,8 +117,21 @@ export function buildAppointmentReassignedMessage(appointment, employeeName) {
 }
 
 export function buildErrorAlertMessage(message, context = {}) {
-  const contextStr = Object.keys(context).length ? `\n<code>${escapeHtml(JSON.stringify(context))}</code>` : "";
-  return [`🚨 <b>Greška</b>`, "", escapeHtml(message) + contextStr].join("\n");
+  const { errorId, method, url, statusCode, env, ...rest } = context;
+
+  const lines = [`🚨 <b>Greška na sajtu</b>`, "", escapeHtml(message)];
+
+  if (method || url) lines.push(`📍 <b>Ruta:</b> ${escapeHtml(`${method || ""} ${url || ""}`.trim())}`);
+  if (statusCode) lines.push(`🔢 <b>Status:</b> ${statusCode}`);
+  if (env) lines.push(`🌍 <b>Okruženje:</b> ${escapeHtml(env)}`);
+  if (errorId) lines.push(`🆔 <b>ID greške:</b> <code>${escapeHtml(errorId)}</code>`);
+
+  const restKeys = Object.keys(rest);
+  if (restKeys.length) {
+    lines.push("", `<code>${escapeHtml(JSON.stringify(rest))}</code>`);
+  }
+
+  return lines.join("\n");
 }
 
 export default {
