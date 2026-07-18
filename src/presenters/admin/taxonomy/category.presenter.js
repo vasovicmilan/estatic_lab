@@ -1,4 +1,18 @@
 import { formatDateTime } from "../../../utils/date.time.util.js";
+import { CATEGORY_DOMAINS } from "../../../models/category.model.js";
+
+// Labels only - the actual set of valid domains always comes from CATEGORY_DOMAINS,
+// so adding a new domain there is the only change needed; a domain missing from this
+// map just falls back to showing its raw value instead of silently disappearing.
+const DOMAIN_LABELS = {
+  post: "Blog",
+  service: "Usluga",
+  product: "Proizvod",
+};
+
+function getDomainOptions() {
+  return CATEGORY_DOMAINS.map((domain) => ({ value: domain, label: DOMAIN_LABELS[domain] || domain }));
+}
 
 export function prepareCategoryListData(result, query = {}) {
   return {
@@ -113,10 +127,7 @@ export function prepareCategoryFormData(category = null, { parentOptions = [] } 
       required: true,
       width: 6,
       value: values.domain,
-      options: [
-        { value: "post", label: "Blog" },
-        { value: "service", label: "Usluga" },
-      ],
+      options: getDomainOptions(),
     },
     {
       name: "parent",

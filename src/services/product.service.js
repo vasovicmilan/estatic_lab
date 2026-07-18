@@ -44,7 +44,10 @@ export async function getProductForEdit(productId) {
   return mapProductForEdit(product);
 }
 
-// ---- Phase 1: core info + image ---------------------------------------------------
+// ---- Phase 1: bare minimum - just enough to get a row in the DB -------------------
+// No description, no image, no categories here on purpose - an admin should be able
+// to punch in a name+SKU and move on, filling in the rest across the next two phases
+// without the form blocking them on content that isn't ready yet.
 export async function createDraftProduct(data) {
   if (!data) validationError("data");
   if (!data.name) validationError("name");
@@ -53,7 +56,13 @@ export async function createDraftProduct(data) {
   const existingSku = await productRepo.findProductBySku(data.sku);
   if (existingSku) conflict("Proizvod sa ovim SKU već postoji");
 
-  const payload = { ...data, sku: data.sku.toLowerCase().trim(), isActive: false, variations: [] };
+  const payload = {
+    name: data.name,
+    sku: data.sku.toLowerCase().trim(),
+    slug: data.slug || null,
+    isActive: false,
+    variations: [],
+  };
 
   if (payload.slug) {
     const existingSlug = await productRepo.findProductBySlug(payload.slug);
@@ -67,41 +76,58 @@ export async function createDraftProduct(data) {
   return mapProductForEdit(created);
 }
 
-// ---- Phase 2: variations -----------------------------------------------------------
-export async function addVariationsToProduct(productId, variations) {
+// ---- Phase 2: variations + content + media -----------------------------------------
+// Everything needed to actually describe and sell the product: variations (the one
+// thing that's still required - a product can't be published without at least one),
+// categories/tags, descriptions, and all imagery (main image, gallery, video).
+export async function addDetailsAndMedia(productId, data) {
   if (!productId) validationError("productId");
   const existing = await productRepo.findProductById(productId);
   if (!existing) notFound("Proizvod");
 
-  validateVariations(variations || []);
+  const variations = data.variations ?? existing.variations ?? [];
+  validateVariations(variations);
 
-  const updated = await productRepo.updateProductById(productId, { variations: variations || [] });
-  logInfo("Product variations saved (phase 2)", { productId, variationCount: (variations || []).length });
+  const updated = await productRepo.updateProductById(productId, {
+    variations,
+    categories: data.categories ?? existing.categories ?? [],
+    tags: data.tags ?? existing.tags ?? [],
+    shortDescription: data.shortDescription ?? existing.shortDescription ?? "",
+    longDescription: data.longDescription ?? existing.longDescription ?? "",
+    image: data.image ?? existing.image ?? null,
+    gallery: data.gallery ?? existing.gallery ?? [],
+    videos: data.videos ?? existing.videos ?? [],
+  });
+
+  logInfo("Product details and media saved (phase 2)", { productId, variationCount: variations.length });
   return mapProductForEdit(updated);
 }
 
-// ---- Phase 3: optional extras + publish --------------------------------------------
-export async function addExtrasAndPublishProduct(productId, data) {
+// ---- Phase 3: SEO + remaining optional bits + publish ------------------------------
+export async function addSeoAndPublish(productId, data) {
   if (!productId) validationError("productId");
   const existing = await productRepo.findProductById(productId);
   if (!existing) notFound("Proizvod");
 
   const merged = {
+    seoKeywords: data.seoKeywords ?? existing.seoKeywords ?? [],
     relatedProducts: data.relatedProducts ?? existing.relatedProducts ?? [],
     faq: data.faq ?? existing.faq ?? [],
     isActive: data.isActive ?? true,
   };
 
   if (merged.isActive) {
-    if (!existing.image) badRequest("Objavljen proizvod mora imati sliku.");
-    if (!existing.variations?.length) badRequest("Objavljen proizvod mora imati bar jednu varijantu za prodaju.");
+    if (!existing.image) badRequest("Objavljen proizvod mora imati sliku - vratite se na korak 2.");
+    if (!existing.variations?.length) badRequest("Objavljen proizvod mora imati bar jednu varijantu za prodaju - vratite se na korak 2.");
   }
 
   const updated = await productRepo.updateProductById(productId, merged);
-  logInfo("Product extras saved" + (merged.isActive ? " and published (phase 3)" : " as draft (phase 3)"), { productId });
+  logInfo("Product SEO saved" + (merged.isActive ? " and published (phase 3)" : " as draft (phase 3)"), { productId });
   return mapProductForAdminDetail(updated);
 }
 
+// kept for the standalone post-creation SEO edit form (separate from phase 3 above,
+// which only runs once during initial creation)
 export async function updateProductSeo(productId, seoKeywords) {
   if (!productId) validationError("productId");
   const updated = await productRepo.updateProductById(productId, { seoKeywords: seoKeywords || [] });
@@ -257,8 +283,8 @@ export default {
   getProductForEdit,
   createProduct,
   createDraftProduct,
-  addVariationsToProduct,
-  addExtrasAndPublishProduct,
+  addDetailsAndMedia,
+  addSeoAndPublish,
   updateProductSeo,
   updateProductById,
   deleteProductById,

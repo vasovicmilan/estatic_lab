@@ -4,9 +4,10 @@ import * as tagService from "../../../../services/tag.service.js";
 import {
   prepareProductListData,
   prepareProductDetailsData,
+  prepareProductCreateStep1Data,
   prepareProductFormData,
-  prepareProductVariationsStepData,
-  prepareProductExtrasStepData,
+  prepareProductDetailsMediaStepData,
+  prepareProductSeoPublishStepData,
   prepareProductSeoFormData,
 } from "../../../../presenters/admin/catalog/product.presenter.js";
 import { prepareMediaFormData } from "../../../../presenters/admin/media-form.presenter.js";
@@ -45,21 +46,39 @@ async function loadProductOptions(excludeId = null) {
   return result.data.filter((p) => p.id !== excludeId).map((p) => ({ id: p.id, naziv: p.naziv }));
 }
 
-function buildStep1Payload(req) {
-  const data = { ...req.body };
-
-  data.image = req.uploadedFiles?.productImage
+function buildPhase2Payload(req, existing = {}) {
+  const image = req.uploadedFiles?.productImage
     ? { img: req.uploadedFiles.productImage.img, imgDesc: (req.body.imageDesc || "").trim() }
-    : null;
+    : existing.image || null;
 
-  data.categories = toIdArray(req.body.categories);
-  data.tags = toIdArray(req.body.tags);
+  const newGalleryFiles = req.uploadedFiles?.gallery ? [].concat(req.uploadedFiles.gallery) : [];
+  const newGallery = newGalleryFiles.map((f) => ({ img: f.img, imgDesc: (req.body.galleryDesc || "").trim() }));
+  const gallery = [...(existing.gallery || []), ...newGallery];
 
-  return data;
+  const newVideoFiles = req.uploadedFiles?.video ? [].concat(req.uploadedFiles.video) : [];
+  const newVideos = newVideoFiles.map((v) => ({ url: v.url, title: "", thumbnail: v.thumbnail || "", isExternal: false }));
+  const videos = [...(existing.videos || []), ...newVideos];
+
+  return {
+    categories: toIdArray(req.body.categories),
+    tags: toIdArray(req.body.tags),
+    shortDescription: req.body.shortDescription || "",
+    longDescription: req.body.longDescription || "",
+    variations: parseJsonField(req.body.variations, []),
+    image,
+    gallery,
+    videos,
+  };
 }
 
-function buildStep3Payload(req) {
+function buildPhase3Payload(req) {
+  const seoKeywords = (req.body.seoKeywordsCsv || "")
+    .split(",")
+    .map((k) => k.trim())
+    .filter(Boolean);
+
   return {
+    seoKeywords,
     relatedProducts: toIdArray(req.body.relatedProducts),
     faq: parseJsonField(req.body.faq),
     isActive: parseCheckbox(req.body.isActive),
@@ -127,12 +146,11 @@ export async function productDetails(req, res, next) {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 1: core info + image
+// Phase 1: bare minimum - just enough to get a row in the DB
 // ---------------------------------------------------------------------------
 export async function newProductForm(req, res, next) {
   try {
-    const options = await loadFormOptions();
-    const formData = prepareProductFormData(null, options);
+    const formData = prepareProductCreateStep1Data();
     return res.render("admin/_form", {
       pageTitle: "Novi proizvod",
       pageDescription: "Kreiraj novi proizvod - korak 1 od 3",
@@ -148,8 +166,7 @@ export async function createProductDraft(req, res, next) {
   try {
     if (req.validationErrors) {
       logWarn("[createProductDraft] Validacione greške u fazi 1", { validationErrors: req.validationErrors, userId: req.session?.user?.id });
-      const options = await loadFormOptions();
-      const formData = prepareProductFormData(null, options);
+      const formData = prepareProductCreateStep1Data();
       return res.status(400).render("admin/_form", {
         pageTitle: "Novi proizvod",
         pageDescription: "Kreiraj novi proizvod - korak 1 od 3",
@@ -157,18 +174,16 @@ export async function createProductDraft(req, res, next) {
       });
     }
 
-    const data = buildStep1Payload(req);
-    const product = await productService.createDraftProduct(data);
+    const product = await productService.createDraftProduct({ name: req.body.name, sku: req.body.sku, slug: req.body.slug });
     logInfo(`[createProductDraft] Nacrt proizvoda kreiran: "${product.name}"`, { productId: product.id, adminId: req.session?.user?.id });
 
-    return flashAndRedirect(req, res, "success", "Osnovni podaci sačuvani - dodajte varijante", `/admin/proizvodi/${product.id}/dodavanje/varijante`);
+    return flashAndRedirect(req, res, "success", "Proizvod kreiran - dodajte detalje, varijante i medije", `/admin/proizvodi/${product.id}/dodavanje/detalji`);
   } catch (error) {
     logError("[createProductDraft] Greška u fazi 1 kreiranja proizvoda", error, { body: req.body, userId: req.session?.user?.id });
 
     const { statusCode, message } = normalizeError(error);
     if (statusCode === 400 || statusCode === 409) {
-      const options = await loadFormOptions();
-      const formData = prepareProductFormData(null, options);
+      const formData = prepareProductCreateStep1Data();
       return res.status(statusCode).render("admin/_form", {
         pageTitle: "Novi proizvod",
         pageDescription: "Kreiraj novi proizvod - korak 1 od 3",
@@ -180,55 +195,59 @@ export async function createProductDraft(req, res, next) {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 2: variations
+// Phase 2: variations + content + media
 // ---------------------------------------------------------------------------
-export async function newProductVariationsForm(req, res, next) {
+export async function newProductDetailsMediaForm(req, res, next) {
   try {
     const { productId } = req.params;
     const product = await productService.getProductForEdit(productId);
-    const formData = prepareProductVariationsStepData(product);
+    const options = await loadFormOptions();
+    const formData = prepareProductDetailsMediaStepData(product, options);
     return res.render("admin/_form", {
-      pageTitle: `${product.name} - varijante`,
-      pageDescription: "Dodaj varijante - korak 2 od 3",
+      pageTitle: `${product.name} - detalji i medija`,
+      pageDescription: "Varijante, sadržaj i slike - korak 2 od 3",
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
-    logError("[newProductVariationsForm] Greška pri prikazu forme za varijante", error, { productId: req.params.productId, userId: req.session?.user?.id });
+    logError("[newProductDetailsMediaForm] Greška pri prikazu forme za detalje", error, { productId: req.params.productId, userId: req.session?.user?.id });
     next(error);
   }
 }
 
-export async function addProductVariations(req, res, next) {
+export async function addProductDetailsMedia(req, res, next) {
   try {
     const { productId } = req.params;
 
     if (req.validationErrors) {
-      logWarn(`[addProductVariations] Validacione greške u fazi 2 za productId=${productId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
+      logWarn(`[addProductDetailsMedia] Validacione greške u fazi 2 za productId=${productId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
       const product = await productService.getProductForEdit(productId);
-      const formData = prepareProductVariationsStepData(product);
+      const options = await loadFormOptions();
+      const formData = prepareProductDetailsMediaStepData(product, options);
       return res.status(400).render("admin/_form", {
-        pageTitle: `${product.name} - varijante`,
-        pageDescription: "Dodaj varijante - korak 2 od 3",
+        pageTitle: `${product.name} - detalji i medija`,
+        pageDescription: "Varijante, sadržaj i slike - korak 2 od 3",
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
-    const variations = parseJsonField(req.body.variations, []);
-    const product = await productService.addVariationsToProduct(productId, variations);
-    logInfo(`[addProductVariations] Varijante sačuvane za proizvod #${productId}`, { productId, adminId: req.session?.user?.id });
+    const existing = await productService.getProductForEdit(productId);
+    const data = buildPhase2Payload(req, existing);
+    const product = await productService.addDetailsAndMedia(productId, data);
+    logInfo(`[addProductDetailsMedia] Detalji i medija sačuvani za proizvod #${productId}`, { productId, adminId: req.session?.user?.id });
 
-    return flashAndRedirect(req, res, "success", "Varijante sačuvane - dodaj još detalja ili objavi proizvod", `/admin/proizvodi/${product.id}/dodavanje/detalji`);
+    return flashAndRedirect(req, res, "success", "Detalji sačuvani - podesite SEO i objavite proizvod", `/admin/proizvodi/${product.id}/dodavanje/seo`);
   } catch (error) {
-    logError("[addProductVariations] Greška u fazi 2 kreiranja proizvoda", error, { productId: req.params.productId, body: req.body, userId: req.session?.user?.id });
+    logError("[addProductDetailsMedia] Greška u fazi 2 kreiranja proizvoda", error, { productId: req.params.productId, body: req.body, userId: req.session?.user?.id });
 
     const { statusCode, message } = normalizeError(error);
     if (statusCode === 400 || statusCode === 404) {
       const product = await productService.getProductForEdit(req.params.productId).catch(() => null);
       if (product) {
-        const formData = prepareProductVariationsStepData(product);
+        const options = await loadFormOptions();
+        const formData = prepareProductDetailsMediaStepData(product, options);
         return res.status(statusCode).render("admin/_form", {
-          pageTitle: `${product.name} - varijante`,
-          pageDescription: "Dodaj varijante - korak 2 od 3",
+          pageTitle: `${product.name} - detalji i medija`,
+          pageDescription: "Varijante, sadržaj i slike - korak 2 od 3",
           data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
         });
       }
@@ -238,21 +257,21 @@ export async function addProductVariations(req, res, next) {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 3: optional extras + publish
+// Phase 3: SEO + remaining optional bits + publish
 // ---------------------------------------------------------------------------
-export async function newProductExtrasForm(req, res, next) {
+export async function newProductSeoPublishForm(req, res, next) {
   try {
     const { productId } = req.params;
     const product = await productService.getProductForEdit(productId);
     const productOptions = await loadProductOptions(productId);
-    const formData = prepareProductExtrasStepData(product, { productOptions });
+    const formData = prepareProductSeoPublishStepData(product, { productOptions });
     return res.render("admin/_form", {
-      pageTitle: `${product.name} - detalji i objava`,
-      pageDescription: "Dodatni detalji i objava - korak 3 od 3",
+      pageTitle: `${product.name} - SEO i objava`,
+      pageDescription: "SEO, dodatni detalji i objava - korak 3 od 3",
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
-    logError("[newProductExtrasForm] Greška pri prikazu forme za detalje", error, { productId: req.params.productId, userId: req.session?.user?.id });
+    logError("[newProductSeoPublishForm] Greška pri prikazu forme za SEO i objavu", error, { productId: req.params.productId, userId: req.session?.user?.id });
     next(error);
   }
 }
@@ -265,16 +284,16 @@ export async function publishProductStep(req, res, next) {
       logWarn(`[publishProductStep] Validacione greške u fazi 3 za productId=${productId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
       const product = await productService.getProductForEdit(productId);
       const productOptions = await loadProductOptions(productId);
-      const formData = prepareProductExtrasStepData(product, { productOptions });
+      const formData = prepareProductSeoPublishStepData(product, { productOptions });
       return res.status(400).render("admin/_form", {
-        pageTitle: `${product.name} - detalji i objava`,
-        pageDescription: "Dodatni detalji i objava - korak 3 od 3",
+        pageTitle: `${product.name} - SEO i objava`,
+        pageDescription: "SEO, dodatni detalji i objava - korak 3 od 3",
         data: { ...formData, errors: req.validationErrors, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
 
-    const data = buildStep3Payload(req);
-    const product = await productService.addExtrasAndPublishProduct(productId, data);
+    const data = buildPhase3Payload(req);
+    const product = await productService.addSeoAndPublish(productId, data);
     const message = data.isActive === false ? "Sačuvano kao nacrt" : "Proizvod je uspešno objavljen";
     logInfo(`[publishProductStep] Proizvod #${productId} ${data.isActive === false ? "sačuvan kao nacrt" : "objavljen"}`, { productId, adminId: req.session?.user?.id });
 
@@ -287,10 +306,10 @@ export async function publishProductStep(req, res, next) {
       const product = await productService.getProductForEdit(req.params.productId).catch(() => null);
       if (product) {
         const productOptions = await loadProductOptions(req.params.productId);
-        const formData = prepareProductExtrasStepData(product, { productOptions });
+        const formData = prepareProductSeoPublishStepData(product, { productOptions });
         return res.status(statusCode).render("admin/_form", {
-          pageTitle: `${product.name} - detalji i objava`,
-          pageDescription: "Dodatni detalji i objava - korak 3 od 3",
+          pageTitle: `${product.name} - SEO i objava`,
+          pageDescription: "SEO, dodatni detalji i objava - korak 3 od 3",
           data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
         });
       }
@@ -500,9 +519,9 @@ export default {
   productDetails,
   newProductForm,
   createProductDraft,
-  newProductVariationsForm,
-  addProductVariations,
-  newProductExtrasForm,
+  newProductDetailsMediaForm,
+  addProductDetailsMedia,
+  newProductSeoPublishForm,
   publishProductStep,
   editProductForm,
   updateProduct,

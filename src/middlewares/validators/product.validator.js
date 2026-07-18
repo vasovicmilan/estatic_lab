@@ -3,7 +3,7 @@ import { collectValidationErrors } from "./collect-validation-errors.js";
 import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
 import { isJsonArrayOrArray, isArrayOrString, slugField, booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
 
-// Phase 1 - core info + image. No `variations` rule here: that's phase 2's job.
+// Phase 1 - bare minimum, just enough to get a row in the DB.
 export const validateProductStep1 = [
   body("name")
     .trim()
@@ -17,10 +17,15 @@ export const validateProductStep1 = [
 
   slugField(true),
 
-  body("shortDescription")
-    .optional()
-    .trim()
-    .isLength({ max: 300 }).withMessage("Kratak opis može imati najviše 300 karaktera"),
+  collectValidationErrors,
+];
+
+// Phase 2 - variations (the one thing still required to eventually publish), plus
+// categories/tags/descriptions/main image/gallery/video.
+export const validateProductDetailsMediaStep = [
+  body("variations")
+    .notEmpty().withMessage("Proizvod mora imati bar jednu varijantu")
+    .custom(isJsonArrayOrArray).withMessage("Varijante nisu u ispravnom formatu"),
 
   body("categories")
     .optional()
@@ -30,23 +35,26 @@ export const validateProductStep1 = [
     .optional()
     .custom(isArrayOrString).withMessage("Neispravni tagovi"),
 
+  body("shortDescription")
+    .optional()
+    .trim()
+    .isLength({ max: 300 }).withMessage("Kratak opis može imati najviše 300 karaktera"),
+
+  body("longDescription")
+    .optional()
+    .trim(),
+
   body("imageDesc")
     .custom(requireImageDescIfUploaded((req) => req.uploadedFiles?.productImage)),
 
   collectValidationErrors,
 ];
 
-// Phase 2 - variations. The one field that's actually required to publish.
-export const validateProductVariationsStep = [
-  body("variations")
-    .notEmpty().withMessage("Proizvod mora imati bar jednu varijantu")
-    .custom(isJsonArrayOrArray).withMessage("Varijante nisu u ispravnom formatu"),
+// Phase 3 - SEO + remaining optional bits, plus the publish toggle.
+export const validateProductSeoPublishStep = [
+  body("seoKeywordsCsv")
+    .optional(),
 
-  collectValidationErrors,
-];
-
-// Phase 3 - everything optional, plus the publish toggle.
-export const validateProductExtrasStep = [
   body("relatedProducts")
     .optional()
     .custom(isArrayOrString).withMessage("Neispravni povezani proizvodi"),
@@ -104,8 +112,8 @@ export const validateProductId = mongoIdParamValidator("productId", "proizvoda")
 
 export default {
   validateProductStep1,
-  validateProductVariationsStep,
-  validateProductExtrasStep,
+  validateProductDetailsMediaStep,
+  validateProductSeoPublishStep,
   validateProductUpdate,
   validateProductSeo,
   validateProductId,

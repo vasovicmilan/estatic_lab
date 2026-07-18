@@ -2,8 +2,8 @@ import { Router } from "express";
 import * as ProductController from "../../../controllers/web/admin/catalog/product.controller.js";
 import {
   validateProductStep1,
-  validateProductVariationsStep,
-  validateProductExtrasStep,
+  validateProductDetailsMediaStep,
+  validateProductSeoPublishStep,
   validateProductUpdate,
   validateProductSeo,
   validateProductId,
@@ -18,6 +18,13 @@ const router = Router();
 
 const productUploads = processMultipleUploads([{ name: "productImage", maxCount: 1, type: "products" }]);
 
+// phase 2 handles the main image AND gallery/video in one submission
+const productDetailsMediaUploads = processMultipleUploads([
+  { name: "productImage", maxCount: 1, type: "products" },
+  { name: "gallery", maxCount: 10, type: "products" },
+  { name: "video", maxCount: 5, type: "products" },
+]);
+
 const productGalleryUploads = processMultipleUploads([
   { name: "gallery", maxCount: 10, type: "products" },
   { name: "video", maxCount: 5, type: "products" },
@@ -29,31 +36,30 @@ router.get("/izmena/:productId", validateProductId, ProductController.editProduc
 router.get("/:productId/seo", validateProductId, ProductController.editProductSeoForm);
 
 // --- 3-phase creation wizard ---
-// Phase 1: core info + image (file upload -> needs multer before CSRF)
+
+// Phase 1: bare minimum (name + sku only) - no file upload, no image required, so
+// no multer needed here at all; normal CSRF middleware applies.
 router.get("/dodavanje", ProductController.newProductForm);
-router.post(
-  "/dodavanje",
-  ...productUploads,
-  csrfAfterMulter,
-  validateProductStep1,
-  ProductController.createProductDraft
-);
+router.post("/dodavanje", validateProductStep1, ProductController.createProductDraft);
 
-// Phase 2: variations (no file upload -> normal CSRF middleware applies)
-router.get("/:productId/dodavanje/varijante", validateProductId, ProductController.newProductVariationsForm);
-router.post(
-  "/:productId/dodavanje/varijante",
-  validateProductId,
-  validateProductVariationsStep,
-  ProductController.addProductVariations
-);
-
-// Phase 3: extras + publish (no file upload)
-router.get("/:productId/dodavanje/detalji", validateProductId, ProductController.newProductExtrasForm);
+// Phase 2: variations + content + media - this is now where the main image, gallery,
+// and video get uploaded, so multer runs before CSRF here instead of on phase 1.
+router.get("/:productId/dodavanje/detalji", validateProductId, ProductController.newProductDetailsMediaForm);
 router.post(
   "/:productId/dodavanje/detalji",
   validateProductId,
-  validateProductExtrasStep,
+  ...productDetailsMediaUploads,
+  csrfAfterMulter,
+  validateProductDetailsMediaStep,
+  ProductController.addProductDetailsMedia
+);
+
+// Phase 3: SEO + remaining optional bits + publish (no file upload)
+router.get("/:productId/dodavanje/seo", validateProductId, ProductController.newProductSeoPublishForm);
+router.post(
+  "/:productId/dodavanje/seo",
+  validateProductId,
+  validateProductSeoPublishStep,
   ProductController.publishProductStep
 );
 
@@ -69,7 +75,7 @@ router.put(
 
 router.put("/:productId/seo", validateProductId, validateProductSeo, ProductController.updateProductSeo);
 
-// --- gallery & video ---
+// --- gallery & video (post-creation standalone edit) ---
 router.get("/:productId/galerija", validateProductId, ProductController.editProductGalleryForm);
 router.put(
   "/:productId/galerija",

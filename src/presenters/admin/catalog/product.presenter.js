@@ -141,27 +141,40 @@ export function prepareProductDetailsData(product) {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 1: core info + image
+// Phase 1: bare minimum - just enough to get a row in the DB. No description,
+// image, or categories here on purpose - those move to phase 2.
 // ---------------------------------------------------------------------------
-export function prepareProductFormData(product = null, { categoryOptions = [], tagOptions = [] } = {}) {
-  const isEdit = !!product;
-  const values = isEdit
-    ? product
-    : {
-        name: "",
-        sku: "",
-        shortDescription: "",
-        longDescription: "",
-        categories: [],
-        tags: [],
-      };
+export function prepareProductCreateStep1Data() {
+  return {
+    formAction: "/admin/proizvodi/dodavanje",
+    formEnctype: "application/x-www-form-urlencoded",
+    isEdit: false,
+    fields: [
+      { name: "name", label: "Naziv", type: "text", required: true, width: 6, value: "" },
+      { name: "sku", label: "SKU (šifra proizvoda)", type: "text", required: true, width: 6, value: "", help: "Jedinstvena šifra - model/kataloški broj." },
+    ],
+    phaseInfo: { label: "Novi proizvod", current: 1, total: 3 },
+    submitLabel: "Sačuvaj i nastavi",
+    cancelUrl: "/admin/proizvodi",
+    breadcrumbs: [
+      { label: "Admin", url: "/admin" },
+      { label: "Proizvodi", url: "/admin/proizvodi" },
+      { label: "Novi proizvod", url: null },
+    ],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Single-shot edit form (post-creation) - keeps everything in one place, unlike
+// the phased creation flow. Kept separate from phase 1 above since their shape
+// diverged once phase 1 got trimmed down.
+// ---------------------------------------------------------------------------
+export function prepareProductFormData(product, { categoryOptions = [], tagOptions = [] } = {}) {
+  const values = product;
 
   const fields = [
     { name: "name", label: "Naziv", type: "text", required: true, width: 6, value: values.name },
     { name: "sku", label: "SKU (šifra proizvoda)", type: "text", required: true, width: 6, value: values.sku, help: "Jedinstvena šifra - model/kataloški broj." },
-  ];
-
-  fields.push(
     { name: "shortDescription", label: "Kratak opis", type: "textarea", rows: 2, width: 12, value: values.shortDescription, help: "Najviše 300 karaktera." },
     { name: "longDescription", label: "Dugi opis", type: "textarea", rows: 5, width: 12, value: values.longDescription },
     {
@@ -179,13 +192,8 @@ export function prepareProductFormData(product = null, { categoryOptions = [], t
       width: 6,
       value: (values.tags || []).map((t) => (typeof t === "object" ? t.id ?? t._id?.toString() : t)),
       options: tagOptions.map((t) => ({ value: t.id, label: t.naziv })),
-    }
-  );
-
-  // relatedProducts/faq/isActive only show on the single-shot EDIT form - first-time
-  // creation handles those across phases 2 and 3, same convention as Service.
-  if (isEdit) {
-    fields.push({
+    },
+    {
       name: "faq",
       label: "Česta pitanja",
       type: "repeater",
@@ -196,47 +204,60 @@ export function prepareProductFormData(product = null, { categoryOptions = [], t
         { name: "question", label: "Pitanje", type: "text", required: true },
         { name: "answer", label: "Odgovor", type: "textarea", required: true },
       ],
-    });
-  }
-
-  fields.push(
+    },
     {
       name: "productImage",
       label: "Glavna slika",
       type: "file",
       accept: "image/*",
-      required: !isEdit,
+      required: false,
       width: 6,
-      preview: isEdit ? values.image?.url : null,
+      preview: values.image?.url,
     },
-    { name: "imageDesc", label: "Opis slike (alt tekst)", type: "text", width: 6, required: true, value: values.image?.imgDesc || "" }
-  );
-
-  if (isEdit) {
-    fields.push({ name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive });
-  }
+    { name: "imageDesc", label: "Opis slike (alt tekst)", type: "text", width: 6, required: true, value: values.image?.imgDesc || "" },
+    { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive },
+  ];
 
   return {
-    formAction: isEdit ? `/admin/proizvodi/${product.id}` : "/admin/proizvodi/dodavanje",
+    formAction: `/admin/proizvodi/${product.id}`,
     formEnctype: "multipart/form-data",
-    isEdit,
+    isEdit: true,
     fields,
-    phaseInfo: isEdit ? undefined : { label: "Novi proizvod", current: 1, total: 3 },
-    submitLabel: isEdit ? "Sačuvaj izmene" : "Sačuvaj i nastavi",
+    submitLabel: "Sačuvaj izmene",
     cancelUrl: "/admin/proizvodi",
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Proizvodi", url: "/admin/proizvodi" },
-      { label: isEdit ? "Izmena" : "Novi proizvod", url: null },
+      { label: "Izmena", url: null },
     ],
   };
 }
 
 // ---------------------------------------------------------------------------
-// Phase 2: variations
+// Phase 2: variations + content + media - everything needed to actually
+// describe and sell the product. Variations are the one thing still required
+// (a product can't be published without at least one).
 // ---------------------------------------------------------------------------
-export function prepareProductVariationsStepData(product) {
+export function prepareProductDetailsMediaStepData(product, { categoryOptions = [], tagOptions = [] } = {}) {
   const fields = [
+    {
+      name: "categories",
+      label: "Kategorije",
+      type: "multiselect",
+      width: 6,
+      value: (product.categories || []).map((c) => (typeof c === "object" ? c.id ?? c._id?.toString() : c)),
+      options: categoryOptions.map((c) => ({ value: c.id, label: c.naziv })),
+    },
+    {
+      name: "tags",
+      label: "Tagovi",
+      type: "multiselect",
+      width: 6,
+      value: (product.tags || []).map((t) => (typeof t === "object" ? t.id ?? t._id?.toString() : t)),
+      options: tagOptions.map((t) => ({ value: t.id, label: t.naziv })),
+    },
+    { name: "shortDescription", label: "Kratak opis", type: "textarea", rows: 2, width: 12, value: product.shortDescription || "", help: "Najviše 300 karaktera." },
+    { name: "longDescription", label: "Dugi opis", type: "textarea", rows: 5, width: 12, value: product.longDescription || "" },
     {
       name: "variations",
       label: "Varijante",
@@ -253,12 +274,40 @@ export function prepareProductVariationsStepData(product) {
         { name: "lowStockThreshold", label: "Prag niskog stanja", type: "number", min: 0 },
       ],
     },
+    {
+      name: "productImage",
+      label: "Glavna slika",
+      type: "file",
+      accept: "image/*",
+      required: !product.image,
+      width: 6,
+      preview: product.image?.url,
+      help: "Obavezna da bi proizvod mogao biti objavljen u koraku 3.",
+    },
+    { name: "imageDesc", label: "Opis slike (alt tekst)", type: "text", width: 6, required: !!product.image || undefined, value: product.image?.imgDesc || "" },
+    {
+      name: "gallery",
+      label: "Galerija (dodatne slike)",
+      type: "file",
+      accept: "image/*",
+      multiple: true,
+      width: 8,
+      preview: (product.gallery || []).map((g) => g.url),
+    },
+    { name: "galleryDesc", label: "Opis slika u galeriji (alt tekst)", type: "text", width: 4, value: "" },
+    {
+      name: "video",
+      label: "Video",
+      type: "file",
+      accept: "video/*",
+      multiple: true,
+      width: 12,
+    },
   ];
 
   return {
-    formAction: `/admin/proizvodi/${product.id}/dodavanje/varijante`,
-    formEnctype: "application/x-www-form-urlencoded",
-    formMethod: "POST",
+    formAction: `/admin/proizvodi/${product.id}/dodavanje/detalji`,
+    formEnctype: "multipart/form-data",
     isEdit: false,
     fields,
     phaseInfo: { label: `Novi proizvod - ${product.name}`, current: 2, total: 3 },
@@ -268,16 +317,23 @@ export function prepareProductVariationsStepData(product) {
       { label: "Admin", url: "/admin" },
       { label: "Proizvodi", url: "/admin/proizvodi" },
       { label: product.name, url: null },
-      { label: "Varijante", url: null },
+      { label: "Detalji i medija", url: null },
     ],
   };
 }
 
 // ---------------------------------------------------------------------------
-// Phase 3: optional extras + publish
+// Phase 3: SEO + remaining optional bits + publish
 // ---------------------------------------------------------------------------
-export function prepareProductExtrasStepData(product, { productOptions = [] } = {}) {
+export function prepareProductSeoPublishStepData(product, { productOptions = [] } = {}) {
   const fields = [
+    {
+      name: "seoKeywordsCsv",
+      label: "Ključne reči (odvojene zarezom)",
+      type: "text",
+      width: 12,
+      value: (product.seoKeywords || []).join(", "),
+    },
     {
       name: "relatedProducts",
       label: "Povezani proizvodi",
@@ -309,7 +365,7 @@ export function prepareProductExtrasStepData(product, { productOptions = [] } = 
   ];
 
   return {
-    formAction: `/admin/proizvodi/${product.id}/dodavanje/detalji`,
+    formAction: `/admin/proizvodi/${product.id}/dodavanje/seo`,
     formEnctype: "application/x-www-form-urlencoded",
     formMethod: "POST",
     isEdit: false,
@@ -321,7 +377,7 @@ export function prepareProductExtrasStepData(product, { productOptions = [] } = 
       { label: "Admin", url: "/admin" },
       { label: "Proizvodi", url: "/admin/proizvodi" },
       { label: product.name, url: null },
-      { label: "Detalji i objava", url: null },
+      { label: "SEO i objava", url: null },
     ],
   };
 }
@@ -353,8 +409,9 @@ export function prepareProductSeoFormData(product) {
 export default {
   prepareProductListData,
   prepareProductDetailsData,
+  prepareProductCreateStep1Data,
   prepareProductFormData,
-  prepareProductVariationsStepData,
-  prepareProductExtrasStepData,
+  prepareProductDetailsMediaStepData,
+  prepareProductSeoPublishStepData,
   prepareProductSeoFormData,
 };

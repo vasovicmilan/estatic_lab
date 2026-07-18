@@ -1,3 +1,15 @@
+import { CATEGORY_DOMAINS } from "../../../models/category.model.js";
+
+const DOMAIN_LABELS = {
+  post: "Blog",
+  service: "Usluga",
+  product: "Proizvod",
+};
+
+function getDomainOptions() {
+  return CATEGORY_DOMAINS.map((domain) => ({ value: domain, label: DOMAIN_LABELS[domain] || domain }));
+}
+
 export function prepareTagListData(result, query = {}) {
   return {
     items: result.data,
@@ -34,11 +46,7 @@ export function prepareTagListData(result, query = {}) {
           name: "domain",
           label: "Domen",
           value: query.domain || "",
-          options: [
-            { value: "", label: "Svi domeni" },
-            { value: "post", label: "Blog" },
-            { value: "service", label: "Usluga" },
-          ],
+          options: [{ value: "", label: "Svi domeni" }, ...getDomainOptions()],
         },
       ],
     },
@@ -108,10 +116,7 @@ export function prepareTagFormData(tag = null) {
       required: true,
       width: 6,
       value: values.domain,
-      options: [
-        { value: "post", label: "Blog" },
-        { value: "service", label: "Usluga" },
-      ],
+      options: getDomainOptions(),
     },
     { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive }
   );
