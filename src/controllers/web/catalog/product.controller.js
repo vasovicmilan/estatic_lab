@@ -113,7 +113,7 @@ export async function productDetails(req, res, next) {
     });
     const seo = await generateSeo("product", product, req);
 
-    return res.render("shop/product", {
+    return res.render("shop/product-details", {
       pageTitle: seo.title,
       pageDescription: seo.description,
       seo,
