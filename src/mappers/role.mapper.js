@@ -20,6 +20,9 @@ export function translatePermission(permission) {
 
     manage_marketing: "Upravljanje marketingom",
     manage_coupons: "Upravljanje kuponima",
+
+    manage_products: "Upravljanje proizvodima",
+    manage_orders: "Upravljanje porudžbinama",
   };
   return map[permission] || permission;
 }
