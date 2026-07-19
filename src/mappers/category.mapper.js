@@ -4,6 +4,7 @@ function translateDomain(domain) {
   const map = {
     post: "Blog",
     service: "Usluga",
+    product: "Proizvod",
   };
   return map[domain] || domain;
 }
