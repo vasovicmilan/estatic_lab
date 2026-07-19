@@ -344,6 +344,137 @@ export function buildTestimonial(overrides = {}) {
   };
 }
 
+export function buildProductVariation(overrides = {}) {
+  return {
+    _id: id(),
+    label: "50ml",
+    sku: null,
+    price: 2000,
+    compareAtPrice: null,
+    stock: 10,
+    lowStockThreshold: 5,
+    image: null,
+    order: 0,
+    isActive: true,
+    ...overrides,
+  };
+}
+
+export function buildProduct(overrides = {}) {
+  return {
+    _id: id(),
+    name: "ESMA Uređaj",
+    sku: "esma-001",
+    slug: "esma-uredjaj",
+    shortDescription: "Profesionalni uređaj za tretmane",
+    longDescription: "",
+    categories: [],
+    tags: [],
+    image: { img: "/images/products/esma.webp", imgDesc: "ESMA uređaj" },
+    gallery: [],
+    videos: [],
+    variations: [buildProductVariation()],
+    relatedProducts: [],
+    faq: [],
+    seoKeywords: [],
+    badge: "none",
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+export function buildAddress(overrides = {}) {
+  return {
+    label: "Kuća",
+    city: "Novi Sad",
+    postalCode: "21000",
+    street: "Bulevar Oslobođenja",
+    number: "10",
+    hash: "addresshash123",
+    isDefault: true,
+    ...overrides,
+  };
+}
+
+export function buildCartItem(overrides = {}) {
+  return {
+    product: id(),
+    variant: id(),
+    quantity: 1,
+    ...overrides,
+  };
+}
+
+export function buildOrderItem(overrides = {}) {
+  return {
+    product: id(),
+    variant: id(),
+    title: "ESMA Uređaj",
+    variantLabel: "50ml",
+    sku: "esma-001",
+    price: 2000,
+    quantity: 1,
+    image: "/images/products/esma.webp",
+    ...overrides,
+  };
+}
+
+export function buildOrder(overrides = {}) {
+  return {
+    _id: id(),
+    user: buildUser(),
+    contactSnapshot: { firstName: "Marko", lastName: "Markovic", email: "korisnik@example.com" },
+    phone: "encrypted-phone-ciphertext",
+    address: buildAddress(),
+    items: [buildOrderItem()],
+    subtotal: 2000,
+    shipping: 350,
+    coupon: null,
+    discountApplied: 0,
+    totalPrice: 2350,
+    note: "",
+    status: "pending",
+    cancelToken: "canceltoken123",
+    processingAt: null,
+    shippedAt: null,
+    deliveredAt: null,
+    completedAt: null,
+    cancelledAt: null,
+    returnedAt: null,
+    refundedAt: null,
+    cancelledBy: null,
+    cancellationReason: "",
+    returnReason: "",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+export function buildTemporaryOrder(overrides = {}) {
+  return {
+    _id: id(),
+    user: id(),
+    contactSnapshot: { firstName: "Marko", lastName: "Markovic", email: "korisnik@example.com" },
+    phone: "encrypted-phone-ciphertext",
+    address: buildAddress(),
+    items: [buildOrderItem()],
+    subtotal: 2000,
+    shipping: 350,
+    coupon: null,
+    discountApplied: 0,
+    totalPrice: 2350,
+    note: "",
+    verificationToken: "verifytoken123",
+    tokenExpiration: new Date(Date.now() + 60 * 60 * 1000),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
 export default {
   id,
   buildRole,
@@ -362,4 +493,11 @@ export default {
   buildContact,
   buildSubscriber,
   buildTestimonial,
+  buildProductVariation,
+  buildProduct,
+  buildAddress,
+  buildCartItem,
+  buildOrderItem,
+  buildOrder,
+  buildTemporaryOrder,
 };
