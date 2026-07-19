@@ -1,5 +1,10 @@
 import { formatDateTime, formatDate } from "../utils/date.time.util.js";
 
+function resolveRefId(ref) {
+  if (!ref) return null;
+  return (ref._id || ref).toString();
+}
+
 function translateDiscountType(type) {
   const map = {
     percentage: "Procenat",
@@ -63,11 +68,13 @@ export function mapCouponForAdminDetail(coupon) {
       istice: coupon.validUntil ? formatDateTime(coupon.validUntil) : null,
     },
     primenljivoNaUsluge: (coupon.applicableServices || []).map((s) =>
-      typeof s === "object" ? { id: s._id.toString(), naziv: s.name } : { id: s.toString() }
+      s?.name ? { id: s._id.toString(), naziv: s.name } : { id: resolveRefId(s) }
     ),
     istorijaKoriscenja: (coupon.usageHistory || []).map((u) => ({
-      korisnikId: typeof u.user === "object" ? u.user._id.toString() : u.user?.toString(),
-      terminId: typeof u.appointment === "object" ? u.appointment._id.toString() : u.appointment?.toString(),
+      korisnikId: resolveRefId(u.user),
+      terminId: resolveRefId(u.appointment),
+      paketId: resolveRefId(u.packagePurchase),
+      porudzbinaId: resolveRefId(u.order),
       iznosPopusta: `${u.discountAmount} RSD`,
       iskoriscenoU: formatDateTime(u.usedAt),
     })),

@@ -28,7 +28,7 @@ export function mapCategoriesForAdminList(categories = []) {
         domen: translateDomain(category.domain),
         domenRaw: category.domain,
         roditelj: category.parent
-          ? typeof category.parent === "object"
+          ? category.parent.name
             ? category.parent.name
             : category.parent.toString()
           : null,
@@ -49,7 +49,7 @@ export function mapCategoryForAdminDetail(category) {
     slug: category.slug,
     domen: category.domain,
     roditelj: category.parent
-      ? typeof category.parent === "object"
+      ? category.parent.name
         ? { id: category.parent._id.toString(), naziv: category.parent.name, slug: category.parent.slug }
         : { id: category.parent.toString() }
       : null,
