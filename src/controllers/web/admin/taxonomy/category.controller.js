@@ -3,6 +3,7 @@ import { prepareCategoryListData, prepareCategoryDetailsData, prepareCategoryFor
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
+import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
 async function loadParentOptions(domain, excludeId = null) {
   const options = await categoryService.getCategoriesForSelect(domain || "service");
@@ -116,6 +117,12 @@ export async function createCategory(req, res, next) {
     const data = { ...req.body };
     data.featureImage = buildFeatureImage(req, null);
     data.parent = data.parent || null;
+    data.isIndexable = parseCheckbox(req.body.isIndexable, true);
+    // isActive is stored at meta.isActive in the schema, not top-level - the form
+    // field is flattened for display (see mapCategoryForEdit) but has to be written
+    // back to its real nested path
+    data.meta = { isActive: parseCheckbox(req.body.isActive, true) };
+    delete data.isActive;
 
     const category = await categoryService.createCategory(data);
     logInfo(`[createCategory] Kategorija kreirana: "${category.naziv}"`, { categoryId: category.id, adminId: req.session?.user?.id });
@@ -158,6 +165,13 @@ export async function updateCategory(req, res, next) {
     const data = { ...req.body };
     data.featureImage = buildFeatureImage(req, existing.featureImage);
     data.parent = data.parent || null;
+    data.isIndexable = parseCheckbox(req.body.isIndexable, existing.isIndexable);
+    // isActive lives at meta.isActive in the schema. Using the dot-notation key here
+    // (rather than data.meta = {...}) means Mongoose's $set only touches that one
+    // nested field - setting a plain data.meta object would replace the whole meta
+    // subdocument and silently wipe meta.priority back to its default.
+    data["meta.isActive"] = parseCheckbox(req.body.isActive, existing.isActive);
+    delete data.isActive;
 
     const updated = await categoryService.updateCategoryById(categoryId, data);
     logInfo(`[updateCategory] Kategorija #${categoryId} ažurirana`, { categoryId, adminId: req.session?.user?.id });

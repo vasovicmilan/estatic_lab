@@ -2,6 +2,7 @@ import * as tagService from "../../../../services/tag.service.js";
 import { prepareTagListData, prepareTagDetailsData, prepareTagFormData } from "../../../../presenters/admin/taxonomy/tag.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
 export async function listTags(req, res, next) {
   try {
@@ -88,7 +89,8 @@ export async function createTag(req, res, next) {
       });
     }
 
-    const tag = await tagService.createTag(req.body);
+    const data = { ...req.body, isActive: parseCheckbox(req.body.isActive, true) };
+    const tag = await tagService.createTag(data);
     logInfo(`[createTag] Tag kreiran: "${tag.naziv}"`, { tagId: tag.id, adminId: req.session?.user?.id });
 
     return flashAndRedirect(req, res, "success", "Tag je uspešno kreiran", `/admin/tagovi/detalji/${tag.id}`);
@@ -122,7 +124,9 @@ export async function updateTag(req, res, next) {
       });
     }
 
-    const updated = await tagService.updateTagById(tagId, req.body);
+    const existing = await tagService.getTagForEdit(tagId);
+    const data = { ...req.body, isActive: parseCheckbox(req.body.isActive, existing.isActive) };
+    const updated = await tagService.updateTagById(tagId, data);
     logInfo(`[updateTag] Tag #${tagId} ažuriran`, { tagId, adminId: req.session?.user?.id });
 
     return flashAndRedirect(req, res, "success", "Tag je uspešno ažuriran", `/admin/tagovi/detalji/${updated.id}`);
