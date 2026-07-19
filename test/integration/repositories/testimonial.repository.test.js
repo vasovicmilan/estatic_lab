@@ -6,6 +6,7 @@ import testimonialRepo from "../../../src/repositories/testimonial.repository.js
 import "../../../src/models/service.model.js";
 import "../../../src/models/package.model.js";
 import "../../../src/models/user.model.js";
+import "../../../src/models/product.model.js";
 
 function validTestimonial(overrides = {}) {
   return {

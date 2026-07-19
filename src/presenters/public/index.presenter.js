@@ -509,7 +509,7 @@ export function prepareHomeData({
           ctaUrl: "/usluge",
           secondaryCtaLabel: "Pogledajte pakete",
           secondaryCtaUrl: "/paketi",
-          image: "/img/hero.jpg",
+          image: "/images/site/hero-medium.webp",
         },
 
     intro: {

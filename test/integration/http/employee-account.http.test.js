@@ -9,8 +9,16 @@ import serviceRepo from "../../../src/repositories/service.repository.js";
 import appointmentRepo from "../../../src/repositories/appointment.repository.js";
 
 async function createEmployeeSession(agent, { email = "zaposleni@example.com" } = {}) {
-  const user = await registerAndLogin(agent, { email, roleName: "employee", firstName: "Ana", lastName: "Anic" });
-  const employee = await employeeRepo.createEmployee({ userId: user._id, isActive: true });
+  let employee;
+  const user = await registerAndLogin(agent, {
+    email,
+    roleName: "employee",
+    firstName: "Ana",
+    lastName: "Anic",
+    beforeLogin: async (registeredUser) => {
+      employee = await employeeRepo.createEmployee({ userId: registeredUser._id, isActive: true });
+    },
+  });
   return { user, employee };
 }
 
@@ -100,10 +108,6 @@ describe("employee account routes (HTTP)", () => {
     assert.equal(updated.workingHours[0].day, "monday");
   });
 
-  // See the note above this file: employee.controller.js's confirmAppointment passes
-  // req.session.user.id (a User id) to appointmentService.confirmAppointment, but
-  // appointment.employee/assignedTo store Employee ids - a different document. If that
-  // analysis is right, this test should fail with the appointment still "pending".
   it("confirms an appointment assigned to this employee", async () => {
     const agent = request.agent(app);
     const { employee } = await createEmployeeSession(agent);

@@ -51,11 +51,3 @@ process.on("uncaughtException", (error) => {
 });
 
 start();
-
-
-// TODO: add filter to emails for Products (Prozivodi) (2026-07-19)
-// TODO: fix tests and add new (2026-07-19)
-// TODO: consider adding deleting images after update (2026-07-19)
-// TODO: consider adding admin id to loggs that are consider admin actions (2026-07-19)
-// TODO: adding pdf to email for confirmed order (2026-07-19)
-// TODO: consider adding pdf or txt file of logs in daily reports (2026-07-19)

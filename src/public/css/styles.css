@@ -240,7 +240,7 @@ h1, h2, h3, h4, h5, h6,
 }
 
 .hero-section-with-image {
-  background-image: linear-gradient(rgba(46, 42, 36, 0.6), rgba(46, 42, 36, 0.55)), url("/img/hero.jpg");
+  background-image: linear-gradient(rgba(46, 42, 36, 0.6), rgba(46, 42, 36, 0.55)), var(--hero-image);
 }
 
 .hero-inner {

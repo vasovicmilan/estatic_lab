@@ -21,7 +21,7 @@ export async function findTags({ search = "", limit = 20, page = 1, filters = {}
   const skip = resolveSkip(page, resolvedLimit);
 
   const [data, total] = await Promise.all([
-    Tag.find(filter).sort({ name: 1 }).skip(skip).limit(resolvedLimit).session(session || null).lean(),
+    Tag.find(filter).sort({ name: 1, _id: -1 }).skip(skip).limit(resolvedLimit).session(session || null).lean(),
     Tag.countDocuments(filter).session(session || null),
   ]);
 
@@ -31,7 +31,7 @@ export async function findTags({ search = "", limit = 20, page = 1, filters = {}
 export async function findAllTagsByDomain(domain, { onlyActive = true, session } = {}) {
   const filter = { domain };
   if (onlyActive) filter.isActive = true;
-  return Tag.find(filter).sort({ name: 1 }).session(session || null).lean();
+  return Tag.find(filter).sort({ name: 1, _id: -1 }).session(session || null).lean();
 }
 
 export async function updateTagById(id, updateData, { session } = {}) {

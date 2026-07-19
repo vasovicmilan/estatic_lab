@@ -29,7 +29,7 @@ export async function findCategories({
 
   const [data, total] = await Promise.all([
     Category.find(filter)
-      .sort({ "meta.priority": -1, name: 1 })
+      .sort({ "meta.priority": -1, name: 1, _id: -1 })
       .skip(skip)
       .limit(resolvedLimit)
       .session(session || null)
@@ -44,7 +44,7 @@ export async function findCategories({
 export async function findAllCategoriesByDomain(domain, { onlyActive = true, session } = {}) {
   const filter = { domain };
   if (onlyActive) filter["meta.isActive"] = true;
-  return Category.find(filter).sort({ "meta.priority": -1, name: 1 }).session(session || null).lean();
+  return Category.find(filter).sort({ "meta.priority": -1, name: 1, _id: -1 }).session(session || null).lean();
 }
 
 export async function updateCategoryById(id, updateData, { session } = {}) {

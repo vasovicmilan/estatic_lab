@@ -1,4 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // homepage hero background image (see landing/home.ejs) - applied via JS rather
+  // than an inline style="" attribute so this never depends on style-src allowing
+  // 'unsafe-inline' (setting a CSS custom property through the DOM API isn't
+  // restricted by CSP the way an inline style attribute would be)
+  document.querySelectorAll("[data-hero-image]").forEach((el) => {
+    el.style.setProperty("--hero-image", `url('${el.dataset.heroImage}')`);
+  });
+
   // multi-phase form progress bar (see admin/_form.ejs) - the width has to be
   // applied via JS because Bootstrap's .progress-bar has no width without it
   document.querySelectorAll("[data-progress-bar]").forEach((bar) => {

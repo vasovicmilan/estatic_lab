@@ -1,7 +1,7 @@
 <%- include("../includes/head") %>
 <%- include("../includes/navigation") %>
 
-<header class="position-relative text-white hero-section <%= data.hero.image ? 'hero-section-with-image' : '' %>">
+<header class="position-relative text-white hero-section <%= data.hero.image ? 'hero-section-with-image' : '' %>" <% if (data.hero.image) { %>data-hero-image="<%= data.hero.image %>"<% } %>>
   <div class="container hero-inner">
     <div class="row align-items-center hero-inner">
       <div class="col-lg-7 py-5">

@@ -31,7 +31,7 @@ describe("admin category CRUD + image upload (HTTP)", () => {
     const { token } = await getCsrfToken(agent, "/admin/kategorije/dodavanje");
 
     const res = await agent
-      .post("/admin/kategorije/dodavanje")
+      .post("/admin/kategorije")
       .field("CSRFToken", token)
       .field("name", "Masaze Lica")
       .field("domain", "service")
@@ -54,7 +54,7 @@ describe("admin category CRUD + image upload (HTTP)", () => {
     await getCsrfToken(agent, "/admin/kategorije/dodavanje");
 
     const res = await agent
-      .post("/admin/kategorije/dodavanje")
+      .post("/admin/kategorije")
       .field("name", "Bez Tokena")
       .field("domain", "service")
       .field("categoryImageDesc", "Bez tokena")
@@ -69,7 +69,7 @@ describe("admin category CRUD + image upload (HTTP)", () => {
 
     const { token: createToken } = await getCsrfToken(agent, "/admin/kategorije/dodavanje");
     const createRes = await agent
-      .post("/admin/kategorije/dodavanje")
+      .post("/admin/kategorije")
       .field("CSRFToken", createToken)
       .field("name", "Originalno Ime")
       .field("domain", "service")
@@ -104,7 +104,7 @@ describe("admin category CRUD + image upload (HTTP)", () => {
 
     const { token: createToken } = await getCsrfToken(agent, "/admin/kategorije/dodavanje");
     const createRes = await agent
-      .post("/admin/kategorije/dodavanje")
+      .post("/admin/kategorije")
       .field("CSRFToken", createToken)
       .field("name", "Za Brisanje")
       .field("domain", "service")

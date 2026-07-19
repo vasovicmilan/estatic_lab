@@ -53,10 +53,11 @@ describe("employee.service", () => {
 
     it("accepts a valid split shift (non-overlapping slots)", async (t) => {
       t.mock.method(employeeRepo, "findEmployeeByUserId", async () => null);
-      const employeeRole = buildRole({ name: "employee" });
+      const employeeRole = buildRole({ name: "employee", priority: 50 });
       t.mock.method(roleService, "findRoleByName", async () => employeeRole);
       const created = buildEmployee();
       t.mock.method(employeeRepo, "createEmployee", async () => created);
+      t.mock.method(userRepo, "findUserById", async () => ({ role: { priority: 0, name: "user" } }));
       t.mock.method(userRepo, "updateUserById", async () => {});
       t.mock.method(employeeRepo, "findEmployeeById", async () => created);
 
@@ -90,10 +91,11 @@ describe("employee.service", () => {
 
     it("promotes the target user's role to 'employee' on success", async (t) => {
       t.mock.method(employeeRepo, "findEmployeeByUserId", async () => null);
-      const employeeRole = buildRole({ name: "employee" });
+      const employeeRole = buildRole({ name: "employee", priority: 50 });
       t.mock.method(roleService, "findRoleByName", async () => employeeRole);
       const created = buildEmployee();
       t.mock.method(employeeRepo, "createEmployee", async () => created);
+      t.mock.method(userRepo, "findUserById", async () => ({ role: { priority: 0, name: "user" } }));
       let updatedRolePayload;
       t.mock.method(userRepo, "updateUserById", async (userId, patch) => {
         updatedRolePayload = patch;
