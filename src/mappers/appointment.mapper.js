@@ -27,21 +27,21 @@ function getUserName(appointment) {
   if (appointment.contactSnapshot?.firstName) {
     return `${appointment.contactSnapshot.firstName} ${appointment.contactSnapshot.lastName || ""}`.trim();
   }
-  if (appointment.user && typeof appointment.user === "object") {
-    return `${appointment.user.firstName || ""} ${appointment.user.lastName || ""}`.trim();
+  if (appointment.user && typeof appointment.user === "object" && appointment.user.firstName) {
+    return `${appointment.user.firstName} ${appointment.user.lastName || ""}`.trim();
   }
   return "Nepoznat korisnik";
 }
 
 function getUserEmail(appointment) {
   if (appointment.contactSnapshot?.email) return appointment.contactSnapshot.email;
-  if (appointment.user && typeof appointment.user === "object") return appointment.user.email;
+  if (appointment.user && typeof appointment.user === "object" && appointment.user.email) return appointment.user.email;
   return null;
 }
 
 function getUserPhone(appointment) {
   if (appointment.contactSnapshot?.phone) return appointment.contactSnapshot.phone;
-  if (appointment.user && typeof appointment.user === "object") return decryptPhone(appointment.user.phone);
+  if (appointment.user && typeof appointment.user === "object" && appointment.user.phone) return decryptPhone(appointment.user.phone);
   return null;
 }
 
