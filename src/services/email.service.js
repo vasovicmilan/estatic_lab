@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { sendEmail } from "../integrations/email/email.provider.js";
 import { logError } from "../utils/logger.util.js";
+import { generateOrderInvoicePdf } from "../utils/invoice-pdf.util.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -132,7 +133,16 @@ export async function sendOrderConfirmationRequestEmail({ email, firstName }, { 
 
 export async function sendOrderReceivedEmail({ email, firstName }, order) {
   const html = await renderTemplate("order-received", { firstName, order, manageUrl: `${BASE_URL}/nalog/porudzbine` });
-  return sendEmail({ to: email, subject: `Porudžbina potvrđena - ${SITE_NAME}`, html });
+
+  let attachments = [];
+  try {
+    const pdfBuffer = await generateOrderInvoicePdf(order);
+    attachments = [{ filename: `porudzbina-${order.id}.pdf`, content: pdfBuffer, contentType: "application/pdf" }];
+  } catch (error) {
+    logError("[EMAIL] Failed to generate order invoice PDF - sending confirmation without it", error, { orderId: order.id });
+  }
+
+  return sendEmail({ to: email, subject: `Porudžbina potvrđena - ${SITE_NAME}`, html, attachments });
 }
 
 // generic fallback for processing/shipped/delivered/completed/cancelled/returned/refunded
@@ -153,6 +163,21 @@ export async function notifyAdminOrderCancelled(order) {
   const html = await renderTemplate("admin-order-cancelled", { order, adminUrl: `${BASE_URL}/admin/porudzbine/detalji/${order.id}` });
   const summary = `Otkazano od kupca - ${order.korisnik?.ime || "Klijent"} (${order.ukupnaCena || ""})`;
   return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("PORUDŽBINA", summary), html });
+}
+
+// ==================== PRODUCTS ====================
+
+export async function notifyAdminStockAlert({ productId, productName, sku, variantLabel, stock, isOutOfStock }) {
+  const html = await renderTemplate("admin-stock-alert", {
+    productName,
+    sku,
+    variantLabel,
+    stock,
+    isOutOfStock,
+    adminUrl: `${BASE_URL}/admin/proizvodi/izmena/${productId}`,
+  });
+  const label = isOutOfStock ? "RASPRODATO" : "NISKO STANJE";
+  return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject(label, `${productName} - ${variantLabel}`), html });
 }
 
 // ==================== PACKAGES ====================
@@ -208,9 +233,9 @@ export async function sendNewsletterCampaign(subscribers, campaign) {
 
 // ==================== ADMIN REPORTS ====================
 
-export async function sendLogReportEmail(periodLabel, dateRangeLabel, summary) {
+export async function sendLogReportEmail(periodLabel, dateRangeLabel, summary, attachments = []) {
   const html = await renderTemplate("admin-log-report", { periodLabel, dateRangeLabel, ...summary });
-  return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("IZVEŠTAJ", `${periodLabel} (${dateRangeLabel})`), html });
+  return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("IZVEŠTAJ", `${periodLabel} (${dateRangeLabel})`), html, attachments });
 }
 
 export default {
@@ -231,6 +256,7 @@ export default {
   sendOrderStatusUpdateEmail,
   notifyAdminNewOrder,
   notifyAdminOrderCancelled,
+  notifyAdminStockAlert,
   sendPackagePurchaseCreatedEmail,
   sendPackagePurchaseCancelledEmail,
   notifyAdminNewContact,

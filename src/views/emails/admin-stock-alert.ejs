@@ -1,0 +1,18 @@
+<%- include("_layout", {
+  title: isOutOfStock ? "Proizvod je rasprodat" : "Proizvod na niskom stanju",
+  preheader: `${productName} - ${variantLabel}`,
+  body: `
+    <h1 style="font-size:20px; color:#333; margin:0 0 16px;">${isOutOfStock ? "🔴 Proizvod je rasprodat" : "🟡 Nisko stanje zaliha"}</h1>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9f7f5; border-radius:6px; margin:0 0 16px;">
+      <tr><td style="padding:16px; font-size:14px; color:#333;">
+        <strong>Proizvod:</strong> ${productName}<br>
+        <strong>SKU:</strong> ${sku || "-"}<br>
+        <strong>Varijanta:</strong> ${variantLabel}<br>
+        <strong>Preostalo na stanju:</strong> ${stock}
+      </td></tr>
+    </table>
+    <p style="text-align:center; margin:32px 0;">
+      <a href="${adminUrl}" style="background-color:#7a5c3e; color:#ffffff; padding:12px 28px; border-radius:4px; text-decoration:none; font-size:14px; font-weight:bold; display:inline-block;">Ažuriraj zalihe</a>
+    </p>
+  `
+}) %>

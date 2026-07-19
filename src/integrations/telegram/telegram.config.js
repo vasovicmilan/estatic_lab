@@ -7,6 +7,7 @@ const TELEGRAM_CONFIG = {
     TESTIMONIALS: process.env.TELEGRAM_TESTIMONIALS_THREAD || null,
     USERS: process.env.TELEGRAM_USERS_THREAD || null,
     ORDERS: process.env.TELEGRAM_ORDERS_THREAD || null,
+    PRODUCTS: process.env.TELEGRAM_PRODUCTS_THREAD || null,
     ERRORS: process.env.TELEGRAM_ERRORS_THREAD || null,
   },
 

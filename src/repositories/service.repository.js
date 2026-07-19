@@ -47,7 +47,7 @@ export async function findServices({
   const skip = resolveSkip(page, resolvedLimit);
 
   let query = Service.find(filter)
-    .sort({ highlight: -1, createdAt: -1 })
+    .sort({ highlight: -1, createdAt: -1, _id: -1 })
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);

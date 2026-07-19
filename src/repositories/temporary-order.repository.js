@@ -21,7 +21,7 @@ export async function findTemporaryOrders({ search = "", limit = 20, page = 1, f
   const skip = resolveSkip(page, resolvedLimit);
 
   const [data, total] = await Promise.all([
-    TemporaryOrder.find(filter).sort({ createdAt: -1 }).skip(skip).limit(resolvedLimit).session(session || null).lean(),
+    TemporaryOrder.find(filter).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(resolvedLimit).session(session || null).lean(),
     TemporaryOrder.countDocuments(filter).session(session || null),
   ]);
 

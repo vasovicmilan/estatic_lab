@@ -74,7 +74,7 @@ export async function findCoupons({ search = "", limit = 20, page = 1, filters =
 
   const [data, total] = await Promise.all([
     Coupon.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 })
       .skip(skip)
       .limit(resolvedLimit)
       .session(session || null)

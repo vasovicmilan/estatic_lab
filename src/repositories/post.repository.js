@@ -36,7 +36,7 @@ export async function findPosts({
   const skip = resolveSkip(page, resolvedLimit);
 
   let query = Post.find(filter)
-    .sort({ publishedAt: -1, createdAt: -1 })
+    .sort({ publishedAt: -1, createdAt: -1, _id: -1 })
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);

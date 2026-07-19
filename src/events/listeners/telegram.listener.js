@@ -18,6 +18,7 @@ import {
   buildNewOrderMessage,
   buildOrderCancelledMessage,
   buildOrderStatusChangeMessage,
+  buildStockAlertMessage,
 } from "../../utils/telegram-message.util.js";
 import { logError } from "../../utils/logger.util.js";
 
@@ -152,6 +153,24 @@ eventEmitter.on(
 
     const text = buildOrderStatusChangeMessage(flat, translateOrderStatus(previousStatus), translateOrderStatus(status));
     await telegramService.sendTelegramMessage("ORDERS", text);
+  })
+);
+
+// ==================== PRODUCTS ====================
+
+eventEmitter.on(
+  "product:out_of_stock",
+  safe("product:out_of_stock", async ({ productId, productName, sku, variantLabel }) => {
+    const text = buildStockAlertMessage({ productName, sku, variantLabel, stock: 0, isOutOfStock: true, adminUrl: `${BASE_URL}/admin/proizvodi/izmena/${productId}` });
+    await telegramService.sendTelegramMessage("PRODUCTS", text);
+  })
+);
+
+eventEmitter.on(
+  "product:low_stock",
+  safe("product:low_stock", async ({ productId, productName, sku, variantLabel, stock }) => {
+    const text = buildStockAlertMessage({ productName, sku, variantLabel, stock, isOutOfStock: false, adminUrl: `${BASE_URL}/admin/proizvodi/izmena/${productId}` });
+    await telegramService.sendTelegramMessage("PRODUCTS", text);
   })
 );
 

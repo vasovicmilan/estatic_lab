@@ -32,7 +32,7 @@ export async function findPackages({
   const skip = resolveSkip(page, resolvedLimit);
 
   let query = Package.find(filter)
-    .sort({ order: 1, createdAt: -1 })
+    .sort({ order: 1, createdAt: -1, _id: -1 })
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);

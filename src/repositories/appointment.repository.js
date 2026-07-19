@@ -43,7 +43,7 @@ export async function findAppointments({
   const skip = resolveSkip(page, resolvedLimit);
 
   let query = Appointment.find(filter)
-    .sort({ startTime: -1 })
+    .sort({ startTime: -1, _id: -1 })
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);

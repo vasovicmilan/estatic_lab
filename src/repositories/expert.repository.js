@@ -28,7 +28,7 @@ export async function findExperts({
   const skip = resolveSkip(page, resolvedLimit);
 
   let query = Expert.find(filter)
-    .sort({ order: 1, createdAt: -1 })
+    .sort({ order: 1, createdAt: -1, _id: -1 })
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);
@@ -44,7 +44,7 @@ export async function findExperts({
 
 // public "our experts" listing - active only, ordered for display, no pagination noise
 export async function findActiveExperts({ session } = {}) {
-  return Expert.find({ isActive: true }).sort({ order: 1, createdAt: -1 }).session(session || null).lean();
+  return Expert.find({ isActive: true }).sort({ order: 1, createdAt: -1, _id: -1 }).session(session || null).lean();
 }
 
 export async function updateExpertById(id, updateData, { session } = {}) {

@@ -38,7 +38,7 @@ export async function findTestimonials({
   const skip = resolveSkip(page, resolvedLimit);
 
   let query = Testimonial.find(filter)
-    .sort({ isFeatured: -1, createdAt: -1 })
+    .sort({ isFeatured: -1, createdAt: -1, _id: -1 })
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);
@@ -61,7 +61,7 @@ export async function findApprovedTestimonials({ limit = 10, featuredOnly = fals
   if (product) filter.product = product;
 
   let query = Testimonial.find(filter)
-    .sort({ isFeatured: -1, createdAt: -1 })
+    .sort({ isFeatured: -1, createdAt: -1, _id: -1 })
     .limit(limit)
     .session(session || null);
   for (const field of TESTIMONIAL_POPULATE) query = query.populate(field);

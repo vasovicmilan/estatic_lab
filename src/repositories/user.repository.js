@@ -72,7 +72,7 @@ export async function findUsers({
   const skip = resolveSkip(page, resolvedLimit);
 
   let query = User.find(filter)
-    .sort({ createdAt: -1 })
+    .sort({ createdAt: -1, _id: -1 })
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);

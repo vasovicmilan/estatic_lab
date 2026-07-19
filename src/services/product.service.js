@@ -10,6 +10,7 @@ import {
 } from "../mappers/product.mapper.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
+import { deleteUploadedFile, deleteUploadedFiles } from "../utils/file-cleanup.util.js";
 
 function validateVariations(variations = []) {
   for (const v of variations) {
@@ -88,13 +89,18 @@ export async function addDetailsAndMedia(productId, data) {
   const variations = data.variations ?? existing.variations ?? [];
   validateVariations(variations);
 
+  const nextImage = data.image ?? existing.image ?? null;
+  if (existing.image?.img && nextImage?.img && nextImage.img !== existing.image.img) {
+    await deleteUploadedFile(existing.image.img);
+  }
+
   const updated = await productRepo.updateProductById(productId, {
     variations,
     categories: data.categories ?? existing.categories ?? [],
     tags: data.tags ?? existing.tags ?? [],
     shortDescription: data.shortDescription ?? existing.shortDescription ?? "",
     longDescription: data.longDescription ?? existing.longDescription ?? "",
-    image: data.image ?? existing.image ?? null,
+    image: nextImage,
     gallery: data.gallery ?? existing.gallery ?? [],
     videos: data.videos ?? existing.videos ?? [],
   });
@@ -176,6 +182,18 @@ export async function updateProductById(productId, data) {
     slug = generateSlug(data.slug);
   }
 
+  // clean up files that this update actually replaces/removes - not files that were
+  // never touched by this request (data.image/data.gallery undefined means "leave
+  // as-is", not "clear it")
+  if (data.image !== undefined && existing.image?.img && data.image?.img !== existing.image.img) {
+    await deleteUploadedFile(existing.image.img);
+  }
+  if (data.gallery !== undefined) {
+    const nextUrls = new Set((data.gallery || []).map((g) => g.img));
+    const removed = (existing.gallery || []).filter((g) => g.img && !nextUrls.has(g.img)).map((g) => g.img);
+    await deleteUploadedFiles(removed);
+  }
+
   const updated = await productRepo.updateProductById(productId, {
     ...data,
     ...(data.sku ? { sku: data.sku.toLowerCase().trim() } : {}),
@@ -190,6 +208,11 @@ export async function deleteProductById(productId) {
   const existing = await productRepo.findProductById(productId);
   if (!existing) notFound("Proizvod");
   await productRepo.deleteProductById(productId);
+
+  // no reason to keep orphaned files around once the product record itself is gone
+  await deleteUploadedFile(existing.image?.img);
+  await deleteUploadedFiles((existing.gallery || []).map((g) => g.img));
+
   logInfo("Product deleted", { productId });
   return { success: true };
 }

@@ -1,6 +1,7 @@
 import logReportService from "../services/log-report.service.js";
 import emailService from "../services/email.service.js";
 import tempOrderService from "../services/temporary-order.service.js";
+import { getRawLogTextForDate } from "../utils/log-analysis.util.js";
 import { formatDate, toDateKey } from "../utils/date.time.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 import { alertError } from "../utils/telegram-alert.util.js";
@@ -30,7 +31,10 @@ export async function runDailyLogReport() {
     const dateStr = toDateKey(yesterday);
 
     const summary = await logReportService.generateDailySummary(dateStr);
-    await emailService.sendLogReportEmail("Dnevni izveštaj", formatDate(yesterday), summary);
+    const rawLogText = getRawLogTextForDate(dateStr);
+    const attachments = [{ filename: `logs-${dateStr}.txt`, content: rawLogText, contentType: "text/plain" }];
+
+    await emailService.sendLogReportEmail("Dnevni izveštaj", formatDate(yesterday), summary, attachments);
   });
 }
 

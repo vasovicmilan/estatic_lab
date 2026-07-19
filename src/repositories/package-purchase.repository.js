@@ -19,7 +19,7 @@ export async function findPackagePurchaseDocById(id, { session } = {}) {
 }
 
 export async function findPurchasesByUser(userId, { populateFields = [], session } = {}) {
-  let query = PackagePurchase.find({ user: userId }).sort({ purchasedAt: -1 }).session(session || null);
+  let query = PackagePurchase.find({ user: userId }).sort({ purchasedAt: -1, _id: -1 }).session(session || null);
   populateFields.forEach((p) => (query = query.populate(p)));
   return query.lean();
 }
@@ -49,7 +49,7 @@ export async function findPackagePurchases({ filters = {}, limit = 20, page = 1,
   const resolvedLimit = resolveLimit(limit);
   const skip = resolveSkip(page, resolvedLimit);
 
-  let query = PackagePurchase.find(filter).sort({ purchasedAt: -1 }).skip(skip).limit(resolvedLimit).session(session || null);
+  let query = PackagePurchase.find(filter).sort({ purchasedAt: -1, _id: -1 }).skip(skip).limit(resolvedLimit).session(session || null);
   populateFields.forEach((p) => (query = query.populate(p)));
 
   const [data, total] = await Promise.all([query.lean(), PackagePurchase.countDocuments(filter).session(session || null)]);

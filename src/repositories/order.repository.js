@@ -45,7 +45,7 @@ export async function findOrders({
   const resolvedLimit = resolveLimit(limit);
   const skip = resolveSkip(page, resolvedLimit);
 
-  let query = Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(resolvedLimit).session(session || null);
+  let query = Order.find(filter).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(resolvedLimit).session(session || null);
   query = applyPopulate(query, populateFields);
 
   const [data, total] = await Promise.all([

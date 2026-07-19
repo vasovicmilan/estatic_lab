@@ -26,7 +26,7 @@ export async function findSubscribers({ search = "", limit = 20, page = 1, filte
 
   const [data, total] = await Promise.all([
     NewsLetter.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 })
       .skip(skip)
       .limit(resolvedLimit)
       .session(session || null)

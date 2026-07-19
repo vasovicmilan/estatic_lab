@@ -106,6 +106,20 @@ export function buildOrderStatusChangeMessage(order, oldStatus, newStatus) {
   return lines.join("\n");
 }
 
+export function buildStockAlertMessage({ productName, sku, variantLabel, stock, isOutOfStock, adminUrl }) {
+  const lines = [
+    isOutOfStock ? `🔴 <b>Proizvod je rasprodat</b>` : `🟡 <b>Nisko stanje zaliha</b>`,
+    "",
+    `📦 <b>Proizvod:</b> ${escapeHtml(productName)}`,
+  ];
+  if (sku) lines.push(`🏷 <b>SKU:</b> ${escapeHtml(sku)}`);
+  lines.push(`🔧 <b>Varijanta:</b> ${escapeHtml(variantLabel)}`);
+  lines.push(`📊 <b>Na stanju:</b> ${stock}`);
+  if (adminUrl) lines.push("", `🔗 <a href="${adminUrl}">Ažuriraj zalihe</a>`);
+
+  return lines.join("\n");
+}
+
 export function buildNewContactMessage(contact) {
   const lines = [
     `📩 <b>Nova kontakt poruka</b>`,
@@ -194,5 +208,6 @@ export default {
   buildNewOrderMessage,
   buildOrderCancelledMessage,
   buildOrderStatusChangeMessage,
+  buildStockAlertMessage,
   buildErrorAlertMessage,
 };

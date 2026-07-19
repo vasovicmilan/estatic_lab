@@ -82,6 +82,38 @@ function increment(map, key) {
  * LogSummary stores. Returns 0/empty fields if no log files exist for that day (e.g.
  * the app wasn't running, or logs were already cleaned up past retention).
  */
+/**
+ * Raw, human-readable text of every app/error/http log line for a given day,
+ * concatenated in one file - a backup/audit trail attached to the daily report email,
+ * independent of the aggregated LogSummary in the database. Not parsed or filtered -
+ * exactly what was written that day, so it's useful even if analyzeDay's own parsing
+ * logic has a bug or misses something.
+ */
+export function getRawLogTextForDate(dateStr) {
+  const sections = [
+    { label: "APP/ERROR LOG", baseName: baseFileName("app") },
+    { label: "HTTP LOG", baseName: baseFileName("http") },
+  ];
+
+  const parts = [`Raw logs for ${dateStr}\n${"=".repeat(40)}`];
+  for (const { label, baseName } of sections) {
+    const files = findLogFiles(baseName, dateStr);
+    parts.push(`\n--- ${label} (${files.length} file(s)) ---\n`);
+    if (files.length === 0) {
+      parts.push("(no files found for this date)\n");
+      continue;
+    }
+    for (const file of files) {
+      try {
+        parts.push(fs.readFileSync(file, "utf8"));
+      } catch (error) {
+        parts.push(`(failed to read ${file}: ${error.message})\n`);
+      }
+    }
+  }
+  return parts.join("\n");
+}
+
 export function analyzeDay(dateStr) {
   const appLines = findLogFiles(baseFileName("app"), dateStr).flatMap(readJsonLines);
   const httpLines = findLogFiles(baseFileName("http"), dateStr).flatMap(readJsonLines);
