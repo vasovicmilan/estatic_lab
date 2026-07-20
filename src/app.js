@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import cookieParser from "cookie-parser";
 
 import { setupHelmet } from "./config/helmet.config.js";
 import { setupCors } from "./config/cors.config.js";
@@ -13,6 +14,7 @@ import { setupViewEngine } from "./config/view-engine.config.js";
 import localsMiddleware from "./config/locals.config.js";
 import { csrfLocals, csrfWebProtection } from "./config/csrf.config.js";
 import { globalLimiter } from "./middlewares/rate-limiter.middleware.js";
+import { couponCaptureMiddleware } from "./middlewares/coupon-capture.middleware.js";
 import routes from "./routes/index.routes.js";
 import { notFoundHandler, globalErrorHandler } from "./middlewares/error.middleware.js";
 
@@ -25,6 +27,7 @@ setupMorgan(app);
 
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
+app.use(cookieParser());
 
 setupMethodOverride(app);
 setupSanitize(app);
@@ -35,6 +38,7 @@ setupFlash(app);
 app.use(localsMiddleware);
 app.use(csrfLocals);
 app.use(csrfWebProtection);
+app.use(couponCaptureMiddleware);
 
 app.use((req, res, next) => {
   if (!req.originalUrl.startsWith("/api")) {

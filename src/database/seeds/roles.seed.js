@@ -20,6 +20,7 @@ const defaultRoles = [
       "manage_coupons",
       "manage_products",
       "manage_orders",
+      "manage_partners",
     ],
     isDefault: false,
     priority: 100,
@@ -30,6 +31,13 @@ const defaultRoles = [
     permissions: ["view_dashboard", "manage_appointments_assigned"],
     isDefault: false,
     priority: 50,
+  },
+  {
+    name: "partner",
+    description: "Partner - pristup sopstvenom katalogu, referalnom linku i proviziji",
+    permissions: ["view_dashboard", "view_own_commissions"],
+    isDefault: false,
+    priority: 40,
   },
   {
     name: "user",

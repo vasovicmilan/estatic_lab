@@ -11,6 +11,8 @@ import {
 } from "../../../presenters/public/booking.presenter.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
+import { getCapturedReferralCode } from "../../../middlewares/coupon-capture.middleware.js";
+import { tryApplyCoupon } from "./coupon.controller.js";
 
 // Step 1 - GET /zakazivanje/:serviceSlug
 export async function serviceStep(req, res, next) {
@@ -106,6 +108,13 @@ export async function contactStep(req, res, next) {
       { startTime, employeeId: employeeId || null },
       { isLoggedIn, user: req.session?.user, usablePackagePurchase }
     );
+
+    if (!req.session.activeCoupon) {
+      const referralCode = getCapturedReferralCode(req);
+      if (referralCode) {
+        await tryApplyCoupon(req, { code: referralCode, context: "booking", serviceId: service.id, appointmentValue: viewData.appointmentValue });
+      }
+    }
 
     return res.render("booking/contact-step", {
       pageTitle: `Zakazivanje - ${service.naziv}`,

@@ -87,6 +87,17 @@ const CouponSchema = new Schema(
     applicablePackages: [{ type: Schema.Types.ObjectId, ref: "Package" }],
     applicableProducts: [{ type: Schema.Types.ObjectId, ref: "Product" }],
 
+    // when set, this coupon is a partner's affiliate/referral code - redeeming it
+    // still discounts the customer normally, but also queues a commission entry
+    // for this partner once the underlying appointment/order actually completes
+    // (see commission.service.js)
+    partner: {
+      type: Schema.Types.ObjectId,
+      ref: "Partner",
+      default: null,
+      index: true,
+    },
+
     validFrom: {
       type: Date,
       default: Date.now,

@@ -8,23 +8,19 @@ function getAuth(req) {
 }
 
 /**
- * Applies a coupon code for either a booking (appointment) or an order (checkout)
- * and, on success, stores it in session as the single active coupon for that
- * context. The final booking/checkout submission reads this from session rather
- * than trusting a resubmitted form field, so what actually gets redeemed is
- * exactly what the user saw previewed here - never a stale or unvalidated code.
+ * Core validate-and-store logic, usable both from the HTTP apply endpoint below
+ * and from the cookie-based auto-apply on page load (see coupon-capture.middleware.js
+ * and booking/shop controllers) - both need the exact same validation, just
+ * triggered differently (an explicit click vs. a captured referral code).
  *
- * Re-validating here doesn't change the security story: bookAppointment/checkout
- * both re-validate the coupon again for real at submission time regardless (via
- * the same validateCouponFor* functions), so this is purely a UX preview step -
- * nothing is redeemed until the booking/order is actually created.
+ * Never throws - callers get back { success, code, discountAmount } or
+ * { success: false, message }, since an auto-apply failure should never surface
+ * as an error to a visitor who didn't take any explicit action.
  */
-export async function applyCoupon(req, res) {
-  const { code, context, serviceId, appointmentValue, productIds, orderValue } = req.body;
-
+export async function tryApplyCoupon(req, { code, context, serviceId, appointmentValue, productIds, orderValue } = {}) {
   try {
-    if (!code) return res.status(400).json({ success: false, message: "Unesite kod kupona" });
-    if (!["booking", "order"].includes(context)) return res.status(400).json({ success: false, message: "Nepoznat kontekst" });
+    if (!code) return { success: false, message: "Unesite kod kupona" };
+    if (!["booking", "order"].includes(context)) return { success: false, message: "Nepoznat kontekst" };
 
     const { userId } = getAuth(req);
     let result;
@@ -46,13 +42,19 @@ export async function applyCoupon(req, res) {
       appliedAt: new Date().toISOString(),
     };
 
-    logInfo(`[applyCoupon] Kupon "${result.coupon.code}" primenjen`, { context, userId, discountAmount: result.discountAmount });
-    return res.json({ success: true, code: result.coupon.code, discountAmount: result.discountAmount });
+    logInfo(`[tryApplyCoupon] Kupon "${result.coupon.code}" primenjen`, { context, userId, discountAmount: result.discountAmount });
+    return { success: true, code: result.coupon.code, discountAmount: result.discountAmount };
   } catch (error) {
-    logWarn(`[applyCoupon] Kupon nije primenjen: ${error.message}`, { code, context });
+    logWarn(`[tryApplyCoupon] Kupon nije primenjen: ${error.message}`, { code, context });
     const normalized = normalizeError(error);
-    return res.status(normalized.statusCode || 400).json({ success: false, message: normalized.message });
+    return { success: false, message: normalized.message };
   }
+}
+
+export async function applyCoupon(req, res) {
+  const { code, context, serviceId, appointmentValue, productIds, orderValue } = req.body;
+  const result = await tryApplyCoupon(req, { code, context, serviceId, appointmentValue, productIds, orderValue });
+  return res.status(result.success ? 200 : 400).json(result);
 }
 
 export async function removeCoupon(req, res) {

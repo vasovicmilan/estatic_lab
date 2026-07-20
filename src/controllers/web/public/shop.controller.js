@@ -9,6 +9,8 @@ import {
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 import { normalizeError } from "../../../utils/error.util.js";
+import { getCapturedReferralCode } from "../../../middlewares/coupon-capture.middleware.js";
+import { tryApplyCoupon } from "./coupon.controller.js";
 
 function getAuth(req) {
   const isLoggedIn = !!req.session?.isLoggedIn;
@@ -131,6 +133,13 @@ export async function checkoutStep(req, res, next) {
     const user = isLoggedIn ? await userService.findUserProfile(userId) : null;
 
     const viewData = prepareCheckoutStepData(cart, { isLoggedIn, user, addresses });
+
+    if (!req.session.activeCoupon) {
+      const referralCode = getCapturedReferralCode(req);
+      if (referralCode) {
+        await tryApplyCoupon(req, { code: referralCode, context: "order", productIds: viewData.productIds, orderValue: viewData.orderValue });
+      }
+    }
 
     return res.render("shop/checkout", {
       pageTitle: "Naplata",
