@@ -14,6 +14,11 @@ export async function createEmployee(data, { session } = {}) {
   return employee;
 }
 
+export async function findAllEmployeeUserIds({ session } = {}) {
+  const employees = await Employee.find({}).select("userId").session(session || null).lean();
+  return employees.map((e) => e.userId.toString());
+}
+
 export async function findEmployeeById(id, { populateFields = [], session } = {}) {
   let query = Employee.findById(id).session(session || null);
   query = applyPopulate(query, populateFields);
@@ -77,6 +82,7 @@ export async function countEmployees(filters = {}, { session } = {}) {
 
 export default {
   createEmployee,
+  findAllEmployeeUserIds,
   findEmployeeById,
   findEmployeeByUserId,
   findEmployeesByService,

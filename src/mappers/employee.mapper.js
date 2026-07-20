@@ -108,6 +108,8 @@ export function mapEmployeeForAdminDetail(employee) {
     povezaniEkspert: getLinkedExpert(employee),
     usluge: getServiceNames(employee),
     radnoVreme: getWorkingHours(employee),
+    nacinIsplate: employee.payType === "commission" ? "Provizija" : "Fiksna plata",
+    procenatProvizije: employee.payType === "commission" ? `${employee.commissionRate}%` : null,
     aktivan: employee.isActive ? "Da" : "Ne",
     napomena: employee.notes || null,
     vreme: {
@@ -132,6 +134,8 @@ export function mapEmployeeForEdit(employee) {
     expert: employee.expert?._id?.toString() || employee.expert?.toString() || null,
     services: (employee.services || []).map((s) => s._id?.toString() || s.toString()),
     workingHours: getWorkingHoursRaw(employee),
+    payType: employee.payType || "salary",
+    commissionRate: employee.commissionRate,
     isActive: employee.isActive,
     notes: employee.notes || "",
   };

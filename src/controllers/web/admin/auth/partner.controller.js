@@ -1,12 +1,24 @@
 import * as partnerService from "../../../../services/partner.service.js";
 import * as userService from "../../../../services/user.service.js";
+import partnerRepo from "../../../../repositories/partner.repository.js";
 import { preparePartnerListData, preparePartnerDetailsData, preparePartnerFormData } from "../../../../presenters/admin/auth/partner.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 
 async function loadFormOptions() {
-  const users = await userService.listUsers({ role: undefined, status: "active", limit: 200 });
-  return { userOptions: users.data.map((u) => ({ value: u.id, label: `${u.imePrezime} (${u.email})` })) };
+  const [users, existingPartnerUserIds] = await Promise.all([
+    userService.listUsers({ role: undefined, status: "active", limit: 200 }),
+    partnerRepo.findAllPartnerUserIds(),
+  ]);
+
+  // exclude users who already have a Partner profile - not because an employee or
+  // admin can't also be a partner (the role-priority safeguard in
+  // partnerService.createPartner handles that fine), but so admin doesn't select
+  // someone here and immediately hit the duplicate-profile conflict error
+  const existingSet = new Set(existingPartnerUserIds);
+  const userOptions = users.data.filter((u) => !existingSet.has(u.id)).map((u) => ({ value: u.id, label: `${u.imePrezime} (${u.email})` }));
+
+  return { userOptions };
 }
 
 export async function listPartners(req, res, next) {

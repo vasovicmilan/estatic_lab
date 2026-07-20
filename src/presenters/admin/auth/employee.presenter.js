@@ -91,6 +91,8 @@ export function prepareEmployeeDetailsData(employee) {
         type: "table",
         rows: [
           { label: "Aktivan", value: employee.aktivan },
+          { label: "Način isplate", value: employee.nacinIsplate },
+          ...(employee.procenatProvizije ? [{ label: "Procenat provizije", value: employee.procenatProvizije }] : []),
           { label: "Napomena", value: employee.napomena || "-" },
         ],
       },
@@ -113,7 +115,9 @@ export function prepareEmployeeDetailsData(employee) {
 
 export function prepareEmployeeFormData(employee = null, { userOptions = [], serviceOptions = [], expertOptions = [] } = {}) {
   const isEdit = !!employee;
-  const values = isEdit ? employee : { userId: "", expert: null, services: [], workingHours: [], isActive: true, notes: "" };
+  const values = isEdit
+    ? employee
+    : { userId: "", expert: null, services: [], workingHours: [], payType: "salary", commissionRate: null, isActive: true, notes: "" };
   const weekDays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
   // employee has no slug at all - nothing to hide here, included for consistency
@@ -158,6 +162,28 @@ export function prepareEmployeeFormData(employee = null, { userOptions = [], ser
       value: values.workingHours || [],
       days: weekDays.map((d) => ({ value: d, label: translateDay(d) })),
       help: "Dodajte jedan ili više termina za svaki radni dan. Dani bez termina se smatraju neradnim.",
+    },
+    {
+      name: "payType",
+      label: "Način isplate",
+      type: "select",
+      width: 6,
+      value: values.payType || "salary",
+      options: [
+        { value: "salary", label: "Fiksna plata" },
+        { value: "commission", label: "Provizija" },
+      ],
+    },
+    {
+      name: "commissionRate",
+      label: "Procenat provizije",
+      type: "number",
+      width: 6,
+      min: 0,
+      max: 100,
+      step: "0.01",
+      value: values.commissionRate,
+      help: "Obavezno samo ako je način isplate 'Provizija'.",
     },
     { name: "notes", label: "Napomena", type: "textarea", rows: 3, width: 12, value: values.notes, help: "Najviše 500 karaktera." },
     { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive }

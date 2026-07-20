@@ -14,6 +14,11 @@ export async function createPartner(data, { session } = {}) {
   return partner;
 }
 
+export async function findAllPartnerUserIds({ session } = {}) {
+  const partners = await Partner.find({}).select("userId").session(session || null).lean();
+  return partners.map((p) => p.userId.toString());
+}
+
 export async function findPartnerById(id, { populateFields = [], session } = {}) {
   let query = Partner.findById(id).session(session || null);
   query = applyPopulate(query, populateFields);
@@ -66,6 +71,7 @@ export async function countPartners(filters = {}, { session } = {}) {
 
 export default {
   createPartner,
+  findAllPartnerUserIds,
   findPartnerById,
   findPartnerByUserId,
   findPartners,

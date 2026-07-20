@@ -6,6 +6,7 @@ import {
   runYearlyLogReport,
   runExpiredTemporaryOrderCleanup,
 } from "./report-jobs.js";
+import { runCommissionGracePeriodSweep } from "./commission-jobs.js";
 import { logInfo } from "../utils/logger.util.js";
 
 const TIMEZONE = process.env.CRON_TIMEZONE || "Europe/Belgrade";
@@ -41,6 +42,11 @@ export function startScheduler() {
   // whole point of the grace period is to give admin/customer time to sort it out
   // before anything is actually deleted.
   cron.schedule("0 * * * *", runExpiredTemporaryOrderCleanup, { timezone: TIMEZONE });
+
+  // Commission grace-period sweep - once daily, 02:00. Not time-sensitive down to
+  // the hour (the 14-day withdrawal window doesn't move minute to minute), but
+  // frequent enough that a partner's payable balance doesn't sit stale for long.
+  cron.schedule("0 2 * * *", runCommissionGracePeriodSweep, { timezone: TIMEZONE });
 
   logInfo(`[cron] Scheduler started (timezone: ${TIMEZONE})`);
 }

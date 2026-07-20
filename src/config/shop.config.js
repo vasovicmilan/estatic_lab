@@ -14,4 +14,10 @@ export const TEMP_ORDER_TOKEN_TTL_MINUTES = Number(process.env.TEMP_ORDER_TOKEN_
 // this full window passes does the reservation actually get released.
 export const TEMP_ORDER_RETENTION_HOURS = Number(process.env.TEMP_ORDER_RETENTION_HOURS || 24);
 
-export default { DEFAULT_SHIPPING_PRICE, TEMP_ORDER_TOKEN_TTL_MINUTES, TEMP_ORDER_RETENTION_HOURS };
+// matches the 14-day statutory withdrawal right (Zakon o zaštiti potrošača,
+// already documented in the site's Terms) - a partner-referred order's commission
+// stays "pending" until this window has passed, since the customer could still
+// return the order and the commission would need to be reversed
+export const ORDER_COMMISSION_GRACE_PERIOD_DAYS = Number(process.env.ORDER_COMMISSION_GRACE_PERIOD_DAYS || 14);
+
+export default { DEFAULT_SHIPPING_PRICE, TEMP_ORDER_TOKEN_TTL_MINUTES, TEMP_ORDER_RETENTION_HOURS, ORDER_COMMISSION_GRACE_PERIOD_DAYS };

@@ -2,19 +2,29 @@ import * as employeeService from "../../../../services/employee.service.js";
 import * as userService from "../../../../services/user.service.js";
 import * as serviceService from "../../../../services/service.service.js";
 import * as expertService from "../../../../services/expert.service.js";
+import employeeRepo from "../../../../repositories/employee.repository.js";
 import { prepareEmployeeListData, prepareEmployeeDetailsData, prepareEmployeeFormData } from "../../../../presenters/admin/auth/employee.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 
 async function loadFormOptions() {
-  const [users, services, experts] = await Promise.all([
+  const [users, services, experts, existingEmployeeUserIds] = await Promise.all([
     userService.listUsers({ role: undefined, status: "active", limit: 200 }),
     serviceService.listServices({ limit: 200 }),
     expertService.listExperts({ limit: 200 }),
+    employeeRepo.findAllEmployeeUserIds(),
   ]);
 
+  // exclude users who already have an Employee profile - same reasoning as
+  // partner.controller.js: not a restriction on who CAN become an employee, just
+  // avoids picking someone who'd immediately hit the duplicate-profile conflict
+  const existingSet = new Set(existingEmployeeUserIds);
+  const userOptions = users.data
+    .filter((u) => !existingSet.has(u.id))
+    .map((u) => ({ value: u.id, label: `${u.imePrezime} (${u.email})` }));
+
   return {
-    userOptions: users.data.map((u) => ({ value: u.id, label: `${u.imePrezime} (${u.email})` })),
+    userOptions,
     serviceOptions: services.data.map((s) => ({ value: s.id, label: s.naziv })),
     expertOptions: experts.data.map((e) => ({ value: e.id, label: e.imePrezime })),
   };
