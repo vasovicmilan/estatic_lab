@@ -105,11 +105,12 @@
           <textarea name="note" class="form-control" rows="3"><%= (typeof formData !== 'undefined' && formData.note) || '' %></textarea>
         </div>
 
-        <div class="mb-4">
-          <label class="form-label">Kod kupona</label>
-          <input type="text" name="couponCode" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.couponCode) || '' %>" style="max-width:250px;">
-          <% if (data.errors && data.errors.couponCode) { %><div class="text-danger small mt-1"><%= data.errors.couponCode %></div><% } %>
-        </div>
+        <%- include("../includes/components/coupon-field", {
+          context: "order",
+          productIds: data.productIds || [],
+          orderValue: data.orderValue,
+          activeCoupon: data.activeCoupon || null,
+        }) %>
 
         <button type="submit" class="btn btn-primary btn-lg">Potvrdi porudžbinu</button>
       </form>

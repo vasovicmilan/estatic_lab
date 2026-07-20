@@ -2,7 +2,8 @@ import { Router } from "express";
 import { webAuthMiddleware, optionalWebAuth } from "../../middlewares/auth.middleware.js";
 import * as IndexController from "../../controllers/web/index.controller.js";
 import * as SeoController from "../../controllers/web/seo.controller.js";
-import { contactLimiter, newsletterLimiter, testimonialLimiter } from "../../middlewares/rate-limiter.middleware.js";
+import { contactLimiter, newsletterLimiter, testimonialLimiter, couponLimiter } from "../../middlewares/rate-limiter.middleware.js";
+import * as CouponController from "../../controllers/web/public/coupon.controller.js";
 import { validateContactCreate } from "../../middlewares/validators/contact.validator.js";
 import { validateNewsletterSubscribe } from "../../middlewares/validators/newsletter.validator.js";
 import { validateTestimonialSubmit } from "../../middlewares/validators/testimonial.validator.js";
@@ -68,6 +69,9 @@ router.use("/paketi", packageRoutes);
 router.use("/blog", blogRoutes);
 router.use("/zakazivanje", bookingRoutes);
 router.use("/prodavnica", productRoutes);
+
+router.post("/kupon/primeni", couponLimiter, CouponController.applyCoupon);
+router.post("/kupon/ukloni", CouponController.removeCoupon);
 router.use("/korpa", shopRoutes);
 
 router.use("/", authRoutes);

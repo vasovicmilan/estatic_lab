@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
 
   <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Estetik Lab' %></title>
   <meta name="description" content="<%= typeof pageDescription !== 'undefined' ? pageDescription : 'Estetik Lab wellness centar' %>">

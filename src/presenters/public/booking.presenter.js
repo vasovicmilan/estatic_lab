@@ -72,6 +72,10 @@ export function prepareBookingContactStepData(
     // a package-covered booking is already prepaid - the coupon field only makes
     // sense when the visitor is actually paying for this booking
     couponFieldEnabled: true,
+    // variant.cena is a formatted "3000 RSD" display string - this strips it back
+    // down to a plain number for the coupon widget, which needs to send a real
+    // value to validateCouponForBooking, not something to parse client-side
+    appointmentValue: parseInt(String(variant.cena).replace(/[^\d]/g, ""), 10) || 0,
     usablePackagePurchase: packageOption,
     breadcrumbs: [
       { label: "Usluge", url: "/usluge" },

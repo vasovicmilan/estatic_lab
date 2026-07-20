@@ -1,0 +1,32 @@
+<%
+  const couponContext = context; // "booking" or "order"
+  const couponServiceId = typeof serviceId !== "undefined" ? serviceId : "";
+  const couponAppointmentValue = typeof appointmentValue !== "undefined" ? appointmentValue : "";
+  const couponProductIds = typeof productIds !== "undefined" ? productIds.join(",") : "";
+  const couponOrderValue = typeof orderValue !== "undefined" ? orderValue : "";
+  const applied = typeof activeCoupon !== "undefined" ? activeCoupon : null;
+%>
+<div class="mb-3"
+  data-coupon-widget
+  data-coupon-context="<%= couponContext %>"
+  data-coupon-service-id="<%= couponServiceId %>"
+  data-coupon-appointment-value="<%= couponAppointmentValue %>"
+  data-coupon-product-ids="<%= couponProductIds %>"
+  data-coupon-order-value="<%= couponOrderValue %>"
+>
+  <label class="form-label">Kod kupona</label>
+
+  <div class="input-group <%= applied ? 'd-none' : '' %>" style="max-width:320px;" data-coupon-input-group>
+    <input type="text" class="form-control text-uppercase" data-coupon-input placeholder="Unesite kod" autocomplete="off">
+    <button type="button" class="btn btn-outline-primary" data-coupon-apply-btn>Primeni</button>
+  </div>
+
+  <div class="mt-2 <%= applied ? '' : 'd-none' %>" data-coupon-applied-badge>
+    <span class="badge bg-success">
+      Kupon "<span data-coupon-applied-code><%= applied ? applied.code : '' %></span>" primenjen - popust: <span data-coupon-applied-discount><%= applied ? applied.discountAmount : '' %></span> RSD
+    </span>
+    <button type="button" class="btn btn-link btn-sm text-danger p-0 ms-2" data-coupon-remove-btn>Ukloni</button>
+  </div>
+
+  <div class="text-danger small mt-1 d-none" data-coupon-error></div>
+</div>

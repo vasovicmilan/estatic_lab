@@ -135,7 +135,7 @@ export async function checkoutStep(req, res, next) {
     return res.render("shop/checkout", {
       pageTitle: "Naplata",
       pageDescription: "Unesite podatke za dostavu",
-      data: { ...viewData, csrfToken: res.locals.csrfToken },
+      data: { ...viewData, activeCoupon: req.session?.activeCoupon?.context === "order" ? req.session.activeCoupon : null, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[checkoutStep] Greška pri učitavanju naplate", error, { userId: req.session?.user?.id });
@@ -144,7 +144,7 @@ export async function checkoutStep(req, res, next) {
 }
 
 export async function submitCheckout(req, res, next) {
-  const { firstName, lastName, email, phone, city, postalCode, street, number, note, couponCode } = req.body;
+  const { firstName, lastName, email, phone, city, postalCode, street, number, note } = req.body;
 
   try {
     const { isLoggedIn, userId } = getAuth(req);
@@ -158,9 +158,13 @@ export async function submitCheckout(req, res, next) {
       return res.status(400).render("shop/checkout", {
         pageTitle: "Naplata",
         pageDescription: "Unesite podatke za dostavu",
-        data: { ...viewData, formData: req.body, csrfToken: res.locals.csrfToken },
+        data: { ...viewData, activeCoupon: req.session?.activeCoupon?.context === "order" ? req.session.activeCoupon : null, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
+
+    // see coupon.controller.js - only ever set once validateCouponForOrder has
+    // already confirmed the code works against what's actually in the cart
+    const activeCoupon = req.session?.activeCoupon?.context === "order" ? req.session.activeCoupon : null;
 
     const result = await shopService.checkout({
       isLoggedIn,
@@ -170,8 +174,10 @@ export async function submitCheckout(req, res, next) {
       phone,
       address: { city, postalCode, street, number },
       note,
-      couponCode: couponCode || null,
+      couponCode: activeCoupon?.code || null,
     });
+
+    delete req.session.activeCoupon;
 
     logInfo(`[submitCheckout] Privremena porudžbina kreirana za "${email}"`, { temporaryOrderId: result.id, accountJustCreated: result.accountJustCreated });
 
@@ -192,7 +198,7 @@ export async function submitCheckout(req, res, next) {
         return res.status(400).render("shop/checkout", {
           pageTitle: "Naplata",
           pageDescription: "Unesite podatke za dostavu",
-          data: { ...viewData, formData: req.body, csrfToken: res.locals.csrfToken },
+          data: { ...viewData, activeCoupon: req.session?.activeCoupon?.context === "order" ? req.session.activeCoupon : null, formData: req.body, csrfToken: res.locals.csrfToken },
         });
       } catch (renderError) {
         logError("[submitCheckout] Greška pri ponovnom renderovanju forme nakon neuspešne naplate", renderError);

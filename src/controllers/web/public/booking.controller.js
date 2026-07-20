@@ -110,7 +110,7 @@ export async function contactStep(req, res, next) {
     return res.render("booking/contact-step", {
       pageTitle: `Zakazivanje - ${service.naziv}`,
       pageDescription: "Unesite podatke za kontakt",
-      data: { ...viewData, csrfToken: res.locals.csrfToken },
+      data: { ...viewData, activeCoupon: req.session?.activeCoupon?.context === "booking" ? req.session.activeCoupon : null, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[contactStep] Greška pri učitavanju koraka unosa podataka", error, { serviceSlug: req.params.serviceSlug, query: req.query });
@@ -131,7 +131,6 @@ export async function confirmBooking(req, res, next) {
     email,
     phone,
     note,
-    couponCode,
     packagePurchaseId,
   } = req.body;
 
@@ -154,9 +153,14 @@ export async function confirmBooking(req, res, next) {
       return res.status(400).render("booking/contact-step", {
         pageTitle: `Zakazivanje - ${service.naziv}`,
         pageDescription: "Unesite podatke za kontakt",
-        data: { ...viewData, formData: req.body, csrfToken: res.locals.csrfToken },
+        data: { ...viewData, activeCoupon: req.session?.activeCoupon?.context === "booking" ? req.session.activeCoupon : null, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
+
+    // the active coupon (see coupon.controller.js) is the source of truth here, not
+    // the raw form field - it's only ever set once validateCouponForBooking has
+    // already confirmed the code works, so this is exactly what the user previewed
+    const activeCoupon = req.session?.activeCoupon?.context === "booking" ? req.session.activeCoupon : null;
 
     const { appointment, accountJustCreated } = await appointmentService.bookAppointment({
       serviceId,
@@ -167,9 +171,11 @@ export async function confirmBooking(req, res, next) {
       userId: isLoggedIn ? req.session.user.id : null,
       contact: { firstName, lastName, email, phone },
       note,
-      couponCode: couponCode || null,
+      couponCode: activeCoupon?.code || null,
       packagePurchaseId: packagePurchaseId || null,
     });
+
+    delete req.session.activeCoupon;
 
     logInfo(`[confirmBooking] Termin zakazan za "${email}"`, { appointmentId: appointment.id, accountJustCreated });
 
@@ -197,7 +203,7 @@ export async function confirmBooking(req, res, next) {
         return res.status(400).render("booking/contact-step", {
           pageTitle: `Zakazivanje - ${service.naziv}`,
           pageDescription: "Unesite podatke za kontakt",
-          data: { ...viewData, formData: req.body, csrfToken: res.locals.csrfToken },
+          data: { ...viewData, activeCoupon: req.session?.activeCoupon?.context === "booking" ? req.session.activeCoupon : null, formData: req.body, csrfToken: res.locals.csrfToken },
         });
       } catch (renderError) {
         logError("[confirmBooking] Greška pri ponovnom renderovanju forme nakon neuspešnog zakazivanja", renderError);

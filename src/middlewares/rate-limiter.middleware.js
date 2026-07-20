@@ -67,7 +67,7 @@ export const verificationLimiter = rateLimit({
 
 export const contactLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 1,
+  max: 2,
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,
@@ -90,6 +90,15 @@ export const testimonialLimiter = rateLimit({
   legacyHeaders: false,
   skip: skipInTest,
   handler: handleRateLimitExceeded("Previše testimoniala - pokušajte ponovo za 1 sat."),
+});
+
+export const couponLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInTest,
+  handler: handleRateLimitExceeded("Previše pokušaja sa kodom kupona - pokušajte ponovo za nekoliko minuta."),
 });
 
 export const searchLimiter = rateLimit({

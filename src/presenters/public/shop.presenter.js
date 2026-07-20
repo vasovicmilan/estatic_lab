@@ -17,6 +17,10 @@ export function prepareCheckoutStepData(cart, { isLoggedIn = false, user = null,
   return {
     cart,
     isLoggedIn,
+    // for the coupon widget - validateCouponForOrder needs to know which products
+    // are actually in the cart (to check applicableProducts) and the cart total
+    productIds: cart.stavke.map((s) => s.productId),
+    orderValue: cart.ukupnaCena,
     prefill: isLoggedIn
       ? {
           firstName: user.firstName,
