@@ -6,6 +6,7 @@ import partnerService from "../../../../services/partner.service.js";
 import { prepareCouponListData, prepareCouponDetailsData, prepareCouponFormData } from "../../../../presenters/admin/marketing/coupon.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
 async function loadFormOptions() {
   const [services, packages, products, partners] = await Promise.all([
@@ -46,7 +47,7 @@ function buildCouponPayload(req) {
   data.maxUses = req.body.maxUses && Number(req.body.maxUses) > 0 ? Number(req.body.maxUses) : null;
   data.maxUsesPerUser = req.body.maxUsesPerUser && Number(req.body.maxUsesPerUser) > 0 ? Number(req.body.maxUsesPerUser) : null;
   data.validUntil = req.body.validUntil || null;
-  data.isActive = req.body.isActive === "true" || req.body.isActive === true || req.body.isActive === "on";
+  data.isActive = parseCheckbox(req.body.isActive, true);
   return data;
 }
 

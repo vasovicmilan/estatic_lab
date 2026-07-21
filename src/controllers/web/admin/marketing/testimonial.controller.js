@@ -2,6 +2,7 @@ import * as testimonialService from "../../../../services/testimonial.service.js
 import { prepareTestimonialListData, prepareTestimonialDetailsData } from "../../../../presenters/admin/marketing/testimonial.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
 export async function listTestimonials(req, res, next) {
   try {
@@ -52,7 +53,7 @@ export async function testimonialDetails(req, res, next) {
 export async function approveTestimonial(req, res, next) {
   try {
     const { testimonialId } = req.params;
-    const isFeatured = req.body.isFeatured === "true" || req.body.isFeatured === true || req.body.isFeatured === "on";
+    const isFeatured = parseCheckbox(req.body.isFeatured);
 
     await testimonialService.approveTestimonial(testimonialId, { isFeatured });
     logInfo(`[approveTestimonial] Testimonijal #${testimonialId} odobren`, { testimonialId, isFeatured, adminId: req.session?.user?.id });
