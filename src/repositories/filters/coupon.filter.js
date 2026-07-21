@@ -1,7 +1,7 @@
 /**
  * Builds the Mongo filter object for Coupon list queries.
  */
-export function buildCouponFilter({ search = "", isActive = null, service = null, validNow = false } = {}) {
+export function buildCouponFilter({ search = "", isActive = null, service = null, partner = null, validNow = false } = {}) {
   const filter = {};
 
   if (search) {
@@ -10,6 +10,7 @@ export function buildCouponFilter({ search = "", isActive = null, service = null
 
   if (isActive !== null && isActive !== undefined) filter.isActive = isActive;
   if (service) filter.applicableServices = service;
+  if (partner) filter.partner = partner;
 
   if (validNow) {
     const now = new Date();

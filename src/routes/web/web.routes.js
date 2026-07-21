@@ -18,6 +18,7 @@ import bookingRoutes from "./booking.routes.js";
 import teamRoutes from "./team.routes.js";
 import userRoutes from "./user.routes.js";
 import employeeRoutes from "./employee.routes.js";
+import partnerRoutes from "./partner.routes.js";
 import productRoutes from "./product.routes.js";
 import shopRoutes from "./shop.routes.js";
 
@@ -79,5 +80,6 @@ router.use("/", authRoutes);
 router.use("/admin", webAuthMiddleware, adminRoutes);
 router.use("/nalog", webAuthMiddleware, userRoutes);
 router.use("/moj-nalog", webAuthMiddleware, employeeRoutes);
+router.use("/moj-partner-nalog", webAuthMiddleware, partnerRoutes);
 
 export default router;

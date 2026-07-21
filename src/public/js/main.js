@@ -1,4 +1,23 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // copy-to-clipboard for referral links (see views/partner/dashboard.ejs and
+  // views/partner/catalog.ejs) - one handler covers every copy button on either
+  // page, scoped via the input sitting in the same .input-group
+  document.querySelectorAll("[data-copy-link-btn]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const input = btn.closest(".input-group")?.querySelector("[data-referral-link-input]");
+      if (!input) return;
+      try {
+        await navigator.clipboard.writeText(input.value);
+        const original = btn.textContent;
+        btn.textContent = "Kopirano!";
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      } catch {
+        // clipboard API can fail (permissions, insecure context) - the link text
+        // is already visible and selectable in the input either way
+      }
+    });
+  });
+
   // coupon apply/remove widget (see includes/components/coupon-field.ejs) - one
   // generic handler covers both the booking contact step and checkout, since the
   // actual validation differs server-side but the UI interaction is identical

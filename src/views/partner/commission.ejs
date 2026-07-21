@@ -1,0 +1,33 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <h1 class="h3 mb-4">Moja provizija</h1>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <% if (data.items.length === 0) { %>
+        <p class="text-muted p-3 mb-0">Nemate zabeleženu proviziju.</p>
+      <% } else { %>
+        <table class="table mb-0">
+          <thead><tr><th>Izvor</th><th>Osnovna vrednost</th><th>Procenat</th><th>Iznos</th><th>Status</th></tr></thead>
+          <tbody>
+            <% data.items.forEach(function(c) { %>
+              <tr>
+                <td><%= c.izvor %></td>
+                <td><%= c.osnovnaVrednost %></td>
+                <td><%= c.procenat %></td>
+                <td><%= c.iznos %></td>
+                <td><%= c.status %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+  </div>
+
+  <%- include("../includes/pagination", { pagination: data.pagination }) %>
+</main>
+
+<%- include("../includes/footer") %>

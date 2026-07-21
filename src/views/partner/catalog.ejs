@@ -1,0 +1,32 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <h1 class="h3 mb-4">Katalog za deljenje</h1>
+
+  <% if (!data.hasCode) { %>
+    <div class="alert alert-warning">Nemate aktivan referalni kod - kontaktirajte administratora.</div>
+  <% } else { %>
+    <p class="text-muted mb-4">Kopirajte link ispod za bilo koju stavku i podelite ga - vaš kod se automatski primenjuje.</p>
+
+    <% [["Usluge", data.services], ["Paketi", data.packages], ["Proizvodi", data.products]].forEach(function(section) { %>
+      <% const [title, items] = section; %>
+      <% if (items.length > 0) { %>
+        <h2 class="h5 mt-4 mb-3"><%= title %></h2>
+        <div class="list-group mb-4">
+          <% items.forEach(function(item) { %>
+            <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
+              <span><%= item.naziv %></span>
+              <div class="input-group input-group-sm" style="max-width:400px;">
+                <input type="text" class="form-control" value="<%= item.referralLink %>" readonly data-referral-link-input>
+                <button type="button" class="btn btn-outline-secondary" data-copy-link-btn>Kopiraj</button>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    <% }) %>
+  <% } %>
+</main>
+
+<%- include("../includes/footer") %>

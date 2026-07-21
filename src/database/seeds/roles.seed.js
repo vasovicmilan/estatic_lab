@@ -21,6 +21,7 @@ const defaultRoles = [
       "manage_products",
       "manage_orders",
       "manage_partners",
+      "manage_payouts",
     ],
     isDefault: false,
     priority: 100,
