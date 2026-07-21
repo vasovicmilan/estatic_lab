@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import CommissionEntry from "../models/commission-entry.model.js";
 import { buildCommissionEntryFilter } from "./filters/commission-entry.filter.js";
 import { resolveLimit, resolveSkip, buildPaginationMeta } from "../utils/pagination.util.js";
@@ -38,8 +39,8 @@ export async function findCommissionEntries({ limit = 20, page = 1, filters = {}
 // than ever being stored, so there's no drift risk (see payout-request.model.js).
 export async function sumEarnedAmount({ employee = null, partner = null }, { session } = {}) {
   const match = { status: "earned" };
-  if (employee) match.employee = employee;
-  if (partner) match.partner = partner;
+  if (employee) match.employee = new Types.ObjectId(employee);
+  if (partner) match.partner = new Types.ObjectId(partner);
 
   const [result] = await CommissionEntry.aggregate([{ $match: match }, { $group: { _id: null, total: { $sum: "$amount" } } }]).session(
     session || null

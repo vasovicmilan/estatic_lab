@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import PayoutRequest from "../models/payout-request.model.js";
 import { buildPayoutRequestFilter } from "./filters/payout-request.filter.js";
 import { resolveLimit, resolveSkip, buildPaginationMeta } from "../utils/pagination.util.js";
@@ -40,8 +41,8 @@ export async function findPayoutRequests({ limit = 20, page = 1, filters = {}, s
 // earlier pending request
 export async function sumPendingRequestedAmount({ employee = null, partner = null }, { session } = {}) {
   const match = { status: { $in: ["requested", "approved"] } };
-  if (employee) match.employee = employee;
-  if (partner) match.partner = partner;
+  if (employee) match.employee = new Types.ObjectId(employee);
+  if (partner) match.partner = new Types.ObjectId(partner);
 
   const [result] = await PayoutRequest.aggregate([{ $match: match }, { $group: { _id: null, total: { $sum: "$amount" } } }]).session(
     session || null

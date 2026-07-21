@@ -127,10 +127,39 @@ export async function getYearlySummary(year) {
   return aggregateRange(`${year}-01-01`, `${year}-12-31`);
 }
 
+/**
+ * Live, on-demand analysis of today's logs so far - the nightly cron only
+ * persists a LogSummary once the day is over, so this exists specifically for
+ * "what does today look like right now" without waiting for that. Never
+ * persisted - recomputed fresh every time this is called, since the day isn't
+ * finished and the numbers will keep changing until it is.
+ */
+export async function getTodaySummary() {
+  const todayKey = toDateKey(new Date());
+  const analyzed = analyzeDay(todayKey);
+  return { date: todayKey, isLive: true, generatedAt: new Date(), ...analyzed };
+}
+
+/**
+ * Paginated browse of persisted daily summaries (most recent first) - for an
+ * admin list view, distinct from aggregateRange which combines multiple days
+ * into one merged report.
+ */
+export async function listLogSummaries({ limit = 20, page = 1 } = {}) {
+  return logSummaryRepo.findLogSummaries({ limit, page });
+}
+
+export async function getLogSummaryByDate(dateStr) {
+  return logSummaryRepo.findSummaryByDate(dateStr);
+}
+
 export default {
   generateDailySummary,
   aggregateRange,
   getWeeklySummary,
   getMonthlySummary,
   getYearlySummary,
+  getTodaySummary,
+  listLogSummaries,
+  getLogSummaryByDate,
 };

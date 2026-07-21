@@ -2,6 +2,8 @@ import * as partnerService from "../../../../services/partner.service.js";
 import * as userService from "../../../../services/user.service.js";
 import partnerRepo from "../../../../repositories/partner.repository.js";
 import payoutRequestService from "../../../../services/payout-request.service.js";
+import couponRepo from "../../../../repositories/coupon.repository.js";
+import commissionRepo from "../../../../repositories/commission-entry.repository.js";
 import { preparePartnerListData, preparePartnerDetailsData, preparePartnerFormData } from "../../../../presenters/admin/auth/partner.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -50,7 +52,9 @@ export async function partnerDetails(req, res, next) {
     const { partnerId } = req.params;
     const partner = await partnerService.getPartnerById(partnerId, "admin", "detail");
     const balance = await payoutRequestService.getBalance("partner", partnerId);
-    const viewData = preparePartnerDetailsData(partner, balance);
+    const coupons = await couponRepo.findCoupons({ filters: { partner: partnerId }, limit: 20 });
+    const commissions = await commissionRepo.findCommissionEntries({ filters: { partner: partnerId }, limit: 10 });
+    const viewData = preparePartnerDetailsData(partner, balance, coupons.data, commissions.data);
 
     return res.render("admin/_details", {
       pageTitle: `Partner - ${partner.korisnik.imePrezime}`,

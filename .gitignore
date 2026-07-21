@@ -1,6 +1,6 @@
 .env
 node_modules
-logs
+/logs/
 src/public/images
 src/public/videos
 src/public/icons

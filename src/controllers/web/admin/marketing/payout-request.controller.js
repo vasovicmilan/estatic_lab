@@ -8,10 +8,15 @@ import { flashAndRedirect } from "../../../../utils/flash.util.js";
 
 export async function listPayoutRequests(req, res, next) {
   try {
-    const { status, earnerType, page = 1, limit = 10 } = req.query;
+    const { status, earnerType, partnerId, employeeId, page = 1, limit = 10 } = req.query;
 
     const result = await payoutRequestService.listPayoutRequests({
-      filters: { status: status || undefined, earnerType: earnerType || undefined },
+      filters: {
+        status: status || undefined,
+        earnerType: earnerType || undefined,
+        partner: partnerId || undefined,
+        employee: employeeId || undefined,
+      },
       page: parseInt(page, 10) || 1,
       limit: parseInt(limit, 10) || 10,
     });
