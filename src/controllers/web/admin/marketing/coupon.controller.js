@@ -36,8 +36,15 @@ function buildCouponPayload(req) {
   data.partner = req.body.partner || null;
   data.discountValue = req.body.discountValue != null ? Number(req.body.discountValue) : undefined;
   data.minAppointmentValue = req.body.minAppointmentValue ? Number(req.body.minAppointmentValue) : 0;
-  data.maxUses = req.body.maxUses ? Number(req.body.maxUses) : null;
-  data.maxUsesPerUser = req.body.maxUsesPerUser ? Number(req.body.maxUsesPerUser) : 1;
+  // 0 and blank both mean "no limit" - normalized to null here so there's one
+  // canonical "unlimited" representation everywhere downstream. Previously this
+  // used a plain truthy check (`req.body.maxUses ? ... : null`), which mishandled
+  // a literal "0": the string "0" is truthy in JS, so it got stored as the number
+  // 0 instead of null - and coupon.service.js's check (`usedCount >= maxUses`) is
+  // always true once maxUses is 0, since usedCount starts at 0 too. That made the
+  // coupon completely unusable from its very first redemption attempt.
+  data.maxUses = req.body.maxUses && Number(req.body.maxUses) > 0 ? Number(req.body.maxUses) : null;
+  data.maxUsesPerUser = req.body.maxUsesPerUser && Number(req.body.maxUsesPerUser) > 0 ? Number(req.body.maxUsesPerUser) : null;
   data.validUntil = req.body.validUntil || null;
   data.isActive = req.body.isActive === "true" || req.body.isActive === true || req.body.isActive === "on";
   return data;

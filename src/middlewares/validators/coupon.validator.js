@@ -24,11 +24,11 @@ export const validateCouponCreate = [
 
   body("maxUses")
     .optional({ values: "falsy" })
-    .isInt({ min: 1 }).withMessage("Maksimalan broj upotreba mora biti pozitivan broj"),
+    .isInt({ min: 0 }).withMessage("Maksimalan broj upotreba mora biti 0 (neograničeno) ili pozitivan broj"),
 
   body("maxUsesPerUser")
     .optional({ values: "falsy" })
-    .isInt({ min: 1 }).withMessage("Maksimalan broj upotreba po korisniku mora biti pozitivan broj"),
+    .isInt({ min: 0 }).withMessage("Maksimalan broj upotreba po korisniku mora biti 0 (neograničeno) ili pozitivan broj"),
 
   body("applicableServices")
     .optional()
@@ -63,6 +63,14 @@ export const validateCouponUpdate = [
   body("discountValue")
     .optional()
     .isFloat({ min: 0 }).withMessage("Vrednost popusta mora biti pozitivan broj"),
+
+  body("maxUses")
+    .optional({ values: "falsy" })
+    .isInt({ min: 0 }).withMessage("Maksimalan broj upotreba mora biti 0 (neograničeno) ili pozitivan broj"),
+
+  body("maxUsesPerUser")
+    .optional({ values: "falsy" })
+    .isInt({ min: 0 }).withMessage("Maksimalan broj upotreba po korisniku mora biti 0 (neograničeno) ili pozitivan broj"),
 
   body("validUntil")
     .optional({ values: "falsy" })

@@ -103,11 +103,11 @@ async function validateCoupon(code, { userId = null, kind, targetId, value } = {
     }
   }
 
-  if (coupon.maxUses != null && coupon.usedCount >= coupon.maxUses) {
+  if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
     badRequest("Kupon je dostigao maksimalan broj upotreba");
   }
 
-  if (userId && coupon.maxUsesPerUser != null) {
+  if (userId && coupon.maxUsesPerUser) {
     const userUsageCount = await couponRepo.countCouponUsagesByUser(coupon._id, userId);
     if (userUsageCount >= coupon.maxUsesPerUser) {
       badRequest("Već ste iskoristili ovaj kupon maksimalan broj puta");

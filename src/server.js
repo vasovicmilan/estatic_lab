@@ -46,7 +46,7 @@ process.on("unhandledRejection", (reason) => {
   logError("Unhandled promise rejection", reason instanceof Error ? reason : new Error(String(reason)));
 });
 
-process.on("uncaughtException", (error) => {
+process.on("uncaughtException", (error) => {  
   logError("Uncaught exception", error);
   process.exit(1);
 });

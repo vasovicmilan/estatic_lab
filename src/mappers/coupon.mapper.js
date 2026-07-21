@@ -18,7 +18,7 @@ function translateActive(isActive) {
 }
 
 function formatMaxUses(maxUses) {
-  if (maxUses === null || maxUses === undefined) return "Neograničeno";
+  if (!maxUses) return "Neograničeno";
   return maxUses;
 }
 

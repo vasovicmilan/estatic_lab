@@ -169,8 +169,8 @@ export function prepareCouponFormData(coupon = null, { serviceOptions = [], pack
       },
       { name: "discountValue", label: "Vrednost popusta", type: "number", required: true, min: 0, step: "0.01", width: 6, value: values.discountValue },
       { name: "minAppointmentValue", label: "Minimalna vrednost termina", type: "number", min: 0, step: "0.01", width: 6, value: values.minAppointmentValue },
-      { name: "maxUses", label: "Maksimalan broj upotreba (ukupno, opciono)", type: "number", min: 1, width: 6, value: values.maxUses },
-      { name: "maxUsesPerUser", label: "Maksimalan broj upotreba po korisniku", type: "number", min: 1, width: 6, value: values.maxUsesPerUser },
+      { name: "maxUses", label: "Maksimalan broj upotreba (ukupno, opciono)", type: "number", min: 0, width: 6, value: values.maxUses, help: "Ostavite prazno ili unesite 0 za neograničen broj upotreba." },
+      { name: "maxUsesPerUser", label: "Maksimalan broj upotreba po korisniku", type: "number", min: 0, width: 6, value: values.maxUsesPerUser, help: "Ostavite prazno ili unesite 0 za neograničen broj upotreba po korisniku." },
       {
         name: "applicableServices",
         label: "Važi samo za usluge (opciono - prazno = sve usluge)",

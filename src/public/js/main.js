@@ -1,4 +1,42 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // cookie consent banner (see includes/components/cookie-consent.ejs) - shown
+  // once until the visitor makes a choice, stored client-side since it's purely
+  // a UI preference with no server-side logic depending on it today. Exposed as
+  // window.hasNonEssentialCookieConsent() for any future tracking script to
+  // check before loading itself.
+  (function initCookieConsent() {
+    const CONSENT_COOKIE_NAME = "cookieConsent";
+    const CONSENT_COOKIE_MAX_AGE_DAYS = 365;
+
+    function getCookie(name) {
+      const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+      return match ? decodeURIComponent(match[1]) : null;
+    }
+
+    function setCookie(name, value, days) {
+      const maxAge = days * 24 * 60 * 60;
+      document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    }
+
+    window.hasNonEssentialCookieConsent = () => getCookie(CONSENT_COOKIE_NAME) === "accepted";
+
+    const banner = document.querySelector("[data-cookie-consent-banner]");
+    if (!banner) return;
+
+    if (getCookie(CONSENT_COOKIE_NAME)) return; // already chosen, stay hidden
+    banner.classList.remove("d-none");
+
+    banner.querySelector("[data-cookie-consent-accept]")?.addEventListener("click", () => {
+      setCookie(CONSENT_COOKIE_NAME, "accepted", CONSENT_COOKIE_MAX_AGE_DAYS);
+      banner.classList.add("d-none");
+    });
+
+    banner.querySelector("[data-cookie-consent-decline]")?.addEventListener("click", () => {
+      setCookie(CONSENT_COOKIE_NAME, "declined", CONSENT_COOKIE_MAX_AGE_DAYS);
+      banner.classList.add("d-none");
+    });
+  })();
+
   // copy-to-clipboard for referral links (see views/partner/dashboard.ejs and
   // views/partner/catalog.ejs) - one handler covers every copy button on either
   // page, scoped via the input sitting in the same .input-group
@@ -6,14 +44,42 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", async () => {
       const input = btn.closest(".input-group")?.querySelector("[data-referral-link-input]");
       if (!input) return;
+
+      const original = btn.textContent;
+      const showFeedback = (text, revertMs = 1500) => {
+        btn.textContent = text;
+        setTimeout(() => { btn.textContent = original; }, revertMs);
+      };
+
+      // navigator.clipboard requires a secure context (HTTPS or localhost) - it's
+      // undefined (or writeText throws) over plain HTTP on a non-localhost host,
+      // which silently did nothing before instead of falling back or showing an
+      // error, making the button look completely broken with zero feedback
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(input.value);
+          showFeedback("Kopirano!");
+          return;
+        } catch {
+          // fall through to the legacy approach below
+        }
+      }
+
       try {
-        await navigator.clipboard.writeText(input.value);
-        const original = btn.textContent;
-        btn.textContent = "Kopirano!";
-        setTimeout(() => { btn.textContent = original; }, 1500);
+        input.removeAttribute("readonly");
+        input.select();
+        input.setSelectionRange(0, input.value.length);
+        const copied = document.execCommand("copy");
+        input.setAttribute("readonly", "");
+        if (copied) {
+          showFeedback("Kopirano!");
+        } else {
+          throw new Error("execCommand copy failed");
+        }
       } catch {
-        // clipboard API can fail (permissions, insecure context) - the link text
-        // is already visible and selectable in the input either way
+        // both approaches failed - the link is still selected in the input, so
+        // the user can copy it manually with Ctrl+C instead of nothing happening
+        showFeedback("Označeno - kopirajte sa Ctrl+C", 3000);
       }
     });
   });
