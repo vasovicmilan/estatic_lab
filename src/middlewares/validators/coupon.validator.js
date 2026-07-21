@@ -34,9 +34,21 @@ export const validateCouponCreate = [
     .optional()
     .custom(isArrayOrString).withMessage("Neispravne usluge"),
 
+  body("applicablePackages")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravni paketi"),
+
+  body("applicableProducts")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravni proizvodi"),
+
   body("validUntil")
-    .notEmpty().withMessage("Datum isteka je obavezan")
+    .optional({ values: "falsy" })
     .isISO8601().withMessage("Neispravan format datuma"),
+
+  body("partner")
+    .optional({ values: "falsy" })
+    .isMongoId().withMessage("Neispravan ID partnera"),
 
   booleanishField("isActive", true),
 
@@ -53,8 +65,24 @@ export const validateCouponUpdate = [
     .isFloat({ min: 0 }).withMessage("Vrednost popusta mora biti pozitivan broj"),
 
   body("validUntil")
-    .optional()
+    .optional({ values: "falsy" })
     .isISO8601().withMessage("Neispravan format datuma"),
+
+  body("applicableServices")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravne usluge"),
+
+  body("applicablePackages")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravni paketi"),
+
+  body("applicableProducts")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravni proizvodi"),
+
+  body("partner")
+    .optional({ values: "falsy" })
+    .isMongoId().withMessage("Neispravan ID partnera"),
 
   booleanishField("isActive", true),
 

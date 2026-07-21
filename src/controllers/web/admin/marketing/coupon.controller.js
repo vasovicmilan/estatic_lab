@@ -1,25 +1,44 @@
 import * as couponService from "../../../../services/coupon.service.js";
 import * as serviceService from "../../../../services/service.service.js";
+import * as packageService from "../../../../services/package.service.js";
+import * as productService from "../../../../services/product.service.js";
+import partnerService from "../../../../services/partner.service.js";
 import { prepareCouponListData, prepareCouponDetailsData, prepareCouponFormData } from "../../../../presenters/admin/marketing/coupon.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 
-async function loadServiceOptions() {
-  const services = await serviceService.listServices({ limit: 200 });
-  return services.data.map((s) => ({ value: s.id, label: s.naziv }));
+async function loadFormOptions() {
+  const [services, packages, products, partners] = await Promise.all([
+    serviceService.listServices({ limit: 200 }),
+    packageService.listPackages({ limit: 200 }),
+    productService.listProducts({ limit: 200 }),
+    partnerService.listPartners({ limit: 200, filters: { isActive: true } }),
+  ]);
+
+  return {
+    serviceOptions: services.data.map((s) => ({ value: s.id, label: s.naziv })),
+    packageOptions: packages.data.map((p) => ({ value: p.id, label: p.naziv })),
+    productOptions: products.data.map((p) => ({ value: p.id, label: p.naziv })),
+    partnerOptions: partners.data.map((p) => ({ value: p.id, label: p.imePrezime })),
+  };
+}
+
+function toIdArray(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  return value ? [value] : [];
 }
 
 function buildCouponPayload(req) {
   const data = { ...req.body };
-  data.applicableServices = Array.isArray(req.body.applicableServices)
-    ? req.body.applicableServices.filter(Boolean)
-    : req.body.applicableServices
-    ? [req.body.applicableServices]
-    : [];
+  data.applicableServices = toIdArray(req.body.applicableServices);
+  data.applicablePackages = toIdArray(req.body.applicablePackages);
+  data.applicableProducts = toIdArray(req.body.applicableProducts);
+  data.partner = req.body.partner || null;
   data.discountValue = req.body.discountValue != null ? Number(req.body.discountValue) : undefined;
   data.minAppointmentValue = req.body.minAppointmentValue ? Number(req.body.minAppointmentValue) : 0;
   data.maxUses = req.body.maxUses ? Number(req.body.maxUses) : null;
   data.maxUsesPerUser = req.body.maxUsesPerUser ? Number(req.body.maxUsesPerUser) : 1;
+  data.validUntil = req.body.validUntil || null;
   data.isActive = req.body.isActive === "true" || req.body.isActive === true || req.body.isActive === "on";
   return data;
 }
@@ -67,8 +86,8 @@ export async function couponDetails(req, res, next) {
 
 export async function newCouponForm(req, res, next) {
   try {
-    const serviceOptions = await loadServiceOptions();
-    const formData = prepareCouponFormData(null, { serviceOptions });
+    const formOptions = await loadFormOptions();
+    const formData = prepareCouponFormData(null, formOptions);
     return res.render("admin/_form", {
       pageTitle: "Novi kupon",
       pageDescription: "Kreiraj novi kupon za popust",
@@ -84,8 +103,8 @@ export async function editCouponForm(req, res, next) {
   try {
     const { couponId } = req.params;
     const coupon = await couponService.getCouponForEdit(couponId);
-    const serviceOptions = await loadServiceOptions();
-    const formData = prepareCouponFormData(coupon, { serviceOptions });
+    const formOptions = await loadFormOptions();
+    const formData = prepareCouponFormData(coupon, formOptions);
 
     return res.render("admin/_form", {
       pageTitle: `Izmena - ${coupon.code}`,
@@ -102,8 +121,8 @@ export async function createCoupon(req, res, next) {
   try {
     if (req.validationErrors) {
       logWarn("[createCoupon] Validacione greške pri kreiranju kupona", { validationErrors: req.validationErrors, userId: req.session?.user?.id });
-      const serviceOptions = await loadServiceOptions();
-      const formData = prepareCouponFormData(null, { serviceOptions });
+      const formOptions = await loadFormOptions();
+      const formData = prepareCouponFormData(null, formOptions);
       return res.status(400).render("admin/_form", {
         pageTitle: "Novi kupon",
         pageDescription: "Kreiraj novi kupon za popust",
@@ -120,8 +139,8 @@ export async function createCoupon(req, res, next) {
     logError("[createCoupon] Greška pri kreiranju kupona", error, { body: req.body, userId: req.session?.user?.id });
 
     if (error.statusCode === 400 || error.statusCode === 409) {
-      const serviceOptions = await loadServiceOptions();
-      const formData = prepareCouponFormData(null, { serviceOptions });
+      const formOptions = await loadFormOptions();
+      const formData = prepareCouponFormData(null, formOptions);
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: "Novi kupon",
         pageDescription: "Kreiraj novi kupon za popust",
@@ -139,8 +158,8 @@ export async function updateCoupon(req, res, next) {
     if (req.validationErrors) {
       logWarn(`[updateCoupon] Validacione greške za couponId=${couponId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
       const coupon = await couponService.getCouponForEdit(couponId);
-      const serviceOptions = await loadServiceOptions();
-      const formData = prepareCouponFormData(coupon, { serviceOptions });
+      const formOptions = await loadFormOptions();
+      const formData = prepareCouponFormData(coupon, formOptions);
       return res.status(400).render("admin/_form", {
         pageTitle: `Izmena - ${coupon.code}`,
         pageDescription: coupon.code,
@@ -158,8 +177,8 @@ export async function updateCoupon(req, res, next) {
 
     if (error.statusCode === 400 || error.statusCode === 404 || error.statusCode === 409) {
       const coupon = await couponService.getCouponForEdit(req.params.couponId).catch(() => null);
-      const serviceOptions = await loadServiceOptions();
-      const formData = prepareCouponFormData(coupon, { serviceOptions });
+      const formOptions = await loadFormOptions();
+      const formData = prepareCouponFormData(coupon, formOptions);
       return res.status(error.statusCode).render("admin/_form", {
         pageTitle: coupon ? `Izmena - ${coupon.code}` : "Izmena kupona",
         pageDescription: coupon?.code || "",

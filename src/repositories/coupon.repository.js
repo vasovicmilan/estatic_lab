@@ -8,7 +8,13 @@ export async function createCoupon(data, { session } = {}) {
 }
 
 export async function findCouponById(id, { session } = {}) {
-  return Coupon.findById(id).session(session || null).lean();
+  return Coupon.findById(id)
+    .populate("applicableServices", "name")
+    .populate("applicablePackages", "name")
+    .populate("applicableProducts", "name")
+    .populate({ path: "partner", populate: { path: "userId", select: "firstName lastName" } })
+    .session(session || null)
+    .lean();
 }
 
 export async function findCouponByCode(code, { session } = {}) {

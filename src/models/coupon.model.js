@@ -102,9 +102,12 @@ const CouponSchema = new Schema(
       type: Date,
       default: Date.now,
     },
+    // null means "never expires" - the actual expiration check (coupon.service.js's
+    // validateCoupon) already treats a missing validUntil this way; this was the
+    // only place still forcing an end date to be required
     validUntil: {
       type: Date,
-      required: true,
+      default: null,
     },
 
     isActive: {

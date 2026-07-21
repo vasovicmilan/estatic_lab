@@ -78,12 +78,31 @@ export function prepareCouponDetailsData(coupon) {
         items: coupon.primenljivoNaUsluge.map((s) => s.naziv || s.id),
       },
       {
+        title: "Primenljivo na pakete",
+        type: "list",
+        items: coupon.primenljivoNaPakete.map((p) => p.naziv || p.id),
+      },
+      {
+        title: "Primenljivo na proizvode",
+        type: "list",
+        items: coupon.primenljivoNaProizvode.map((p) => p.naziv || p.id),
+      },
+      {
         title: "Istorija korišćenja",
         type: "table",
         rows: coupon.istorijaKoriscenja.map((u) => ({ label: u.iskoriscenoU, value: `${u.iznosPopusta} (termin ${u.terminId})` })),
       },
     ],
     sidebar: [
+      ...(coupon.partner
+        ? [
+            {
+              title: "Partner",
+              type: "table",
+              rows: [{ label: "Referalni partner", value: coupon.partner.imePrezime }],
+            },
+          ]
+        : []),
       {
         title: "Vreme važenja",
         type: "table",
@@ -109,7 +128,7 @@ export function prepareCouponDetailsData(coupon) {
   };
 }
 
-export function prepareCouponFormData(coupon = null, { serviceOptions = [] } = {}) {
+export function prepareCouponFormData(coupon = null, { serviceOptions = [], packageOptions = [], productOptions = [], partnerOptions = [] } = {}) {
   const isEdit = !!coupon;
   const values = isEdit
     ? coupon
@@ -121,6 +140,9 @@ export function prepareCouponFormData(coupon = null, { serviceOptions = [] } = {
         maxUses: null,
         maxUsesPerUser: 1,
         applicableServices: [],
+        applicablePackages: [],
+        applicableProducts: [],
+        partner: null,
         validFrom: new Date(),
         validUntil: null,
         isActive: true,
@@ -158,6 +180,31 @@ export function prepareCouponFormData(coupon = null, { serviceOptions = [] } = {
         options: serviceOptions,
       },
       {
+        name: "applicablePackages",
+        label: "Važi samo za pakete (opciono - prazno = svi paketi)",
+        type: "multiselect",
+        width: 12,
+        value: (values.applicablePackages || []).map((p) => (typeof p === "object" ? p.id ?? p._id?.toString() : p)),
+        options: packageOptions,
+      },
+      {
+        name: "applicableProducts",
+        label: "Važi samo za proizvode (opciono - prazno = svi proizvodi)",
+        type: "multiselect",
+        width: 12,
+        value: (values.applicableProducts || []).map((p) => (typeof p === "object" ? p.id ?? p._id?.toString() : p)),
+        options: productOptions,
+      },
+      {
+        name: "partner",
+        label: "Referalni partner (opciono)",
+        type: "select",
+        width: 6,
+        value: values.partner ? (typeof values.partner === "object" ? values.partner.id : values.partner) : "",
+        options: [{ value: "", label: "Nije partnerski kupon" }, ...partnerOptions],
+        help: "Ako je izabran, korišćenje ovog kupona generiše proviziju za partnera.",
+      },
+      {
         name: "validFrom",
         label: "Važi od",
         type: "date",
@@ -166,9 +213,8 @@ export function prepareCouponFormData(coupon = null, { serviceOptions = [] } = {
       },
       {
         name: "validUntil",
-        label: "Važi do",
+        label: "Važi do (opciono - prazno = nikad ne ističe)",
         type: "date",
-        required: true,
         width: 6,
         value: values.validUntil ? String(values.validUntil).slice(0, 10) : "",
       },

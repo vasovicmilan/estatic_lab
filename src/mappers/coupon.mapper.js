@@ -70,6 +70,21 @@ export function mapCouponForAdminDetail(coupon) {
     primenljivoNaUsluge: (coupon.applicableServices || []).map((s) =>
       s?.name ? { id: s._id.toString(), naziv: s.name } : { id: resolveRefId(s) }
     ),
+    primenljivoNaPakete: (coupon.applicablePackages || []).map((p) =>
+      p?.name ? { id: p._id.toString(), naziv: p.name } : { id: resolveRefId(p) }
+    ),
+    primenljivoNaProizvode: (coupon.applicableProducts || []).map((p) =>
+      p?.name ? { id: p._id.toString(), naziv: p.name } : { id: resolveRefId(p) }
+    ),
+    partner: coupon.partner
+      ? {
+          id: resolveRefId(coupon.partner),
+          imePrezime:
+            coupon.partner?.userId && typeof coupon.partner.userId === "object" && coupon.partner.userId.firstName
+              ? `${coupon.partner.userId.firstName} ${coupon.partner.userId.lastName || ""}`.trim()
+              : "Nepoznato",
+        }
+      : null,
     istorijaKoriscenja: (coupon.usageHistory || []).map((u) => ({
       korisnikId: resolveRefId(u.user),
       terminId: resolveRefId(u.appointment),
@@ -97,6 +112,9 @@ export function mapCouponForEdit(coupon) {
     maxUses: coupon.maxUses,
     maxUsesPerUser: coupon.maxUsesPerUser,
     applicableServices: (coupon.applicableServices || []).map((s) => s._id?.toString() || s.toString()),
+    applicablePackages: (coupon.applicablePackages || []).map((p) => p._id?.toString() || p.toString()),
+    applicableProducts: (coupon.applicableProducts || []).map((p) => p._id?.toString() || p.toString()),
+    partner: coupon.partner ? resolveRefId(coupon.partner) : null,
     validFrom: coupon.validFrom,
     validUntil: coupon.validUntil,
     isActive: coupon.isActive,

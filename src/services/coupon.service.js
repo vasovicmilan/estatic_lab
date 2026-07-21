@@ -27,7 +27,6 @@ export async function createCoupon(data) {
   if (!data.code) validationError("code");
   if (!data.discountType) validationError("discountType");
   if (data.discountValue == null) validationError("discountValue");
-  if (!data.validUntil) validationError("validUntil");
 
   const existing = await couponRepo.findCouponByCode(data.code);
   if (existing) conflict("Kupon sa ovim kodom već postoji");
