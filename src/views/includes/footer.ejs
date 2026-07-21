@@ -70,6 +70,6 @@
 <%- include("./components/cookie-consent") %>
 
 <script src="/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="/js/main.js"></script>
+<script src="/js/main.js?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>"></script>
 </body>
 </html>

@@ -1,10 +1,18 @@
 import userService from "../services/user.service.js";
 import { logError } from "../utils/logger.util.js";
 
+// Static assets are served with a 30-day browser/CDN cache (see static.config.js).
+// Without a cache-busting version on the URL, a deployed JS/CSS fix would be
+// invisible to anyone with a previously-cached copy for up to 30 days. Computed
+// once here at module load (server startup) - every deploy/restart gets a fresh
+// value, which is exactly when the cache needs busting.
+const ASSET_VERSION = Date.now();
+
 export async function localsMiddleware(req, res, next) {
   res.locals.currentPath = req.path;
   res.locals.isLoggedIn = !!req.session?.isLoggedIn;
   res.locals.user = req.session?.user || null;
+  res.locals.assetVersion = ASSET_VERSION;
 
   res.locals.success = req.flash ? req.flash("success") : [];
   res.locals.error = req.flash ? req.flash("error") : [];
