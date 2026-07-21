@@ -1,0 +1,123 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container-fluid py-4">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Logovi</h1>
+    <a href="/admin/logovi/istorija" class="btn btn-outline-secondary btn-sm">Istorija dnevnih izveštaja &rarr;</a>
+  </div>
+
+  <% if (!data.today) { %>
+    <div class="alert alert-warning">Nema podataka za prikaz.</div>
+  <% } else { %>
+    <div class="alert alert-info small">
+      Prikazano stanje za danas (<%= data.today.date %>) - uživo, generisano u trenutku učitavanja stranice. Ne čeka se noćni izveštaj.
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">Ukupno zahteva (danas)</p>
+          <p class="h4 mb-0"><%= data.today.requests.total %></p>
+        </div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">Jedinstvenih IP adresa</p>
+          <p class="h4 mb-0"><%= data.today.requests.uniqueIPs %></p>
+        </div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">Upozorenja / Greške</p>
+          <p class="h4 mb-0"><%= data.today.logs.warnCount %> / <%= data.today.logs.errorCount %></p>
+        </div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">Prosečno vreme odgovora</p>
+          <p class="h4 mb-0"><%= data.today.performance ? data.today.performance.avgResponseTimeMs + " ms" : "-" %></p>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">2xx</p><p class="h5 mb-0"><%= data.today.requests.byStatusClass["2xx"] %></p>
+        </div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">3xx</p><p class="h5 mb-0"><%= data.today.requests.byStatusClass["3xx"] %></p>
+        </div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">4xx</p><p class="h5 mb-0"><%= data.today.requests.byStatusClass["4xx"] %></p>
+        </div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">5xx</p><p class="h5 mb-0"><%= data.today.requests.byStatusClass["5xx"] %></p>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-header">Najčešće greške</div>
+          <div class="card-body p-0">
+            <% if (data.today.topErrors.length === 0) { %>
+              <p class="text-muted p-3 mb-0">Nema grešaka danas.</p>
+            <% } else { %>
+              <table class="table table-sm mb-0"><tbody>
+                <% data.today.topErrors.forEach(function(e) { %>
+                  <tr><td><%= e.label %></td><td class="text-end"><%= e.count %></td></tr>
+                <% }) %>
+              </tbody></table>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-header">Najposećenije rute</div>
+          <div class="card-body p-0">
+            <% if (data.today.topUrls.length === 0) { %>
+              <p class="text-muted p-3 mb-0">Nema podataka.</p>
+            <% } else { %>
+              <table class="table table-sm mb-0"><tbody>
+                <% data.today.topUrls.forEach(function(u) { %>
+                  <tr><td><%= u.label %></td><td class="text-end"><%= u.count %></td></tr>
+                <% }) %>
+              </tbody></table>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-header">Rute sa 4xx/5xx odgovorima</div>
+          <div class="card-body p-0">
+            <% if (data.today.topErrorUrls.length === 0) { %>
+              <p class="text-muted p-3 mb-0">Nema neuspešnih zahteva.</p>
+            <% } else { %>
+              <table class="table table-sm mb-0"><tbody>
+                <% data.today.topErrorUrls.forEach(function(u) { %>
+                  <tr><td><%= u.label %></td><td class="text-end"><%= u.count %></td></tr>
+                <% }) %>
+              </tbody></table>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</main>
+
+<%- include("../includes/footer") %>
