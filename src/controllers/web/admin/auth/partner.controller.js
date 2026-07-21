@@ -1,6 +1,7 @@
 import * as partnerService from "../../../../services/partner.service.js";
 import * as userService from "../../../../services/user.service.js";
 import partnerRepo from "../../../../repositories/partner.repository.js";
+import payoutRequestService from "../../../../services/payout-request.service.js";
 import { preparePartnerListData, preparePartnerDetailsData, preparePartnerFormData } from "../../../../presenters/admin/auth/partner.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -48,12 +49,13 @@ export async function partnerDetails(req, res, next) {
   try {
     const { partnerId } = req.params;
     const partner = await partnerService.getPartnerById(partnerId, "admin", "detail");
-    const viewData = preparePartnerDetailsData(partner);
+    const balance = await payoutRequestService.getBalance("partner", partnerId);
+    const viewData = preparePartnerDetailsData(partner, balance);
 
     return res.render("admin/_details", {
       pageTitle: `Partner - ${partner.korisnik.imePrezime}`,
       pageDescription: partner.korisnik.email,
-      data: viewData,
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[partnerDetails] Greška pri učitavanju detalja partnera", error, {

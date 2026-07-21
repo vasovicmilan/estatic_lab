@@ -141,11 +141,19 @@ export function analyzeDay(dateStr) {
   const urlCounts = new Map();
   const errorUrlCounts = new Map();
 
+  // performance tracking - responseTimeMs was already captured by the regex above,
+  // it just wasn't being used for anything until now
+  let totalResponseTimeMs = 0;
+  let responseTimeSampleCount = 0;
+  let maxResponseTimeMs = 0;
+  let maxResponseTimeUrl = null;
+  const routeTimings = new Map(); // urlKey -> { totalMs, count }
+
   for (const entry of httpLines) {
     const match = HTTP_LINE_RE.exec(entry.msg || "");
     if (!match) continue;
 
-    const [, , method, url, statusStr, , , ip] = match;
+    const [, , method, url, statusStr, , responseTimeStr, ip] = match;
     const status = parseInt(statusStr, 10);
     const statusClass = bucketStatus(status);
     if (!statusClass) continue;
@@ -159,7 +167,30 @@ export function analyzeDay(dateStr) {
     if (statusClass === "4xx" || statusClass === "5xx") {
       increment(errorUrlCounts, `${status} ${urlKey}`);
     }
+
+    const responseTimeMs = parseFloat(responseTimeStr);
+    if (!isNaN(responseTimeMs)) {
+      totalResponseTimeMs += responseTimeMs;
+      responseTimeSampleCount += 1;
+      if (responseTimeMs > maxResponseTimeMs) {
+        maxResponseTimeMs = responseTimeMs;
+        maxResponseTimeUrl = urlKey;
+      }
+
+      const routeStats = routeTimings.get(urlKey) || { totalMs: 0, count: 0 };
+      routeStats.totalMs += responseTimeMs;
+      routeStats.count += 1;
+      routeTimings.set(urlKey, routeStats);
+    }
   }
+
+  // "slowest routes" ranked by average response time, not raw hit count - a route
+  // hit once at 3000ms is a real bottleneck worth seeing even if it never makes
+  // topUrls (which ranks by traffic volume instead)
+  const slowestRoutes = [...routeTimings.entries()]
+    .map(([label, { totalMs, count }]) => ({ label, avgMs: Math.round((totalMs / count) * 10) / 10, count }))
+    .sort((a, b) => b.avgMs - a.avgMs)
+    .slice(0, 10);
 
   return {
     requests: {
@@ -171,6 +202,14 @@ export function analyzeDay(dateStr) {
     topErrors: topN(errorCounts),
     topUrls: topN(urlCounts),
     topErrorUrls: topN(errorUrlCounts),
+    perf: {
+      avgResponseTimeMs: responseTimeSampleCount > 0 ? Math.round((totalResponseTimeMs / responseTimeSampleCount) * 10) / 10 : 0,
+      maxResponseTimeMs,
+      maxResponseTimeUrl,
+      totalResponseTimeMs,
+      responseTimeSampleCount,
+      slowestRoutes,
+    },
   };
 }
 

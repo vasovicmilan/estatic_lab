@@ -59,7 +59,7 @@ export function prepareEmployeeListData(result, query = {}) {
   };
 }
 
-export function prepareEmployeeDetailsData(employee) {
+export function prepareEmployeeDetailsData(employee, balance = null) {
   return {
     backUrl: "/admin/zaposleni",
     editUrl: `/admin/zaposleni/izmena/${employee.id}`,
@@ -96,6 +96,16 @@ export function prepareEmployeeDetailsData(employee) {
           { label: "Napomena", value: employee.napomena || "-" },
         ],
       },
+      ...(balance
+        ? [
+            {
+              title: "Zabeleži isplatu",
+              type: "custom",
+              content: "payout-record-form",
+              data: { earnerType: "employee", earnerId: employee.id, available: balance.available },
+            },
+          ]
+        : []),
       {
         title: "Vreme",
         type: "table",

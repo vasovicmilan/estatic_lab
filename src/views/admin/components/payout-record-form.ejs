@@ -1,0 +1,18 @@
+<% const d = data; %>
+<% if (d.available <= 0) { %>
+  <p class="text-muted small mb-0">Trenutno nema raspoloživog iznosa za isplatu.</p>
+<% } else { %>
+  <form action="/admin/isplate/direktno" method="POST">
+    <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+    <input type="hidden" name="earnerType" value="<%= d.earnerType %>">
+    <input type="hidden" name="earnerId" value="<%= d.earnerId %>">
+    <p class="small text-muted mb-2">Raspoloživo: <strong><%= d.available %> RSD</strong></p>
+    <div class="mb-2">
+      <input type="number" name="amount" class="form-control form-control-sm" min="1" max="<%= d.available %>" step="0.01" placeholder="Iznos u RSD" required>
+    </div>
+    <div class="mb-2">
+      <textarea name="note" class="form-control form-control-sm" rows="2" placeholder="Napomena (opciono)"></textarea>
+    </div>
+    <button type="submit" class="btn btn-success btn-sm w-100">Zabeleži isplatu</button>
+  </form>
+<% } %>

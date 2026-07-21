@@ -8,6 +8,15 @@ const CountEntrySchema = new Schema(
   { _id: false }
 );
 
+const RouteTimingSchema = new Schema(
+  {
+    label: { type: String, required: true },
+    avgMs: { type: Number, required: true },
+    count: { type: Number, required: true },
+  },
+  { _id: false }
+);
+
 const LogSummarySchema = new Schema(
   {
     // "YYYY-MM-DD" - the calendar day this summary covers, in server-local reporting
@@ -34,6 +43,20 @@ const LogSummarySchema = new Schema(
       infoCount: { type: Number, default: 0 },
       warnCount: { type: Number, default: 0 },
       errorCount: { type: Number, default: 0 },
+    },
+
+    // avgResponseTimeMs/maxResponseTimeMs are the display-ready values for this one
+    // day; totalResponseTimeMs+responseTimeSampleCount are stored alongside them
+    // specifically so a multi-day report (see log-report.service.js's
+    // aggregateRange) can recompute a correctly-weighted average across days,
+    // rather than incorrectly averaging several daily averages together
+    perf: {
+      avgResponseTimeMs: { type: Number, default: 0 },
+      maxResponseTimeMs: { type: Number, default: 0 },
+      maxResponseTimeUrl: { type: String, default: null },
+      totalResponseTimeMs: { type: Number, default: 0 },
+      responseTimeSampleCount: { type: Number, default: 0 },
+      slowestRoutes: [RouteTimingSchema],
     },
 
     // top N by count, not exhaustive - enough for a report to point at, not a full dump

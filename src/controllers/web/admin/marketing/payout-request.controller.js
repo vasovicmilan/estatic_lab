@@ -3,7 +3,7 @@ import {
   preparePayoutRequestListData,
   preparePayoutRequestDetailsData,
 } from "../../../../presenters/admin/marketing/payout-request.presenter.js";
-import { logError, logInfo } from "../../../../utils/logger.util.js";
+import { logError, logInfo, logWarn } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 
 export async function listPayoutRequests(req, res, next) {
@@ -94,4 +94,37 @@ export async function rejectPayoutRequest(req, res, next) {
   }
 }
 
-export default { listPayoutRequests, payoutRequestDetails, approvePayoutRequest, markPayoutRequestPaid, rejectPayoutRequest };
+// the admin-initiated quick-action: recording a payout that's already happened
+// (or is about to) without the earner having requested it first - e.g. admin
+// handed over cash in person and just needs it logged. Separate from the
+// request/approve/pay flow above, which assumes the earner asked first.
+export async function recordPayoutDirectly(req, res, next) {
+  const { earnerType, earnerId } = req.body;
+  const redirectUrl = earnerType === "employee" ? `/admin/zaposleni/detalji/${earnerId}` : `/admin/partneri/detalji/${earnerId}`;
+
+  try {
+    if (req.validationErrors) {
+      logWarn("[recordPayoutDirectly] Validacione greške", { validationErrors: req.validationErrors, userId: req.session?.user?.id });
+      return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), redirectUrl);
+    }
+
+    await payoutRequestService.recordPayoutByAdmin(earnerType, earnerId, Number(req.body.amount), req.body.note || "");
+    logInfo(`[recordPayoutDirectly] Isplata direktno zabeležena`, { earnerType, earnerId, amount: req.body.amount, adminId: req.session?.user?.id });
+    return flashAndRedirect(req, res, "success", "Isplata je zabeležena", redirectUrl);
+  } catch (error) {
+    logError("[recordPayoutDirectly] Greška pri direktnom beleženju isplate", error, { earnerType, earnerId, userId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, redirectUrl);
+    }
+    next(error);
+  }
+}
+
+export default {
+  listPayoutRequests,
+  payoutRequestDetails,
+  approvePayoutRequest,
+  markPayoutRequestPaid,
+  rejectPayoutRequest,
+  recordPayoutDirectly,
+};

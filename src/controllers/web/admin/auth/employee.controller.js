@@ -3,6 +3,7 @@ import * as userService from "../../../../services/user.service.js";
 import * as serviceService from "../../../../services/service.service.js";
 import * as expertService from "../../../../services/expert.service.js";
 import employeeRepo from "../../../../repositories/employee.repository.js";
+import payoutRequestService from "../../../../services/payout-request.service.js";
 import { prepareEmployeeListData, prepareEmployeeDetailsData, prepareEmployeeFormData } from "../../../../presenters/admin/auth/employee.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -57,12 +58,13 @@ export async function employeeDetails(req, res, next) {
   try {
     const { employeeId } = req.params;
     const employee = await employeeService.getEmployeeById(employeeId, "admin", "detail");
-    const viewData = prepareEmployeeDetailsData(employee);
+    const balance = employee.nacinIsplate === "Provizija" ? await payoutRequestService.getBalance("employee", employeeId) : null;
+    const viewData = prepareEmployeeDetailsData(employee, balance);
 
     return res.render("admin/_details", {
       pageTitle: `Zaposleni - ${employee.korisnik.imePrezime}`,
       pageDescription: employee.korisnik.email,
-      data: viewData,
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[employeeDetails] Greška pri učitavanju detalja zaposlenog", error, {

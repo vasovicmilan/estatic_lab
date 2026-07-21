@@ -45,7 +45,7 @@ export function preparePartnerListData(result, query = {}) {
   };
 }
 
-export function preparePartnerDetailsData(partner) {
+export function preparePartnerDetailsData(partner, balance = null) {
   return {
     backUrl: "/admin/partneri",
     editUrl: `/admin/partneri/izmena/${partner.id}`,
@@ -70,6 +70,16 @@ export function preparePartnerDetailsData(partner) {
           { label: "Napomena", value: partner.napomena || "-" },
         ],
       },
+      ...(balance
+        ? [
+            {
+              title: "Zabeleži isplatu",
+              type: "custom",
+              content: "payout-record-form",
+              data: { earnerType: "partner", earnerId: partner.id, available: balance.available },
+            },
+          ]
+        : []),
       {
         title: "Vreme",
         type: "table",

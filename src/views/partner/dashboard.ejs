@@ -5,6 +5,7 @@
   <%- include("../includes/flash-messages") %>
 
   <h1 class="h3 mb-4">Moj partnerski nalog</h1>
+  <%- include("../includes/components/partner-nav") %>
 
   <div class="row g-4 mb-4">
     <div class="col-md-3">
@@ -57,7 +58,7 @@
         <div class="card-header">Vaš referalni link</div>
         <div class="card-body">
           <% if (data.referralLinks.length === 0) { %>
-            <p class="text-muted mb-0">Nemate aktivan referalni kod. Kontaktirajte administratora.</p>
+            <p class="text-muted mb-2">Nemate aktivan referalni kod. Kontaktirajte administratora.</p>
           <% } else { %>
             <% data.referralLinks.forEach(function(ref) { %>
               <div class="mb-3">
@@ -68,8 +69,8 @@
                 </div>
               </div>
             <% }) %>
-            <a href="/moj-partner-nalog/katalog" class="small">Pogledaj sve linkove po uslugama/proizvodima &rarr;</a>
           <% } %>
+          <a href="/moj-partner-nalog/katalog" class="small">Pogledaj sve linkove po uslugama/proizvodima &rarr;</a>
         </div>
       </div>
     </div>

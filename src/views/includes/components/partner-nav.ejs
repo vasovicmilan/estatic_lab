@@ -1,0 +1,5 @@
+<ul class="nav nav-pills mb-4">
+  <li class="nav-item"><a class="nav-link <%= currentPath === '/moj-partner-nalog' ? 'active' : '' %>" href="/moj-partner-nalog">Pregled</a></li>
+  <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/moj-partner-nalog/provizije') ? 'active' : '' %>" href="/moj-partner-nalog/provizije">Moja provizija</a></li>
+  <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/moj-partner-nalog/katalog') ? 'active' : '' %>" href="/moj-partner-nalog/katalog">Katalog za deljenje</a></li>
+</ul>
