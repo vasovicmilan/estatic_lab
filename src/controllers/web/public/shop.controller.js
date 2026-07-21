@@ -134,7 +134,7 @@ export async function checkoutStep(req, res, next) {
 
     const viewData = prepareCheckoutStepData(cart, { isLoggedIn, user, addresses });
 
-    if (!req.session.activeCoupon) {
+    if (req.session.activeCoupon?.context !== "order") {
       const referralCode = getCapturedReferralCode(req);
       if (referralCode) {
         await tryApplyCoupon(req, { code: referralCode, context: "order", productIds: viewData.productIds, orderValue: viewData.orderValue });

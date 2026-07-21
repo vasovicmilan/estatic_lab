@@ -109,7 +109,7 @@ export async function contactStep(req, res, next) {
       { isLoggedIn, user: req.session?.user, usablePackagePurchase }
     );
 
-    if (!req.session.activeCoupon) {
+    if (req.session.activeCoupon?.context !== "booking") {
       const referralCode = getCapturedReferralCode(req);
       if (referralCode) {
         await tryApplyCoupon(req, { code: referralCode, context: "booking", serviceId: service.id, appointmentValue: viewData.appointmentValue });
