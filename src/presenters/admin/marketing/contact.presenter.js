@@ -63,6 +63,18 @@ export function prepareContactDetailsData(contact) {
       },
     ],
     sidebar: [
+      ...(contact.referalniKod
+        ? [
+            {
+              title: "Referalni kod",
+              type: "table",
+              rows: [
+                { label: "Kod", value: contact.referalniKod },
+                { label: "Napomena", value: "Ovaj upit je stigao preko partnerskog referalnog linka. Koristite ovaj kod kada budete kreirali kupovinu paketa za ovog korisnika." },
+              ],
+            },
+          ]
+        : []),
       {
         title: "Status",
         type: "custom",

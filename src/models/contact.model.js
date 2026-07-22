@@ -36,6 +36,15 @@ const ContactSchema = new Schema(
     // abuse/audit trail - not shown in the UI
     ip: String,
     userAgent: String,
+
+    // only set when the contact page was reached via ?tema= (a specific
+    // package/service inquiry link, not a generic "contact us") AND a referral
+    // cookie was active at that moment - never attached to a generic inquiry
+    // just because a stale cookie happens to exist from unrelated browsing
+    referralCode: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true }
 );

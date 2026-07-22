@@ -44,6 +44,7 @@ export function mapContactForAdminDetail(contact) {
       saglasnost: contact.consent ? "Da" : "Ne",
     },
     poruka: decryptField(contact.message),
+    referalniKod: contact.referralCode || null,
     vreme: {
       kreirano: formatDateTime(contact.createdAt),
       azurirano: formatDateTime(contact.updatedAt),

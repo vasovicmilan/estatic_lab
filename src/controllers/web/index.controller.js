@@ -7,6 +7,7 @@ import {
 } from "../../presenters/public/index.presenter.js";
 import { logError, logWarn, logInfo } from "../../utils/logger.util.js";
 import { flashAndRedirect } from "../../utils/flash.util.js";
+import { getCapturedReferralCode } from "../../middlewares/coupon-capture.middleware.js";
 
 export async function homePage(req, res, next) {
   try {
@@ -97,7 +98,7 @@ export async function contactPage(req, res, next) {
       pageDescription: serviceData.seo.pageDescription,
       seo: serviceData.seo,
       showForm: true,
-      data: { formData: { topic: req.query.tema || "" }, errors: {}, csrfToken: res.locals.csrfToken },
+      data: { formData: { topic: req.query.tema || "", arrivedWithTema: req.query.tema ? "1" : "" }, errors: {}, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[contactPage] Greška pri učitavanju kontakt stranice", error);
@@ -119,8 +120,15 @@ export async function submitContact(req, res, next) {
       });
     }
 
-    await indexService.submitContactForm(req.body, { ip: req.ip, userAgent: req.headers["user-agent"] });
-    logInfo("[submitContact] Kontakt poruka poslata", { email: req.body.email });
+    // only attach the referral code when this contact was reached with a
+    // specific purpose (?tema= on the original page load, carried through via
+    // the hidden arrivedWithTema field) - a generic "contact us" submission
+    // should never get a referral code attached just because a stale cookie
+    // happens to exist from unrelated earlier browsing
+    const referralCode = req.body.arrivedWithTema === "1" ? getCapturedReferralCode(req) : null;
+
+    await indexService.submitContactForm(req.body, { ip: req.ip, userAgent: req.headers["user-agent"], referralCode });
+    logInfo("[submitContact] Kontakt poruka poslata", { email: req.body.email, referralCode });
 
     return flashAndRedirect(req, res, "success", "Vaša poruka je uspešno poslata. Odgovorićemo vam u najkraćem roku.", "/kontakt");
   } catch (error) {

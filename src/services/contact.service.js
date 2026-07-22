@@ -17,7 +17,7 @@ export async function getContactById(contactId) {
   return mapContactForAdminDetail(contact);
 }
 
-export async function submitContact(data, { ip, userAgent } = {}) {
+export async function submitContact(data, { ip, userAgent, referralCode } = {}) {
   if (!data) validationError("data");
   if (!data.firstName) validationError("firstName");
   if (!data.lastName) validationError("lastName");
@@ -35,6 +35,7 @@ export async function submitContact(data, { ip, userAgent } = {}) {
     consent: true,
     ip,
     userAgent,
+    referralCode: referralCode || null,
   });
 
   logInfo("Contact message submitted", { contactId: created._id, email: created.email });
