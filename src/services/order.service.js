@@ -138,6 +138,16 @@ export async function getOrderById(orderId, requesterId, role) {
   return mapOrder(order, role, "detail");
 }
 
+/**
+ * Raw (unmapped) order data for commission.service.js's internal use only -
+ * needs totalPrice and the coupon's partner, neither of which any mapped shape
+ * exposes in the right form. Narrowly scoped on purpose, same reasoning as
+ * appointment.service.js's getAppointmentForCommission.
+ */
+export async function getOrderForCommission(orderId) {
+  return orderRepo.findOrderById(orderId, { populateFields: [{ path: "coupon", populate: "partner" }] });
+}
+
 export async function getOrderByCancelToken(token) {
   if (!token) validationError("token");
   const order = await orderRepo.findOrderByCancelToken(token);
@@ -258,6 +268,7 @@ export default {
   confirmOrderByAdmin,
   findOrders,
   getOrderById,
+  getOrderForCommission,
   getOrderByCancelToken,
   markProcessing,
   markShipped,

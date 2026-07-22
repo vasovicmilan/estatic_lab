@@ -144,6 +144,26 @@ export async function redeemCoupon(
   return couponRepo.redeemCoupon(couponId, { userId, appointmentId, packagePurchaseId, orderId, discountAmount }, { session });
 }
 
+/**
+ * A partner's own referral coupon(s), in a clean minimal shape - not the
+ * Serbian admin-display shape mapCouponsForAdminList produces (translated
+ * strings, pre-formatted discount text), since the callers here need the raw
+ * code for building URLs and raw discountType/discountValue for their own
+ * formatting. Used by both the admin's partner detail page and the partner's
+ * own dashboard/catalog, so neither has to import coupon.repository.js directly.
+ */
+export async function listCouponsForPartner(partnerId) {
+  if (!partnerId) validationError("partnerId");
+  const result = await couponRepo.findCoupons({ filters: { partner: partnerId }, limit: 20 });
+  return result.data.map((c) => ({
+    id: c._id.toString(),
+    code: c.code,
+    discountType: c.discountType,
+    discountValue: c.discountValue,
+    isActive: c.isActive,
+  }));
+}
+
 export default {
   listCoupons,
   getCouponById,
@@ -155,4 +175,5 @@ export default {
   validateCouponForPackagePurchase,
   validateCouponForOrder,
   redeemCoupon,
+  listCouponsForPartner,
 };

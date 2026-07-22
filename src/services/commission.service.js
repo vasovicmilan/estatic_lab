@@ -1,6 +1,6 @@
 import commissionRepo from "../repositories/commission-entry.repository.js";
-import appointmentRepo from "../repositories/appointment.repository.js";
-import orderRepo from "../repositories/order.repository.js";
+import appointmentService from "./appointment.service.js";
+import orderService from "./order.service.js";
 import { ORDER_COMMISSION_GRACE_PERIOD_DAYS } from "../config/shop.config.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 
@@ -15,9 +15,7 @@ const ORDER_TERMINAL_NO_COMMISSION_STATUSES = ["cancelled", "returned", "refunde
  * unlike an order that could still be returned.
  */
 export async function recordAppointmentCommissions(appointmentId) {
-  const appointment = await appointmentRepo.findAppointmentById(appointmentId, {
-    populateFields: ["employee", { path: "coupon", populate: "partner" }],
-  });
+  const appointment = await appointmentService.getAppointmentForCommission(appointmentId);
   if (!appointment) return;
 
   const baseValue = appointment.finalPrice || 0;
@@ -69,7 +67,7 @@ export async function recordAppointmentCommissions(appointmentId) {
  * "pending", not "earned" - see processGracePeriodCommissions for how it resolves.
  */
 export async function recordOrderCommission(orderId) {
-  const order = await orderRepo.findOrderById(orderId, { populateFields: [{ path: "coupon", populate: "partner" }] });
+  const order = await orderService.getOrderForCommission(orderId);
   if (!order || !order.coupon?.partner) return;
 
   const baseValue = order.totalPrice || 0;
@@ -167,9 +165,29 @@ function round2(value) {
   return Math.round(value * 100) / 100;
 }
 
+/**
+ * Total earned (not paid, not reversed) for one earner - used by
+ * payout-request.service.js's balance calculation, so that service doesn't need
+ * to reach into commission-entry.repository.js directly.
+ */
+export async function getEarnedTotal({ employee = null, partner = null }) {
+  return commissionRepo.sumEarnedAmount({ employee, partner });
+}
+
+/**
+ * Paginated commission history for one earner - used by the partner admin
+ * detail page and the partner's own dashboard, so neither has to import
+ * commission-entry.repository.js directly.
+ */
+export async function listCommissionsForEarner({ employee = null, partner = null, limit = 10, page = 1 } = {}) {
+  return commissionRepo.findCommissionEntries({ filters: { employee, partner }, limit, page });
+}
+
 export default {
   recordAppointmentCommissions,
   recordOrderCommission,
   promoteOrderCommissionOnCompletion,
   processGracePeriodCommissions,
+  getEarnedTotal,
+  listCommissionsForEarner,
 };

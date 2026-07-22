@@ -1,7 +1,7 @@
 import partnerService from "../../../services/partner.service.js";
 import payoutRequestService from "../../../services/payout-request.service.js";
-import couponRepo from "../../../repositories/coupon.repository.js";
-import commissionRepo from "../../../repositories/commission-entry.repository.js";
+import couponService from "../../../services/coupon.service.js";
+import commissionService from "../../../services/commission.service.js";
 import serviceService from "../../../services/service.service.js";
 import packageService from "../../../services/package.service.js";
 import * as productService from "../../../services/product.service.js";
@@ -24,10 +24,10 @@ export async function dashboard(req, res, next) {
     const partnerId = await getOwnPartnerId(req);
     const partner = await partnerService.getPartnerById(partnerId, "partner", "detail");
     const balance = await payoutRequestService.getBalance("partner", partnerId);
-    const coupons = await couponRepo.findCoupons({ filters: { partner: partnerId }, limit: 10 });
-    const recentCommissions = await commissionRepo.findCommissionEntries({ filters: { partner: partnerId }, limit: 5 });
+    const coupons = await couponService.listCouponsForPartner(partnerId);
+    const recentCommissions = await commissionService.listCommissionsForEarner({ partner: partnerId, limit: 5 });
 
-    const viewData = preparePartnerDashboardData({ partner, balance, coupons: coupons.data, recentCommissions: recentCommissions.data });
+    const viewData = preparePartnerDashboardData({ partner, balance, coupons, recentCommissions: recentCommissions.data });
 
     return res.render("partner/dashboard", {
       pageTitle: "Moj partnerski nalog",
@@ -45,8 +45,8 @@ export async function commissions(req, res, next) {
     const partnerId = await getOwnPartnerId(req);
     const { page = 1, limit = 10 } = req.query;
 
-    const result = await commissionRepo.findCommissionEntries({
-      filters: { partner: partnerId },
+    const result = await commissionService.listCommissionsForEarner({
+      partner: partnerId,
       page: parseInt(page, 10) || 1,
       limit: parseInt(limit, 10) || 10,
     });
@@ -90,8 +90,8 @@ export async function requestPayout(req, res, next) {
 export async function catalog(req, res, next) {
   try {
     const partnerId = await getOwnPartnerId(req);
-    const coupons = await couponRepo.findCoupons({ filters: { partner: partnerId }, limit: 1 });
-    const code = coupons.data[0]?.code || null;
+    const coupons = await couponService.listCouponsForPartner(partnerId);
+    const code = coupons[0]?.code || null;
 
     const [services, packages, products] = await Promise.all([
       serviceService.listServices({ limit: 50 }),

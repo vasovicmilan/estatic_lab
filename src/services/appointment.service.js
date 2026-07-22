@@ -61,6 +61,19 @@ export async function getAppointmentById(appointmentId, requesterId, role) {
 }
 
 /**
+ * Raw (unmapped) appointment data for commission.service.js's internal use only -
+ * needs finalPrice and the employee's pay type/commission rate plus the coupon's
+ * partner, none of which any mapped shape exposes in the right form. Kept
+ * narrowly scoped and separate from getAppointmentById on purpose: this is not
+ * a general-purpose getter, just the one thing commission calculation needs.
+ */
+export async function getAppointmentForCommission(appointmentId) {
+  return appointmentRepo.findAppointmentById(appointmentId, {
+    populateFields: ["employee", { path: "coupon", populate: "partner" }],
+  });
+}
+
+/**
  * The core booking flow. Reads that only inform a decision happen before the
  * transaction; the guest-user creation (if any), the Appointment write, and (when
  * paying via a package) the session reservation all happen inside one transaction;
@@ -370,6 +383,7 @@ export async function deleteAppointmentById(appointmentId, actorId) {
 export default {
   findAppointments,
   getAppointmentById,
+  getAppointmentForCommission,
   bookAppointment,
   confirmAppointment,
   rejectAppointment,

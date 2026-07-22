@@ -68,7 +68,7 @@ export function preparePartnerDetailsData(partner, balance = null, coupons = [],
                 label: c.code,
                 value: `${c.discountType === "percentage" ? c.discountValue + "%" : c.discountValue + " RSD"} popust${
                   c.isActive ? "" : " (neaktivan)"
-                } - <a href="/admin/kuponi/detalji/${c._id}">detalji</a>`,
+                } - <a href="/admin/kuponi/detalji/${c.id}">detalji</a>`,
               }))
             : [{ label: "Nema dodeljenih kodova", value: `<a href="/admin/kuponi/dodavanje">Kreiraj kupon za ovog partnera</a>` }],
       },

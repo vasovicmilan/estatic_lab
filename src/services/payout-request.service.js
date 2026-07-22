@@ -1,5 +1,5 @@
 import payoutRepo from "../repositories/payout-request.repository.js";
-import commissionRepo from "../repositories/commission-entry.repository.js";
+import commissionService from "./commission.service.js";
 import { mapPayoutRequestsForAdminList, mapPayoutRequestForAdminDetail } from "../mappers/payout-request.mapper.js";
 import { validationError, notFound, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
@@ -15,7 +15,7 @@ export async function getBalance(earnerType, earnerId) {
   const ref = earnerType === "employee" ? { employee: earnerId } : { partner: earnerId };
 
   const [earned, reserved, paid] = await Promise.all([
-    commissionRepo.sumEarnedAmount(ref),
+    commissionService.getEarnedTotal(ref),
     payoutRepo.sumPendingRequestedAmount(ref), // requested + approved, not yet paid
     payoutRepo.sumPaidAmount(ref), // already paid out - permanently reduces the balance
   ]);
