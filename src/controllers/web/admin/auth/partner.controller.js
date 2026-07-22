@@ -1,6 +1,5 @@
 import * as partnerService from "../../../../services/partner.service.js";
 import * as userService from "../../../../services/user.service.js";
-import partnerRepo from "../../../../repositories/partner.repository.js";
 import payoutRequestService from "../../../../services/payout-request.service.js";
 import couponService from "../../../../services/coupon.service.js";
 import commissionService from "../../../../services/commission.service.js";
@@ -11,7 +10,7 @@ import { flashAndRedirect } from "../../../../utils/flash.util.js";
 async function loadFormOptions() {
   const [users, existingPartnerUserIds] = await Promise.all([
     userService.listUsers({ role: undefined, status: "active", limit: 200 }),
-    partnerRepo.findAllPartnerUserIds(),
+    partnerService.getAllPartnerUserIds(),
   ]);
 
   // exclude users who already have a Partner profile - not because an employee or

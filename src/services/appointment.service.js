@@ -74,6 +74,24 @@ export async function getAppointmentForCommission(appointmentId) {
 }
 
 /**
+ * Raw busy intervals for one employee on one day - for availability.service.js's
+ * internal use only, computing free slots from working hours minus these.
+ */
+export async function getBusyIntervals(employeeId, dayStart, dayEnd) {
+  return appointmentRepo.findBusyIntervals(employeeId, dayStart, dayEnd);
+}
+
+/**
+ * Whether an employee has any appointment overlapping the given window - for
+ * availability.service.js's write-time final-check before actually booking,
+ * since the slot list the visitor saw may be a few seconds stale by then.
+ */
+export async function hasOverlappingAppointment(employeeId, startTime, endTime, { session } = {}) {
+  const overlapping = await appointmentRepo.findOverlappingAppointments(employeeId, startTime, endTime, null, { session });
+  return overlapping.length > 0;
+}
+
+/**
  * The core booking flow. Reads that only inform a decision happen before the
  * transaction; the guest-user creation (if any), the Appointment write, and (when
  * paying via a package) the session reservation all happen inside one transaction;
@@ -384,6 +402,8 @@ export default {
   findAppointments,
   getAppointmentById,
   getAppointmentForCommission,
+  getBusyIntervals,
+  hasOverlappingAppointment,
   bookAppointment,
   confirmAppointment,
   rejectAppointment,

@@ -105,6 +105,13 @@ export async function deletePartnerById(partnerId) {
   return { success: true };
 }
 
+// every userId that already has a Partner profile - used by the admin
+// controller to exclude them from the "promote this user" dropdown, same
+// reasoning as employee.service.js's getAllEmployeeUserIds
+export async function getAllPartnerUserIds() {
+  return partnerRepo.findAllPartnerUserIds();
+}
+
 export default {
   listPartners,
   getPartnerById,
@@ -114,4 +121,5 @@ export default {
   createPartner,
   updatePartnerById,
   deletePartnerById,
+  getAllPartnerUserIds,
 };

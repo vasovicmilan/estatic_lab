@@ -1,6 +1,6 @@
 import eventEmitter from "../events/event.emitter.js";
 import packagePurchaseRepo from "../repositories/package-purchase.repository.js";
-import packageRepo from "../repositories/package.repository.js";
+import packageService from "./package.service.js";
 import couponService from "./coupon.service.js";
 import { mapPackagePurchasesForAdminList, mapPackagePurchaseForAdminDetail } from "../mappers/package-purchase.mapper.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
@@ -20,7 +20,7 @@ export async function createPurchaseForUser(userId, packageId, adminId, { expire
   if (!packageId) validationError("packageId");
   if (!adminId) validationError("adminId");
 
-  const pkg = await packageRepo.findPackageById(packageId);
+  const pkg = await packageService.getPackageByIdRaw(packageId);
   if (!pkg) notFound("Paket");
 
   const originalPrice = pricePaid ?? pkg.totalPrice;

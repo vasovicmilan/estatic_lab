@@ -1,5 +1,5 @@
-import employeeRepo from "../repositories/employee.repository.js";
-import appointmentRepo from "../repositories/appointment.repository.js";
+import employeeService from "./employee.service.js";
+import appointmentService from "./appointment.service.js";
 import serviceService from "./service.service.js";
 import { validationError, badRequest } from "../utils/error.util.js";
 import { BOOKING_BUFFER_MINUTES, SLOT_GRID_MINUTES } from "../config/booking.config.js";
@@ -102,7 +102,7 @@ async function getEmployeeFreeSlotsForDay(employee, date, durationMinutes) {
   if (!workingHoursEntry || !workingHoursEntry.slots?.length) return [];
 
   const { start: dayStart, end: dayEnd } = dayBounds(date);
-  const busyRaw = await appointmentRepo.findBusyIntervals(employee._id, dayStart, dayEnd);
+  const busyRaw = await appointmentService.getBusyIntervals(employee._id, dayStart, dayEnd);
   // pad every existing appointment by the required buffer on both sides before
   // subtracting - this is what actually keeps a gap before/after each appointment,
   // not just prevents literal overlap. Matches the buffer applied at write time in
@@ -144,8 +144,8 @@ export async function getAvailableSlots({ serviceId, servicePackageId, employeeI
   const { variant } = await serviceService.getActiveVariant(serviceId, servicePackageId);
 
   const candidates = employeeId
-    ? [await employeeRepo.findEmployeeById(employeeId)].filter(Boolean)
-    : await employeeRepo.findEmployeesByService(serviceId);
+    ? [await employeeService.getEmployeeByIdRaw(employeeId)].filter(Boolean)
+    : await employeeService.findEmployeesByServiceRaw(serviceId);
 
   if (!candidates.length) return [];
 
@@ -180,10 +180,10 @@ export async function getAvailableSlots({ serviceId, servicePackageId, employeeI
  * visitor saw may be a few seconds stale.
  */
 export async function findFirstAvailableEmployee(serviceId, startTime, endTime, { session } = {}) {
-  const candidates = await employeeRepo.findEmployeesByService(serviceId, { session });
+  const candidates = await employeeService.findEmployeesByServiceRaw(serviceId, { session });
   for (const employee of candidates) {
-    const overlapping = await appointmentRepo.findOverlappingAppointments(employee._id, startTime, endTime, null, { session });
-    if (overlapping.length === 0) return employee;
+    const isOverlapping = await appointmentService.hasOverlappingAppointment(employee._id, startTime, endTime, { session });
+    if (!isOverlapping) return employee;
   }
   return null;
 }

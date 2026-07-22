@@ -72,6 +72,18 @@ export async function getServiceById(serviceId) {
   return mapServiceForAdminDetail(service);
 }
 
+/**
+ * Raw (unmapped) service for package.service.js's internal validation use only -
+ * needs the raw `packages` array with `_id` fields to check a variant actually
+ * belongs to the service, which the mapped shape (packages -> varijante, renamed
+ * fields) doesn't expose in the right form. Returns null rather than throwing,
+ * unlike getServiceById, since the caller has its own not-found message.
+ */
+export async function getServiceByIdRaw(serviceId) {
+  if (!serviceId) return null;
+  return serviceRepo.findServiceById(serviceId);
+}
+
 export async function getServiceForEdit(serviceId) {
   if (!serviceId) validationError("serviceId");
   const service = await serviceRepo.findServiceById(serviceId, { populateFields: adminPopulate });
@@ -216,6 +228,7 @@ export async function getActiveVariant(serviceId, servicePackageId) {
 export default {
   listServices,
   getServiceById,
+  getServiceByIdRaw,
   getServiceForEdit,
   getServiceBySlug,
   findActiveServices,

@@ -153,9 +153,16 @@ export async function deleteEmployeeById(employeeId) {
 }
 
 // raw (unmapped) - used internally by the availability engine
-export async function findEmployeesByServiceRaw(serviceId) {
+export async function findEmployeesByServiceRaw(serviceId, { session } = {}) {
   if (!serviceId) validationError("serviceId");
-  return employeeRepo.findEmployeesByService(serviceId);
+  return employeeRepo.findEmployeesByService(serviceId, { session });
+}
+
+// raw (unmapped) single employee, for availability.service.js's internal use -
+// needs workingHours directly, which no mapped shape exposes in the right form
+export async function getEmployeeByIdRaw(employeeId) {
+  if (!employeeId) validationError("employeeId");
+  return employeeRepo.findEmployeeById(employeeId);
 }
 
 // {id, name} pairs for the admin appointment-assignment dropdown - only employees
@@ -182,5 +189,6 @@ export default {
   manageWorkingHours,
   deleteEmployeeById,
   findEmployeesByServiceRaw,
+  getEmployeeByIdRaw,
   getEmployeeOptionsForService,
 };

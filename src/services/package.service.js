@@ -1,5 +1,5 @@
 import packageRepo from "../repositories/package.repository.js";
-import serviceRepo from "../repositories/service.repository.js";
+import serviceService from "./service.service.js";
 import {
   mapPackagesForAdminList,
   mapPackageForAdminDetail,
@@ -23,7 +23,7 @@ async function validateItems(items = []) {
     if (!item.servicePackageId) badRequest("Svaka stavka paketa mora imati izabranu varijantu usluge");
     if (!item.sessions || item.sessions < 1) badRequest("Broj seansi mora biti bar 1");
 
-    const service = await serviceRepo.findServiceById(item.service);
+    const service = await serviceService.getServiceByIdRaw(item.service);
     if (!service) badRequest("Izabrana usluga ne postoji");
     const variantExists = (service.packages || []).some((p) => String(p._id) === String(item.servicePackageId));
     if (!variantExists) badRequest(`Izabrana varijanta ne pripada usluzi "${service.name}"`);
@@ -40,6 +40,17 @@ export async function getPackageById(packageId) {
   const pkg = await packageRepo.findPackageById(packageId, { populateFields: populate });
   if (!pkg) notFound("Paket");
   return mapPackageForAdminDetail(pkg);
+}
+
+/**
+ * Raw (unmapped) package for package-purchase.service.js's internal use only -
+ * needs the raw totalPrice and items array to build a purchase, neither of
+ * which the mapped admin-detail shape exposes in the right form. Returns null
+ * rather than throwing, since the caller has its own not-found message.
+ */
+export async function getPackageByIdRaw(packageId) {
+  if (!packageId) return null;
+  return packageRepo.findPackageById(packageId);
 }
 
 export async function getPackageForEdit(packageId) {
@@ -107,6 +118,7 @@ export async function deletePackageById(packageId) {
 export default {
   listPackages,
   getPackageById,
+  getPackageByIdRaw,
   getPackageForEdit,
   getPackageBySlug,
   findActivePackages,
