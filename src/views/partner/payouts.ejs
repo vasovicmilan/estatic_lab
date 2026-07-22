@@ -1,0 +1,42 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container py-5">
+  <h1 class="h3 mb-4">Moje isplate</h1>
+  <%- include("../includes/components/partner-nav") %>
+
+  <form method="GET" action="/moj-partner-nalog/isplate" class="d-flex gap-2 mb-3">
+    <select name="status" class="form-select form-select-sm" style="max-width:200px;" onchange="this.form.submit()">
+      <% data.filters.status.options.forEach(function(opt) { %>
+        <option value="<%= opt.value %>" <%= opt.value === data.filters.status.value ? "selected" : "" %>><%= opt.label %></option>
+      <% }) %>
+    </select>
+  </form>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <% if (data.items.length === 0) { %>
+        <p class="text-muted p-3 mb-0">Nemate podnetih zahteva za isplatu.</p>
+      <% } else { %>
+        <table class="table mb-0">
+          <thead><tr><th>Iznos</th><th>Status</th><th>Zatraženo</th><th>Ažurirano</th><th>Napomena</th></tr></thead>
+          <tbody>
+            <% data.items.forEach(function(p) { %>
+              <tr>
+                <td><%= p.iznos %></td>
+                <td><%= p.status %></td>
+                <td><%= p.zatrazeno %></td>
+                <td><%= p.azurirano %></td>
+                <td><%= p.napomena || "-" %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+  </div>
+
+  <%- include("../includes/pagination", { pagination: data.pagination }) %>
+</main>
+
+<%- include("../includes/footer") %>
