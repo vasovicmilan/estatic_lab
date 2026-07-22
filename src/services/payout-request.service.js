@@ -1,3 +1,4 @@
+import eventEmitter from "../events/event.emitter.js";
 import payoutRepo from "../repositories/payout-request.repository.js";
 import commissionService from "./commission.service.js";
 import { mapPayoutRequestsForAdminList, mapPayoutRequestForAdminDetail } from "../mappers/payout-request.mapper.js";
@@ -80,8 +81,10 @@ export async function approvePayoutRequest(requestId, adminNote = "") {
   if (!request) notFound("Zahtev za isplatu");
   if (request.status !== "requested") badRequest(`Zahtev je već u statusu "${request.status}"`);
 
-  const updated = await payoutRepo.updatePayoutRequestById(requestId, { status: "approved", approvedAt: new Date(), adminNote });
+  await payoutRepo.updatePayoutRequestById(requestId, { status: "approved", approvedAt: new Date(), adminNote });
+  const updated = await payoutRepo.findPayoutRequestById(requestId);
   logInfo("Payout request approved", { requestId });
+  eventEmitter.emit("payout:status_changed", { payoutRequest: updated, status: "approved" });
   return updated;
 }
 
@@ -90,8 +93,10 @@ export async function markPayoutRequestPaid(requestId, adminNote = "") {
   if (!request) notFound("Zahtev za isplatu");
   if (!["requested", "approved"].includes(request.status)) badRequest(`Zahtev je već u statusu "${request.status}"`);
 
-  const updated = await payoutRepo.updatePayoutRequestById(requestId, { status: "paid", paidAt: new Date(), adminNote });
+  await payoutRepo.updatePayoutRequestById(requestId, { status: "paid", paidAt: new Date(), adminNote });
+  const updated = await payoutRepo.findPayoutRequestById(requestId);
   logInfo("Payout request marked paid", { requestId });
+  eventEmitter.emit("payout:status_changed", { payoutRequest: updated, status: "paid" });
   return updated;
 }
 
@@ -100,8 +105,10 @@ export async function rejectPayoutRequest(requestId, adminNote = "") {
   if (!request) notFound("Zahtev za isplatu");
   if (request.status === "paid") badRequest("Isplaćen zahtev se ne može odbiti");
 
-  const updated = await payoutRepo.updatePayoutRequestById(requestId, { status: "rejected", rejectedAt: new Date(), adminNote });
+  await payoutRepo.updatePayoutRequestById(requestId, { status: "rejected", rejectedAt: new Date(), adminNote });
+  const updated = await payoutRepo.findPayoutRequestById(requestId);
   logInfo("Payout request rejected", { requestId });
+  eventEmitter.emit("payout:status_changed", { payoutRequest: updated, status: "rejected" });
   return updated;
 }
 
@@ -116,6 +123,32 @@ export async function getPayoutRequestById(requestId) {
   return mapPayoutRequestForAdminDetail(request);
 }
 
+/**
+ * The earner's own payout request history - a clean minimal shape distinct from
+ * listPayoutRequests (which returns the admin-display shape: earnerType,
+ * earnerName - redundant/awkward for someone viewing their own requests - and
+ * doesn't include adminNote at all, which is exactly the reason/context the
+ * earner needs to see when a request is rejected or approved).
+ */
+export async function listPayoutRequestsForEarner({ employee = null, partner = null, limit = 10, page = 1 } = {}) {
+  const result = await payoutRepo.findPayoutRequests({ filters: { employee, partner }, limit, page });
+  return {
+    data: result.data.map((r) => ({
+      id: r._id.toString(),
+      amount: r.amount,
+      status: r.status,
+      adminNote: r.adminNote || null,
+      requestedAt: r.requestedAt || r.createdAt,
+      approvedAt: r.approvedAt || null,
+      paidAt: r.paidAt || null,
+      rejectedAt: r.rejectedAt || null,
+    })),
+    total: result.total,
+    page: result.page,
+    totalPages: result.totalPages,
+  };
+}
+
 export default {
   getBalance,
   requestPayout,
@@ -124,5 +157,6 @@ export default {
   markPayoutRequestPaid,
   rejectPayoutRequest,
   listPayoutRequests,
+  listPayoutRequestsForEarner,
   getPayoutRequestById,
 };

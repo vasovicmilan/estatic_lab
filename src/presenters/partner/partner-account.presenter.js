@@ -1,6 +1,10 @@
+import { formatDateTime } from "../../utils/date.time.util.js";
+
 const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
 
-export function preparePartnerDashboardData({ partner, balance, coupons, recentCommissions }) {
+const PAYOUT_STATUS_LABELS = { requested: "Zatraženo", approved: "Odobreno", paid: "Isplaćeno", rejected: "Odbijeno" };
+
+export function preparePartnerDashboardData({ partner, balance, coupons, recentCommissions, payoutRequests = [] }) {
   return {
     partner,
     balance: {
@@ -18,6 +22,20 @@ export function preparePartnerDashboardData({ partner, balance, coupons, recentC
       link: `${BASE_URL}/?code=${encodeURIComponent(c.code)}`,
     })),
     recentCommissions: recentCommissions.map(mapCommissionRow),
+    payoutRequests: payoutRequests.map(mapPayoutRequestRow),
+  };
+}
+
+function mapPayoutRequestRow(request) {
+  return {
+    iznos: `${request.amount} RSD`,
+    status: PAYOUT_STATUS_LABELS[request.status] || request.status,
+    statusRaw: request.status,
+    napomena: request.adminNote || null,
+    zatrazeno: formatDateTime(request.requestedAt),
+    // whichever of these actually happened, for a compact "last update" column -
+    // paid/rejected are terminal so at most one of them is ever set alongside approvedAt
+    azurirano: formatDateTime(request.paidAt || request.rejectedAt || request.approvedAt || request.requestedAt),
   };
 }
 

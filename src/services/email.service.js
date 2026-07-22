@@ -101,6 +101,12 @@ export async function sendAppointmentStatusUpdateEmail({ email, firstName }, app
   return sendEmail({ to: email, subject: `Status termina ažuriran - ${SITE_NAME}`, html });
 }
 
+// covers approved/paid/rejected - one partner or commission-employee at a time
+export async function sendPayoutStatusUpdateEmail({ email, firstName }, payoutRequest, status) {
+  const html = await renderTemplate("payout-status-update", { firstName, payoutRequest, status });
+  return sendEmail({ to: email, subject: `Status zahteva za isplatu ažuriran - ${SITE_NAME}`, html });
+}
+
 // sent to the EMPLOYEE when an appointment is (re)assigned to them by an admin
 export async function sendAppointmentReassignedEmail({ email, firstName }, appointment) {
   const html = await renderTemplate("appointment-reassigned-employee", { firstName, appointment, manageUrl: `${BASE_URL}/moj-nalog/termini` });
@@ -248,6 +254,7 @@ export default {
   sendAppointmentConfirmedEmail,
   sendAppointmentCancelledEmail,
   sendAppointmentStatusUpdateEmail,
+  sendPayoutStatusUpdateEmail,
   sendAppointmentReassignedEmail,
   notifyAdminNewAppointment,
   notifyAdminAppointmentCancelled,

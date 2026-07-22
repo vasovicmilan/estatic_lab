@@ -76,6 +76,30 @@
     </div>
   </div>
 
+  <div class="card mb-4">
+    <div class="card-header">Moji zahtevi za isplatu</div>
+    <div class="card-body p-0">
+      <% if (data.payoutRequests.length === 0) { %>
+        <p class="text-muted p-3 mb-0">Još uvek niste podneli zahtev za isplatu.</p>
+      <% } else { %>
+        <table class="table mb-0">
+          <thead><tr><th>Iznos</th><th>Status</th><th>Zatraženo</th><th>Ažurirano</th><th>Napomena</th></tr></thead>
+          <tbody>
+            <% data.payoutRequests.forEach(function(p) { %>
+              <tr>
+                <td><%= p.iznos %></td>
+                <td><%= p.status %></td>
+                <td><%= p.zatrazeno %></td>
+                <td><%= p.azurirano %></td>
+                <td><%= p.napomena || "-" %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
       <span>Poslednje provizije</span>

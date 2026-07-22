@@ -26,8 +26,15 @@ export async function dashboard(req, res, next) {
     const balance = await payoutRequestService.getBalance("partner", partnerId);
     const coupons = await couponService.listCouponsForPartner(partnerId);
     const recentCommissions = await commissionService.listCommissionsForEarner({ partner: partnerId, limit: 5 });
+    const payoutRequests = await payoutRequestService.listPayoutRequestsForEarner({ partner: partnerId, limit: 10 });
 
-    const viewData = preparePartnerDashboardData({ partner, balance, coupons, recentCommissions: recentCommissions.data });
+    const viewData = preparePartnerDashboardData({
+      partner,
+      balance,
+      coupons,
+      recentCommissions: recentCommissions.data,
+      payoutRequests: payoutRequests.data,
+    });
 
     return res.render("partner/dashboard", {
       pageTitle: "Moj partnerski nalog",

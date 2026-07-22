@@ -2,7 +2,7 @@ import { formatDateTime } from "../utils/date.time.util.js";
 
 const STATUS_LABELS = { requested: "Zatraženo", approved: "Odobreno", paid: "Isplaćeno", rejected: "Odbijeno" };
 
-function translateStatus(status) {
+export function translateStatus(status) {
   return STATUS_LABELS[status] || status;
 }
 
@@ -51,4 +51,4 @@ export function mapPayoutRequestForAdminDetail(request) {
   };
 }
 
-export default { mapPayoutRequestForAdminShort, mapPayoutRequestsForAdminList, mapPayoutRequestForAdminDetail };
+export default { mapPayoutRequestForAdminShort, mapPayoutRequestsForAdminList, mapPayoutRequestForAdminDetail, translateStatus };

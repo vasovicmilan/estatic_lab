@@ -6,6 +6,8 @@
     <p style="font-size:14px; color:#555; line-height:1.6; margin:0 0 16px;">
       Novi status vašeg termina: <strong>${status}</strong>
     </p>
+    ${appointment.razlogOdbijanja ? `<p style="font-size:14px; color:#555; line-height:1.6; margin:0 0 16px;"><strong>Razlog odbijanja:</strong> ${appointment.razlogOdbijanja}</p>` : ""}
+    ${appointment.razlogOtkazivanja ? `<p style="font-size:14px; color:#555; line-height:1.6; margin:0 0 16px;"><strong>Razlog otkazivanja:</strong> ${appointment.razlogOtkazivanja}</p>` : ""}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9f7f5; border-radius:6px; margin:0 0 16px;">
       <tr><td style="padding:16px; font-size:14px; color:#333;">
         <strong>Usluga:</strong> ${appointment.usluga?.naziv || "-"}<br>

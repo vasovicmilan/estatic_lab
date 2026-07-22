@@ -6,6 +6,8 @@
     <p style="font-size:14px; color:#555; line-height:1.6; margin:0 0 16px;">
       Novi status vaše porudžbine: <strong>${status}</strong>
     </p>
+    ${order.razlogOtkazivanja ? `<p style="font-size:14px; color:#555; line-height:1.6; margin:0 0 16px;"><strong>Razlog otkazivanja:</strong> ${order.razlogOtkazivanja}</p>` : ""}
+    ${order.razlogVracanja ? `<p style="font-size:14px; color:#555; line-height:1.6; margin:0 0 16px;"><strong>Razlog vraćanja:</strong> ${order.razlogVracanja}</p>` : ""}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9f7f5; border-radius:6px; margin:0 0 16px;">
       <tr><td style="padding:16px; font-size:14px; color:#333;">
         ${order.stavke.map(function(item) {

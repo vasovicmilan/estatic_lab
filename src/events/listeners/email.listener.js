@@ -4,6 +4,7 @@ import * as appointmentService from "../../services/appointment.service.js";
 import * as employeeService from "../../services/employee.service.js";
 import * as packagePurchaseService from "../../services/package-purchase.service.js";
 import * as orderService from "../../services/order.service.js";
+import { translateStatus as translatePayoutStatus } from "../../mappers/payout-request.mapper.js";
 import { logError } from "../../utils/logger.util.js";
 
 /**
@@ -208,6 +209,24 @@ eventEmitter.on(
   "newsletter:subscribed",
   safe("newsletter:subscribed", async ({ email, unsubscribeToken }) => {
     await emailService.sendNewsletterWelcomeEmail({ email }, unsubscribeToken);
+  })
+);
+
+// ==================== PARTNER / EMPLOYEE PAYOUTS ====================
+
+eventEmitter.on(
+  "payout:status_changed",
+  safe("payout:status_changed", async ({ payoutRequest, status }) => {
+    // exactly one of these is populated, matching payoutRequest.earnerType
+    const earner = payoutRequest.earnerType === "employee" ? payoutRequest.employee : payoutRequest.partner;
+    const user = earner?.userId;
+    if (!user?.email) return;
+
+    await emailService.sendPayoutStatusUpdateEmail(
+      { email: user.email, firstName: user.firstName },
+      payoutRequest,
+      translatePayoutStatus(status)
+    );
   })
 );
 
