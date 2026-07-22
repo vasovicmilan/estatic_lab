@@ -26,3 +26,11 @@ eventEmitter.on(
     await commissionService.recordOrderCommission(orderId);
   })
 );
+
+eventEmitter.on(
+  "order:status_changed",
+  safe("order:status_changed", async ({ orderId, status }) => {
+    if (status !== "completed") return;
+    await commissionService.promoteOrderCommissionOnCompletion(orderId);
+  })
+);

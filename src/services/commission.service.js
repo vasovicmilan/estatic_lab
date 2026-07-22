@@ -91,6 +91,26 @@ export async function recordOrderCommission(orderId) {
 }
 
 /**
+ * Called when an order reaches "completed" - a terminal state with no path back
+ * to cancelled/returned/refunded (see order-status-transitions.js). Since there's
+ * no remaining risk of reversal once an order is explicitly marked completed,
+ * its pending commission can be promoted to "earned" immediately rather than
+ * waiting out the rest of the 14-day grace period. This is a fast-track
+ * alongside processGracePeriodCommissions, not a replacement for it - most
+ * orders are never explicitly marked "completed" and still resolve via the cron.
+ */
+export async function promoteOrderCommissionOnCompletion(orderId) {
+  const entry = await commissionRepo.findPendingCommissionByOrder(orderId);
+  if (!entry) return;
+
+  await commissionRepo.updateCommissionEntryById(entry._id, { status: "earned", earnedAt: new Date() });
+  logInfo("Commission promoted to earned - order marked completed before the grace period closed", {
+    orderId,
+    commissionEntryId: entry._id,
+  });
+}
+
+/**
  * Cron target (see jobs/commission-jobs.js). Every pending order-sourced entry
  * either resolves to "earned" (grace period passed, order still valid) or
  * "reversed" (the order was cancelled/returned/refunded before the window closed).
@@ -147,4 +167,9 @@ function round2(value) {
   return Math.round(value * 100) / 100;
 }
 
-export default { recordAppointmentCommissions, recordOrderCommission, processGracePeriodCommissions };
+export default {
+  recordAppointmentCommissions,
+  recordOrderCommission,
+  promoteOrderCommissionOnCompletion,
+  processGracePeriodCommissions,
+};

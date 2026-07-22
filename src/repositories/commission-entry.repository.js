@@ -21,6 +21,15 @@ export async function findPendingOrderCommissions({ session } = {}) {
     .lean();
 }
 
+// used when one specific order reaches a terminal state (e.g. "completed") and
+// its commission needs to be resolved immediately, rather than waiting for the
+// cron's next sweep to find it via the broader scan above
+export async function findPendingCommissionByOrder(orderId, { session } = {}) {
+  return CommissionEntry.findOne({ sourceType: "order", order: orderId, status: "pending" })
+    .session(session || null)
+    .lean();
+}
+
 export async function findCommissionEntries({ limit = 20, page = 1, filters = {}, session } = {}) {
   const filter = buildCommissionEntryFilter(filters);
   const resolvedLimit = resolveLimit(limit);
@@ -56,6 +65,7 @@ export default {
   createCommissionEntry,
   findCommissionEntryById,
   findPendingOrderCommissions,
+  findPendingCommissionByOrder,
   findCommissionEntries,
   sumEarnedAmount,
   updateCommissionEntryById,
