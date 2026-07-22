@@ -50,6 +50,17 @@ export async function sumPendingRequestedAmount({ employee = null, partner = nul
   return result?.total || 0;
 }
 
+export async function sumPaidAmount({ employee = null, partner = null }, { session } = {}) {
+  const match = { status: "paid" };
+  if (employee) match.employee = new Types.ObjectId(employee);
+  if (partner) match.partner = new Types.ObjectId(partner);
+
+  const [result] = await PayoutRequest.aggregate([{ $match: match }, { $group: { _id: null, total: { $sum: "$amount" } } }]).session(
+    session || null
+  );
+  return result?.total || 0;
+}
+
 export async function updatePayoutRequestById(id, updateData, { session } = {}) {
   return PayoutRequest.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
@@ -59,5 +70,6 @@ export default {
   findPayoutRequestById,
   findPayoutRequests,
   sumPendingRequestedAmount,
+  sumPaidAmount,
   updatePayoutRequestById,
 };

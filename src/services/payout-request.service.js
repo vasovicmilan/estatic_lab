@@ -14,24 +14,17 @@ export async function getBalance(earnerType, earnerId) {
   if (!["employee", "partner"].includes(earnerType)) validationError("earnerType");
   const ref = earnerType === "employee" ? { employee: earnerId } : { partner: earnerId };
 
-  const [earned, alreadyPaidOrPending] = await Promise.all([
+  const [earned, reserved, paid] = await Promise.all([
     commissionRepo.sumEarnedAmount(ref),
-    payoutRepo.sumPendingRequestedAmount(ref),
+    payoutRepo.sumPendingRequestedAmount(ref), // requested + approved, not yet paid
+    payoutRepo.sumPaidAmount(ref), // already paid out - permanently reduces the balance
   ]);
-
-  // "already paid" needs its own sum separate from "pending/approved" - paid
-  // payouts permanently reduce the balance, while pending ones are just reserved
-  const paidResult = await payoutRepo.findPayoutRequests({
-    limit: 1000,
-    filters: { ...(earnerType === "employee" ? { employee: earnerId } : { partner: earnerId }), status: "paid" },
-  });
-  const alreadyPaid = paidResult.data.reduce((sum, p) => sum + p.amount, 0);
 
   return {
     earned,
-    paid: alreadyPaid,
-    reserved: alreadyPaidOrPending - alreadyPaid, // requested/approved, not yet paid
-    available: Math.max(0, earned - alreadyPaidOrPending),
+    paid,
+    reserved,
+    available: Math.max(0, earned - paid - reserved),
   };
 }
 
