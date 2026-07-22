@@ -39,6 +39,30 @@ function mapPayoutRequestRow(request) {
   };
 }
 
+export function preparePartnerPayoutsTabData(result, query = {}) {
+  return {
+    items: result.data.map(mapPayoutRequestRow),
+    pagination: {
+      currentPage: result.page,
+      totalPages: result.totalPages,
+      basePath: "/moj-partner-nalog/isplate",
+      query,
+    },
+    filters: {
+      status: {
+        value: query.status || "",
+        options: [
+          { value: "", label: "Svi statusi" },
+          { value: "requested", label: "Zatraženo" },
+          { value: "approved", label: "Odobreno" },
+          { value: "paid", label: "Isplaćeno" },
+          { value: "rejected", label: "Odbijeno" },
+        ],
+      },
+    },
+  };
+}
+
 export function preparePartnerCommissionsTabData(result, query = {}) {
   return {
     items: result.data.map(mapCommissionRow),
@@ -47,6 +71,25 @@ export function preparePartnerCommissionsTabData(result, query = {}) {
       totalPages: result.totalPages,
       basePath: "/moj-partner-nalog/provizije",
       query,
+    },
+    filters: {
+      status: {
+        value: query.status || "",
+        options: [
+          { value: "", label: "Svi statusi" },
+          { value: "pending", label: "Na čekanju" },
+          { value: "earned", label: "Zarađeno" },
+          { value: "reversed", label: "Stornirano" },
+        ],
+      },
+      sourceType: {
+        value: query.sourceType || "",
+        options: [
+          { value: "", label: "Svi izvori" },
+          { value: "appointment", label: "Termin" },
+          { value: "order", label: "Porudžbina" },
+        ],
+      },
     },
   };
 }

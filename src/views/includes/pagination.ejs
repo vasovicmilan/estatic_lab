@@ -6,8 +6,9 @@
   <ul class="pagination">
     <%
       const qs = { ...(p.query || {}) };
+      const pageParam = p.pageParam || "page";
       function pageUrl(page) {
-        const params = new URLSearchParams({ ...qs, page });
+        const params = new URLSearchParams({ ...qs, [pageParam]: page });
         return `${p.basePath}?${params.toString()}`;
       }
     %>

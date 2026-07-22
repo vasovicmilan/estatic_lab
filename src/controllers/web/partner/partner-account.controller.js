@@ -8,6 +8,7 @@ import * as productService from "../../../services/product.service.js";
 import {
   preparePartnerDashboardData,
   preparePartnerCommissionsTabData,
+  preparePartnerPayoutsTabData,
 } from "../../../presenters/partner/partner-account.presenter.js";
 import { logError, logInfo, logWarn } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
@@ -26,7 +27,7 @@ export async function dashboard(req, res, next) {
     const balance = await payoutRequestService.getBalance("partner", partnerId);
     const coupons = await couponService.listCouponsForPartner(partnerId);
     const recentCommissions = await commissionService.listCommissionsForEarner({ partner: partnerId, limit: 5 });
-    const payoutRequests = await payoutRequestService.listPayoutRequestsForEarner({ partner: partnerId, limit: 10 });
+    const payoutRequests = await payoutRequestService.listPayoutRequestsForEarner({ partner: partnerId, limit: 3 });
 
     const viewData = preparePartnerDashboardData({
       partner,
@@ -50,10 +51,12 @@ export async function dashboard(req, res, next) {
 export async function commissions(req, res, next) {
   try {
     const partnerId = await getOwnPartnerId(req);
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, status, sourceType } = req.query;
 
     const result = await commissionService.listCommissionsForEarner({
       partner: partnerId,
+      status: status || undefined,
+      sourceType: sourceType || undefined,
       page: parseInt(page, 10) || 1,
       limit: parseInt(limit, 10) || 10,
     });
@@ -67,6 +70,31 @@ export async function commissions(req, res, next) {
     });
   } catch (error) {
     logError("[commissions] Greška pri učitavanju istorije provizije", error, { userId: req.session?.user?.id });
+    next(error);
+  }
+}
+
+export async function payoutHistory(req, res, next) {
+  try {
+    const partnerId = await getOwnPartnerId(req);
+    const { page = 1, limit = 10, status } = req.query;
+
+    const result = await payoutRequestService.listPayoutRequestsForEarner({
+      partner: partnerId,
+      status: status || undefined,
+      page: parseInt(page, 10) || 1,
+      limit: parseInt(limit, 10) || 10,
+    });
+
+    const viewData = preparePartnerPayoutsTabData(result, req.query);
+
+    return res.render("partner/payouts", {
+      pageTitle: "Moje isplate",
+      pageDescription: "Istorija zahteva za isplatu",
+      data: viewData,
+    });
+  } catch (error) {
+    logError("[payoutHistory] Greška pri učitavanju istorije isplata", error, { userId: req.session?.user?.id });
     next(error);
   }
 }
@@ -99,11 +127,12 @@ export async function catalog(req, res, next) {
     const partnerId = await getOwnPartnerId(req);
     const coupons = await couponService.listCouponsForPartner(partnerId);
     const code = coupons[0]?.code || null;
+    const { search = "", servicesPage = 1, packagesPage = 1, productsPage = 1 } = req.query;
 
     const [services, packages, products] = await Promise.all([
-      serviceService.listServices({ limit: 50 }),
-      packageService.listPackages({ limit: 50 }),
-      productService.listPublicProducts({ limit: 50 }),
+      serviceService.listServices({ search, limit: 10, page: parseInt(servicesPage, 10) || 1 }),
+      packageService.listPackages({ search, limit: 10, page: parseInt(packagesPage, 10) || 1 }),
+      productService.listPublicProducts({ search, limit: 10, page: parseInt(productsPage, 10) || 1 }),
     ]);
 
     const withLink = (items, path) =>
@@ -114,9 +143,13 @@ export async function catalog(req, res, next) {
       pageDescription: "Usluge, paketi i proizvodi sa vašim referalnim linkom",
       data: {
         hasCode: !!code,
+        search,
         services: withLink(services.data, "/usluge"),
+        servicesPagination: { currentPage: services.page, totalPages: services.totalPages, basePath: "/moj-partner-nalog/katalog", pageParam: "servicesPage", query: req.query },
         packages: withLink(packages.data, "/paketi"),
+        packagesPagination: { currentPage: packages.page, totalPages: packages.totalPages, basePath: "/moj-partner-nalog/katalog", pageParam: "packagesPage", query: req.query },
         products: withLink(products.data, "/prodavnica"),
+        productsPagination: { currentPage: products.page, totalPages: products.totalPages, basePath: "/moj-partner-nalog/katalog", pageParam: "productsPage", query: req.query },
       },
     });
   } catch (error) {
@@ -125,4 +158,4 @@ export async function catalog(req, res, next) {
   }
 }
 
-export default { dashboard, commissions, requestPayout, catalog };
+export default { dashboard, commissions, payoutHistory, requestPayout, catalog };

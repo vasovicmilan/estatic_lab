@@ -5,6 +5,19 @@
   <h1 class="h3 mb-4">Moja provizija</h1>
   <%- include("../includes/components/partner-nav") %>
 
+  <form method="GET" action="/moj-partner-nalog/provizije" class="d-flex gap-2 mb-3">
+    <select name="status" class="form-select form-select-sm" style="max-width:200px;" onchange="this.form.submit()">
+      <% data.filters.status.options.forEach(function(opt) { %>
+        <option value="<%= opt.value %>" <%= opt.value === data.filters.status.value ? "selected" : "" %>><%= opt.label %></option>
+      <% }) %>
+    </select>
+    <select name="sourceType" class="form-select form-select-sm" style="max-width:200px;" onchange="this.form.submit()">
+      <% data.filters.sourceType.options.forEach(function(opt) { %>
+        <option value="<%= opt.value %>" <%= opt.value === data.filters.sourceType.value ? "selected" : "" %>><%= opt.label %></option>
+      <% }) %>
+    </select>
+  </form>
+
   <div class="card">
     <div class="card-body p-0">
       <% if (data.items.length === 0) { %>

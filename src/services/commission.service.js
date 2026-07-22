@@ -179,8 +179,8 @@ export async function getEarnedTotal({ employee = null, partner = null }) {
  * detail page and the partner's own dashboard, so neither has to import
  * commission-entry.repository.js directly.
  */
-export async function listCommissionsForEarner({ employee = null, partner = null, limit = 10, page = 1 } = {}) {
-  return commissionRepo.findCommissionEntries({ filters: { employee, partner }, limit, page });
+export async function listCommissionsForEarner({ employee = null, partner = null, status = null, sourceType = null, limit = 10, page = 1 } = {}) {
+  return commissionRepo.findCommissionEntries({ filters: { employee, partner, status, sourceType }, limit, page });
 }
 
 export default {

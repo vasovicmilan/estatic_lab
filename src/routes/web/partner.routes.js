@@ -12,6 +12,7 @@ router.use(partnerMiddleware);
 
 router.get("/", PartnerAccountController.dashboard);
 router.get("/provizije", PartnerAccountController.commissions);
+router.get("/isplate", PartnerAccountController.payoutHistory);
 router.post("/isplata", validatePayoutRequest, PartnerAccountController.requestPayout);
 router.get("/katalog", PartnerAccountController.catalog);
 

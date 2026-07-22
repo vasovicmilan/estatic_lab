@@ -10,23 +10,63 @@
   <% } else { %>
     <p class="text-muted mb-4">Kopirajte link ispod za bilo koju stavku i podelite ga - vaš kod se automatski primenjuje.</p>
 
-    <% [["Usluge", data.services], ["Paketi", data.packages], ["Proizvodi", data.products]].forEach(function(section) { %>
-      <% const [title, items] = section; %>
-      <% if (items.length > 0) { %>
-        <h2 class="h5 mt-4 mb-3"><%= title %></h2>
-        <div class="list-group mb-4">
-          <% items.forEach(function(item) { %>
-            <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
-              <span><%= item.naziv %></span>
-              <div class="input-group input-group-sm" style="max-width:400px;">
-                <input type="text" class="form-control" value="<%= item.referralLink %>" readonly data-referral-link-input>
-                <button type="button" class="btn btn-outline-secondary" data-copy-link-btn>Kopiraj</button>
-              </div>
+    <form method="GET" action="/moj-partner-nalog/katalog" class="mb-4" style="max-width:400px;">
+      <input type="text" name="search" class="form-control" placeholder="Pretraži usluge, pakete, proizvode..." value="<%= data.search %>">
+    </form>
+
+    <h2 class="h5 mt-4 mb-3">Usluge</h2>
+    <% if (data.services.length === 0) { %>
+      <p class="text-muted mb-4"><%= data.search ? "Nema usluga koje odgovaraju pretrazi." : "Nema dostupnih usluga." %></p>
+    <% } else { %>
+      <div class="list-group mb-2">
+        <% data.services.forEach(function(item) { %>
+          <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
+            <span><%= item.naziv %></span>
+            <div class="input-group input-group-sm" style="max-width:400px;">
+              <input type="text" class="form-control" value="<%= item.referralLink %>" readonly data-referral-link-input>
+              <button type="button" class="btn btn-outline-secondary" data-copy-link-btn>Kopiraj</button>
             </div>
-          <% }) %>
-        </div>
-      <% } %>
-    <% }) %>
+          </div>
+        <% }) %>
+      </div>
+      <%- include("../includes/pagination", { pagination: data.servicesPagination }) %>
+    <% } %>
+
+    <h2 class="h5 mt-4 mb-3">Paketi</h2>
+    <% if (data.packages.length === 0) { %>
+      <p class="text-muted mb-4"><%= data.search ? "Nema paketa koji odgovaraju pretrazi." : "Nema dostupnih paketa." %></p>
+    <% } else { %>
+      <div class="list-group mb-2">
+        <% data.packages.forEach(function(item) { %>
+          <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
+            <span><%= item.naziv %></span>
+            <div class="input-group input-group-sm" style="max-width:400px;">
+              <input type="text" class="form-control" value="<%= item.referralLink %>" readonly data-referral-link-input>
+              <button type="button" class="btn btn-outline-secondary" data-copy-link-btn>Kopiraj</button>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+      <%- include("../includes/pagination", { pagination: data.packagesPagination }) %>
+    <% } %>
+
+    <h2 class="h5 mt-4 mb-3">Proizvodi</h2>
+    <% if (data.products.length === 0) { %>
+      <p class="text-muted mb-4"><%= data.search ? "Nema proizvoda koji odgovaraju pretrazi." : "Nema dostupnih proizvoda." %></p>
+    <% } else { %>
+      <div class="list-group mb-2">
+        <% data.products.forEach(function(item) { %>
+          <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
+            <span><%= item.naziv %></span>
+            <div class="input-group input-group-sm" style="max-width:400px;">
+              <input type="text" class="form-control" value="<%= item.referralLink %>" readonly data-referral-link-input>
+              <button type="button" class="btn btn-outline-secondary" data-copy-link-btn>Kopiraj</button>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+      <%- include("../includes/pagination", { pagination: data.productsPagination }) %>
+    <% } %>
   <% } %>
 </main>
 

@@ -1,4 +1,4 @@
-export function buildCommissionEntryFilter({ earnerType = null, employee = null, partner = null, status = null, statusIn = null } = {}) {
+export function buildCommissionEntryFilter({ earnerType = null, employee = null, partner = null, status = null, statusIn = null, sourceType = null } = {}) {
   const filter = {};
 
   if (earnerType) filter.earnerType = earnerType;
@@ -6,6 +6,7 @@ export function buildCommissionEntryFilter({ earnerType = null, employee = null,
   if (partner) filter.partner = partner;
   if (statusIn) filter.status = { $in: statusIn };
   else if (status) filter.status = status;
+  if (sourceType) filter.sourceType = sourceType;
 
   return filter;
 }

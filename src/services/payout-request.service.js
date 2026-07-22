@@ -130,8 +130,8 @@ export async function getPayoutRequestById(requestId) {
  * doesn't include adminNote at all, which is exactly the reason/context the
  * earner needs to see when a request is rejected or approved).
  */
-export async function listPayoutRequestsForEarner({ employee = null, partner = null, limit = 10, page = 1 } = {}) {
-  const result = await payoutRepo.findPayoutRequests({ filters: { employee, partner }, limit, page });
+export async function listPayoutRequestsForEarner({ employee = null, partner = null, status = null, limit = 10, page = 1 } = {}) {
+  const result = await payoutRepo.findPayoutRequests({ filters: { employee, partner, status }, limit, page });
   return {
     data: result.data.map((r) => ({
       id: r._id.toString(),
