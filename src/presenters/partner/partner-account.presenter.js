@@ -1,4 +1,6 @@
 import { formatDateTime } from "../../utils/date.time.util.js";
+import { formatPrice } from "../../utils/price.util.js";
+import { translateCommissionSourceType, translateCommissionStatus } from "../../utils/commission-display.util.js";
 
 const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
 
@@ -8,10 +10,10 @@ export function preparePartnerDashboardData({ partner, balance, coupons, recentC
   return {
     partner,
     balance: {
-      earned: balance.earned,
-      paid: balance.paid,
-      reserved: balance.reserved,
-      available: balance.available,
+      earned: formatPrice(balance.earned),
+      paid: formatPrice(balance.paid),
+      reserved: formatPrice(balance.reserved),
+      available: formatPrice(balance.available),
     },
     // one referral link per coupon that references this partner - a partner could
     // theoretically have more than one active code (e.g. a seasonal promo alongside
@@ -28,7 +30,7 @@ export function preparePartnerDashboardData({ partner, balance, coupons, recentC
 
 function mapPayoutRequestRow(request) {
   return {
-    iznos: `${request.amount} RSD`,
+    iznos: `${formatPrice(request.amount)} RSD`,
     status: PAYOUT_STATUS_LABELS[request.status] || request.status,
     statusRaw: request.status,
     napomena: request.adminNote || null,
@@ -104,18 +106,13 @@ export function preparePayoutRequestFormData(balance) {
 function mapCommissionRow(entry) {
   return {
     id: entry._id?.toString?.() || entry.id,
-    izvor: entry.sourceType === "appointment" ? "Termin" : "Porudžbina",
-    osnovnaVrednost: `${entry.baseValue} RSD`,
+    izvor: translateCommissionSourceType(entry.sourceType),
+    osnovnaVrednost: `${formatPrice(entry.baseValue)} RSD`,
     procenat: `${entry.rate}%`,
-    iznos: `${entry.amount} RSD`,
+    iznos: `${formatPrice(entry.amount)} RSD`,
     status: translateCommissionStatus(entry.status),
     datum: entry.earnedAt || entry.createdAt,
   };
-}
-
-function translateCommissionStatus(status) {
-  const map = { pending: "Na čekanju", earned: "Zarađeno", reversed: "Stornirano" };
-  return map[status] || status;
 }
 
 function describeCoupon(coupon) {

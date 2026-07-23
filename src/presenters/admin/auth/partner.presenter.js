@@ -1,3 +1,6 @@
+import { formatPrice } from "../../../utils/price.util.js";
+import { translateCommissionSourceType, translateCommissionStatus } from "../../../utils/commission-display.util.js";
+
 export function preparePartnerListData(result, query = {}) {
   return {
     items: result.data,
@@ -78,8 +81,8 @@ export function preparePartnerDetailsData(partner, balance = null, coupons = [],
         rows:
           commissions.length > 0
             ? commissions.map((c) => ({
-                label: `${c.sourceType === "appointment" ? "Termin" : "Porudžbina"} - ${c.baseValue} RSD x ${c.rate}%`,
-                value: `${c.amount} RSD (${translateCommissionStatus(c.status)})`,
+                label: `${translateCommissionSourceType(c.sourceType)} - ${formatPrice(c.baseValue)} RSD x ${c.rate}%`,
+                value: `${formatPrice(c.amount)} RSD (${translateCommissionStatus(c.status)})`,
               }))
             : [{ label: "Nema zabeleženih provizija", value: "-" }],
       },
@@ -100,17 +103,17 @@ export function preparePartnerDetailsData(partner, balance = null, coupons = [],
               title: "Stanje",
               type: "table",
               rows: [
-                { label: "Ukupno zarađeno", value: `${balance.earned} RSD` },
-                { label: "Isplaćeno", value: `${balance.paid} RSD` },
-                { label: "Rezervisano (na čekanju)", value: `${balance.reserved} RSD` },
-                { label: "Raspoloživo za isplatu", value: `${balance.available} RSD` },
+                { label: "Ukupno zarađeno", value: `${formatPrice(balance.earned)} RSD` },
+                { label: "Isplaćeno", value: `${formatPrice(balance.paid)} RSD` },
+                { label: "Rezervisano (na čekanju)", value: `${formatPrice(balance.reserved)} RSD` },
+                { label: "Raspoloživo za isplatu", value: `${formatPrice(balance.available)} RSD` },
               ],
             },
             {
               title: "Zabeleži isplatu",
               type: "custom",
               content: "payout-record-form",
-              data: { earnerType: "partner", earnerId: partner.id, available: balance.available },
+              data: { earnerType: "partner", earnerId: partner.id, available: formatPrice(balance.available) },
             },
             {
               title: "Sve isplate",
@@ -134,11 +137,6 @@ export function preparePartnerDetailsData(partner, balance = null, coupons = [],
       { label: partner.korisnik.imePrezime, url: null },
     ],
   };
-}
-
-function translateCommissionStatus(status) {
-  const map = { pending: "Na čekanju", earned: "Zarađeno", reversed: "Stornirano" };
-  return map[status] || status;
 }
 
 export function preparePartnerFormData(partner = null, { userOptions = [] } = {}) {

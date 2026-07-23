@@ -1,3 +1,5 @@
+import { formatPrice } from "../../../utils/price.util.js";
+
 const DAY_LABELS = {
   monday: "Ponedeljak",
   tuesday: "Utorak",
@@ -102,7 +104,7 @@ export function prepareEmployeeDetailsData(employee, balance = null) {
               title: "Zabeleži isplatu",
               type: "custom",
               content: "payout-record-form",
-              data: { earnerType: "employee", earnerId: employee.id, available: balance.available },
+              data: { earnerType: "employee", earnerId: employee.id, available: formatPrice(balance.available) },
             },
           ]
         : []),

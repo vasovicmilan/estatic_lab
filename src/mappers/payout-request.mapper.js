@@ -1,4 +1,5 @@
 import { formatDateTime } from "../utils/date.time.util.js";
+import { formatPrice } from "../utils/price.util.js";
 
 const STATUS_LABELS = { requested: "Zatraženo", approved: "Odobreno", paid: "Isplaćeno", rejected: "Odbijeno" };
 
@@ -21,7 +22,7 @@ export function mapPayoutRequestForAdminShort(request) {
     id: request._id.toString(),
     earnerType: request.earnerType === "employee" ? "Zaposleni" : "Partner",
     earnerName: getEarnerName(request),
-    iznos: `${request.amount} RSD`,
+    iznos: `${formatPrice(request.amount)} RSD`,
     status: translateStatus(request.status),
     statusRaw: request.status,
     zatrazeno: formatDateTime(request.requestedAt || request.createdAt),
@@ -38,7 +39,7 @@ export function mapPayoutRequestForAdminDetail(request) {
     id: request._id.toString(),
     earnerType: request.earnerType === "employee" ? "Zaposleni" : "Partner",
     earnerName: getEarnerName(request),
-    iznos: `${request.amount} RSD`,
+    iznos: `${formatPrice(request.amount)} RSD`,
     status: translateStatus(request.status),
     statusRaw: request.status,
     napomena: request.adminNote || null,
