@@ -1,0 +1,9 @@
+<ul class="nav nav-pills mb-4">
+  <li class="nav-item"><a class="nav-link <%= currentPath === '/moj-nalog' ? 'active' : '' %>" href="/moj-nalog">Pregled</a></li>
+  <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/moj-nalog/termini') ? 'active' : '' %>" href="/moj-nalog/termini">Svi termini</a></li>
+  <% if (typeof isCommissionBased !== 'undefined' && isCommissionBased) { %>
+    <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/moj-nalog/provizije') ? 'active' : '' %>" href="/moj-nalog/provizije">Moja provizija</a></li>
+    <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/moj-nalog/isplate') ? 'active' : '' %>" href="/moj-nalog/isplate">Moje isplate</a></li>
+  <% } %>
+  <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/moj-nalog/profil') ? 'active' : '' %>" href="/moj-nalog/profil">Moj profil</a></li>
+</ul>

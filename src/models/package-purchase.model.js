@@ -7,6 +7,15 @@ const PackagePurchaseItemSchema = new Schema(
     sessionsTotal: { type: Number, required: true, min: 1 },
     sessionsUsed: { type: Number, default: 0, min: 0 },
     sessionsReserved: { type: Number, default: 0, min: 0 },
+    // the a la carte price of ONE session of this service+variant, snapshotted
+    // at the moment of purchase - needed so a commission-based employee who
+    // performs a session consumed from this package can be paid fairly: not the
+    // full a la carte price (the customer got a bulk discount, so the business
+    // didn't actually collect that much for this one session), and not zero
+    // (a rendered service is still real work). See commission.service.js's
+    // recordAppointmentCommissions for how this gets pro-rated by the package's
+    // overall discount ratio.
+    unitPrice: { type: Number, required: true, min: 0 },
   },
   { _id: false }
 );

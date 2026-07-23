@@ -1,22 +1,38 @@
 import * as employeeService from "../../../services/employee.service.js";
 import * as appointmentService from "../../../services/appointment.service.js";
+import payoutRequestService from "../../../services/payout-request.service.js";
+import commissionService from "../../../services/commission.service.js";
 import {
   prepareEmployeeDashboardData,
   prepareEmployeeAppointmentTabData,
   prepareEmployeeAppointmentDetailData,
   prepareEmployeeProfileTabData,
+  prepareEmployeeCommissionsTabData,
+  prepareEmployeePayoutsTabData,
 } from "../../../presenters/employee/employee.presenter.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 
-async function getOwnEmployeeId(req) {
-  const employee = await employeeService.findEmployeeByUserId(req.session.user.id);
+// returns the full raw employee record (not just the id) - payType/commissionRate
+// are needed on every page to decide whether the commission/payout nav tabs
+// should even be shown, not just on the pages that display balance data
+async function getOwnEmployee(req) {
+  return employeeService.findEmployeeByUserId(req.session.user.id);
+}
+
+function employeeIdOf(employee) {
   return employee?._id?.toString() || employee?.id;
+}
+
+function isCommissionBased(employee) {
+  return employee?.payType === "commission";
 }
 
 export async function dashboard(req, res, next) {
   try {
-    const employeeId = await getOwnEmployeeId(req);
+    const employee = await getOwnEmployee(req);
+    const employeeId = employeeIdOf(employee);
+    const commissionBased = isCommissionBased(employee);
 
     const [today, week] = await Promise.all([
       appointmentService.findAppointments({
@@ -29,12 +45,28 @@ export async function dashboard(req, res, next) {
     ]);
 
     const pendingCount = week.data.filter((a) => a.status === "Na čekanju").length;
-    const viewData = prepareEmployeeDashboardData({ todayAppointments: today.data, pendingCount, weekAppointments: week.data });
+
+    let balance = null;
+    let recentCommissions = [];
+    if (commissionBased) {
+      balance = await payoutRequestService.getBalance("employee", employeeId);
+      const commissionsResult = await commissionService.listCommissionsForEarner({ employee: employeeId, limit: 5 });
+      recentCommissions = commissionsResult.data;
+    }
+
+    const viewData = prepareEmployeeDashboardData({
+      todayAppointments: today.data,
+      pendingCount,
+      weekAppointments: week.data,
+      isCommissionBased: commissionBased,
+      balance,
+      recentCommissions,
+    });
 
     return res.render("employee/dashboard", {
       pageTitle: "Moj kalendar",
       pageDescription: "Pregled vaših termina",
-      data: viewData,
+      data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[dashboard] Greška pri učitavanju dashboard-a zaposlenog", error, { userId: req.session?.user?.id });
@@ -44,7 +76,8 @@ export async function dashboard(req, res, next) {
 
 export async function appointments(req, res, next) {
   try {
-    const employeeId = await getOwnEmployeeId(req);
+    const employee = await getOwnEmployee(req);
+    const employeeId = employeeIdOf(employee);
     const { status, page = 1, limit = 10 } = req.query;
 
     const result = await appointmentService.findAppointments({
@@ -60,7 +93,7 @@ export async function appointments(req, res, next) {
     return res.render("employee/appointments", {
       pageTitle: "Moji termini",
       pageDescription: "Pregled svih vaših termina",
-      data: viewData,
+      data: { ...viewData, isCommissionBased: isCommissionBased(employee) },
     });
   } catch (error) {
     logError("[appointments] Greška pri učitavanju termina zaposlenog", error, { userId: req.session?.user?.id, ...req.query });
@@ -71,14 +104,15 @@ export async function appointments(req, res, next) {
 export async function appointmentDetails(req, res, next) {
   try {
     const { appointmentId } = req.params;
-    const employeeId = await getOwnEmployeeId(req);
+    const employee = await getOwnEmployee(req);
+    const employeeId = employeeIdOf(employee);
     const appointment = await appointmentService.getAppointmentById(appointmentId, employeeId, "employee");
     const viewData = prepareEmployeeAppointmentDetailData(appointment);
 
     return res.render("employee/appointment-details", {
       pageTitle: `Termin - ${appointment.klijent.ime}`,
       pageDescription: appointment.usluga.naziv,
-      data: { ...viewData, csrfToken: res.locals.csrfToken },
+      data: { ...viewData, isCommissionBased: isCommissionBased(employee), csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[appointmentDetails] Greška pri učitavanju detalja termina", error, {
@@ -92,7 +126,7 @@ export async function appointmentDetails(req, res, next) {
 export async function confirmAppointment(req, res, next) {
   try {
     const { appointmentId } = req.params;
-    const employeeId = await getOwnEmployeeId(req);
+    const employeeId = employeeIdOf(await getOwnEmployee(req));
     await appointmentService.confirmAppointment(appointmentId, employeeId, "employee");
     logInfo(`[confirmAppointment] Zaposleni potvrdio termin #${appointmentId}`, { appointmentId, userId: req.session.user.id });
     return flashAndRedirect(req, res, "success", "Termin je potvrđen", `/moj-nalog/termini/detalji/${appointmentId}`);
@@ -114,7 +148,7 @@ export async function rejectAppointment(req, res, next) {
       return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), `/moj-nalog/termini/detalji/${appointmentId}`);
     }
 
-    const employeeId = await getOwnEmployeeId(req);
+    const employeeId = employeeIdOf(await getOwnEmployee(req));
     await appointmentService.rejectAppointment(appointmentId, req.body.reason, employeeId, "employee");
     logInfo(`[rejectAppointment] Zaposleni odbio termin #${appointmentId}`, { appointmentId, userId: req.session.user.id });
     return flashAndRedirect(req, res, "success", "Termin je odbijen", `/moj-nalog/termini/detalji/${appointmentId}`);
@@ -130,7 +164,7 @@ export async function rejectAppointment(req, res, next) {
 export async function completeAppointment(req, res, next) {
   try {
     const { appointmentId } = req.params;
-    const employeeId = await getOwnEmployeeId(req);
+    const employeeId = employeeIdOf(await getOwnEmployee(req));
     await appointmentService.completeAppointment(appointmentId, employeeId, "employee");
     logInfo(`[completeAppointment] Zaposleni završio termin #${appointmentId}`, { appointmentId, userId: req.session.user.id });
     return flashAndRedirect(req, res, "success", "Termin je označen kao završen", `/moj-nalog/termini/detalji/${appointmentId}`);
@@ -152,7 +186,7 @@ export async function noShowAppointment(req, res, next) {
       return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), `/moj-nalog/termini/detalji/${appointmentId}`);
     }
 
-    const employeeId = await getOwnEmployeeId(req);
+    const employeeId = employeeIdOf(await getOwnEmployee(req));
     await appointmentService.noShowAppointment(appointmentId, req.body.note, employeeId, "employee");
     logInfo(`[noShowAppointment] Zaposleni označio termin #${appointmentId} kao 'nije se pojavio'`, { appointmentId, userId: req.session.user.id });
     return flashAndRedirect(req, res, "success", "Termin je označen kao 'klijent se nije pojavio'", `/moj-nalog/termini/detalji/${appointmentId}`);
@@ -167,13 +201,14 @@ export async function noShowAppointment(req, res, next) {
 
 export async function profile(req, res, next) {
   try {
-    const employee = await employeeService.findEmployeeProfile(req.session.user.id, "employee");
-    const viewData = prepareEmployeeProfileTabData(employee);
+    const employee = await getOwnEmployee(req);
+    const employeeProfile = await employeeService.findEmployeeProfile(req.session.user.id, "employee");
+    const viewData = prepareEmployeeProfileTabData(employeeProfile);
 
     return res.render("employee/profile", {
       pageTitle: "Moj profil",
       pageDescription: "Pregled vašeg profila i radnog vremena",
-      data: { ...viewData, csrfToken: res.locals.csrfToken },
+      data: { ...viewData, isCommissionBased: isCommissionBased(employee), csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[profile] Greška pri učitavanju profila zaposlenog", error, { userId: req.session?.user?.id });
@@ -188,7 +223,7 @@ export async function updateWorkingHours(req, res, next) {
       return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), "/moj-nalog/profil");
     }
 
-    const employeeId = await getOwnEmployeeId(req);
+    const employeeId = employeeIdOf(await getOwnEmployee(req));
     await employeeService.manageWorkingHours(employeeId, req.body.workingHours || [], req.session.user.id, "employee");
     logInfo(`[updateWorkingHours] Zaposleni #${req.session.user.id} ažurirao radno vreme`, { userId: req.session.user.id });
     return flashAndRedirect(req, res, "success", "Radno vreme je uspešno ažurirano", "/moj-nalog/profil");
@@ -196,6 +231,80 @@ export async function updateWorkingHours(req, res, next) {
     logError("[updateWorkingHours] Greška pri ažuriranju radnog vremena", error, { userId: req.session?.user?.id });
     if (error.statusCode) {
       return flashAndRedirect(req, res, "error", error.message, "/moj-nalog/profil");
+    }
+    next(error);
+  }
+}
+
+export async function commissions(req, res, next) {
+  try {
+    const employee = await getOwnEmployee(req);
+    const employeeId = employeeIdOf(employee);
+    const { page = 1, limit = 10, status, sourceType } = req.query;
+
+    const result = await commissionService.listCommissionsForEarner({
+      employee: employeeId,
+      status: status || undefined,
+      sourceType: sourceType || undefined,
+      page: parseInt(page, 10) || 1,
+      limit: parseInt(limit, 10) || 10,
+    });
+
+    const viewData = prepareEmployeeCommissionsTabData(result, req.query);
+
+    return res.render("employee/commissions", {
+      pageTitle: "Moja provizija",
+      pageDescription: "Istorija zarađene provizije",
+      data: { ...viewData, isCommissionBased: isCommissionBased(employee) },
+    });
+  } catch (error) {
+    logError("[commissions] Greška pri učitavanju istorije provizije zaposlenog", error, { userId: req.session?.user?.id });
+    next(error);
+  }
+}
+
+export async function payoutHistory(req, res, next) {
+  try {
+    const employee = await getOwnEmployee(req);
+    const employeeId = employeeIdOf(employee);
+    const { page = 1, limit = 10, status } = req.query;
+
+    const result = await payoutRequestService.listPayoutRequestsForEarner({
+      employee: employeeId,
+      status: status || undefined,
+      page: parseInt(page, 10) || 1,
+      limit: parseInt(limit, 10) || 10,
+    });
+
+    const viewData = prepareEmployeePayoutsTabData(result, req.query);
+
+    return res.render("employee/payouts", {
+      pageTitle: "Moje isplate",
+      pageDescription: "Istorija zahteva za isplatu",
+      data: { ...viewData, isCommissionBased: isCommissionBased(employee) },
+    });
+  } catch (error) {
+    logError("[payoutHistory] Greška pri učitavanju istorije isplata zaposlenog", error, { userId: req.session?.user?.id });
+    next(error);
+  }
+}
+
+export async function requestPayout(req, res, next) {
+  try {
+    const employeeId = employeeIdOf(await getOwnEmployee(req));
+
+    if (req.validationErrors) {
+      logWarn("[requestPayout] Validacione greške", { validationErrors: req.validationErrors, userId: req.session?.user?.id });
+      return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), "/moj-nalog");
+    }
+
+    await payoutRequestService.requestPayout("employee", employeeId, Number(req.body.amount));
+    logInfo("[requestPayout] Zaposleni zatražio isplatu", { employeeId, amount: req.body.amount });
+    return flashAndRedirect(req, res, "success", "Zahtev za isplatu je poslat", "/moj-nalog");
+  } catch (error) {
+    logError("[requestPayout] Greška pri slanju zahteva za isplatu", error, { userId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, "/moj-nalog");
     }
     next(error);
   }
@@ -211,4 +320,7 @@ export default {
   noShowAppointment,
   profile,
   updateWorkingHours,
+  commissions,
+  payoutHistory,
+  requestPayout,
 };

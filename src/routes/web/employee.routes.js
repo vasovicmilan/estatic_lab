@@ -3,6 +3,7 @@ import { employeeMiddleware } from "../../middlewares/employee.middleware.js";
 import * as EmployeeController from "../../controllers/web/employee/employee.controller.js";
 import { validateAppointmentId, validateAppointmentReject, validateAppointmentNoShow } from "../../middlewares/validators/appointment.validator.js";
 import { validateWorkingHoursUpdate } from "../../middlewares/validators/employee.validator.js";
+import { validatePayoutRequest } from "../../middlewares/validators/payout-request.validator.js";
 import { parseJsonFields } from "../../middlewares/parse-json-fields.middleware.js";
 
 const router = Router();
@@ -20,6 +21,10 @@ router.post("/termini/:appointmentId/potvrdi", validateAppointmentId, EmployeeCo
 router.post("/termini/:appointmentId/odbij", validateAppointmentId, validateAppointmentReject, EmployeeController.rejectAppointment);
 router.post("/termini/:appointmentId/zavrsi", validateAppointmentId, EmployeeController.completeAppointment);
 router.post("/termini/:appointmentId/nije-se-pojavio", validateAppointmentId, validateAppointmentNoShow, EmployeeController.noShowAppointment);
+
+router.get("/provizije", EmployeeController.commissions);
+router.get("/isplate", EmployeeController.payoutHistory);
+router.post("/isplata", validatePayoutRequest, EmployeeController.requestPayout);
 
 router.get("/profil", EmployeeController.profile);
 router.post("/profil/radno-vreme", parseJsonFields("workingHours"), validateWorkingHoursUpdate, EmployeeController.updateWorkingHours);

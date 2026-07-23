@@ -69,7 +69,7 @@ export async function getAppointmentById(appointmentId, requesterId, role) {
  */
 export async function getAppointmentForCommission(appointmentId) {
   return appointmentRepo.findAppointmentById(appointmentId, {
-    populateFields: ["employee", { path: "coupon", populate: "partner" }],
+    populateFields: ["employee", "packagePurchase", { path: "coupon", populate: "partner" }],
   });
 }
 

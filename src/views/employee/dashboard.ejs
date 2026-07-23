@@ -5,11 +5,77 @@
   <%- include("../includes/flash-messages") %>
   <h1 class="h3 mb-4">Moj kalendar</h1>
 
-  <ul class="nav nav-pills mb-4">
-    <li class="nav-item"><a class="nav-link active" href="/moj-nalog">Pregled</a></li>
-    <li class="nav-item"><a class="nav-link" href="/moj-nalog/termini">Svi termini</a></li>
-    <li class="nav-item"><a class="nav-link" href="/moj-nalog/profil">Moj profil</a></li>
-  </ul>
+<%- include("../includes/components/employee-nav", { currentPath: "/moj-nalog", isCommissionBased: data.isCommissionBased }) %>
+
+  <% if (data.isCommissionBased && data.balance) { %>
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">Ukupno zarađeno</p>
+          <p class="h4 mb-0"><%= data.balance.earned %> RSD</p>
+        </div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">Isplaćeno</p>
+          <p class="h4 mb-0"><%= data.balance.paid %> RSD</p>
+        </div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">Rezervisano (na čekanju)</p>
+          <p class="h4 mb-0"><%= data.balance.reserved %> RSD</p>
+        </div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card h-100 border-primary"><div class="card-body">
+          <p class="text-muted small mb-1">Raspoloživo za isplatu</p>
+          <p class="h4 mb-0 text-primary"><%= data.balance.available %> RSD</p>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-header">Zatraži isplatu</div>
+          <div class="card-body">
+            <% if (data.balance.available <= 0) { %>
+              <p class="text-muted mb-0">Trenutno nemate raspoloživ iznos za isplatu.</p>
+            <% } else { %>
+              <form action="/moj-nalog/isplata" method="POST" class="d-flex gap-2">
+                <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+                <input type="number" name="amount" class="form-control" min="1" max="<%= data.balance.available %>" step="0.01" placeholder="Iznos u RSD" required>
+                <button type="submit" class="btn btn-primary text-nowrap">Pošalji zahtev</button>
+              </form>
+              <small class="text-muted d-block mt-2">Najviše <%= data.balance.available %> RSD.</small>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Poslednje provizije</span>
+            <a href="/moj-nalog/provizije" class="small">Sve provizije &rarr;</a>
+          </div>
+          <div class="card-body p-0">
+            <% if (data.recentCommissions.length === 0) { %>
+              <p class="text-muted p-3 mb-0">Nema zabeležene provizije.</p>
+            <% } else { %>
+              <table class="table table-sm mb-0">
+                <tbody>
+                  <% data.recentCommissions.forEach(function(c) { %>
+                    <tr><td><%= c.izvor %></td><td><%= c.iznos %></td><td><%= c.status %></td></tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
 
   <div class="row g-4 mb-4">
     <div class="col-md-4">

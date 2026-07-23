@@ -5,11 +5,7 @@
   <%- include("../includes/flash-messages") %>
   <h1 class="h3 mb-4">Moji termini</h1>
 
-  <ul class="nav nav-pills mb-4">
-    <li class="nav-item"><a class="nav-link" href="/moj-nalog">Pregled</a></li>
-    <li class="nav-item"><a class="nav-link active" href="/moj-nalog/termini">Svi termini</a></li>
-    <li class="nav-item"><a class="nav-link" href="/moj-nalog/profil">Moj profil</a></li>
-  </ul>
+  <%- include("../includes/components/employee-nav", { currentPath: "/moj-nalog/termini", isCommissionBased: data.isCommissionBased }) %>
 
   <form method="GET" class="mb-4" style="max-width: 250px;">
     <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">

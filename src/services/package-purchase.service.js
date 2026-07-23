@@ -1,6 +1,7 @@
 import eventEmitter from "../events/event.emitter.js";
 import packagePurchaseRepo from "../repositories/package-purchase.repository.js";
 import packageService from "./package.service.js";
+import serviceService from "./service.service.js";
 import couponService from "./coupon.service.js";
 import { mapPackagePurchasesForAdminList, mapPackagePurchaseForAdminDetail } from "../mappers/package-purchase.mapper.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
@@ -11,6 +12,23 @@ const adminPopulate = [
   { path: "user", select: "firstName lastName email" },
   { path: "items.service", select: "name packages" }, // packages needed to resolve the variant name in the mapper
 ];
+
+// resolves each item's current a la carte unit price by fetching its service and
+// finding the matching variant - deduplicates service fetches since a package
+// could include the same service more than once (different variants) or
+// reference several distinct services across its items
+async function resolveItemUnitPrices(items) {
+  const uniqueServiceIds = [...new Set(items.map((item) => item.service.toString()))];
+  const services = await Promise.all(uniqueServiceIds.map((id) => serviceService.getServiceByIdRaw(id)));
+  const serviceById = new Map(uniqueServiceIds.map((id, i) => [id, services[i]]));
+
+  return items.map((item) => {
+    const service = serviceById.get(item.service.toString());
+    const variant = service?.packages?.find((p) => p._id.toString() === item.servicePackageId.toString());
+    if (!variant) badRequest(`Varijanta usluge nije pronađena za stavku paketa (servis: ${item.service})`);
+    return { ...item, unitPrice: variant.totalPrice };
+  });
+}
 
 // Admin action: grant a user a package they paid for outside the system (cash, card
 // terminal, bank transfer). This is the ONLY way a PackagePurchase comes into
@@ -32,12 +50,14 @@ export async function createPurchaseForUser(userId, packageId, adminId, { expire
     discountApplied = couponResult.discountAmount;
   }
 
-  const items = pkg.items.map((item) => ({
+  const itemsWithPrices = await resolveItemUnitPrices(pkg.items);
+  const items = itemsWithPrices.map((item) => ({
     service: item.service,
     servicePackageId: item.servicePackageId,
     sessionsTotal: item.sessions,
     sessionsUsed: 0,
     sessionsReserved: 0,
+    unitPrice: item.unitPrice,
   }));
 
   const created = await packagePurchaseRepo.createPackagePurchase({

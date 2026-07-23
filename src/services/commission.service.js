@@ -19,35 +19,49 @@ export async function recordAppointmentCommissions(appointmentId) {
   const appointment = await appointmentService.getAppointmentForCommission(appointmentId);
   if (!appointment) return;
 
-  const baseValue = appointment.finalPrice || 0;
-  if (baseValue <= 0) return;
-
   const entries = [];
 
-  if (appointment.employee?.payType === "commission" && appointment.employee.commissionRate) {
+  // Employee commission: when the appointment was consumed from a package,
+  // finalPrice is 0 (the customer paid nothing new at this specific
+  // appointment - they already paid for the package). Paying the employee
+  // based on the service's full a la carte price would overpay them relative
+  // to what the business actually collected for this session; paying them
+  // nothing shortchanges them for real work performed. Pro-rating by the
+  // package's actual discount ratio is the fair middle ground - see
+  // getPackageProRatedValue.
+  const employeeBaseValue = appointment.packagePurchase
+    ? getPackageProRatedValue(appointment, appointment.packagePurchase)
+    : appointment.finalPrice || 0;
+
+  if (employeeBaseValue > 0 && appointment.employee?.payType === "commission" && appointment.employee.commissionRate) {
     entries.push({
       earnerType: "employee",
       employee: appointment.employee._id,
       sourceType: "appointment",
       appointment: appointment._id,
-      baseValue,
+      baseValue: employeeBaseValue,
       rate: appointment.employee.commissionRate,
-      amount: round2(baseValue * (appointment.employee.commissionRate / 100)),
+      amount: round2(employeeBaseValue * (appointment.employee.commissionRate / 100)),
       status: "earned",
       earnedAt: new Date(),
     });
   }
 
-  if (appointment.coupon?.partner) {
+  // Partner commission: unaffected by the package pro-rating above - a
+  // package-covered appointment can't also carry a coupon (mutually exclusive
+  // by design, see appointment.model.js), so this stays on the plain
+  // finalPrice/coupon path exactly as before.
+  const partnerBaseValue = appointment.finalPrice || 0;
+  if (partnerBaseValue > 0 && appointment.coupon?.partner) {
     const partner = appointment.coupon.partner;
     entries.push({
       earnerType: "partner",
       partner: partner._id || partner,
       sourceType: "appointment",
       appointment: appointment._id,
-      baseValue,
+      baseValue: partnerBaseValue,
       rate: partner.commissionRate ?? 0,
-      amount: round2(baseValue * ((partner.commissionRate ?? 0) / 100)),
+      amount: round2(partnerBaseValue * ((partner.commissionRate ?? 0) / 100)),
       status: "earned",
       earnedAt: new Date(),
     });
@@ -59,6 +73,26 @@ export async function recordAppointmentCommissions(appointmentId) {
   if (entries.length) {
     logInfo("Commission recorded for completed appointment", { appointmentId, count: entries.length });
   }
+}
+
+/**
+ * Finds the package purchase item matching this appointment's specific
+ * service+variant, and pro-rates its snapshotted a la carte unitPrice by the
+ * package's actual discount ratio (pricePaid / originalPrice) - so every
+ * service in a package is discounted by the same overall rate the customer
+ * actually got, rather than assuming a flat value per session regardless of
+ * which service was performed.
+ */
+function getPackageProRatedValue(appointment, packagePurchase) {
+  const item = (packagePurchase.items || []).find(
+    (i) =>
+      i.service?.toString() === appointment.service?.toString() &&
+      i.servicePackageId?.toString() === appointment.variant?.servicePackageId?.toString()
+  );
+  if (!item) return 0;
+
+  const discountRatio = packagePurchase.originalPrice > 0 ? packagePurchase.pricePaid / packagePurchase.originalPrice : 1;
+  return round2(item.unitPrice * discountRatio);
 }
 
 /**
