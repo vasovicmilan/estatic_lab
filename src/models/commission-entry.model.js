@@ -24,10 +24,10 @@ const CommissionEntrySchema = new Schema(
 
     sourceType: {
       type: String,
-      enum: ["appointment", "order"],
+      enum: ["appointment", "order", "package_purchase"],
       required: true,
     },
-    // exactly one of these two is set, matching sourceType
+    // exactly one of these three is set, matching sourceType
     appointment: {
       type: Schema.Types.ObjectId,
       ref: "Appointment",
@@ -36,6 +36,11 @@ const CommissionEntrySchema = new Schema(
     order: {
       type: Schema.Types.ObjectId,
       ref: "Order",
+      default: null,
+    },
+    packagePurchase: {
+      type: Schema.Types.ObjectId,
+      ref: "PackagePurchase",
       default: null,
     },
 
@@ -58,12 +63,6 @@ const CommissionEntrySchema = new Schema(
       min: 0,
     },
 
-    // pending: created at order-confirmed time, waiting out the return-grace-window
-    //   (appointment-sourced entries skip this - they go straight to "earned" when
-    //   marked completed, since a rendered service has nothing left to reverse against)
-    // earned: safe to include in the earner's payable balance
-    // reversed: the underlying appointment/order was cancelled/returned before
-    //   this entry ever reached "earned" - excluded from the balance entirely
     status: {
       type: String,
       enum: ["pending", "earned", "reversed"],

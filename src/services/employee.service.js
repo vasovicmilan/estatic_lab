@@ -178,6 +178,10 @@ export async function getEmployeeOptionsForService(serviceId) {
   }));
 }
 
+export async function getAllEmployeeUserIds() {
+  return employeeRepo.findAllEmployeeUserIds();
+}
+
 export default {
   listEmployees,
   getEmployeeById,
@@ -191,4 +195,5 @@ export default {
   findEmployeesByServiceRaw,
   getEmployeeByIdRaw,
   getEmployeeOptionsForService,
+  getAllEmployeeUserIds,
 };

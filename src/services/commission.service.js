@@ -1,6 +1,7 @@
 import commissionRepo from "../repositories/commission-entry.repository.js";
 import appointmentService from "./appointment.service.js";
 import orderService from "./order.service.js";
+import packagePurchaseService from "./package-purchase.service.js";
 import { ORDER_COMMISSION_GRACE_PERIOD_DAYS } from "../config/shop.config.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 
@@ -86,6 +87,58 @@ export async function recordOrderCommission(orderId) {
   });
 
   logInfo("Pending commission recorded for confirmed order", { orderId, partnerId: partner._id || partner });
+}
+
+/**
+ * Called when a package purchase is created. Only a partner-referred purchase
+ * generates a commission - the coupon used could be an ordinary discount code
+ * with no partner attached at all, which must NOT generate anything here (this
+ * is exactly the `coupon.partner` check below - a plain coupon and a partner
+ * referral coupon share the same model, so this is the one thing that tells
+ * them apart).
+ *
+ * Goes straight to "earned", same as an appointment: a package purchase is
+ * created by admin after payment has already been collected out-of-band, so
+ * there's no equivalent "wait out the return window" concept the way an online
+ * order has. It CAN still be cancelled afterward though (see
+ * reversePackagePurchaseCommission), just less commonly and not on a timer.
+ */
+export async function recordPackagePurchaseCommission(packagePurchaseId) {
+  const purchase = await packagePurchaseService.getPurchaseForCommission(packagePurchaseId);
+  if (!purchase || !purchase.coupon?.partner) return;
+
+  const baseValue = purchase.pricePaid || 0;
+  if (baseValue <= 0) return;
+
+  const partner = purchase.coupon.partner;
+  await commissionRepo.createCommissionEntry({
+    earnerType: "partner",
+    partner: partner._id || partner,
+    sourceType: "package_purchase",
+    packagePurchase: purchase._id,
+    baseValue,
+    rate: partner.commissionRate ?? 0,
+    amount: round2(baseValue * ((partner.commissionRate ?? 0) / 100)),
+    status: "earned",
+    earnedAt: new Date(),
+  });
+
+  logInfo("Commission recorded for package purchase", { packagePurchaseId, partnerId: partner._id || partner });
+}
+
+/**
+ * Called when a package purchase is cancelled. Unlike order/appointment
+ * cancellation (handled by the grace-period cron or by never reaching "earned"
+ * in the first place), a package-purchase commission is already "earned" the
+ * moment it's created - so cancellation here means finding and reversing an
+ * already-earned entry, not just skipping a pending one.
+ */
+export async function reversePackagePurchaseCommission(packagePurchaseId, reason = "Kupovina paketa je otkazana") {
+  const entry = await commissionRepo.findEarnedCommissionByPackagePurchase(packagePurchaseId);
+  if (!entry) return;
+
+  await commissionRepo.updateCommissionEntryById(entry._id, { status: "reversed", reversedAt: new Date(), reversalReason: reason });
+  logInfo("Commission reversed - package purchase cancelled", { packagePurchaseId, commissionEntryId: entry._id });
 }
 
 /**
@@ -186,6 +239,8 @@ export async function listCommissionsForEarner({ employee = null, partner = null
 export default {
   recordAppointmentCommissions,
   recordOrderCommission,
+  recordPackagePurchaseCommission,
+  reversePackagePurchaseCommission,
   promoteOrderCommissionOnCompletion,
   processGracePeriodCommissions,
   getEarnedTotal,

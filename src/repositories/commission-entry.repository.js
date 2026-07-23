@@ -30,6 +30,16 @@ export async function findPendingCommissionByOrder(orderId, { session } = {}) {
     .lean();
 }
 
+// used when a package purchase gets cancelled after its commission was already
+// recorded (package-purchase commissions go straight to "earned" at creation,
+// unlike orders which sit "pending" first) - finds the earned entry so it can
+// be reversed rather than silently leaving the partner paid for a cancelled sale
+export async function findEarnedCommissionByPackagePurchase(packagePurchaseId, { session } = {}) {
+  return CommissionEntry.findOne({ sourceType: "package_purchase", packagePurchase: packagePurchaseId, status: "earned" })
+    .session(session || null)
+    .lean();
+}
+
 export async function findCommissionEntries({ limit = 20, page = 1, filters = {}, session } = {}) {
   const filter = buildCommissionEntryFilter(filters);
   const resolvedLimit = resolveLimit(limit);
@@ -66,6 +76,7 @@ export default {
   findCommissionEntryById,
   findPendingOrderCommissions,
   findPendingCommissionByOrder,
+  findEarnedCommissionByPackagePurchase,
   findCommissionEntries,
   sumEarnedAmount,
   updateCommissionEntryById,

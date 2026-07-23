@@ -74,6 +74,18 @@ export async function getPurchaseById(packagePurchaseId) {
   return mapPackagePurchaseForAdminDetail(purchase);
 }
 
+/**
+ * Raw (unmapped) package purchase for commission.service.js's internal use only -
+ * needs pricePaid and the coupon's partner, neither of which the mapped
+ * admin-detail shape exposes in the right form. Same reasoning as
+ * appointment.service.js's getAppointmentForCommission.
+ */
+export async function getPurchaseForCommission(packagePurchaseId) {
+  return packagePurchaseRepo.findPackagePurchaseById(packagePurchaseId, {
+    populateFields: [{ path: "coupon", populate: "partner" }],
+  });
+}
+
 export async function listPurchasesForUser(userId) {
   if (!userId) validationError("userId");
   const purchases = await packagePurchaseRepo.findPurchasesByUser(userId, { populateFields: adminPopulate });
@@ -228,6 +240,7 @@ export async function deletePurchase(packagePurchaseId, adminId) {
 export default {
   createPurchaseForUser,
   getPurchaseById,
+  getPurchaseForCommission,
   listPurchasesForUser,
   listPurchases,
   findUsablePurchaseForService,

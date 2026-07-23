@@ -34,3 +34,17 @@ eventEmitter.on(
     await commissionService.promoteOrderCommissionOnCompletion(orderId);
   })
 );
+
+eventEmitter.on(
+  "package_purchase:created",
+  safe("package_purchase:created", async ({ packagePurchaseId }) => {
+    await commissionService.recordPackagePurchaseCommission(packagePurchaseId);
+  })
+);
+
+eventEmitter.on(
+  "package_purchase:cancelled",
+  safe("package_purchase:cancelled", async ({ packagePurchaseId }) => {
+    await commissionService.reversePackagePurchaseCommission(packagePurchaseId);
+  })
+);
