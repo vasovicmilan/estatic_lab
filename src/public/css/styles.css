@@ -187,6 +187,23 @@ h1, h2, h3, h4, h5, h6,
     max-height: calc(100vh - 4rem);
     overflow-y: auto;
   }
+
+  /* overflow-y: auto above clips any absolutely-positioned descendant that
+     would extend beyond it - which is exactly what Bootstrap's dropdown-menu
+     is (positioned via Popper.js). Forcing it static makes it expand inline
+     within the scrollable menu instead of floating, which has no clipping
+     issue and is also the more usual pattern for mobile nav dropdowns anyway. */
+  .navbar-collapse .dropdown-menu {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    float: none;
+    width: 100%;
+    margin-top: 0;
+    box-shadow: none;
+    border: none;
+    background-color: rgba(0, 0, 0, 0.03);
+  }
 }
 
 /* ---- Badges - soft pill shape, slightly heavier weight ---- */
