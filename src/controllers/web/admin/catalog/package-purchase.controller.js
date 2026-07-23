@@ -1,6 +1,7 @@
 import * as packagePurchaseService from "../../../../services/package-purchase.service.js";
 import * as userService from "../../../../services/user.service.js";
 import * as packageService from "../../../../services/package.service.js";
+import couponService from "../../../../services/coupon.service.js";
 import {
   preparePackagePurchaseListData,
   preparePackagePurchaseDetailsData,
@@ -269,6 +270,43 @@ export async function deletePackagePurchase(req, res, next) {
   }
 }
 
+/**
+ * JSON endpoint for the package-purchase creation form's live coupon check -
+ * lets admin see the real discounted price before submitting, the same
+ * "apply and preview" pattern used for booking/checkout, rather than the old
+ * plain text field that only revealed whether the code worked after the fact.
+ * Read-only: does NOT redeem the coupon (that only happens for real inside
+ * createPurchaseForUser's transaction) - this is purely a preview.
+ */
+export async function checkPackagePurchaseCoupon(req, res) {
+  try {
+    const { code, packageId, userId } = req.body;
+    if (!code || !packageId) {
+      return res.status(400).json({ success: false, message: "Kod kupona i paket su obavezni" });
+    }
+
+    const pkg = await packageService.getPackageByIdRaw(packageId);
+    if (!pkg) {
+      return res.status(404).json({ success: false, message: "Paket nije pronađen" });
+    }
+
+    const { discountAmount } = await couponService.validateCouponForPackagePurchase(code, {
+      userId: userId || null,
+      packageId,
+      purchaseValue: pkg.totalPrice,
+    });
+
+    return res.status(200).json({
+      success: true,
+      originalPrice: pkg.totalPrice,
+      discountAmount,
+      finalPrice: Math.max(0, pkg.totalPrice - discountAmount),
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 400).json({ success: false, message: error.message || "Kupon nije važeći" });
+  }
+}
+
 export default {
   listPackagePurchases,
   packagePurchaseDetails,
@@ -278,4 +316,5 @@ export default {
   updatePackagePurchase,
   cancelPackagePurchase,
   deletePackagePurchase,
+  checkPackagePurchaseCoupon,
 };

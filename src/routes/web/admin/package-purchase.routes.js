@@ -14,6 +14,7 @@ router.get("/dodavanje", PackagePurchaseController.newPackagePurchaseForm);
 router.get("/izmena/:packagePurchaseId", validatePackagePurchaseId, PackagePurchaseController.editPackagePurchaseForm);
 router.get("/detalji/:packagePurchaseId", validatePackagePurchaseId, PackagePurchaseController.packagePurchaseDetails);
 
+router.post("/proveri-kupon", PackagePurchaseController.checkPackagePurchaseCoupon);
 router.post("/", validateCreatePackagePurchase, PackagePurchaseController.createPackagePurchase);
 
 router.put("/:packagePurchaseId", validatePackagePurchaseId, validateUpdatePackagePurchase, PackagePurchaseController.updatePackagePurchase);
