@@ -13,6 +13,7 @@ import {
 import { prepareMediaFormData } from "../../../../presenters/admin/media-form.presenter.js";
 import { buildGalleryPayload, buildVideosPayload } from "../../../../utils/media-form.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
@@ -359,6 +360,16 @@ export async function updateProduct(req, res, next) {
     const data = buildProductPayload(req, existing);
     const updated = await productService.updateProductById(productId, data);
     logInfo(`[updateProduct] Proizvod #${productId} ažuriran`, { productId, adminId: req.session?.user?.id });
+
+    const changes = auditLogService.computeChanges(existing, updated, ["name", "shortDescription", "isActive", "badge"]);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PRODUCT_UPDATED",
+      entity: { type: "Product", id: productId },
+      changes,
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Proizvod je uspešno ažuriran", `/admin/proizvodi/detalji/${updated.id}`);
   } catch (error) {

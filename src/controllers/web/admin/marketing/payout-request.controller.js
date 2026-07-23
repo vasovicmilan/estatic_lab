@@ -5,6 +5,7 @@ import {
 } from "../../../../presenters/admin/marketing/payout-request.presenter.js";
 import { logError, logInfo, logWarn } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 
 export async function listPayoutRequests(req, res, next) {
   try {
@@ -57,11 +58,27 @@ export async function payoutRequestDetails(req, res, next) {
 export async function approvePayoutRequest(req, res, next) {
   try {
     const { requestId } = req.params;
-    await payoutRequestService.approvePayoutRequest(requestId, req.body.reason || "");
+    const updated = await payoutRequestService.approvePayoutRequest(requestId, req.body.reason || "");
     logInfo(`[approvePayoutRequest] Zahtev #${requestId} odobren`, { requestId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PAYOUT_APPROVED",
+      entity: { type: "PayoutRequest", id: requestId },
+      changes: { status: { old: "requested", new: "approved" } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Zahtev je odobren", `/admin/isplate/detalji/${requestId}`);
   } catch (error) {
     logError("[approvePayoutRequest] Greška pri odobravanju zahteva", error, { requestId: req.params.requestId, userId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PAYOUT_APPROVED",
+      entity: { type: "PayoutRequest", id: req.params.requestId },
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
     if (error.statusCode) {
       return flashAndRedirect(req, res, "error", error.message, `/admin/isplate/detalji/${req.params.requestId}`);
     }
@@ -72,11 +89,27 @@ export async function approvePayoutRequest(req, res, next) {
 export async function markPayoutRequestPaid(req, res, next) {
   try {
     const { requestId } = req.params;
-    await payoutRequestService.markPayoutRequestPaid(requestId, req.body.reason || "");
+    const updated = await payoutRequestService.markPayoutRequestPaid(requestId, req.body.reason || "");
     logInfo(`[markPayoutRequestPaid] Zahtev #${requestId} označen kao isplaćen`, { requestId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PAYOUT_PAID",
+      entity: { type: "PayoutRequest", id: requestId },
+      changes: { status: { old: null, new: "paid" } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Isplata je zabeležena", `/admin/isplate/detalji/${requestId}`);
   } catch (error) {
     logError("[markPayoutRequestPaid] Greška pri obeležavanju isplate", error, { requestId: req.params.requestId, userId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PAYOUT_PAID",
+      entity: { type: "PayoutRequest", id: req.params.requestId },
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
     if (error.statusCode) {
       return flashAndRedirect(req, res, "error", error.message, `/admin/isplate/detalji/${req.params.requestId}`);
     }
@@ -87,11 +120,27 @@ export async function markPayoutRequestPaid(req, res, next) {
 export async function rejectPayoutRequest(req, res, next) {
   try {
     const { requestId } = req.params;
-    await payoutRequestService.rejectPayoutRequest(requestId, req.body.reason || "");
+    const updated = await payoutRequestService.rejectPayoutRequest(requestId, req.body.reason || "");
     logInfo(`[rejectPayoutRequest] Zahtev #${requestId} odbijen`, { requestId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PAYOUT_REJECTED",
+      entity: { type: "PayoutRequest", id: requestId },
+      changes: { status: { old: null, new: "rejected" } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Zahtev je odbijen", `/admin/isplate/detalji/${requestId}`);
   } catch (error) {
     logError("[rejectPayoutRequest] Greška pri odbijanju zahteva", error, { requestId: req.params.requestId, userId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PAYOUT_REJECTED",
+      entity: { type: "PayoutRequest", id: req.params.requestId },
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
     if (error.statusCode) {
       return flashAndRedirect(req, res, "error", error.message, `/admin/isplate/detalji/${req.params.requestId}`);
     }

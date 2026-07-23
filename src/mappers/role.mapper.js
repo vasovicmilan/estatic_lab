@@ -23,6 +23,11 @@ export function translatePermission(permission) {
 
     manage_products: "Upravljanje proizvodima",
     manage_orders: "Upravljanje porudžbinama",
+
+    manage_partners: "Upravljanje partnerima",
+    manage_payouts: "Upravljanje isplatama",
+    view_own_commissions: "Pregled sopstvene provizije",
+    view_logs: "Pregled logova",
   };
   return map[permission] || permission;
 }

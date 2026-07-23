@@ -70,7 +70,7 @@
             <thead><tr><th>Ruta</th><th class="text-end">Prosečno vreme</th><th class="text-end">Broj zahteva</th></tr></thead>
             <tbody>
               <% data.summary.performance.slowestRoutes.forEach(function(r) { %>
-                <tr><td><%= r.label %></td><td class="text-end"><%= r.avgMs %> ms</td><td class="text-end"><%= r.count %></td></tr>
+                <tr><td class="text-break"><%= r.label %></td><td class="text-end"><%= r.avgMs %> ms</td><td class="text-end"><%= r.count %></td></tr>
               <% }) %>
             </tbody>
           </table>
@@ -88,7 +88,7 @@
             <% } else { %>
               <table class="table table-sm mb-0"><tbody>
                 <% data.summary.topErrors.forEach(function(e) { %>
-                  <tr><td><%= e.label %></td><td class="text-end"><%= e.count %></td></tr>
+                  <tr><td class="text-break"><%= e.label %></td><td class="text-end"><%= e.count %></td></tr>
                 <% }) %>
               </tbody></table>
             <% } %>
@@ -104,7 +104,7 @@
             <% } else { %>
               <table class="table table-sm mb-0"><tbody>
                 <% data.summary.topUrls.forEach(function(u) { %>
-                  <tr><td><%= u.label %></td><td class="text-end"><%= u.count %></td></tr>
+                  <tr><td class="text-break"><%= u.label %></td><td class="text-end"><%= u.count %></td></tr>
                 <% }) %>
               </tbody></table>
             <% } %>
@@ -120,7 +120,7 @@
             <% } else { %>
               <table class="table table-sm mb-0"><tbody>
                 <% data.summary.topErrorUrls.forEach(function(u) { %>
-                  <tr><td><%= u.label %></td><td class="text-end"><%= u.count %></td></tr>
+                  <tr><td class="text-break"><%= u.label %></td><td class="text-end"><%= u.count %></td></tr>
                 <% }) %>
               </tbody></table>
             <% } %>

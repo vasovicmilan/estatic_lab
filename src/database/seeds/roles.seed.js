@@ -30,7 +30,7 @@ const defaultRoles = [
   {
     name: "employee",
     description: "Zaposleni - pristup sopstvenom kalendaru i dodeljenim terminima",
-    permissions: ["view_dashboard", "manage_appointments_assigned"],
+    permissions: ["view_dashboard", "manage_appointments_assigned", "view_own_commissions"],
     isDefault: false,
     priority: 50,
   },
