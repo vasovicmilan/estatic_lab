@@ -8,6 +8,15 @@
 
   const userSelect = document.getElementById("userId");
 
+  // the only trigger before was blurring the coupon field - invisible, easy to
+  // miss entirely. An explicit button next to the field makes the interaction
+  // unmissable, matching the "Primeni" pattern used elsewhere in the app.
+  const checkBtn = document.createElement("button");
+  checkBtn.type = "button";
+  checkBtn.className = "btn btn-outline-secondary btn-sm mt-2";
+  checkBtn.textContent = "Proveri kupon";
+  couponInput.insertAdjacentElement("afterend", checkBtn);
+
   function clearCouponNote() {
     const existing = panel.querySelector("[data-coupon-preview]");
     if (existing) existing.remove();
@@ -24,8 +33,13 @@
 
   async function checkCoupon() {
     const code = couponInput.value.trim();
-    if (!code || !packageSelect.value) {
-      clearCouponNote();
+
+    if (!packageSelect.value) {
+      showCouponNote("text-danger", "Prvo izaberite paket.");
+      return;
+    }
+    if (!code) {
+      showCouponNote("text-danger", "Unesite kod kupona.");
       return;
     }
 
@@ -50,11 +64,7 @@
     }
   }
 
-  // re-check whenever the code or the selected package changes - either one
-  // affects whether/how much the coupon actually applies
-  couponInput.addEventListener("blur", checkCoupon);
-  packageSelect.addEventListener("change", () => {
-    clearCouponNote();
-    if (couponInput.value.trim()) checkCoupon();
-  });
+  checkBtn.addEventListener("click", checkCoupon);
+  couponInput.addEventListener("input", clearCouponNote);
+  packageSelect.addEventListener("change", clearCouponNote);
 })();
