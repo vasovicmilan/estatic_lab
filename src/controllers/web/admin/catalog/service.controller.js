@@ -16,6 +16,7 @@ import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 
 // complex nested arrays (packages, features, comparisonTable, faq) are submitted as
 // JSON from the dynamic form-builder widgets rather than flat form fields
@@ -300,6 +301,13 @@ export async function publishServiceStep(req, res, next) {
     const service = await serviceService.addExtrasAndPublish(serviceId, data);
     const message = data.isActive === false ? "Sačuvano kao nacrt" : "Usluga je uspešno objavljena";
     logInfo(`[publishServiceStep] Usluga #${serviceId} ${data.isActive === false ? "sačuvana kao nacrt" : "objavljena"}`, { serviceId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: data.isActive === false ? "SERVICE_SAVED_AS_DRAFT" : "SERVICE_PUBLISHED",
+      entity: { type: "Service", id: serviceId },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", message, `/admin/usluge/detalji/${service.id}`);
   } catch (error) {
@@ -362,6 +370,16 @@ export async function updateService(req, res, next) {
     const data = buildServicePayload(req, existing);
     const updated = await serviceService.updateServiceById(serviceId, data);
     logInfo(`[updateService] Usluga #${serviceId} ažurirana`, { serviceId, adminId: req.session?.user?.id });
+
+    const changes = auditLogService.computeChanges(existing, updated, ["name", "isActive", "shortDescription"]);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "SERVICE_UPDATED",
+      entity: { type: "Service", id: serviceId },
+      changes,
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Usluga je uspešno ažurirana", `/admin/usluge/detalji/${updated.id}`);
   } catch (error) {
@@ -521,6 +539,13 @@ export async function deleteService(req, res, next) {
     const { serviceId } = req.params;
     await serviceService.deleteServiceById(serviceId);
     logInfo(`[deleteService] Usluga #${serviceId} obrisana`, { serviceId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "SERVICE_DELETED",
+      entity: { type: "Service", id: serviceId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Usluga je uspešno obrisana", "/admin/usluge");
   } catch (error) {
     logError("[deleteService] Greška pri brisanju usluge", error, { serviceId: req.params.serviceId, userId: req.session?.user?.id });

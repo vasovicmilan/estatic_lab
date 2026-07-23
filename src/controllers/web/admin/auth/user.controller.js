@@ -4,6 +4,7 @@ import * as roleService from "../../../../services/role.service.js";
 import { prepareUserListData, prepareUserDetailsData, prepareUserEditFormData } from "../../../../presenters/admin/auth/user.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 
 export async function listUsers(req, res, next) {
   try {
@@ -62,8 +63,17 @@ export async function updateUserStatus(req, res, next) {
       return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), `/admin/korisnici/detalji/${userId}`);
     }
 
+    const existing = await userService.getUserById(userId).catch(() => null);
     await userService.updateUserStatus(userId, req.body.status);
     logInfo(`[updateUserStatus] Status korisnika #${userId} promenjen na "${req.body.status}"`, { userId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "USER_STATUS_CHANGED",
+      entity: { type: "User", id: userId },
+      changes: { status: { old: existing?.statusRaw || null, new: req.body.status } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Status korisnika je uspešno promenjen", `/admin/korisnici/detalji/${userId}`);
   } catch (error) {
@@ -71,6 +81,14 @@ export async function updateUserStatus(req, res, next) {
       userId: req.params.userId,
       requestedStatus: req.body.status,
       adminId: req.session?.user?.id,
+    });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "USER_STATUS_CHANGED",
+      entity: { type: "User", id: req.params.userId },
+      req,
+      success: false,
+      errorMessage: error.message,
     });
     if (error.statusCode) {
       return flashAndRedirect(req, res, "error", error.message, `/admin/korisnici/detalji/${req.params.userId}`);
@@ -88,8 +106,17 @@ export async function updateUserRole(req, res, next) {
       return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), `/admin/korisnici/detalji/${userId}`);
     }
 
+    const existing = await userService.getUserById(userId).catch(() => null);
     await userService.updateUserRole(userId, req.body.role);
     logInfo(`[updateUserRole] Rola korisnika #${userId} promenjena`, { userId, newRole: req.body.role, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "USER_ROLE_CHANGED",
+      entity: { type: "User", id: userId },
+      changes: { roleId: { old: existing?.roleId || null, new: req.body.role } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Rola korisnika je uspešno promenjena", `/admin/korisnici/detalji/${userId}`);
   } catch (error) {
@@ -97,6 +124,14 @@ export async function updateUserRole(req, res, next) {
       userId: req.params.userId,
       requestedRole: req.body.role,
       adminId: req.session?.user?.id,
+    });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "USER_ROLE_CHANGED",
+      entity: { type: "User", id: req.params.userId },
+      req,
+      success: false,
+      errorMessage: error.message,
     });
     if (error.statusCode) {
       return flashAndRedirect(req, res, "error", error.message, `/admin/korisnici/detalji/${req.params.userId}`);
@@ -110,6 +145,13 @@ export async function verifyUser(req, res, next) {
     const { userId } = req.params;
     await authService.verifyAccountByAdmin(userId);
     logInfo(`[verifyUser] Korisnik #${userId} ručno verifikovan od strane admina`, { userId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "USER_VERIFIED_BY_ADMIN",
+      entity: { type: "User", id: userId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Nalog korisnika je uspešno verifikovan", `/admin/korisnici/detalji/${userId}`);
   } catch (error) {
     logError("[verifyUser] Greška pri verifikaciji korisnika", error, { userId: req.params.userId, adminId: req.session?.user?.id });
@@ -123,8 +165,17 @@ export async function verifyUser(req, res, next) {
 export async function deleteUser(req, res, next) {
   try {
     const { userId } = req.params;
+    const existing = await userService.getUserById(userId).catch(() => null);
     await userService.deleteUser(userId);
     logInfo(`[deleteUser] Korisnik #${userId} obrisan`, { userId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "USER_DELETED",
+      entity: { type: "User", id: userId },
+      changes: { email: { old: existing?.email || null, new: null } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Korisnik je uspešno obrisan", "/admin/korisnici");
   } catch (error) {
     logError("[deleteUser] Greška pri brisanju korisnika", error, { userId: req.params.userId, adminId: req.session?.user?.id });

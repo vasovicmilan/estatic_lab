@@ -6,6 +6,7 @@ import commissionService from "../../../../services/commission.service.js";
 import { preparePartnerListData, preparePartnerDetailsData, preparePartnerFormData } from "../../../../presenters/admin/auth/partner.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 
 async function loadFormOptions() {
   const [users, existingPartnerUserIds] = await Promise.all([
@@ -120,6 +121,14 @@ export async function createPartner(req, res, next) {
 
     const partner = await partnerService.createPartner({ ...req.body, commissionRate: Number(req.body.commissionRate) });
     logInfo(`[createPartner] Partner kreiran za korisnika #${req.body.userId}`, { partnerId: partner.id, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PARTNER_CREATED",
+      entity: { type: "Partner", id: partner.id },
+      changes: { userId: { old: null, new: req.body.userId }, commissionRate: { old: null, new: Number(req.body.commissionRate) } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Partner je uspešno kreiran", `/admin/partneri/detalji/${partner.id}`);
   } catch (error) {
@@ -154,11 +163,22 @@ export async function updatePartner(req, res, next) {
       });
     }
 
+    const existing = await partnerService.getPartnerForEdit(partnerId);
     const updated = await partnerService.updatePartnerById(partnerId, {
       ...req.body,
       ...(req.body.commissionRate !== undefined ? { commissionRate: Number(req.body.commissionRate) } : {}),
     });
     logInfo(`[updatePartner] Partner #${partnerId} ažuriran`, { partnerId, adminId: req.session?.user?.id });
+
+    const changes = auditLogService.computeChanges(existing, updated, ["commissionRate", "isActive", "notes"]);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PARTNER_UPDATED",
+      entity: { type: "Partner", id: partnerId },
+      changes,
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Partner je uspešno ažuriran", `/admin/partneri/detalji/${updated.id}`);
   } catch (error) {
@@ -185,8 +205,17 @@ export async function updatePartner(req, res, next) {
 export async function deletePartner(req, res, next) {
   try {
     const { partnerId } = req.params;
+    const existing = await partnerService.getPartnerForEdit(partnerId).catch(() => null);
     await partnerService.deletePartnerById(partnerId);
     logInfo(`[deletePartner] Partner #${partnerId} obrisan`, { partnerId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PARTNER_DELETED",
+      entity: { type: "Partner", id: partnerId },
+      changes: { imePrezime: { old: existing?.imePrezime || null, new: null } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Partner je uspešno obrisan", "/admin/partneri");
   } catch (error) {
     logError("[deletePartner] Greška pri brisanju partnera", error, { partnerId: req.params.partnerId, userId: req.session?.user?.id });

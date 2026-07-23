@@ -164,9 +164,25 @@ export async function recordPayoutDirectly(req, res, next) {
 
     await payoutRequestService.recordPayoutByAdmin(earnerType, earnerId, Number(req.body.amount), req.body.note || "");
     logInfo(`[recordPayoutDirectly] Isplata direktno zabeležena`, { earnerType, earnerId, amount: req.body.amount, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PAYOUT_RECORDED_DIRECTLY",
+      entity: { type: earnerType === "employee" ? "Employee" : "Partner", id: earnerId },
+      changes: { amount: { old: null, new: Number(req.body.amount) }, note: { old: null, new: req.body.note || null } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Isplata je zabeležena", redirectUrl);
   } catch (error) {
     logError("[recordPayoutDirectly] Greška pri direktnom beleženju isplate", error, { earnerType, earnerId, userId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PAYOUT_RECORDED_DIRECTLY",
+      entity: { type: earnerType === "employee" ? "Employee" : "Partner", id: earnerId },
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
     if (error.statusCode) {
       return flashAndRedirect(req, res, "error", error.message, redirectUrl);
     }

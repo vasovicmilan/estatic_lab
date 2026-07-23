@@ -6,6 +6,7 @@ import payoutRequestService from "../../../../services/payout-request.service.js
 import { prepareEmployeeListData, prepareEmployeeDetailsData, prepareEmployeeFormData } from "../../../../presenters/admin/auth/employee.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 
 async function loadFormOptions() {
   const [users, services, experts, existingEmployeeUserIds] = await Promise.all([
@@ -125,6 +126,14 @@ export async function createEmployee(req, res, next) {
 
     const employee = await employeeService.createEmployee(req.body);
     logInfo(`[createEmployee] Zaposleni kreiran za korisnika #${req.body.userId}`, { employeeId: employee.id, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "EMPLOYEE_CREATED",
+      entity: { type: "Employee", id: employee.id },
+      changes: { userId: { old: null, new: req.body.userId }, payType: { old: null, new: req.body.payType || null } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Zaposleni je uspešno kreiran", `/admin/zaposleni/detalji/${employee.id}`);
   } catch (error) {
@@ -159,8 +168,19 @@ export async function updateEmployee(req, res, next) {
       });
     }
 
+    const existing = await employeeService.getEmployeeForEdit(employeeId);
     const updated = await employeeService.updateEmployeeById(employeeId, req.body);
     logInfo(`[updateEmployee] Zaposleni #${employeeId} ažuriran`, { employeeId, adminId: req.session?.user?.id });
+
+    const changes = auditLogService.computeChanges(existing, updated, ["payType", "commissionRate", "isActive"]);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "EMPLOYEE_UPDATED",
+      entity: { type: "Employee", id: employeeId },
+      changes,
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Zaposleni je uspešno ažuriran", `/admin/zaposleni/detalji/${updated.id}`);
   } catch (error) {
@@ -192,6 +212,13 @@ export async function updateWorkingHours(req, res, next) {
 
     await employeeService.manageWorkingHours(employeeId, req.body.workingHours || [], actorId, actorRole);
     logInfo(`[updateWorkingHours] Radno vreme zaposlenog #${employeeId} ažurirano`, { employeeId, actorId });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "EMPLOYEE_WORKING_HOURS_UPDATED",
+      entity: { type: "Employee", id: employeeId },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Radno vreme je uspešno ažurirano", `/admin/zaposleni/detalji/${employeeId}`);
   } catch (error) {
@@ -209,8 +236,17 @@ export async function updateWorkingHours(req, res, next) {
 export async function deleteEmployee(req, res, next) {
   try {
     const { employeeId } = req.params;
+    const existing = await employeeService.getEmployeeForEdit(employeeId).catch(() => null);
     await employeeService.deleteEmployeeById(employeeId);
     logInfo(`[deleteEmployee] Zaposleni #${employeeId} obrisan`, { employeeId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "EMPLOYEE_DELETED",
+      entity: { type: "Employee", id: employeeId },
+      changes: { imePrezime: { old: existing?.imePrezime || null, new: null } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Zaposleni je uspešno obrisan", "/admin/zaposleni");
   } catch (error) {
     logError("[deleteEmployee] Greška pri brisanju zaposlenog", error, { employeeId: req.params.employeeId, userId: req.session?.user?.id });

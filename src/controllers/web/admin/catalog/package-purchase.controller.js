@@ -9,6 +9,7 @@ import {
 } from "../../../../presenters/admin/marketing/package-purchase.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 
 async function loadFormOptions() {
   const [users, packages] = await Promise.all([
@@ -122,6 +123,19 @@ export async function createPackagePurchase(req, res, next) {
     });
 
     logInfo(`[createPackagePurchase] Paket dodeljen korisniku #${userId}`, { packagePurchaseId: purchase.id, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PACKAGE_PURCHASE_CREATED",
+      entity: { type: "PackagePurchase", id: purchase.id },
+      changes: {
+        userId: { old: null, new: userId },
+        packageId: { old: null, new: packageId },
+        pricePaid: { old: null, new: pricePaid ? parseFloat(pricePaid) : null },
+        couponCode: { old: null, new: couponCode || null },
+      },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Paket je uspešno dodeljen korisniku", `/admin/kupljeni-paketi/detalji/${purchase.id}`);
   } catch (error) {
@@ -159,8 +173,19 @@ export async function updatePackagePurchase(req, res, next) {
     }
 
     const { expiresAt, notes } = req.body;
+    const existing = await packagePurchaseService.getPurchaseById(packagePurchaseId);
     const updated = await packagePurchaseService.updatePurchase(packagePurchaseId, { expiresAt: expiresAt || null, notes });
     logInfo(`[updatePackagePurchase] Kupljeni paket #${packagePurchaseId} ažuriran`, { packagePurchaseId, adminId: req.session?.user?.id });
+
+    const changes = auditLogService.computeChanges(existing, updated, ["expiresAtRaw", "napomena"]);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PACKAGE_PURCHASE_UPDATED",
+      entity: { type: "PackagePurchase", id: packagePurchaseId },
+      changes,
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Kupljeni paket je uspešno ažuriran", `/admin/kupljeni-paketi/detalji/${updated.id}`);
   } catch (error) {
@@ -190,11 +215,27 @@ export async function cancelPackagePurchase(req, res, next) {
     const { packagePurchaseId } = req.params;
     await packagePurchaseService.cancelPurchase(packagePurchaseId, req.session?.user?.id);
     logInfo(`[cancelPackagePurchase] Kupljeni paket #${packagePurchaseId} otkazan`, { packagePurchaseId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PACKAGE_PURCHASE_CANCELLED",
+      entity: { type: "PackagePurchase", id: packagePurchaseId },
+      changes: { status: { old: null, new: "cancelled" } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Kupljeni paket je otkazan", `/admin/kupljeni-paketi/detalji/${packagePurchaseId}`);
   } catch (error) {
     logError("[cancelPackagePurchase] Greška pri otkazivanju kupljenog paketa", error, {
       packagePurchaseId: req.params.packagePurchaseId,
       userId: req.session?.user?.id,
+    });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PACKAGE_PURCHASE_CANCELLED",
+      entity: { type: "PackagePurchase", id: req.params.packagePurchaseId },
+      req,
+      success: false,
+      errorMessage: error.message,
     });
     if (error.statusCode) {
       return flashAndRedirect(req, res, "error", error.message, `/admin/kupljeni-paketi/detalji/${req.params.packagePurchaseId}`);
@@ -208,6 +249,13 @@ export async function deletePackagePurchase(req, res, next) {
     const { packagePurchaseId } = req.params;
     await packagePurchaseService.deletePurchase(packagePurchaseId, req.session?.user?.id);
     logInfo(`[deletePackagePurchase] Kupljeni paket #${packagePurchaseId} obrisan`, { packagePurchaseId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PACKAGE_PURCHASE_DELETED",
+      entity: { type: "PackagePurchase", id: packagePurchaseId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Kupljeni paket je uspešno obrisan", "/admin/kupljeni-paketi");
   } catch (error) {
     logError("[deletePackagePurchase] Greška pri brisanju kupljenog paketa", error, {

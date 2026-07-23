@@ -9,6 +9,7 @@ import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 
 function parseJsonField(value, fallback = []) {
   if (Array.isArray(value) || (value && typeof value === "object")) return value;
@@ -179,6 +180,14 @@ export async function createPackage(req, res, next) {
     const data = buildPackagePayload(req);
     const pkg = await packageService.createPackage(data);
     logInfo(`[createPackage] Paket kreiran: "${pkg.naziv}"`, { packageId: pkg.id, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PACKAGE_CREATED",
+      entity: { type: "Package", id: pkg.id },
+      changes: { totalPrice: { old: null, new: data.totalPrice } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Paket je uspešno kreiran", `/admin/paketi/detalji/${pkg.id}`);
   } catch (error) {
@@ -218,6 +227,16 @@ export async function updatePackage(req, res, next) {
     const data = buildPackagePayload(req, existing);
     const updated = await packageService.updatePackageById(packageId, data);
     logInfo(`[updatePackage] Paket #${packageId} ažuriran`, { packageId, adminId: req.session?.user?.id });
+
+    const changes = auditLogService.computeChanges(existing, updated, ["name", "totalPrice", "isActive"]);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PACKAGE_UPDATED",
+      entity: { type: "Package", id: packageId },
+      changes,
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Paket je uspešno ažuriran", `/admin/paketi/detalji/${updated.id}`);
   } catch (error) {
@@ -332,6 +351,13 @@ export async function deletePackage(req, res, next) {
     const { packageId } = req.params;
     await packageService.deletePackageById(packageId);
     logInfo(`[deletePackage] Paket #${packageId} obrisan`, { packageId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PACKAGE_DELETED",
+      entity: { type: "Package", id: packageId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Paket je uspešno obrisan", "/admin/paketi");
   } catch (error) {
     logError("[deletePackage] Greška pri brisanju paketa", error, { packageId: req.params.packageId, userId: req.session?.user?.id });

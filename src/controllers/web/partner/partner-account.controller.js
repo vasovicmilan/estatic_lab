@@ -11,6 +11,7 @@ import {
   preparePartnerPayoutsTabData,
 } from "../../../presenters/partner/partner-account.presenter.js";
 import { logError, logInfo, logWarn } from "../../../utils/logger.util.js";
+import auditLogService from "../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 
 const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
@@ -110,6 +111,14 @@ export async function requestPayout(req, res, next) {
 
     await payoutRequestService.requestPayout("partner", partnerId, Number(req.body.amount));
     logInfo(`[requestPayout] Partner zatražio isplatu`, { partnerId, amount: req.body.amount });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PAYOUT_REQUESTED",
+      entity: { type: "Partner", id: partnerId },
+      changes: { amount: { old: null, new: Number(req.body.amount) } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Zahtev za isplatu je poslat", "/moj-partner-nalog");
   } catch (error) {
     logError("[requestPayout] Greška pri slanju zahteva za isplatu", error, { userId: req.session?.user?.id });

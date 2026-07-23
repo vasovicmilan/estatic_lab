@@ -300,6 +300,13 @@ export async function publishProductStep(req, res, next) {
     const product = await productService.addSeoAndPublish(productId, data);
     const message = data.isActive === false ? "Sačuvano kao nacrt" : "Proizvod je uspešno objavljen";
     logInfo(`[publishProductStep] Proizvod #${productId} ${data.isActive === false ? "sačuvan kao nacrt" : "objavljen"}`, { productId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: data.isActive === false ? "PRODUCT_SAVED_AS_DRAFT" : "PRODUCT_PUBLISHED",
+      entity: { type: "Product", id: productId },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", message, `/admin/proizvodi/detalji/${product.id}`);
   } catch (error) {
@@ -518,6 +525,13 @@ export async function deleteProduct(req, res, next) {
     const { productId } = req.params;
     await productService.deleteProductById(productId);
     logInfo(`[deleteProduct] Proizvod #${productId} obrisan`, { productId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PRODUCT_DELETED",
+      entity: { type: "Product", id: productId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Proizvod je uspešno obrisan", "/admin/proizvodi");
   } catch (error) {
     logError("[deleteProduct] Greška pri brisanju proizvoda", error, { productId: req.params.productId, userId: req.session?.user?.id });

@@ -11,6 +11,7 @@ import {
   prepareEmployeePayoutsTabData,
 } from "../../../presenters/employee/employee.presenter.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
+import auditLogService from "../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 
 // returns the full raw employee record (not just the id) - payType/commissionRate
@@ -300,6 +301,14 @@ export async function requestPayout(req, res, next) {
 
     await payoutRequestService.requestPayout("employee", employeeId, Number(req.body.amount));
     logInfo("[requestPayout] Zaposleni zatražio isplatu", { employeeId, amount: req.body.amount });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PAYOUT_REQUESTED",
+      entity: { type: "Employee", id: employeeId },
+      changes: { amount: { old: null, new: Number(req.body.amount) } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Zahtev za isplatu je poslat", "/moj-nalog");
   } catch (error) {
     logError("[requestPayout] Greška pri slanju zahteva za isplatu", error, { userId: req.session?.user?.id });
