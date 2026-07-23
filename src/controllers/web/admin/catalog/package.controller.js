@@ -228,7 +228,8 @@ export async function updatePackage(req, res, next) {
     const updated = await packageService.updatePackageById(packageId, data);
     logInfo(`[updatePackage] Paket #${packageId} ažuriran`, { packageId, adminId: req.session?.user?.id });
 
-    const changes = auditLogService.computeChanges(existing, updated, ["name", "totalPrice", "isActive"]);
+    const afterUpdate = await packageService.getPackageForEdit(packageId);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, ["name", "totalPrice", "isActive"]);
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "PACKAGE_UPDATED",

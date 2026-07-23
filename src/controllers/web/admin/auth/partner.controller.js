@@ -170,7 +170,8 @@ export async function updatePartner(req, res, next) {
     });
     logInfo(`[updatePartner] Partner #${partnerId} ažuriran`, { partnerId, adminId: req.session?.user?.id });
 
-    const changes = auditLogService.computeChanges(existing, updated, ["commissionRate", "isActive", "notes"]);
+    const afterUpdate = await partnerService.getPartnerForEdit(partnerId);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, ["commissionRate", "isActive", "notes"]);
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "PARTNER_UPDATED",

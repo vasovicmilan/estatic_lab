@@ -172,7 +172,8 @@ export async function updateEmployee(req, res, next) {
     const updated = await employeeService.updateEmployeeById(employeeId, req.body);
     logInfo(`[updateEmployee] Zaposleni #${employeeId} ažuriran`, { employeeId, adminId: req.session?.user?.id });
 
-    const changes = auditLogService.computeChanges(existing, updated, ["payType", "commissionRate", "isActive"]);
+    const afterUpdate = await employeeService.getEmployeeForEdit(employeeId);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, ["payType", "commissionRate", "isActive"]);
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "EMPLOYEE_UPDATED",

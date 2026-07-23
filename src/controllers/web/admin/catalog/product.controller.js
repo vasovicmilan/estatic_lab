@@ -368,7 +368,12 @@ export async function updateProduct(req, res, next) {
     const updated = await productService.updateProductById(productId, data);
     logInfo(`[updateProduct] Proizvod #${productId} ažuriran`, { productId, adminId: req.session?.user?.id });
 
-    const changes = auditLogService.computeChanges(existing, updated, ["name", "shortDescription", "isActive", "badge"]);
+    // re-fetch via the same mapper used for "existing" - updateProductById's own
+    // return value goes through mapProductForAdminDetail (naziv/kratakOpis/aktivan),
+    // a different shape than mapProductForEdit (name/shortDescription/isActive),
+    // which made every "new" value in the audit diff come through as null
+    const afterUpdate = await productService.getProductForEdit(productId);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, ["name", "shortDescription", "isActive", "badge"]);
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "PRODUCT_UPDATED",

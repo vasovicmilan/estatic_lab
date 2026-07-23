@@ -371,7 +371,8 @@ export async function updateService(req, res, next) {
     const updated = await serviceService.updateServiceById(serviceId, data);
     logInfo(`[updateService] Usluga #${serviceId} ažurirana`, { serviceId, adminId: req.session?.user?.id });
 
-    const changes = auditLogService.computeChanges(existing, updated, ["name", "isActive", "shortDescription"]);
+    const afterUpdate = await serviceService.getServiceForEdit(serviceId);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, ["name", "isActive", "shortDescription"]);
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "SERVICE_UPDATED",

@@ -176,6 +176,19 @@ h1, h2, h3, h4, h5, h6,
   color: var(--bs-primary) !important;
 }
 
+/* the mobile menu (below the lg breakpoint, matching navbar-expand-lg) can be
+   taller than the viewport - since the navbar is sticky-top, its open collapse
+   would otherwise depend on the underlying page having enough of its own
+   content to scroll into, which fails on short pages. Giving it its own bounded,
+   scrollable area fixes this independently of how tall the actual page is. */
+@media (max-width: 991.98px) {
+  .navbar-collapse.show,
+  .navbar-collapse.collapsing {
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+  }
+}
+
 /* ---- Badges - soft pill shape, slightly heavier weight ---- */
 .badge {
   border-radius: var(--bs-border-radius-pill);
