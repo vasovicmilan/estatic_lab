@@ -1,0 +1,72 @@
+<%- include("../../includes/head") %>
+<%- include("../../includes/navigation") %>
+
+<main class="container-fluid py-4">
+  <%- include("../../includes/breadcrumbs") %>
+
+  <h1 class="h3 mb-4">Audit log</h1>
+
+  <form method="GET" action="/admin/logovi/audit" class="d-flex gap-2 mb-3">
+    <select name="action" class="form-select form-select-sm" style="max-width:250px;" onchange="this.form.submit()">
+      <% data.filters.action.options.forEach(function(opt) { %>
+        <option value="<%= opt.value %>" <%= opt.value === data.filters.action.value ? "selected" : "" %>><%= opt.label %></option>
+      <% }) %>
+    </select>
+    <select name="success" class="form-select form-select-sm" style="max-width:200px;" onchange="this.form.submit()">
+      <% data.filters.success.options.forEach(function(opt) { %>
+        <option value="<%= opt.value %>" <%= opt.value === data.filters.success.value ? "selected" : "" %>><%= opt.label %></option>
+      <% }) %>
+    </select>
+  </form>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <% if (data.items.length === 0) { %>
+        <p class="text-muted p-3 mb-0">Nema zabeleženih akcija.</p>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr>
+                <th>Vreme</th>
+                <th>Korisnik</th>
+                <th>Rola</th>
+                <th>Akcija</th>
+                <th>Entitet</th>
+                <th>Izmene</th>
+                <th>IP</th>
+                <th>Browser</th>
+                <th>Uspešno</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% data.items.forEach(function(entry) { %>
+                <tr>
+                  <td class="text-nowrap"><%= entry.vreme %></td>
+                  <td class="text-break"><%= entry.korisnik %></td>
+                  <td><%= entry.rola %></td>
+                  <td class="text-break"><%= entry.akcija %></td>
+                  <td class="text-break"><%= entry.entitet %></td>
+                  <td class="text-break" style="white-space: pre-line; min-width: 200px;"><%= entry.izmene || "-" %></td>
+                  <td class="text-break"><%= entry.ip %></td>
+                  <td class="text-break" style="max-width: 220px;"><%= entry.userAgent %></td>
+                  <td>
+                    <% if (entry.uspesno === "Da") { %>
+                      <span class="badge bg-success">Da</span>
+                    <% } else { %>
+                      <span class="badge bg-danger" title="<%= entry.greska || '' %>">Ne</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <%- include("../../includes/pagination", { pagination: data.pagination }) %>
+</main>
+
+<%- include("../../includes/footer") %>
