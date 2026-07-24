@@ -5,7 +5,7 @@ import serviceService from "./service.service.js";
 import couponService from "./coupon.service.js";
 import { mapPackagePurchasesForAdminList, mapPackagePurchaseForAdminDetail } from "../mappers/package-purchase.mapper.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
-import { logInfo } from "../utils/logger.util.js";
+import { logInfo, logWarn } from "../utils/logger.util.js";
 
 const adminPopulate = [
   { path: "package", select: "name" },
@@ -17,15 +17,35 @@ const adminPopulate = [
 // finding the matching variant - deduplicates service fetches since a package
 // could include the same service more than once (different variants) or
 // reference several distinct services across its items
-async function resolveItemUnitPrices(items) {
+async function resolveItemUnitPrices(items, pkg) {
   const uniqueServiceIds = [...new Set(items.map((item) => item.service.toString()))];
   const services = await Promise.all(uniqueServiceIds.map((id) => serviceService.getServiceByIdRaw(id)));
   const serviceById = new Map(uniqueServiceIds.map((id, i) => [id, services[i]]));
 
+  // used only as a fallback below - an even split across every session in the
+  // package, for the (hopefully rare) case where a specific variant reference
+  // has gone stale since the package was created
+  const totalSessions = items.reduce((sum, item) => sum + (item.sessions || 1), 0);
+  const fallbackUnitPrice = totalSessions > 0 ? pkg.totalPrice / totalSessions : pkg.totalPrice;
+
   return items.map((item) => {
     const service = serviceById.get(item.service.toString());
     const variant = service?.packages?.find((p) => p._id.toString() === item.servicePackageId.toString());
-    if (!variant) badRequest(`Varijanta usluge nije pronađena za stavku paketa (servis: ${item.service})`);
+
+    if (!variant) {
+      // granting the customer their package is the actual business action here -
+      // a stale variant reference (e.g. the underlying service was edited since
+      // this package was created) must not block that just to get a more precise
+      // commission number. Falls back to an even per-session split instead.
+      logWarn("Package purchase: exact variant not found for pro-rating, falling back to even split", {
+        packageId: pkg._id,
+        serviceId: item.service,
+        servicePackageId: item.servicePackageId,
+        fallbackUnitPrice,
+      });
+      return { ...item, unitPrice: fallbackUnitPrice };
+    }
+
     return { ...item, unitPrice: variant.totalPrice };
   });
 }
@@ -50,7 +70,7 @@ export async function createPurchaseForUser(userId, packageId, adminId, { expire
     discountApplied = couponResult.discountAmount;
   }
 
-  const itemsWithPrices = await resolveItemUnitPrices(pkg.items);
+  const itemsWithPrices = await resolveItemUnitPrices(pkg.items, pkg);
   const items = itemsWithPrices.map((item) => ({
     service: item.service,
     servicePackageId: item.servicePackageId,
