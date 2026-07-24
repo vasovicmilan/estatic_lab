@@ -1,4 +1,7 @@
 import employeeRepo from "../repositories/employee.repository.js";
+import appointmentRepo from "../repositories/appointment.repository.js";
+import commissionEntryRepo from "../repositories/commission-entry.repository.js";
+import payoutRequestRepo from "../repositories/payout-request.repository.js";
 import userRepo from "../repositories/user.repository.js";
 import roleService from "./role.service.js";
 import { mapEmployee, mapEmployeesForAdminList, mapEmployeeForEdit } from "../mappers/employee.mapper.js";
@@ -147,6 +150,28 @@ export async function deleteEmployeeById(employeeId) {
   if (!employeeId) validationError("employeeId");
   const existing = await employeeRepo.findEmployeeById(employeeId);
   if (!existing) notFound("Zaposleni");
+
+  // Unlike Service (which survives via Appointment.variant's snapshot), Employee has
+  // no name snapshot anywhere it's referenced - Appointment, CommissionEntry, and
+  // PayoutRequest all just hold a bare ObjectId. Deleting it would make even fully
+  // historical records permanently unreadable ("who did this? who was this paid to?").
+  // So this blocks on ANY reference, regardless of status - deactivate instead.
+  const [appointmentCount, commissionCount, payoutCount] = await Promise.all([
+    appointmentRepo.countAppointments({ employeeId }),
+    commissionEntryRepo.countCommissionEntries({ employee: employeeId }),
+    payoutRequestRepo.countPayoutRequests({ employee: employeeId }),
+  ]);
+
+  if (appointmentCount > 0) {
+    badRequest("Zaposleni ima termine (prošle ili buduće) - ne može biti obrisan. Deaktivirajte nalog umesto brisanja.");
+  }
+  if (commissionCount > 0) {
+    badRequest("Zaposleni ima istoriju provizija - ne može biti obrisan. Deaktivirajte nalog umesto brisanja.");
+  }
+  if (payoutCount > 0) {
+    badRequest("Zaposleni ima istoriju isplata - ne može biti obrisan. Deaktivirajte nalog umesto brisanja.");
+  }
+
   await employeeRepo.deleteEmployeeById(employeeId);
   logInfo("Employee deleted", { employeeId });
   return { success: true };

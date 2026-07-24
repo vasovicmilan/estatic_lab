@@ -83,6 +83,13 @@ export async function countProducts(filters = {}, { session } = {}) {
   return Product.countDocuments(buildProductFilter(filters)).session(session || null);
 }
 
+// Called when a Category is deleted - Product.categories[] is current taxonomy
+// assignment, not a promise to anyone, so it's safe to auto-clean rather than
+// block the Category deletion on it.
+export async function pullCategoryFromAllProducts(categoryId, { session } = {}) {
+  return Product.updateMany({ categories: categoryId }, { $pull: { categories: categoryId } }, { session });
+}
+
 export default {
   createProduct,
   findProductById,
@@ -94,4 +101,5 @@ export default {
   updateProductById,
   deleteProductById,
   countProducts,
+  pullCategoryFromAllProducts,
 };

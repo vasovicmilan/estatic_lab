@@ -1,9 +1,23 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import mongoose from "mongoose";
 import categoryRepo from "../../../src/repositories/category.repository.js";
+import productRepo from "../../../src/repositories/product.repository.js";
+import serviceRepo from "../../../src/repositories/service.repository.js";
+import packageRepo from "../../../src/repositories/package.repository.js";
 import * as categoryService from "../../../src/services/category.service.js";
 import { buildCategory, id } from "../../helpers/factories.js";
 import { buildPaginatedResult } from "../../helpers/pagination.js";
+
+// deleteCategoryById wraps its auto-cleanup + delete in a real Mongo transaction -
+// faking the session lets this run as a pure unit test instead of needing a
+// replica-set-backed mongodb-memory-server instance.
+function mockSession(t) {
+  t.mock.method(mongoose, "startSession", async () => ({
+    withTransaction: async (fn) => fn(),
+    endSession: async () => {},
+  }));
+}
 
 describe("category.service", () => {
   describe("domain validation", () => {
@@ -65,13 +79,23 @@ describe("category.service", () => {
       await assert.rejects(() => categoryService.deleteCategoryById(id().toString()), (err) => err.statusCode === 400);
     });
 
-    it("deletes a childless category", async (t) => {
+    it("deletes a childless category and pulls its reference from Product/Service/Package", async (t) => {
+      mockSession(t);
       t.mock.method(categoryRepo, "findCategoryById", async () => buildCategory());
       t.mock.method(categoryRepo, "findCategories", async () => buildPaginatedResult([], { total: 0 }));
       t.mock.method(categoryRepo, "deleteCategoryById", async () => true);
 
+      const pullCalls = { product: 0, service: 0, package: 0 };
+      t.mock.method(productRepo, "pullCategoryFromAllProducts", async () => { pullCalls.product++; });
+      t.mock.method(serviceRepo, "pullCategoryFromAllServices", async () => { pullCalls.service++; });
+      t.mock.method(packageRepo, "pullCategoryFromAllPackages", async () => { pullCalls.package++; });
+
       const result = await categoryService.deleteCategoryById(id().toString());
+
       assert.equal(result.success, true);
+      assert.equal(pullCalls.product, 1);
+      assert.equal(pullCalls.service, 1);
+      assert.equal(pullCalls.package, 1);
     });
   });
 

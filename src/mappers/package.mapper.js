@@ -8,30 +8,53 @@ function formatImage(image) {
   };
 }
 
+// A raw (unpopulated) Mongoose ObjectId is ALSO typeof "object" - and it even has a
+// self-aliasing `._id` getter for interop - so `typeof x === "object"` alone cannot
+// tell a raw ObjectId apart from a real populated Service document. Checking for
+// `.name` (a field only the real document has) is the actual distinguishing signal.
+function isPopulatedService(service) {
+  return Boolean(service && typeof service === "object" && typeof service.name === "string");
+}
+
 function findVariant(item) {
-  if (item.service && typeof item.service === "object" && Array.isArray(item.service.packages)) {
+  if (isPopulatedService(item.service) && Array.isArray(item.service.packages)) {
     return item.service.packages.find((p) => String(p._id) === String(item.servicePackageId)) || null;
   }
   return null;
 }
 
+// item.service is the live populated Service doc when the query populated this path
+// and the referenced Service still exists. Two distinct "not populated" cases, easy
+// to mix up:
+//  - a raw ObjectId (truthy, no .name): the query simply didn't request a populate
+//    on this path - not necessarily deleted, just not fetched here. No name is
+//    available to show, but the id itself is still valid.
+//  - null: populate() ran and came back empty - the referenced Service really was
+//    deleted (shouldn't happen going forward now that service.service.js blocks
+//    that - see deleteServiceById - but pre-existing/stale data can still have it).
+// Showing a clear placeholder for either case, instead of silently dropping the item
+// (the old behavior), matters: a package missing an item from its summary looks like
+// it has fewer things in it than it's actually priced for.
+function serviceLabel(item) {
+  if (isPopulatedService(item.service)) return item.service.name;
+  if (item.service) return "Usluga nije učitana";
+  return "Usluga obrisana";
+}
+
 function getItemsSummary(items = []) {
-  return items
-    .filter((item) => item.service && typeof item.service === "object")
-    .map((item) => {
-      const variant = findVariant(item);
-      return `${item.service.name}${variant ? ` - ${variant.name}` : ""} x${item.sessions}`;
-    });
+  return items.map((item) => {
+    const variant = findVariant(item);
+    return `${serviceLabel(item)}${variant ? ` - ${variant.name}` : ""} x${item.sessions}`;
+  });
 }
 
 function mapItems(items = []) {
   return items.map((item) => {
     const variant = findVariant(item);
     return {
-      usluga:
-        item.service && typeof item.service === "object"
-          ? { id: item.service._id.toString(), naziv: item.service.name, slug: item.service.slug }
-          : { id: item.service?.toString() },
+      usluga: isPopulatedService(item.service)
+        ? { id: item.service._id.toString(), naziv: item.service.name, slug: item.service.slug }
+        : { id: item.service?.toString() || null, naziv: serviceLabel(item) },
       varijanta: variant ? { id: variant._id.toString(), naziv: variant.name, cena: variant.totalPrice } : { id: item.servicePackageId?.toString() },
       brojSeansi: item.sessions,
     };

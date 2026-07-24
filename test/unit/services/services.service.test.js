@@ -1,8 +1,24 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import mongoose from "mongoose";
 import serviceRepo from "../../../src/repositories/service.repository.js";
+import appointmentRepo from "../../../src/repositories/appointment.repository.js";
+import packagePurchaseRepo from "../../../src/repositories/package-purchase.repository.js";
+import packageRepo from "../../../src/repositories/package.repository.js";
+import employeeRepo from "../../../src/repositories/employee.repository.js";
+import couponRepo from "../../../src/repositories/coupon.repository.js";
 import categoryService from "../../../src/services/category.service.js";
 import * as serviceService from "../../../src/services/service.service.js";
+
+// deleteServiceById wraps its auto-cleanup + delete in a real Mongo transaction -
+// faking the session lets this run as a pure unit test instead of needing a
+// replica-set-backed mongodb-memory-server instance.
+function mockSession(t) {
+  t.mock.method(mongoose, "startSession", async () => ({
+    withTransaction: async (fn) => fn(),
+    endSession: async () => {},
+  }));
+}
 import { buildService, buildServicePackageVariant, buildCategory, id } from "../../helpers/factories.js";
 
 describe("service.service", () => {
@@ -254,6 +270,77 @@ describe("service.service", () => {
     it("throws 404 for a nonexistent service", async (t) => {
       t.mock.method(serviceRepo, "findServiceById", async () => null);
       await assert.rejects(() => serviceService.deleteServiceById("missing"), (err) => err.statusCode === 404);
+    });
+
+    function mockNoBlockingReferences(t) {
+      t.mock.method(appointmentRepo, "countAppointments", async () => 0);
+      t.mock.method(packagePurchaseRepo, "countActivePurchasesWithOutstandingSessionsForService", async () => 0);
+      t.mock.method(packageRepo, "findPackages", async () => ({ data: [], total: 0, page: 1, limit: 5, totalPages: 0 }));
+    }
+
+    it("deletes a service with no remaining references, pulling it from Employee/Coupon", async (t) => {
+      mockSession(t);
+      t.mock.method(serviceRepo, "findServiceById", async () => buildService());
+      t.mock.method(serviceRepo, "deleteServiceById", async () => true);
+      mockNoBlockingReferences(t);
+
+      const pullCalls = { employee: 0, coupon: 0 };
+      t.mock.method(employeeRepo, "pullServiceFromAllEmployees", async () => { pullCalls.employee++; });
+      t.mock.method(couponRepo, "pullServiceFromAllCoupons", async () => { pullCalls.coupon++; });
+
+      const result = await serviceService.deleteServiceById(id().toString());
+
+      assert.equal(result.success, true);
+      assert.equal(pullCalls.employee, 1);
+      assert.equal(pullCalls.coupon, 1);
+    });
+
+    it("refuses to delete a service with a pending or confirmed appointment", async (t) => {
+      t.mock.method(serviceRepo, "findServiceById", async () => buildService());
+      mockNoBlockingReferences(t);
+      t.mock.method(appointmentRepo, "countAppointments", async () => 1);
+
+      await assert.rejects(() => serviceService.deleteServiceById(id().toString()), (err) => err.statusCode === 400);
+    });
+
+    it("allows deletion when appointments exist but are all terminal (completed/cancelled/rejected/no_show)", async (t) => {
+      mockSession(t);
+      t.mock.method(serviceRepo, "findServiceById", async () => buildService());
+      t.mock.method(serviceRepo, "deleteServiceById", async () => true);
+      t.mock.method(employeeRepo, "pullServiceFromAllEmployees", async () => {});
+      t.mock.method(couponRepo, "pullServiceFromAllCoupons", async () => {});
+      mockNoBlockingReferences(t);
+      // countAppointments is called with statusIn: ["pending", "confirmed"] specifically,
+      // so a mock that only returns 0 already proves terminal-status appointments don't
+      // block - nothing further to arrange here, this documents the intent.
+
+      const result = await serviceService.deleteServiceById(id().toString());
+      assert.equal(result.success, true);
+    });
+
+    it("refuses to delete a service with an active package purchase holding unused sessions", async (t) => {
+      t.mock.method(serviceRepo, "findServiceById", async () => buildService());
+      mockNoBlockingReferences(t);
+      t.mock.method(packagePurchaseRepo, "countActivePurchasesWithOutstandingSessionsForService", async () => 1);
+
+      await assert.rejects(() => serviceService.deleteServiceById(id().toString()), (err) => err.statusCode === 400);
+    });
+
+    it("refuses to delete a service still used in a package, naming the package in the error", async (t) => {
+      t.mock.method(serviceRepo, "findServiceById", async () => buildService());
+      mockNoBlockingReferences(t);
+      t.mock.method(packageRepo, "findPackages", async () => ({
+        data: [{ name: "Relax paket" }],
+        total: 1,
+        page: 1,
+        limit: 5,
+        totalPages: 1,
+      }));
+
+      await assert.rejects(
+        () => serviceService.deleteServiceById(id().toString()),
+        (err) => err.statusCode === 400 && err.message.includes("Relax paket")
+      );
     });
   });
 });

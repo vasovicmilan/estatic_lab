@@ -28,11 +28,12 @@ describe("package.mapper", () => {
       assert.equal(mapped.stavke[0].brojSeansi, 5);
     });
 
-    it("does not crash when service is null, and falls back gracefully", () => {
+    it("does not crash when service is null, and shows a placeholder rather than dropping the item", () => {
       const pkg = buildPackage({ items: [{ service: null, servicePackageId: id(), sessions: 2 }] });
       // should NOT throw
       const mapped = mapPackageForAdminDetail(pkg);
-      assert.equal(mapped.stavke[0].usluga.id, undefined);
+      assert.equal(mapped.stavke[0].usluga.id, null);
+      assert.equal(mapped.stavke[0].usluga.naziv, "Usluga obrisana");
     });
 
     it("falls back to the raw id when service isn't populated", () => {
@@ -40,9 +41,10 @@ describe("package.mapper", () => {
       const pkg = buildPackage({ items: [{ service: serviceId, servicePackageId: id(), sessions: 1 }] });
       const mapped = mapPackageForAdminDetail(pkg);
       assert.equal(mapped.stavke[0].usluga.id, serviceId.toString());
+      assert.equal(mapped.stavke[0].usluga.naziv, "Usluga nije učitana");
     });
 
-    it("getItemsSummary (used on the list/card views) only excludes a null/missing service, not merely-unpopulated ones", () => {
+    it("getItemsSummary (used on the list/card views) never drops an item, even when its service is null - a dropped item made the package look like it had fewer things in it than it's actually priced for", () => {
       const pkg = buildPackage({
         items: [
           { service: { name: "Masaza", packages: [] }, servicePackageId: id(), sessions: 3 },
@@ -50,8 +52,9 @@ describe("package.mapper", () => {
         ],
       });
       const [mapped] = mapPackagesForAdminList([pkg]);
-      assert.equal(mapped.stavke.length, 1, "only the null-service item should be omitted");
+      assert.equal(mapped.stavke.length, 2, "both items should be shown, not just the populated one");
       assert.match(mapped.stavke[0], /Masaza/);
+      assert.match(mapped.stavke[1], /Usluga obrisana/);
     });
   });
 

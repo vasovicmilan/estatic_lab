@@ -73,6 +73,13 @@ export async function countServices(filters = {}, { session } = {}) {
   return Service.countDocuments(buildServiceFilter(filters)).session(session || null);
 }
 
+// Called when a Category is deleted - Service.categories[] is current taxonomy
+// assignment, not a promise to anyone, so it's safe to auto-clean rather than
+// block the Category deletion on it.
+export async function pullCategoryFromAllServices(categoryId, { session } = {}) {
+  return Service.updateMany({ categories: categoryId }, { $pull: { categories: categoryId } }, { session });
+}
+
 export default {
   createService,
   findServiceById,
@@ -82,4 +89,5 @@ export default {
   updateServiceById,
   deleteServiceById,
   countServices,
+  pullCategoryFromAllServices,
 }

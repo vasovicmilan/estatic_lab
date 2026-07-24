@@ -1,4 +1,8 @@
+import mongoose from "mongoose";
 import categoryRepo from "../repositories/category.repository.js";
+import productRepo from "../repositories/product.repository.js";
+import serviceRepo from "../repositories/service.repository.js";
+import packageRepo from "../repositories/package.repository.js";
 import { CATEGORY_DOMAINS } from "../models/category.model.js";
 import {
   mapCategoriesForAdminList,
@@ -94,10 +98,27 @@ export async function deleteCategoryById(categoryId) {
   const existing = await categoryRepo.findCategoryById(categoryId);
   if (!existing) notFound("Kategorija");
 
+  // Subcategories are a structural/navigation concern (where do they go?), not
+  // something safe to auto-resolve - this stays a hard block.
   const children = await categoryRepo.findCategories({ filters: { parent: categoryId }, limit: 1 });
   if (children.total > 0) badRequest("Kategorija ima podkategorije - premestite ih ili obrišite prvo");
 
-  await categoryRepo.deleteCategoryById(categoryId);
+  // Category on Product.categories[]/Service.categories[]/Package.categories[] is
+  // just current taxonomy assignment, not a promise to anyone (unlike, say, a
+  // customer's purchased package) - so rather than blocking the delete, pull the
+  // category out of every place it's assigned, atomically with the delete itself.
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      await productRepo.pullCategoryFromAllProducts(categoryId, { session });
+      await serviceRepo.pullCategoryFromAllServices(categoryId, { session });
+      await packageRepo.pullCategoryFromAllPackages(categoryId, { session });
+      await categoryRepo.deleteCategoryById(categoryId, { session });
+    });
+  } finally {
+    await session.endSession();
+  }
+
   logInfo("Category deleted", { categoryId });
   return { success: true };
 }

@@ -71,6 +71,13 @@ export async function updateCommissionEntryById(id, updateData, { session } = {}
   return CommissionEntry.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
+// Used by employee.service.js's deleteEmployeeById - CommissionEntry.employee has no
+// name snapshot, so it must block deletion rather than silently orphan a paid-out
+// record with no readable "who earned this" left.
+export async function countCommissionEntries(filters = {}, { session } = {}) {
+  return CommissionEntry.countDocuments(buildCommissionEntryFilter(filters)).session(session || null);
+}
+
 export default {
   createCommissionEntry,
   findCommissionEntryById,
@@ -80,4 +87,5 @@ export default {
   findCommissionEntries,
   sumEarnedAmount,
   updateCommissionEntryById,
+  countCommissionEntries,
 };

@@ -1,4 +1,7 @@
+import mongoose from "mongoose";
 import packageRepo from "../repositories/package.repository.js";
+import packagePurchaseRepo from "../repositories/package-purchase.repository.js";
+import couponRepo from "../repositories/coupon.repository.js";
 import serviceService from "./service.service.js";
 import {
   mapPackagesForAdminList,
@@ -110,7 +113,30 @@ export async function deletePackageById(packageId) {
   if (!packageId) validationError("packageId");
   const existing = await packageRepo.findPackageById(packageId);
   if (!existing) notFound("Paket");
-  await packageRepo.deletePackageById(packageId);
+
+  // Unlike Service (whose Appointment reference survives via variant's snapshot),
+  // PackagePurchase.package has no name snapshot of the package itself - only its
+  // items[] snapshot service/price, not the parent package's own name. Deleting a
+  // Package that's ever been sold would make even a fully historical purchase
+  // permanently unable to show what the customer bought. Blocks on ANY reference,
+  // regardless of status - same reasoning as Employee.
+  const purchaseCount = await packagePurchaseRepo.countPackagePurchases({ package: packageId });
+  if (purchaseCount > 0) {
+    badRequest("Paket je kupljen od strane korisnika (aktivno ili u prošlosti) - ne može biti obrisan");
+  }
+
+  // Coupon.applicablePackages[] is just current targeting config, not a promise to
+  // anyone - safe to clean up automatically, atomically with the delete itself.
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      await couponRepo.pullPackageFromAllCoupons(packageId, { session });
+      await packageRepo.deletePackageById(packageId, { session });
+    });
+  } finally {
+    await session.endSession();
+  }
+
   logInfo("Package deleted", { packageId });
   return { success: true };
 }

@@ -1,4 +1,10 @@
+import mongoose from "mongoose";
 import serviceRepo from "../repositories/service.repository.js";
+import appointmentRepo from "../repositories/appointment.repository.js";
+import packagePurchaseRepo from "../repositories/package-purchase.repository.js";
+import packageRepo from "../repositories/package.repository.js";
+import employeeRepo from "../repositories/employee.repository.js";
+import couponRepo from "../repositories/coupon.repository.js";
 import {
   mapServicesForAdminList,
   mapServiceForAdminDetail,
@@ -208,7 +214,57 @@ export async function deleteServiceById(serviceId) {
   if (!serviceId) validationError("serviceId");
   const existing = await serviceRepo.findServiceById(serviceId);
   if (!existing) notFound("Usluga");
-  await serviceRepo.deleteServiceById(serviceId);
+
+  // Tier 1 - active commitments. These have to block outright; there's no automatic
+  // fix. Appointment.variant snapshots name/duration/price, so a *terminal*
+  // (completed/cancelled/rejected/no_show) appointment survives this service's
+  // deletion just fine - only "still needs the live service" statuses count.
+  const activeAppointments = await appointmentRepo.countAppointments({
+    serviceId,
+    statusIn: ["pending", "confirmed"],
+  });
+  if (activeAppointments > 0) {
+    badRequest("Usluga ima termine na čekanju ili potvrđene termine - ne može biti obrisana");
+  }
+
+  // A customer holding unused sessions for this exact service (inside an active
+  // package purchase) is also a live commitment - PackagePurchase.items[] is its own
+  // independent snapshot, so even editing the Package afterward wouldn't fix this.
+  const outstandingPurchases = await packagePurchaseRepo.countActivePurchasesWithOutstandingSessionsForService(serviceId);
+  if (outstandingPurchases > 0) {
+    badRequest(
+      "Korisnici imaju aktivne kupljene pakete sa neiskorišćenim seansama za ovu uslugu - ne može biti obrisana dok se seanse ne iskoriste ili paket ne otkaže"
+    );
+  }
+
+  // Tier 2 - structural composition. Package.items[].service is part of the
+  // package's own definition, tied to its totalPrice - that's a pricing decision
+  // only a human should make, so this blocks with a directive rather than
+  // auto-adjusting the price for them.
+  const packagesUsingService = await packageRepo.findPackages({
+    filters: { service: serviceId },
+    limit: 5,
+    populateFields: [],
+  });
+  if (packagesUsingService.total > 0) {
+    const names = packagesUsingService.data.map((p) => p.name).join(", ");
+    badRequest(`Usluga se koristi u paketu (${names}) - prvo je uklonite iz paketa i ažurirajte cenu paketa`);
+  }
+
+  // Tier 3 - current configuration, not a promise to anyone. Employee.services[] and
+  // Coupon.applicableServices[] just mean "currently assigned/targeted" - safe to
+  // clean up automatically, atomically with the delete itself.
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      await employeeRepo.pullServiceFromAllEmployees(serviceId, { session });
+      await couponRepo.pullServiceFromAllCoupons(serviceId, { session });
+      await serviceRepo.deleteServiceById(serviceId, { session });
+    });
+  } finally {
+    await session.endSession();
+  }
+
   logInfo("Service deleted", { serviceId });
   return { success: true };
 }

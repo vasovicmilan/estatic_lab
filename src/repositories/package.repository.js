@@ -58,6 +58,13 @@ export async function countPackages(filters = {}, { session } = {}) {
   return Package.countDocuments(buildPackageFilter(filters)).session(session || null);
 }
 
+// Called when a Category is deleted - Package.categories[] is current taxonomy
+// assignment, not a promise to anyone, so it's safe to auto-clean rather than
+// block the Category deletion on it.
+export async function pullCategoryFromAllPackages(categoryId, { session } = {}) {
+  return Package.updateMany({ categories: categoryId }, { $pull: { categories: categoryId } }, { session });
+}
+
 export default {
   createPackage,
   findPackageById,
@@ -66,4 +73,5 @@ export default {
   updatePackageById,
   deletePackageById,
   countPackages,
+  pullCategoryFromAllPackages,
 }

@@ -65,6 +65,13 @@ export async function updatePayoutRequestById(id, updateData, { session } = {}) 
   return PayoutRequest.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
+// Used by employee.service.js's deleteEmployeeById - PayoutRequest.employee has no
+// name snapshot, so it must block deletion rather than silently orphan a payout
+// record with no readable "who this was paid to" left.
+export async function countPayoutRequests(filters = {}, { session } = {}) {
+  return PayoutRequest.countDocuments(buildPayoutRequestFilter(filters)).session(session || null);
+}
+
 export default {
   createPayoutRequest,
   findPayoutRequestById,
@@ -72,4 +79,5 @@ export default {
   sumPendingRequestedAmount,
   sumPaidAmount,
   updatePayoutRequestById,
+  countPayoutRequests,
 };

@@ -80,6 +80,13 @@ export async function countEmployees(filters = {}, { session } = {}) {
   return Employee.countDocuments(buildEmployeeFilter(filters)).session(session || null);
 }
 
+// Called when a Service is deleted - Employee.services[] is current "who can perform
+// this" configuration, not a promise to anyone, so it's safe to auto-clean rather
+// than block the Service deletion on it.
+export async function pullServiceFromAllEmployees(serviceId, { session } = {}) {
+  return Employee.updateMany({ services: serviceId }, { $pull: { services: serviceId } }, { session });
+}
+
 export default {
   createEmployee,
   findAllEmployeeUserIds,
@@ -90,4 +97,5 @@ export default {
   updateEmployeeById,
   deleteEmployeeById,
   countEmployees,
+  pullServiceFromAllEmployees,
 }

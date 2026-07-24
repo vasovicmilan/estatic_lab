@@ -1,9 +1,22 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import mongoose from "mongoose";
 import packageRepo from "../../../src/repositories/package.repository.js";
 import serviceRepo from "../../../src/repositories/service.repository.js";
+import packagePurchaseRepo from "../../../src/repositories/package-purchase.repository.js";
+import couponRepo from "../../../src/repositories/coupon.repository.js";
 import * as packageService from "../../../src/services/package.service.js";
 import { buildPackage, buildService, buildServicePackageVariant, id } from "../../helpers/factories.js";
+
+// deletePackageById wraps its auto-cleanup + delete in a real Mongo transaction -
+// faking the session lets this run as a pure unit test instead of needing a
+// replica-set-backed mongodb-memory-server instance.
+function mockSession(t) {
+  t.mock.method(mongoose, "startSession", async () => ({
+    withTransaction: async (fn) => fn(),
+    endSession: async () => {},
+  }));
+}
 
 describe("package.service", () => {
   describe("createPackage - item validation", () => {
@@ -126,6 +139,37 @@ describe("package.service", () => {
     it("throws 404 for a nonexistent package", async (t) => {
       t.mock.method(packageRepo, "findPackageById", async () => null);
       await assert.rejects(() => packageService.updatePackageById("missing", {}), (err) => err.statusCode === 404);
+    });
+  });
+
+  describe("deletePackageById", () => {
+    it("throws 404 for a nonexistent package", async (t) => {
+      t.mock.method(packageRepo, "findPackageById", async () => null);
+      await assert.rejects(() => packageService.deletePackageById("missing"), (err) => err.statusCode === 404);
+    });
+
+    it("deletes a package with no purchases, pulling it from Coupon", async (t) => {
+      mockSession(t);
+      t.mock.method(packageRepo, "findPackageById", async () => buildPackage());
+      t.mock.method(packageRepo, "deletePackageById", async () => true);
+      t.mock.method(packagePurchaseRepo, "countPackagePurchases", async () => 0);
+
+      let couponPullCalls = 0;
+      t.mock.method(couponRepo, "pullPackageFromAllCoupons", async () => { couponPullCalls++; });
+
+      const result = await packageService.deletePackageById(id().toString());
+
+      assert.equal(result.success, true);
+      assert.equal(couponPullCalls, 1);
+    });
+
+    it("refuses to delete a package with any purchase, even a completed/expired one", async (t) => {
+      // Unlike Service, PackagePurchase.package has no name snapshot of the package -
+      // so this blocks regardless of purchase status, not just active ones.
+      t.mock.method(packageRepo, "findPackageById", async () => buildPackage());
+      t.mock.method(packagePurchaseRepo, "countPackagePurchases", async () => 1);
+
+      await assert.rejects(() => packageService.deletePackageById(id().toString()), (err) => err.statusCode === 400);
     });
   });
 });

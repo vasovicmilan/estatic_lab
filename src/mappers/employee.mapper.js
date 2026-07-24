@@ -45,9 +45,18 @@ function getPhone(employee) {
 
 function getServiceNames(employee) {
   if (!employee.services || !Array.isArray(employee.services)) return [];
-  return employee.services
-    .filter((svc) => svc && typeof svc === "object" && svc.name)
-    .map((svc) => svc.name);
+  // Same reasoning as package.mapper.js's serviceLabel(): a dangling ref (Service
+  // deleted outside the normal flow, or stale pre-existing data) should show a
+  // placeholder, not silently vanish from the list - a silent drop here would make
+  // brojUsluga's count (which uses the raw, unfiltered array length) not match the
+  // number of names actually shown, which is confusing to debug from the admin side.
+  // A raw ObjectId means this query simply didn't populate the field (not
+  // necessarily deleted); null means populate() ran and found nothing (genuinely gone).
+  return employee.services.map((svc) => {
+    if (svc && typeof svc === "object" && svc.name) return svc.name;
+    if (svc) return "Usluga nije učitana";
+    return "Usluga obrisana";
+  });
 }
 
 function getWorkingHours(employee) {
