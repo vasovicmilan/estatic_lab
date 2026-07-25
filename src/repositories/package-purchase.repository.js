@@ -96,6 +96,49 @@ export async function countActivePurchasesWithOutstandingSessionsForService(serv
   return result[0]?.count || 0;
 }
 
+// Atomically reserves one session for the given variant, IF capacity remains.
+// The query's own $expr gates the match on capacity (sessionsUsed + sessionsReserved
+// < sessionsTotal for the matching item), so this either succeeds - matching and
+// incrementing in one atomic DB operation - or matches nothing and returns null.
+//
+// This replaces a read-then-increment-then-save pattern that a concurrency test
+// (booking-concurrency.http.test.js) proved was NOT safe: two simultaneous
+// reservations against a purchase with exactly one session left both succeeded.
+// Neither MongoDB's transaction isolation (each read a consistent snapshot before
+// either committed) nor Mongoose's default document versioning (which only guards
+// "unsafe" array operations like push/pull/splice, not a plain field mutation on
+// an existing array element) caught the race - only a real atomic conditional
+// update at the database level does.
+export async function reserveSessionAtomic(packagePurchaseId, servicePackageId, { session } = {}) {
+  const variantId = new Types.ObjectId(servicePackageId);
+  return PackagePurchase.findOneAndUpdate(
+    {
+      _id: packagePurchaseId,
+      $expr: {
+        $gt: [
+          {
+            $size: {
+              $filter: {
+                input: "$items",
+                as: "i",
+                cond: {
+                  $and: [
+                    { $eq: ["$$i.servicePackageId", variantId] },
+                    { $lt: [{ $add: ["$$i.sessionsUsed", "$$i.sessionsReserved"] }, "$$i.sessionsTotal"] },
+                  ],
+                },
+              },
+            },
+          },
+          0,
+        ],
+      },
+    },
+    { $inc: { "items.$[elem].sessionsReserved": 1 } },
+    { arrayFilters: [{ "elem.servicePackageId": variantId }], returnDocument: "after", session }
+  ).lean();
+}
+
 export default {
   createPackagePurchase,
   findPackagePurchaseById,
@@ -107,4 +150,5 @@ export default {
   deletePackagePurchaseById,
   countPackagePurchases,
   countActivePurchasesWithOutstandingSessionsForService,
+  reserveSessionAtomic,
 };

@@ -57,3 +57,5 @@ export async function stopTelegramBot() {
     logInfo("Telegram bot stopped");
   }
 }
+
+export default { initTelegramBot, getTelegramBot, stopTelegramBot };

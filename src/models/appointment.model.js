@@ -134,4 +134,27 @@ AppointmentSchema.index({ employee: 1, startTime: -1 });
 AppointmentSchema.index({ assignedTo: 1, startTime: -1 });
 AppointmentSchema.index({ status: 1, startTime: 1 });
 
+// Enforces no-double-booking at the database level. The in-code "re-check right
+// before the write" guard in appointment.service.js's bookAppointment is NOT
+// sufficient on its own: MongoDB transactions use snapshot isolation, so two
+// concurrent bookings both read "no conflict" before either commits, and since
+// each is inserting a brand-new document (not updating a shared one), MongoDB has
+// no natural write-conflict to catch at commit time - both can succeed. A unique
+// index is what actually makes the second one fail. Scoped to non-null employee
+// and active (pending/confirmed) statuses via a partial filter, so a cancelled/
+// rejected/completed appointment at the same slot - or two different unassigned
+// appointments before an employee is picked - never collides with this constraint.
+// NOTE: this only catches an EXACT startTime collision (the common case: two
+// people booking the same visible slot), not every possible staggered-but-
+// overlapping pair (e.g. a 90-minute booking at 10:00 and a 30-minute booking at
+// 10:30 for the same employee) - that would need a stronger mechanism (a
+// per-employee serialization point) if full coverage is ever needed.
+AppointmentSchema.index(
+  { employee: 1, startTime: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { employee: { $type: "objectId" }, status: { $in: ["pending", "confirmed"] } },
+  }
+);
+
 export default model("Appointment", AppointmentSchema);

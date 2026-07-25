@@ -107,7 +107,5 @@ OrderSchema.pre("save", function () {
 OrderSchema.index({ user: 1, createdAt: -1 });
 OrderSchema.index({ status: 1, createdAt: -1 });
 OrderSchema.index({ "contactSnapshot.email": 1 });
-OrderSchema.index({ "phone.hash": 1 });
-OrderSchema.index({ "address.hash": 1 });
 
 export default model("Order", OrderSchema);

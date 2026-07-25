@@ -163,6 +163,43 @@ describe("package.service", () => {
       assert.equal(couponPullCalls, 1);
     });
 
+    it("aborts the whole transaction and never reaches the terminal delete when the cleanup step fails", async (t) => {
+      mockSession(t);
+      t.mock.method(packageRepo, "findPackageById", async () => buildPackage());
+      t.mock.method(packagePurchaseRepo, "countPackagePurchases", async () => 0);
+      t.mock.method(couponRepo, "pullPackageFromAllCoupons", async () => {
+        throw new Error("Simulated write failure mid-transaction");
+      });
+      let deleteCalled = false;
+      t.mock.method(packageRepo, "deletePackageById", async () => {
+        deleteCalled = true;
+        return true;
+      });
+
+      await assert.rejects(() => packageService.deletePackageById(id().toString()), /Simulated write failure/);
+
+      assert.equal(deleteCalled, false, "the package itself must not be deleted if the cleanup step failed");
+    });
+
+    it("always ends the session, even when the transaction throws", async (t) => {
+      let endSessionCalls = 0;
+      t.mock.method(mongoose, "startSession", async () => ({
+        withTransaction: async (fn) => fn(),
+        endSession: async () => {
+          endSessionCalls++;
+        },
+      }));
+      t.mock.method(packageRepo, "findPackageById", async () => buildPackage());
+      t.mock.method(packagePurchaseRepo, "countPackagePurchases", async () => 0);
+      t.mock.method(couponRepo, "pullPackageFromAllCoupons", async () => {
+        throw new Error("Simulated write failure mid-transaction");
+      });
+
+      await assert.rejects(() => packageService.deletePackageById(id().toString()));
+
+      assert.equal(endSessionCalls, 1, "a leaked session (never ended) is a real resource leak, transaction failed or not");
+    });
+
     it("refuses to delete a package with any purchase, even a completed/expired one", async (t) => {
       // Unlike Service, PackagePurchase.package has no name snapshot of the package -
       // so this blocks regardless of purchase status, not just active ones.

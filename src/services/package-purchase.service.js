@@ -200,17 +200,21 @@ export async function assertUsablePurchase(packagePurchaseId, userId, servicePac
 // only happens on completion (commitSession). A cancelled/rejected booking calls
 // releaseSession() to give the slot back.
 export async function reserveSession(packagePurchaseId, servicePackageId, { session } = {}) {
-  const purchase = await packagePurchaseRepo.findPackagePurchaseDocById(packagePurchaseId, { session });
-  if (!purchase) notFound("Kupljeni paket");
+  const updated = await packagePurchaseRepo.reserveSessionAtomic(packagePurchaseId, servicePackageId, { session });
+  if (updated) {
+    logInfo("Package purchase session reserved", { packagePurchaseId, servicePackageId });
+    return updated;
+  }
 
+  // The atomic update matched nothing - it's ambiguous WHY (purchase missing,
+  // variant not covered, or genuinely no sessions left), so this read is purely
+  // to produce the right error message. It plays no part in the actual
+  // reserve-or-not decision, which the atomic update above already made safely.
+  const purchase = await packagePurchaseRepo.findPackagePurchaseById(packagePurchaseId, { session });
+  if (!purchase) notFound("Kupljeni paket");
   const item = purchase.items.find((i) => String(i.servicePackageId) === String(servicePackageId));
   if (!item) badRequest("Ovaj paket ne pokriva izabranu varijantu usluge");
-  if (availableSessions(item) <= 0) badRequest("Nema više preostalih seansi za ovu varijantu u paketu");
-
-  item.sessionsReserved += 1;
-  await purchase.save({ session });
-  logInfo("Package purchase session reserved", { packagePurchaseId, servicePackageId });
-  return purchase;
+  badRequest("Nema više preostalih seansi za ovu varijantu u paketu");
 }
 
 // Gives a reserved-but-undelivered session back - called when a package-covered

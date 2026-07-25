@@ -295,6 +295,44 @@ describe("service.service", () => {
       assert.equal(pullCalls.coupon, 1);
     });
 
+    it("aborts the whole transaction and never reaches the terminal delete when an earlier cleanup step fails", async (t) => {
+      mockSession(t);
+      t.mock.method(serviceRepo, "findServiceById", async () => buildService());
+      mockNoBlockingReferences(t);
+      t.mock.method(employeeRepo, "pullServiceFromAllEmployees", async () => {
+        throw new Error("Simulated write failure mid-transaction");
+      });
+      t.mock.method(couponRepo, "pullServiceFromAllCoupons", async () => {});
+      let deleteCalled = false;
+      t.mock.method(serviceRepo, "deleteServiceById", async () => {
+        deleteCalled = true;
+        return true;
+      });
+
+      await assert.rejects(() => serviceService.deleteServiceById(id().toString()), /Simulated write failure/);
+
+      assert.equal(deleteCalled, false, "the service itself must not be deleted if an earlier step in the transaction failed");
+    });
+
+    it("always ends the session, even when the transaction throws", async (t) => {
+      let endSessionCalls = 0;
+      t.mock.method(mongoose, "startSession", async () => ({
+        withTransaction: async (fn) => fn(),
+        endSession: async () => {
+          endSessionCalls++;
+        },
+      }));
+      t.mock.method(serviceRepo, "findServiceById", async () => buildService());
+      mockNoBlockingReferences(t);
+      t.mock.method(employeeRepo, "pullServiceFromAllEmployees", async () => {
+        throw new Error("Simulated write failure mid-transaction");
+      });
+
+      await assert.rejects(() => serviceService.deleteServiceById(id().toString()));
+
+      assert.equal(endSessionCalls, 1, "a leaked session (never ended) is a real resource leak, transaction failed or not");
+    });
+
     it("refuses to delete a service with a pending or confirmed appointment", async (t) => {
       t.mock.method(serviceRepo, "findServiceById", async () => buildService());
       mockNoBlockingReferences(t);

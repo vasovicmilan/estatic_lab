@@ -1,5 +1,9 @@
+import mongoose from "mongoose";
 import partnerRepo from "../repositories/partner.repository.js";
 import userRepo from "../repositories/user.repository.js";
+import commissionEntryRepo from "../repositories/commission-entry.repository.js";
+import payoutRequestRepo from "../repositories/payout-request.repository.js";
+import couponRepo from "../repositories/coupon.repository.js";
 import roleService from "./role.service.js";
 import { mapPartner, mapPartnersForAdminList, mapPartnerForEdit } from "../mappers/partner.mapper.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
@@ -100,7 +104,34 @@ export async function deletePartnerById(partnerId) {
   if (!partnerId) validationError("partnerId");
   const existing = await partnerRepo.findPartnerById(partnerId);
   if (!existing) notFound("Partner");
-  await partnerRepo.deletePartnerById(partnerId);
+
+  // Same tiered policy as employee.service.js's deleteEmployeeById: Partner has no
+  // name snapshot anywhere it's referenced, so a pending commission or unresolved
+  // payout (real money not yet settled) has to block - there's no automatic fix.
+  // Coupon.partner is different in kind: it's current referral-attribution config,
+  // not a financial record, so it's safe to auto-clean rather than block on.
+  const [pendingCommissions, unresolvedPayouts] = await Promise.all([
+    commissionEntryRepo.countCommissionEntries({ partner: partnerId, status: "pending" }),
+    payoutRequestRepo.countPayoutRequests({ partner: partnerId, statusIn: ["requested", "approved"] }),
+  ]);
+
+  if (pendingCommissions > 0) {
+    badRequest("Partner ima proviziju na čekanju koja još nije obračunata - ne može biti obrisan");
+  }
+  if (unresolvedPayouts > 0) {
+    badRequest("Partner ima zahtev za isplatu koji još nije rešen - ne može biti obrisan");
+  }
+
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      await couponRepo.unsetPartnerFromAllCoupons(partnerId, { session });
+      await partnerRepo.deletePartnerById(partnerId, { session });
+    });
+  } finally {
+    await session.endSession();
+  }
+
   logInfo("Partner deleted", { partnerId });
   return { success: true };
 }

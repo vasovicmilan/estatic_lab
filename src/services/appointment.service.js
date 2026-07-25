@@ -257,6 +257,15 @@ export async function bookAppointment(input) {
       }
     });
   } catch (error) {
+    // E11000 here means the new unique (employee, startTime) index caught a real
+    // double-booking race that slipped past the in-transaction pre-check above -
+    // see appointment.model.js's index comment for why that check alone isn't
+    // enough. Surface it as the same friendly, already-localized message rather
+    // than a raw Mongo duplicate-key error.
+    if (error.code === 11000) {
+      logInfo("Booking race caught by the unique index - two requests targeted the same employee+slot", { serviceId, startTime: start });
+      badRequest("Izabrani termin je upravo zauzet, pokušajte ponovo");
+    }
     logError("Appointment booking transaction failed", error, { serviceId, servicePackageId, startTime: start });
     throw error;
   } finally {

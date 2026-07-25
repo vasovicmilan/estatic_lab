@@ -97,6 +97,45 @@ describe("category.service", () => {
       assert.equal(pullCalls.service, 1);
       assert.equal(pullCalls.package, 1);
     });
+
+    it("aborts the whole transaction and never reaches the terminal delete when an earlier cleanup step fails", async (t) => {
+      mockSession(t);
+      t.mock.method(categoryRepo, "findCategoryById", async () => buildCategory());
+      t.mock.method(categoryRepo, "findCategories", async () => buildPaginatedResult([], { total: 0 }));
+      t.mock.method(productRepo, "pullCategoryFromAllProducts", async () => {
+        throw new Error("Simulated write failure mid-transaction");
+      });
+      t.mock.method(serviceRepo, "pullCategoryFromAllServices", async () => {});
+      t.mock.method(packageRepo, "pullCategoryFromAllPackages", async () => {});
+      let deleteCalled = false;
+      t.mock.method(categoryRepo, "deleteCategoryById", async () => {
+        deleteCalled = true;
+        return true;
+      });
+
+      await assert.rejects(() => categoryService.deleteCategoryById(id().toString()), /Simulated write failure/);
+
+      assert.equal(deleteCalled, false, "the category itself must not be deleted if an earlier step in the transaction failed");
+    });
+
+    it("always ends the session, even when the transaction throws", async (t) => {
+      let endSessionCalls = 0;
+      t.mock.method(mongoose, "startSession", async () => ({
+        withTransaction: async (fn) => fn(),
+        endSession: async () => {
+          endSessionCalls++;
+        },
+      }));
+      t.mock.method(categoryRepo, "findCategoryById", async () => buildCategory());
+      t.mock.method(categoryRepo, "findCategories", async () => buildPaginatedResult([], { total: 0 }));
+      t.mock.method(productRepo, "pullCategoryFromAllProducts", async () => {
+        throw new Error("Simulated write failure mid-transaction");
+      });
+
+      await assert.rejects(() => categoryService.deleteCategoryById(id().toString()));
+
+      assert.equal(endSessionCalls, 1, "a leaked session (never ended) is a real resource leak, transaction failed or not");
+    });
   });
 
   describe("getCategoryBySlugAndDomain", () => {

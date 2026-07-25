@@ -262,22 +262,28 @@ describe("package-purchase.service", () => {
   });
 
   describe("reserveSession", () => {
-    it("increments sessionsReserved without touching sessionsUsed", async (t) => {
+    it("succeeds when the atomic update matches (capacity was available)", async (t) => {
       const purchase = buildPackagePurchase();
-      purchase.save = async () => purchase;
-      t.mock.method(packagePurchaseRepo, "findPackagePurchaseDocById", async () => purchase);
+      const updated = { ...purchase, items: [{ ...purchase.items[0], sessionsReserved: 1 }] };
+      t.mock.method(packagePurchaseRepo, "reserveSessionAtomic", async () => updated);
 
-      await packagePurchaseService.reserveSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString());
+      const result = await packagePurchaseService.reserveSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString());
 
-      assert.equal(purchase.items[0].sessionsReserved, 1);
-      assert.equal(purchase.items[0].sessionsUsed, 0);
+      assert.equal(result.items[0].sessionsReserved, 1);
     });
 
-    it("rejects reserving when nothing is available, accounting for existing reservations", async (t) => {
+    it("rejects when the atomic update matches nothing because no sessions are available", async (t) => {
       const purchase = buildPackagePurchase();
       purchase.items[0].sessionsTotal = 1;
       purchase.items[0].sessionsReserved = 1;
-      t.mock.method(packagePurchaseRepo, "findPackagePurchaseDocById", async () => purchase);
+      // the atomic update itself is what makes this decision safely - it's mocked
+      // here to return null, exactly as it would for real when its $expr capacity
+      // check doesn't match any document
+      t.mock.method(packagePurchaseRepo, "reserveSessionAtomic", async () => null);
+      // the service falls back to a plain read ONLY to build the right error
+      // message - not to decide whether to allow the reservation
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => purchase);
+
       await assert.rejects(
         () => packagePurchaseService.reserveSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString()),
         (err) => err.statusCode === 400
@@ -286,7 +292,8 @@ describe("package-purchase.service", () => {
 
     it("rejects reserving for a variant the purchase doesn't cover", async (t) => {
       const purchase = buildPackagePurchase();
-      t.mock.method(packagePurchaseRepo, "findPackagePurchaseDocById", async () => purchase);
+      t.mock.method(packagePurchaseRepo, "reserveSessionAtomic", async () => null);
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => purchase);
       await assert.rejects(
         () => packagePurchaseService.reserveSession(purchase._id.toString(), id().toString()),
         (err) => err.statusCode === 400
@@ -294,7 +301,8 @@ describe("package-purchase.service", () => {
     });
 
     it("throws 404 for a nonexistent purchase", async (t) => {
-      t.mock.method(packagePurchaseRepo, "findPackagePurchaseDocById", async () => null);
+      t.mock.method(packagePurchaseRepo, "reserveSessionAtomic", async () => null);
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => null);
       await assert.rejects(() => packagePurchaseService.reserveSession(id().toString(), id().toString()), (err) => err.statusCode === 404);
     });
   });

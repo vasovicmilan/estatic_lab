@@ -1,4 +1,4 @@
-import { getTelegramBot } from "../integrations/telegram/telegram.provider.js";
+import telegramProvider from "../integrations/telegram/telegram.provider.js";
 import TELEGRAM_CONFIG from "../integrations/telegram/telegram.config.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 
@@ -6,7 +6,7 @@ export async function sendTelegramMessage(type, text, options = {}) {
   try {
     if (!TELEGRAM_CONFIG.isEnabled()) return null;
 
-    const bot = getTelegramBot();
+    const bot = telegramProvider.getTelegramBot();
     if (!bot) {
       logError("Telegram bot not initialized", null, { type });
       return null;
