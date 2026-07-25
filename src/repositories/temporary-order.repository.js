@@ -45,6 +45,18 @@ export async function countTemporaryOrders(filters = {}, { session } = {}) {
   return TemporaryOrder.countDocuments(buildTemporaryOrderFilter(filters)).session(session || null);
 }
 
+// Used by product.service.js's deleteProductById - TemporaryOrder.items[] IS fully
+// snapshotted (same OrderItemSchema as a real Order), so a historical/expired one
+// is safe either way. But a still-valid (non-expired) one represents an in-progress
+// checkout that will call decreaseVariationStock on completion, which needs the
+// live Product to exist - so only an active one blocks, not every past reference.
+export async function countActiveTemporaryOrdersReferencingProduct(productId, { session } = {}) {
+  return TemporaryOrder.countDocuments({
+    "items.product": productId,
+    tokenExpiration: { $gt: new Date() },
+  }).session(session || null);
+}
+
 export default {
   createTemporaryOrder,
   findTemporaryOrderById,
@@ -53,4 +65,5 @@ export default {
   findTemporaryOrdersPastRetention,
   deleteTemporaryOrderById,
   countTemporaryOrders,
+  countActiveTemporaryOrdersReferencingProduct,
 };

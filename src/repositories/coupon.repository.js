@@ -114,6 +114,10 @@ export async function pullPackageFromAllCoupons(packageId, { session } = {}) {
   return Coupon.updateMany({ applicablePackages: packageId }, { $pull: { applicablePackages: packageId } }, { session });
 }
 
+export async function pullProductFromAllCoupons(productId, { session } = {}) {
+  return Coupon.updateMany({ applicableProducts: productId }, { $pull: { applicableProducts: productId } }, { session });
+}
+
 // Called when a Partner is deleted - Coupon.partner is current referral-attribution
 // config (single ref, not an array, unlike applicableServices/applicablePackages
 // above), not a promise to anyone. Safe to auto-clean: the coupon just becomes a
@@ -134,5 +138,6 @@ export default {
   countCoupons,
   pullServiceFromAllCoupons,
   pullPackageFromAllCoupons,
+  pullProductFromAllCoupons,
   unsetPartnerFromAllCoupons,
 };

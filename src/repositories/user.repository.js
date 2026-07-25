@@ -102,6 +102,16 @@ export async function countUsers(filters = {}, { session } = {}) {
   return User.countDocuments(buildUserFilter(filters)).session(session || null);
 }
 
+// Used by product.service.js's deleteProductById - unlike Order.items (which
+// snapshot title/price/image at purchase time), User.cart[] holds only
+// {product, variant, quantity} with no snapshot at all (see cart-item.schema.js's
+// own comment on why: the cart is meant to always reflect current price/stock).
+// A dangling cart reference would break checkout outright, not just look stale -
+// so this has to block, not auto-clean.
+export async function countUsersWithProductInCart(productId, { session } = {}) {
+  return User.countDocuments({ "cart.product": productId }).session(session || null);
+}
+
 // ==================== CART ====================
 // {product, variant, quantity} lines only - see cart-item.schema.js. No snapshot
 // fields here, so nothing to keep in sync when a product's price or title changes.
@@ -200,6 +210,7 @@ export default {
   updateLastLogin,
   deleteUserById,
   countUsers,
+  countUsersWithProductInCart,
   incrementCartItemQuantity,
   addCartItem,
   setCartItemQuantity,

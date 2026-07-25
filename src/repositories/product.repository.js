@@ -90,6 +90,19 @@ export async function pullCategoryFromAllProducts(categoryId, { session } = {}) 
   return Product.updateMany({ categories: categoryId }, { $pull: { categories: categoryId } }, { session });
 }
 
+// Called when a Tag is deleted - Product.tags[] is current taxonomy assignment,
+// always safe to auto-clean.
+export async function pullTagFromAllProducts(tagId, { session } = {}) {
+  return Product.updateMany({ tags: tagId }, { $pull: { tags: tagId } }, { session });
+}
+
+// Called when a Product is deleted - Product.relatedProducts[] is current
+// merchandising config on OTHER products, not a promise to anyone, safe to
+// auto-clean.
+export async function pullFromAllRelatedProducts(productId, { session } = {}) {
+  return Product.updateMany({ relatedProducts: productId }, { $pull: { relatedProducts: productId } }, { session });
+}
+
 export default {
   createProduct,
   findProductById,
@@ -102,4 +115,6 @@ export default {
   deleteProductById,
   countProducts,
   pullCategoryFromAllProducts,
+  pullTagFromAllProducts,
+  pullFromAllRelatedProducts,
 };

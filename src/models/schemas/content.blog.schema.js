@@ -6,7 +6,31 @@ import { Schema } from "mongoose";
  * (e.g. an image block needs alt text, a quote block needs an attribution) and so the SEO
  * builder can pull structured data (e.g. first image for og:image) without HTML parsing.
  */
-export const BLOG_BLOCK_TYPES = ["paragraph", "heading", "image", "quote", "list", "video"];
+export const BLOG_BLOCK_TYPES = ["paragraph", "heading", "image", "quote", "list", "video", "table", "cards"];
+
+// One row of a `table` block - same shape as ComparisonRowSchema (see
+// comparison-row.schema.js), reused here rather than imported since blog blocks are
+// a subdocument array, not a top-level collection, and don't need the parent-level
+// column-count validation hook Service's version has.
+const TableRowSchema = new Schema(
+  {
+    label: { type: String, trim: true },
+    values: { type: [String], default: [] },
+  },
+  { _id: false }
+);
+
+// One card in a `cards` block - same shape as ServiceFeatureSchema (icon/title/text),
+// simplified for blog use (no slug/order/isActive - a blog post's cards are just
+// display content, not a separately-manageable catalog).
+const ContentCardSchema = new Schema(
+  {
+    icon: { type: String, trim: true }, // e.g. "bi bi-heart-pulse"
+    title: { type: String, trim: true },
+    text: { type: String, trim: true },
+  },
+  { _id: true }
+);
 
 const ContentBlogSchema = new Schema(
   {
@@ -49,6 +73,18 @@ const ContentBlogSchema = new Schema(
     ordered: {
       type: Boolean,
       default: false,
+    },
+
+    // used by: table
+    table: {
+      columns: { type: [String], default: undefined },
+      rows: { type: [TableRowSchema], default: undefined },
+    },
+
+    // used by: cards
+    cards: {
+      type: [ContentCardSchema],
+      default: undefined,
     },
 
     // used by: quote (attribution)

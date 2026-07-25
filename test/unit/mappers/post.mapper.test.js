@@ -61,6 +61,51 @@ describe("post.mapper", () => {
       const mapped = mapPostForAdminDetail(post);
       assert.equal(mapped.sadrzaj[0].tekst, "No order");
     });
+
+    it("maps a table block's columns and rows", () => {
+      const post = buildPost({
+        content: [
+          {
+            type: "table",
+            table: {
+              columns: ["Tip kože", "Preporuka"],
+              rows: [
+                { label: "Masna", values: ["Duboko čišćenje", "Jednom nedeljno"] },
+                { label: "Suva", values: ["Hidratacija", "Svaki dan"] },
+              ],
+            },
+            order: 0,
+          },
+        ],
+      });
+      const mapped = mapPostForAdminDetail(post);
+      assert.deepEqual(mapped.sadrzaj[0].kolone, ["Tip kože", "Preporuka"]);
+      assert.equal(mapped.sadrzaj[0].redovi.length, 2);
+      assert.equal(mapped.sadrzaj[0].redovi[0].label, "Masna");
+    });
+
+    it("maps a cards block's card list", () => {
+      const post = buildPost({
+        content: [
+          {
+            type: "cards",
+            cards: [{ icon: "bi bi-heart-pulse", title: "Savet 1", text: "Tekst saveta" }],
+            order: 0,
+          },
+        ],
+      });
+      const mapped = mapPostForAdminDetail(post);
+      assert.equal(mapped.sadrzaj[0].kartice.length, 1);
+      assert.equal(mapped.sadrzaj[0].kartice[0].title, "Savet 1");
+    });
+
+    it("defaults kolone/redovi/kartice to null for block types that don't use them", () => {
+      const post = buildPost({ content: [{ type: "paragraph", text: "X", order: 0 }] });
+      const mapped = mapPostForAdminDetail(post);
+      assert.equal(mapped.sadrzaj[0].kolone, null);
+      assert.equal(mapped.sadrzaj[0].redovi, null);
+      assert.equal(mapped.sadrzaj[0].kartice, null);
+    });
   });
 
   describe("category/tag name extraction", () => {

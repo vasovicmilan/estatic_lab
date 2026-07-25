@@ -62,6 +62,9 @@ function renderContentBlocks(blocks = []) {
       stavke: block.items || null,
       uredjeno: Boolean(block.ordered),
       izvor: block.meta || null,
+      kolone: block.table?.columns || null,
+      redovi: block.table?.rows || null,
+      kartice: block.cards || null,
     }));
 }
 

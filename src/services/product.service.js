@@ -1,5 +1,9 @@
+import mongoose from "mongoose";
 import eventEmitter from "../events/event.emitter.js";
 import productRepo from "../repositories/product.repository.js";
+import userRepo from "../repositories/user.repository.js";
+import temporaryOrderRepo from "../repositories/temporary-order.repository.js";
+import couponRepo from "../repositories/coupon.repository.js";
 import { generateSlug, generateUniqueSlug } from "../utils/slug.util.js";
 import {
   mapProductsForAdminList,
@@ -207,9 +211,45 @@ export async function deleteProductById(productId) {
   if (!productId) validationError("productId");
   const existing = await productRepo.findProductById(productId);
   if (!existing) notFound("Proizvod");
-  await productRepo.deleteProductById(productId);
 
-  // no reason to keep orphaned files around once the product record itself is gone
+  // Tier 1 - active commitments with no snapshot to fall back on. Order.items[]
+  // (and a past/expired TemporaryOrder) already snapshot title/price/image at
+  // purchase time - same reasoning as Appointment.variant - so real order history
+  // is safe to leave alone regardless of what happens to the live Product. But
+  // User.cart[] holds only {product, variant, quantity} (see cart-item.schema.js's
+  // own comment: the cart is meant to always reflect current price/stock, so it
+  // deliberately snapshots nothing), and a still-valid TemporaryOrder represents
+  // an in-progress checkout that will call decreaseVariationStock against the live
+  // Product on completion - both would break outright, not just look stale.
+  const [cartCount, activeTempOrderCount] = await Promise.all([
+    userRepo.countUsersWithProductInCart(productId),
+    temporaryOrderRepo.countActiveTemporaryOrdersReferencingProduct(productId),
+  ]);
+
+  if (cartCount > 0) {
+    badRequest("Proizvod se nalazi u korpi jednog ili više korisnika - ne može biti obrisan");
+  }
+  if (activeTempOrderCount > 0) {
+    badRequest("Proizvod je deo porudžbine koja je u toku - ne može biti obrisan dok se ne završi ili istekne");
+  }
+
+  // Tier 2 - current configuration, not a promise to anyone. Coupon.
+  // applicableProducts[] and other products' relatedProducts[] are safe to
+  // auto-clean rather than block on.
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      await couponRepo.pullProductFromAllCoupons(productId, { session });
+      await productRepo.pullFromAllRelatedProducts(productId, { session });
+      await productRepo.deleteProductById(productId, { session });
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  // no reason to keep orphaned files around once the product record itself is gone -
+  // filesystem cleanup happens after the DB transaction commits, same as everywhere
+  // else in this file that touches uploaded files
   await deleteUploadedFile(existing.image?.img);
   await deleteUploadedFiles((existing.gallery || []).map((g) => g.img));
 

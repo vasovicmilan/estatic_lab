@@ -2,8 +2,10 @@
   // Confirmed against content.blog.schema.js: paragraph/heading/quote use `text`
   // (+`level` for heading, +`meta` for quote's attribution); image/video are nested
   // objects (`image.img`/`image.imgDesc`, `video.url`/`video.title`); list uses
-  // `items` (array of strings) + `ordered` (boolean). `order` is derived from each
-  // block's position in the list, not user-edited.
+  // `items` (array of strings) + `ordered` (boolean); table uses `table.columns`
+  // (array of strings) + `table.rows` (array of {label, values}); cards uses
+  // `cards` (array of {icon, title, text}). `order` is derived from each block's
+  // position in the list, not user-edited.
   const BLOCK_FIELDS = {
     paragraph: [{ name: "text", label: "Tekst", type: "textarea" }],
     heading: [
@@ -26,6 +28,26 @@
       { name: "items", label: "Stavke (jedna po redu)", type: "textarea" },
       { name: "ordered", label: "Numerisana lista", type: "checkbox" },
     ],
+    // table and cards are handled separately below (buildTableBuilder/
+    // buildCardsBuilder) - they need their own add/remove-row UI, not a flat
+    // list of scalar inputs like everything above.
+    table: [],
+    cards: [],
+  };
+
+  // Shown in the "add block" dropdown and each block's own header - purely a
+  // display label, the underlying stored `type` value stays the English enum
+  // from content.blog.schema.js (BLOG_BLOCK_TYPES) so storage/schema/SEO-builder
+  // code never has to deal with a translated string.
+  const BLOCK_TYPE_LABELS = {
+    paragraph: "Pasus",
+    heading: "Naslov",
+    image: "Slika",
+    quote: "Citat",
+    list: "Lista",
+    video: "Video",
+    table: "Tabela",
+    cards: "Kartice",
   };
 
   function getNested(obj, dottedName) {
@@ -82,6 +104,249 @@
     return wrapper;
   }
 
+  // ---- Table builder: add/remove columns, add/remove rows, one labeled input
+  // per cell - no delimiter syntax, meant to be usable by someone who has never
+  // written code. Columns and row-value-inputs are kept in sync: adding/removing
+  // a column adds/removes the matching value input on every existing row. ----
+
+  function tableColumnCount(builderEl) {
+    return builderEl.querySelectorAll("[data-table-columns] [data-table-column]").length;
+  }
+
+  function addTableColumn(builderEl, value) {
+    const columnsList = builderEl.querySelector("[data-table-columns]");
+    const colIndex = tableColumnCount(builderEl);
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "input-group input-group-sm mb-1";
+    wrapper.dataset.tableColumn = "";
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "form-control";
+    input.placeholder = `Naziv kolone ${colIndex + 1}`;
+    input.value = value ?? "";
+    input.dataset.columnInput = "";
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "btn btn-outline-danger";
+    removeBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
+    removeBtn.dataset.columnRemove = "";
+
+    wrapper.appendChild(input);
+    wrapper.appendChild(removeBtn);
+    columnsList.appendChild(wrapper);
+
+    // every existing row needs a matching new (empty) value cell
+    builderEl.querySelectorAll("[data-table-rows] [data-table-row]").forEach((rowEl) => {
+      addTableRowValueCell(rowEl, "");
+    });
+  }
+
+  function addTableRowValueCell(rowEl, value) {
+    const valuesList = rowEl.querySelector("[data-row-values]");
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "form-control form-control-sm mb-1";
+    input.dataset.rowValue = "";
+    input.value = value ?? "";
+    valuesList.appendChild(input);
+  }
+
+  function addTableRow(builderEl, rowData) {
+    const rowsList = builderEl.querySelector("[data-table-rows]");
+    const colCount = tableColumnCount(builderEl);
+
+    const rowEl = document.createElement("div");
+    rowEl.className = "border rounded p-2 mb-2";
+    rowEl.dataset.tableRow = "";
+
+    const header = document.createElement("div");
+    header.className = "d-flex align-items-center gap-2 mb-1";
+
+    const labelInput = document.createElement("input");
+    labelInput.type = "text";
+    labelInput.className = "form-control form-control-sm";
+    labelInput.placeholder = "Naziv reda";
+    labelInput.value = rowData?.label ?? "";
+    labelInput.dataset.rowLabel = "";
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "btn btn-sm btn-outline-danger flex-shrink-0";
+    removeBtn.innerHTML = '<i class="bi bi-trash"></i>';
+    removeBtn.dataset.rowRemove = "";
+
+    header.appendChild(labelInput);
+    header.appendChild(removeBtn);
+    rowEl.appendChild(header);
+
+    const valuesList = document.createElement("div");
+    valuesList.dataset.rowValues = "";
+    rowEl.appendChild(valuesList);
+
+    rowsList.appendChild(rowEl);
+
+    const existingValues = rowData?.values || [];
+    for (let i = 0; i < colCount; i++) {
+      addTableRowValueCell(rowEl, existingValues[i] ?? "");
+    }
+  }
+
+  function buildTableBuilder(blockData) {
+    const builder = document.createElement("div");
+    builder.dataset.tableBuilder = "";
+
+    const columnsSection = document.createElement("div");
+    columnsSection.className = "mb-3";
+    const columnsLabel = document.createElement("label");
+    columnsLabel.className = "form-label small mb-1 fw-semibold";
+    columnsLabel.textContent = "Kolone";
+    const columnsList = document.createElement("div");
+    columnsList.dataset.tableColumns = "";
+    const addColumnBtn = document.createElement("button");
+    addColumnBtn.type = "button";
+    addColumnBtn.className = "btn btn-sm btn-outline-primary mt-1";
+    addColumnBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Dodaj kolonu';
+    addColumnBtn.dataset.columnAdd = "";
+    columnsSection.appendChild(columnsLabel);
+    columnsSection.appendChild(columnsList);
+    columnsSection.appendChild(addColumnBtn);
+    builder.appendChild(columnsSection);
+
+    const rowsSection = document.createElement("div");
+    const rowsLabel = document.createElement("label");
+    rowsLabel.className = "form-label small mb-1 fw-semibold";
+    rowsLabel.textContent = "Redovi";
+    const rowsList = document.createElement("div");
+    rowsList.dataset.tableRows = "";
+    const addRowBtn = document.createElement("button");
+    addRowBtn.type = "button";
+    addRowBtn.className = "btn btn-sm btn-outline-primary mt-1";
+    addRowBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Dodaj red';
+    addRowBtn.dataset.rowAdd = "";
+    rowsSection.appendChild(rowsLabel);
+    rowsSection.appendChild(rowsList);
+    rowsSection.appendChild(addRowBtn);
+    builder.appendChild(rowsSection);
+
+    (blockData?.table?.columns || []).forEach((col) => addTableColumn(builder, col));
+    (blockData?.table?.rows || []).forEach((row) => addTableRow(builder, row));
+
+    builder.addEventListener("click", (e) => {
+      if (e.target.closest("[data-column-add]")) {
+        addTableColumn(builder, "");
+      } else if (e.target.closest("[data-row-add]")) {
+        addTableRow(builder, null);
+      } else if (e.target.closest("[data-column-remove]")) {
+        const colEl = e.target.closest("[data-table-column]");
+        const colIndex = Array.from(builder.querySelectorAll("[data-table-column]")).indexOf(colEl);
+        colEl.remove();
+        // remove the matching value cell from every row
+        builder.querySelectorAll("[data-table-row]").forEach((rowEl) => {
+          const cells = rowEl.querySelectorAll("[data-row-value]");
+          if (cells[colIndex]) cells[colIndex].remove();
+        });
+      } else if (e.target.closest("[data-row-remove]")) {
+        e.target.closest("[data-table-row]").remove();
+      }
+    });
+
+    return builder;
+  }
+
+  function readTableBuilder(builderEl) {
+    const columns = Array.from(builderEl.querySelectorAll("[data-column-input]")).map((i) => i.value.trim());
+    const rows = Array.from(builderEl.querySelectorAll("[data-table-row]")).map((rowEl) => ({
+      label: rowEl.querySelector("[data-row-label]").value.trim(),
+      values: Array.from(rowEl.querySelectorAll("[data-row-value]")).map((i) => i.value),
+    }));
+    return { columns, rows };
+  }
+
+  // ---- Cards builder: add/remove cards, each with icon/title/text fields. ----
+
+  function addCard(builderEl, cardData) {
+    const list = builderEl.querySelector("[data-cards-list]");
+
+    const cardEl = document.createElement("div");
+    cardEl.className = "border rounded p-2 mb-2";
+    cardEl.dataset.contentCard = "";
+
+    const header = document.createElement("div");
+    header.className = "d-flex justify-content-end mb-1";
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "btn btn-sm btn-outline-danger";
+    removeBtn.innerHTML = '<i class="bi bi-trash"></i>';
+    removeBtn.dataset.cardRemove = "";
+    header.appendChild(removeBtn);
+    cardEl.appendChild(header);
+
+    const iconInput = document.createElement("input");
+    iconInput.type = "text";
+    iconInput.className = "form-control form-control-sm mb-1";
+    iconInput.placeholder = "Ikonica (npr. bi bi-heart-pulse) - opciono";
+    iconInput.value = cardData?.icon ?? "";
+    iconInput.dataset.cardIcon = "";
+    cardEl.appendChild(iconInput);
+
+    const titleInput = document.createElement("input");
+    titleInput.type = "text";
+    titleInput.className = "form-control form-control-sm mb-1";
+    titleInput.placeholder = "Naslov kartice";
+    titleInput.value = cardData?.title ?? "";
+    titleInput.dataset.cardTitle = "";
+    cardEl.appendChild(titleInput);
+
+    const textInput = document.createElement("textarea");
+    textInput.className = "form-control form-control-sm";
+    textInput.rows = 2;
+    textInput.placeholder = "Tekst kartice";
+    textInput.value = cardData?.text ?? "";
+    textInput.dataset.cardText = "";
+    cardEl.appendChild(textInput);
+
+    list.appendChild(cardEl);
+  }
+
+  function buildCardsBuilder(blockData) {
+    const builder = document.createElement("div");
+    builder.dataset.cardsBuilder = "";
+
+    const list = document.createElement("div");
+    list.dataset.cardsList = "";
+    builder.appendChild(list);
+
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "btn btn-sm btn-outline-primary mt-1";
+    addBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Dodaj karticu';
+    addBtn.dataset.cardAdd = "";
+    builder.appendChild(addBtn);
+
+    (blockData?.cards || []).forEach((card) => addCard(builder, card));
+
+    builder.addEventListener("click", (e) => {
+      if (e.target.closest("[data-card-add]")) {
+        addCard(builder, null);
+      } else if (e.target.closest("[data-card-remove]")) {
+        e.target.closest("[data-content-card]").remove();
+      }
+    });
+
+    return builder;
+  }
+
+  function readCardsBuilder(builderEl) {
+    return Array.from(builderEl.querySelectorAll("[data-content-card]")).map((cardEl) => ({
+      icon: cardEl.querySelector("[data-card-icon]").value.trim(),
+      title: cardEl.querySelector("[data-card-title]").value.trim(),
+      text: cardEl.querySelector("[data-card-text]").value.trim(),
+    }));
+  }
+
   function buildBlock(type, blockData) {
     const block = document.createElement("div");
     block.className = "border rounded p-3 mb-2";
@@ -91,7 +356,7 @@
     const header = document.createElement("div");
     header.className = "d-flex justify-content-between align-items-center mb-2";
     const typeLabel = document.createElement("strong");
-    typeLabel.textContent = type;
+    typeLabel.textContent = BLOCK_TYPE_LABELS[type] || type;
     header.appendChild(typeLabel);
 
     const btnGroup = document.createElement("div");
@@ -110,10 +375,16 @@
     header.appendChild(btnGroup);
     block.appendChild(header);
 
-    const fieldsRow = document.createElement("div");
-    fieldsRow.className = "row";
-    (BLOCK_FIELDS[type] || []).forEach((field) => fieldsRow.appendChild(buildFieldInput(field, blockData)));
-    block.appendChild(fieldsRow);
+    if (type === "table") {
+      block.appendChild(buildTableBuilder(blockData));
+    } else if (type === "cards") {
+      block.appendChild(buildCardsBuilder(blockData));
+    } else {
+      const fieldsRow = document.createElement("div");
+      fieldsRow.className = "row";
+      (BLOCK_FIELDS[type] || []).forEach((field) => fieldsRow.appendChild(buildFieldInput(field, blockData)));
+      block.appendChild(fieldsRow);
+    }
 
     return block;
   }
@@ -121,6 +392,16 @@
   function readBlock(block, index) {
     const type = block.dataset.blockType;
     const obj = { type, order: index };
+
+    if (type === "table") {
+      obj.table = readTableBuilder(block.querySelector("[data-table-builder]"));
+      return obj;
+    }
+    if (type === "cards") {
+      obj.cards = readCardsBuilder(block.querySelector("[data-cards-builder]"));
+      return obj;
+    }
+
     (BLOCK_FIELDS[type] || []).forEach((field) => {
       const input = block.querySelector(`[data-block-field="${field.name}"]`);
       if (!input) return;
@@ -149,7 +430,17 @@
     if (hiddenInput) hiddenInput.value = JSON.stringify(value);
   }
 
+  function relabelTypeSelect(container) {
+    const select = container.querySelector("[data-block-type-select]");
+    if (!select) return;
+    Array.from(select.options).forEach((option) => {
+      option.textContent = BLOCK_TYPE_LABELS[option.value] || option.value;
+    });
+  }
+
   function init(container) {
+    relabelTypeSelect(container);
+
     let initialValue = [];
     try {
       initialValue = JSON.parse(container.dataset.contentBlocksValue || "[]");
@@ -187,6 +478,7 @@
 
     container.addEventListener("input", () => sync(container));
     container.addEventListener("change", () => sync(container));
+    container.addEventListener("click", () => sync(container));
     const form = container.closest("form");
     if (form) form.addEventListener("submit", () => sync(container));
 

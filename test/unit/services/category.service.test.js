@@ -5,6 +5,7 @@ import categoryRepo from "../../../src/repositories/category.repository.js";
 import productRepo from "../../../src/repositories/product.repository.js";
 import serviceRepo from "../../../src/repositories/service.repository.js";
 import packageRepo from "../../../src/repositories/package.repository.js";
+import postRepo from "../../../src/repositories/post.repository.js";
 import * as categoryService from "../../../src/services/category.service.js";
 import { buildCategory, id } from "../../helpers/factories.js";
 import { buildPaginatedResult } from "../../helpers/pagination.js";
@@ -79,16 +80,17 @@ describe("category.service", () => {
       await assert.rejects(() => categoryService.deleteCategoryById(id().toString()), (err) => err.statusCode === 400);
     });
 
-    it("deletes a childless category and pulls its reference from Product/Service/Package", async (t) => {
+    it("deletes a childless category and pulls its reference from Product/Service/Package/Post", async (t) => {
       mockSession(t);
       t.mock.method(categoryRepo, "findCategoryById", async () => buildCategory());
       t.mock.method(categoryRepo, "findCategories", async () => buildPaginatedResult([], { total: 0 }));
       t.mock.method(categoryRepo, "deleteCategoryById", async () => true);
 
-      const pullCalls = { product: 0, service: 0, package: 0 };
+      const pullCalls = { product: 0, service: 0, package: 0, post: 0 };
       t.mock.method(productRepo, "pullCategoryFromAllProducts", async () => { pullCalls.product++; });
       t.mock.method(serviceRepo, "pullCategoryFromAllServices", async () => { pullCalls.service++; });
       t.mock.method(packageRepo, "pullCategoryFromAllPackages", async () => { pullCalls.package++; });
+      t.mock.method(postRepo, "pullCategoryFromAllPosts", async () => { pullCalls.post++; });
 
       const result = await categoryService.deleteCategoryById(id().toString());
 
@@ -96,6 +98,7 @@ describe("category.service", () => {
       assert.equal(pullCalls.product, 1);
       assert.equal(pullCalls.service, 1);
       assert.equal(pullCalls.package, 1);
+      assert.equal(pullCalls.post, 1);
     });
 
     it("aborts the whole transaction and never reaches the terminal delete when an earlier cleanup step fails", async (t) => {

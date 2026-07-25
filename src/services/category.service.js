@@ -3,6 +3,7 @@ import categoryRepo from "../repositories/category.repository.js";
 import productRepo from "../repositories/product.repository.js";
 import serviceRepo from "../repositories/service.repository.js";
 import packageRepo from "../repositories/package.repository.js";
+import postRepo from "../repositories/post.repository.js";
 import { CATEGORY_DOMAINS } from "../models/category.model.js";
 import {
   mapCategoriesForAdminList,
@@ -103,16 +104,18 @@ export async function deleteCategoryById(categoryId) {
   const children = await categoryRepo.findCategories({ filters: { parent: categoryId }, limit: 1 });
   if (children.total > 0) badRequest("Kategorija ima podkategorije - premestite ih ili obrišite prvo");
 
-  // Category on Product.categories[]/Service.categories[]/Package.categories[] is
-  // just current taxonomy assignment, not a promise to anyone (unlike, say, a
-  // customer's purchased package) - so rather than blocking the delete, pull the
-  // category out of every place it's assigned, atomically with the delete itself.
+  // Category on Product.categories[]/Service.categories[]/Package.categories[]/
+  // Post.categories[] is just current taxonomy assignment, not a promise to anyone
+  // (unlike, say, a customer's purchased package) - so rather than blocking the
+  // delete, pull the category out of every place it's assigned, atomically with
+  // the delete itself.
   const session = await mongoose.startSession();
   try {
     await session.withTransaction(async () => {
       await productRepo.pullCategoryFromAllProducts(categoryId, { session });
       await serviceRepo.pullCategoryFromAllServices(categoryId, { session });
       await packageRepo.pullCategoryFromAllPackages(categoryId, { session });
+      await postRepo.pullCategoryFromAllPosts(categoryId, { session });
       await categoryRepo.deleteCategoryById(categoryId, { session });
     });
   } finally {

@@ -65,6 +65,12 @@ export async function pullCategoryFromAllPackages(categoryId, { session } = {}) 
   return Package.updateMany({ categories: categoryId }, { $pull: { categories: categoryId } }, { session });
 }
 
+// Called when a Tag is deleted - Package.tags[] is current taxonomy assignment
+// (no hierarchy to worry about, unlike Category), so it's always safe to auto-clean.
+export async function pullTagFromAllPackages(tagId, { session } = {}) {
+  return Package.updateMany({ tags: tagId }, { $pull: { tags: tagId } }, { session });
+}
+
 export default {
   createPackage,
   findPackageById,
@@ -74,4 +80,5 @@ export default {
   deletePackageById,
   countPackages,
   pullCategoryFromAllPackages,
+  pullTagFromAllPackages,
 }

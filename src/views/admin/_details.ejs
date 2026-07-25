@@ -59,6 +59,39 @@
                   <% } %>
                 <% } else if (block.tip === 'video' && block.video) { %>
                   <video controls class="w-100 rounded mb-3" src="<%= block.video.url %>"></video>
+                <% } else if (block.tip === 'table' && block.kolone && block.kolone.length > 0) { %>
+                  <div class="table-responsive mb-3">
+                    <table class="table table-bordered align-middle">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <% block.kolone.forEach(function(col) { %><th><%= col %></th><% }) %>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% (block.redovi || []).forEach(function(row) { %>
+                          <tr>
+                            <th scope="row"><%= row.label %></th>
+                            <% (row.values || []).forEach(function(val) { %><td><%= val %></td><% }) %>
+                          </tr>
+                        <% }) %>
+                      </tbody>
+                    </table>
+                  </div>
+                <% } else if (block.tip === 'cards' && block.kartice && block.kartice.length > 0) { %>
+                  <div class="row g-3 mb-3">
+                    <% block.kartice.forEach(function(card) { %>
+                      <div class="col-12 col-md-6">
+                        <div class="card h-100">
+                          <div class="card-body">
+                            <% if (card.icon) { %><i class="<%= card.icon %> fs-3 text-primary mb-2 d-block"></i><% } %>
+                            <% if (card.title) { %><h5 class="card-title"><%= card.title %></h5><% } %>
+                            <% if (card.text) { %><p class="card-text"><%= card.text %></p><% } %>
+                          </div>
+                        </div>
+                      </div>
+                    <% }) %>
+                  </div>
                 <% } %>
               <% }) %>
               <% } else if (section.type === 'variants') { %>

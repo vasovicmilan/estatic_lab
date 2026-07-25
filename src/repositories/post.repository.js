@@ -67,6 +67,20 @@ export async function countPosts(filters = {}, { session } = {}) {
   return Post.countDocuments(buildPostFilter(filters)).session(session || null);
 }
 
+// Called when a Category is deleted - Post.categories[] is current taxonomy
+// assignment, always safe to auto-clean. (Missed in the original Category-deletion
+// fix, which only covered Product/Service/Package - Post uses the same "post"
+// category domain and was left out.)
+export async function pullCategoryFromAllPosts(categoryId, { session } = {}) {
+  return Post.updateMany({ categories: categoryId }, { $pull: { categories: categoryId } }, { session });
+}
+
+// Called when a Tag is deleted - Post.tags[] is current taxonomy assignment,
+// always safe to auto-clean.
+export async function pullTagFromAllPosts(tagId, { session } = {}) {
+  return Post.updateMany({ tags: tagId }, { $pull: { tags: tagId } }, { session });
+}
+
 export default {
   createPost,
   findPostById,
@@ -76,4 +90,6 @@ export default {
   updatePostById,
   deletePostById,
   countPosts,
+  pullCategoryFromAllPosts,
+  pullTagFromAllPosts,
 }

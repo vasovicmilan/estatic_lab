@@ -1,9 +1,23 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import mongoose from "mongoose";
 import productRepo from "../../../src/repositories/product.repository.js";
+import userRepo from "../../../src/repositories/user.repository.js";
+import temporaryOrderRepo from "../../../src/repositories/temporary-order.repository.js";
+import couponRepo from "../../../src/repositories/coupon.repository.js";
 import * as productService from "../../../src/services/product.service.js";
 import eventEmitter from "../../../src/events/event.emitter.js";
 import { buildProduct, buildProductVariation, id } from "../../helpers/factories.js";
+
+// deleteProductById wraps its auto-cleanup + delete in a real Mongo transaction -
+// faking the session lets this run as a pure unit test instead of needing a
+// replica-set-backed mongodb-memory-server instance.
+function mockSession(t) {
+  t.mock.method(mongoose, "startSession", async () => ({
+    withTransaction: async (fn) => fn(),
+    endSession: async () => {},
+  }));
+}
 
 describe("product.service", () => {
   describe("createDraftProduct (phase 1)", () => {
@@ -392,22 +406,59 @@ describe("product.service", () => {
       await assert.rejects(() => productService.deleteProductById(id().toString()), (err) => err.statusCode === 404);
     });
 
-    // NOTE: unlike category/service/package/partner's deleteXById, this currently
-    // has NO reference checks at all - Order.items[].product, TemporaryOrder.
-    // items[].product, User.cart[].product, Coupon.applicableProducts[], and
-    // Testimonial.product can all still point at a Product after it's deleted.
-    // This test documents the CURRENT behavior; it is not an endorsement of it.
-    it("currently deletes unconditionally, even if the product is referenced by historical orders", async (t) => {
+    function mockNoBlockingReferences(t) {
+      t.mock.method(userRepo, "countUsersWithProductInCart", async () => 0);
+      t.mock.method(temporaryOrderRepo, "countActiveTemporaryOrdersReferencingProduct", async () => 0);
+    }
+
+    it("deletes a product with no live references, pulling it from Coupon/relatedProducts - real Order history doesn't block it since it's fully snapshotted", async (t) => {
+      mockSession(t);
       t.mock.method(productRepo, "findProductById", async () => buildProduct({ image: null, gallery: [] }));
+      t.mock.method(productRepo, "deleteProductById", async () => {});
+      mockNoBlockingReferences(t);
+
+      const pullCalls = { coupon: 0, related: 0 };
+      t.mock.method(couponRepo, "pullProductFromAllCoupons", async () => { pullCalls.coupon++; });
+      t.mock.method(productRepo, "pullFromAllRelatedProducts", async () => { pullCalls.related++; });
+
+      const result = await productService.deleteProductById(id().toString());
+
+      assert.equal(result.success, true);
+      assert.equal(pullCalls.coupon, 1);
+      assert.equal(pullCalls.related, 1);
+    });
+
+    it("refuses to delete a product that's sitting in a live cart - cart has no price/title snapshot, unlike Order", async (t) => {
+      t.mock.method(productRepo, "findProductById", async () => buildProduct());
+      mockNoBlockingReferences(t);
+      t.mock.method(userRepo, "countUsersWithProductInCart", async () => 1);
+
+      await assert.rejects(() => productService.deleteProductById(id().toString()), (err) => err.statusCode === 400);
+    });
+
+    it("refuses to delete a product that's part of a still-valid (non-expired) checkout in progress", async (t) => {
+      t.mock.method(productRepo, "findProductById", async () => buildProduct());
+      mockNoBlockingReferences(t);
+      t.mock.method(temporaryOrderRepo, "countActiveTemporaryOrdersReferencingProduct", async () => 1);
+
+      await assert.rejects(() => productService.deleteProductById(id().toString()), (err) => err.statusCode === 400);
+    });
+
+    it("aborts the whole transaction and never reaches the terminal delete when a cleanup step fails", async (t) => {
+      mockSession(t);
+      t.mock.method(productRepo, "findProductById", async () => buildProduct({ image: null, gallery: [] }));
+      mockNoBlockingReferences(t);
+      t.mock.method(couponRepo, "pullProductFromAllCoupons", async () => {
+        throw new Error("Simulated write failure mid-transaction");
+      });
       let deleteCalled = false;
       t.mock.method(productRepo, "deleteProductById", async () => {
         deleteCalled = true;
       });
 
-      const result = await productService.deleteProductById(id().toString());
+      await assert.rejects(() => productService.deleteProductById(id().toString()), /Simulated write failure/);
 
-      assert.equal(result.success, true);
-      assert.equal(deleteCalled, true);
+      assert.equal(deleteCalled, false, "the product itself must not be deleted if a cleanup step failed");
     });
   });
 

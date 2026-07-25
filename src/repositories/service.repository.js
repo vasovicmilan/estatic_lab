@@ -80,6 +80,12 @@ export async function pullCategoryFromAllServices(categoryId, { session } = {}) 
   return Service.updateMany({ categories: categoryId }, { $pull: { categories: categoryId } }, { session });
 }
 
+// Called when a Tag is deleted - Service.tags[] is current taxonomy assignment,
+// always safe to auto-clean.
+export async function pullTagFromAllServices(tagId, { session } = {}) {
+  return Service.updateMany({ tags: tagId }, { $pull: { tags: tagId } }, { session });
+}
+
 export default {
   createService,
   findServiceById,
@@ -90,4 +96,5 @@ export default {
   deleteServiceById,
   countServices,
   pullCategoryFromAllServices,
+  pullTagFromAllServices,
 }
