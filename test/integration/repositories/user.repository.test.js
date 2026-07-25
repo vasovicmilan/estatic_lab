@@ -260,4 +260,183 @@ describe("user.repository", () => {
             assert.equal(activeCount, 1);
         });
     });
+
+    describe("findUserByIdWithPassword", () => {
+        it("exposes the normally-hidden password field", async () => {
+            const role = await createTestRole();
+            const created = await userRepo.createUser(validUserData({ role: role._id }));
+
+            const found = await userRepo.findUserByIdWithPassword(created._id);
+
+            assert.ok(found.password, "password must be selected back in explicitly here");
+        });
+
+        it("returns null for a nonexistent id", async () => {
+            const found = await userRepo.findUserByIdWithPassword(new mongoose.Types.ObjectId());
+            assert.equal(found, null);
+        });
+    });
+
+    describe("findUserByConfirmToken", () => {
+        it("finds a user with a still-valid confirm token", async () => {
+            const role = await createTestRole();
+            const future = new Date(Date.now() + 60 * 60 * 1000);
+            await userRepo.createUser(validUserData({ role: role._id, confirmToken: "confirm-abc", confirmTokenExpiration: future }));
+
+            const found = await userRepo.findUserByConfirmToken("confirm-abc");
+
+            assert.equal(found.confirmToken, "confirm-abc");
+        });
+
+        it("does not return a user whose confirm token has expired", async () => {
+            const role = await createTestRole();
+            const past = new Date(Date.now() - 60 * 60 * 1000);
+            await userRepo.createUser(validUserData({ role: role._id, confirmToken: "confirm-abc", confirmTokenExpiration: past }));
+
+            const found = await userRepo.findUserByConfirmToken("confirm-abc");
+
+            assert.equal(found, null);
+        });
+    });
+
+    describe("cart operations", () => {
+        it("incrementCartItemQuantity increments an existing matching line, returns null when no line matches", async () => {
+            const role = await createTestRole();
+            const productId = new mongoose.Types.ObjectId();
+            const variantId = new mongoose.Types.ObjectId();
+            const created = await userRepo.createUser(
+                validUserData({ role: role._id, cart: [{ product: productId, variant: variantId, quantity: 2 }] })
+            );
+
+            const updated = await userRepo.incrementCartItemQuantity(created._id, productId, variantId, 3);
+            assert.equal(updated.cart[0].quantity, 5);
+
+            const noMatch = await userRepo.incrementCartItemQuantity(created._id, new mongoose.Types.ObjectId(), variantId, 1);
+            assert.equal(noMatch, null);
+        });
+
+        it("addCartItem appends a new line", async () => {
+            const role = await createTestRole();
+            const created = await userRepo.createUser(validUserData({ role: role._id }));
+            const productId = new mongoose.Types.ObjectId();
+
+            const updated = await userRepo.addCartItem(created._id, { product: productId, variant: null, quantity: 1 });
+
+            assert.equal(updated.cart.length, 1);
+            assert.equal(String(updated.cart[0].product), String(productId));
+        });
+
+        it("setCartItemQuantity sets an existing line's quantity by cart item id", async () => {
+            const role = await createTestRole();
+            const created = await userRepo.createUser(
+                validUserData({ role: role._id, cart: [{ product: new mongoose.Types.ObjectId(), quantity: 1 }] })
+            );
+            const cartItemId = created.cart[0]._id;
+
+            const updated = await userRepo.setCartItemQuantity(created._id, cartItemId, 9);
+
+            assert.equal(updated.cart[0].quantity, 9);
+        });
+
+        it("removeCartItem removes only the matching line", async () => {
+            const role = await createTestRole();
+            const created = await userRepo.createUser(
+                validUserData({
+                    role: role._id,
+                    cart: [
+                        { product: new mongoose.Types.ObjectId(), quantity: 1 },
+                        { product: new mongoose.Types.ObjectId(), quantity: 2 },
+                    ],
+                })
+            );
+            const removeId = created.cart[0]._id;
+
+            const updated = await userRepo.removeCartItem(created._id, removeId);
+
+            assert.equal(updated.cart.length, 1);
+            assert.notEqual(String(updated.cart[0]._id), String(removeId));
+        });
+
+        it("clearCart empties the whole array", async () => {
+            const role = await createTestRole();
+            const created = await userRepo.createUser(
+                validUserData({ role: role._id, cart: [{ product: new mongoose.Types.ObjectId(), quantity: 1 }] })
+            );
+
+            const updated = await userRepo.clearCart(created._id);
+
+            assert.equal(updated.cart.length, 0);
+        });
+
+        it("replaceCart overwrites the array wholesale with whatever was computed elsewhere", async () => {
+            const role = await createTestRole();
+            const created = await userRepo.createUser(
+                validUserData({ role: role._id, cart: [{ product: new mongoose.Types.ObjectId(), quantity: 1 }] })
+            );
+            const newCart = [{ product: new mongoose.Types.ObjectId(), quantity: 5 }];
+
+            const updated = await userRepo.replaceCart(created._id, newCart);
+
+            assert.equal(updated.cart.length, 1);
+            assert.equal(updated.cart[0].quantity, 5);
+        });
+
+        it("findUserCartQuantities projects only the cart field", async () => {
+            const role = await createTestRole();
+            const created = await userRepo.createUser(
+                validUserData({ role: role._id, cart: [{ product: new mongoose.Types.ObjectId(), quantity: 3 }] })
+            );
+
+            const found = await userRepo.findUserCartQuantities(created._id);
+
+            assert.equal(found.cart.length, 1);
+            assert.equal(found.email, undefined, "only cart should be projected, not the rest of the document");
+        });
+
+        it("findUserCartQuantities returns null for a nonexistent user", async () => {
+            const found = await userRepo.findUserCartQuantities(new mongoose.Types.ObjectId());
+            assert.equal(found, null);
+        });
+    });
+
+    describe("address operations", () => {
+        function validAddress(overrides = {}) {
+            return { city: "Novi Sad", postalCode: "21000", street: "encryptedstreet", number: "encryptednum", hash: `hash-${new mongoose.Types.ObjectId()}`, ...overrides };
+        }
+
+        it("addAddressToUser appends an address", async () => {
+            const role = await createTestRole();
+            const created = await userRepo.createUser(validUserData({ role: role._id }));
+
+            const updated = await userRepo.addAddressToUser(created._id, validAddress());
+
+            assert.equal(updated.addresses.length, 1);
+        });
+
+        it("removeAddressFromUser removes only the matching address", async () => {
+            const role = await createTestRole();
+            let user = await userRepo.createUser(validUserData({ role: role._id }));
+            user = await userRepo.addAddressToUser(user._id, validAddress());
+            user = await userRepo.addAddressToUser(user._id, validAddress());
+            const removeId = user.addresses[0]._id;
+
+            const updated = await userRepo.removeAddressFromUser(user._id, removeId);
+
+            assert.equal(updated.addresses.length, 1);
+            assert.notEqual(String(updated.addresses[0]._id), String(removeId));
+        });
+
+        it("setDefaultAddress unsets every other address before setting the new default", async () => {
+            const role = await createTestRole();
+            let user = await userRepo.createUser(validUserData({ role: role._id }));
+            user = await userRepo.addAddressToUser(user._id, validAddress({ isDefault: true }));
+            user = await userRepo.addAddressToUser(user._id, validAddress());
+            const secondAddressId = user.addresses[1]._id;
+
+            const updated = await userRepo.setDefaultAddress(user._id, secondAddressId);
+
+            assert.equal(updated.addresses[0].isDefault, false, "the previously-default address must be unset");
+            assert.equal(updated.addresses[1].isDefault, true);
+        });
+    });
 });

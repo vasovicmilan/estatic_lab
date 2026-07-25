@@ -52,6 +52,14 @@ describe("testimonial.mapper", () => {
       assert.equal(mapped.proizvod, null);
     });
 
+    it("falls back to just the raw id (no naziv/slug) when service isn't populated - doesn't show blank strings", () => {
+      const serviceId = id();
+      const t = buildTestimonial({ service: serviceId, package: null, product: null });
+      const mapped = mapTestimonialForAdminDetail(t);
+      assert.equal(mapped.usluga.id, serviceId.toString());
+      assert.equal("naziv" in mapped.usluga, false, "an unpopulated ref must not silently show an empty-string naziv");
+    });
+
     it("resolves a populated product (the subject added when the shop was built)", () => {
       const t = buildTestimonial({ service: null, package: null, product: { _id: id(), name: "ESMA Uređaj", slug: "esma-uredjaj" } });
       const mapped = mapTestimonialForAdminDetail(t);

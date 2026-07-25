@@ -272,4 +272,166 @@ describe("product.service", () => {
       assert.equal(variation.stock, 7);
     });
   });
+
+  describe("listProducts / getProductById / getProductForEdit", () => {
+    it("listProducts maps through the admin list shape", async (t) => {
+      t.mock.method(productRepo, "findProducts", async () => ({ data: [buildProduct()], total: 1, page: 1, limit: 10, totalPages: 1 }));
+      const result = await productService.listProducts({});
+      assert.equal(result.data.length, 1);
+    });
+
+    it("getProductById throws 404 for a nonexistent product", async (t) => {
+      t.mock.method(productRepo, "findProductById", async () => null);
+      await assert.rejects(() => productService.getProductById(id().toString()), (err) => err.statusCode === 404);
+    });
+
+    it("getProductForEdit throws 404 for a nonexistent product", async (t) => {
+      t.mock.method(productRepo, "findProductById", async () => null);
+      await assert.rejects(() => productService.getProductForEdit(id().toString()), (err) => err.statusCode === 404);
+    });
+  });
+
+  describe("updateProductSeo", () => {
+    it("throws 404 for a nonexistent product", async (t) => {
+      t.mock.method(productRepo, "updateProductById", async () => null);
+      await assert.rejects(() => productService.updateProductSeo(id().toString(), ["a"]), (err) => err.statusCode === 404);
+    });
+
+    it("defaults seoKeywords to an empty array when omitted", async (t) => {
+      let captured;
+      t.mock.method(productRepo, "updateProductById", async (productId, data) => {
+        captured = data;
+        return buildProduct();
+      });
+      t.mock.method(productRepo, "findProductById", async () => buildProduct());
+
+      await productService.updateProductSeo(id().toString(), null);
+
+      assert.deepEqual(captured.seoKeywords, []);
+    });
+  });
+
+  describe("createProduct", () => {
+    it("rejects a duplicate sku", async (t) => {
+      t.mock.method(productRepo, "findProductBySku", async () => buildProduct({ sku: "zauzeto" }));
+      await assert.rejects(
+        () => productService.createProduct({ name: "X", sku: "zauzeto" }),
+        (err) => err.statusCode === 409
+      );
+    });
+
+    it("auto-generates a slug from the name when omitted", async (t) => {
+      t.mock.method(productRepo, "findProductBySku", async () => null);
+      t.mock.method(productRepo, "findProductBySlug", async () => null);
+      let created;
+      t.mock.method(productRepo, "createProduct", async (data) => {
+        created = { ...data, _id: id() };
+        return created;
+      });
+      t.mock.method(productRepo, "findProductById", async () => created);
+
+      await productService.createProduct({ name: "Krema Za Lice", sku: "SKU-1" });
+
+      assert.equal(created.slug, "krema-za-lice");
+    });
+
+    it("lowercases and trims the sku before persisting", async (t) => {
+      t.mock.method(productRepo, "findProductBySku", async () => null);
+      t.mock.method(productRepo, "findProductBySlug", async () => null);
+      let created;
+      t.mock.method(productRepo, "createProduct", async (data) => {
+        created = { ...data, _id: id() };
+        return created;
+      });
+      t.mock.method(productRepo, "findProductById", async () => created);
+
+      await productService.createProduct({ name: "X", sku: "  SKU-ABC  " });
+
+      assert.equal(created.sku, "sku-abc");
+    });
+
+    it("validates variations when provided", async (t) => {
+      t.mock.method(productRepo, "findProductBySku", async () => null);
+      await assert.rejects(
+        () => productService.createProduct({ name: "X", sku: "sku-1", variations: [{ label: "50ml", price: -5, stock: 1 }] }),
+        (err) => err.statusCode === 400
+      );
+    });
+  });
+
+  describe("updateProductById", () => {
+    it("throws 404 for a nonexistent product", async (t) => {
+      t.mock.method(productRepo, "findProductById", async () => null);
+      await assert.rejects(() => productService.updateProductById(id().toString(), {}), (err) => err.statusCode === 400 || err.statusCode === 404);
+    });
+
+    it("rejects a sku that collides with a different existing product", async (t) => {
+      const existing = buildProduct({ sku: "original-sku" });
+      t.mock.method(productRepo, "findProductById", async () => existing);
+      t.mock.method(productRepo, "findProductBySku", async () => buildProduct({ sku: "taken-sku", _id: id() }));
+
+      await assert.rejects(
+        () => productService.updateProductById(existing._id.toString(), { sku: "taken-sku" }),
+        (err) => err.statusCode === 409
+      );
+    });
+
+    it("allows keeping the product's own current sku unchanged (no false conflict)", async (t) => {
+      const existing = buildProduct({ sku: "same-sku" });
+      t.mock.method(productRepo, "findProductById", async () => existing);
+      t.mock.method(productRepo, "updateProductById", async () => existing);
+
+      // should NOT throw - same sku, just different casing
+      await productService.updateProductById(existing._id.toString(), { sku: "SAME-SKU" });
+    });
+  });
+
+  describe("deleteProductById", () => {
+    it("throws 404 for a nonexistent product", async (t) => {
+      t.mock.method(productRepo, "findProductById", async () => null);
+      await assert.rejects(() => productService.deleteProductById(id().toString()), (err) => err.statusCode === 404);
+    });
+
+    // NOTE: unlike category/service/package/partner's deleteXById, this currently
+    // has NO reference checks at all - Order.items[].product, TemporaryOrder.
+    // items[].product, User.cart[].product, Coupon.applicableProducts[], and
+    // Testimonial.product can all still point at a Product after it's deleted.
+    // This test documents the CURRENT behavior; it is not an endorsement of it.
+    it("currently deletes unconditionally, even if the product is referenced by historical orders", async (t) => {
+      t.mock.method(productRepo, "findProductById", async () => buildProduct({ image: null, gallery: [] }));
+      let deleteCalled = false;
+      t.mock.method(productRepo, "deleteProductById", async () => {
+        deleteCalled = true;
+      });
+
+      const result = await productService.deleteProductById(id().toString());
+
+      assert.equal(result.success, true);
+      assert.equal(deleteCalled, true);
+    });
+  });
+
+  describe("listPublicProducts / getPublicProductBySlug", () => {
+    it("listPublicProducts always forces isActive:true regardless of the filters passed in", async (t) => {
+      let capturedFilters;
+      t.mock.method(productRepo, "findProducts", async (args) => {
+        capturedFilters = args.filters;
+        return { data: [], total: 0, page: 1, limit: 12, totalPages: 0 };
+      });
+
+      await productService.listPublicProducts({ filters: { isActive: false } });
+
+      assert.equal(capturedFilters.isActive, true);
+    });
+
+    it("getPublicProductBySlug treats an inactive product as not found publicly", async (t) => {
+      t.mock.method(productRepo, "findProductBySlug", async () => buildProduct({ isActive: false }));
+      await assert.rejects(() => productService.getPublicProductBySlug("neaktivan"), (err) => err.statusCode === 404);
+    });
+
+    it("getPublicProductBySlug throws 404 for a nonexistent slug", async (t) => {
+      t.mock.method(productRepo, "findProductBySlug", async () => null);
+      await assert.rejects(() => productService.getPublicProductBySlug("nepostojeci"), (err) => err.statusCode === 404);
+    });
+  });
 });

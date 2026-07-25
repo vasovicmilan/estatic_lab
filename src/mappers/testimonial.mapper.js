@@ -42,40 +42,45 @@ function isRegisteredUser(testimonial) {
   return Boolean(testimonial.user);
 }
 
+// A raw (unpopulated) Mongoose ObjectId is ALSO typeof "object", so a plain typeof
+// check can't tell it apart from a real populated document - checking for .name (a
+// field only the real document has) is the actual distinguishing signal. Without
+// this, an unpopulated ref would take the "populated" branch below and silently
+// produce empty-string naziv/slug instead of just falling back to the raw id.
 function getServiceInfo(testimonial) {
   if (!testimonial.service) return null;
-  if (typeof testimonial.service === "object") {
+  if (typeof testimonial.service === "object" && typeof testimonial.service.name === "string") {
     return {
       id: testimonial.service._id.toString(),
       naziv: testimonial.service.name || "",
       slug: testimonial.service.slug || "",
     };
   }
-  return { id: testimonial.service.toString() };
+  return { id: testimonial.service._id?.toString() || testimonial.service.toString() };
 }
 
 function getPackageInfo(testimonial) {
   if (!testimonial.package) return null;
-  if (typeof testimonial.package === "object") {
+  if (typeof testimonial.package === "object" && typeof testimonial.package.name === "string") {
     return {
       id: testimonial.package._id.toString(),
       naziv: testimonial.package.name || "",
       slug: testimonial.package.slug || "",
     };
   }
-  return { id: testimonial.package.toString() };
+  return { id: testimonial.package._id?.toString() || testimonial.package.toString() };
 }
 
 function getProductInfo(testimonial) {
   if (!testimonial.product) return null;
-  if (typeof testimonial.product === "object") {
+  if (typeof testimonial.product === "object" && typeof testimonial.product.name === "string") {
     return {
       id: testimonial.product._id.toString(),
       naziv: testimonial.product.name || "",
       slug: testimonial.product.slug || "",
     };
   }
-  return { id: testimonial.product.toString() };
+  return { id: testimonial.product._id?.toString() || testimonial.product.toString() };
 }
 
 export function mapTestimonialsForAdminList(testimonials = []) {

@@ -78,17 +78,23 @@ function getWorkingHoursRaw(employee) {
 }
 
 // employee.expert links to a public Expert profile (see expert.mapper.js) - bio/photo
-// live there, this is just a "linked to" pointer for the admin screen
+// live there, this is just a "linked to" pointer for the admin screen.
+// A raw (unpopulated) Mongoose ObjectId is ALSO typeof "object", so a plain typeof
+// check can't tell it apart from a real populated Expert document - checking for
+// .firstName (a field only the real document has) is the actual distinguishing
+// signal. Without this, an unpopulated expert ref would take the "populated"
+// branch below and silently produce a blank imePrezime instead of just falling
+// back to the raw id.
 function getLinkedExpert(employee) {
   if (!employee.expert) return null;
-  if (typeof employee.expert === "object") {
+  if (typeof employee.expert === "object" && typeof employee.expert.firstName === "string") {
     return {
       id: employee.expert._id.toString(),
       imePrezime: `${employee.expert.firstName || ""} ${employee.expert.lastName || ""}`.trim(),
       slug: employee.expert.slug,
     };
   }
-  return { id: employee.expert.toString() };
+  return { id: employee.expert._id?.toString() || employee.expert.toString() };
 }
 
 export function mapEmployeeForAdminShort(employee) {

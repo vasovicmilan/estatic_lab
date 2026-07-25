@@ -7,6 +7,7 @@ import packagePurchaseRepo from "../../../src/repositories/package-purchase.repo
 import employeeRepo from "../../../src/repositories/employee.repository.js";
 import partnerRepo from "../../../src/repositories/partner.repository.js";
 import roleService from "../../../src/services/role.service.js";
+import productService from "../../../src/services/product.service.js";
 import * as userService from "../../../src/services/user.service.js";
 import { buildUser, buildRole, id } from "../../helpers/factories.js";
 
@@ -316,6 +317,194 @@ describe("user.service", () => {
       // across multiple anonymized accounts
       assert.deepEqual(update.$unset, { googleId: 1 });
       assert.ok(!("googleId" in update.$set));
+    });
+  });
+
+  describe("cart", () => {
+    describe("getCartItemCount - the nav badge, never throws", () => {
+      it("sums quantities across all cart lines", async (t) => {
+        t.mock.method(userRepo, "findUserCartQuantities", async () => ({ cart: [{ quantity: 2 }, { quantity: 3 }] }));
+        assert.equal(await userService.getCartItemCount(id().toString()), 5);
+      });
+
+      it("returns 0 (not throw) for a nonexistent user", async (t) => {
+        t.mock.method(userRepo, "findUserCartQuantities", async () => null);
+        assert.equal(await userService.getCartItemCount(id().toString()), 0);
+      });
+
+      it("returns 0 (not throw) when no userId is given at all", async () => {
+        assert.equal(await userService.getCartItemCount(null), 0);
+      });
+    });
+
+    describe("addToCart", () => {
+      it("throws if the variant doesn't exist or isn't active (via getVariationRaw)", async (t) => {
+        t.mock.method(productService, "getVariationRaw", async () => {
+          const err = new Error("Varijanta ne postoji");
+          err.statusCode = 404;
+          throw err;
+        });
+
+        await assert.rejects(
+          () => userService.addToCart(id().toString(), { productId: id().toString(), variantId: id().toString() }),
+          (err) => err.statusCode === 404
+        );
+      });
+
+      it("rejects a zero or negative quantity", async () => {
+        await assert.rejects(
+          () => userService.addToCart(id().toString(), { productId: id().toString(), variantId: id().toString(), quantity: 0 }),
+          (err) => err.statusCode === 400
+        );
+      });
+
+      it("increments an existing matching line instead of adding a duplicate", async (t) => {
+        t.mock.method(productService, "getVariationRaw", async () => ({}));
+        let incrementCalled = false;
+        t.mock.method(userRepo, "incrementCartItemQuantity", async () => {
+          incrementCalled = true;
+          return { cart: [] };
+        });
+        let addCalled = false;
+        t.mock.method(userRepo, "addCartItem", async () => {
+          addCalled = true;
+        });
+        t.mock.method(userRepo, "findUserById", async () => buildUser({ cart: [] }));
+
+        await userService.addToCart(id().toString(), { productId: id().toString(), variantId: id().toString(), quantity: 2 });
+
+        assert.equal(incrementCalled, true);
+        assert.equal(addCalled, false, "should not add a second line when incrementing the existing one succeeded");
+      });
+
+      it("adds a new line only when no existing line was incremented", async (t) => {
+        t.mock.method(productService, "getVariationRaw", async () => ({}));
+        t.mock.method(userRepo, "incrementCartItemQuantity", async () => null);
+        let addCalled = false;
+        t.mock.method(userRepo, "addCartItem", async () => {
+          addCalled = true;
+        });
+        t.mock.method(userRepo, "findUserById", async () => buildUser({ cart: [] }));
+
+        await userService.addToCart(id().toString(), { productId: id().toString(), variantId: id().toString() });
+
+        assert.equal(addCalled, true);
+      });
+    });
+
+    describe("updateCartItemQuantity", () => {
+      it("removes the line entirely when quantity is 0 or negative", async (t) => {
+        let removeCalled = false;
+        t.mock.method(userRepo, "removeCartItem", async () => {
+          removeCalled = true;
+        });
+        t.mock.method(userRepo, "findUserById", async () => buildUser({ cart: [] }));
+
+        await userService.updateCartItemQuantity(id().toString(), id().toString(), 0);
+
+        assert.equal(removeCalled, true);
+      });
+
+      it("throws 404 when the cart item doesn't exist", async (t) => {
+        t.mock.method(userRepo, "setCartItemQuantity", async () => null);
+        await assert.rejects(
+          () => userService.updateCartItemQuantity(id().toString(), id().toString(), 3),
+          (err) => err.statusCode === 404
+        );
+      });
+    });
+
+    describe("mergeGuestCart", () => {
+      it("sums quantities for a matching (product, variant) pair instead of duplicating the line", async (t) => {
+        const productId = id();
+        const existingUser = buildUser({ cart: [{ product: productId, variant: null, quantity: 2 }] });
+        t.mock.method(userRepo, "findUserById", async () => existingUser);
+        let replacedWith;
+        t.mock.method(userRepo, "replaceCart", async (userId, cart) => {
+          replacedWith = cart;
+        });
+
+        await userService.mergeGuestCart(existingUser._id.toString(), [{ productId: productId.toString(), variantId: null, quantity: 3 }]);
+
+        assert.equal(replacedWith.length, 1);
+        assert.equal(replacedWith[0].quantity, 5);
+      });
+
+      it("appends a new line for a product/variant the user's cart doesn't already have", async (t) => {
+        const existingUser = buildUser({ cart: [] });
+        t.mock.method(userRepo, "findUserById", async () => existingUser);
+        let replacedWith;
+        t.mock.method(userRepo, "replaceCart", async (userId, cart) => {
+          replacedWith = cart;
+        });
+
+        await userService.mergeGuestCart(existingUser._id.toString(), [{ productId: id().toString(), variantId: id().toString(), quantity: 1 }]);
+
+        assert.equal(replacedWith.length, 1);
+      });
+
+      it("skips the merge entirely (no repo call) when the guest cart is empty", async (t) => {
+        let replaceCalled = false;
+        t.mock.method(userRepo, "replaceCart", async () => {
+          replaceCalled = true;
+        });
+        t.mock.method(userRepo, "findUserById", async () => buildUser({ cart: [] }));
+
+        await userService.mergeGuestCart(id().toString(), []);
+
+        assert.equal(replaceCalled, false);
+      });
+
+      it("throws 404 when the target user doesn't exist", async (t) => {
+        t.mock.method(userRepo, "findUserById", async () => null);
+        await assert.rejects(
+          () => userService.mergeGuestCart(id().toString(), [{ productId: id().toString(), quantity: 1 }]),
+          (err) => err.statusCode === 404
+        );
+      });
+    });
+  });
+
+  describe("addresses", () => {
+    describe("addAddress", () => {
+      it("rejects an incomplete address (buildAddressRecord returns null)", async () => {
+        await assert.rejects(() => userService.addAddress(id().toString(), {}), (err) => err.statusCode === 400);
+      });
+
+      it("sets the just-added address as default when isDefault is requested", async (t) => {
+        t.mock.method(userRepo, "addAddressToUser", async () => {});
+        const addressInput = { city: "Novi Sad", postalCode: "21000", street: "Ulica", number: "1", isDefault: true };
+        // the service matches on the address's real computed hash, so compute it the
+        // same way (buildAddressRecord) rather than using an arbitrary mismatched value
+        const { buildAddressRecord } = await import("../../../src/utils/address.util.js");
+        const expectedHash = buildAddressRecord(addressInput).hash;
+        t.mock.method(userRepo, "findUserById", async () => buildUser({ addresses: [{ _id: id(), hash: expectedHash }] }));
+        let defaultSetFor;
+        t.mock.method(userRepo, "setDefaultAddress", async (userId, addressId) => {
+          defaultSetFor = addressId;
+        });
+
+        await userService.addAddress(id().toString(), addressInput);
+
+        assert.ok(defaultSetFor);
+      });
+    });
+
+    describe("setDefaultAddress", () => {
+      it("throws 404 when the address doesn't exist on this user", async (t) => {
+        t.mock.method(userRepo, "setDefaultAddress", async () => null);
+        await assert.rejects(
+          () => userService.setDefaultAddress(id().toString(), id().toString()),
+          (err) => err.statusCode === 404
+        );
+      });
+    });
+
+    describe("getAddresses", () => {
+      it("throws 404 for a nonexistent user", async (t) => {
+        t.mock.method(userRepo, "findUserById", async () => null);
+        await assert.rejects(() => userService.getAddresses(id().toString()), (err) => err.statusCode === 404);
+      });
     });
   });
 });
