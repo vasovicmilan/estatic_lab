@@ -103,6 +103,17 @@ export async function countCoupons(filters = {}, { session } = {}) {
   return Coupon.countDocuments(buildCouponFilter(filters)).session(session || null);
 }
 
+// Called when a Service or Package is deleted - Coupon.applicableServices[]/
+// applicablePackages[] is current targeting config, not a promise to anyone, so
+// it's safe to auto-clean rather than block the deletion on it.
+export async function pullServiceFromAllCoupons(serviceId, { session } = {}) {
+  return Coupon.updateMany({ applicableServices: serviceId }, { $pull: { applicableServices: serviceId } }, { session });
+}
+
+export async function pullPackageFromAllCoupons(packageId, { session } = {}) {
+  return Coupon.updateMany({ applicablePackages: packageId }, { $pull: { applicablePackages: packageId } }, { session });
+}
+
 export default {
   createCoupon,
   findCouponById,
@@ -113,4 +124,6 @@ export default {
   updateCouponById,
   deleteCouponById,
   countCoupons,
+  pullServiceFromAllCoupons,
+  pullPackageFromAllCoupons,
 };

@@ -55,12 +55,11 @@ describe("coupon.validator", () => {
       assert.ok(res.body.errors.discountValue);
     });
 
-    it("rejects a missing validUntil", async () => {
+    it("accepts a missing validUntil - a coupon with no end date never expires", async () => {
       const agent = buildValidatorHarness(validateCouponCreate);
       const { validUntil, ...rest } = validCoupon();
       const res = await agent.post("/test").send(rest);
-      assert.equal(res.status, 400);
-      assert.ok(res.body.errors.validUntil);
+      assert.equal(res.status, 200);
     });
 
     it("rejects a malformed validUntil date", async () => {

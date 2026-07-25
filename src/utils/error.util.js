@@ -86,8 +86,6 @@ export function wrapError(error) {
     process.env.NODE_ENV === "development"
       ? { originalMessage: error.message, stack: error.stack }
       : null;
-      
-  console.error(error);
   
   return new AppError("Interna greška servera", error.statusCode || 500, {
     isOperational: false,

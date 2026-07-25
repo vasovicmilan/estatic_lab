@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import packagePurchaseRepo from "../../../src/repositories/package-purchase.repository.js";
 import packageRepo from "../../../src/repositories/package.repository.js";
 import couponService from "../../../src/services/coupon.service.js";
+import serviceService from "../../../src/services/service.service.js";
 import * as packagePurchaseService from "../../../src/services/package-purchase.service.js";
 import { buildPackagePurchase, buildPackage, buildCoupon, id } from "../../helpers/factories.js";
 
@@ -21,6 +22,7 @@ describe("package-purchase.service", () => {
         totalPrice: 10000,
       });
       t.mock.method(packageRepo, "findPackageById", async () => pkg);
+      t.mock.method(serviceService, "getServiceByIdRaw", async () => null);
 
       let created;
       t.mock.method(packagePurchaseRepo, "createPackagePurchase", async (data) => {
@@ -51,6 +53,7 @@ describe("package-purchase.service", () => {
     it("lets the admin override the price paid instead of using the package's own price", async (t) => {
       const pkg = buildPackage({ totalPrice: 10000 });
       t.mock.method(packageRepo, "findPackageById", async () => pkg);
+      t.mock.method(serviceService, "getServiceByIdRaw", async () => null);
       let created;
       t.mock.method(packagePurchaseRepo, "createPackagePurchase", async (data) => {
         created = { ...data, _id: id() };
@@ -67,6 +70,7 @@ describe("package-purchase.service", () => {
     it("applies a coupon and redeems it, discounting pricePaid", async (t) => {
       const pkg = buildPackage({ totalPrice: 10000 });
       t.mock.method(packageRepo, "findPackageById", async () => pkg);
+      t.mock.method(serviceService, "getServiceByIdRaw", async () => null);
       const coupon = buildCoupon({ discountType: "fixed", discountValue: 2000 });
       t.mock.method(couponService, "validateCouponForPackagePurchase", async () => ({ coupon, discountAmount: 2000 }));
       const redeemMock = t.mock.method(couponService, "redeemCoupon", async () => {});

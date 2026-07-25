@@ -10,7 +10,7 @@ function validPurchase(overrides = {}) {
   return {
     user: new mongoose.Types.ObjectId(),
     package: new mongoose.Types.ObjectId(),
-    items: [{ service: serviceId, servicePackageId, sessionsTotal: 3, sessionsUsed: 0, sessionsReserved: 0 }],
+    items: [{ service: serviceId, servicePackageId, sessionsTotal: 3, sessionsUsed: 0, sessionsReserved: 0, unitPrice: 3000 }],
     originalPrice: 9000,
     discountApplied: 0,
     pricePaid: 9000,
@@ -83,10 +83,10 @@ describe("package-purchase.repository", () => {
       const variantB = new mongoose.Types.ObjectId(); // a DIFFERENT variant of the SAME service
 
       await packagePurchaseRepo.createPackagePurchase(
-        validPurchase({ user: userId, items: [{ service: serviceId, servicePackageId: variantA, sessionsTotal: 2, sessionsUsed: 0 }] })
+        validPurchase({ user: userId, items: [{ service: serviceId, servicePackageId: variantA, sessionsTotal: 2, sessionsUsed: 0, unitPrice: 3000 }] })
       );
       await packagePurchaseRepo.createPackagePurchase(
-        validPurchase({ user: userId, items: [{ service: serviceId, servicePackageId: variantB, sessionsTotal: 2, sessionsUsed: 0 }] })
+        validPurchase({ user: userId, items: [{ service: serviceId, servicePackageId: variantB, sessionsTotal: 2, sessionsUsed: 0, unitPrice: 3000 }] })
       );
 
       const result = await packagePurchaseRepo.findActivePurchasesForUserAndVariant(userId, variantA);
@@ -102,7 +102,7 @@ describe("package-purchase.repository", () => {
         validPurchase({
           user: userId,
           status: "cancelled",
-          items: [{ service: new mongoose.Types.ObjectId(), servicePackageId, sessionsTotal: 2, sessionsUsed: 0 }],
+          items: [{ service: new mongoose.Types.ObjectId(), servicePackageId, sessionsTotal: 2, sessionsUsed: 0, unitPrice: 3000 }],
         })
       );
 
