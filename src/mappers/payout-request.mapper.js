@@ -8,10 +8,21 @@ export function translateStatus(status) {
 }
 
 function getEarnerName(request) {
-  const earner = request.earnerType === "employee" ? request.employee : request.partner;
-  if (earner && typeof earner === "object" && earner.userId && typeof earner.userId === "object") {
-    const first = earner.userId.firstName || "";
-    const last = earner.userId.lastName || "";
+  if (request.earnerType === "employee") {
+    if (request.employeeSnapshot?.name) return request.employeeSnapshot.name;
+    const employee = request.employee;
+    if (employee && typeof employee === "object" && employee.userId && typeof employee.userId === "object") {
+      const first = employee.userId.firstName || "";
+      const last = employee.userId.lastName || "";
+      return `${first} ${last}`.trim() || "Nepoznato";
+    }
+    return "Nepoznato";
+  }
+
+  const partner = request.partner;
+  if (partner && typeof partner === "object" && partner.userId && typeof partner.userId === "object") {
+    const first = partner.userId.firstName || "";
+    const last = partner.userId.lastName || "";
     return `${first} ${last}`.trim() || "Nepoznato";
   }
   return "Nepoznato";

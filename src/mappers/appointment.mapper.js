@@ -93,7 +93,7 @@ export function mapAppointmentForAdminDetail(appointment) {
     status: translateStatus(appointment.status),
     statusRaw: appointment.status,
     terapeutId: appointment.employee?._id?.toString() || appointment.employee?.toString() || null,
-    terapeut: appointment.employee ? getEmployeeName(appointment.employee) : null,
+    terapeut: appointment.employeeSnapshot?.name || (appointment.employee ? getEmployeeName(appointment.employee) : null),
     dodeljenTerapeut: appointment.assignedTo ? getEmployeeName(appointment.assignedTo) : null,
     napomena: appointment.note || null,
     popust: appointment.discountApplied ? `${appointment.discountApplied} RSD` : null,
@@ -186,11 +186,10 @@ export function mapAppointmentForUserDetail(appointment) {
     },
     status: translateStatus(appointment.status),
     statusRaw: appointment.status,
-    terapeut: appointment.employee
-      ? getEmployeeName(appointment.employee)
-      : appointment.assignedTo
-      ? getEmployeeName(appointment.assignedTo)
-      : "Nije dodeljen",
+    terapeut: appointment.employeeSnapshot?.name
+      || (appointment.employee ? getEmployeeName(appointment.employee) : null)
+      || (appointment.assignedTo ? getEmployeeName(appointment.assignedTo) : null)
+      || "Nije dodeljen",
     napomena: appointment.note || null,
     popust: appointment.discountApplied ? `${appointment.discountApplied} RSD` : null,
     konacnaCena: appointment.finalPrice != null ? `${appointment.finalPrice.toFixed(2)} RSD` : null,

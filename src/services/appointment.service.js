@@ -5,6 +5,7 @@ import userService from "./user.service.js";
 import serviceService from "./service.service.js";
 import couponService from "./coupon.service.js";
 import availabilityService from "./availability.service.js";
+import employeeService from "./employee.service.js";
 import packagePurchaseService from "./package-purchase.service.js";
 import { mapAppointment, mapAppointmentsForAdminList } from "../mappers/appointment.mapper.js";
 import { getAllowedStatuses } from "../models/appointment-status-transitions.js";
@@ -207,6 +208,7 @@ export async function bookAppointment(input) {
       }
 
       const discountApplied = couponResult?.discountAmount || 0;
+      const employeeName = chosenEmployeeId ? await employeeService.getEmployeeNameById(chosenEmployeeId) : null;
 
       created = await appointmentRepo.createAppointment(
         {
@@ -219,6 +221,7 @@ export async function bookAppointment(input) {
             price: variant.totalPrice,
           },
           employee: chosenEmployeeId,
+          employeeSnapshot: { name: employeeName },
           assignedTo: null,
           assignedBy: null,
           assignedAt: null,
@@ -367,8 +370,11 @@ export async function reassignAppointment(appointmentId, newEmployeeId, actorId)
   const overlapping = await appointmentRepo.findOverlappingAppointments(newEmployeeId, appointment.startTime, appointment.endTime, appointmentId);
   if (overlapping.length > 0) badRequest("Izabrani terapeut nije dostupan u ovom terminu");
 
+  const employeeName = await employeeService.getEmployeeNameById(newEmployeeId);
+
   const updated = await appointmentRepo.updateAppointmentById(appointmentId, {
     employee: newEmployeeId,
+    employeeSnapshot: { name: employeeName },
     assignedTo: null,
     assignedBy: "admin",
     assignedAt: new Date(),

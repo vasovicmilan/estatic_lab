@@ -6,6 +6,7 @@ import userService from "../../../src/services/user.service.js";
 import serviceService from "../../../src/services/service.service.js";
 import availabilityService from "../../../src/services/availability.service.js";
 import couponService from "../../../src/services/coupon.service.js";
+import employeeService from "../../../src/services/employee.service.js";
 import packagePurchaseService from "../../../src/services/package-purchase.service.js";
 import * as appointmentService from "../../../src/services/appointment.service.js";
 import {
@@ -170,6 +171,7 @@ describe("appointment.service", () => {
       const appointment = buildAppointment();
       t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
       t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+      t.mock.method(employeeService, "getEmployeeNameById", async () => "Nova Terapeutkinja");
       let updatePayload;
       t.mock.method(appointmentRepo, "updateAppointmentById", async (appId, patch) => {
         updatePayload = patch;
@@ -180,6 +182,7 @@ describe("appointment.service", () => {
 
       assert.equal(updatePayload.assignedBy, "admin");
       assert.equal(updatePayload.assignedTo, null);
+      assert.equal(updatePayload.employeeSnapshot.name, "Nova Terapeutkinja");
     });
   });
 });
@@ -254,6 +257,7 @@ describe("bookAppointment - employee assignment", () => {
     t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
     t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
     t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+    t.mock.method(employeeService, "getEmployeeNameById", async () => "Izabrana Terapeutkinja");
 
     let createdPayload;
     t.mock.method(appointmentRepo, "createAppointment", async (data) => {
@@ -271,6 +275,7 @@ describe("bookAppointment - employee assignment", () => {
 
     assert.equal(String(createdPayload.employee), String(chosen._id));
     assert.equal(createdPayload.assignedTo, null);
+    assert.equal(createdPayload.employeeSnapshot.name, "Izabrana Terapeutkinja");
   });
 });
 

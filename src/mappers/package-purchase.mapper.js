@@ -1,16 +1,34 @@
 import { formatDateTime, formatDate } from "../utils/date.time.util.js";
 
+// Same fix as package.mapper.js's isPopulatedService: a raw (unpopulated) Mongoose
+// ObjectId is ALSO typeof "object", so a plain typeof check can't tell it apart from
+// a real populated document - checking for a field only the real document has (.name
+// for Service, .firstName for User) is the actual distinguishing signal.
+function isPopulatedService(service) {
+  return Boolean(service && typeof service === "object" && typeof service.name === "string");
+}
+
 function getServiceName(item) {
-  if (item.service && typeof item.service === "object") return item.service.name;
-  return null;
+  return isPopulatedService(item.service) ? item.service.name : null;
 }
 
 function getVariantName(item) {
-  if (item.service && typeof item.service === "object" && Array.isArray(item.service.packages)) {
+  if (isPopulatedService(item.service) && Array.isArray(item.service.packages)) {
     const variant = item.service.packages.find((p) => String(p._id) === String(item.servicePackageId));
     return variant?.name || null;
   }
   return null;
+}
+
+// item.user is the live populated User doc when the query populated this path and
+// the referenced User still exists. userSnapshot is frozen at purchase time (see
+// package-purchase.service.js's createPurchaseForUser), so it's tried first - it
+// survives both a truly-unpopulated ref AND a User that's since been anonymized or
+// deleted (see user.service.js's anonymizeUser/deleteUser).
+function getUserName(p) {
+  if (p.userSnapshot?.firstName) return `${p.userSnapshot.firstName} ${p.userSnapshot.lastName || ""}`.trim();
+  if (p.user && typeof p.user === "object" && p.user.firstName) return `${p.user.firstName} ${p.user.lastName || ""}`.trim();
+  return p.user?.toString() || null;
 }
 
 function mapItems(items = []) {
@@ -51,7 +69,7 @@ export function mapPackagePurchaseForAdminDetail(p) {
   if (!p) return null;
   return {
     id: p._id.toString(),
-    korisnik: p.user?.firstName ? `${p.user.firstName} ${p.user.lastName || ""}`.trim() : p.user?.toString(),
+    korisnik: getUserName(p),
     korisnikEmail: p.user?.email || null,
     paket: p.package?.name || p.package?.toString(),
     stavke: mapItems(p.items),

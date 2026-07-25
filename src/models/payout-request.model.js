@@ -13,6 +13,12 @@ const PayoutRequestSchema = new Schema(
       ref: "Employee",
       default: null,
     },
+    // frozen at creation time - only set when earnerType is "employee". Same
+    // reasoning as CommissionEntry.employeeSnapshot: this is a financial record
+    // and must stay readable even after the Employee document is deleted.
+    employeeSnapshot: {
+      name: { type: String, default: null },
+    },
     partner: {
       type: Schema.Types.ObjectId,
       ref: "Partner",

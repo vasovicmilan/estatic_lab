@@ -186,7 +186,13 @@ describe("employee.service", () => {
       t.mock.method(payoutRequestRepo, "countPayoutRequests", async () => 0);
     }
 
-    it("deletes an employee with no remaining references at all", async (t) => {
+    it("deletes an employee with only settled history - terminal appointments, earned/paid commissions and payouts", async (t) => {
+      // These all return 0 because the *filters themselves* only ever match
+      // active/pending states (statusIn: ["pending","confirmed"] for appointments,
+      // status: "pending" for commissions, statusIn: ["requested","approved"] for
+      // payouts) - a mock returning 0 here specifically proves settled/terminal
+      // records don't block, since real terminal records would never match these
+      // filters in the first place.
       t.mock.method(employeeRepo, "findEmployeeById", async () => buildEmployee());
       t.mock.method(employeeRepo, "deleteEmployeeById", async () => true);
       mockNoReferences(t);
@@ -195,9 +201,7 @@ describe("employee.service", () => {
       assert.equal(result.success, true);
     });
 
-    it("refuses to delete an employee with any appointment, even a terminal (completed) one", async (t) => {
-      // Unlike Service, Employee has no name snapshot on Appointment - so this blocks
-      // regardless of status, not just pending/confirmed.
+    it("refuses to delete an employee with a pending or confirmed appointment", async (t) => {
       t.mock.method(employeeRepo, "findEmployeeById", async () => buildEmployee());
       mockNoReferences(t);
       t.mock.method(appointmentRepo, "countAppointments", async () => 1);
@@ -205,7 +209,7 @@ describe("employee.service", () => {
       await assert.rejects(() => employeeService.deleteEmployeeById(id().toString()), (err) => err.statusCode === 400);
     });
 
-    it("refuses to delete an employee with commission history", async (t) => {
+    it("refuses to delete an employee with a commission still pending (not yet earned/reversed)", async (t) => {
       t.mock.method(employeeRepo, "findEmployeeById", async () => buildEmployee());
       mockNoReferences(t);
       t.mock.method(commissionEntryRepo, "countCommissionEntries", async () => 1);
@@ -213,7 +217,7 @@ describe("employee.service", () => {
       await assert.rejects(() => employeeService.deleteEmployeeById(id().toString()), (err) => err.statusCode === 400);
     });
 
-    it("refuses to delete an employee with payout history", async (t) => {
+    it("refuses to delete an employee with a payout still requested/approved (not yet paid/rejected)", async (t) => {
       t.mock.method(employeeRepo, "findEmployeeById", async () => buildEmployee());
       mockNoReferences(t);
       t.mock.method(payoutRequestRepo, "countPayoutRequests", async () => 1);

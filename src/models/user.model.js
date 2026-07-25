@@ -76,7 +76,12 @@ const UserSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["guest", "pending", "active", "inactive", "suspended"],
+      // "deleted" = anonymized via user.service.js's anonymizeUser - the account
+      // requested erasure, PII is scrubbed, but the document/ObjectId is kept so
+      // every historical Order/Appointment/PackagePurchase reference stays valid.
+      // Deliberately distinct from "suspended" (banned for cause by admin) and
+      // "inactive" (self-paused via deactivateAccount, PII untouched, reversible).
+      enum: ["guest", "pending", "active", "inactive", "suspended", "deleted"],
       default: "pending",
       required: true,
       index: true,

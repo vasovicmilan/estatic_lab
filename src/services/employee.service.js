@@ -151,25 +151,26 @@ export async function deleteEmployeeById(employeeId) {
   const existing = await employeeRepo.findEmployeeById(employeeId);
   if (!existing) notFound("Zaposleni");
 
-  // Unlike Service (which survives via Appointment.variant's snapshot), Employee has
-  // no name snapshot anywhere it's referenced - Appointment, CommissionEntry, and
-  // PayoutRequest all just hold a bare ObjectId. Deleting it would make even fully
-  // historical records permanently unreadable ("who did this? who was this paid to?").
-  // So this blocks on ANY reference, regardless of status - deactivate instead.
-  const [appointmentCount, commissionCount, payoutCount] = await Promise.all([
-    appointmentRepo.countAppointments({ employeeId }),
-    commissionEntryRepo.countCommissionEntries({ employee: employeeId }),
-    payoutRequestRepo.countPayoutRequests({ employee: employeeId }),
+  // Now that Appointment/CommissionEntry/PayoutRequest all snapshot the employee's
+  // name at creation time (see appointment.service.js/commission.service.js/
+  // payout-request.service.js), Employee can follow the same tiered policy as
+  // Service: block only on active commitments, not on settled history. A terminal
+  // appointment or a paid/reversed commission/payout stays perfectly readable via
+  // its snapshot even after this document is gone.
+  const [activeAppointments, pendingCommissions, unresolvedPayouts] = await Promise.all([
+    appointmentRepo.countAppointments({ employeeId, statusIn: ["pending", "confirmed"] }),
+    commissionEntryRepo.countCommissionEntries({ employee: employeeId, status: "pending" }),
+    payoutRequestRepo.countPayoutRequests({ employee: employeeId, statusIn: ["requested", "approved"] }),
   ]);
 
-  if (appointmentCount > 0) {
-    badRequest("Zaposleni ima termine (prošle ili buduće) - ne može biti obrisan. Deaktivirajte nalog umesto brisanja.");
+  if (activeAppointments > 0) {
+    badRequest("Zaposleni ima termine na čekanju ili potvrđene termine - ne može biti obrisan. Deaktivirajte nalog umesto brisanja.");
   }
-  if (commissionCount > 0) {
-    badRequest("Zaposleni ima istoriju provizija - ne može biti obrisan. Deaktivirajte nalog umesto brisanja.");
+  if (pendingCommissions > 0) {
+    badRequest("Zaposleni ima proviziju na čekanju koja još nije obračunata - ne može biti obrisan. Deaktivirajte nalog umesto brisanja.");
   }
-  if (payoutCount > 0) {
-    badRequest("Zaposleni ima istoriju isplata - ne može biti obrisan. Deaktivirajte nalog umesto brisanja.");
+  if (unresolvedPayouts > 0) {
+    badRequest("Zaposleni ima zahtev za isplatu koji još nije rešen - ne može biti obrisan. Deaktivirajte nalog umesto brisanja.");
   }
 
   await employeeRepo.deleteEmployeeById(employeeId);
@@ -203,6 +204,21 @@ export async function getEmployeeOptionsForService(serviceId) {
   }));
 }
 
+// Used to populate a point-in-time snapshot (Appointment.employeeSnapshot,
+// CommissionEntry.employeeSnapshot, PayoutRequest.employeeSnapshot) - resolved once
+// at the moment the record is created/assigned so it survives the Employee document
+// being deleted later. Returns null rather than throwing on a missing employee,
+// since callers use this defensively (a snapshot that ends up null just means "no
+// name available", not a reason to fail the booking/commission/payout itself).
+export async function getEmployeeNameById(employeeId) {
+  if (!employeeId) return null;
+  const employee = await employeeRepo.findEmployeeById(employeeId, {
+    populateFields: [{ path: "userId", select: "firstName lastName" }],
+  });
+  if (!employee) return null;
+  return `${employee.userId?.firstName || ""} ${employee.userId?.lastName || ""}`.trim() || null;
+}
+
 export async function getAllEmployeeUserIds() {
   return employeeRepo.findAllEmployeeUserIds();
 }
@@ -220,5 +236,6 @@ export default {
   findEmployeesByServiceRaw,
   getEmployeeByIdRaw,
   getEmployeeOptionsForService,
+  getEmployeeNameById,
   getAllEmployeeUserIds,
 };

@@ -1,4 +1,9 @@
 import userRepo from "../repositories/user.repository.js";
+import orderRepo from "../repositories/order.repository.js";
+import appointmentRepo from "../repositories/appointment.repository.js";
+import packagePurchaseRepo from "../repositories/package-purchase.repository.js";
+import employeeRepo from "../repositories/employee.repository.js";
+import partnerRepo from "../repositories/partner.repository.js";
 import roleService from "./role.service.js";
 import productService from "./product.service.js";
 import { mapUser, mapUsersForAdminList, mapUserForAdminDetail, mapUserForProfile, mapUserAddresses, mapUserCart } from "../mappers/user.mapper.js";
@@ -265,6 +270,48 @@ export async function deactivateAccount(userId, password) {
   return { email: user.email, firstName: user.firstName };
 }
 
+/**
+ * The "right to be forgotten" path - scrubs PII on the live account but keeps the
+ * document and its ObjectId, so every historical Order/Appointment/PackagePurchase
+ * reference stays valid (those already carry their own contactSnapshot/userSnapshot
+ * of what the name actually was at the time, so nothing there needs to change).
+ * This is deliberately NOT the same as deactivateAccount above: deactivation just
+ * pauses login and leaves all PII intact and reversible; this permanently destroys
+ * it and is not reversible. Distinct from a true hard delete (deleteUser below),
+ * which removes the document entirely and is only safe when nothing references it.
+ */
+export async function anonymizeUser(userId) {
+  if (!userId) validationError("userId");
+  const existing = await userRepo.findUserById(userId);
+  if (!existing) notFound("Korisnik");
+
+  await userRepo.updateUserById(userId, {
+    $set: {
+      status: "deleted",
+      firstName: "Obrisan",
+      lastName: "korisnik",
+      email: `obrisan-${userId}@obrisan.local`,
+      phone: { hash: null, encrypted: null },
+      addresses: [],
+      cart: [],
+      avatar: "",
+      password: null,
+      resetToken: null,
+      resetTokenExpiration: null,
+      confirmToken: null,
+      confirmTokenExpiration: null,
+    },
+    // googleId is sparse+unique - setting it to null would still count as "has the
+    // field" for a sparse index, so a second anonymized account would collide on
+    // uniqueness. $unset removes it entirely, matching how an account without
+    // Google sign-in never had the field in the first place.
+    $unset: { googleId: 1 },
+  });
+
+  logInfo("User anonymized", { userId });
+  return { success: true };
+}
+
 export async function updateProfile(userId, data) {
   if (!userId) validationError("userId");
   const allowed = { firstName: data.firstName, lastName: data.lastName };
@@ -310,10 +357,34 @@ export async function findUserById(userId) {
   return userRepo.findUserById(userId, { populateFields: [{ path: "role", select: "name" }] });
 }
 
+/**
+ * True hard delete - only safe for an account with genuinely no historical
+ * footprint (never ordered, never booked, never bought a package, no staff/partner
+ * link). Testimonial is deliberately NOT checked here: it stores its own `name`
+ * field independent of the User account (see testimonial.model.js), so a dangling
+ * `user` ref there doesn't lose any readable information. For an account that DOES
+ * have history, use anonymizeUser above instead - erasing PII without breaking
+ * every Order/Appointment/PackagePurchase that references it.
+ */
 export async function deleteUser(userId) {
   if (!userId) validationError("userId");
   const existing = await userRepo.findUserById(userId);
   if (!existing) notFound("Korisnik");
+
+  const [orderCount, appointmentCount, purchaseCount, employee, partner] = await Promise.all([
+    orderRepo.countOrders({ user: userId }),
+    appointmentRepo.countAppointments({ userId }),
+    packagePurchaseRepo.countPackagePurchases({ user: userId }),
+    employeeRepo.findEmployeeByUserId(userId),
+    partnerRepo.findPartnerByUserId(userId),
+  ]);
+
+  if (orderCount > 0) badRequest("Korisnik ima porudžbine - ne može biti trajno obrisan. Koristite brisanje ličnih podataka umesto toga.");
+  if (appointmentCount > 0) badRequest("Korisnik ima termine - ne može biti trajno obrisan. Koristite brisanje ličnih podataka umesto toga.");
+  if (purchaseCount > 0) badRequest("Korisnik ima kupljene pakete - ne može biti trajno obrisan. Koristite brisanje ličnih podataka umesto toga.");
+  if (employee) badRequest("Korisnik je povezan sa profilom zaposlenog - prvo uklonite tu vezu.");
+  if (partner) badRequest("Korisnik je povezan sa profilom partnera - prvo uklonite tu vezu.");
+
   await userRepo.deleteUserById(userId);
   logInfo("User deleted", { userId });
   return { success: true };
@@ -483,6 +554,7 @@ export default {
   resetPassword,
   changePassword,
   deactivateAccount,
+  anonymizeUser,
   updateProfile,
   updateUserStatus,
   updateUserRole,

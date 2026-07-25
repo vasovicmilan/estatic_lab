@@ -78,6 +78,23 @@ describe("appointment.mapper", () => {
       const mapped = mapAppointmentForUserDetail(appointment);
       assert.equal(mapped.terapeut, "Nije dodeljen");
     });
+
+    it("falls back to employeeSnapshot.name when the Employee was deleted (populate resolves to null)", () => {
+      // populate() sets the field to null when the referenced doc is gone - the old
+      // `appointment.employee ? getEmployeeName(...) : null` guard would have skipped
+      // the snapshot entirely in this exact case, since appointment.employee itself
+      // is falsy once that happens.
+      const appointment = buildAppointment({ employee: null, employeeSnapshot: { name: "Bivša Terapeutkinja" } });
+      const mapped = mapAppointmentForAdminDetail(appointment);
+      assert.equal(mapped.terapeut, "Bivša Terapeutkinja");
+    });
+
+    it("prefers employeeSnapshot.name over a live populate when both are present", () => {
+      const employee = buildEmployee({ userId: buildUser({ firstName: "Marko", lastName: "Markovic" }) });
+      const appointment = buildAppointment({ employee, employeeSnapshot: { name: "Neko Drugi" } });
+      const mapped = mapAppointmentForAdminDetail(appointment);
+      assert.equal(mapped.terapeut, "Neko Drugi");
+    });
   });
 
   describe("price formatting", () => {

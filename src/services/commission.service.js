@@ -37,6 +37,10 @@ export async function recordAppointmentCommissions(appointmentId) {
     entries.push({
       earnerType: "employee",
       employee: appointment.employee._id,
+      // reuse the appointment's own snapshot rather than re-resolving it - it's the
+      // same employee, frozen at the same moment (booking/reassignment), no reason
+      // to duplicate the lookup or risk it drifting from what the appointment shows.
+      employeeSnapshot: appointment.employeeSnapshot,
       sourceType: "appointment",
       appointment: appointment._id,
       baseValue: employeeBaseValue,

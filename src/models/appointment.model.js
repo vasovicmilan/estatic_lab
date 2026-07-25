@@ -30,6 +30,14 @@ const AppointmentSchema = new Schema(
       index: true,
       default: null,
     },
+    // frozen whenever `employee` is actually set - at booking time if the customer
+    // picked someone, or in reassignAppointment if assigned/reassigned later. Same
+    // reasoning as contactSnapshot below: the Employee document can later be
+    // deleted (see employee.service.js's deleteEmployeeById), but "who performed
+    // this" must stay readable in the appointment's own history regardless.
+    employeeSnapshot: {
+      name: { type: String, default: null },
+    },
 
     startTime: {
       type: Date,

@@ -2,6 +2,7 @@ import eventEmitter from "../events/event.emitter.js";
 import packagePurchaseRepo from "../repositories/package-purchase.repository.js";
 import packageService from "./package.service.js";
 import serviceService from "./service.service.js";
+import userService from "./user.service.js";
 import couponService from "./coupon.service.js";
 import { mapPackagePurchasesForAdminList, mapPackagePurchaseForAdminDetail } from "../mappers/package-purchase.mapper.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
@@ -80,8 +81,11 @@ export async function createPurchaseForUser(userId, packageId, adminId, { expire
     unitPrice: item.unitPrice,
   }));
 
+  const buyer = await userService.findUserById(userId);
+
   const created = await packagePurchaseRepo.createPackagePurchase({
     user: userId,
+    userSnapshot: { firstName: buyer?.firstName || null, lastName: buyer?.lastName || null },
     package: packageId,
     items,
     originalPrice,

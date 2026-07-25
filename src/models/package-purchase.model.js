@@ -23,6 +23,13 @@ const PackagePurchaseItemSchema = new Schema(
 const PackagePurchaseSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    // frozen at purchase time, same reasoning as Order/Appointment's
+    // contactSnapshot - the User document can be anonymized or deleted later (see
+    // user.service.js), but a financial record must stay readable regardless.
+    userSnapshot: {
+      firstName: { type: String, default: null },
+      lastName: { type: String, default: null },
+    },
     package: { type: Schema.Types.ObjectId, ref: "Package", required: true },
     items: { type: [PackagePurchaseItemSchema], required: true },
 

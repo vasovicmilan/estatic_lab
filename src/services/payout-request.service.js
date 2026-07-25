@@ -1,6 +1,7 @@
 import eventEmitter from "../events/event.emitter.js";
 import payoutRepo from "../repositories/payout-request.repository.js";
 import commissionService from "./commission.service.js";
+import employeeService from "./employee.service.js";
 import { mapPayoutRequestsForAdminList, mapPayoutRequestForAdminDetail } from "../mappers/payout-request.mapper.js";
 import { validationError, notFound, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
@@ -41,7 +42,9 @@ export async function requestPayout(earnerType, earnerId, amount) {
 
   const created = await payoutRepo.createPayoutRequest({
     earnerType,
-    ...(earnerType === "employee" ? { employee: earnerId } : { partner: earnerId }),
+    ...(earnerType === "employee"
+      ? { employee: earnerId, employeeSnapshot: { name: await employeeService.getEmployeeNameById(earnerId) } }
+      : { partner: earnerId }),
     amount,
     status: "requested",
   });
@@ -64,7 +67,9 @@ export async function recordPayoutByAdmin(earnerType, earnerId, amount, adminNot
 
   const created = await payoutRepo.createPayoutRequest({
     earnerType,
-    ...(earnerType === "employee" ? { employee: earnerId } : { partner: earnerId }),
+    ...(earnerType === "employee"
+      ? { employee: earnerId, employeeSnapshot: { name: await employeeService.getEmployeeNameById(earnerId) } }
+      : { partner: earnerId }),
     amount,
     status: "paid",
     approvedAt: new Date(),

@@ -71,6 +71,7 @@ export async function countPackagePurchases(filters = {}, { session } = {}) {
   if (filters.package) filter.package = filters.package;
   if (filters.service) filter["items.service"] = filters.service;
   if (filters.status) filter.status = filters.status;
+  if (filters.user) filter.user = filters.user;
   return PackagePurchase.countDocuments(filter).session(session || null);
 }
 

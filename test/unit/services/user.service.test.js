@@ -1,6 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import userRepo from "../../../src/repositories/user.repository.js";
+import orderRepo from "../../../src/repositories/order.repository.js";
+import appointmentRepo from "../../../src/repositories/appointment.repository.js";
+import packagePurchaseRepo from "../../../src/repositories/package-purchase.repository.js";
+import employeeRepo from "../../../src/repositories/employee.repository.js";
+import partnerRepo from "../../../src/repositories/partner.repository.js";
 import roleService from "../../../src/services/role.service.js";
 import * as userService from "../../../src/services/user.service.js";
 import { buildUser, buildRole, id } from "../../helpers/factories.js";
@@ -228,6 +233,89 @@ describe("user.service", () => {
     it("deleteUser throws 404 if the user doesn't exist", async (t) => {
       t.mock.method(userRepo, "findUserById", async () => null);
       await assert.rejects(() => userService.deleteUser("missing"), (err) => err.statusCode === 404);
+    });
+
+    function mockNoUserReferences(t) {
+      t.mock.method(orderRepo, "countOrders", async () => 0);
+      t.mock.method(appointmentRepo, "countAppointments", async () => 0);
+      t.mock.method(packagePurchaseRepo, "countPackagePurchases", async () => 0);
+      t.mock.method(employeeRepo, "findEmployeeByUserId", async () => null);
+      t.mock.method(partnerRepo, "findPartnerByUserId", async () => null);
+    }
+
+    it("deletes a user with no historical footprint at all", async (t) => {
+      t.mock.method(userRepo, "findUserById", async () => buildUser());
+      t.mock.method(userRepo, "deleteUserById", async () => true);
+      mockNoUserReferences(t);
+
+      const result = await userService.deleteUser(id().toString());
+      assert.equal(result.success, true);
+    });
+
+    it("refuses to hard-delete a user with orders", async (t) => {
+      t.mock.method(userRepo, "findUserById", async () => buildUser());
+      mockNoUserReferences(t);
+      t.mock.method(orderRepo, "countOrders", async () => 1);
+      await assert.rejects(() => userService.deleteUser(id().toString()), (err) => err.statusCode === 400);
+    });
+
+    it("refuses to hard-delete a user with appointments", async (t) => {
+      t.mock.method(userRepo, "findUserById", async () => buildUser());
+      mockNoUserReferences(t);
+      t.mock.method(appointmentRepo, "countAppointments", async () => 1);
+      await assert.rejects(() => userService.deleteUser(id().toString()), (err) => err.statusCode === 400);
+    });
+
+    it("refuses to hard-delete a user with package purchases", async (t) => {
+      t.mock.method(userRepo, "findUserById", async () => buildUser());
+      mockNoUserReferences(t);
+      t.mock.method(packagePurchaseRepo, "countPackagePurchases", async () => 1);
+      await assert.rejects(() => userService.deleteUser(id().toString()), (err) => err.statusCode === 400);
+    });
+
+    it("refuses to hard-delete a user linked to an employee profile", async (t) => {
+      t.mock.method(userRepo, "findUserById", async () => buildUser());
+      mockNoUserReferences(t);
+      t.mock.method(employeeRepo, "findEmployeeByUserId", async () => ({ _id: id() }));
+      await assert.rejects(() => userService.deleteUser(id().toString()), (err) => err.statusCode === 400);
+    });
+
+    it("refuses to hard-delete a user linked to a partner profile", async (t) => {
+      t.mock.method(userRepo, "findUserById", async () => buildUser());
+      mockNoUserReferences(t);
+      t.mock.method(partnerRepo, "findPartnerByUserId", async () => ({ _id: id() }));
+      await assert.rejects(() => userService.deleteUser(id().toString()), (err) => err.statusCode === 400);
+    });
+  });
+
+  describe("anonymizeUser", () => {
+    it("throws 404 if the user doesn't exist", async (t) => {
+      t.mock.method(userRepo, "findUserById", async () => null);
+      await assert.rejects(() => userService.anonymizeUser("missing"), (err) => err.statusCode === 404);
+    });
+
+    it("scrubs PII and sets status to deleted, keeping the document itself", async (t) => {
+      t.mock.method(userRepo, "findUserById", async () => buildUser());
+      let update;
+      t.mock.method(userRepo, "updateUserById", async (userId, patch) => {
+        update = patch;
+        return buildUser();
+      });
+
+      const userId = id().toString();
+      const result = await userService.anonymizeUser(userId);
+
+      assert.equal(result.success, true);
+      assert.equal(update.$set.status, "deleted");
+      assert.equal(update.$set.firstName, "Obrisan");
+      assert.equal(update.$set.email, `obrisan-${userId}@obrisan.local`);
+      assert.equal(update.$set.password, null);
+      assert.deepEqual(update.$set.addresses, []);
+      // googleId must be $unset, not set to null - it's a sparse+unique index, and
+      // an explicit null still counts as "has the field", which would collide
+      // across multiple anonymized accounts
+      assert.deepEqual(update.$unset, { googleId: 1 });
+      assert.ok(!("googleId" in update.$set));
     });
   });
 });

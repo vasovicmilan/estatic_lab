@@ -16,6 +16,14 @@ const CommissionEntrySchema = new Schema(
       ref: "Employee",
       default: null,
     },
+    // frozen at creation time (from Appointment.employeeSnapshot, since that's who
+    // actually performed the work this commission is for) - only set when
+    // earnerType is "employee". Same reasoning as Appointment.contactSnapshot: the
+    // Employee document can later be deleted (see employee.service.js's
+    // deleteEmployeeById), but a financial record must stay readable forever.
+    employeeSnapshot: {
+      name: { type: String, default: null },
+    },
     partner: {
       type: Schema.Types.ObjectId,
       ref: "Partner",
