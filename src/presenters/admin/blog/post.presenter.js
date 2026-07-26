@@ -10,6 +10,7 @@ export function preparePostListData(result, query = {}) {
       { key: "kategorije", label: "Kategorije" },
       { key: "pregledi", label: "Pregledi" },
       { key: "datumObjave", label: "Objavljeno" },
+      { key: "zakazanoZa", label: "Zakazano za" },
     ],
     actions: [
       { type: "view", url: "/admin/blog/detalji/", icon: "eye" },
@@ -41,6 +42,7 @@ export function preparePostListData(result, query = {}) {
           options: [
             { value: "", label: "Svi statusi" },
             { value: "draft", label: "Nacrt" },
+            { value: "scheduled", label: "Zakazano" },
             { value: "published", label: "Objavljeno" },
             { value: "archived", label: "Arhivirano" },
           ],
@@ -117,6 +119,7 @@ export function preparePostDetailsData(post) {
         type: "table",
         rows: [
           { label: "Objavljeno", value: post.datumObjave || "Nije objavljeno" },
+          ...(post.zakazanoZa ? [{ label: "Zakazano za", value: post.zakazanoZa }] : []),
           { label: "Kreiran", value: post.vreme.kreiran },
           { label: "Ažuriran", value: post.vreme.azuriran },
         ],
@@ -196,9 +199,18 @@ export function preparePostFormData(post = null, { categoryOptions = [], tagOpti
       value: values.status,
       options: [
         { value: "draft", label: "Nacrt" },
+        { value: "scheduled", label: "Zakazano" },
         { value: "published", label: "Objavljeno" },
         { value: "archived", label: "Arhivirano" },
       ],
+    },
+    {
+      name: "scheduledFor",
+      label: "Zakazano za",
+      type: "datetime-local",
+      width: 6,
+      value: values.scheduledFor || "",
+      help: "Obavezno samo ako je status 'Zakazano'. Post se automatski objavljuje u ovo vreme.",
     },
     {
       name: "coverImage",

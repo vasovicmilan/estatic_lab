@@ -7,6 +7,7 @@ import {
   runExpiredTemporaryOrderCleanup,
 } from "./report-jobs.js";
 import { runCommissionGracePeriodSweep } from "./commission-jobs.js";
+import { runPublishScheduledPosts } from "./post-jobs.js";
 import { logInfo } from "../utils/logger.util.js";
 
 const TIMEZONE = process.env.CRON_TIMEZONE || "Europe/Belgrade";
@@ -47,6 +48,11 @@ export function startScheduler() {
   // the hour (the 14-day withdrawal window doesn't move minute to minute), but
   // frequent enough that a partner's payable balance doesn't sit stale for long.
   cron.schedule("0 2 * * *", runCommissionGracePeriodSweep, { timezone: TIMEZONE });
+
+  // Scheduled blog post publisher - every 5 minutes. Frequent enough that a post
+  // scheduled for e.g. 09:00 actually goes live close to 09:00 rather than sitting
+  // "scheduled" for up to an hour, without being so frequent it's pointless load.
+  cron.schedule("*/5 * * * *", runPublishScheduledPosts, { timezone: TIMEZONE });
 
   logInfo(`[cron] Scheduler started (timezone: ${TIMEZONE})`);
 }

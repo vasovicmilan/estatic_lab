@@ -55,6 +55,14 @@ export async function incrementPostViews(id, { session } = {}) {
   return Post.findByIdAndUpdate(id, { $inc: { views: 1 } }, { returnDocument: "after", session }).lean();
 }
 
+// Used by jobs/post-jobs.js's cron sweep. Deliberately NOT .lean() and NOT a bulk
+// updateMany - returns real Mongoose documents so the caller can set status and call
+// .save() on each one, which runs the pre("save") hook in post.model.js that sets
+// publishedAt. A bulk update would skip that hook and duplicate its logic here.
+export async function findDueScheduledPosts({ session } = {}) {
+  return Post.find({ status: "scheduled", scheduledFor: { $lte: new Date() } }).session(session || null);
+}
+
 export async function updatePostById(id, updateData, { session } = {}) {
   return Post.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
@@ -87,6 +95,7 @@ export default {
   findPostBySlug,
   findPosts,
   incrementPostViews,
+  findDueScheduledPosts,
   updatePostById,
   deletePostById,
   countPosts,

@@ -34,7 +34,21 @@ export const validatePostCreate = [
 
   body("status")
     .optional()
-    .isIn(["draft", "published", "archived"]).withMessage("Neispravan status"),
+    .isIn(["draft", "scheduled", "published", "archived"]).withMessage("Neispravan status"),
+
+  body("scheduledFor")
+    .optional({ values: "falsy" })
+    .isISO8601().withMessage("Neispravan format datuma zakazivanja")
+    .custom((value, { req }) => {
+      if (req.body.status === "scheduled" && new Date(value) <= new Date()) {
+        throw new Error("Datum zakazivanja mora biti u budućnosti");
+      }
+      return true;
+    }),
+
+  body("scheduledFor")
+    .if(body("status").equals("scheduled"))
+    .notEmpty().withMessage("Zakazan post mora imati datum objave"),
 
   booleanishField("isIndexable", true),
 
@@ -63,7 +77,21 @@ export const validatePostUpdate = [
 
   body("status")
     .optional()
-    .isIn(["draft", "published", "archived"]).withMessage("Neispravan status"),
+    .isIn(["draft", "scheduled", "published", "archived"]).withMessage("Neispravan status"),
+
+  body("scheduledFor")
+    .optional({ values: "falsy" })
+    .isISO8601().withMessage("Neispravan format datuma zakazivanja")
+    .custom((value, { req }) => {
+      if (req.body.status === "scheduled" && new Date(value) <= new Date()) {
+        throw new Error("Datum zakazivanja mora biti u budućnosti");
+      }
+      return true;
+    }),
+
+  body("scheduledFor")
+    .if(body("status").equals("scheduled"))
+    .notEmpty().withMessage("Zakazan post mora imati datum objave"),
 
   body("coverImageDesc")
     .custom(requireImageDescIfUploaded((req) => req.uploadedFiles?.coverImage)),
@@ -75,7 +103,17 @@ export const validatePostStatus = [
   body("status")
     .trim()
     .notEmpty().withMessage("Status je obavezan")
-    .isIn(["draft", "published", "archived"]).withMessage("Neispravan status"),
+    .isIn(["draft", "scheduled", "published", "archived"]).withMessage("Neispravan status"),
+
+  body("scheduledFor")
+    .if(body("status").equals("scheduled"))
+    .notEmpty().withMessage("Zakazan post mora imati datum objave")
+    .bail()
+    .isISO8601().withMessage("Neispravan format datuma zakazivanja")
+    .custom((value) => {
+      if (new Date(value) <= new Date()) throw new Error("Datum zakazivanja mora biti u budućnosti");
+      return true;
+    }),
 
   collectValidationErrors,
 ];
