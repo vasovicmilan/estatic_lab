@@ -23,16 +23,38 @@
     video: [
       { name: "video.url", label: "URL videa", type: "text" },
       { name: "video.title", label: "Naslov videa", type: "text" },
+      { name: "video.thumbnail", label: "Slika za pregled (thumbnail) - opciono", type: "text" },
+      { name: "video.isExternal", label: "Eksterni video (YouTube/Vimeo link, ne fajl sa servera)", type: "checkbox" },
     ],
     list: [
       { name: "items", label: "Stavke (jedna po redu)", type: "textarea" },
       { name: "ordered", label: "Numerisana lista", type: "checkbox" },
     ],
-    // table and cards are handled separately below (buildTableBuilder/
-    // buildCardsBuilder) - they need their own add/remove-row UI, not a flat
-    // list of scalar inputs like everything above.
+    callout: [
+      { name: "title", label: "Naslov (opciono)", type: "text" },
+      { name: "text", label: "Tekst", type: "textarea" },
+      { name: "variant", label: "Stil (info/success/warning/danger)", type: "text" },
+    ],
+    cta: [
+      { name: "title", label: "Naslov", type: "text" },
+      { name: "text", label: "Tekst", type: "textarea" },
+      { name: "button.text", label: "Tekst dugmeta", type: "text" },
+      { name: "button.url", label: "Link dugmeta", type: "text" },
+    ],
+    serviceReference: [
+      { name: "title", label: "Naslov", type: "text" },
+      { name: "text", label: "Kratak opis", type: "textarea" },
+      { name: "button.text", label: "Tekst linka", type: "text" },
+      { name: "button.url", label: "Link ka usluzi", type: "text" },
+    ],
+    divider: [],
+    // table, cards, gallery, and faq are handled separately below (buildTableBuilder/
+    // buildCardsBuilder/buildGalleryBuilder/buildFaqBuilder) - they need their own
+    // add/remove-row UI, not a flat list of scalar inputs like everything above.
     table: [],
     cards: [],
+    gallery: [],
+    faq: [{ name: "title", label: "Naslov sekcije (opciono)", type: "text" }],
   };
 
   // Shown in the "add block" dropdown and each block's own header - purely a
@@ -43,11 +65,17 @@
     paragraph: "Pasus",
     heading: "Naslov",
     image: "Slika",
+    gallery: "Galerija slika",
     quote: "Citat",
     list: "Lista",
     video: "Video",
     table: "Tabela",
     cards: "Kartice",
+    callout: "Istaknuta napomena",
+    faq: "Pitanja i odgovori (FAQ)",
+    cta: "Poziv na akciju (CTA)",
+    divider: "Razdvajač",
+    serviceReference: "Link ka usluzi",
   };
 
   function getNested(obj, dottedName) {
@@ -347,6 +375,152 @@
     }));
   }
 
+  // ---- Gallery builder: add/remove images, each with img path + alt text. ----
+
+  function addGalleryImage(builderEl, imgData) {
+    const list = builderEl.querySelector("[data-gallery-list]");
+
+    const itemEl = document.createElement("div");
+    itemEl.className = "border rounded p-2 mb-2";
+    itemEl.dataset.galleryImage = "";
+
+    const header = document.createElement("div");
+    header.className = "d-flex justify-content-end mb-1";
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "btn btn-sm btn-outline-danger";
+    removeBtn.innerHTML = '<i class="bi bi-trash"></i>';
+    removeBtn.dataset.galleryImageRemove = "";
+    header.appendChild(removeBtn);
+    itemEl.appendChild(header);
+
+    const imgInput = document.createElement("input");
+    imgInput.type = "text";
+    imgInput.className = "form-control form-control-sm mb-1";
+    imgInput.placeholder = "Putanja do slike (iz galerije)";
+    imgInput.value = imgData?.img ?? "";
+    imgInput.dataset.galleryImgPath = "";
+    itemEl.appendChild(imgInput);
+
+    const descInput = document.createElement("input");
+    descInput.type = "text";
+    descInput.className = "form-control form-control-sm";
+    descInput.placeholder = "Opis slike (alt tekst)";
+    descInput.value = imgData?.imgDesc ?? "";
+    descInput.dataset.galleryImgDesc = "";
+    itemEl.appendChild(descInput);
+
+    list.appendChild(itemEl);
+  }
+
+  function buildGalleryBuilder(blockData) {
+    const builder = document.createElement("div");
+    builder.dataset.galleryBuilder = "";
+
+    const list = document.createElement("div");
+    list.dataset.galleryList = "";
+    builder.appendChild(list);
+
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "btn btn-sm btn-outline-primary mt-1";
+    addBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Dodaj sliku';
+    addBtn.dataset.galleryImageAdd = "";
+    builder.appendChild(addBtn);
+
+    (blockData?.gallery || []).forEach((img) => addGalleryImage(builder, img));
+
+    builder.addEventListener("click", (e) => {
+      if (e.target.closest("[data-gallery-image-add]")) {
+        addGalleryImage(builder, null);
+      } else if (e.target.closest("[data-gallery-image-remove]")) {
+        e.target.closest("[data-gallery-image]").remove();
+      }
+    });
+
+    return builder;
+  }
+
+  function readGalleryBuilder(builderEl) {
+    return Array.from(builderEl.querySelectorAll("[data-gallery-image]")).map((el) => ({
+      img: el.querySelector("[data-gallery-img-path]").value.trim(),
+      imgDesc: el.querySelector("[data-gallery-img-desc]").value.trim(),
+    }));
+  }
+
+  // ---- FAQ builder: add/remove question/answer pairs. ----
+
+  function addFaqItem(builderEl, itemData) {
+    const list = builderEl.querySelector("[data-faq-list]");
+
+    const itemEl = document.createElement("div");
+    itemEl.className = "border rounded p-2 mb-2";
+    itemEl.dataset.faqItem = "";
+
+    const header = document.createElement("div");
+    header.className = "d-flex justify-content-end mb-1";
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "btn btn-sm btn-outline-danger";
+    removeBtn.innerHTML = '<i class="bi bi-trash"></i>';
+    removeBtn.dataset.faqItemRemove = "";
+    header.appendChild(removeBtn);
+    itemEl.appendChild(header);
+
+    const questionInput = document.createElement("input");
+    questionInput.type = "text";
+    questionInput.className = "form-control form-control-sm mb-1";
+    questionInput.placeholder = "Pitanje";
+    questionInput.value = itemData?.question ?? "";
+    questionInput.dataset.faqQuestion = "";
+    itemEl.appendChild(questionInput);
+
+    const answerInput = document.createElement("textarea");
+    answerInput.className = "form-control form-control-sm";
+    answerInput.rows = 2;
+    answerInput.placeholder = "Odgovor";
+    answerInput.value = itemData?.answer ?? "";
+    answerInput.dataset.faqAnswer = "";
+    itemEl.appendChild(answerInput);
+
+    list.appendChild(itemEl);
+  }
+
+  function buildFaqBuilder(blockData) {
+    const builder = document.createElement("div");
+    builder.dataset.faqBuilder = "";
+
+    const list = document.createElement("div");
+    list.dataset.faqList = "";
+    builder.appendChild(list);
+
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "btn btn-sm btn-outline-primary mt-1";
+    addBtn.innerHTML = '<i class="bi bi-plus-lg"></i> Dodaj pitanje';
+    addBtn.dataset.faqItemAdd = "";
+    builder.appendChild(addBtn);
+
+    (blockData?.faqItems || []).forEach((item) => addFaqItem(builder, item));
+
+    builder.addEventListener("click", (e) => {
+      if (e.target.closest("[data-faq-item-add]")) {
+        addFaqItem(builder, null);
+      } else if (e.target.closest("[data-faq-item-remove]")) {
+        e.target.closest("[data-faq-item]").remove();
+      }
+    });
+
+    return builder;
+  }
+
+  function readFaqBuilder(builderEl) {
+    return Array.from(builderEl.querySelectorAll("[data-faq-item]")).map((el) => ({
+      question: el.querySelector("[data-faq-question]").value.trim(),
+      answer: el.querySelector("[data-faq-answer]").value.trim(),
+    }));
+  }
+
   function buildBlock(type, blockData) {
     const block = document.createElement("div");
     block.className = "border rounded p-3 mb-2";
@@ -379,6 +553,16 @@
       block.appendChild(buildTableBuilder(blockData));
     } else if (type === "cards") {
       block.appendChild(buildCardsBuilder(blockData));
+    } else if (type === "gallery") {
+      block.appendChild(buildGalleryBuilder(blockData));
+    } else if (type === "faq") {
+      // faq also has a plain "title" field (section heading) via BLOCK_FIELDS,
+      // rendered above the question/answer builder
+      const fieldsRow = document.createElement("div");
+      fieldsRow.className = "row";
+      (BLOCK_FIELDS.faq || []).forEach((field) => fieldsRow.appendChild(buildFieldInput(field, blockData)));
+      block.appendChild(fieldsRow);
+      block.appendChild(buildFaqBuilder(blockData));
     } else {
       const fieldsRow = document.createElement("div");
       fieldsRow.className = "row";
@@ -399,6 +583,16 @@
     }
     if (type === "cards") {
       obj.cards = readCardsBuilder(block.querySelector("[data-cards-builder]"));
+      return obj;
+    }
+    if (type === "gallery") {
+      obj.gallery = readGalleryBuilder(block.querySelector("[data-gallery-builder]"));
+      return obj;
+    }
+    if (type === "faq") {
+      obj.faqItems = readFaqBuilder(block.querySelector("[data-faq-builder]"));
+      const titleInput = block.querySelector('[data-block-field="title"]');
+      if (titleInput) obj.title = titleInput.value;
       return obj;
     }
 

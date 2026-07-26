@@ -59,6 +59,7 @@ function renderContentBlocks(blocks = []) {
       tekst: block.text || null,
       nivo: block.level || null,
       slika: block.image ? { url: block.image.img, alt: block.image.imgDesc } : null,
+      galerija: Array.isArray(block.gallery) ? block.gallery.map((img) => ({ url: img.img, alt: img.imgDesc })) : null,
       video: block.video || null,
       stavke: block.items || null,
       uredjeno: Boolean(block.ordered),
@@ -66,6 +67,10 @@ function renderContentBlocks(blocks = []) {
       kolone: block.table?.columns || null,
       redovi: block.table?.rows || null,
       kartice: block.cards || null,
+      naslovBloka: block.title || null,
+      varijanta: block.variant || "info",
+      faqStavke: block.faqItems || null,
+      dugme: block.button?.text || block.button?.url ? { tekst: block.button.text, url: block.button.url } : null,
     }));
 }
 

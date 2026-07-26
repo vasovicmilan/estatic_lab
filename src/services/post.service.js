@@ -22,6 +22,7 @@ function validateBasicData(data) {
   if (!data.excerpt) validationError("excerpt");
   if (!data.coverImage?.img) validationError("coverImage");
   if (!data.author) validationError("author");
+  if (data.status === "scheduled" && !data.scheduledFor) validationError("scheduledFor");
 }
 
 export async function listPosts({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
@@ -87,11 +88,18 @@ export async function updatePostById(postId, data) {
   return getPostById(updated._id);
 }
 
-export async function updatePostStatus(postId, status) {
+export async function updatePostStatus(postId, status, { scheduledFor } = {}) {
   if (!postId) validationError("postId");
-  if (!["draft", "published", "archived"].includes(status)) badRequest("Nepoznat status posta");
+  if (!["draft", "scheduled", "published", "archived"].includes(status)) badRequest("Nepoznat status posta");
+  if (status === "scheduled") {
+    if (!scheduledFor) validationError("scheduledFor");
+    if (new Date(scheduledFor) <= new Date()) badRequest("Datum zakazivanja mora biti u budućnosti");
+  }
 
-  const updated = await postRepo.updatePostById(postId, { status });
+  const patch = { status };
+  if (status === "scheduled") patch.scheduledFor = scheduledFor;
+
+  const updated = await postRepo.updatePostById(postId, patch);
   if (!updated) notFound("Post");
   logInfo("Post status changed", { postId, status });
   return getPostById(updated._id);

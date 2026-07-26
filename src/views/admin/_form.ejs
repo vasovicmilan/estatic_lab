@@ -58,7 +58,7 @@
                   </div>
                 <% } %>
 
-                <% if (field.type === 'text' || field.type === 'email' || field.type === 'number' || field.type === 'date' || field.type === 'url' || field.type === 'tel') { %>
+                <% if (field.type === 'text' || field.type === 'email' || field.type === 'number' || field.type === 'date' || field.type === 'datetime-local' || field.type === 'url' || field.type === 'tel') { %>
                   <input type="<%= field.type %>"
                          class="form-control <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'is-invalid' : '' %>"
                          id="<%= field.name %>"

@@ -52,6 +52,7 @@ function buildPostPayload(req, existing = {}) {
   data.tags = Array.isArray(req.body.tags) ? req.body.tags.filter(Boolean) : req.body.tags ? [req.body.tags] : [];
   data.seo = parseJsonField(req.body.seo, existing.seo || {});
   data.isIndexable = parseCheckbox(req.body.isIndexable, existing.isIndexable ?? true);
+  data.scheduledFor = req.body.scheduledFor ? req.body.scheduledFor : null;
 
   return data;
 }
@@ -208,7 +209,7 @@ export async function updatePost(req, res, next) {
 export async function updatePostStatus(req, res, next) {
   try {
     const { postId } = req.params;
-    await postService.updatePostStatus(postId, req.body.status);
+    await postService.updatePostStatus(postId, req.body.status, { scheduledFor: req.body.scheduledFor || null });
     logInfo(`[updatePostStatus] Status posta #${postId} promenjen na "${req.body.status}"`, { postId, adminId: req.session?.user?.id });
     return flashAndRedirect(req, res, "success", "Status posta je uspešno promenjen", `/admin/blog/detalji/${postId}`);
   } catch (error) {

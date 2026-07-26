@@ -66,6 +66,47 @@
             </div>
           <% }) %>
         </div>
+      <% } else if (block.tip === 'gallery' && block.galerija && block.galerija.length > 0) { %>
+        <div class="row g-2 mb-3">
+          <% block.galerija.forEach(function(img) { %>
+            <div class="col-4">
+              <img src="<%= img.url %>" alt="<%= img.alt || '' %>" class="img-fluid rounded">
+            </div>
+          <% }) %>
+        </div>
+      <% } else if (block.tip === 'callout') { %>
+        <div class="alert alert-<%= block.varijanta %> mb-3">
+          <% if (block.naslovBloka) { %><h5 class="alert-heading"><%= block.naslovBloka %></h5><% } %>
+          <p class="mb-0"><%= block.tekst %></p>
+        </div>
+      <% } else if (block.tip === 'faq' && block.faqStavke && block.faqStavke.length > 0) { %>
+        <div class="mb-3">
+          <% if (block.naslovBloka) { %><h3><%= block.naslovBloka %></h3><% } %>
+          <% block.faqStavke.forEach(function(item) { %>
+            <details class="mb-2">
+              <summary class="fw-semibold"><%= item.question %></summary>
+              <p class="mt-2 mb-0"><%= item.answer %></p>
+            </details>
+          <% }) %>
+        </div>
+      <% } else if (block.tip === 'cta') { %>
+        <div class="card bg-light border-0 p-4 mb-3 text-center">
+          <% if (block.naslovBloka) { %><h4><%= block.naslovBloka %></h4><% } %>
+          <% if (block.tekst) { %><p><%= block.tekst %></p><% } %>
+          <% if (block.dugme && block.dugme.url) { %>
+            <a href="<%= block.dugme.url %>" class="btn btn-primary mx-auto" style="width: fit-content;"><%= block.dugme.tekst || 'Zakažite termin' %></a>
+          <% } %>
+        </div>
+      <% } else if (block.tip === 'serviceReference') { %>
+        <div class="card border-primary p-3 mb-3">
+          <% if (block.naslovBloka) { %><h6 class="mb-1"><%= block.naslovBloka %></h6><% } %>
+          <% if (block.tekst) { %><p class="small mb-2"><%= block.tekst %></p><% } %>
+          <% if (block.dugme && block.dugme.url) { %>
+            <a href="<%= block.dugme.url %>" class="small"><%= block.dugme.tekst || 'Pogledajte uslugu' %> &rarr;</a>
+          <% } %>
+        </div>
+      <% } else if (block.tip === 'divider') { %>
+        <hr class="my-4">
       <% } %>
     <% }) %>
 

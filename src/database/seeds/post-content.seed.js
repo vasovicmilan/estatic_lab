@@ -176,9 +176,14 @@ const postDefs = [
       keywords: ["esma favorit", "esma favorit novi sad", "esma tretmani"],
     },
     content: blocks([
+      { type: "heading", level: 2, text: "Jedan aparat, više terapijskih modaliteta" },
       {
         type: "paragraph",
         text: "ESMA Favorit je profesionalni fizioterapeutski aparat koji u jednom sistemu kombinuje nekoliko različitih tehnologija - električnu stimulaciju mišića, limfnu drenažu strujom, mikrostrujnu terapiju, ultrazvuk i svetlosnu (lasersku) biostimulaciju. Umesto da klijent prolazi kroz nekoliko odvojenih uređaja, terapeut na jednom sistemu bira kombinaciju modaliteta koja odgovara cilju tretmana.",
+      },
+      {
+        type: "paragraph",
+        text: "Ovakav pristup ima praktičnu prednost: terapeut može da kombinuje modalitete unutar jedne seanse - na primer miostimulaciju za tonus i limfnu drenažu za cirkulaciju u istom terminu - umesto da klijent zakazuje nekoliko odvojenih poseta za svaki efekat pojedinačno.",
       },
       { type: "heading", level: 2, text: "Šta aparat kombinuje" },
       {
@@ -190,14 +195,50 @@ const postDefs = [
           { icon: "bi bi-soundwave", title: "Ultrazvuk", text: "Ultrazvučni piling i podrška regeneraciji kože." },
         ],
       },
+      { type: "heading", level: 2, text: "Kako terapeut bira kombinaciju" },
       {
         type: "paragraph",
         text: "Terapeut pre prvog tretmana radi kratku procenu - pita o cilju (tonus, opuštanje, nega kože), zdravstvenom stanju i eventualnim kontraindikacijama, i na osnovu toga predlaže kombinaciju i broj tretmana. Serija se najčešće preporučuje jer su efekti kumulativni, a pojedinačni tretman je uvod, ne konačan rezultat.",
       },
       {
+        type: "table",
+        table: {
+          columns: ["Cilj", "Modaliteti koji se najčešće kombinuju"],
+          rows: [
+            { label: "Tonus i oblikovanje tela", values: ["Miostimulacija + limfna drenaža"] },
+            { label: "Nega i tonus lica", values: ["Mikrostrujna terapija + ultrazvuk"] },
+            { label: "Opuštanje i cirkulacija nogu", values: ["Limfna drenaža + laserska biostimulacija"] },
+            { label: "Sveobuhvatan wellness tretman", values: ["Kombinacija sva četiri modaliteta, prilagođena redom i intenzitetom"] },
+          ],
+        },
+      },
+      {
+        type: "callout",
+        variant: "info",
+        title: "Serija, ne pojedinačni tretman",
+        text: "ESMA Favorit tretmani deluju kumulativno. Terapeut retko predlaže samo jedan tretman - uobičajena preporuka je serija od nekoliko seansi, uz prilagođavanje nakon prvih poseta na osnovu reakcije organizma.",
+      },
+      {
         type: "quote",
         text: "Cilj nije da nabijemo što više tehnologije u jedan tretman, već da izaberemo ono što konkretnoj osobi zaista treba.",
         meta: "Estetik Lab, tim terapeuta",
+      },
+      { type: "heading", level: 2, text: "Najčešća pitanja" },
+      {
+        type: "faq",
+        title: "FAQ - ESMA Favorit",
+        faqItems: [
+          { question: "Da li se svi modaliteti koriste u svakom tretmanu?", answer: "Ne. Terapeut bira kombinaciju prema cilju - neko dolazi samo zbog miostimulacije, neko kombinuje više modaliteta u istoj seansi." },
+          { question: "Koliko traje jedan ESMA tretman?", answer: "U zavisnosti od izabrane kombinacije, najčešće između 30 i 60 minuta." },
+          { question: "Da li je potrebna posebna priprema pre tretmana?", answer: "Dovoljno je da koža bude čista, bez krema ili ulja na tretiranoj zoni, i da budete dobro hidrirani." },
+          { question: "Kome ESMA Favorit nije preporučljiv?", answer: "Trudnicama, osobama sa pejsmejkerom ili drugim elektronskim implantatima, epilepsijom, i osobama sa akutnim upalama kože na tretiranoj zoni - o tome se razgovara na konsultaciji." },
+        ],
+      },
+      {
+        type: "cta",
+        title: "Zakažite konsultaciju za ESMA Favorit",
+        text: "Terapeut će na konsultaciji proceniti koja kombinacija modaliteta najviše odgovara vašem cilju i predložiti realan plan tretmana.",
+        button: { text: "Zakažite termin", url: "/kontakt" },
       },
     ]),
   },
@@ -214,9 +255,25 @@ const postDefs = [
       keywords: ["limfna drenaža cena", "limfna drenaža", "detoksikacija"],
     },
     content: blocks([
+      { type: "heading", level: 2, text: "Kako limfni sistem radi i zašto ponekad zaostaje" },
+      {
+        type: "paragraph",
+        text: "Limfni sistem prati krvotok i ima ulogu da iz tkiva odvede višak tečnosti, otpadne produkte i toksine. Za razliku od krvi koju pumpa srce, limfa se kreće zahvaljujući kontrakciji mišića i pokretu tela - zato dug boravak u sedećem ili stajaćem položaju, malo kretanja ili topli dani mogu usporiti njeno kretanje i dovesti do osećaja težine, otoka ili zadržavanja tečnosti, najčešće u nogama.",
+      },
       {
         type: "paragraph",
         text: "Limfna drenaža je tretman koji ritmičnim pritiskom - ručno ili aparatom, poput ESMA Favorit sistema - podstiče kretanje limfe kroz tkivo, pomažući organizmu da se rastereti viška tečnosti. Najčešće se traži zbog osećaja \"teških nogu\", otoka na kraju dana ili kao deo oporavka posle napornih treninga.",
+      },
+      { type: "heading", level: 3, text: "Kako izgleda tretman" },
+      {
+        type: "list",
+        ordered: true,
+        items: [
+          "Kratak razgovor o cilju tretmana i eventualnim zdravstvenim stanjima",
+          "Postavljanje elektroda ili izvođenje ručnih pokreta u pravcu limfnih čvorova",
+          "Ritmična, blaga stimulacija - bez bola, uglavnom prijatan osećaj pritiska",
+          "Preporuka za hidrataciju i lagano kretanje posle tretmana",
+        ],
       },
       { type: "heading", level: 3, text: "Šta utiče na cenu" },
       {
@@ -233,8 +290,37 @@ const postDefs = [
         text: "Tačan cenovnik uvek pogledajte na stranici konkretne usluge, jer se cene paketa periodično ažuriraju. Ono što je konstantno je preporuka: za osećaj olakšanja posle jednog tretmana, ali za primetniju i dužu razliku, terapeuti najčešće predlažu seriju od 5 do 10 tretmana, u razmaku od nekoliko dana.",
       },
       {
-        type: "paragraph",
-        text: "Limfna drenaža se ne preporučuje osobama sa akutnim infekcijama, trombozom ili određenim srčanim i bubrežnim stanjima - to je jedan od prvih pitanja koje terapeut postavlja na konsultaciji.",
+        type: "table",
+        table: {
+          columns: ["Pristup", "Karakteristike"],
+          rows: [
+            { label: "Ručna limfna drenaža", values: ["Precizni ručni pokreti, terapeut prilagođava pritisak u realnom vremenu"] },
+            { label: "Aparaturna limfna drenaža (ESMA)", values: ["Ravnomerna stimulacija veće površine, pogodna za kombinovanje sa drugim modalitetima u istoj seansi"] },
+          ],
+        },
+      },
+      {
+        type: "callout",
+        variant: "warning",
+        title: "Kada limfna drenaža nije preporučljiva",
+        text: "Limfna drenaža se ne preporučuje osobama sa akutnim infekcijama, trombozom ili određenim srčanim i bubrežnim stanjima - to je jedno od prvih pitanja koje terapeut postavlja na konsultaciji.",
+      },
+      { type: "heading", level: 2, text: "Najčešća pitanja" },
+      {
+        type: "faq",
+        title: "FAQ - Limfna drenaža",
+        faqItems: [
+          { question: "Da li limfna drenaža boli?", answer: "Ne. Tretman se opisuje kao prijatan pritisak, bez bola." },
+          { question: "Koliko brzo se oseti razlika?", answer: "Mnogi klijenti prijave osećaj lakših nogu odmah posle prvog tretmana, ali trajniji efekat gradi se kroz seriju." },
+          { question: "Da li mogu da radim limfnu drenažu svake nedelje?", answer: "Terapeut predlaže dinamiku prema cilju i stanju - najčešće nekoliko puta nedeljno u intenzivnijoj fazi, a zatim ređe za održavanje." },
+          { question: "Da li se limfna drenaža kombinuje sa drugim tretmanima?", answer: "Da, često se kombinuje sa mikrostrujnom terapijom ili miostimulacijom u istoj ESMA seansi." },
+        ],
+      },
+      {
+        type: "cta",
+        title: "Zakažite limfnu drenažu",
+        text: "Ako se borite sa osećajem teških nogu ili zadržavanjem tečnosti, terapeut može da proceni da li je limfna drenaža pravi izbor za vas.",
+        button: { text: "Zakažite termin", url: "/kontakt" },
       },
     ]),
   },
@@ -251,11 +337,26 @@ const postDefs = [
       keywords: ["celulit tretman", "anticelulit masaža", "elektrolipoliza"],
     },
     content: blocks([
+      { type: "heading", level: 2, text: "Zašto celulit nastaje" },
       {
         type: "paragraph",
-        text: "Prvo najvažnije: celulit je potpuno normalna pojava koja pogađa veliku većinu žena, bez obzira na težinu ili nivo fizičke aktivnosti, i nastaje zbog strukture vezivnog tkiva ispod kože. Nijedan tretman ga ne \"leči\" niti trajno uklanja - ono što tretmani mogu jeste da doprinesu izgledu kože, cirkulaciji i osećaju zategnutosti, u kombinaciji sa zdravim navikama.",
+        text: "Prvo najvažnije: celulit je potpuno normalna pojava koja pogađa veliku većinu žena, bez obzira na težinu ili nivo fizičke aktivnosti, i nastaje zbog strukture vezivnog tkiva ispod kože. Vezivna vlakna kod žena su raspoređena drugačije nego kod muškaraca, pa se masno tkivo lakše \"gura\" ka površini kože, stvarajući karakterističan izgled.",
+      },
+      {
+        type: "callout",
+        variant: "info",
+        title: "Nijedan tretman ga ne \"leči\"",
+        text: "Celulit se ne leči niti trajno uklanja - ono što tretmani mogu jeste da doprinesu izgledu kože, cirkulaciji i osećaju zategnutosti, u kombinaciji sa zdravim navikama. Bilo koje obećanje trajnog i potpunog uklanjanja treba primiti sa rezervom.",
       },
       { type: "heading", level: 3, text: "Pristupi koje nudimo" },
+      {
+        type: "cards",
+        cards: [
+          { icon: "bi bi-hand-index-thumb", title: "Anticelulit masaža", text: "Ručna stimulacija cirkulacije i limfne drenaže problematičnih zona." },
+          { icon: "bi bi-lightning", title: "Elektrolipoliza", text: "Ciljana električna stimulacija za rad na specifičnim zonama." },
+          { icon: "bi bi-stars", title: "Kombinovani ESMA tretman", text: "Limfna drenaža + ultrazvuk + zatezanje kože u jednoj seansi." },
+        ],
+      },
       {
         type: "table",
         table: {
@@ -267,9 +368,37 @@ const postDefs = [
           ],
         },
       },
+      { type: "heading", level: 2, text: "Šta dodatno pomaže uz tretmane" },
+      {
+        type: "list",
+        ordered: false,
+        items: [
+          "Redovna fizička aktivnost, posebno kretanje i lagani trening nogu",
+          "Dovoljan unos vode tokom dana",
+          "Izbegavanje dugog sedenja bez pauza za kretanje",
+          "Uravnotežena ishrana kao deo šire rutine, ne kao brzo rešenje",
+        ],
+      },
       {
         type: "paragraph",
         text: "Terapeut na konsultaciji procenjuje tip i stepen izraženosti celulita i predlaže kombinaciju koja ima smisla - najčešće serija tretmana, uz savet o hidrataciji i kretanju, jer aparatura sama po sebi radi bolje kao deo šire rutine, a ne kao izolovano rešenje.",
+      },
+      { type: "heading", level: 2, text: "Najčešća pitanja" },
+      {
+        type: "faq",
+        title: "FAQ - Anticelulit tretmani",
+        faqItems: [
+          { question: "Da li se celulit može potpuno ukloniti?", answer: "Ne postoji tretman koji trajno i potpuno uklanja celulit. Tretmani mogu doprineti izgledu kože i cirkulaciji, ali ne menjaju osnovnu strukturu vezivnog tkiva." },
+          { question: "Koliko brzo se vidi razlika?", answer: "Zavisi od individualnih faktora, ali većina terapeuta preporučuje seriju od najmanje 8 do 10 tretmana pre procene rezultata." },
+          { question: "Da li anticelulit masaža boli?", answer: "Može biti intenzivnija od klasične relaksacione masaže, ali se intenzitet uvek prilagođava toleranciji klijenta." },
+          { question: "Da li je potrebno menjati ishranu uz tretmane?", answer: "Nije obavezno, ali zdrave navike - hidratacija, kretanje, uravnotežena ishrana - pomažu da efekat tretmana bude vidljiviji i duže traje." },
+        ],
+      },
+      {
+        type: "cta",
+        title: "Zakažite konsultaciju",
+        text: "Terapeut može da proceni koja kombinacija anticelulit tretmana najviše odgovara vašoj koži i cilju.",
+        button: { text: "Zakažite termin", url: "/kontakt" },
       },
     ]),
   },
@@ -288,6 +417,7 @@ const postDefs = [
       keywords: ["lifting lica bez igala", "miolifting lica", "mikrostrujna terapija"],
     },
     content: blocks([
+      { type: "heading", level: 2, text: "Zašto lice \"pada\" sa godinama" },
       {
         type: "paragraph",
         text: "Starenje lica ne dešava se samo na koži - opuštaju se i duboki mišićni slojevi koji drže konturu obraza, vilice i vrata. Klasične kreme i površinski tretmani ne dopiru do tog nivoa. Mikrostrujni lifting radi drugačije: niskointenzivna struja stimuliše mišiće lica direktno, slično treningu za lice.",
@@ -303,8 +433,44 @@ const postDefs = [
         ],
       },
       {
+        type: "callout",
+        variant: "success",
+        title: "Bez oporavka",
+        text: "Tretman je bezbolan, bez perioda oporavka - klijent može odmah nastaviti dan. Efekat posle jednog tretmana je suptilan i privremen; za primetniju i dužu razliku terapeuti preporučuju seriju tretmana, uz periodično održavanje.",
+      },
+      {
         type: "paragraph",
-        text: "Tretman je bezbolan, bez perioda oporavka - klijent može odmah nastaviti dan. Efekat posle jednog tretmana je suptilan i privremen; za primetniju i dužu razliku terapeuti preporučuju seriju tretmana, uz periodično održavanje. Ovo nije zamena za hiruršku intervenciju, već neinvazivna alternativa za onе koji žele postepen, prirodniji pristup.",
+        text: "Ovo nije zamena za hiruršku intervenciju, već neinvazivna alternativa za onе koji žele postepen, prirodniji pristup. Terapeut na konsultaciji realno procenjuje šta se od mikrostrujnog liftinga može očekivati za konkretnu osobu, bez preteranih obećanja.",
+      },
+      { type: "heading", level: 2, text: "Mikrostrujni lifting vs hirurški lifting" },
+      {
+        type: "table",
+        table: {
+          columns: ["Mikrostrujni lifting", "Hirurški lifting"],
+          rows: [
+            { label: "Invazivnost", values: ["Neinvazivno, bez rezova", "Hirurška intervencija, period oporavka"] },
+            { label: "Efekat", values: ["Postepen, suptilan, gradi se kroz seriju", "Izraženiji i trenutan posle oporavka"] },
+            { label: "Trajanje efekta", values: ["Zahteva periodično održavanje", "Dugotrajniji efekat po prirodi zahvata"] },
+            { label: "Rizik", values: ["Minimalan", "Hirurški rizici prisutni kao kod svake operacije"] },
+          ],
+        },
+      },
+      { type: "heading", level: 2, text: "Najčešća pitanja" },
+      {
+        type: "faq",
+        title: "FAQ - Mikrostrujni lifting lica",
+        faqItems: [
+          { question: "Da li mikrostrujni lifting boli?", answer: "Ne, tretman je bezbolan - osećaju se blagi trnci na koži." },
+          { question: "Koliko tretmana je potrebno?", answer: "Terapeuti najčešće preporučuju seriju od 8 do 12 tretmana za primetniji efekat, uz periodično održavanje." },
+          { question: "Kome se ovaj tretman ne preporučuje?", answer: "Trudnicama, osobama sa pejsmejkerom, epilepsijom ili akutnim upalama kože lica." },
+          { question: "Da li se kombinuje sa drugim tretmanima lica?", answer: "Da, često se kombinuje sa ultrazvučnim piling tretmanom u istoj seansi." },
+        ],
+      },
+      {
+        type: "cta",
+        title: "Otkrijte mikrostrujni lifting",
+        text: "Zakažite konsultaciju i saznajte da li je mikrostrujni lifting pravi izbor za vaš cilj.",
+        button: { text: "Zakažite termin", url: "/kontakt" },
       },
     ]),
   },
@@ -321,6 +487,7 @@ const postDefs = [
       keywords: ["hifu lifting", "zatezanje kože", "anti-aging"],
     },
     content: blocks([
+      { type: "heading", level: 2, text: "Fokusirani ultrazvuk umesto rezova" },
       {
         type: "paragraph",
         text: "HIFU (High-Intensity Focused Ultrasound) je tehnologija koja fokusiranim ultrazvučnim talasima cilja dublje slojeve kože i potkožnog tkiva, bez oštećenja površinske kože. Cilj je da se podstakne prirodna proizvodnja kolagena, što telu treba vremena da samo izgradi.",
@@ -331,8 +498,51 @@ const postDefs = [
         text: "Za razliku od hirurškog liftinga, HIFU nema rezove, anesteziju ni period oporavka - klijent može odmah nastaviti sa svakodnevnim aktivnostima. Sam tretman traje od nekoliko desetina minuta do sat vremena, u zavisnosti od tretirane zone (lice, vrat, jagodice).",
       },
       {
+        type: "cards",
+        cards: [
+          { icon: "bi bi-soundwave", title: "Fokusirani ultrazvuk", text: "Talasi ciljaju tačno određenu dubinu tkiva, bez oštećenja površine kože." },
+          { icon: "bi bi-arrow-repeat", title: "Prirodna obnova kolagena", text: "Telo samo gradi novi kolagen tokom narednih nedelja." },
+          { icon: "bi bi-calendar-week", title: "Bez oporavka", text: "Odmah nakon tretmana moguć je povratak svakodnevnim aktivnostima." },
+        ],
+      },
+      {
+        type: "callout",
+        variant: "info",
+        title: "Rezultat nije trenutan",
+        text: "Ono što je važno postaviti realno: efekat se ne vidi odmah na izlasku iz salona. Kolagen se gradi postepeno, pa se puni efekat obično primećuje tokom narednih nedelja do meseci, a rezultat zavisi od individualnih karakteristika kože i starosne strukture kolagena.",
+      },
+      {
         type: "paragraph",
-        text: "Ono što je važno postaviti realno: efekat se ne vidi odmah na izlasku iz salona. Kolagen se gradi postepeno, pa se puni efekat obično primećuje tokom narednih nedelja do meseci, a rezultat zavisi od individualnih karakteristika kože i starosne strukture kolagena. Terapeut na konsultaciji procenjuje da li je HIFU pravi izbor za konkretnu zonu i cilj.",
+        text: "Terapeut na konsultaciji procenjuje da li je HIFU pravi izbor za konkretnu zonu i cilj, uzimajući u obzir stanje kože, starost i realna očekivanja klijenta.",
+      },
+      { type: "heading", level: 2, text: "HIFU vs mikrostrujni lifting" },
+      {
+        type: "table",
+        table: {
+          columns: ["HIFU", "Mikrostrujni lifting"],
+          rows: [
+            { label: "Princip delovanja", values: ["Fokusirani ultrazvuk podstiče proizvodnju kolagena", "Mikrostruja stimuliše mišiće lica direktno"] },
+            { label: "Kada se vidi efekat", values: ["Postepeno, tokom nedelja do meseci", "Postepeno, kroz seriju tretmana"] },
+            { label: "Učestalost dolazaka", values: ["Ređe, efekat traje duže po prirodi zahvata", "Češće, uz periodično održavanje"] },
+          ],
+        },
+      },
+      { type: "heading", level: 2, text: "Najčešća pitanja" },
+      {
+        type: "faq",
+        title: "FAQ - HIFU lifting",
+        faqItems: [
+          { question: "Da li HIFU boli?", answer: "Klijenti najčešće osećaju blagu toplotu ili trnce tokom tretmana, u zavisnosti od praga tolerancije." },
+          { question: "Koliko traje efekat HIFU tretmana?", answer: "Efekat po prirodi zahvata traje duže od mikrostrujnog liftinga, ali tačno trajanje zavisi od individualnih faktora poput starosti kože i načina života." },
+          { question: "Kome HIFU nije preporučljiv?", answer: "Trudnicama, osobama sa određenim kožnim oboljenjima ili implantatima na tretiranoj zoni - o tome se razgovara na konsultaciji." },
+          { question: "Da li je potreban jedan tretman ili serija?", answer: "Zavisi od cilja i stanja kože - terapeut na konsultaciji predlaže plan prilagođen konkretnoj osobi." },
+        ],
+      },
+      {
+        type: "cta",
+        title: "Saznajte da li je HIFU za vas",
+        text: "Zakažite konsultaciju kako bi terapeut procenio da li je HIFU pravi izbor za vašu zonu i cilj.",
+        button: { text: "Zakažite termin", url: "/kontakt" },
       },
     ]),
   },
@@ -349,9 +559,19 @@ const postDefs = [
       keywords: ["ultrazvuk za lice", "ultrazvučni piling", "sjaj kože"],
     },
     content: blocks([
+      { type: "heading", level: 2, text: "Više primena, jedna tehnologija" },
       {
         type: "paragraph",
         text: "Ultrazvučni tretmani za lice koriste vibracije visoke frekvencije u nekoliko različitih svrha - od nežnog uklanjanja mrtvih ćelija kože i nečistoća iz pora (ultrazvučni piling), do podrške cirkulaciji i utrljavanju aktivnih sastojaka dublje u kožu.",
+      },
+      { type: "heading", level: 3, text: "Glavne primene" },
+      {
+        type: "cards",
+        cards: [
+          { icon: "bi bi-droplet-half", title: "Ultrazvučni piling", text: "Nežno uklanjanje mrtvih ćelija kože i nečistoća iz pora." },
+          { icon: "bi bi-arrow-down-circle", title: "Ultrafonoforeza", text: "Podrška dubljem prodiranju aktivnih sastojaka u kožu." },
+          { icon: "bi bi-water", title: "Podrška cirkulaciji", text: "Blagi rad na cirkulaciji i osećaju svežine kože." },
+        ],
       },
       { type: "heading", level: 3, text: "Za koga je pogodan" },
       {
@@ -365,7 +585,30 @@ const postDefs = [
       },
       {
         type: "paragraph",
-        text: "Tretman je nežan i bez oporavka, pogodan i za osetljiviju kožu, ali kao i kod svih tretmana lica, terapeut prvo procenjuje tip kože i eventualne kontraindikacije (aktivna akne infekcija, otvorene rane, određena kožna stanja).",
+        text: "Tretman je nežan i bez oporavka, pogodan i za osetljiviju kožu, ali kao i kod svih tretmana lica, terapeut prvo procenjuje tip kože i eventualne kontraindikacije.",
+      },
+      {
+        type: "callout",
+        variant: "warning",
+        title: "Kada se ultrazvučni tretman odlaže",
+        text: "Aktivna akne infekcija, otvorene rane ili određena kožna stanja mogu biti razlog da terapeut predloži odlaganje tretmana do smirivanja stanja kože.",
+      },
+      { type: "heading", level: 2, text: "Najčešća pitanja" },
+      {
+        type: "faq",
+        title: "FAQ - Ultrazvuk za lice",
+        faqItems: [
+          { question: "Da li ultrazvučni piling boli?", answer: "Ne, tretman se opisuje kao prijatan i bez nelagodnosti." },
+          { question: "Koliko često se preporučuje ultrazvučni piling?", answer: "U zavisnosti od tipa kože, najčešće jednom u nekoliko nedelja kao deo redovne nege." },
+          { question: "Da li se ultrazvuk za lice kombinuje sa drugim tretmanima?", answer: "Da, često se koristi kao priprema kože pre mikrostrujnog liftinga ili drugih tretmana lica." },
+          { question: "Da li je pogodan za osetljivu kožu?", answer: "Uglavnom da, jer je tretman nežan, ali terapeut uvek prvo procenjuje individualno stanje kože." },
+        ],
+      },
+      {
+        type: "cta",
+        title: "Zakažite negu lica",
+        text: "Terapeut može da predloži kombinaciju ultrazvučnog tretmana sa drugim modalitetima prilagođenu vašoj koži.",
+        button: { text: "Zakažite termin", url: "/kontakt" },
       },
     ]),
   },
@@ -382,6 +625,7 @@ const postDefs = [
       keywords: ["laser za kožu", "laserska epilacija", "trajna epilacija"],
     },
     content: blocks([
+      { type: "heading", level: 2, text: "Kako laser deluje na dlaku" },
       {
         type: "paragraph",
         text: "Laserska epilacija radi na principu da laserska svetlost cilja pigment (melanin) u korenu dlake, oštećujući folikul dovoljno da uspori ili zaustavi rast. Zato tip kože i boja dlake direktno utiču na to koji parametri (talasna dužina, snaga, dužina impulsa) će dati najbolji i najbezbedniji rezultat.",
@@ -401,8 +645,40 @@ const postDefs = [
         ],
       },
       {
+        type: "callout",
+        variant: "info",
+        title: "Zašto je potrebno više tretmana",
+        text: "Dlake rastu u ciklusima, a laser deluje samo na one koje su trenutno u aktivnoj fazi rasta. Zato je serija od više tretmana, u preporučenim razmacima, standardan i očekivan deo procesa, a ne znak da nešto ne funkcioniše.",
+      },
+      { type: "heading", level: 2, text: "Faze rasta dlake" },
+      {
+        type: "cards",
+        cards: [
+          { icon: "bi bi-arrow-up-circle", title: "Anagena faza", text: "Aktivan rast - dlaka je najosetljivija na dejstvo lasera." },
+          { icon: "bi bi-pause-circle", title: "Katagena faza", text: "Prelazna faza mirovanja rasta." },
+          { icon: "bi bi-dash-circle", title: "Telogena faza", text: "Faza mirovanja - dlaka u ovoj fazi ne reaguje na tretman." },
+        ],
+      },
+      {
         type: "paragraph",
-        text: "Zato je serija od više tretmana, u preporučenim razmacima, standardan i očekivan deo procesa, a ne znak da nešto ne funkcioniše.",
+        text: "Pošto se dlake na različitim delovima tela ne nalaze u istoj fazi u isto vreme, potrebno je nekoliko tretmana u razmaku od nekoliko nedelja da bi se obuhvatile sve dlake tokom svog aktivnog ciklusa.",
+      },
+      { type: "heading", level: 2, text: "Najčešća pitanja" },
+      {
+        type: "faq",
+        title: "FAQ - Laserska epilacija",
+        faqItems: [
+          { question: "Koliko tretmana je potrebno za trajniji efekat?", answer: "Najčešće između 6 i 8 tretmana, u zavisnosti od regije i individualnih karakteristika dlake i kože." },
+          { question: "Da li laserska epilacija boli?", answer: "Osećaj se opisuje kao blago pečenje ili trnci, u zavisnosti od osetljivosti kože i regije koja se tretira." },
+          { question: "Da li je bezbedna za tamniju kožu?", answer: "Moderni medicinski laseri imaju prilagodljive parametre baš za tu svrhu - terapeut bira podešavanja prema tonu kože klijenta." },
+          { question: "Šta ako imam svetle ili sede dlake?", answer: "Fine i svetle dlake sadrže manje pigmenta i sporije reaguju na lasersku epilaciju - terapeut na konsultaciji objašnjava realna očekivanja za vaš tip dlake." },
+        ],
+      },
+      {
+        type: "cta",
+        title: "Zakažite konsultaciju za lasersku epilaciju",
+        text: "Terapeut će proceniti vaš tip kože i dlake i predložiti realan plan tretmana.",
+        button: { text: "Zakažite termin", url: "/kontakt" },
       },
     ]),
   },
@@ -419,6 +695,7 @@ const postDefs = [
       keywords: ["oblikovanje tela", "ems tretman", "body sculpt"],
     },
     content: blocks([
+      { type: "heading", level: 2, text: "Dva mehanizma u jednom tretmanu" },
       {
         type: "paragraph",
         text: "EMS (Electrical Muscle Stimulation) tretmani za oblikovanje tela kombinuju električnu stimulaciju mišića sa radiofrekvencijom koja zagreva dublje slojeve tkiva. Cilj kombinacije je dvostruk - podrška tonusu mišića i istovremeno rad na zatezanju kože iznad njih.",
@@ -429,8 +706,47 @@ const postDefs = [
         text: "Elektrode se postavljaju na ciljanu zonu (najčešće stomak, butine ili zadnjica), a aparat naizmenično radi kontrakcije i radiofrekventno zagrevanje. Tretman se najčešće opisuje kao intenzivan, ali podnošljiv - nema znojenja ni fizičkog napora kakav bi imao klasičan trening iste zone.",
       },
       {
-        type: "paragraph",
+        type: "cards",
+        cards: [
+          { icon: "bi bi-lightning-charge", title: "EMS kontrakcije", text: "Kontrolisana stimulacija mišićnih vlakana na ciljanoj zoni." },
+          { icon: "bi bi-thermometer-sun", title: "Radiofrekvencija", text: "Zagrevanje dubljih slojeva tkiva koje podržava zatezanje kože." },
+          { icon: "bi bi-graph-up", title: "Kumulativan efekat", text: "Efekat se gradi kroz seriju tretmana, ne posle jedne posete." },
+        ],
+      },
+      {
+        type: "callout",
+        variant: "info",
+        title: "Realna očekivanja",
         text: "Kao i kod svih tretmana ove vrste, jedan tretman daje osećaj, a rezultat gradi serija - terapeuti obično predlažu paket od više seansi, uz napomenu da rezultati zavise od polazne tačke, načina života i redovnosti dolazaka, ne samo od same tehnologije.",
+      },
+      { type: "heading", level: 2, text: "EMS tretman vs klasičan trening" },
+      {
+        type: "table",
+        table: {
+          columns: ["EMS tretman", "Klasičan trening"],
+          rows: [
+            { label: "Fizički napor", values: ["Minimalan - nema znojenja ni pokreta", "Zahteva aktivno fizičko angažovanje"] },
+            { label: "Trajanje seanse", values: ["Obično 20-30 minuta po zoni", "Zavisi od plana treninga"] },
+            { label: "Najbolji rezultati", values: ["Kombinovano sa aktivnim načinom života", "Kombinovano sa uravnoteženom ishranom"] },
+          ],
+        },
+      },
+      { type: "heading", level: 2, text: "Najčešća pitanja" },
+      {
+        type: "faq",
+        title: "FAQ - EMS oblikovanje tela",
+        faqItems: [
+          { question: "Da li EMS tretman zamenjuje trening u teretani?", answer: "Ne, EMS je dopuna aktivnom načinu života, a ne zamena za redovnu fizičku aktivnost." },
+          { question: "Koliko tretmana je potrebno?", answer: "Terapeuti najčešće predlažu paket od nekoliko tretmana, uz procenu napretka tokom serije." },
+          { question: "Da li tretman boli?", answer: "Opisuje se kao intenzivan, ali podnošljiv - intenzitet se prilagođava toleranciji klijenta." },
+          { question: "Kome EMS tretman nije preporučljiv?", answer: "Trudnicama, osobama sa pejsmejkerom ili drugim elektronskim implantatima i osobama sa akutnim upalama na tretiranoj zoni." },
+        ],
+      },
+      {
+        type: "cta",
+        title: "Zakažite EMS tretman",
+        text: "Terapeut će proceniti vaš cilj i predložiti realan plan serije tretmana.",
+        button: { text: "Zakažite termin", url: "/kontakt" },
       },
     ]),
   },
@@ -447,9 +763,19 @@ const postDefs = [
       keywords: ["relaksaciona masaža", "antistres masaža", "terapeutska masaža"],
     },
     content: blocks([
+      { type: "heading", level: 2, text: "Dva različita pristupa opuštanju i tonusu" },
       {
         type: "paragraph",
         text: "Pitanje \"masaža ili aparat\" zapravo nema jedan tačan odgovor - zavisi od toga šta je cilj tog dana. Ručna masaža radi na opuštanju mišićnog tkiva, smanjenju napetosti i psihičkom opuštanju kroz direktan dodir i pritisak terapeuta, prilagođen u realnom vremenu.",
+      },
+      { type: "heading", level: 3, text: "Vrste masaže koje nudimo" },
+      {
+        type: "cards",
+        cards: [
+          { icon: "bi bi-emoji-smile", title: "Relaksaciona / antistres masaža", text: "Opuštanje tela i uma, smanjenje osećaja stresa i napetosti." },
+          { icon: "bi bi-bandaid", title: "Terapeutska masaža", text: "Rad na napetim mišićnim grupama, bol u leđima i vratu." },
+          { icon: "bi bi-trophy", title: "Sportska masaža", text: "Podrška oporavku posle fizičke aktivnosti i treninga." },
+        ],
       },
       { type: "heading", level: 3, text: "Kada birati šta" },
       {
@@ -465,8 +791,27 @@ const postDefs = [
         },
       },
       {
-        type: "paragraph",
+        type: "callout",
+        variant: "success",
+        title: "Kombinacija je moguća",
         text: "Dobra vest je da se ova dva pristupa odlično kombinuju - mnogi klijenti naizmenično ili u istoj poseti kombinuju ručnu masažu sa aparaturnim delom tretmana. Terapeut na konsultaciji može predložiti kombinaciju koja odgovara vašem cilju i raspoloživom vremenu.",
+      },
+      { type: "heading", level: 2, text: "Najčešća pitanja" },
+      {
+        type: "faq",
+        title: "FAQ - Masaža i aparaturni tretmani",
+        faqItems: [
+          { question: "Da li mogu u istoj poseti da kombinujem masažu i aparaturni tretman?", answer: "Da, mnogi klijenti kombinuju oba pristupa u istoj poseti, u zavisnosti od raspoloživog vremena." },
+          { question: "Koji pristup je bolji za bol u leđima?", answer: "Terapeutska masaža je najčešće prvi izbor za napetost i bol u leđima izazvane sedenjem ili fizičkim naporom." },
+          { question: "Da li aparaturni tretmani mogu zameniti masažu?", answer: "Ne - rade na različit način. Aparaturni tretmani su usmereni na tonus mišića i oblikovanje, dok masaža radi na opuštanju i cirkulaciji kroz direktan dodir." },
+          { question: "Koliko često se preporučuje masaža?", answer: "Zavisi od cilja - za opuštanje jednom nedeljno do mesečno, za rad na specifičnom bolu terapeut predlaže dinamiku prema stanju." },
+        ],
+      },
+      {
+        type: "cta",
+        title: "Zakažite masažu ili konsultaciju",
+        text: "Recite nam vaš cilj, a terapeut će predložiti pristup ili kombinaciju koja najviše odgovara vašim potrebama.",
+        button: { text: "Zakažite termin", url: "/kontakt" },
       },
     ]),
   },
@@ -483,6 +828,10 @@ const postDefs = [
       keywords: ["pre i posle tretmana", "esma favorit novi sad", "esma tretmani"],
     },
     content: blocks([
+      {
+        type: "paragraph",
+        text: "Prvi dolazak na ESMA tretman često izaziva nekoliko istih pitanja - šta poneti, na šta se pripremiti, i šta je normalno da se oseti posle. Evo praktičnog vodiča koji pokriva ceo proces, od prve konsultacije do nege posle tretmana.",
+      },
       { type: "heading", level: 2, text: "Pre tretmana" },
       {
         type: "list",
@@ -493,6 +842,12 @@ const postDefs = [
           "Obavezno recite terapeutu o trudnoći, pejsmejkeru, epilepsiji ili akutnim upalama kože",
           "Nosite udobnu odeću koja se lako skida sa zone koja se tretira",
         ],
+      },
+      {
+        type: "callout",
+        variant: "warning",
+        title: "Budite iskreni na konsultaciji",
+        text: "Konsultacija pre prvog tretmana nije formalnost - ono što kažete terapeutu direktno utiče na to koji modaliteti i intenzitet su bezbedni za vas.",
       },
       { type: "heading", level: 2, text: "Posle tretmana" },
       {
@@ -506,8 +861,33 @@ const postDefs = [
         ],
       },
       {
+        type: "cards",
+        cards: [
+          { icon: "bi bi-droplet", title: "Hidratacija", text: "Voda pomaže telu da efikasnije reaguje na tretman." },
+          { icon: "bi bi-person-walking", title: "Lagano kretanje", text: "Šetnja podržava cirkulaciju, intenzivan trening sačekajte do sutra." },
+          { icon: "bi bi-calendar-check", title: "Redovnost", text: "Serija tretmana u preporučenom razmaku daje bolje rezultate od pojedinačnih poseta." },
+        ],
+      },
+      {
         type: "paragraph",
         text: "Ako niste sigurni da li se nešto specifično odnosi na vas (lekovi, hronična stanja, trudnoća), najbolje je da to pomenete terapeutu pre prvog tretmana - konsultacija postoji baš zato da se tretman prilagodi vama, a ne obrnuto.",
+      },
+      { type: "heading", level: 2, text: "Najčešća pitanja" },
+      {
+        type: "faq",
+        title: "FAQ - Pre i posle ESMA tretmana",
+        faqItems: [
+          { question: "Da li mogu da vozim posle tretmana?", answer: "Da, ESMA tretmani ne utiču na sposobnost vožnje ili obavljanja svakodnevnih aktivnosti." },
+          { question: "Da li treba da jedem pre tretmana?", answer: "Preporučuje se da niste gladni, ali obilan obrok neposredno pre tretmana takođe nije potreban." },
+          { question: "Šta ako osetim nelagodnost tokom tretmana?", answer: "Odmah recite terapeutu - intenzitet se prilagođava u realnom vremenu tokom cele seanse." },
+          { question: "Koliko brzo mogu da zakažem sledeći tretman?", answer: "Terapeut na osnovu vašeg plana predlaže razmak između tretmana, najčešće nekoliko dana." },
+        ],
+      },
+      {
+        type: "cta",
+        title: "Spremni za prvi tretman?",
+        text: "Zakažite konsultaciju i terapeut će vas provesti kroz ceo proces, korak po korak.",
+        button: { text: "Zakažite termin", url: "/kontakt" },
       },
     ]),
   },
@@ -524,6 +904,7 @@ const postDefs = [
       keywords: ["pre i posle tretmana", "koliko tretmana", "esma tretmani"],
     },
     content: blocks([
+      { type: "heading", level: 2, text: "Zašto se tretmani rade u seriji" },
       {
         type: "paragraph",
         text: "Skoro svaki tretman u ovoj kategoriji - miostimulacija, limfna drenaža, HIFU, laserska epilacija - deluje kumulativno. To znači da jedan tretman pokreće proces (kontrakciju, cirkulaciju, proizvodnju kolagena, oštećenje folikula dlake), ali da se puni efekat gradi tek kroz seriju, jer telo reaguje postepeno.",
@@ -539,9 +920,41 @@ const postDefs = [
           "Individualne razlike u metabolizmu i regeneraciji",
         ],
       },
+      { type: "heading", level: 2, text: "Orijentacioni okvir po tipu tretmana" },
       {
-        type: "paragraph",
-        text: "Zato terapeuti na konsultaciji retko obećavaju tačan broj unapred bez procene uživo - umesto toga daju opšti okvir (najčešće između 5 i 10 tretmana za većinu ESMA i telo tretmana) i prilagođavaju ga posle prvih par seansi, kada se vidi kako organizam reaguje.",
+        type: "table",
+        table: {
+          columns: ["Tip tretmana", "Orijentacioni broj tretmana"],
+          rows: [
+            { label: "ESMA / miostimulacija / EMS", values: ["Najčešće 8-12 tretmana za primetniji efekat"] },
+            { label: "Limfna drenaža", values: ["Najčešće 5-10 tretmana u intenzivnijoj fazi"] },
+            { label: "Laserska epilacija", values: ["Najčešće 6-8 tretmana, prati biološki ciklus dlake"] },
+            { label: "HIFU / mikrostrujni lifting", values: ["Zavisi od cilja - HIFU ređe, mikrostrujni lifting kroz seriju"] },
+          ],
+        },
+      },
+      {
+        type: "callout",
+        variant: "info",
+        title: "Ovo je orijentacioni okvir, ne obećanje",
+        text: "Brojevi u tabeli su opšta orijentacija, ne garancija. Terapeuti na konsultaciji retko obećavaju tačan broj unapred bez procene uživo - umesto toga daju opšti okvir i prilagođavaju ga posle prvih par seansi, kada se vidi kako organizam reaguje.",
+      },
+      { type: "heading", level: 2, text: "Najčešća pitanja" },
+      {
+        type: "faq",
+        title: "FAQ - Koliko tretmana je potrebno",
+        faqItems: [
+          { question: "Da li mogu da vidim rezultat posle jednog tretmana?", answer: "Kod većine tretmana osećate razliku odmah (npr. lakše noge posle limfne drenaže), ali vidljiviji i trajniji rezultat gradi se kroz seriju." },
+          { question: "Šta ako mi je potrebno manje ili više tretmana od preporučenog?", answer: "To je normalno - terapeut prilagođava plan tokom serije na osnovu toga kako organizam reaguje." },
+          { question: "Da li paket tretmana izlazi jeftinije?", answer: "Da, paketi od više tretmana najčešće imaju povoljniju cenu po tretmanu u odnosu na pojedinačne posete." },
+          { question: "Da li treba da nastavim sa održavanjem posle serije?", answer: "Za većinu tretmana da - periodično održavanje pomaže da se postignuti efekat duže zadrži." },
+        ],
+      },
+      {
+        type: "cta",
+        title: "Zakažite konsultaciju",
+        text: "Terapeut će na osnovu vašeg cilja i polaznog stanja predložiti realan plan broja tretmana.",
+        button: { text: "Zakažite termin", url: "/kontakt" },
       },
     ]),
   },
