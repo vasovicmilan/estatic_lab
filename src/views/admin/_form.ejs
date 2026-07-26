@@ -46,11 +46,16 @@
             <% data.fields.forEach(function(field) { %>
               <div class="col-md-<%= field.width || 12 %> mb-3" data-field-wrapper="<%= field.name %>">
 
-                <% if (field.type !== 'checkbox' && field.type !== 'hidden' && field.type !== 'checkbox-group') { %>
+                <% if (field.type !== 'checkbox' && field.type !== 'hidden' && field.type !== 'checkbox-group' && field.type !== 'content-blocks' && field.type !== 'schedule' && field.type !== 'multiselect' && field.type !== 'repeater' && field.type !== 'comparison-table') { %>
                   <label for="<%= field.name %>" class="form-label">
                     <%= field.label %>
                     <% if (field.required) { %><span class="text-danger" aria-hidden="true">*</span><span class="visually-hidden">(obavezno)</span><% } %>
                   </label>
+                <% } else if (field.type === 'content-blocks' || field.type === 'schedule' || field.type === 'multiselect' || field.type === 'repeater' || field.type === 'comparison-table') { %>
+                  <div class="form-label" id="<%= field.name %>_label">
+                    <%= field.label %>
+                    <% if (field.required) { %><span class="text-danger" aria-hidden="true">*</span><span class="visually-hidden">(obavezno)</span><% } %>
+                  </div>
                 <% } %>
 
                 <% if (field.type === 'text' || field.type === 'email' || field.type === 'number' || field.type === 'date' || field.type === 'url' || field.type === 'tel') { %>
