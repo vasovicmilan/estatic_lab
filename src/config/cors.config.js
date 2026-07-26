@@ -31,6 +31,7 @@ if (!isProd) {
 
 export function setupCors(app) {
   app.use(
+    "/api",
     cors({
       origin: (origin, callback) => {
         // no Origin header (server-to-server, curl, same-origin) - allow
