@@ -36,6 +36,13 @@ export function globalErrorHandler(err, req, res, next) {
     ip: req.ip,
     statusCode: error.statusCode,
     isOperational: error.isOperational,
+    // the wrapped `error` above has its message replaced with the generic
+    // "Interna greška servera" for non-operational errors (see wrapError) - these
+    // two fields are the only place the actual underlying cause survives into the
+    // log file. Always logged (this never reaches the browser response, only the
+    // server-side log), regardless of NODE_ENV.
+    originalMessage: error.details?.originalMessage,
+    originalStack: error.details?.stack,
   });
 
   if (isGenuineError) {

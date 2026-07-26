@@ -11,6 +11,7 @@ import {
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
+import { normalizeError } from "../../../../utils/error.util.js";
 
 function parseJsonField(value, fallback = []) {
   if (Array.isArray(value) || (value && typeof value === "object")) return value;
@@ -53,6 +54,12 @@ function buildPostPayload(req, existing = {}) {
   data.seo = parseJsonField(req.body.seo, existing.seo || {});
   data.isIndexable = parseCheckbox(req.body.isIndexable, existing.isIndexable ?? true);
   data.scheduledFor = req.body.scheduledFor ? req.body.scheduledFor : null;
+  // the "Autor" select always has an empty placeholder option (see admin/_form.ejs) -
+  // if it's left on that placeholder (or the current author isn't in the ~200-user
+  // options list for whatever reason), req.body.author is "" - falling back to the
+  // existing author here means that case leaves the post's author unchanged instead
+  // of Mongoose trying to cast "" to an ObjectId and throwing.
+  data.author = req.body.author || existing.author || undefined;
 
   return data;
 }
@@ -153,14 +160,15 @@ export async function createPost(req, res, next) {
     return flashAndRedirect(req, res, "success", "Post je uspešno kreiran", `/admin/blog/detalji/${post.id}`);
   } catch (error) {
     logError("[createPost] Greška pri kreiranju posta", error, { body: req.body, userId: req.session?.user?.id });
-    
-    if (error.statusCode === 400 || error.statusCode === 409) {
+
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode === 400 || statusCode === 409) {
       const options = await loadFormOptions();
       const formData = preparePostFormData(null, options);
-      return res.status(error.statusCode).render("admin/_form", {
+      return res.status(statusCode).render("admin/_form", {
         pageTitle: "Novi post",
         pageDescription: "Kreiraj novu blog objavu",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
+        data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -192,14 +200,15 @@ export async function updatePost(req, res, next) {
   } catch (error) {
     logError("[updatePost] Greška pri ažuriranju posta", error, { postId: req.params.postId, body: req.body, userId: req.session?.user?.id });
 
-    if (error.statusCode === 400 || error.statusCode === 404 || error.statusCode === 409) {
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode === 400 || statusCode === 404 || statusCode === 409) {
       const post = await postService.getPostForEdit(req.params.postId).catch(() => null);
       const options = await loadFormOptions();
       const formData = preparePostFormData(post, options);
-      return res.status(error.statusCode).render("admin/_form", {
+      return res.status(statusCode).render("admin/_form", {
         pageTitle: post ? `Izmena - ${post.title}` : "Izmena posta",
         pageDescription: post?.excerpt || "",
-        data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },
+        data: { ...formData, errors: { general: message }, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
     next(error);
@@ -214,8 +223,9 @@ export async function updatePostStatus(req, res, next) {
     return flashAndRedirect(req, res, "success", "Status posta je uspešno promenjen", `/admin/blog/detalji/${postId}`);
   } catch (error) {
     logError("[updatePostStatus] Greška pri promeni statusa posta", error, { postId: req.params.postId, userId: req.session?.user?.id });
-    if (error.statusCode) {
-      return flashAndRedirect(req, res, "error", error.message, `/admin/blog/detalji/${req.params.postId}`);
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode) {
+      return flashAndRedirect(req, res, "error", message, `/admin/blog/detalji/${req.params.postId}`);
     }
     next(error);
   }
@@ -255,8 +265,9 @@ export async function updatePostSeo(req, res, next) {
     return flashAndRedirect(req, res, "success", "SEO podaci su uspešno ažurirani", `/admin/blog/detalji/${updated.id}`);
   } catch (error) {
     logError("[updatePostSeo] Greška pri ažuriranju SEO podataka", error, { postId: req.params.postId, userId: req.session?.user?.id });
-    if (error.statusCode) {
-      return flashAndRedirect(req, res, "error", error.message, `/admin/blog/detalji/${req.params.postId}`);
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode) {
+      return flashAndRedirect(req, res, "error", message, `/admin/blog/detalji/${req.params.postId}`);
     }
     next(error);
   }
@@ -270,8 +281,9 @@ export async function deletePost(req, res, next) {
     return flashAndRedirect(req, res, "success", "Post je uspešno obrisan", "/admin/blog");
   } catch (error) {
     logError("[deletePost] Greška pri brisanju posta", error, { postId: req.params.postId, userId: req.session?.user?.id });
-    if (error.statusCode) {
-      return flashAndRedirect(req, res, "error", error.message, "/admin/blog");
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode) {
+      return flashAndRedirect(req, res, "error", message, "/admin/blog");
     }
     next(error);
   }
