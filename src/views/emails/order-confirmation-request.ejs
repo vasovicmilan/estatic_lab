@@ -1,18 +1,15 @@
+<% include("_helpers") %>
 <%- include("_layout", {
   title: "Potvrdite porudžbinu",
+  eyebrow: "Porudžbina",
+  heading: `Potvrdite porudžbinu${typeof firstName !== 'undefined' && firstName ? ', ' + firstName : ''}`,
   preheader: "Kliknite na link da potvrdite porudžbinu",
   body: `
-    <h1 style="font-size:20px; color:#333; margin:0 0 16px;">Potvrdite porudžbinu${typeof firstName !== 'undefined' && firstName ? ', ' + firstName : ''}</h1>
-    <p style="font-size:14px; color:#555; line-height:1.6; margin:0 0 16px;">
-      Hvala na porudžbini! Da bismo je obradili, potrebno je da je potvrdite klikom na dugme ispod.
+    <p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0 0 8px;">Hvala na porudžbini! Potvrdite je klikom na dugme ispod da je obradimo.</p>
+    ${ctaButton(confirmUrl, "Potvrdi porudžbinu")}
+    <p style="font-size:12px; color:#aca59d; line-height:1.6; margin:20px 0 0; text-align:center;">
+      Link važi do: ${tokenExpiration}. Ako ne stignete da potvrdite, rezervisane zalihe se oslobađaju - javite nam se i pomoći ćemo da ipak završimo porudžbinu.
     </p>
-    <p style="text-align:center; margin:32px 0;">
-      <a href="${confirmUrl}" style="background-color:#7a5c3e; color:#ffffff; padding:12px 28px; border-radius:4px; text-decoration:none; font-size:14px; font-weight:bold; display:inline-block;">Potvrdi porudžbinu</a>
-    </p>
-    <p style="font-size:12px; color:#999; line-height:1.6; margin:0;">
-      Link važi do: ${tokenExpiration}. Ako ne potvrdite porudžbinu do tada, rezervisane zalihe se oslobađaju - ali nam se slobodno javite i pomoći ćemo vam da je ipak završimo.<br>
-      Ako dugme ne radi, kopirajte ovaj link u vaš pregledač:<br>
-      <a href="${confirmUrl}" style="color:#7a5c3e; word-break:break-all;">${confirmUrl}</a>
-    </p>
+    ${linkFallback(confirmUrl)}
   `
 }) %>

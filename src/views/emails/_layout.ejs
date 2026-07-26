@@ -1,45 +1,44 @@
 <!--
-  Shared wrapper for every transactional email. Included by each content template via
-  the include() helper, passing title/preheader/body (body is raw already-rendered
-  HTML, not further EJS-escaped). Table-based layout + inline styles on purpose -
-  this needs to render consistently in email clients that ignore <style> blocks
-  (Outlook desktop, some webmail).
+  Shared wrapper for every transactional/marketing email. Included via include("_layout", {...}).
+  Table layout + inline styles for Outlook/webmail compatibility. Pass title/preheader/eyebrow/heading/body.
 -->
 <!DOCTYPE html>
 <html lang="sr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %></title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title><%= title %></title>
 </head>
-<body style="margin:0; padding:0; background-color:#f4f2f0; font-family:Arial, Helvetica, sans-serif;">
-  <span style="display:none; max-height:0; overflow:hidden;"><%= typeof preheader !== 'undefined' ? preheader : '' %></span>
-
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f2f0; padding:32px 16px;">
-    <tr>
-      <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px; background-color:#ffffff; border-radius:8px; overflow:hidden;">
-          <tr>
-            <td style="background-color:#7a5c3e; padding:24px 32px;">
-              <span style="color:#ffffff; font-size:20px; font-weight:bold;"><%= SITE_NAME %></span>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:32px;">
-              <%- body %>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:20px 32px; background-color:#f9f7f5; border-top:1px solid #eee;">
-              <p style="margin:0; font-size:12px; color:#888;">
-                <%= SITE_NAME %> &middot; Pitanja? Pišite nam na <a href="mailto:<%= SUPPORT_EMAIL %>" style="color:#7a5c3e;"><%= SUPPORT_EMAIL %></a>
-              </p>
-              <p style="margin:8px 0 0; font-size:12px; color:#aaa;">&copy; <%= currentYear %> <%= SITE_NAME %>. Sva prava zadržana.</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
+<body style="margin:0; padding:0; background-color:#faf8f6; font-family:Arial, Helvetica, sans-serif;">
+<span style="display:none; max-height:0; overflow:hidden; opacity:0;"><%= typeof preheader !== 'undefined' ? preheader : '' %></span>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf8f6; padding:40px 16px;">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px; background-color:#ffffff; border-radius:12px; overflow:hidden; border:1px solid #ece7e2;">
+<tr>
+<td style="background-color:#7a5c3e; padding:26px 36px;">
+<span style="color:#ffffff; font-size:19px; font-weight:700;"><%= SITE_NAME %></span>
+</td>
+</tr>
+<tr>
+<td style="padding:40px 36px 36px;">
+<% if (typeof eyebrow !== 'undefined' && eyebrow) { %>
+<p style="margin:0 0 10px; font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#a5794f;"><%= eyebrow %></p>
+<% } %>
+<% if (typeof heading !== 'undefined' && heading) { %>
+<h1 style="margin:0 0 16px; font-size:22px; line-height:1.3; color:#2d2a26; font-weight:700;"><%= heading %></h1>
+<% } %>
+<%- body %>
+</td>
+</tr>
+<tr>
+<td style="padding:24px 36px; background-color:#f7f4f1; border-top:1px solid #ece7e2;">
+<p style="margin:0; font-size:12px; color:#9b9490; line-height:1.6;"><%= SITE_NAME %> &middot; Pitanja? Pišite nam na <a href="mailto:<%= SUPPORT_EMAIL %>" style="color:#7a5c3e; text-decoration:none;"><%= SUPPORT_EMAIL %></a></p>
+<p style="margin:8px 0 0; font-size:12px; color:#b7b0a9;">&copy; <%= currentYear %> <%= SITE_NAME %>. Sva prava zadržana.</p>
+</td>
+</tr>
+</table>
+</td></tr>
+</table>
 </body>
 </html>

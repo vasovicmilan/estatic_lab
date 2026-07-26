@@ -1,80 +1,71 @@
 <%
   function rows(items, emptyText) {
-    if (!items || !items.length) return `<tr><td style="padding:8px 16px; color:#999; font-size:13px;">${emptyText}</td></tr>`;
+    if (!items || !items.length) return `<tr><td style="padding:12px 20px; color:#aca59d; font-size:13px;">${emptyText}</td></tr>`;
     return items.map(function(item) {
       return `<tr>
-        <td style="padding:6px 16px; font-size:13px; color:#333; border-bottom:1px solid #eee;">${item.label}</td>
-        <td style="padding:6px 16px; font-size:13px; color:#333; border-bottom:1px solid #eee; text-align:right;">${item.count}</td>
+        <td style="padding:9px 20px; font-size:13px; color:#2d2a26; border-bottom:1px solid #ece7e2;">${item.label}</td>
+        <td style="padding:9px 20px; font-size:13px; color:#2d2a26; border-bottom:1px solid #ece7e2; text-align:right;">${item.count}</td>
       </tr>`;
     }).join("");
   }
-
   function perfRows(items, emptyText) {
-    if (!items || !items.length) return `<tr><td style="padding:8px 16px; color:#999; font-size:13px;">${emptyText}</td></tr>`;
+    if (!items || !items.length) return `<tr><td style="padding:12px 20px; color:#aca59d; font-size:13px;">${emptyText}</td></tr>`;
     return items.map(function(item) {
       return `<tr>
-        <td style="padding:6px 16px; font-size:13px; color:#333; border-bottom:1px solid #eee;">${item.label}</td>
-        <td style="padding:6px 16px; font-size:13px; color:#333; border-bottom:1px solid #eee; text-align:right;">${item.avgMs} ms</td>
-        <td style="padding:6px 16px; font-size:13px; color:#999; border-bottom:1px solid #eee; text-align:right;">${item.count}x</td>
+        <td style="padding:9px 20px; font-size:13px; color:#2d2a26; border-bottom:1px solid #ece7e2;">${item.label}</td>
+        <td style="padding:9px 20px; font-size:13px; color:#2d2a26; border-bottom:1px solid #ece7e2; text-align:right;">${item.avgMs} ms</td>
+        <td style="padding:9px 20px; font-size:13px; color:#aca59d; border-bottom:1px solid #ece7e2; text-align:right;">${item.count}x</td>
       </tr>`;
     }).join("");
+  }
+  function statBlock(label, value) {
+    return `<td style="padding:16px 20px; font-size:14px; color:#2d2a26; width:50%;"><span style="display:block; font-size:12px; color:#9b9490; margin-bottom:2px;">${label}</span><strong style="font-size:16px;">${value}</strong></td>`;
   }
 %>
 <%- include("_layout", {
   title: `${periodLabel} - izveštaj sa sajta`,
+  eyebrow: "Admin · Izveštaj",
+  heading: periodLabel,
   preheader: `${periodLabel} za period ${dateRangeLabel}`,
   body: `
-    <h1 style="font-size:20px; color:#333; margin:0 0 4px;">${periodLabel}</h1>
-    <p style="font-size:13px; color:#999; margin:0 0 16px;">Period: ${dateRangeLabel}</p>
-
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9f7f5; border-radius:6px; margin:0 0 20px;">
+    <p style="font-size:13px; color:#9b9490; margin:0 0 20px;">Period: ${dateRangeLabel}</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf8f6; border-radius:8px; margin:0 0 24px;">
       <tr>
-        <td style="padding:16px; font-size:14px; color:#333; width:50%;">
-          <strong>Ukupno zahteva:</strong> ${requests.total}<br>
-          <strong>Jedinstvenih IP adresa:</strong> ${requests.uniqueIPs}<br>
-          <strong>2xx (uspešno):</strong> ${requests.byStatusClass["2xx"]}<br>
-          <strong>3xx (redirekcije):</strong> ${requests.byStatusClass["3xx"]}
-        </td>
-        <td style="padding:16px; font-size:14px; color:#333; width:50%;">
-          <strong>4xx (greške klijenta):</strong> ${requests.byStatusClass["4xx"]}<br>
-          <strong>5xx (greške servera):</strong> ${requests.byStatusClass["5xx"]}<br>
-          <strong>Upozorenja (warn):</strong> ${logs.warnCount}<br>
-          <strong>Greške (error):</strong> ${logs.errorCount}
-        </td>
+        ${statBlock("Ukupno zahteva", requests.total)}
+        ${statBlock("Jedinstvenih IP", requests.uniqueIPs)}
+      </tr>
+      <tr>
+        ${statBlock("2xx / 3xx", `${requests.byStatusClass["2xx"]} / ${requests.byStatusClass["3xx"]}`)}
+        ${statBlock("4xx / 5xx", `${requests.byStatusClass["4xx"]} / ${requests.byStatusClass["5xx"]}`)}
+      </tr>
+      <tr>
+        ${statBlock("Upozorenja", logs.warnCount)}
+        ${statBlock("Greške", logs.errorCount)}
       </tr>
     </table>
-
     ${(typeof perf !== "undefined" && perf) ? `
-    <h2 style="font-size:15px; color:#333; margin:0 0 8px;">Performanse</h2>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9f7f5; border-radius:6px; margin:0 0 20px;">
+    <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Performanse</h2>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf8f6; border-radius:8px; margin:0 0 20px;">
       <tr>
-        <td style="padding:16px; font-size:14px; color:#333; width:50%;">
-          <strong>Prosečno vreme odgovora:</strong> ${perf.avgResponseTimeMs} ms
-        </td>
-        <td style="padding:16px; font-size:14px; color:#333; width:50%;">
-          <strong>Najsporiji odgovor:</strong> ${perf.maxResponseTimeMs} ms${perf.maxResponseTimeUrl ? ` (${perf.maxResponseTimeUrl})` : ""}
-        </td>
+        ${statBlock("Prosečno vreme odgovora", `${perf.avgResponseTimeMs} ms`)}
+        ${statBlock("Najsporiji odgovor", `${perf.maxResponseTimeMs} ms${perf.maxResponseTimeUrl ? ` (${perf.maxResponseTimeUrl})` : ""}`)}
       </tr>
     </table>
-
-    <h2 style="font-size:15px; color:#333; margin:0 0 8px;">Najsporije rute (po proseku)</h2>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px; border:1px solid #eee; border-radius:4px;">
+    <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Najsporije rute (po proseku)</h2>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px; border:1px solid #ece7e2; border-radius:8px; overflow:hidden;">
       ${perfRows(perf.slowestRoutes, "Nema dovoljno podataka za ovaj period.")}
     </table>
     ` : ""}
-
-    <h2 style="font-size:15px; color:#333; margin:0 0 8px;">Najčešće greške</h2>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px; border:1px solid #eee; border-radius:4px;">
+    <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Najčešće greške</h2>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px; border:1px solid #ece7e2; border-radius:8px; overflow:hidden;">
       ${rows(topErrors, "Nema zabeleženih grešaka za ovaj period.")}
     </table>
-
-    <h2 style="font-size:15px; color:#333; margin:0 0 8px;">Najposećenije rute</h2>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px; border:1px solid #eee; border-radius:4px;">
+    <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Najposećenije rute</h2>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px; border:1px solid #ece7e2; border-radius:8px; overflow:hidden;">
       ${rows(topUrls, "Nema podataka o saobraćaju za ovaj period.")}
     </table>
-
-    <h2 style="font-size:15px; color:#333; margin:0 0 8px;">Rute sa najviše 4xx/5xx odgovora</h2>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px; border:1px solid #eee; border-radius:4px;">
+    <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Rute sa najviše 4xx/5xx odgovora</h2>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px; border:1px solid #ece7e2; border-radius:8px; overflow:hidden;">
       ${rows(topErrorUrls, "Nema neuspešnih zahteva za ovaj period.")}
     </table>
   `
