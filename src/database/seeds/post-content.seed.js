@@ -203,7 +203,7 @@ const postDefs = [
       {
         type: "table",
         table: {
-          columns: ["Cilj", "Modaliteti koji se najčešće kombinuju"],
+          columns: ["Modaliteti koji se najčešće kombinuju"],
           rows: [
             { label: "Tonus i oblikovanje tela", values: ["Miostimulacija + limfna drenaža"] },
             { label: "Nega i tonus lica", values: ["Mikrostrujna terapija + ultrazvuk"] },
@@ -292,7 +292,7 @@ const postDefs = [
       {
         type: "table",
         table: {
-          columns: ["Pristup", "Karakteristike"],
+          columns: ["Karakteristike"],
           rows: [
             { label: "Ručna limfna drenaža", values: ["Precizni ručni pokreti, terapeut prilagođava pritisak u realnom vremenu"] },
             { label: "Aparaturna limfna drenaža (ESMA)", values: ["Ravnomerna stimulacija veće površine, pogodna za kombinovanje sa drugim modalitetima u istoj seansi"] },
@@ -360,7 +360,7 @@ const postDefs = [
       {
         type: "table",
         table: {
-          columns: ["Tretman", "Fokus"],
+          columns: ["Fokus"],
           rows: [
             { label: "Anticelulit masaža", values: ["Ručna stimulacija cirkulacije i limfne drenaže"] },
             { label: "Elektrolipoliza", values: ["Ciljana električna stimulacija problematičnih zona"] },
@@ -781,7 +781,7 @@ const postDefs = [
       {
         type: "table",
         table: {
-          columns: ["Cilj", "Bolji izbor"],
+          columns: ["Bolji izbor"],
           rows: [
             { label: "Opuštanje i smanjenje stresa", values: ["Relaksaciona / antistres masaža"] },
             { label: "Bol u leđima ili napetost od sedenja", values: ["Terapeutska masaža"] },
@@ -924,7 +924,7 @@ const postDefs = [
       {
         type: "table",
         table: {
-          columns: ["Tip tretmana", "Orijentacioni broj tretmana"],
+          columns: ["Orijentacioni broj tretmana"],
           rows: [
             { label: "ESMA / miostimulacija / EMS", values: ["Najčešće 8-12 tretmana za primetniji efekat"] },
             { label: "Limfna drenaža", values: ["Najčešće 5-10 tretmana u intenzivnijoj fazi"] },

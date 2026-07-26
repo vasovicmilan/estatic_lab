@@ -82,11 +82,14 @@ export function wrapError(error) {
     return error;
   }
 
-  const details =
-    process.env.NODE_ENV === "development"
-      ? { originalMessage: error.message, stack: error.stack }
-      : null;
-  
+  // Always captured, in every environment - this `details` is only ever read by
+  // logError() (server-side log file) and by buildWebErrorContext(), which itself
+  // gates what actually reaches the browser response by NODE_ENV. Gating it here
+  // too meant that in production the *original* error's message/stack never even
+  // reached the log file, not just the browser - a raw 500 became genuinely
+  // undebuggable from the logs alone.
+  const details = { originalMessage: error.message, stack: error.stack };
+
   return new AppError("Interna greška servera", error.statusCode || 500, {
     isOperational: false,
     details,
@@ -124,7 +127,11 @@ export function buildApiErrorPayload(err, req, extra = {}) {
     },
   };
 
-  if (err.details) {
+  // details is meant for intentionally-thrown operational errors (e.g. validation
+  // field details) that the client is supposed to see. Non-operational errors now
+  // always carry details too (see wrapError) - but that's for the server log only,
+  // never for the client, so it's gated on isOperational here specifically.
+  if (err.details && err.isOperational) {
     payload.error.details = err.details;
   }
 
