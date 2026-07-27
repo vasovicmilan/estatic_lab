@@ -412,6 +412,104 @@ h1, h2, h3, h4, h5, h6,
 }
 
 /* ================================================================
+   Services listing (services/services.ejs)
+   ================================================================ */
+
+.service-stat-value {
+  font-family: var(--font-heading);
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--bs-primary-text-emphasis);
+  line-height: 1;
+}
+
+/* Sticky category filter bar - real links to /usluge, /usluge/kategorija/:slug
+   etc., not client-side filtering, so every tab stays its own indexable page. */
+.service-filter-bar {
+  position: sticky;
+  top: 96px;
+  z-index: 30;
+  background: rgba(251, 246, 241, 0.94);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.service-filter-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.service-filter-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-pill {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 100px;
+  border: 1.5px solid var(--bs-border-color);
+  background: #fff;
+  color: var(--bs-body-color);
+  font-size: 0.84375rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.filter-pill:hover {
+  border-color: var(--bs-primary);
+  color: var(--bs-primary-text-emphasis);
+}
+
+.filter-pill.active {
+  background: var(--bs-primary);
+  border-color: var(--bs-primary);
+  color: #fff;
+}
+
+.filter-pill-count {
+  font-size: 0.71875rem;
+  opacity: 0.7;
+}
+
+/* "Pretražite po temu" tag chips */
+.tag-chip {
+  display: inline-block;
+  font-size: 0.8125rem;
+  color: var(--bs-secondary-color);
+  text-decoration: none;
+  padding: 8px 15px;
+  border-radius: 100px;
+  border: 1px solid var(--bs-border-color);
+  background: var(--bs-tertiary-bg);
+}
+
+.tag-chip:hover,
+.tag-chip.active {
+  border-color: var(--bs-primary);
+  color: var(--bs-primary-text-emphasis);
+}
+
+/* CSS-only "show more" disclosure for the remaining tag chips */
+.tag-chips-more summary {
+  list-style: none;
+  color: var(--bs-primary-text-emphasis);
+  font-weight: 600;
+  font-size: 0.84375rem;
+  cursor: pointer;
+  margin-top: 18px;
+}
+
+.tag-chips-more summary::-webkit-details-marker {
+  display: none;
+}
+
+/* ================================================================
    Blog post article (blog/post-details.ejs)
    ================================================================ */
 

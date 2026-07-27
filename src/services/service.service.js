@@ -124,6 +124,19 @@ export async function findServicesByCategorySlug(categorySlug, { limit = 12, pag
   return findActiveServices({ limit, page, filters: { category: category._id } });
 }
 
+// Total active services, used for the "Sve usluge" filter tab count.
+export async function countAllActiveServices() {
+  return serviceRepo.countServices({ isActive: true });
+}
+
+// Decorates each public category with how many active services it currently
+// has, so the /usluge filter tabs can show real counts (e.g. "ESMA 5") instead
+// of just labels.
+export async function attachServiceCountsToCategories(categories = []) {
+  const counts = await Promise.all(categories.map((cat) => serviceRepo.countServices({ category: cat.id, isActive: true })));
+  return categories.map((cat, index) => ({ ...cat, count: counts[index] }));
+}
+
 // ---- Phase 1: core info + image -------------------------------------------------
 export async function createDraftService(data) {
   if (!data) validationError("data");
@@ -290,6 +303,8 @@ export default {
   findActiveServices,
   findHighlightedServices,
   findServicesByCategorySlug,
+  countAllActiveServices,
+  attachServiceCountsToCategories,
   createDraftService,
   addPackagesToService,
   addExtrasAndPublish,
