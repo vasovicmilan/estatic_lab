@@ -204,12 +204,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // clicking a pill still navigates and works; with JS enabled, it swaps the
   // card's price/badge/savings/CTA in place instead of navigating away.
   document.querySelectorAll("[data-package-group]").forEach((card) => {
-    const priceEl = card.querySelector("[data-tier-price]");
-    const oldPriceEl = card.querySelector("[data-tier-old-price]");
-    const savingsEl = card.querySelector("[data-tier-savings]");
-    const badgeEl = card.querySelector("[data-tier-badge]");
-    const descEl = card.querySelector("[data-tier-desc]");
-    const ctaEl = card.querySelector("[data-tier-cta]");
+    const priceEl = card.querySelector("[data-tier-price-target]");
+    const oldPriceEl = card.querySelector("[data-tier-old-price-target]");
+    const savingsEl = card.querySelector("[data-tier-savings-target]");
+    const badgeEl = card.querySelector("[data-tier-badge-target]");
+    const descEl = card.querySelector("[data-tier-desc-target]");
+    const ctaEl = card.querySelector("[data-tier-cta-target]");
     const buttons = card.querySelectorAll("[data-tier-button]");
 
     buttons.forEach((button) => {

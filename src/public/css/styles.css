@@ -441,9 +441,9 @@ h1, h2, h3, h4, h5, h6,
   color: #fff;
 }
 
-[data-tier-badge]:empty,
-[data-tier-old-price]:empty,
-[data-tier-savings]:empty {
+[data-tier-badge-target]:empty,
+[data-tier-old-price-target]:empty,
+[data-tier-savings-target]:empty {
   display: none;
 }
 
