@@ -5,6 +5,19 @@ const SHOP_TRUST = [
   { icon: "bi-arrow-return-left", title: "Pravo na odustanak", text: "14 dana za odustanak od porudžbine, u skladu sa Zakonom o zaštiti potrošača." },
 ];
 
+// Gives the /prodavnica landing real, indexable body copy above the trust
+// badges - what's actually being sold here and why it's the same equipment
+// used in the studio, not just a generic marketplace.
+const SHOP_INTRO = {
+  eyebrow: "Prodavnica",
+  title: "Profesionalna kozmetička oprema i potrošni materijal",
+  lead:
+    "Ovde prodajemo istu opremu, delove i potrošni materijal koje sami koristimo na tretmanima u Estetik Lab centru - ne generičku kozmetiku, već ono što stoji iza rezultata koje vidite na tretmanu.",
+  paragraphs: [
+    "U ponudi su rezervni delovi i potrošni materijal za uređaje koje koristimo na ESMA tretmanima (elektrode, nastavci, gelovi za provodljivost), kao i profesionalna oprema za kućnu negu. Uz svaku porudžbinu ostaje podrška našeg tima - i posle isporuke, ako vam zatreba pomoć oko korišćenja ili dostupnosti delova.",
+  ],
+};
+
 const SHOP_FAQ = [
   {
     pitanje: "Kako se plaća porudžbina?",
@@ -32,6 +45,7 @@ export function prepareProductListData(result, { query = {}, categories = [], ta
     // category/tag/search/badge views (and page 2+) go straight to the filtered grid
     isLandingView,
     badgeTitle,
+    intro: isLandingView ? SHOP_INTRO : null,
     featured,
     sale,
     categoryTiles: isLandingView ? categories : [],
