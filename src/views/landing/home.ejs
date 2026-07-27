@@ -186,26 +186,24 @@
   <!-- Location -->
   <% if (data.map && data.map.embedUrl) { %>
     <section class="container py-5">
-      <p class="section-eyebrow justify-content-center d-flex">Gde se nalazimo</p>
-      <h2 class="h3 mb-4 text-center"><%= data.map.address %></h2>
-      <div class="ratio ratio-21x9 rounded-4 overflow-hidden border">
-        <iframe
-          src="<%= data.map.embedUrl %>"
-          title="<%= data.map.address %>"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-          allowfullscreen
-        ></iframe>
-      </div>
-    </section>
-  <% } %>
-  <% if (data.googleDataNotice) { %>
-    <section class="container pb-5">
-      <div class="row justify-content-center">
-        <div class="col-lg-9">
-          <div class="border rounded-4 p-3 p-md-4 bg-light small">
-            <p class="mb-1"><%= data.googleDataNotice.text %></p>
-            <a href="<%= data.googleDataNotice.privacyUrl %>">Pročitajte više u našoj Politici privatnosti</a>
+      <div class="row align-items-center g-5">
+        <div class="col-lg-5">
+          <p class="section-eyebrow">Gde se nalazimo</p>
+          <h2 class="h3 mb-3"><%= data.map.address %></h2>
+          <% if (data.googleDataNotice) { %>
+            <p class="text-muted small mb-2"><%= data.googleDataNotice.text %></p>
+            <a href="<%= data.googleDataNotice.privacyUrl %>" class="small fw-semibold">Pročitajte više u našoj Politici privatnosti</a>
+          <% } %>
+        </div>
+        <div class="col-lg-7">
+          <div class="ratio ratio-4x3 rounded-4 overflow-hidden border">
+            <iframe
+              src="<%= data.map.embedUrl %>"
+              title="<%= data.map.address %>"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              allowfullscreen
+            ></iframe>
           </div>
         </div>
       </div>
