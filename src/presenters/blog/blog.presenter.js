@@ -1,4 +1,41 @@
+// Shown only on the plain /blog landing page (no active search) - gives the
+// page real, indexable body copy beyond just a grid of post cards, and frames
+// what the blog is for before a visitor starts browsing categories/tags.
+const BLOG_INTRO = {
+  eyebrow: "Sa bloga",
+  title: "Vodič kroz masaže, ESMA tretmane i negu lica i tela",
+  lead:
+    "Ovde objašnjavamo kako rade naši tretmani, čemu služe i kome su namenjeni - bez marketinških obećanja, već jasnim informacijama zasnovanim na iskustvu našeg tima terapeuta u Novom Sadu.",
+  paragraphs: [
+    "Estetski i wellness tretmani daju najbolje rezultate kada znate šta da očekujete - koliko traje tretman, da li postoje kontraindikacije i koliko poseta je potrebno da bi efekti bili vidljivi. Zato u svakom tekstu detaljno opisujemo tok tretmana, ko treba da bude oprezan i po čemu se pojedini pristupi razlikuju.",
+  ],
+  highlights: [
+    {
+      icon: "bi-journal-richtext",
+      title: "Objašnjenja tretmana",
+      text: "Kako funkcionišu ESMA tretmani, masaže i nega lica i tela - korak po korak, bez stručnog žargona.",
+    },
+    {
+      icon: "bi-shield-check",
+      title: "Bezbednost i kontraindikacije",
+      text: "Kada je tretman bezbedan, a kada je potrebno prethodno mišljenje lekara.",
+    },
+    {
+      icon: "bi-graph-up",
+      title: "Realna očekivanja",
+      text: "Koliko tretmana je obično potrebno i kada se mogu očekivati prvi vidljivi rezultati.",
+    },
+    {
+      icon: "bi-tags",
+      title: "Pregled po temama",
+      text: "Pronađite tekstove po vrsti tretmana ili konkretnoj temi koja vas trenutno zanima.",
+    },
+  ],
+};
+
 export function prepareBlogListData(result, { query = {}, categories = [], tags = [] } = {}) {
+  const search = query.search || "";
+
   return {
     posts: result.data,
     pagination: {
@@ -11,7 +48,8 @@ export function prepareBlogListData(result, { query = {}, categories = [], tags 
       categories,
       tags,
     },
-    search: query.search || "",
+    search,
+    intro: search ? null : BLOG_INTRO,
     breadcrumbs: [{ label: "Blog", url: null }],
   };
 }

@@ -88,7 +88,7 @@ export async function searchBlog(req, res, next) {
     if (!q) return res.redirect("/blog");
 
     const data = await blogService.searchBlogPosts(q, { page: parseInt(page, 10) || 1 });
-    const viewData = prepareBlogListData(data, { query: req.query });
+    const viewData = prepareBlogListData(data, { query: { ...req.query, search: q } });
 
     return res.render("blog/blog", {
       pageTitle: data.seo.pageTitle,
