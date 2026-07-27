@@ -1,11 +1,11 @@
-<div class="card h-100 shadow-sm">
+<a href="/blog/<%= post.slug %>" class="card h-100 shadow-sm text-decoration-none text-dark hover-lift">
   <% if (post.slika && post.slika.url) { %>
-    <img src="<%= post.slika.url %>" class="card-img-top" alt="<%= post.slika.alt || post.naslov %>" style="height:180px;object-fit:cover;">
+    <img src="<%= post.slika.url %>" class="card-img-top post-card-img" alt="<%= post.slika.alt || post.naslov %>">
   <% } %>
   <div class="card-body d-flex flex-column">
     <div class="small text-muted mb-1"><%= post.datumObjave %> &middot; <%= post.vremeCitanja %></div>
-    <h3 class="h6"><a href="/blog/<%= post.slug %>" class="text-decoration-none text-dark"><%= post.naslov %></a></h3>
+    <h3 class="h6"><%= post.naslov %></h3>
     <p class="text-muted small flex-grow-1"><%= post.kratakOpis %></p>
-    <a href="/blog/<%= post.slug %>" class="small">Pročitajte više &rarr;</a>
+    <span class="small text-primary-emphasis fw-semibold">Pročitajte više &rarr;</span>
   </div>
-</div>
+</a>
