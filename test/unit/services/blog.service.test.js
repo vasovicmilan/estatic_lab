@@ -12,12 +12,15 @@ describe("blog.service", () => {
       t.mock.method(postService, "findPublishedPosts", async () => ({ data: [{ id: "p1" }], total: 1, page: 1, limit: 9, totalPages: 1 }));
       t.mock.method(categoryService, "getPublicCategories", async () => [{ id: "c1" }]);
       t.mock.method(tagService, "getPublicTags", async () => [{ id: "t1" }]);
+      t.mock.method(postService, "countAllPublishedPosts", async () => 1);
+      t.mock.method(postService, "attachPostCountsToCategories", async (categories) => categories.map((c) => ({ ...c, count: 1 })));
 
       const result = await blogService.getBlogLandingData({});
 
       assert.equal(result.data.length, 1);
       assert.equal(result.categories.length, 1);
       assert.equal(result.tags.length, 1);
+      assert.equal(result.totalCount, 1);
     });
   });
 
@@ -31,6 +34,8 @@ describe("blog.service", () => {
       t.mock.method(categoryService, "getCategoryBySlugAndDomain", async () => ({ _id: categoryId, name: "Masaze", slug: "masaze", shortDescription: "" }));
       t.mock.method(categoryService, "getPublicCategories", async () => []);
       t.mock.method(tagService, "getPublicTags", async () => []);
+      t.mock.method(postService, "countAllPublishedPosts", async () => 0);
+      t.mock.method(postService, "attachPostCountsToCategories", async () => []);
       let filtersUsed;
       t.mock.method(postService, "findPublishedPosts", async ({ filters }) => {
         filtersUsed = filters;

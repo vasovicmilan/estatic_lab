@@ -49,6 +49,18 @@ export async function findPublishedPosts({ limit = 10, page = 1, filters = {}, s
   return { data: mapPostsForCards(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 
+// Total published posts, used for the "Sve objave" filter tab count.
+export async function countAllPublishedPosts() {
+  return postRepo.countPosts({ publishedOnly: true });
+}
+
+// Decorates each public category with how many published posts it currently
+// has, so the /blog filter tabs can show real counts, same as /usluge and /prodavnica.
+export async function attachPostCountsToCategories(categories = []) {
+  const counts = await Promise.all(categories.map((cat) => postRepo.countPosts({ category: cat.id, publishedOnly: true })));
+  return categories.map((cat, index) => ({ ...cat, count: counts[index] }));
+}
+
 export async function getPublicPostBySlug(slug) {
   if (!slug) validationError("slug");
   const post = await postRepo.findPostBySlug(slug, { populateFields: populate });
@@ -126,6 +138,8 @@ export default {
   getPostById,
   getPostForEdit,
   findPublishedPosts,
+  countAllPublishedPosts,
+  attachPostCountsToCategories,
   getPublicPostBySlug,
   createPost,
   updatePostById,

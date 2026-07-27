@@ -12,7 +12,7 @@ export async function blogHome(req, res, next) {
   try {
     const { page = 1, search } = req.query;
     const data = await blogService.getBlogLandingData({ page: parseInt(page, 10) || 1, search: search || "" });
-    const viewData = prepareBlogListData(data, { query: req.query, categories: data.categories, tags: data.tags });
+    const viewData = prepareBlogListData(data, { query: req.query, categories: data.categories, tags: data.tags, totalCount: data.totalCount });
 
     return res.render("blog/blog", {
       pageTitle: data.seo.pageTitle,
@@ -31,7 +31,7 @@ export async function blogCategory(req, res, next) {
     const { page = 1 } = req.query;
 
     const data = await blogService.getBlogCategoryData(categorySlug, { page: parseInt(page, 10) || 1 });
-    const viewData = prepareBlogCategoryData(data.category, data, req.query);
+    const viewData = prepareBlogCategoryData(data.category, data, req.query, { categories: data.categories, tags: data.tags, totalCount: data.totalCount });
 
     return res.render("blog/blog", {
       pageTitle: data.seo.pageTitle,
@@ -50,7 +50,7 @@ export async function blogTag(req, res, next) {
     const { page = 1 } = req.query;
 
     const data = await blogService.getBlogTagData(tagSlug, { page: parseInt(page, 10) || 1 });
-    const viewData = prepareBlogTagData(data.tag, data, req.query);
+    const viewData = prepareBlogTagData(data.tag, data, req.query, { categories: data.categories, tags: data.tags, totalCount: data.totalCount });
 
     return res.render("blog/blog", {
       pageTitle: data.seo.pageTitle,
@@ -88,7 +88,7 @@ export async function searchBlog(req, res, next) {
     if (!q) return res.redirect("/blog");
 
     const data = await blogService.searchBlogPosts(q, { page: parseInt(page, 10) || 1 });
-    const viewData = prepareBlogListData(data, { query: { ...req.query, search: q } });
+    const viewData = prepareBlogListData(data, { query: { ...req.query, search: q }, categories: data.categories, tags: data.tags, totalCount: data.totalCount });
 
     return res.render("blog/blog", {
       pageTitle: data.seo.pageTitle,

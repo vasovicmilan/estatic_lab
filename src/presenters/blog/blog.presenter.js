@@ -33,7 +33,32 @@ const BLOG_INTRO = {
   ],
 };
 
-export function prepareBlogListData(result, { query = {}, categories = [], tags = [] } = {}) {
+// Builds the category filter bar shown at the top of every /blog view (plain
+// list, category, and tag pages alike) - same pattern as /usluge and
+// /prodavnica: real links to existing routes, not client-side filtering.
+function buildCategoryTabs(categories = [], activeCategorySlug = null, totalCount = 0) {
+  return [
+    { label: "Sve objave", href: "/blog", count: totalCount, active: !activeCategorySlug },
+    ...categories.map((cat) => ({
+      label: cat.naziv,
+      href: `/blog/kategorija/${cat.slug}`,
+      count: cat.count || 0,
+      active: cat.slug === activeCategorySlug,
+    })),
+  ];
+}
+
+// Builds the "search by topic" tag chips shown below the grid, with the
+// current tag (if any) marked active - same pattern as /usluge.
+function buildTagChips(tags = [], activeTagSlug = null) {
+  return tags.map((tag) => ({
+    label: tag.naziv,
+    href: `/blog/tag/${tag.slug}`,
+    active: tag.slug === activeTagSlug,
+  }));
+}
+
+export function prepareBlogListData(result, { query = {}, categories = [], tags = [], totalCount = 0 } = {}) {
   const search = query.search || "";
 
   return {
@@ -44,20 +69,20 @@ export function prepareBlogListData(result, { query = {}, categories = [], tags 
       basePath: "/blog",
       query,
     },
-    sidebar: {
-      categories,
-      tags,
-    },
+    categoryTabs: buildCategoryTabs(categories, null, totalCount),
+    tagChips: buildTagChips(tags, null),
     search,
     intro: search ? null : BLOG_INTRO,
     breadcrumbs: [{ label: "Blog", url: null }],
   };
 }
 
-export function prepareBlogCategoryData(category, result, query = {}) {
+export function prepareBlogCategoryData(category, result, query = {}, { categories = [], tags = [], totalCount = 0 } = {}) {
   return {
     category,
     posts: result.data,
+    categoryTabs: buildCategoryTabs(categories, category.slug, totalCount),
+    tagChips: buildTagChips(tags, null),
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
@@ -71,10 +96,12 @@ export function prepareBlogCategoryData(category, result, query = {}) {
   };
 }
 
-export function prepareBlogTagData(tag, result, query = {}) {
+export function prepareBlogTagData(tag, result, query = {}, { categories = [], tags = [], totalCount = 0 } = {}) {
   return {
     tag,
     posts: result.data,
+    categoryTabs: buildCategoryTabs(categories, null, totalCount),
+    tagChips: buildTagChips(tags, tag.slug),
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,

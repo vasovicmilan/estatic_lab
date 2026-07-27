@@ -464,6 +464,12 @@ h1, h2, h3, h4, h5, h6,
   max-width: 720px;
 }
 
+.blog-search-form {
+  max-width: 260px;
+  flex-shrink: 0;
+  width: 100%;
+}
+
 /* ================================================================
    Services listing (services/services.ejs)
    ================================================================ */

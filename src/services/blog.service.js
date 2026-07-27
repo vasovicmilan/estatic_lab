@@ -5,11 +5,13 @@ import { buildPageSeo } from "../seo/index.js";
 import { validationError } from "../utils/error.util.js";
 
 export async function getBlogLandingData({ limit = 9, page = 1, search = "" } = {}) {
-  const [posts, categories, tags] = await Promise.all([
+  const [posts, categoriesRaw, tags, totalCount] = await Promise.all([
     postService.findPublishedPosts({ limit, page, search }),
     categoryService.getPublicCategories("post"),
     tagService.getPublicTags("post"),
+    postService.countAllPublishedPosts(),
   ]);
+  const categories = await postService.attachPostCountsToCategories(categoriesRaw);
 
   const seo = buildPageSeo({
     title: "Blog | Estetik Lab",
@@ -18,17 +20,19 @@ export async function getBlogLandingData({ limit = 9, page = 1, search = "" } = 
     isIndexable: true,
   });
 
-  return { ...posts, categories, tags, seo };
+  return { ...posts, categories, tags, totalCount, seo };
 }
 
 export async function getBlogCategoryData(categorySlug, { limit = 9, page = 1 } = {}) {
   if (!categorySlug) validationError("categorySlug");
 
-  const [category, categories, tags] = await Promise.all([
+  const [category, categoriesRaw, tags, totalCount] = await Promise.all([
     categoryService.getCategoryBySlugAndDomain(categorySlug, "post"),
     categoryService.getPublicCategories("post"),
     tagService.getPublicTags("post"),
+    postService.countAllPublishedPosts(),
   ]);
+  const categories = await postService.attachPostCountsToCategories(categoriesRaw);
   const posts = await postService.findPublishedPosts({ limit, page, filters: { category: category._id } });
 
   const seo = buildPageSeo({
@@ -43,6 +47,7 @@ export async function getBlogCategoryData(categorySlug, { limit = 9, page = 1 } 
     category: { id: category._id.toString(), naziv: category.name, slug: category.slug },
     categories,
     tags,
+    totalCount,
     seo,
   };
 }
@@ -50,11 +55,13 @@ export async function getBlogCategoryData(categorySlug, { limit = 9, page = 1 } 
 export async function getBlogTagData(tagSlug, { limit = 9, page = 1 } = {}) {
   if (!tagSlug) validationError("tagSlug");
 
-  const [tag, categories, tags] = await Promise.all([
+  const [tag, categoriesRaw, tags, totalCount] = await Promise.all([
     tagService.getTagBySlugAndDomain(tagSlug, "post"),
     categoryService.getPublicCategories("post"),
     tagService.getPublicTags("post"),
+    postService.countAllPublishedPosts(),
   ]);
+  const categories = await postService.attachPostCountsToCategories(categoriesRaw);
   const posts = await postService.findPublishedPosts({ limit, page, filters: { tag: tag._id } });
 
   const seo = buildPageSeo({
@@ -69,6 +76,7 @@ export async function getBlogTagData(tagSlug, { limit = 9, page = 1 } = {}) {
     tag: { id: tag._id.toString(), naziv: tag.name, slug: tag.slug },
     categories,
     tags,
+    totalCount,
     seo,
   };
 }
@@ -91,7 +99,13 @@ export async function getBlogPostData(slug) {
 export async function searchBlogPosts(search, { limit = 9, page = 1 } = {}) {
   if (!search) validationError("search");
 
-  const posts = await postService.findPublishedPosts({ limit, page, search });
+  const [posts, categoriesRaw, tags, totalCount] = await Promise.all([
+    postService.findPublishedPosts({ limit, page, search }),
+    categoryService.getPublicCategories("post"),
+    tagService.getPublicTags("post"),
+    postService.countAllPublishedPosts(),
+  ]);
+  const categories = await postService.attachPostCountsToCategories(categoriesRaw);
 
   const seo = buildPageSeo({
     title: `Pretraga: ${search} | Blog | Estetik Lab`,
@@ -100,7 +114,7 @@ export async function searchBlogPosts(search, { limit = 9, page = 1 } = {}) {
     isIndexable: false,
   });
 
-  return { ...posts, search, seo };
+  return { ...posts, categories, tags, totalCount, search, seo };
 }
 
 export default {
