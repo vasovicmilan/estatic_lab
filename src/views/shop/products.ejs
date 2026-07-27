@@ -1,151 +1,101 @@
 <%- include("../includes/head") %>
 <%- include("../includes/navigation") %>
 
-<main class="container py-5">
-  <%- include("../includes/breadcrumbs") %>
+<main>
   <%- include("../includes/flash-messages") %>
 
-  <% if (data.isLandingView) { %>
-    <div class="mb-5">
-      <div class="row justify-content-center">
-        <div class="col-lg-8 text-center">
-          <p class="section-eyebrow justify-content-center d-flex"><%= data.intro.eyebrow %></p>
-          <h1 class="h2 mb-3"><%= data.intro.title %></h1>
-          <p class="lead text-muted"><%= data.intro.lead %></p>
-          <% data.intro.paragraphs.forEach(function(p) { %>
-            <p class="text-muted mb-0"><%= p %></p>
+  <section class="bg-white pt-5 <%= data.isLandingView ? '' : 'pb-4' %>">
+    <div class="container">
+      <%- include("../includes/breadcrumbs") %>
+
+      <% if (data.isLandingView) { %>
+        <p class="section-eyebrow"><%= data.intro.eyebrow %></p>
+        <h1 class="h2 mb-4 shop-intro-title"><%= data.intro.title %></h1>
+        <p class="lead text-muted shop-intro-text"><%= data.intro.lead %></p>
+        <% data.intro.paragraphs.forEach(function(p) { %>
+          <p class="text-muted shop-intro-text"><%= p %></p>
+        <% }) %>
+
+        <% if (data.trust && data.trust.length > 0) { %>
+          <div class="row g-4 mt-2 mb-4 pb-4 border-bottom">
+            <% data.trust.forEach(function(item) { %>
+              <div class="col-6 col-md-3">
+                <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary-emphasis rounded-circle icon-circle-lg mb-3">
+                  <i class="bi <%= item.icon %> fs-4"></i>
+                </div>
+                <h3 class="h6"><%= item.title %></h3>
+                <p class="text-muted small"><%= item.text %></p>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      <% } else { %>
+        <h1 class="h3 mb-2"><%= data.badgeTitle || (data.category ? data.category.naziv : (data.tag ? data.tag.naziv : "Prodavnica")) %></h1>
+        <% if (data.subtitle) { %><p class="text-muted mb-4"><%= data.subtitle %></p><% } %>
+      <% } %>
+    </div>
+  </section>
+
+  <% if (data.categoryTabs && data.categoryTabs.length > 0) { %>
+    <nav class="service-filter-bar" aria-label="Filter po kategoriji">
+      <div class="container">
+        <div class="service-filter-scroll py-3">
+          <% data.categoryTabs.forEach(function(tab) { %>
+            <a href="<%= tab.href %>" class="filter-pill <%= tab.active ? 'active' : '' %>">
+              <%= tab.label %>
+              <span class="filter-pill-count">(<%= tab.count %>)</span>
+            </a>
           <% }) %>
         </div>
       </div>
-    </div>
-
-    <% if (data.trust && data.trust.length > 0) { %>
-      <section class="mb-5">
-        <div class="row g-4 text-center">
-          <% data.trust.forEach(function(item) { %>
-            <div class="col-md-3 col-6">
-              <i class="bi <%= item.icon %> fs-2 text-primary mb-2 d-block"></i>
-              <h3 class="h6 mb-1"><%= item.title %></h3>
-              <p class="text-muted small mb-0"><%= item.text %></p>
-            </div>
-          <% }) %>
-        </div>
-      </section>
-    <% } %>
-
-    <% if (data.featured && data.featured.length > 0) { %>
-      <section class="mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h2 class="h4 mb-0">Istaknuto</h2>
-          <a href="/prodavnica?badge=featured" class="small">Vidi sve &rarr;</a>
-        </div>
-        <div class="row g-4">
-          <% data.featured.forEach(function(product) { %>
-            <div class="col-md-3">
-              <%- include("../includes/components/card-product", { product: product }) %>
-            </div>
-          <% }) %>
-        </div>
-      </section>
-    <% } %>
-
-    <% if (data.sale && data.sale.length > 0) { %>
-      <section class="mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h2 class="h4 mb-0">Na akciji</h2>
-          <a href="/prodavnica?badge=sale" class="small">Vidi sve &rarr;</a>
-        </div>
-        <div class="row g-4">
-          <% data.sale.forEach(function(product) { %>
-            <div class="col-md-3">
-              <%- include("../includes/components/card-product", { product: product }) %>
-            </div>
-          <% }) %>
-        </div>
-      </section>
-    <% } %>
-
-    <% if (data.categoryTiles && data.categoryTiles.length > 0) { %>
-      <section class="mb-5">
-        <h2 class="h4 mb-3">Po kategorijama</h2>
-        <div class="row g-3">
-          <% data.categoryTiles.forEach(function(cat) { %>
-            <div class="col-md-3 col-6">
-              <a href="/prodavnica/kategorija/<%= cat.slug %>" class="btn btn-outline-secondary w-100 py-3 text-decoration-none"><%= cat.naziv %></a>
-            </div>
-          <% }) %>
-        </div>
-      </section>
-    <% } %>
-
-    <h2 class="h4 mb-3">Svi proizvodi</h2>
-  <% } else { %>
-    <h1 class="h3 mb-2"><%= data.badgeTitle || (data.category ? data.category.naziv : (data.tag ? data.tag.naziv : "Prodavnica")) %></h1>
-    <% if (data.subtitle) { %><p class="text-muted mb-4"><%= data.subtitle %></p><% } %>
+    </nav>
   <% } %>
 
-  <div class="row">
-    <div class="col-lg-9">
-      <% if (data.products && data.products.length > 0) { %>
-        <div class="row g-4">
-          <% data.products.forEach(function(product) { %>
-            <div class="col-md-4">
-              <%- include("../includes/components/card-product", { product: product }) %>
-            </div>
-          <% }) %>
-        </div>
-        <%- include("../includes/pagination", { pagination: data.pagination }) %>
-      <% } else { %>
-        <p class="text-muted">Trenutno nema dostupnih proizvoda.</p>
-      <% } %>
-    </div>
-
-    <div class="col-lg-3">
-      <% if (data.sidebar && data.sidebar.categories && data.sidebar.categories.length > 0) { %>
-        <div class="card mb-4">
-          <div class="card-header"><h2 class="h6 mb-0">Kategorije</h2></div>
-          <div class="list-group list-group-flush">
-            <a href="/prodavnica" class="list-group-item list-group-item-action <%= !data.sidebar.activeCategorySlug && !data.sidebar.activeTagSlug ? 'active' : '' %>">Svi proizvodi</a>
-            <% data.sidebar.categories.forEach(function(cat) { %>
-              <a href="/prodavnica/kategorija/<%= cat.slug %>" class="list-group-item list-group-item-action <%= data.sidebar.activeCategorySlug === cat.slug ? 'active' : '' %>"><%= cat.naziv %></a>
-            <% }) %>
+  <div class="container py-5">
+    <% if (data.products && data.products.length > 0) { %>
+      <div class="row g-4">
+        <% data.products.forEach(function(product) { %>
+          <div class="col-md-4">
+            <%- include("../includes/components/card-product", { product: product }) %>
           </div>
-        </div>
-      <% } %>
-
-      <% if (data.sidebar && data.sidebar.tags && data.sidebar.tags.length > 0) { %>
-        <div class="card mb-4">
-          <div class="card-header"><h2 class="h6 mb-0">Tagovi</h2></div>
-          <div class="card-body d-flex flex-wrap gap-2">
-            <% data.sidebar.tags.forEach(function(tag) { %>
-              <a href="/prodavnica/tag/<%= tag.slug %>" class="badge text-decoration-none <%= data.sidebar.activeTagSlug === tag.slug ? 'bg-primary' : 'bg-secondary' %>"><%= tag.naziv %></a>
-            <% }) %>
-          </div>
-        </div>
-      <% } %>
-    </div>
+        <% }) %>
+      </div>
+      <%- include("../includes/pagination", { pagination: data.pagination }) %>
+    <% } else { %>
+      <p class="text-muted text-center py-5 mb-0">Nema proizvoda u ovoj kategoriji.</p>
+    <% } %>
   </div>
 
   <% if (data.isLandingView && data.faq && data.faq.length > 0) { %>
-    <section class="mt-5 pt-4 border-top">
-      <h2 class="h4 mb-4">Česta pitanja o kupovini</h2>
-      <div class="row justify-content-center">
-        <div class="col-lg-8">
-          <%- include("../includes/components/faq", { faq: data.faq }) %>
+    <section class="bg-white border-top py-5">
+      <div class="container">
+        <h2 class="h4 mb-4 text-center">Česta pitanja o kupovini</h2>
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <%- include("../includes/components/faq", { faq: data.faq }) %>
+          </div>
         </div>
       </div>
     </section>
   <% } %>
 
   <% if (data.isLandingView && data.latestPosts && data.latestPosts.length > 0) { %>
-    <section class="mt-5 pt-4 border-top">
-      <h2 class="h4 mb-4">Sa bloga</h2>
-      <div class="row g-4">
-        <% data.latestPosts.forEach(function(post) { %>
-          <div class="col-md-4">
-            <%- include("../includes/components/card-post", { post: post }) %>
+    <section class="border-top py-5">
+      <div class="container">
+        <div class="d-flex align-items-end justify-content-between flex-wrap gap-3 mb-4">
+          <div>
+            <p class="section-eyebrow mb-2">Sa bloga</p>
+            <h2 class="h3 mb-0">Saveti i objašnjenja iz struke</h2>
           </div>
-        <% }) %>
+          <a href="/blog" class="fw-semibold text-decoration-none text-primary-emphasis">Svi tekstovi &rarr;</a>
+        </div>
+        <div class="row g-4">
+          <% data.latestPosts.forEach(function(post) { %>
+            <div class="col-md-4">
+              <%- include("../includes/components/card-post", { post: post }) %>
+            </div>
+          <% }) %>
+        </div>
       </div>
     </section>
   <% } %>

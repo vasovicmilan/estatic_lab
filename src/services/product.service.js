@@ -264,6 +264,18 @@ export async function listPublicProducts({ search = "", filters = {}, limit = 12
   return { data: mapProductsForPublic(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 
+// Total active products, used for the "Svi proizvodi" filter tab count.
+export async function countAllActiveProducts() {
+  return productRepo.countProducts({ isActive: true });
+}
+
+// Decorates each public category with how many active products it currently
+// has, so the /prodavnica filter tabs can show real counts, same as /usluge.
+export async function attachProductCountsToCategories(categories = []) {
+  const counts = await Promise.all(categories.map((cat) => productRepo.countProducts({ category: cat.id, isActive: true })));
+  return categories.map((cat, index) => ({ ...cat, count: counts[index] }));
+}
+
 export async function getPublicProductBySlug(slug) {
   if (!slug) validationError("slug");
   const product = await productRepo.findProductBySlug(slug);
@@ -354,6 +366,8 @@ export default {
   deleteProductById,
   listPublicProducts,
   getPublicProductBySlug,
+  countAllActiveProducts,
+  attachProductCountsToCategories,
   getVariationRaw,
   decreaseVariationStock,
   restoreVariationStock,

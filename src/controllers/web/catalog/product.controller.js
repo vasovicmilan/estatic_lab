@@ -24,21 +24,20 @@ export async function productList(req, res, next) {
     const badgeFilter = ["featured", "sale"].includes(badge) ? badge : null;
     const isLandingView = pageNum === 1 && !search && !badgeFilter;
 
-    const [result, categories, tags, featuredResult, saleResult, latestPostsResult] = await Promise.all([
+    const [result, categoriesRaw, tags, totalCount, latestPostsResult] = await Promise.all([
       productService.listPublicProducts({ page: pageNum, search, filters: badgeFilter ? { badge: badgeFilter } : {} }),
       categoryService.getPublicCategories("product"),
       tagService.getPublicTags("product"),
-      isLandingView ? productService.listPublicProducts({ filters: { badge: "featured" }, limit: 4 }) : null,
-      isLandingView ? productService.listPublicProducts({ filters: { badge: "sale" }, limit: 4 }) : null,
+      productService.countAllActiveProducts(),
       isLandingView ? postService.findPublishedPosts({ limit: 3 }) : null,
     ]);
+    const categories = await productService.attachProductCountsToCategories(categoriesRaw);
 
     const viewData = prepareProductListData(result, {
       query: req.query,
       categories,
       tags,
-      featured: featuredResult?.data || [],
-      sale: saleResult?.data || [],
+      totalCount,
       latestPosts: latestPostsResult?.data || [],
       isLandingView,
       badgeTitle: badgeFilter ? BADGE_LABELS[badgeFilter] : null,
@@ -63,18 +62,20 @@ export async function productCategory(req, res, next) {
     const { categorySlug } = req.params;
     const { page = 1 } = req.query;
 
-    const [category, categories, tags] = await Promise.all([
+    const [category, categoriesRaw, tags, totalCount] = await Promise.all([
       categoryService.getCategoryBySlugAndDomain(categorySlug, "product"),
       categoryService.getPublicCategories("product"),
       tagService.getPublicTags("product"),
+      productService.countAllActiveProducts(),
     ]);
+    const categories = await productService.attachProductCountsToCategories(categoriesRaw);
     const result = await productService.listPublicProducts({ page: parseInt(page, 10) || 1, filters: { category: category._id } });
 
     const viewData = prepareProductCategoryData(
       { id: category._id.toString(), naziv: category.name, slug: category.slug },
       result,
       req.query,
-      { categories, tags }
+      { categories, tags, totalCount }
     );
     const seo = await generateSeo("category", category, req);
 
@@ -95,18 +96,20 @@ export async function productTag(req, res, next) {
     const { tagSlug } = req.params;
     const { page = 1 } = req.query;
 
-    const [tag, categories, tags] = await Promise.all([
+    const [tag, categoriesRaw, tags, totalCount] = await Promise.all([
       tagService.getTagBySlugAndDomain(tagSlug, "product"),
       categoryService.getPublicCategories("product"),
       tagService.getPublicTags("product"),
+      productService.countAllActiveProducts(),
     ]);
+    const categories = await productService.attachProductCountsToCategories(categoriesRaw);
     const result = await productService.listPublicProducts({ page: parseInt(page, 10) || 1, filters: { tag: tag._id } });
 
     const viewData = prepareProductTagData(
       { id: tag._id.toString(), naziv: tag.name, slug: tag.slug },
       result,
       req.query,
-      { categories, tags }
+      { categories, tags, totalCount }
     );
     const seo = await generateSeo("tag", tag, req);
 

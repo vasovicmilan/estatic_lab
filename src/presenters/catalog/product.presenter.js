@@ -37,7 +37,22 @@ const SHOP_FAQ = [
   },
 ];
 
-export function prepareProductListData(result, { query = {}, categories = [], tags = [], featured = [], sale = [], latestPosts = [], isLandingView = false, badgeTitle = null } = {}) {
+// Builds the category filter bar shown at the top of every /prodavnica view
+// (plain list, category, and tag pages alike) - same pattern as /usluge:
+// real links to existing routes, not client-side filtering.
+function buildCategoryTabs(categories = [], activeCategorySlug = null, totalCount = 0) {
+  return [
+    { label: "Svi proizvodi", href: "/prodavnica", count: totalCount, active: !activeCategorySlug },
+    ...categories.map((cat) => ({
+      label: cat.naziv,
+      href: `/prodavnica/kategorija/${cat.slug}`,
+      count: cat.count || 0,
+      active: cat.slug === activeCategorySlug,
+    })),
+  ];
+}
+
+export function prepareProductListData(result, { query = {}, categories = [], tags = [], totalCount = 0, latestPosts = [], isLandingView = false, badgeTitle = null } = {}) {
   return {
     products: result.data,
     subtitle: "Oprema, delovi i potrošni materijal za profesionalnu kozmetičku negu.",
@@ -46,9 +61,7 @@ export function prepareProductListData(result, { query = {}, categories = [], ta
     isLandingView,
     badgeTitle,
     intro: isLandingView ? SHOP_INTRO : null,
-    featured,
-    sale,
-    categoryTiles: isLandingView ? categories : [],
+    categoryTabs: buildCategoryTabs(categories, null, totalCount),
     trust: isLandingView ? SHOP_TRUST : [],
     faq: isLandingView ? SHOP_FAQ : [],
     latestPosts,
@@ -58,23 +71,22 @@ export function prepareProductListData(result, { query = {}, categories = [], ta
       basePath: "/prodavnica",
       query,
     },
-    sidebar: { categories, tags, activeCategorySlug: null, activeTagSlug: null },
     breadcrumbs: [{ label: "Prodavnica", url: null }],
   };
 }
 
-export function prepareProductCategoryData(category, result, query = {}, { categories = [], tags = [] } = {}) {
+export function prepareProductCategoryData(category, result, query = {}, { categories = [], tags = [], totalCount = 0 } = {}) {
   return {
     category,
     products: result.data,
     subtitle: `Proizvodi iz kategorije „${category.naziv}”.`,
+    categoryTabs: buildCategoryTabs(categories, category.slug, totalCount),
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
       basePath: `/prodavnica/kategorija/${category.slug}`,
       query,
     },
-    sidebar: { categories, tags, activeCategorySlug: category.slug, activeTagSlug: null },
     breadcrumbs: [
       { label: "Prodavnica", url: "/prodavnica" },
       { label: category.naziv, url: null },
@@ -82,18 +94,18 @@ export function prepareProductCategoryData(category, result, query = {}, { categ
   };
 }
 
-export function prepareProductTagData(tag, result, query = {}, { categories = [], tags = [] } = {}) {
+export function prepareProductTagData(tag, result, query = {}, { categories = [], tags = [], totalCount = 0 } = {}) {
   return {
     tag,
     products: result.data,
     subtitle: `Proizvodi označeni sa „${tag.naziv}”.`,
+    categoryTabs: buildCategoryTabs(categories, null, totalCount),
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
       basePath: `/prodavnica/tag/${tag.slug}`,
       query,
     },
-    sidebar: { categories, tags, activeCategorySlug: null, activeTagSlug: tag.slug },
     breadcrumbs: [
       { label: "Prodavnica", url: "/prodavnica" },
       { label: tag.naziv, url: null },
