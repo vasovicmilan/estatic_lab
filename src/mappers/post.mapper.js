@@ -193,6 +193,10 @@ export function mapPostForPublicDetail(post) {
     seoKljucneReci: post.seo?.keywords || [],
     datumObjave: formatDate(post.publishedAt),
     poslednjeAzuriranje: formatDate(post.updatedAt),
+    // raw ISO strings alongside the display-formatted ones above - schema.org
+    // JSON-LD (datePublished/dateModified) needs ISO 8601, not "26.07.2026."
+    datumObjaveISO: post.publishedAt ? new Date(post.publishedAt).toISOString() : null,
+    poslednjeAzuriranjeISO: post.updatedAt ? new Date(post.updatedAt).toISOString() : null,
     vremeCitanja: `${post.readingTimeMinutes} min`,
   };
 }

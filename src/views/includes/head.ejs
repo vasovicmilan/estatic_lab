@@ -55,5 +55,10 @@
     }
   }
   </script>
+  <% if (typeof seo !== 'undefined' && seo && Array.isArray(seo.jsonLd)) { %>
+    <% seo.jsonLd.forEach(function(block) { %>
+      <script type="application/ld+json"><%- JSON.stringify(block) %></script>
+    <% }) %>
+  <% } %>
 </head>
 <body class="d-flex flex-column min-vh-100">

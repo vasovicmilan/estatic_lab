@@ -1,5 +1,44 @@
 import { truncate, escape, buildCanonical } from "../utils.seo.js";
 
+// Pulls every faq block's Q&A pairs into one flat list. A post can have more than
+// one faq block (rare, but the schema allows it) - Google's FAQPage rich result
+// wants one consolidated list per page, not one schema block per content block.
+function collectFaqItems(sadrzaj = []) {
+  return (sadrzaj || [])
+    .filter((block) => block.tip === "faq" && Array.isArray(block.faqStavke))
+    .flatMap((block) => block.faqStavke)
+    .filter((item) => item?.question && item?.answer);
+}
+
+function buildFaqPageJsonLd(faqItems) {
+  if (faqItems.length === 0) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItems.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
+    })),
+  };
+}
+
+function buildBlogPostingJsonLd(post, canonical, imageUrl, siteName) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "@id": canonical,
+    headline: post.naslov,
+    description: truncate(post.kratakOpis || "", 300),
+    image: imageUrl,
+    datePublished: post.datumObjaveISO || undefined,
+    dateModified: post.poslednjeAzuriranjeISO || post.datumObjaveISO || undefined,
+    author: post.autor?.ime ? { "@type": "Person", name: post.autor.ime } : { "@type": "Organization", name: siteName },
+    publisher: { "@type": "Organization", name: siteName },
+    mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+  };
+}
+
 export async function buildPostSeo(post, req, siteConfig = {}) {
   const siteName = siteConfig.siteName || "Estetik Lab";
   const defaultImage = siteConfig.defaultImage || "/images/site/default-og.webp";
@@ -9,11 +48,15 @@ export async function buildPostSeo(post, req, siteConfig = {}) {
   const canonical = buildCanonical(req, `/blog/${post.slug}`);
   const imageUrl = post.slika?.url || post.coverImage?.img || defaultImage;
 
+  const faqItems = collectFaqItems(post.sadrzaj);
+  const jsonLd = [buildBlogPostingJsonLd(post, canonical, imageUrl, siteName), buildFaqPageJsonLd(faqItems)].filter(Boolean);
+
   return {
     title,
     description,
     canonical,
     robots,
+    jsonLd,
     meta: { keywords: (post.seoKljucneReci || post.seo?.kljucneReci || []).join(", ") },
     og: {
       title,
@@ -23,7 +66,7 @@ export async function buildPostSeo(post, req, siteConfig = {}) {
       image: imageUrl,
       site_name: siteName,
       article: {
-        publishedTime: post.datumObjave,
+        publishedTime: post.datumObjaveISO || post.datumObjave,
         author: post.autor?.ime,
         section: post.kategorije?.[0],
       },

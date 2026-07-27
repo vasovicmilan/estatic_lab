@@ -5,6 +5,7 @@ import {
   prepareBlogTagData,
   prepareBlogPostData,
 } from "../../../presenters/blog/blog.presenter.js";
+import { generateSeo } from "../../../seo/index.js";
 import { logError } from "../../../utils/logger.util.js";
 
 export async function blogHome(req, res, next) {
@@ -66,12 +67,13 @@ export async function postDetails(req, res, next) {
   try {
     const { slug } = req.params;
     const data = await blogService.getBlogPostData(slug);
+    const seo = await generateSeo("post", data.post, req);
     const viewData = prepareBlogPostData(data.post, { relatedPosts: data.relatedPosts });
 
     return res.render("blog/post-details", {
-      pageTitle: data.seo.title,
-      pageDescription: data.seo.description,
-      seo: data.seo,
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: viewData,
     });
   } catch (error) {

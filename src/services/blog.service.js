@@ -85,15 +85,7 @@ export async function getBlogPostData(slug) {
     relatedPosts = (related.data || []).filter((p) => p.id !== post.id).slice(0, 3);
   }
 
-  const seo = buildPageSeo({
-    title: post.seo?.naslov || `${post.naslov} | Blog | Estetik Lab`,
-    description: post.seo?.opis || post.kratakOpis,
-    canonical: `/blog/${post.slug}`,
-    isIndexable: true,
-    type: "article",
-  });
-
-  return { post, relatedPosts, seo };
+  return { post, relatedPosts };
 }
 
 export async function searchBlogPosts(search, { limit = 9, page = 1 } = {}) {
