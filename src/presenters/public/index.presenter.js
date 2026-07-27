@@ -519,10 +519,10 @@ export function prepareHomeData({
       who:
         "Ovi tretmani su namenjeni svima koji žele da poboljšaju izgled i elastičnost kože, smanje celulit, zategnu telo ili ubrzaju regeneraciju - bez obzira da li se prvi put upoznajete sa estetskim tretmanima ili već imate iskustva sa negom ovog tipa.",
       massages: [
-        { title: "Relax masaža", text: "Za opuštanje tela i uma nakon napornog perioda." },
-        { title: "Anticelulit masaža", text: "Za modelovanje tela i zatezanje kože." },
-        { title: "Terapeutska masaža", text: "Za ublažavanje napetosti, bolova i ukočenosti." },
-        { title: "Sportska masaža", text: "Za regeneraciju i pripremu mišića." },
+        { title: "Relax masaža", text: "Za opuštanje tela i uma nakon napornog perioda.", href: "/usluge/relaks-masaza" },
+        { title: "Anticelulit masaža", text: "Za modelovanje tela i zatezanje kože.", href: "/usluge/anticelulit-masaza" },
+        { title: "Terapeutska masaža", text: "Za ublažavanje napetosti, bolova i ukočenosti.", href: "/usluge/terapeutska-masaza" },
+        { title: "Sportska masaža", text: "Za regeneraciju i pripremu mišića.", href: "/usluge/sportska-masaza" },
       ],
       packages:
         "Sve tretmane i masaže možete kombinovati kroz naše pakete usluga, prilagođene vašim ciljevima i dinamici poseta, čime ostvarujete bolju vrednost i kontinuitet nege.",

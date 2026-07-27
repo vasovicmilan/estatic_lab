@@ -54,13 +54,13 @@
               <h3 class="h6 text-primary-emphasis mb-3">Naše masaže</h3>
               <div class="d-flex flex-column">
                 <% data.intro.massages.forEach(function(m, i) { %>
-                  <div class="d-flex align-items-baseline gap-3 py-3 px-2 border-bottom massage-list-item">
+                  <a href="<%= m.href %>" class="d-flex align-items-baseline gap-3 py-3 px-2 border-bottom massage-list-item text-decoration-none text-reset">
                     <span class="massage-index small">0<%= i + 1 %></span>
                     <div>
                       <div class="fw-semibold small"><%= m.title %></div>
                       <div class="text-muted small"><%= m.text %></div>
                     </div>
-                  </div>
+                  </a>
                 <% }) %>
               </div>
             </div>

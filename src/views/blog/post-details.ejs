@@ -1,129 +1,255 @@
 <%- include("../includes/head") %>
 <%- include("../includes/navigation") %>
 
-<main class="container py-5">
-  <%- include("../includes/breadcrumbs") %>
+<%
+  // ---- Table of contents -------------------------------------------------
+  // Built from the post's own level-2 heading blocks so it never drifts out
+  // of sync with the article: each heading gets a slugified anchor id, and
+  // the same id is written onto the <h2> further down when that block renders.
+  function slugifyHeading(str) {
+    const translit = { š: "s", đ: "dj", č: "c", ć: "c", ž: "z", Š: "s", Đ: "dj", Č: "c", Ć: "c", Ž: "z" };
+    return String(str || "")
+      .split("")
+      .map((ch) => translit[ch] || ch)
+      .join("")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-");
+  }
+
+  function initials(name) {
+    return String(name || "")
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0].toUpperCase())
+      .join("");
+  }
+
+  function humanizeSlug(slug) {
+    return String(slug || "")
+      .split("-")
+      .filter(Boolean)
+      .map((part) => part[0].toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+
+  const blocks = data.post.sadrzaj || [];
+  const usedAnchors = new Set();
+  const toc = [];
+
+  blocks.forEach(function (block) {
+    if (block.tip === "heading" && Number(block.nivo) === 2) {
+      let anchor = slugifyHeading(block.tekst) || "sekcija";
+      let suffix = 2;
+      while (usedAnchors.has(anchor)) {
+        anchor = `${slugifyHeading(block.tekst) || "sekcija"}-${suffix}`;
+        suffix++;
+      }
+      usedAnchors.add(anchor);
+      block._anchor = anchor;
+      toc.push({ label: block.tekst, href: `#${anchor}` });
+    }
+  });
+%>
+
+<main>
   <%- include("../includes/flash-messages") %>
 
-  <article class="mx-auto" style="max-width: 800px;">
-    <% if (data.post.slika && data.post.slika.url) { %>
-      <img src="<%= data.post.slika.url %>" class="img-fluid rounded mb-4" alt="<%= data.post.slika.alt || data.post.naslov %>">
+  <div class="container article-container pt-5">
+    <%- include("../includes/breadcrumbs") %>
+
+    <% if (data.post.kategorije && data.post.kategorije.length > 0) { %>
+      <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill mb-3"><%= humanizeSlug(data.post.kategorije[0]) %></span>
     <% } %>
 
-    <h1 class="h2"><%= data.post.naslov %></h1>
-    <div class="text-muted small mb-4">
-      <% if (data.post.autor) { %>Autor: <%= data.post.autor.ime %> &middot; <% } %>
-      <%= data.post.datumObjave %> &middot; <%= data.post.vremeCitanja %>
-    </div>
+    <h1 class="mb-4"><%= data.post.naslov %></h1>
 
-    <% (data.post.sadrzaj || []).forEach(function(block) { %>
-      <% if (block.tip === 'heading') { %>
-        <h3><%= block.tekst %></h3>
-      <% } else if (block.tip === 'paragraph') { %>
-        <p><%= block.tekst %></p>
-      <% } else if (block.tip === 'image' && block.slika) { %>
-        <img src="<%= block.slika.url %>" alt="<%= block.slika.alt %>" class="img-fluid rounded mb-3">
-      <% } else if (block.tip === 'quote') { %>
-        <blockquote class="blockquote"><p><%= block.tekst %></p><% if (block.izvor) { %><footer class="blockquote-footer"><%= block.izvor %></footer><% } %></blockquote>
-      <% } else if (block.tip === 'list') { %>
-        <% if (block.uredjeno) { %>
-          <ol><% (block.stavke || []).forEach(function(s) { %><li><%= s %></li><% }) %></ol>
-        <% } else { %>
-          <ul><% (block.stavke || []).forEach(function(s) { %><li><%= s %></li><% }) %></ul>
-        <% } %>
-      <% } else if (block.tip === 'video' && block.video) { %>
-        <video controls class="w-100 rounded mb-3" src="<%= block.video.url %>"></video>
-      <% } else if (block.tip === 'table' && block.kolone && block.kolone.length > 0) { %>
-        <div class="table-responsive mb-3">
-          <table class="table table-bordered align-middle">
-            <thead>
-              <tr>
-                <th></th>
-                <% block.kolone.forEach(function(col) { %><th><%= col %></th><% }) %>
-              </tr>
-            </thead>
-            <tbody>
-              <% (block.redovi || []).forEach(function(row) { %>
-                <tr>
-                  <th scope="row"><%= row.label %></th>
-                  <% (row.values || []).forEach(function(val) { %><td><%= val %></td><% }) %>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
+    <div class="d-flex align-items-center gap-3 mb-5">
+      <% if (data.post.autor && data.post.autor.avatar) { %>
+        <img src="<%= data.post.autor.avatar %>" alt="<%= data.post.autor.ime %>" class="avatar-md rounded-circle object-fit-cover">
+      <% } else { %>
+        <div class="avatar-md rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-semibold small">
+          <%= initials(data.post.autor && data.post.autor.ime) %>
         </div>
-      <% } else if (block.tip === 'cards' && block.kartice && block.kartice.length > 0) { %>
-        <div class="row g-3 mb-3">
-          <% block.kartice.forEach(function(card) { %>
-            <div class="col-12 col-md-6">
-              <div class="card h-100">
-                <div class="card-body">
-                  <% if (card.icon) { %><i class="<%= card.icon %> fs-3 text-primary mb-2 d-block"></i><% } %>
-                  <% if (card.title) { %><h5 class="card-title"><%= card.title %></h5><% } %>
-                  <% if (card.text) { %><p class="card-text"><%= card.text %></p><% } %>
-                </div>
-              </div>
-            </div>
-          <% }) %>
-        </div>
-      <% } else if (block.tip === 'gallery' && block.galerija && block.galerija.length > 0) { %>
-        <div class="row g-2 mb-3">
-          <% block.galerija.forEach(function(img) { %>
-            <div class="col-4">
-              <img src="<%= img.url %>" alt="<%= img.alt || '' %>" class="img-fluid rounded">
-            </div>
-          <% }) %>
-        </div>
-      <% } else if (block.tip === 'callout') { %>
-        <div class="alert alert-<%= block.varijanta %> mb-3">
-          <% if (block.naslovBloka) { %><h5 class="alert-heading"><%= block.naslovBloka %></h5><% } %>
-          <p class="mb-0"><%= block.tekst %></p>
-        </div>
-      <% } else if (block.tip === 'faq' && block.faqStavke && block.faqStavke.length > 0) { %>
-        <div class="mb-3">
-          <% if (block.naslovBloka) { %><h3><%= block.naslovBloka %></h3><% } %>
-          <% block.faqStavke.forEach(function(item) { %>
-            <details class="mb-2">
-              <summary class="fw-semibold"><%= item.question %></summary>
-              <p class="mt-2 mb-0"><%= item.answer %></p>
-            </details>
-          <% }) %>
-        </div>
-      <% } else if (block.tip === 'cta') { %>
-        <div class="card bg-light border-0 p-4 mb-3 text-center">
-          <% if (block.naslovBloka) { %><h4><%= block.naslovBloka %></h4><% } %>
-          <% if (block.tekst) { %><p><%= block.tekst %></p><% } %>
-          <% if (block.dugme && block.dugme.url) { %>
-            <a href="<%= block.dugme.url %>" class="btn btn-primary mx-auto" style="width: fit-content;"><%= block.dugme.tekst || 'Zakažite termin' %></a>
-          <% } %>
-        </div>
-      <% } else if (block.tip === 'serviceReference') { %>
-        <div class="card border-primary p-3 mb-3">
-          <% if (block.naslovBloka) { %><h6 class="mb-1"><%= block.naslovBloka %></h6><% } %>
-          <% if (block.tekst) { %><p class="small mb-2"><%= block.tekst %></p><% } %>
-          <% if (block.dugme && block.dugme.url) { %>
-            <a href="<%= block.dugme.url %>" class="small"><%= block.dugme.tekst || 'Pogledajte uslugu' %> &rarr;</a>
-          <% } %>
-        </div>
-      <% } else if (block.tip === 'divider') { %>
-        <hr class="my-4">
       <% } %>
-    <% }) %>
-
-    <% if (data.post.tagovi && data.post.tagovi.length > 0) { %>
-      <div class="d-flex flex-wrap gap-2 mt-4">
-        <% data.post.tagovi.forEach(function(tag) { %><span class="badge bg-light text-dark border">#<%= tag %></span><% }) %>
+      <div class="text-muted small">
+        <% if (data.post.autor && data.post.autor.ime) { %><span class="text-body fw-semibold"><%= data.post.autor.ime %></span> &middot; <% } %>
+        <%= data.post.datumObjave %> &middot; <%= data.post.vremeCitanja %>
       </div>
-    <% } %>
-  </article>
+    </div>
+  </div>
+
+  <% if (data.post.slika && data.post.slika.url) { %>
+    <div class="container article-hero-wrap mb-5">
+      <div class="ratio ratio-16x9 rounded-4 overflow-hidden">
+        <img src="<%= data.post.slika.url %>" alt="<%= data.post.slika.alt || data.post.naslov %>" class="w-100 h-100 object-fit-cover">
+      </div>
+    </div>
+  <% } %>
+
+  <div class="container article-container pb-5">
+    <div class="article-layout">
+      <% if (toc.length > 0) { %>
+        <nav class="article-toc d-none d-lg-block" aria-label="Sadržaj teksta">
+          <div class="text-uppercase text-muted small fw-bold mb-3">Sadržaj</div>
+          <div class="d-flex flex-column">
+            <% toc.forEach(function(t) { %>
+              <a href="<%= t.href %>" class="article-toc-link"><%= t.label %></a>
+            <% }) %>
+          </div>
+        </nav>
+      <% } %>
+
+      <div class="article-body">
+        <% blocks.forEach(function(block) { %>
+
+          <% if (block.tip === "heading") { %>
+            <% if (Number(block.nivo) === 3) { %>
+              <h3><%= block.tekst %></h3>
+            <% } else if (Number(block.nivo) === 4) { %>
+              <h4><%= block.tekst %></h4>
+            <% } else { %>
+              <h2 id="<%= block._anchor %>"><%= block.tekst %></h2>
+            <% } %>
+
+          <% } else if (block.tip === "paragraph") { %>
+            <p><%= block.tekst %></p>
+
+          <% } else if (block.tip === "image" && block.slika) { %>
+            <img src="<%= block.slika.url %>" alt="<%= block.slika.alt || "" %>" class="img-fluid rounded-4 mb-4">
+
+          <% } else if (block.tip === "gallery" && block.galerija && block.galerija.length > 0) { %>
+            <div class="row g-2 mb-4">
+              <% block.galerija.forEach(function(img) { %>
+                <div class="col-4">
+                  <img src="<%= img.url %>" alt="<%= img.alt || "" %>" class="img-fluid rounded-4">
+                </div>
+              <% }) %>
+            </div>
+
+          <% } else if (block.tip === "video" && block.video && block.video.url) { %>
+            <div class="ratio ratio-16x9 rounded-4 overflow-hidden mb-4">
+              <video controls src="<%= block.video.url %>"></video>
+            </div>
+
+          <% } else if (block.tip === "quote") { %>
+            <figure class="pull-quote">
+              <blockquote>&ldquo;<%= block.tekst %>&rdquo;</blockquote>
+              <% if (block.izvor) { %><figcaption><%= block.izvor %></figcaption><% } %>
+            </figure>
+
+          <% } else if (block.tip === "list") { %>
+            <% if (block.uredjeno) { %>
+              <ol><% (block.stavke || []).forEach(function(s) { %><li><%= s %></li><% }) %></ol>
+            <% } else { %>
+              <ul><% (block.stavke || []).forEach(function(s) { %><li><%= s %></li><% }) %></ul>
+            <% } %>
+
+          <% } else if (block.tip === "table" && block.kolone && block.kolone.length > 0) { %>
+            <div class="table-responsive mb-4">
+              <table class="table align-middle">
+                <thead>
+                  <tr>
+                    <th class="border-bottom border-primary border-2"></th>
+                    <% block.kolone.forEach(function(col, i) { %>
+                      <th class="border-bottom border-primary border-2 <%= i === 0 ? 'text-primary-emphasis' : 'text-muted' %> text-uppercase small"><%= col %></th>
+                    <% }) %>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% (block.redovi || []).forEach(function(row) { %>
+                    <tr>
+                      <th scope="row" class="fw-semibold"><%= row.label %></th>
+                      <% (row.values || []).forEach(function(val) { %><td class="text-muted"><%= val %></td><% }) %>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+
+          <% } else if (block.tip === "cards" && block.kartice && block.kartice.length > 0) { %>
+            <div class="row g-4 mb-4 content-cards-grid">
+              <% block.kartice.forEach(function(card) { %>
+                <div class="col-12 col-md-6 col-lg-4 content-card">
+                  <% if (card.icon) { %>
+                    <i class="<%= card.icon %> fs-4 text-primary mb-2 d-block"></i>
+                  <% } else { %>
+                    <div class="content-card-index mb-2"></div>
+                  <% } %>
+                  <% if (card.title) { %><div class="fw-semibold mb-1"><%= card.title %></div><% } %>
+                  <% if (card.text) { %><p class="text-muted small mb-0"><%= card.text %></p><% } %>
+                </div>
+              <% }) %>
+            </div>
+
+          <% } else if (block.tip === "callout") { %>
+            <div class="alert alert-<%= block.varijanta %> mb-4">
+              <% if (block.naslovBloka) { %><h5 class="alert-heading"><%= block.naslovBloka %></h5><% } %>
+              <p class="mb-0"><%= block.tekst %></p>
+            </div>
+
+          <% } else if (block.tip === "faq" && block.faqStavke && block.faqStavke.length > 0) { %>
+            <% if (block.naslovBloka) { %><h3><%= block.naslovBloka %></h3><% } %>
+            <div class="mb-4">
+              <% block.faqStavke.forEach(function(item) { %>
+                <details class="article-faq-item">
+                  <summary>
+                    <span><%= item.question %></span>
+                    <i class="bi bi-plus"></i>
+                    <i class="bi bi-dash"></i>
+                  </summary>
+                  <p class="text-muted mb-0"><%= item.answer %></p>
+                </details>
+              <% }) %>
+            </div>
+
+          <% } else if (block.tip === "cta") { %>
+            <div class="article-cta-box">
+              <% if (block.naslovBloka) { %><h3 class="text-white mb-2"><%= block.naslovBloka %></h3><% } %>
+              <% if (block.tekst) { %><p class="text-white-50 mb-4"><%= block.tekst %></p><% } %>
+              <% if (block.dugme && block.dugme.url) { %>
+                <a href="<%= block.dugme.url %>" class="btn btn-light rounded-pill px-4 fw-semibold"><%= block.dugme.tekst || "Zakažite termin" %></a>
+              <% } %>
+            </div>
+
+          <% } else if (block.tip === "serviceReference" && block.dugme && block.dugme.url) { %>
+            <a href="<%= block.dugme.url %>" class="link-card">
+              <div>
+                <% if (block.naslovBloka) { %><div class="fw-semibold mb-1"><%= block.naslovBloka %></div><% } %>
+                <% if (block.tekst) { %><div class="text-muted small"><%= block.tekst %></div><% } %>
+              </div>
+              <i class="bi bi-arrow-right text-primary flex-shrink-0"></i>
+            </a>
+
+          <% } else if (block.tip === "divider") { %>
+            <hr class="my-5">
+          <% } %>
+
+        <% }) %>
+
+        <% if (data.post.tagovi && data.post.tagovi.length > 0) { %>
+          <div class="d-flex flex-wrap gap-2 mt-5">
+            <% data.post.tagovi.forEach(function(tag) { %>
+              <span class="badge rounded-pill bg-light text-muted border">#<%= tag %></span>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
 
   <% if (data.relatedPosts && data.relatedPosts.length > 0) { %>
-    <section class="mt-5">
-      <h2 class="h4 mb-3">Slični postovi</h2>
-      <div class="row g-4">
-        <% data.relatedPosts.forEach(function(post) { %>
-          <div class="col-md-4"><%- include("../includes/components/card-post", { post: post }) %></div>
-        <% }) %>
+    <section class="bg-white border-top py-5">
+      <div class="container">
+        <p class="section-eyebrow">Nastavite čitanje</p>
+        <h2 class="h3 mb-4">Slični tekstovi</h2>
+        <div class="row g-4">
+          <% data.relatedPosts.forEach(function(post) { %>
+            <div class="col-md-4"><%- include("../includes/components/card-post", { post: post }) %></div>
+          <% }) %>
+        </div>
       </div>
     </section>
   <% } %>
