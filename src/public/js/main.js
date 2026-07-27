@@ -198,6 +198,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // package tier toggle (see includes/components/card-package-group.ejs on
+  // /paketi) - each tier "pill" is a real link to that tier's own package
+  // detail page, so this is pure progressive enhancement: with JS disabled,
+  // clicking a pill still navigates and works; with JS enabled, it swaps the
+  // card's price/badge/savings/CTA in place instead of navigating away.
+  document.querySelectorAll("[data-package-group]").forEach((card) => {
+    const priceEl = card.querySelector("[data-tier-price]");
+    const oldPriceEl = card.querySelector("[data-tier-old-price]");
+    const savingsEl = card.querySelector("[data-tier-savings]");
+    const badgeEl = card.querySelector("[data-tier-badge]");
+    const descEl = card.querySelector("[data-tier-desc]");
+    const ctaEl = card.querySelector("[data-tier-cta]");
+    const buttons = card.querySelectorAll("[data-tier-button]");
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        buttons.forEach((b) => b.classList.remove("active"));
+        button.classList.add("active");
+
+        if (priceEl) priceEl.textContent = button.dataset.tierPrice || "";
+        if (oldPriceEl) oldPriceEl.textContent = button.dataset.tierOldPrice || "";
+        if (savingsEl) savingsEl.textContent = button.dataset.tierSavings || "";
+        if (descEl) descEl.textContent = button.dataset.tierDesc || "";
+        if (ctaEl) ctaEl.setAttribute("href", button.dataset.tierHref || "#");
+
+        if (badgeEl) {
+          badgeEl.textContent = button.dataset.tierBadge || "";
+          badgeEl.classList.remove("text-bg-warning", "text-bg-secondary");
+          badgeEl.classList.add(button.dataset.tierBadgeClass || "text-bg-secondary");
+        }
+      });
+    });
+  });
+
   const modalEl = document.getElementById("confirmActionModal");
   if (!modalEl || typeof bootstrap === "undefined") return;
 

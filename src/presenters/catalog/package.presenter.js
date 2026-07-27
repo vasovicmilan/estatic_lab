@@ -33,9 +33,39 @@ const PACKAGE_LIST_INTRO = {
   ],
 };
 
+// Groups the flat package list into per-treatment "tiers": packages sharing
+// the same grupa key (see package.mapper.js buildGroupKey) are the same
+// underlying treatment at different session counts (5 vs 10, etc.) and render
+// as one card with a toggle; a package with no siblings just gets a group of
+// one and renders like a normal standalone card.
+function groupPackagesByTreatment(packages = []) {
+  const order = [];
+  const groups = new Map();
+
+  packages.forEach((pkg) => {
+    if (!groups.has(pkg.grupa)) {
+      groups.set(pkg.grupa, []);
+      order.push(pkg.grupa);
+    }
+    groups.get(pkg.grupa).push(pkg);
+  });
+
+  return order.map((key) => {
+    const tiers = [...groups.get(key)].sort((a, b) => (a.brojSeansi || 0) - (b.brojSeansi || 0));
+    const defaultTier = tiers.find((t) => t.najbolji) || tiers[tiers.length - 1];
+    return {
+      naslov: defaultTier.naslovTretmana,
+      trajanjePoSeansi: defaultTier.trajanjePoSeansi,
+      tiers,
+      defaultTierId: defaultTier.id,
+    };
+  });
+}
+
 export function preparePackageListData(result, query = {}) {
   return {
     packages: result.data,
+    packageGroups: groupPackagesByTreatment(result.data),
     subtitle: "Kombinacije tretmana osmišljene da vam donesu više za manje - bez žurbe, uz naš tim koji brine o detaljima.",
     intro: PACKAGE_LIST_INTRO,
     pagination: {

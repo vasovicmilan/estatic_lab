@@ -61,6 +61,31 @@ function mapItems(items = []) {
   });
 }
 
+function getVariantDuration(item) {
+  const variant = findVariant(item);
+  return variant ? variant.duration : null;
+}
+
+// Packages built from a single service item (e.g. "Tesla-Tone 24 - 5 tretmana"
+// and "Tesla-Tone 24 - 10 tretmana") are really session-count tiers of the same
+// treatment, not distinct bundles - grouping key ties them together so the
+// listing page can render one card with a tier toggle instead of two separate
+// cards. Multi-item bundles (a combo of several different services) don't have
+// this concept, so each gets its own standalone group keyed by its own id.
+function buildGroupKey(pkg) {
+  const items = pkg.items || [];
+  if (items.length !== 1) return `standalone:${pkg._id}`;
+
+  const [item] = items;
+  const serviceKey = isPopulatedService(item.service) ? item.service.slug : item.service?.toString() || "nepoznato";
+  return `${serviceKey}:${item.servicePackageId}`;
+}
+
+function getSavingsPercent(pkg) {
+  if (!pkg.basePrice) return null;
+  return Math.round((1 - pkg.totalPrice / pkg.basePrice) * 100);
+}
+
 export function mapPackagesForAdminList(packages = []) {
   return packages
     .map((pkg) => {
@@ -139,6 +164,10 @@ export function mapPackageForEdit(pkg) {
 export function mapPackageForPublicCard(pkg) {
   if (!pkg) return null;
 
+  const items = pkg.items || [];
+  const isSingleServiceRepeat = items.length === 1;
+  const [firstItem] = items;
+
   return {
     id: pkg._id.toString(),
     naziv: pkg.name,
@@ -147,9 +176,14 @@ export function mapPackageForPublicCard(pkg) {
     stavke: getItemsSummary(pkg.items),
     cena: `${pkg.totalPrice} RSD`,
     staraCena: pkg.basePrice ? `${pkg.basePrice} RSD` : null,
+    ustedaProcenat: getSavingsPercent(pkg),
     oznaka: pkg.badge || null,
     najbolji: Boolean(pkg.isBest),
     slika: formatImage(pkg.image),
+    brojSeansi: isSingleServiceRepeat ? firstItem.sessions : null,
+    trajanjePoSeansi: isSingleServiceRepeat ? getVariantDuration(firstItem) : null,
+    naslovTretmana: isSingleServiceRepeat && isPopulatedService(firstItem.service) ? firstItem.service.name : pkg.name,
+    grupa: buildGroupKey(pkg),
   };
 }
 

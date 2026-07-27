@@ -40,11 +40,11 @@
   </section>
 
   <div class="container py-5">
-    <% if (data.packages && data.packages.length > 0) { %>
+    <% if (data.packageGroups && data.packageGroups.length > 0) { %>
       <div class="row g-4">
-        <% data.packages.forEach(function(pkg) { %>
+        <% data.packageGroups.forEach(function(group) { %>
           <div class="col-md-4">
-            <%- include("../includes/components/card-package", { pkg: pkg }) %>
+            <%- include("../includes/components/card-package-group", { group: group }) %>
           </div>
         <% }) %>
       </div>

@@ -412,6 +412,42 @@ h1, h2, h3, h4, h5, h6,
 }
 
 /* ================================================================
+   Package tier toggle (/paketi listing, includes/components/card-package-group.ejs)
+   ================================================================ */
+
+.tier-toggle {
+  display: flex;
+  gap: 8px;
+  background: var(--bs-tertiary-bg);
+  border-radius: 100px;
+  padding: 4px;
+}
+
+.tier-pill {
+  flex: 1;
+  text-align: center;
+  border: none;
+  background: transparent;
+  color: var(--bs-body-color);
+  padding: 9px 12px;
+  border-radius: 100px;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tier-pill.active {
+  background: var(--bs-primary);
+  color: #fff;
+}
+
+[data-tier-badge]:empty,
+[data-tier-old-price]:empty,
+[data-tier-savings]:empty {
+  display: none;
+}
+
+/* ================================================================
    Services listing (services/services.ejs)
    ================================================================ */
 

@@ -1,0 +1,56 @@
+<div class="card h-100 shadow-sm <%= group.tiers.some(function(t){ return t.najbolji; }) ? 'border-primary' : '' %>" <% if (group.tiers.length > 1) { %>data-package-group<% } %>>
+  <% const activeTier = group.tiers.find(function(t) { return t.id === group.defaultTierId; }); %>
+  <% if (activeTier.slika && activeTier.slika.url) { %>
+    <img src="<%= activeTier.slika.url %>" class="card-img-top package-card-img" alt="<%= activeTier.slika.alt || group.naslov %>">
+  <% } %>
+  <div class="card-body d-flex flex-column">
+    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+      <h3 class="h5 mb-0"><%= group.naslov %></h3>
+      <span class="badge <%= activeTier.najbolji ? 'text-bg-warning' : 'text-bg-secondary' %> flex-shrink-0" data-tier-badge><%= activeTier.oznaka || (activeTier.najbolji ? "Najbolja vrednost" : "") %></span>
+    </div>
+
+    <p class="text-muted small" data-tier-desc><%= activeTier.kratakOpis %></p>
+
+    <% if (group.tiers.length === 1 && activeTier.stavke && activeTier.stavke.length > 0) { %>
+      <ul class="list-unstyled small mb-3">
+        <% activeTier.stavke.forEach(function(s) { %><li><i class="bi bi-check2 text-primary me-1"></i><%= s %></li><% }) %>
+      </ul>
+    <% } %>
+
+    <% if (group.tiers.length > 1) { %>
+      <div class="tier-toggle mb-3">
+        <% group.tiers.forEach(function(tier) { %>
+          <a
+            href="/paketi/<%= tier.slug %>"
+            class="tier-pill <%= tier.id === group.defaultTierId ? 'active' : '' %>"
+            data-tier-button
+            data-tier-id="<%= tier.id %>"
+            data-tier-price="<%= tier.cena %>"
+            data-tier-old-price="<%= tier.staraCena || '' %>"
+            data-tier-badge="<%= tier.oznaka || (tier.najbolji ? 'Najbolja vrednost' : '') %>"
+            data-tier-badge-class="<%= tier.najbolji ? 'text-bg-warning' : 'text-bg-secondary' %>"
+            data-tier-desc="<%= tier.kratakOpis %>"
+            data-tier-savings="<%= tier.ustedaProcenat ? ('Ušteda ' + tier.ustedaProcenat + '%') : '' %>"
+            data-tier-href="/paketi/<%= tier.slug %>"
+          ><%= tier.brojSeansi %> seansi</a>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <% if (group.trajanjePoSeansi) { %>
+      <div class="small text-muted mb-2"><%= group.trajanjePoSeansi %> min po seansi</div>
+    <% } %>
+
+    <div class="d-flex align-items-baseline gap-2 mt-auto pt-2 border-top">
+      <strong class="text-primary-emphasis" data-tier-price><%= activeTier.cena %></strong>
+      <span class="text-muted text-decoration-line-through small" data-tier-old-price><%= activeTier.staraCena || '' %></span>
+      <% if (activeTier.ustedaProcenat) { %>
+        <span class="ms-auto small fw-bold text-success" data-tier-savings>Ušteda <%= activeTier.ustedaProcenat %>%</span>
+      <% } else { %>
+        <span class="ms-auto small fw-bold text-success" data-tier-savings></span>
+      <% } %>
+    </div>
+
+    <a href="/paketi/<%= activeTier.slug %>" class="btn btn-primary rounded-pill mt-3" data-tier-cta>Zakaži paket</a>
+  </div>
+</div>

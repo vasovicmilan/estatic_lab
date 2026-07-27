@@ -7,7 +7,7 @@ import { logError } from "../../../utils/logger.util.js";
 export async function packageList(req, res, next) {
   try {
     const { page = 1 } = req.query;
-    const result = await packageService.findActivePackages({ page: parseInt(page, 10) || 1 });
+    const result = await packageService.findActivePackages({ page: parseInt(page, 10) || 1, limit: 60 });
     const viewData = preparePackageListData(result, req.query);
     const seo = await generateSeo("page", { title: "Paketi", description: "Kombinovani paketi usluga po povoljnijoj ceni.", slug: "/paketi" }, req);
 
