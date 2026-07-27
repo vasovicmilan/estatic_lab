@@ -5,12 +5,12 @@
   <div class="container hero-inner">
     <div class="row align-items-center hero-inner">
       <div class="col-lg-7 py-5">
-        <p class="text-uppercase small fw-semibold mb-2 hero-eyebrow"><%= data.hero.eyebrow %></p>
+        <p class="section-eyebrow section-eyebrow-light"><%= data.hero.eyebrow %></p>
         <h1 class="display-4 fw-bold mb-3"><%= data.hero.title %></h1>
         <p class="lead mb-4"><%= data.hero.subtitle %></p>
         <div class="d-flex flex-wrap gap-3">
-          <a href="<%= data.hero.ctaUrl %>" class="btn btn-primary btn-lg"><%= data.hero.ctaLabel %></a>
-          <a href="<%= data.hero.secondaryCtaUrl %>" class="btn btn-outline-light btn-lg"><%= data.hero.secondaryCtaLabel %></a>
+          <a href="<%= data.hero.ctaUrl %>" class="btn btn-primary btn-lg rounded-pill px-4"><%= data.hero.ctaLabel %></a>
+          <a href="<%= data.hero.secondaryCtaUrl %>" class="btn btn-outline-light btn-lg rounded-pill px-4"><%= data.hero.secondaryCtaLabel %></a>
         </div>
       </div>
     </div>
@@ -23,10 +23,12 @@
   <!-- Why us -->
   <% if (data.whyUs && data.whyUs.length > 0) { %>
     <section class="container py-5">
-      <div class="row g-4 text-center">
+      <div class="row g-4">
         <% data.whyUs.forEach(function(item) { %>
           <div class="col-6 col-md-3">
-            <i class="bi <%= item.icon %> display-6 text-primary d-block mb-2"></i>
+            <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary-emphasis rounded-circle icon-circle-lg mb-3">
+              <i class="bi <%= item.icon %> fs-4"></i>
+            </div>
             <h3 class="h6"><%= item.title %></h3>
             <p class="text-muted small"><%= item.text %></p>
           </div>
@@ -35,63 +37,79 @@
     </section>
   <% } %>
 
-    <% if (data.intro) { %>
-    <section class="container py-5">
-      <div class="row justify-content-center">
-        <div class="col-lg-9">
-          <h2 class="h3 mb-3 text-center"><%= data.intro.title %></h2>
-          <p class="lead text-center mb-4"><%= data.intro.lead %></p>
-          <p class="mb-4"><%= data.intro.who %></p>
-
-          <div class="row g-3 mb-4">
-            <% data.intro.massages.forEach(function(m) { %>
-              <div class="col-6 col-md-3">
-                <div class="border rounded p-3 h-100 text-center">
-                  <h3 class="h6 mb-1"><%= m.title %></h3>
-                  <p class="text-muted small mb-0"><%= m.text %></p>
-                </div>
-              </div>
-            <% }) %>
+  <!-- About -->
+  <% if (data.intro) { %>
+    <section class="bg-white border-top border-bottom py-5">
+      <div class="container">
+        <div class="row g-5">
+          <div class="col-lg-7">
+            <p class="section-eyebrow">O nama</p>
+            <h2 class="h3 mb-4"><%= data.intro.title %></h2>
+            <p class="text-muted"><%= data.intro.lead %></p>
+            <p class="text-muted"><%= data.intro.who %></p>
+            <p class="text-muted mb-0"><%= data.intro.closing %></p>
           </div>
-
-          <p class="mb-4"><%= data.intro.packages %></p>
-          <p class="fst-italic text-center mb-0"><%= data.intro.closing %></p>
+          <div class="col-lg-5">
+            <div class="bg-light border rounded-4 p-4">
+              <h3 class="h6 text-primary-emphasis mb-3">Naše masaže</h3>
+              <div class="d-flex flex-column">
+                <% data.intro.massages.forEach(function(m, i) { %>
+                  <div class="d-flex align-items-baseline gap-3 py-3 px-2 border-bottom massage-list-item">
+                    <span class="massage-index small">0<%= i + 1 %></span>
+                    <div>
+                      <div class="fw-semibold small"><%= m.title %></div>
+                      <div class="text-muted small"><%= m.text %></div>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          </div>
         </div>
+        <p class="text-muted mt-4 mb-0"><%= data.intro.packages %></p>
       </div>
     </section>
   <% } %>
 
   <!-- Featured services -->
   <% if (data.highlightedServices && data.highlightedServices.length > 0) { %>
-    <section class="bg-light py-5">
-      <div class="container">
-        <h2 class="h3 mb-2 text-center">Naše usluge</h2>
-        <p class="text-muted text-center mb-4">Masaže, ESMA tretmani i nega lica i tela - prilagođeno vama</p>
-        <div class="row g-4">
-          <% data.highlightedServices.forEach(function(service) { %>
-            <div class="col-md-4">
-              <%- include("../includes/components/card-service", { service: service }) %>
-            </div>
-          <% }) %>
+    <section class="container py-5">
+      <div class="d-flex align-items-end justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+          <p class="section-eyebrow mb-2">Naše usluge</p>
+          <h2 class="h3 mb-0">Masaže, ESMA tretmani i nega lica i tela</h2>
         </div>
-        <div class="text-center mt-4"><a href="/usluge" class="btn btn-outline-primary">Sve usluge</a></div>
+        <a href="/usluge" class="fw-semibold text-decoration-none text-primary-emphasis">Sve usluge &rarr;</a>
+      </div>
+      <div class="row g-4">
+        <% data.highlightedServices.forEach(function(service) { %>
+          <div class="col-md-4">
+            <%- include("../includes/components/card-service", { service: service }) %>
+          </div>
+        <% }) %>
       </div>
     </section>
   <% } %>
 
   <!-- Best packages -->
   <% if (data.bestPackages && data.bestPackages.length > 0) { %>
-    <section class="container py-5">
-      <h2 class="h3 mb-2 text-center">Naši paketi</h2>
-      <p class="text-muted text-center mb-4">Uštedite uz pakete od više tretmana</p>
-      <div class="row g-4">
-        <% data.bestPackages.forEach(function(pkg) { %>
-          <div class="col-md-4">
-            <%- include("../includes/components/card-package", { pkg: pkg }) %>
+    <section class="section-dark py-5">
+      <div class="container">
+        <div class="d-flex align-items-end justify-content-between flex-wrap gap-3 mb-4">
+          <div>
+            <p class="section-eyebrow section-eyebrow-light mb-2">Naši paketi</p>
+            <h2 class="h3 mb-0 text-white">Uštedite uz pakete od više tretmana</h2>
           </div>
-        <% }) %>
+          <a href="/paketi" class="fw-semibold text-decoration-none section-eyebrow-light">Svi paketi &rarr;</a>
+        </div>
+        <div class="row g-4">
+          <% data.bestPackages.forEach(function(pkg) { %>
+            <div class="col-md-4">
+              <%- include("../includes/components/card-package", { pkg: pkg }) %>
+            </div>
+          <% }) %>
+        </div>
       </div>
-      <div class="text-center mt-4"><a href="/paketi" class="btn btn-outline-primary">Svi paketi</a></div>
     </section>
   <% } %>
 
@@ -99,7 +117,8 @@
   <% if (data.featuredExperts && data.featuredExperts.length > 0) { %>
     <section class="bg-light py-5">
       <div class="container">
-        <h2 class="h3 mb-4 text-center">Naš tim</h2>
+        <p class="section-eyebrow justify-content-center d-flex">Naš tim</p>
+        <h2 class="h3 mb-4 text-center">Upoznajte naš tim</h2>
         <div class="row g-4">
           <% data.featuredExperts.forEach(function(expert) { %>
             <div class="col-md-3">
@@ -107,27 +126,27 @@
             </div>
           <% }) %>
         </div>
-        <div class="text-center mt-4"><a href="/nas-tim" class="btn btn-outline-primary">Upoznajte ceo tim</a></div>
+        <div class="text-center mt-4"><a href="/nas-tim" class="btn btn-outline-primary rounded-pill px-4">Upoznajte ceo tim</a></div>
       </div>
     </section>
   <% } %>
 
   <!-- Social proof: testimonials + leave-a-review form -->
   <section class="container py-5">
-    <h2 class="h3 mb-4 text-center">Šta kažu naši klijenti</h2>
+    <p class="section-eyebrow">Utisci klijenata</p>
+    <h2 class="h3 mb-4">Šta kažu naši klijenti</h2>
 
-    <% if (data.testimonials && data.testimonials.length > 0) { %>
-      <div class="row g-4 mb-5">
-        <% data.testimonials.forEach(function(t) { %>
-          <div class="col-md-4">
-            <%- include("../includes/components/card-testimonial", { testimonial: t }) %>
-          </div>
-        <% }) %>
-      </div>
-    <% } %>
-
-    <div class="row justify-content-center">
+    <div class="row g-4">
       <div class="col-lg-7">
+        <% if (data.testimonials && data.testimonials.length > 0) { %>
+          <div class="d-flex flex-column gap-3">
+            <% data.testimonials.forEach(function(t) { %>
+              <%- include("../includes/components/card-testimonial", { testimonial: t }) %>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+      <div class="col-lg-5">
         <%- include("../includes/components/testimonial-form") %>
       </div>
     </div>
@@ -135,9 +154,15 @@
 
   <!-- Blog -->
   <% if (data.latestPosts && data.latestPosts.length > 0) { %>
-    <section class="bg-light py-5">
+    <section class="bg-white border-top py-5">
       <div class="container">
-        <h2 class="h3 mb-4 text-center">Sa bloga</h2>
+        <div class="d-flex align-items-end justify-content-between flex-wrap gap-3 mb-4">
+          <div>
+            <p class="section-eyebrow mb-2">Sa bloga</p>
+            <h2 class="h3 mb-0">Saveti i objašnjenja iz struke</h2>
+          </div>
+          <a href="/blog" class="fw-semibold text-decoration-none text-primary-emphasis">Svi tekstovi &rarr;</a>
+        </div>
         <div class="row g-4">
           <% data.latestPosts.forEach(function(post) { %>
             <div class="col-md-4">
@@ -145,44 +170,40 @@
             </div>
           <% }) %>
         </div>
-        <div class="text-center mt-4"><a href="/blog" class="btn btn-outline-primary">Svi tekstovi</a></div>
       </div>
     </section>
   <% } %>
 
   <!-- Closing CTA -->
-  <section class="py-5 text-white text-center bg-primary">
+  <section class="cta-section py-5 text-white text-center">
     <div class="container">
       <h2 class="h3 fw-bold mb-3">Spremni za trenutak opuštanja?</h2>
       <p class="mb-4">Zakažite svoj termin danas i prepustite se nezi koju zaslužujete.</p>
-      <a href="<%= data.hero.ctaUrl %>" class="btn btn-light btn-lg">Zakažite termin</a>
+      <a href="<%= data.hero.ctaUrl %>" class="btn btn-light btn-lg rounded-pill px-4"><%= data.hero.ctaLabel %></a>
     </div>
   </section>
 
   <!-- Location -->
   <% if (data.map && data.map.embedUrl) { %>
     <section class="container py-5">
-        <h2 class="h3 mb-4 text-center">Gde se nalazimo</h2>
-        <p class="text-center mt-3">
-          <i class="bi bi-geo-alt-fill text-primary me-2"></i>
-          <strong><%= data.map.address %></strong>
-        </p>
-        <div class="ratio ratio-21x9">
-          <iframe
-            src="<%= data.map.embedUrl %>"
-            title="<%= data.map.address %>"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            allowfullscreen
-          ></iframe>
-        </div>
-      </section>
+      <p class="section-eyebrow justify-content-center d-flex">Gde se nalazimo</p>
+      <h2 class="h3 mb-4 text-center"><%= data.map.address %></h2>
+      <div class="ratio ratio-21x9 rounded-4 overflow-hidden border">
+        <iframe
+          src="<%= data.map.embedUrl %>"
+          title="<%= data.map.address %>"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </section>
   <% } %>
   <% if (data.googleDataNotice) { %>
     <section class="container pb-5">
       <div class="row justify-content-center">
         <div class="col-lg-9">
-          <div class="border rounded p-3 p-md-4 bg-light small">
+          <div class="border rounded-4 p-3 p-md-4 bg-light small">
             <p class="mb-1"><%= data.googleDataNotice.text %></p>
             <a href="<%= data.googleDataNotice.privacyUrl %>">Pročitajte više u našoj Politici privatnosti</a>
           </div>
