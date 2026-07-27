@@ -1,54 +1,107 @@
 <%- include("../includes/head") %>
 <%- include("../includes/navigation") %>
 
-<main class="container py-5">
-  <%- include("../includes/breadcrumbs") %>
+<main>
   <%- include("../includes/flash-messages") %>
 
-  <div class="row">
-    <div class="col-lg-9">
-      <h1 class="h3 mb-2"><%= data.category ? data.category.naziv : (data.tag ? data.tag.naziv : "Usluge") %></h1>
-      <% if (data.subtitle) { %><p class="text-muted mb-4"><%= data.subtitle %></p><% } %>
+  <% if (data.intro) { %>
+    <!-- Landing intro: only shown on the plain, unfiltered /usluge index -->
+    <section class="bg-white border-bottom py-5">
+      <div class="container">
+        <%- include("../includes/breadcrumbs") %>
 
-      <% if (data.services && data.services.length > 0) { %>
-        <div class="row g-4">
-          <% data.services.forEach(function(service) { %>
-            <div class="col-md-4">
-              <%- include("../includes/components/card-service", { service: service }) %>
+        <div class="row g-5 align-items-start">
+          <div class="col-lg-7">
+            <p class="section-eyebrow"><%= data.intro.eyebrow %></p>
+            <h1 class="h2 mb-4"><%= data.intro.title %></h1>
+            <p class="lead text-muted"><%= data.intro.lead %></p>
+            <% data.intro.paragraphs.forEach(function(p) { %>
+              <p class="text-muted mb-0"><%= p %></p>
+            <% }) %>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="row g-4">
+              <% data.intro.highlights.forEach(function(item) { %>
+                <div class="col-6">
+                  <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary-emphasis rounded-circle icon-circle-lg mb-3">
+                    <i class="bi <%= item.icon %> fs-4"></i>
+                  </div>
+                  <h3 class="h6"><%= item.title %></h3>
+                  <p class="text-muted small"><%= item.text %></p>
+                </div>
+              <% }) %>
             </div>
-          <% }) %>
-        </div>
-        <%- include("../includes/pagination", { pagination: data.pagination }) %>
-      <% } else { %>
-        <p class="text-muted">Trenutno nema dostupnih usluga.</p>
-      <% } %>
-    </div>
-
-    <div class="col-lg-3">
-      <% if (data.sidebar && data.sidebar.categories && data.sidebar.categories.length > 0) { %>
-        <div class="card mb-4">
-          <div class="card-header"><h2 class="h6 mb-0">Kategorije</h2></div>
-          <div class="list-group list-group-flush">
-            <a href="/usluge" class="list-group-item list-group-item-action <%= !data.sidebar.activeCategorySlug && !data.sidebar.activeTagSlug ? 'active' : '' %>">Sve usluge</a>
-            <% data.sidebar.categories.forEach(function(cat) { %>
-              <a href="/usluge/kategorija/<%= cat.slug %>" class="list-group-item list-group-item-action <%= data.sidebar.activeCategorySlug === cat.slug ? 'active' : '' %>"><%= cat.naziv %></a>
-            <% }) %>
           </div>
         </div>
-      <% } %>
+      </div>
+    </section>
+  <% } %>
 
-      <% if (data.sidebar && data.sidebar.tags && data.sidebar.tags.length > 0) { %>
-        <div class="card mb-4">
-          <div class="card-header"><h2 class="h6 mb-0">Tagovi</h2></div>
-          <div class="card-body d-flex flex-wrap gap-2">
-            <% data.sidebar.tags.forEach(function(tag) { %>
-              <a href="/usluge/tag/<%= tag.slug %>" class="badge text-decoration-none <%= data.sidebar.activeTagSlug === tag.slug ? 'bg-primary' : 'bg-secondary' %>"><%= tag.naziv %></a>
+  <div class="container py-5">
+    <% if (!data.intro) { %>
+      <%- include("../includes/breadcrumbs") %>
+    <% } %>
+
+    <div class="row">
+      <div class="col-lg-9">
+        <% if (!data.intro) { %>
+          <h1 class="h3 mb-2"><%= data.category ? data.category.naziv : (data.tag ? data.tag.naziv : "Usluge") %></h1>
+          <% if (data.subtitle) { %><p class="text-muted mb-4"><%= data.subtitle %></p><% } %>
+        <% } else { %>
+          <h2 class="h4 mb-4">Sve usluge</h2>
+        <% } %>
+
+        <% if (data.services && data.services.length > 0) { %>
+          <div class="row g-4">
+            <% data.services.forEach(function(service) { %>
+              <div class="col-md-4">
+                <%- include("../includes/components/card-service", { service: service }) %>
+              </div>
             <% }) %>
           </div>
-        </div>
-      <% } %>
+          <%- include("../includes/pagination", { pagination: data.pagination }) %>
+        <% } else { %>
+          <p class="text-muted">Trenutno nema dostupnih usluga.</p>
+        <% } %>
+      </div>
+
+      <div class="col-lg-3">
+        <% if (data.sidebar && data.sidebar.categories && data.sidebar.categories.length > 0) { %>
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="h6 mb-0">Kategorije</h2></div>
+            <div class="list-group list-group-flush">
+              <a href="/usluge" class="list-group-item list-group-item-action <%= !data.sidebar.activeCategorySlug && !data.sidebar.activeTagSlug ? 'active' : '' %>">Sve usluge</a>
+              <% data.sidebar.categories.forEach(function(cat) { %>
+                <a href="/usluge/kategorija/<%= cat.slug %>" class="list-group-item list-group-item-action <%= data.sidebar.activeCategorySlug === cat.slug ? 'active' : '' %>"><%= cat.naziv %></a>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+
+        <% if (data.sidebar && data.sidebar.tags && data.sidebar.tags.length > 0) { %>
+          <div class="card mb-4">
+            <div class="card-header"><h2 class="h6 mb-0">Tagovi</h2></div>
+            <div class="card-body d-flex flex-wrap gap-2">
+              <% data.sidebar.tags.forEach(function(tag) { %>
+                <a href="/usluge/tag/<%= tag.slug %>" class="badge text-decoration-none <%= data.sidebar.activeTagSlug === tag.slug ? 'bg-primary' : 'bg-secondary' %>"><%= tag.naziv %></a>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+      </div>
     </div>
   </div>
+
+  <% if (data.intro) { %>
+    <section class="cta-section py-5 text-white text-center">
+      <div class="container">
+        <h2 class="h4 fw-bold mb-3">Ponavljate isti tretman?</h2>
+        <p class="mb-4">Pogledajte naše pakete i uštedite uz više poseta odjednom.</p>
+        <a href="/paketi" class="btn btn-light rounded-pill px-4 fw-semibold">Pogledajte pakete</a>
+      </div>
+    </section>
+  <% } %>
 </main>
 
 <%- include("../includes/footer") %>

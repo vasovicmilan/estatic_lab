@@ -1,7 +1,43 @@
+// Shown only on the plain /usluge listing (no active category/tag filter) -
+// gives the page real, indexable body copy that explains what the services
+// are and how to choose between them, before the visitor starts browsing.
+const SERVICE_LIST_INTRO = {
+  eyebrow: "Naše usluge",
+  title: "Masaže, ESMA tretmani i nega lica i tela u Novom Sadu",
+  lead:
+    "Svaki tretman kod nas ima jasnu svrhu - od opuštanja i ublažavanja bolova, do oblikovanja tela i nege kože. Ovde birate tretman prema cilju koji imate, a ne obrnuto.",
+  paragraphs: [
+    "ESMA tretmani (elektrostimulacija, ultrazvuk, mikrostruje i svetlosna terapija) kombinuju se prema potrebi - za jačanje mišićnog tonusa, smanjenje celulita, limfnu drenažu ili lifting lica bez igala. Klasične i sportske masaže rade naši sertifikovani terapeuti, ručno, prilagođeno svakom telu.",
+  ],
+  highlights: [
+    {
+      icon: "bi-heart-pulse",
+      title: "Prema cilju, ne prema modi",
+      text: "Birate tretman prema onome što želite da postignete - opuštanje, manje bolova, čvršću kožu ili bolji tonus.",
+    },
+    {
+      icon: "bi-award",
+      title: "Sertifikovani terapeuti",
+      text: "Svaki tretman izvodi obučen terapeut, uz opremu i protokole prilagođene vašem stanju.",
+    },
+    {
+      icon: "bi-clipboard-check",
+      title: "Jasne informacije pre zakazivanja",
+      text: "Cena, trajanje i eventualne kontraindikacije navedeni su na stranici svake usluge, bez iznenađenja.",
+    },
+    {
+      icon: "bi-collection",
+      title: "Uštedite uz pakete",
+      text: "Za tretmane koje ponavljate više puta, pogledajte naše pakete i platite manje po poseti.",
+    },
+  ],
+};
+
 export function prepareServiceListData(result, { query = {}, categories = [], tags = [] } = {}) {
   return {
     services: result.data,
     subtitle: "Svaki tretman vodi naš tim sertifikovanih terapeuta - birajte prema potrebi, o ostalom brinemo mi.",
+    intro: SERVICE_LIST_INTRO,
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
