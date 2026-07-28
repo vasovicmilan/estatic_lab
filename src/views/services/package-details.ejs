@@ -1,61 +1,152 @@
 <%- include("../includes/head") %>
 <%- include("../includes/navigation") %>
 
-<main class="container py-5">
-  <%- include("../includes/breadcrumbs") %>
+<% const opisPasusi = (data.package.opis || "").split(/\n+/).map(function(p) { return p.trim(); }).filter(Boolean); %>
+
+<main>
   <%- include("../includes/flash-messages") %>
 
-  <div class="row g-4">
-    <div class="col-md-6">
-      <% if (data.package.slika && data.package.slika.url) { %>
-        <img src="<%= data.package.slika.url %>" class="img-fluid rounded img-clickable" alt="<%= data.package.naziv %>"
-             data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
-             data-full-src="<%= data.package.slika.url %>" data-full-alt="<%= data.package.naziv %>">
-      <% } %>
+  <section class="bg-white py-5">
+    <div class="container">
+      <%- include("../includes/breadcrumbs") %>
+
+      <div class="row g-5 align-items-center">
+        <div class="col-lg-5">
+          <% if (data.package.slika && data.package.slika.url) { %>
+            <div class="position-relative">
+              <div class="ratio ratio-4x3 rounded-4 overflow-hidden">
+                <img src="<%= data.package.slika.url %>" alt="<%= data.package.slika.alt || data.package.naziv %>" class="w-100 h-100 object-fit-cover img-clickable"
+                     data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
+                     data-full-src="<%= data.package.slika.url %>" data-full-alt="<%= data.package.naziv %>">
+              </div>
+              <% if (data.package.oznaka || data.package.najbolji) { %>
+                <span class="position-absolute top-0 start-0 m-3 badge <%= data.package.najbolji ? 'text-bg-warning' : 'text-bg-secondary' %>"><%= data.package.oznaka || "Najbolja vrednost" %></span>
+              <% } %>
+            </div>
+          <% } %>
+        </div>
+
+        <div class="col-lg-7">
+          <p class="section-eyebrow">Paketi</p>
+          <h1 class="h2 mb-3"><%= data.package.naziv %></h1>
+          <p class="lead text-muted"><%= data.package.kratakOpis %></p>
+
+          <% if (data.package.ukupnoTrajanje) { %>
+            <div class="d-flex align-items-center gap-2 text-muted small mb-3">
+              <i class="bi bi-clock"></i>
+              <span>Ukupno trajanje: <%= data.package.ukupnoTrajanje %></span>
+            </div>
+          <% } %>
+
+          <div class="d-flex align-items-baseline gap-2 mb-4">
+            <strong class="fs-3 text-primary-emphasis"><%= data.package.cena %> RSD</strong>
+            <% if (data.package.staraCena) { %><span class="text-muted text-decoration-line-through fs-5"><%= data.package.staraCena %> RSD</span><% } %>
+          </div>
+
+          <a href="<%= data.bookingUrl %>" class="btn btn-primary btn-lg rounded-pill px-4">Zainteresovan/a sam</a>
+          <p class="text-muted small mt-2 mb-0">Kontaktiraćemo vas da dogovorimo termine za sve usluge u paketu.</p>
+        </div>
+      </div>
     </div>
-    <div class="col-md-6">
-      <h1 class="h2"><%= data.package.naziv %></h1>
-      <p class="text-muted"><%= data.package.kratakOpis %></p>
-      <p><%= data.package.opis %></p>
+  </section>
 
-      <h2 class="h6 mt-4">Usluge u paketu</h2>
-      <ul>
-        <% (data.package.stavke || []).forEach(function(s) { %>
-          <li><%= s.usluga.naziv %> &times; <%= s.brojSeansi %></li>
-        <% }) %>
-      </ul>
+  <% if (opisPasusi.length > 0) { %>
+    <section class="bg-light border-top border-bottom py-5">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <p class="section-eyebrow">O paketu</p>
+            <% opisPasusi.forEach(function(p) { %>
+              <p class="text-muted"><%= p %></p>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    </section>
+  <% } %>
 
-      <p class="h3 mt-3">
-        <%= data.package.cena %> RSD
-        <% if (data.package.staraCena) { %><small class="text-muted text-decoration-line-through">&nbsp;<%= data.package.staraCena %> RSD</small><% } %>
-      </p>
+  <% if (data.package.stavke && data.package.stavke.length > 0) { %>
+    <section class="container py-5">
+      <p class="section-eyebrow">U paketu</p>
+      <h2 class="h3 mb-4">Usluge u paketu</h2>
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <% data.package.stavke.forEach(function(s) { %>
+            <% if (s.usluga && s.usluga.slug) { %>
+              <a href="/usluge/<%= s.usluga.slug %>" class="link-card">
+                <div>
+                  <div class="fw-semibold mb-1"><%= s.usluga.naziv %></div>
+                  <div class="text-muted small">
+                    <%= s.brojSeansi %> seansi<% if (s.varijanta && s.varijanta.naziv) { %> &middot; <%= s.varijanta.naziv %><% } %>
+                  </div>
+                </div>
+                <i class="bi bi-arrow-right text-primary flex-shrink-0"></i>
+              </a>
+            <% } else { %>
+              <div class="link-card link-card-static">
+                <div>
+                  <div class="fw-semibold mb-1"><%= s.usluga.naziv %></div>
+                  <div class="text-muted small">
+                    <%= s.brojSeansi %> seansi<% if (s.varijanta && s.varijanta.naziv) { %> &middot; <%= s.varijanta.naziv %><% } %>
+                  </div>
+                </div>
+              </div>
+            <% } %>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+  <% } %>
 
-      <a href="<%= data.bookingUrl %>" class="btn btn-primary btn-lg">Zainteresovan/a sam</a>
-      <p class="text-muted small mt-2">Kontaktiraćemo vas da dogovorimo termine za sve usluge u paketu.</p>
-    </div>
+  <div class="container">
+    <%- include("../includes/components/gallery-video", { galerija: data.package.galerija, videi: data.package.videi }) %>
   </div>
-
-  <%- include("../includes/components/gallery-video", { galerija: data.package.galerija, videi: data.package.videi }) %>
 
   <% if (data.package.faq && data.package.faq.length > 0) { %>
-    <h2 class="h4 mt-5 mb-3">Česta pitanja</h2>
-    <%- include("../includes/components/faq", { faq: data.package.faq }) %>
+    <section class="bg-light border-top py-5">
+      <div class="container">
+        <p class="section-eyebrow justify-content-center d-flex">Pitanja</p>
+        <h2 class="h3 mb-4 text-center">Česta pitanja</h2>
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <%- include("../includes/components/faq", { faq: data.package.faq }) %>
+          </div>
+        </div>
+      </div>
+    </section>
   <% } %>
 
-  <% if (data.testimonials && data.testimonials.length > 0) { %>
-    <h2 class="h4 mt-5 mb-3">Utisci klijenata</h2>
-    <div class="row g-4 mb-5">
-      <% data.testimonials.forEach(function(t) { %>
-        <div class="col-md-4"><%- include("../includes/components/card-testimonial", { testimonial: t }) %></div>
-      <% }) %>
+  <section class="container py-5">
+    <p class="section-eyebrow">Utisci klijenata</p>
+    <h2 class="h3 mb-4">Šta kažu naši klijenti</h2>
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <% if (data.testimonials && data.testimonials.length > 0) { %>
+          <div class="d-flex flex-column gap-3">
+            <% data.testimonials.forEach(function(t) { %>
+              <%- include("../includes/components/card-testimonial", { testimonial: t }) %>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="text-muted">Budite prvi koji će ostaviti utisak o ovom paketu.</p>
+        <% } %>
+      </div>
+      <div class="col-lg-5">
+        <%- include("../includes/components/testimonial-form", { packageId: data.package.id }) %>
+      </div>
     </div>
-  <% } %>
+  </section>
 
-  <div class="row justify-content-center mt-5">
-    <div class="col-lg-7">
-      <%- include("../includes/components/testimonial-form", { packageId: data.package.id }) %>
+  <section class="cta-section py-5 text-white text-center">
+    <div class="container">
+      <h2 class="h4 fw-bold mb-3">Niste sigurni koji paket da izaberete?</h2>
+      <p class="mb-4">Pogledajte i ostale pakete ili nam se javite za predlog koji odgovara vašim ciljevima.</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="/paketi" class="btn btn-light rounded-pill px-4 fw-semibold">Svi paketi</a>
+        <a href="/kontakt" class="btn btn-outline-light rounded-pill px-4 fw-semibold">Kontaktirajte nas</a>
+      </div>
     </div>
-  </div>
+  </section>
 </main>
 
 <%- include("../includes/footer") %>

@@ -768,6 +768,13 @@ h1, h2, h3, h4, h5, h6,
   box-shadow: var(--bs-box-shadow);
 }
 
+/* Non-clickable variant (e.g. a package item whose service has no public
+   slug yet) - same look, no hover lift implying it's interactive. */
+.link-card-static:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 /* CTA block (content block type "cta") */
 .article-cta-box {
   background: var(--bs-dark);
