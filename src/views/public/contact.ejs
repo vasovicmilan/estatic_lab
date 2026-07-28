@@ -65,57 +65,54 @@
           </div>
         </div>
 
-        <div class="col-lg-5">
-          <div class="card shadow-sm">
+        <div class="col-lg-5 d-flex flex-column gap-4">
+          <div class="card shadow-sm bg-dark text-white">
             <div class="card-body p-4">
               <h2 class="h5 mb-3">Kontakt podaci</h2>
               <ul class="list-unstyled mb-0">
                 <li class="mb-3 d-flex align-items-start gap-2">
-                  <i class="bi bi-geo-alt text-primary flex-shrink-0"></i>
-                  <span><%= data.contact.address %></span>
+                  <i class="bi bi-geo-alt text-primary-emphasis flex-shrink-0"></i>
+                  <span class="text-white-50"><%= data.contact.address %></span>
                 </li>
                 <li class="mb-3 d-flex align-items-start gap-2">
-                  <i class="bi bi-envelope text-primary flex-shrink-0"></i>
-                  <a href="mailto:<%= data.contact.email %>" class="text-decoration-none"><%= data.contact.email %></a>
+                  <i class="bi bi-envelope text-primary-emphasis flex-shrink-0"></i>
+                  <a href="mailto:<%= data.contact.email %>" class="text-decoration-none text-white-50"><%= data.contact.email %></a>
                 </li>
                 <li class="d-flex align-items-start gap-2">
-                  <i class="bi bi-telephone text-primary flex-shrink-0"></i>
-                  <a href="tel:<%= data.contact.phoneHref %>" class="text-decoration-none"><%= data.contact.phone %></a>
+                  <i class="bi bi-telephone text-primary-emphasis flex-shrink-0"></i>
+                  <a href="tel:<%= data.contact.phoneHref %>" class="text-decoration-none text-white-50"><%= data.contact.phone %></a>
                 </li>
               </ul>
             </div>
           </div>
+
+          <% if (data.map && data.map.embedUrl) { %>
+            <div class="card shadow-sm">
+              <div class="card-body p-4">
+                <p class="section-eyebrow mb-2">Gde se nalazimo</p>
+                <h3 class="h6 mb-3"><%= data.map.address %></h3>
+                <% if (data.googleDataNotice) { %>
+                  <p class="text-muted small mb-2"><%= data.googleDataNotice.text %></p>
+                  <a href="<%= data.googleDataNotice.privacyUrl %>" class="small fw-semibold">Pročitajte više u našoj Politici privatnosti</a>
+                <% } %>
+                <div class="rounded-4 overflow-hidden border contact-map-embed mt-3">
+                  <iframe
+                    src="<%= data.map.embedUrl %>"
+                    title="<%= data.map.address %>"
+                    width="100%"
+                    height="100%"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    allowfullscreen
+                  ></iframe>
+                </div>
+              </div>
+            </div>
+          <% } %>
         </div>
       </div>
     </div>
   </section>
-
-  <!-- Location - same two-column pattern as the homepage -->
-  <% if (data.map && data.map.embedUrl) { %>
-    <section class="container py-5">
-      <div class="row align-items-center g-5">
-        <div class="col-lg-5">
-          <p class="section-eyebrow">Gde se nalazimo</p>
-          <h2 class="h3 mb-3"><%= data.map.address %></h2>
-          <% if (data.googleDataNotice) { %>
-            <p class="text-muted small mb-2"><%= data.googleDataNotice.text %></p>
-            <a href="<%= data.googleDataNotice.privacyUrl %>" class="small fw-semibold">Pročitajte više u našoj Politici privatnosti</a>
-          <% } %>
-        </div>
-        <div class="col-lg-7">
-          <div class="ratio ratio-4x3 rounded-4 overflow-hidden border">
-            <iframe
-              src="<%= data.map.embedUrl %>"
-              title="<%= data.map.address %>"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-              allowfullscreen
-            ></iframe>
-          </div>
-        </div>
-      </div>
-    </section>
-  <% } %>
 </main>
 
 <%- include("../includes/footer") %>
