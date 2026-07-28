@@ -25,6 +25,21 @@ const LEGAL_CONTACT = {
   company: "Estetik Lab wellness centar",
   address: "Maksima Gorkog 6b, 21120 Novi Sad, Republika Srbija",
   email: "estetik.lab.ns@gmail.com",
+  phone: "+381 65 977 4000",
+  phoneHref: "+38165977400",
+};
+
+// Shared with prepareHomeData below (home.ejs) and prepareContactPageData
+// (public/contact.ejs) - same physical location, so the address text and map
+// embed are only ever defined once.
+const MAP_ADDRESS = "Maksima Gorkog 6b, Novi Sad 21120";
+const MAP_EMBED_PARAM =
+  "!1m18!1m12!1m3!1d2808.909996570131!2d19.843611977018323!3d45.24961274772971!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x475b106c892d2953%3A0x78a7de03d4dbf444!2sMaksima%20Gorkog%206b%2C%20Novi%20Sad%2021120!5e0!3m2!1sen!2srs!4v1784121266023!5m2!1sen!2srs";
+const MAP_EMBED_URL = `https://www.google.com/maps/embed?pb=${MAP_EMBED_PARAM}`;
+const GOOGLE_DATA_NOTICE = {
+  text:
+    "Ukoliko se registrujete ili prijavite putem Google naloga, sa Google-a primamo samo osnovne podatke vašeg profila - ime, prezime i email adresu. Ove podatke koristimo isključivo za kreiranje i povezivanje vašeg korisničkog naloga na Estetik Lab platformi, kako biste mogli da zakazujete termine i pratite svoje rezervacije. Ne delimo ih sa trećim licima niti ih koristimo u druge svrhe bez vaše saglasnosti.",
+  privacyUrl: "/politika-privatnosti",
 };
 
 export function prepareAboutPageData() {
@@ -494,11 +509,6 @@ export function prepareHomeData({
   latestPosts = [],
   bestPackages = [],
 } = {}) {
-  const addressText = "Maksima Gorkog 6b, Novi Sad 21120";
-
-  const mapParam =
-    "!1m18!1m12!1m3!1d2808.909996570131!2d19.843611977018323!3d45.24961274772971!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x475b106c892d2953%3A0x78a7de03d4dbf444!2sMaksima%20Gorkog%206b%2C%20Novi%20Sad%2021120!5e0!3m2!1sen!2srs!4v1784121266023!5m2!1sen!2srs";
-
   return {
     hero: {
           eyebrow: "Estetik Lab wellness centar",
@@ -539,14 +549,28 @@ export function prepareHomeData({
     testimonialFormAction: "/testimonials/posalji",
 
     map: {
-      address: addressText,
-      embedUrl: `https://www.google.com/maps/embed?pb=${mapParam}`,
+      address: MAP_ADDRESS,
+      embedUrl: MAP_EMBED_URL,
     },
-    googleDataNotice: {
-      text:
-        "Ukoliko se registrujete ili prijavite putem Google naloga, sa Google-a primamo samo osnovne podatke vašeg profila - ime, prezime i email adresu. Ove podatke koristimo isključivo za kreiranje i povezivanje vašeg korisničkog naloga na Estetik Lab platformi, kako biste mogli da zakazujete termine i pratite svoje rezervacije. Ne delimo ih sa trećim licima niti ih koristimo u druge svrhe bez vaše saglasnosti.",
-      privacyUrl: "/politika-privatnosti",
+    googleDataNotice: GOOGLE_DATA_NOTICE,
+  };
+}
+
+export function prepareContactPageData() {
+  return {
+    intro: {
+      eyebrow: "Kontakt",
+      title: "Zakažite termin ili nam pošaljite poruku",
+      lead:
+        "Tu smo za sva pitanja o tretmanima, terminima i paketima - javite nam se telefonom, mejlom ili putem forme ispod, a odgovaramo u najkraćem roku.",
     },
+    contact: LEGAL_CONTACT,
+    map: {
+      address: MAP_ADDRESS,
+      embedUrl: MAP_EMBED_URL,
+    },
+    googleDataNotice: GOOGLE_DATA_NOTICE,
+    breadcrumbs: [{ label: "Kontakt", url: null }],
   };
 }
 
@@ -554,4 +578,6 @@ export default {
   prepareHomeData,
   preparePrivacyPolicyData,
   prepareTermsAndConditionsData,
+  prepareAboutPageData,
+  prepareContactPageData,
 };

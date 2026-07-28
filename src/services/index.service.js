@@ -84,9 +84,9 @@ export async function getFaqPageData() {
 export async function getContactPageData() {
   const seo = buildPageSeo({
     title: "Kontakt | Estetik Lab",
-    description: "Kontaktirajte Estetik Lab tim za pitanja o uslugama, terminima ili saradnji.",
+    description: "Kontaktirajte Estetik Lab wellness centar u Novom Sadu - adresa, telefon, email i forma za brz odgovor na vaša pitanja.",
     canonical: "/kontakt",
-    isIndexable: false,
+    isIndexable: true,
   });
   return { seo };
 }

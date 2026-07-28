@@ -13,6 +13,7 @@ const STATIC_PAGES = [
   { path: "/prodavnica", changefreq: "weekly", priority: "0.8" },
   { path: "/blog", changefreq: "weekly", priority: "0.7" },
   { path: "/nas-tim", changefreq: "monthly", priority: "0.6" },
+  { path: "/kontakt", changefreq: "monthly", priority: "0.6" },
   { path: "/faq", changefreq: "monthly", priority: "0.4" },
   { path: "/politika-privatnosti", changefreq: "yearly", priority: "0.2" },
   { path: "/uslovi-koriscenja", changefreq: "yearly", priority: "0.2" },
