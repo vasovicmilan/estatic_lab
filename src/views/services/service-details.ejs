@@ -1,102 +1,214 @@
 <%- include("../includes/head") %>
 <%- include("../includes/navigation") %>
 
-<main class="container py-5">
-  <%- include("../includes/breadcrumbs") %>
+<%
+  const isEsma = data.service.kategorije && data.service.kategorije.some(function(k) { return String(k).toUpperCase() === "ESMA"; });
+  const variants = data.service.varijante || [];
+  const prices = variants.map(function(v) { return parseInt(String(v.cena).replace(/[^\d]/g, ""), 10); }).filter(function(n) { return !isNaN(n); });
+  let priceRange = null;
+  if (prices.length === 1) {
+    priceRange = variants[0].cena;
+  } else if (prices.length > 1) {
+    priceRange = `od ${Math.min.apply(null, prices)} RSD`;
+  }
+  const opisPasusi = (data.service.dugiOpis || "").split(/\n+/).map(function(p) { return p.trim(); }).filter(Boolean);
+%>
+
+<main>
   <%- include("../includes/flash-messages") %>
 
-  <div class="row g-4 mb-5">
-    <div class="col-md-6">
-      <% if (data.service.slika && data.service.slika.url) { %>
-        <img src="<%= data.service.slika.url %>" class="img-fluid rounded img-clickable" alt="<%= data.service.naziv %>"
-             data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
-             data-full-src="<%= data.service.slika.url %>" data-full-alt="<%= data.service.naziv %>">
-      <% } %>
-    </div>
-    <div class="col-md-6">
-      <h1 class="h2"><%= data.service.naziv %></h1>
-      <p class="text-muted"><%= data.service.kratakOpis %></p>
-      <div class="mb-3">
-        <% (data.service.kategorije || []).forEach(function(cat) { %><span class="badge bg-light text-dark border me-1"><%= cat %></span><% }) %>
-      </div>
-      <p><%= data.service.dugiOpis %></p>
-    </div>
-  </div>
+  <section class="bg-white py-5">
+    <div class="container">
+      <%- include("../includes/breadcrumbs") %>
 
-  <h2 class="h4 mb-3">Izaberite varijantu</h2>
-  <div class="row g-3 mb-5">
-    <% (data.service.varijante || []).forEach(function(variant) { %>
-      <div class="col-md-4">
-        <div class="card h-100 <%= variant.najbolji ? 'border-primary' : '' %>">
-          <div class="card-body text-center">
-            <% if (variant.oznaka) { %><span class="badge bg-primary mb-2"><%= variant.oznaka %></span><% } %>
-            <h3 class="h5"><%= variant.naziv %></h3>
-            <p class="text-muted small"><%= variant.trajanje %> min &middot; <%= variant.brojSeansi %> seansi</p>
-            <p class="h4"><%= variant.cena %></p>
-            <% if (variant.staraCena) { %><p class="text-muted text-decoration-line-through small"><%= variant.staraCena %></p><% } %>
-            <a href="/zakazivanje/<%= data.service.slug %>/termin?servicePackageId=<%= variant.id %>" class="btn btn-primary w-100">Zakaži</a>
-          </div>
-        </div>
-      </div>
-    <% }) %>
-  </div>
-
-  <% if (data.service.karakteristike && data.service.karakteristike.length > 0) { %>
-    <h2 class="h4 mb-3">Šta dobijate</h2>
-    <div class="row g-3 mb-5">
-      <% data.service.karakteristike.forEach(function(f) { %>
-        <div class="col-md-4">
-          <div class="d-flex gap-2">
-            <% if (f.ikona) { %><i class="<%= f.ikona %> fs-4 text-primary"></i><% } %>
-            <div>
-              <h3 class="h6 mb-1"><%= f.naziv %></h3>
-              <p class="small text-muted"><%= f.opis %></p>
+      <div class="row g-5 align-items-center">
+        <div class="col-lg-5">
+          <% if (data.service.slika && data.service.slika.url) { %>
+            <div class="position-relative">
+              <div class="ratio ratio-4x3 rounded-4 overflow-hidden">
+                <img src="<%= data.service.slika.url %>" alt="<%= data.service.slika.alt || data.service.naziv %>" class="w-100 h-100 object-fit-cover img-clickable"
+                     data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
+                     data-full-src="<%= data.service.slika.url %>" data-full-alt="<%= data.service.naziv %>">
+              </div>
+              <% if (isEsma) { %>
+                <span class="position-absolute top-0 end-0 m-3 badge text-bg-dark bg-opacity-75">ESMA</span>
+              <% } %>
             </div>
+          <% } %>
+        </div>
+
+        <div class="col-lg-7">
+          <% if (data.service.kategorije && data.service.kategorije.length > 0) { %>
+            <p class="section-eyebrow"><%= data.service.kategorije[0] %></p>
+          <% } %>
+          <h1 class="h2 mb-3"><%= data.service.naziv %></h1>
+          <p class="lead text-muted"><%= data.service.kratakOpis %></p>
+
+          <% if (data.service.tagovi && data.service.tagovi.length > 0) { %>
+            <div class="d-flex flex-wrap gap-2 mb-4">
+              <% data.service.tagovi.forEach(function(tag) { %>
+                <span class="badge rounded-pill bg-light text-muted border">#<%= tag %></span>
+              <% }) %>
+            </div>
+          <% } %>
+
+          <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
+            <% if (priceRange) { %>
+              <strong class="fs-4 text-primary-emphasis"><%= priceRange %></strong>
+            <% } %>
+            <a href="#varijante" class="btn btn-primary rounded-pill px-4">Zakažite termin</a>
+            <a href="/kontakt" class="small fw-semibold text-decoration-none">Imate pitanje? Kontaktirajte nas</a>
           </div>
         </div>
-      <% }) %>
+      </div>
     </div>
+  </section>
+
+  <% if (opisPasusi.length > 0) { %>
+    <section class="bg-light border-top border-bottom py-5">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <p class="section-eyebrow">O tretmanu</p>
+            <% opisPasusi.forEach(function(p) { %>
+              <p class="text-muted"><%= p %></p>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    </section>
   <% } %>
 
-  <%- include("../includes/components/gallery-video", { galerija: data.service.galerija, videi: data.service.videi }) %>
+  <% if (variants.length > 0) { %>
+    <section id="varijante" class="container py-5">
+      <p class="section-eyebrow">Zakazivanje</p>
+      <h2 class="h3 mb-4">Izaberite varijantu</h2>
+      <div class="row g-4">
+        <% variants.forEach(function(variant) { %>
+          <div class="col-md-4">
+            <div class="card h-100 shadow-sm hover-lift <%= variant.najbolji ? 'border-primary' : '' %>">
+              <div class="card-body d-flex flex-column">
+                <% if (variant.oznaka || variant.najbolji) { %>
+                  <span class="badge <%= variant.najbolji ? 'text-bg-warning' : 'text-bg-secondary' %> mb-2 align-self-start"><%= variant.oznaka || "Najbolja vrednost" %></span>
+                <% } %>
+                <h3 class="h5"><%= variant.naziv %></h3>
+                <p class="text-muted small"><%= variant.trajanje %> &middot; <%= variant.brojSeansi %> seansi</p>
+                <div class="mt-auto pt-2 border-top">
+                  <div class="d-flex align-items-baseline gap-2 mb-3">
+                    <strong class="fs-5"><%= variant.cena %></strong>
+                    <% if (variant.staraCena) { %><span class="text-muted text-decoration-line-through small"><%= variant.staraCena %></span><% } %>
+                  </div>
+                  <a href="/zakazivanje/<%= data.service.slug %>/termin?servicePackageId=<%= variant.id %>" class="btn btn-primary rounded-pill w-100">Zakaži</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (data.service.karakteristike && data.service.karakteristike.length > 0) { %>
+    <section class="bg-light border-top border-bottom py-5">
+      <div class="container">
+        <p class="section-eyebrow">Prednosti</p>
+        <h2 class="h3 mb-4">Šta dobijate</h2>
+        <div class="row g-4">
+          <% data.service.karakteristike.forEach(function(f) { %>
+            <div class="col-md-4">
+              <% if (f.ikona) { %>
+                <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary-emphasis rounded-circle icon-circle-lg mb-3">
+                  <i class="bi <%= f.ikona %> fs-4"></i>
+                </div>
+              <% } %>
+              <h3 class="h6"><%= f.naziv %></h3>
+              <p class="text-muted small"><%= f.opis %></p>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+  <% } %>
+
+  <div class="container">
+    <%- include("../includes/components/gallery-video", { galerija: data.service.galerija, videi: data.service.videi }) %>
+  </div>
 
   <% if (data.service.tabelaPoredjenja && data.service.tabelaPoredjenja.redovi && data.service.tabelaPoredjenja.redovi.length > 0) { %>
-    <h2 class="h4 mb-3">Poređenje</h2>
-    <div class="table-responsive mb-5">
-      <table class="table table-bordered">
-        <thead>
-          <tr><th></th><% data.service.tabelaPoredjenja.kolone.forEach(function(col) { %><th><%= col %></th><% }) %></tr>
-        </thead>
-        <tbody>
-          <% data.service.tabelaPoredjenja.redovi.forEach(function(row) { %>
-            <tr><td><%= row.label %></td><% row.values.forEach(function(v) { %><td><%= v %></td><% }) %></tr>
-          <% }) %>
-        </tbody>
-      </table>
-    </div>
+    <section class="container py-5">
+      <p class="section-eyebrow">Poređenje</p>
+      <h2 class="h3 mb-4">Kako se razlikuje od sličnih tretmana</h2>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead>
+            <tr>
+              <th></th>
+              <% data.service.tabelaPoredjenja.kolone.forEach(function(col) { %><th><%= col %></th><% }) %>
+            </tr>
+          </thead>
+          <tbody>
+            <% data.service.tabelaPoredjenja.redovi.forEach(function(row) { %>
+              <tr>
+                <th scope="row"><%= row.label %></th>
+                <% row.values.forEach(function(v) { %><td><%= v %></td><% }) %>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </section>
   <% } %>
 
   <% if (data.service.faq && data.service.faq.length > 0) { %>
-    <h2 class="h4 mb-3">Česta pitanja</h2>
-    <div class="mb-5">
-      <%- include("../includes/components/faq", { faq: data.service.faq }) %>
-    </div>
+    <section class="bg-light border-top py-5">
+      <div class="container">
+        <p class="section-eyebrow justify-content-center d-flex">Pitanja</p>
+        <h2 class="h3 mb-4 text-center">Česta pitanja</h2>
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <%- include("../includes/components/faq", { faq: data.service.faq }) %>
+          </div>
+        </div>
+      </div>
+    </section>
   <% } %>
 
-  <% if (data.testimonials && data.testimonials.length > 0) { %>
-    <h2 class="h4 mb-3">Utisci klijenata</h2>
-    <div class="row g-4 mb-5">
-      <% data.testimonials.forEach(function(t) { %>
-        <div class="col-md-4"><%- include("../includes/components/card-testimonial", { testimonial: t }) %></div>
-      <% }) %>
+  <section class="container py-5">
+    <p class="section-eyebrow">Utisci klijenata</p>
+    <h2 class="h3 mb-4">Šta kažu naši klijenti</h2>
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <% if (data.testimonials && data.testimonials.length > 0) { %>
+          <div class="d-flex flex-column gap-3">
+            <% data.testimonials.forEach(function(t) { %>
+              <%- include("../includes/components/card-testimonial", { testimonial: t }) %>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="text-muted">Budite prvi koji će ostaviti utisak o ovom tretmanu.</p>
+        <% } %>
+      </div>
+      <div class="col-lg-5">
+        <%- include("../includes/components/testimonial-form", { serviceId: data.service.id }) %>
+      </div>
     </div>
-  <% } %>
+  </section>
 
-  <div class="row justify-content-center">
-    <div class="col-lg-7">
-      <%- include("../includes/components/testimonial-form", { serviceId: data.service.id }) %>
-    </div>
-  </div>
+  <% if (data.relatedServices && data.relatedServices.length > 0) { %>
+    <section class="bg-white border-top py-5">
+      <div class="container">
+        <p class="section-eyebrow">Pogledajte i</p>
+        <h2 class="h3 mb-4">Slične usluge</h2>
+        <div class="row g-4">
+          <% data.relatedServices.forEach(function(s) { %>
+            <div class="col-md-4">
+              <%- include("../includes/components/card-service", { service: s }) %>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+  <% } %>
 </main>
 
 <%- include("../includes/footer") %>
