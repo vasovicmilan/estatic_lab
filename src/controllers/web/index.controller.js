@@ -4,6 +4,7 @@ import {
   preparePrivacyPolicyData,
   prepareTermsAndConditionsData,
   prepareAboutPageData,
+  prepareContactPageData,
 } from "../../presenters/public/index.presenter.js";
 import { logError, logWarn, logInfo } from "../../utils/logger.util.js";
 import { flashAndRedirect } from "../../utils/flash.util.js";
@@ -93,12 +94,16 @@ export async function faqPage(req, res, next) {
 export async function contactPage(req, res, next) {
   try {
     const serviceData = await indexService.getContactPageData();
-    return res.render("public/_page", {
+    return res.render("public/contact", {
       pageTitle: serviceData.seo.pageTitle,
       pageDescription: serviceData.seo.pageDescription,
       seo: serviceData.seo,
-      showForm: true,
-      data: { formData: { topic: req.query.tema || "", arrivedWithTema: req.query.tema ? "1" : "" }, errors: {}, csrfToken: res.locals.csrfToken },
+      data: {
+        ...prepareContactPageData(),
+        formData: { topic: req.query.tema || "", arrivedWithTema: req.query.tema ? "1" : "" },
+        errors: {},
+        csrfToken: res.locals.csrfToken,
+      },
     });
   } catch (error) {
     logError("[contactPage] Greška pri učitavanju kontakt stranice", error);
@@ -111,12 +116,16 @@ export async function submitContact(req, res, next) {
     if (req.validationErrors) {
       logWarn("[submitContact] Validacione greške u kontakt formi", { validationErrors: req.validationErrors, email: req.body.email });
       const serviceData = await indexService.getContactPageData();
-      return res.status(400).render("public/_page", {
+      return res.status(400).render("public/contact", {
         pageTitle: serviceData.seo.pageTitle,
         pageDescription: serviceData.seo.pageDescription,
         seo: serviceData.seo,
-        showForm: true,
-        data: { formData: req.body, errors: req.validationErrors, csrfToken: res.locals.csrfToken },
+        data: {
+          ...prepareContactPageData(),
+          formData: req.body,
+          errors: req.validationErrors,
+          csrfToken: res.locals.csrfToken,
+        },
       });
     }
 
@@ -136,12 +145,16 @@ export async function submitContact(req, res, next) {
 
     if (error.statusCode === 400) {
       const serviceData = await indexService.getContactPageData();
-      return res.status(400).render("public/_page", {
+      return res.status(400).render("public/contact", {
         pageTitle: serviceData.seo.pageTitle,
         pageDescription: serviceData.seo.pageDescription,
         seo: serviceData.seo,
-        showForm: true,
-        data: { formData: req.body, errors: { general: error.message }, csrfToken: res.locals.csrfToken },
+        data: {
+          ...prepareContactPageData(),
+          formData: req.body,
+          errors: { general: error.message },
+          csrfToken: res.locals.csrfToken,
+        },
       });
     }
     next(error);
