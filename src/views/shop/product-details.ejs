@@ -1,92 +1,165 @@
 <%- include("../includes/head") %>
 <%- include("../includes/navigation") %>
 
-<main class="container py-5">
-  <%- include("../includes/breadcrumbs") %>
+<% const opisPasusi = (data.product.dugiOpis || "").split(/\n+/).map(function(p) { return p.trim(); }).filter(Boolean); %>
+
+<main>
   <%- include("../includes/flash-messages") %>
 
-  <div class="row g-4 mb-5">
-    <div class="col-md-6">
-      <% if (data.product.slika && data.product.slika.url) { %>
-        <img src="<%= data.product.slika.url %>" class="img-fluid rounded img-clickable" alt="<%= data.product.naziv %>"
-             data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
-             data-full-src="<%= data.product.slika.url %>" data-full-alt="<%= data.product.naziv %>">
-      <% } %>
-    </div>
-    <div class="col-md-6">
-      <h1 class="h2"><%= data.product.naziv %></h1>
-      <p class="text-muted"><%= data.product.kratakOpis %></p>
-      <div class="mb-3">
-        <% (data.product.kategorije || []).forEach(function(cat) { %><span class="badge bg-light text-dark border me-1"><%= cat %></span><% }) %>
+  <section class="bg-white py-5">
+    <div class="container">
+      <%- include("../includes/breadcrumbs") %>
+
+      <div class="row g-5 align-items-center">
+        <div class="col-lg-5">
+          <% if (data.product.slika && data.product.slika.url) { %>
+            <div class="position-relative">
+              <div class="ratio ratio-4x3 rounded-4 overflow-hidden">
+                <img src="<%= data.product.slika.url %>" alt="<%= data.product.slika.alt || data.product.naziv %>" class="w-100 h-100 object-fit-cover img-clickable"
+                     data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
+                     data-full-src="<%= data.product.slika.url %>" data-full-alt="<%= data.product.naziv %>">
+              </div>
+              <% if (data.product.oznaka) { %>
+                <span class="position-absolute top-0 start-0 m-3 badge <%= data.product.oznakaRaw === 'sale' ? 'bg-danger' : 'bg-primary' %>"><%= data.product.oznaka %></span>
+              <% } %>
+            </div>
+          <% } %>
+        </div>
+
+        <div class="col-lg-7">
+          <% if (data.product.kategorije && data.product.kategorije.length > 0) { %>
+            <p class="section-eyebrow"><%= data.product.kategorije[0] %></p>
+          <% } %>
+          <h1 class="h2 mb-3"><%= data.product.naziv %></h1>
+          <p class="lead text-muted"><%= data.product.kratakOpis %></p>
+
+          <% if (data.product.kategorije && data.product.kategorije.length > 0) { %>
+            <div class="mb-2">
+              <% data.product.kategorije.forEach(function(cat) { %><span class="badge bg-light text-dark border me-1"><%= cat %></span><% }) %>
+            </div>
+          <% } %>
+          <% if (data.product.tagovi && data.product.tagovi.length > 0) { %>
+            <div class="d-flex flex-wrap gap-2">
+              <% data.product.tagovi.forEach(function(tag) { %>
+                <span class="badge rounded-pill bg-light text-muted border">#<%= tag %></span>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
       </div>
-      <p><%= data.product.dugiOpis %></p>
     </div>
-  </div>
+  </section>
 
-  <h2 class="h4 mb-3">Izaberite varijantu</h2>
-  <div class="row g-3 mb-5">
-    <% (data.product.varijante || []).forEach(function(variant) { %>
-      <div class="col-md-4">
-        <div class="card h-100">
-          <div class="card-body text-center d-flex flex-column">
-            <h3 class="h5"><%= variant.naziv %></h3>
-            <p class="h4"><%= variant.cena %> RSD</p>
-            <% if (variant.staraCena) { %><p class="text-muted text-decoration-line-through small"><%= variant.staraCena %> RSD</p><% } %>
-
-            <% if (variant.naStanju) { %>
-              <form action="/korpa/dodaj" method="POST" class="mt-auto d-flex gap-2 justify-content-center">
-                <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
-                <input type="hidden" name="productId" value="<%= data.product.id %>">
-                <input type="hidden" name="variantId" value="<%= variant.id %>">
-                <input type="number" name="quantity" value="1" min="1" max="<%= variant.dostupnaKolicina %>" class="form-control form-control-sm" style="width:70px;">
-                <button type="submit" class="btn btn-primary btn-sm">Dodaj u korpu</button>
-              </form>
-            <% } else { %>
-              <button type="button" class="btn btn-outline-secondary btn-sm mt-auto" disabled>Nema na stanju</button>
-            <% } %>
+  <% if (opisPasusi.length > 0) { %>
+    <section class="bg-light border-top border-bottom py-5">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <p class="section-eyebrow">O proizvodu</p>
+            <% opisPasusi.forEach(function(p) { %>
+              <p class="text-muted"><%= p %></p>
+            <% }) %>
           </div>
         </div>
       </div>
-    <% }) %>
+    </section>
+  <% } %>
+
+  <% if (data.product.varijante && data.product.varijante.length > 0) { %>
+    <section class="container py-5">
+      <p class="section-eyebrow">Kupovina</p>
+      <h2 class="h3 mb-4">Izaberite varijantu</h2>
+      <div class="row g-4">
+        <% data.product.varijante.forEach(function(variant) { %>
+          <div class="col-md-4">
+            <div class="card h-100 shadow-sm hover-lift">
+              <div class="card-body d-flex flex-column">
+                <h3 class="h5"><%= variant.naziv %></h3>
+                <div class="d-flex align-items-baseline gap-2 mb-3">
+                  <strong class="fs-5"><%= variant.cena %> RSD</strong>
+                  <% if (variant.staraCena) { %><span class="text-muted text-decoration-line-through small"><%= variant.staraCena %> RSD</span><% } %>
+                </div>
+
+                <% if (variant.naStanju) { %>
+                  <form action="/korpa/dodaj" method="POST" class="mt-auto d-flex gap-2">
+                    <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+                    <input type="hidden" name="productId" value="<%= data.product.id %>">
+                    <input type="hidden" name="variantId" value="<%= variant.id %>">
+                    <input type="number" name="quantity" value="1" min="1" max="<%= variant.stanje %>" class="form-control form-control-sm quantity-input">
+                    <button type="submit" class="btn btn-primary rounded-pill flex-grow-1">Dodaj u korpu</button>
+                  </form>
+                <% } else { %>
+                  <button type="button" class="btn btn-outline-secondary rounded-pill mt-auto" disabled>Nema na stanju</button>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <div class="container">
+    <%- include("../includes/components/gallery-video", { galerija: data.product.galerija, videi: data.product.videi }) %>
   </div>
 
   <% if (data.relatedProducts && data.relatedProducts.length > 0) { %>
-    <h2 class="h4 mb-3">Povezani proizvodi</h2>
-    <div class="row g-3 mb-5">
-      <% data.relatedProducts.forEach(function(p) { %>
-        <div class="col-md-3">
-          <div class="card h-100">
-            <% if (p.slika && p.slika.url) { %><img src="<%= p.slika.url %>" class="card-img-top" style="height:140px;object-fit:cover;" alt="<%= p.naziv %>"><% } %>
-            <div class="card-body">
-              <a href="/prodavnica/<%= p.slug %>" class="text-decoration-none text-dark h6"><%= p.naziv %></a>
+    <section class="bg-light border-top border-bottom py-5">
+      <div class="container">
+        <p class="section-eyebrow">Pogledajte i</p>
+        <h2 class="h3 mb-4">Povezani proizvodi</h2>
+        <div class="row g-4">
+          <% data.relatedProducts.forEach(function(p) { %>
+            <div class="col-md-3">
+              <a href="/prodavnica/<%= p.slug %>" class="card h-100 shadow-sm hover-lift text-decoration-none text-dark">
+                <% if (p.slika && p.slika.url) { %><img src="<%= p.slika.url %>" class="card-img-top product-card-img" alt="<%= p.slika.alt || p.naziv %>"><% } %>
+                <div class="card-body">
+                  <span class="h6"><%= p.naziv %></span>
+                </div>
+              </a>
             </div>
-          </div>
+          <% }) %>
         </div>
-      <% }) %>
-    </div>
+      </div>
+    </section>
   <% } %>
 
   <% if (data.product.faq && data.product.faq.length > 0) { %>
-    <h2 class="h4 mb-3">Česta pitanja</h2>
-    <div class="mb-5">
-      <%- include("../includes/components/faq", { faq: data.product.faq }) %>
-    </div>
+    <section class="py-5">
+      <div class="container">
+        <p class="section-eyebrow justify-content-center d-flex">Pitanja</p>
+        <h2 class="h3 mb-4 text-center">Česta pitanja</h2>
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <%- include("../includes/components/faq", { faq: data.product.faq }) %>
+          </div>
+        </div>
+      </div>
+    </section>
   <% } %>
 
-  <% if (data.testimonials && data.testimonials.length > 0) { %>
-    <h2 class="h4 mb-3">Utisci kupaca</h2>
-    <div class="row g-4 mb-5">
-      <% data.testimonials.forEach(function(t) { %>
-        <div class="col-md-4"><%- include("../includes/components/card-testimonial", { testimonial: t }) %></div>
-      <% }) %>
+  <section class="bg-light border-top py-5">
+    <div class="container">
+      <p class="section-eyebrow">Utisci kupaca</p>
+      <h2 class="h3 mb-4">Šta kažu naši kupci</h2>
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <% if (data.testimonials && data.testimonials.length > 0) { %>
+            <div class="d-flex flex-column gap-3">
+              <% data.testimonials.forEach(function(t) { %>
+                <%- include("../includes/components/card-testimonial", { testimonial: t }) %>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <p class="text-muted">Budite prvi koji će ostaviti utisak o ovom proizvodu.</p>
+          <% } %>
+        </div>
+        <div class="col-lg-5">
+          <%- include("../includes/components/testimonial-form", { productId: data.product.id }) %>
+        </div>
+      </div>
     </div>
-  <% } %>
-
-  <div class="row justify-content-center">
-    <div class="col-lg-7">
-      <%- include("../includes/components/testimonial-form", { productId: data.product.id }) %>
-    </div>
-  </div>
+  </section>
 </main>
 
 <%- include("../includes/footer") %>

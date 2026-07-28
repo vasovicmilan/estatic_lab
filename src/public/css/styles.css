@@ -837,3 +837,12 @@ h1, h2, h3, h4, h5, h6,
 .article-faq-item p {
   padding-bottom: 1.375rem;
 }
+
+/* ================================================================
+   Product details (shop/product-details.ejs)
+   ================================================================ */
+
+.quantity-input {
+  width: 70px;
+  flex-shrink: 0;
+}
