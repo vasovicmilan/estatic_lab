@@ -1432,10 +1432,28 @@ async function upsertPosts(categoriesBySlug, tagsBySlug, authorId) {
       return tag._id;
     });
 
-    const isFuture = def.statusOffset > 0;
-    const status = isFuture ? "scheduled" : "published";
-    const scheduledFor = isFuture ? dayOffset(def.statusOffset) : null;
-    const publishedAt = isFuture ? null : dayOffset(def.statusOffset);
+    // Idempotency guard: statusOffset describes a date relative to WHENEVER this
+    // seed happens to run ("2 days from today"), not a fixed calendar date. The
+    // first run schedules a post correctly; but if the publish-scheduled-posts
+    // cron has since flipped it to "published" (its scheduled date arrived) and
+    // this seed is run AGAIN later, blindly recomputing dayOffset(statusOffset)
+    // would produce a brand new future date and silently drag an already-live,
+    // already-indexed post back to "scheduled" - undoing real publish history.
+    // Once a post is published, only its content/SEO/taxonomy still get updated
+    // on re-run; its publish status and original publishedAt are left alone.
+    const existing = await Post.findOne({ slug: def.slug }, "status scheduledFor publishedAt").lean();
+
+    let status, scheduledFor, publishedAt;
+    if (existing?.status === "published") {
+      status = "published";
+      scheduledFor = null;
+      publishedAt = existing.publishedAt;
+    } else {
+      const isFuture = def.statusOffset > 0;
+      status = isFuture ? "scheduled" : "published";
+      scheduledFor = isFuture ? dayOffset(def.statusOffset) : null;
+      publishedAt = isFuture ? null : dayOffset(def.statusOffset);
+    }
 
     const payload = {
       title: def.title,
