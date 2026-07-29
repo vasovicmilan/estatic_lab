@@ -85,6 +85,10 @@ export async function deleteExpertById(expertId) {
   return { success: true };
 }
 
+export async function listSlugsForSitemap() {
+  return expertRepo.findActiveSlugsForSitemap();
+}
+
 export default {
   listExperts,
   getExpertById,
@@ -94,4 +98,5 @@ export default {
   createExpert,
   updateExpertById,
   deleteExpertById,
+  listSlugsForSitemap,
 };

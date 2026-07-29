@@ -294,6 +294,10 @@ export async function getActiveVariant(serviceId, servicePackageId) {
   return result;
 }
 
+export async function listSlugsForSitemap() {
+  return serviceRepo.findActiveSlugsForSitemap();
+}
+
 export default {
   listServices,
   getServiceById,
@@ -312,4 +316,5 @@ export default {
   updateServiceSeo,
   deleteServiceById,
   getActiveVariant,
+  listSlugsForSitemap,
 };

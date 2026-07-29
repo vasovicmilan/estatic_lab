@@ -59,6 +59,10 @@ export async function countExperts(filters = {}, { session } = {}) {
   return Expert.countDocuments(buildExpertFilter(filters)).session(session || null);
 }
 
+export async function findActiveSlugsForSitemap() {
+  return Expert.find({ isActive: true }, { slug: 1, updatedAt: 1 }).lean();
+}
+
 export default {
   createExpert,
   findExpertById,
@@ -68,4 +72,5 @@ export default {
   updateExpertById,
   deleteExpertById,
   countExperts,
+  findActiveSlugsForSitemap,
 }

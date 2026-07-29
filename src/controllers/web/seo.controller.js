@@ -1,4 +1,5 @@
 import * as sitemapService from "../../services/sitemap.service.js";
+import * as llmsTxtService from "../../services/llms-txt.service.js";
 import { logError } from "../../utils/logger.util.js";
 
 export async function robotsTxt(req, res, next) {
@@ -31,9 +32,10 @@ export async function sitemapXml(req, res, next) {
 
     const body = urls
       .map((entry) => {
+        const lastmod = entry.lastmod ? `\n    <lastmod>${entry.lastmod}</lastmod>` : "";
         const changefreq = entry.changefreq ? `\n    <changefreq>${entry.changefreq}</changefreq>` : "";
         const priority = entry.priority !== undefined ? `\n    <priority>${entry.priority}</priority>` : "";
-        return `  <url>\n    <loc>${entry.loc}</loc>${changefreq}${priority}\n  </url>`;
+        return `  <url>\n    <loc>${entry.loc}</loc>${lastmod}${changefreq}${priority}\n  </url>`;
       })
       .join("\n");
 
@@ -47,4 +49,16 @@ export async function sitemapXml(req, res, next) {
   }
 }
 
-export default { robotsTxt, sitemapXml };
+export async function llmsTxt(req, res, next) {
+  try {
+    const base = `${req.protocol}://${req.get("host")}`;
+    const content = await llmsTxtService.generateLlmsTxt(base);
+    res.type("text/markdown");
+    res.send(content);
+  } catch (error) {
+    logError("[llmsTxt] Greška pri generisanju llms.txt", error);
+    next(error);
+  }
+}
+
+export default { robotsTxt, sitemapXml, llmsTxt };

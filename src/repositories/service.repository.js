@@ -86,6 +86,10 @@ export async function pullTagFromAllServices(tagId, { session } = {}) {
   return Service.updateMany({ tags: tagId }, { $pull: { tags: tagId } }, { session });
 }
 
+export async function findActiveSlugsForSitemap() {
+  return Service.find({ isActive: true }, { slug: 1, updatedAt: 1 }).lean();
+}
+
 export default {
   createService,
   findServiceById,
@@ -97,4 +101,5 @@ export default {
   countServices,
   pullCategoryFromAllServices,
   pullTagFromAllServices,
+  findActiveSlugsForSitemap,
 }

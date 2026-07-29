@@ -210,6 +210,7 @@ export function mapPackageForPublicDetail(pkg) {
     galerija: (pkg.gallery || []).map(formatImage),
     videi: pkg.videos || [],
     faq: (pkg.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
+    seoKeywords: pkg.seoKeywords || [],
   };
 }
 

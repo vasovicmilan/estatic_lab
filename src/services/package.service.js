@@ -141,6 +141,10 @@ export async function deletePackageById(packageId) {
   return { success: true };
 }
 
+export async function listSlugsForSitemap() {
+  return packageRepo.findActiveSlugsForSitemap();
+}
+
 export default {
   listPackages,
   getPackageById,
@@ -151,4 +155,5 @@ export default {
   createPackage,
   updatePackageById,
   deletePackageById,
+  listSlugsForSitemap,
 };

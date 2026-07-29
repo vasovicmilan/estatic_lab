@@ -133,6 +133,10 @@ export async function deletePostById(postId) {
   return { success: true };
 }
 
+export async function listSlugsForSitemap() {
+  return postRepo.findActiveSlugsForSitemap();
+}
+
 export default {
   listPosts,
   getPostById,
@@ -146,4 +150,5 @@ export default {
   updatePostStatus,
   updatePostSeo,
   deletePostById,
+  listSlugsForSitemap,
 };

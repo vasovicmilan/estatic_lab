@@ -49,7 +49,12 @@ export async function buildPostSeo(post, req, siteConfig = {}) {
   const imageUrl = post.slika?.url || post.coverImage?.img || defaultImage;
 
   const faqItems = collectFaqItems(post.sadrzaj);
-  const jsonLd = [buildBlogPostingJsonLd(post, canonical, imageUrl, siteName), buildFaqPageJsonLd(faqItems)].filter(Boolean);
+  const breadcrumb = buildBreadcrumbJsonLd([
+    { name: "Početna", url: buildCanonical(req, "/") },
+    { name: "Blog", url: buildCanonical(req, "/blog") },
+    { name: post.naslov, url: canonical },
+  ]);
+  const jsonLd = [buildBlogPostingJsonLd(post, canonical, imageUrl, siteName), buildFaqPageJsonLd(faqItems), breadcrumb].filter(Boolean);
 
   return {
     title,

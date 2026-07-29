@@ -89,6 +89,14 @@ export async function pullTagFromAllPosts(tagId, { session } = {}) {
   return Post.updateMany({ tags: tagId }, { $pull: { tags: tagId } }, { session });
 }
 
+// Lean slug+updatedAt projection for sitemap.service.js - same publishedOnly rule
+// as buildPostFilter's publishedOnly branch (status=published + already past its
+// publishedAt), duplicated here rather than routed through buildPostFilter since
+// that also accepts search/category/tag filters this call never needs.
+export async function findActiveSlugsForSitemap() {
+  return Post.find({ status: "published", publishedAt: { $lte: new Date() } }, { slug: 1, updatedAt: 1 }).lean();
+}
+
 export default {
   createPost,
   findPostById,
@@ -101,4 +109,5 @@ export default {
   countPosts,
   pullCategoryFromAllPosts,
   pullTagFromAllPosts,
+  findActiveSlugsForSitemap,
 }

@@ -71,6 +71,10 @@ export async function pullTagFromAllPackages(tagId, { session } = {}) {
   return Package.updateMany({ tags: tagId }, { $pull: { tags: tagId } }, { session });
 }
 
+export async function findActiveSlugsForSitemap() {
+  return Package.find({ isActive: true }, { slug: 1, updatedAt: 1 }).lean();
+}
+
 export default {
   createPackage,
   findPackageById,
@@ -81,4 +85,5 @@ export default {
   countPackages,
   pullCategoryFromAllPackages,
   pullTagFromAllPackages,
+  findActiveSlugsForSitemap,
 }

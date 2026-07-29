@@ -28,6 +28,7 @@ router.use(optionalWebAuth);
 
 router.get("/robots.txt", SeoController.robotsTxt);
 router.get("/sitemap.xml", SeoController.sitemapXml);
+router.get("/llms.txt", SeoController.llmsTxt);
 
 router.get("/", IndexController.homePage);
 

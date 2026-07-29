@@ -353,6 +353,10 @@ export async function restoreVariationStock(productId, variantId, quantity, { se
   return product;
 }
 
+export async function listSlugsForSitemap() {
+  return productRepo.findActiveSlugsForSitemap();
+}
+
 export default {
   listProducts,
   getProductById,
@@ -371,4 +375,5 @@ export default {
   getVariationRaw,
   decreaseVariationStock,
   restoreVariationStock,
+  listSlugsForSitemap,
 };

@@ -1,4 +1,5 @@
 import userService from "../services/user.service.js";
+import { buildOrganizationJsonLd } from "../seo/organization.builder.js";
 import { logError } from "../utils/logger.util.js";
 
 // Static assets are served with a 30-day browser/CDN cache (see static.config.js).
@@ -13,6 +14,7 @@ export async function localsMiddleware(req, res, next) {
   res.locals.isLoggedIn = !!req.session?.isLoggedIn;
   res.locals.user = req.session?.user || null;
   res.locals.assetVersion = ASSET_VERSION;
+  res.locals.orgJsonLd = buildOrganizationJsonLd(req);
 
   res.locals.success = req.flash ? req.flash("success") : [];
   res.locals.error = req.flash ? req.flash("error") : [];

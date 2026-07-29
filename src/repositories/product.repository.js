@@ -103,6 +103,10 @@ export async function pullFromAllRelatedProducts(productId, { session } = {}) {
   return Product.updateMany({ relatedProducts: productId }, { $pull: { relatedProducts: productId } }, { session });
 }
 
+export async function findActiveSlugsForSitemap() {
+  return Product.find({ isActive: true }, { slug: 1, updatedAt: 1 }).lean();
+}
+
 export default {
   createProduct,
   findProductById,
@@ -117,4 +121,5 @@ export default {
   pullCategoryFromAllProducts,
   pullTagFromAllProducts,
   pullFromAllRelatedProducts,
+  findActiveSlugsForSitemap,
 };

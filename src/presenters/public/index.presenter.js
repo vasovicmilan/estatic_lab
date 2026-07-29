@@ -1,3 +1,5 @@
+import BUSINESS from "../../config/business.config.js";
+
 const WHY_US = [
   {
     icon: "bi-cpu",
@@ -22,11 +24,11 @@ const WHY_US = [
 ];
 
 const LEGAL_CONTACT = {
-  company: "Estetik Lab wellness centar",
-  address: "Maksima Gorkog 6b, 21120 Novi Sad, Republika Srbija",
-  email: "estetik.lab.ns@gmail.com",
-  phone: "+381 65 977 4000",
-  phoneHref: "+38165977400",
+  company: BUSINESS.legalName,
+  address: BUSINESS.address.full,
+  email: BUSINESS.email,
+  phone: BUSINESS.phone,
+  phoneHref: BUSINESS.phoneHref,
 };
 
 // Shared with prepareHomeData below (home.ejs) and prepareContactPageData

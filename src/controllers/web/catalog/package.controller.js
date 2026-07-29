@@ -29,7 +29,7 @@ export async function packageDetails(req, res, next) {
     const pkg = await packageService.getPackageBySlug(slug);
     const testimonials = await testimonialService.getApprovedTestimonials({ limit: 6, package: pkg.id });
     const viewData = preparePackageDetailData(pkg, { testimonials });
-    const seo = await generateSeo("page", { title: pkg.naziv, description: pkg.kratakOpis, slug: `/paketi/${pkg.slug}` }, req);
+    const seo = await generateSeo("package", pkg, req);
 
     return res.render("services/package-details", {
       pageTitle: seo.title,

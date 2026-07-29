@@ -1,4 +1,34 @@
-import { truncate, escape, buildCanonical } from "../utils.seo.js";
+import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd } from "../utils.seo.js";
+
+// Each service package/tier (5 seansi, 10 seansi, ...) becomes its own Offer -
+// a service genuinely has multiple purchasable tiers at different prices, unlike
+// a simple fixed-price page, so a single price field would misrepresent it.
+function buildServiceOffers(service) {
+  const variants = (service.varijante || []).filter((v) => v.aktivan !== false && typeof v.cenaRaw === "number");
+  if (variants.length === 0) return undefined;
+  return variants.map((v) => ({
+    "@type": "Offer",
+    name: v.naziv,
+    priceCurrency: "RSD",
+    price: v.cenaRaw,
+    availability: "https://schema.org/InStock",
+  }));
+}
+
+function buildServiceJsonLd(service, canonical, imageUrl, siteName) {
+  const offers = buildServiceOffers(service);
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "@id": canonical,
+    name: service.naziv,
+    description: truncate(service.kratakOpis || service.dugiOpis || "", 300),
+    image: imageUrl,
+    provider: { "@type": "HealthAndBeautyBusiness", name: siteName },
+    areaServed: "Novi Sad",
+    ...(offers ? { offers } : {}),
+  };
+}
 
 export async function buildServiceSeo(service, req, siteConfig = {}) {
   const siteName = siteConfig.siteName || "Estetik Lab";
@@ -9,13 +39,23 @@ export async function buildServiceSeo(service, req, siteConfig = {}) {
   const canonical = buildCanonical(req, `/usluge/${service.slug}`);
   const imageUrl = service.slika?.url || service.image?.img || defaultImage;
 
+  const breadcrumb = buildBreadcrumbJsonLd([
+    { name: "Početna", url: buildCanonical(req, "/") },
+    { name: "Usluge", url: buildCanonical(req, "/usluge") },
+    { name: service.naziv, url: canonical },
+  ]);
+  const jsonLd = [buildServiceJsonLd(service, canonical, imageUrl, siteName), breadcrumb].filter(Boolean);
+
   return {
     title,
     description,
     canonical,
     robots,
+    jsonLd,
     meta: { keywords: (service.seoKljucneReci || []).join(", ") },
     og: { title, description, url: canonical, type: "website", image: imageUrl, site_name: siteName },
     twitter: { card: "summary_large_image", title, description, image: imageUrl },
   };
 }
+
+export default { buildServiceSeo };
