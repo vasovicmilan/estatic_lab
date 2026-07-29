@@ -1,4 +1,4 @@
-import { truncate, escape, buildCanonical } from "../utils.seo.js";
+import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd } from "../utils.seo.js";
 
 // Pulls every faq block's Q&A pairs into one flat list. A post can have more than
 // one faq block (rare, but the schema allows it) - Google's FAQPage rich result
