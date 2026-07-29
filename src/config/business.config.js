@@ -32,13 +32,20 @@ export const BUSINESS = {
   // wants a square-ish image, which default-og.webp likely isn't.
   logo: "/images/site/default-og.webp",
 
-  // TODO: no public social profiles or posted opening hours exist anywhere in
-  // the codebase yet. Once real Instagram/Facebook/Google Business Profile
-  // URLs and posted hours exist, fill these in - organization.builder.js
-  // already picks them up automatically and omits the fields while empty.
-  // `sameAs` in particular is one of the strongest entity-verification signals
-  // for both Google's Knowledge Panel and AI answer engines.
-  sameAs: [],
+  // Real social profiles - feeds directly into the Organization JSON-LD's `sameAs`
+  // field, one of the strongest entity-verification signals for both Google's
+  // Knowledge Panel and AI answer engines.
+  sameAs: [
+    "https://www.instagram.com/estetik.lab.ns",
+    "https://www.facebook.com/share/1BrebmE8UG/",
+    "https://www.youtube.com/channel/UCeM0B40yqnauvr0oKr6t47g",
+    "https://www.tiktok.com/@estetik.lab",
+  ],
+
+  // TODO: no posted opening hours exist anywhere in the codebase yet. Once real
+  // hours exist, fill these in as schema.org OpeningHoursSpecification objects,
+  // e.g. { dayOfWeek: ["Monday","Tuesday",...], opens: "09:00", closes: "20:00" }
+  // - organization.builder.js already picks this array up automatically.
   openingHours: [],
 };
 
