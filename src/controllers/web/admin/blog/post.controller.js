@@ -12,6 +12,7 @@ import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
+import { zonedInputToUtcDate } from "../../../../utils/date.time.util.js";
 
 function parseJsonField(value, fallback = []) {
   if (Array.isArray(value) || (value && typeof value === "object")) return value;
@@ -53,7 +54,12 @@ function buildPostPayload(req, existing = {}) {
   data.tags = Array.isArray(req.body.tags) ? req.body.tags.filter(Boolean) : req.body.tags ? [req.body.tags] : [];
   data.seo = parseJsonField(req.body.seo, existing.seo || {});
   data.isIndexable = parseCheckbox(req.body.isIndexable, existing.isIndexable ?? true);
-  data.scheduledFor = req.body.scheduledFor ? req.body.scheduledFor : null;
+  // req.body.scheduledFor is whatever a <input type="datetime-local"> submitted -
+  // a naive "YYYY-MM-DDTHH:mm" string with no timezone info. Converting it here
+  // (as Europe/Belgrade wall-clock time) rather than letting Mongoose's Date
+  // caster parse the raw string is what keeps this correct regardless of the
+  // server process's own system timezone - see date.time.util.js.
+  data.scheduledFor = req.body.scheduledFor ? zonedInputToUtcDate(req.body.scheduledFor) : null;
   // the "Autor" select always has an empty placeholder option (see admin/_form.ejs) -
   // if it's left on that placeholder (or the current author isn't in the ~200-user
   // options list for whatever reason), req.body.author is "" - falling back to the
@@ -218,7 +224,10 @@ export async function updatePost(req, res, next) {
 export async function updatePostStatus(req, res, next) {
   try {
     const { postId } = req.params;
-    await postService.updatePostStatus(postId, req.body.status, { scheduledFor: req.body.scheduledFor || null });
+    // Same conversion as buildPostPayload above - see date.time.util.js's
+    // zonedInputToUtcDate for why this can't just be the raw form value.
+    const scheduledFor = req.body.scheduledFor ? zonedInputToUtcDate(req.body.scheduledFor) : null;
+    await postService.updatePostStatus(postId, req.body.status, { scheduledFor });
     logInfo(`[updatePostStatus] Status posta #${postId} promenjen na "${req.body.status}"`, { postId, adminId: req.session?.user?.id });
     return flashAndRedirect(req, res, "success", "Status posta je uspešno promenjen", `/admin/blog/detalji/${postId}`);
   } catch (error) {

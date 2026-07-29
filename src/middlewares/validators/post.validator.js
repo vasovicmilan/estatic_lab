@@ -2,6 +2,12 @@ import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
 import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
 import { isJsonArrayOrArray, isArrayOrString, slugField, booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
+// scheduledFor arrives as a naive "YYYY-MM-DDTHH:mm" datetime-local string with
+// no timezone info - comparing it via plain `new Date(value)` is ambiguous (it's
+// parsed using the server process's own local time, not necessarily Belgrade),
+// so the "must be in the future" check needs the same zoned conversion the
+// controller uses before it's actually persisted. See date.time.util.js.
+import { zonedInputToUtcDate } from "../../utils/date.time.util.js";
 
 export const validatePostCreate = [
   body("title")
@@ -40,7 +46,7 @@ export const validatePostCreate = [
     .optional({ values: "falsy" })
     .isISO8601().withMessage("Neispravan format datuma zakazivanja")
     .custom((value, { req }) => {
-      if (req.body.status === "scheduled" && new Date(value) <= new Date()) {
+      if (req.body.status === "scheduled" && zonedInputToUtcDate(value) <= new Date()) {
         throw new Error("Datum zakazivanja mora biti u budućnosti");
       }
       return true;
@@ -83,7 +89,7 @@ export const validatePostUpdate = [
     .optional({ values: "falsy" })
     .isISO8601().withMessage("Neispravan format datuma zakazivanja")
     .custom((value, { req }) => {
-      if (req.body.status === "scheduled" && new Date(value) <= new Date()) {
+      if (req.body.status === "scheduled" && zonedInputToUtcDate(value) <= new Date()) {
         throw new Error("Datum zakazivanja mora biti u budućnosti");
       }
       return true;
@@ -111,7 +117,7 @@ export const validatePostStatus = [
     .bail()
     .isISO8601().withMessage("Neispravan format datuma zakazivanja")
     .custom((value) => {
-      if (new Date(value) <= new Date()) throw new Error("Datum zakazivanja mora biti u budućnosti");
+      if (zonedInputToUtcDate(value) <= new Date()) throw new Error("Datum zakazivanja mora biti u budućnosti");
       return true;
     }),
 

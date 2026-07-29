@@ -1,4 +1,4 @@
-import { formatDateTime, formatDate } from "../utils/date.time.util.js";
+import { formatDateTime, formatDate, utcDateToZonedInputValue } from "../utils/date.time.util.js";
 
 function translateStatus(status) {
   const map = {
@@ -146,9 +146,12 @@ export function mapPostForEdit(post) {
     tags: (post.tags || []).map((t) => t._id?.toString() || t.toString()),
     author: getAuthorId(post.author),
     status: post.status,
-    // sliced to "YYYY-MM-DDTHH:mm" - the exact value a native <input type="datetime-local">
-    // needs to show the current value back to the admin when editing.
-    scheduledFor: post.scheduledFor ? new Date(post.scheduledFor).toISOString().slice(0, 16) : "",
+    // "YYYY-MM-DDTHH:mm" in Europe/Belgrade wall-clock time - the exact value a
+    // native <input type="datetime-local"> needs to show the current value back
+    // to the admin when editing. NOT toISOString().slice(0, 16) - that shows the
+    // raw UTC time, which is off by 1-2h (CET/CEST) from what the admin actually
+    // scheduled. See date.time.util.js.
+    scheduledFor: post.scheduledFor ? utcDateToZonedInputValue(post.scheduledFor) : "",
     seo: post.seo || {},
     isIndexable: post.isIndexable,
   };

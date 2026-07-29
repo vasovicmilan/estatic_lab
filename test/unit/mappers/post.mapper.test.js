@@ -138,6 +138,22 @@ describe("post.mapper", () => {
     });
   });
 
+  describe("scheduledFor formatting for the edit form", () => {
+    it("formats scheduledFor in Europe/Belgrade wall-clock time, not raw UTC", () => {
+      // 12:00 UTC in summer is 14:00 in Belgrade (CEST, UTC+2) - the naive
+      // .toISOString().slice(0, 16) this replaced would have shown "12:00",
+      // 2 hours off from what the admin actually scheduled.
+      const post = buildPost({ scheduledFor: new Date("2026-07-29T12:00:00.000Z") });
+      const mapped = mapPostForEdit(post);
+      assert.equal(mapped.scheduledFor, "2026-07-29T14:00");
+    });
+
+    it("returns an empty string when there's no scheduledFor", () => {
+      const mapped = mapPostForEdit(buildPost({ scheduledFor: null }));
+      assert.equal(mapped.scheduledFor, "");
+    });
+  });
+
   describe("null safety", () => {
     it("returns null for a null post across every single-item mapper", () => {
       assert.equal(mapPostForAdminDetail(null), null);

@@ -209,6 +209,9 @@ export function preparePostFormData(post = null, { categoryOptions = [], tagOpti
       label: "Zakazano za",
       type: "datetime-local",
       width: 6,
+      // mapPostForEdit already formats this as "YYYY-MM-DDTHH:mm" in Belgrade
+      // wall-clock time (see post.mapper.js) - not a raw Date, so no further
+      // conversion here.
       value: values.scheduledFor || "",
       help: "Obavezno samo ako je status 'Zakazano'. Post se automatski objavljuje u ovo vreme.",
     },
