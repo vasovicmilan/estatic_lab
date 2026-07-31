@@ -3,17 +3,23 @@
     <div class="row g-4">
       <div class="col-md-4">
         <h5 class="fw-bold">Estetik Lab</h5>
-        <p class="text-secondary small">Vaš prostor za opuštanje i negu.</p>
+        <!-- .text-secondary (solid #6b5b4d) measured only 2.19:1 against this dark
+             background, a real WCAG AA failure - .text-white + .text-opacity-75
+             (native Bootstrap utilities, no custom CSS needed) measures 7.77:1. -->
+        <p class="text-white text-opacity-75 small">Vaš prostor za opuštanje i negu.</p>
       </div>
       <div class="col-md-4">
         <h6>Brzi linkovi</h6>
+        <!-- mb-2 on each <li> gives stacked links real vertical spacing - previously
+             touching directly, which fails WCAG 2.5.8's touch-target-size/spacing
+             check on top of the same contrast problem as above. -->
         <ul class="list-unstyled small">
-          <li><a href="/usluge" class="text-secondary text-decoration-none">Usluge</a></li>
-          <li><a href="/paketi" class="text-secondary text-decoration-none">Paketi</a></li>
-          <li><a href="/blog" class="text-secondary text-decoration-none">Blog</a></li>
-          <li><a href="/nas-tim" class="text-secondary text-decoration-none">Naš tim</a></li>
-          <li><a href="/kontakt" class="text-secondary text-decoration-none">Kontakt</a></li>
-          <li><a href="/o-nama" class="text-secondary text-decoration-none">O nama</a></li>
+          <li class="mb-2"><a href="/usluge" class="text-white text-opacity-75 text-decoration-none">Usluge</a></li>
+          <li class="mb-2"><a href="/paketi" class="text-white text-opacity-75 text-decoration-none">Paketi</a></li>
+          <li class="mb-2"><a href="/blog" class="text-white text-opacity-75 text-decoration-none">Blog</a></li>
+          <li class="mb-2"><a href="/nas-tim" class="text-white text-opacity-75 text-decoration-none">Naš tim</a></li>
+          <li class="mb-2"><a href="/kontakt" class="text-white text-opacity-75 text-decoration-none">Kontakt</a></li>
+          <li><a href="/o-nama" class="text-white text-opacity-75 text-decoration-none">O nama</a></li>
         </ul>
       </div>
       <div class="col-md-4">
@@ -24,15 +30,17 @@
           <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
           <button type="submit" class="btn btn-primary btn-sm text-nowrap">Prijavi se</button>
         </form>
-        <div class="mt-3 small text-secondary">
-          <a href="/politika-privatnosti" class="text-secondary text-decoration-none">Politika privatnosti</a>
-          &middot;
-          <a href="/uslovi-koriscenja" class="text-secondary text-decoration-none">Uslovi korišćenja</a>
+        <!-- d-flex + gap-3 gives the two links real separation instead of a bare
+             middot with a couple of px of whitespace on either side. -->
+        <div class="mt-3 small d-flex flex-wrap gap-3">
+          <a href="/politika-privatnosti" class="text-white text-opacity-75 text-decoration-none">Politika privatnosti</a>
+          <a href="/uslovi-koriscenja" class="text-white text-opacity-75 text-decoration-none">Uslovi korišćenja</a>
         </div>
       </div>
     </div>
     <hr class="border-secondary">
-    <p class="text-secondary small mb-0">&copy; <%= new Date().getFullYear() %> Estetik Lab. Sva prava zadržana.</p>
+    <p class="text-white text-opacity-75 small mb-1">&copy; <%= new Date().getFullYear() %> Estetik Lab. Sva prava zadržana.</p>
+    <p class="text-white text-opacity-75 small mb-0">Napravio Arius Systems</p>
   </div>
 </footer>
 

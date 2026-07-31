@@ -74,8 +74,8 @@
   --font-heading: "Playfair Display", Georgia, serif;
 
   /* ---- Links ---- */
-  --bs-link-color: var(--bs-primary);
-  --bs-link-color-rgb: var(--bs-primary-rgb);
+  --bs-link-color: var(--bs-primary-text-emphasis);
+  --bs-link-color-rgb: 92, 61, 46;
   --bs-link-hover-color: #875740;
   --bs-link-hover-color-rgb: 135, 87, 64;
 
