@@ -1,6 +1,6 @@
 <div class="card h-100 shadow-sm text-center hover-lift">
   <% if (expert.slika && expert.slika.url) { %>
-    <img src="<%= expert.slika.url %>" class="card-img-top expert-card-img" alt="<%= expert.slika.alt || expert.imePrezime %>">
+    <img src="<%= expert.slika.url %>" class="card-img-top expert-card-img" alt="<%= expert.slika.alt || expert.imePrezime %>" loading="lazy" decoding="async">
   <% } %>
   <div class="card-body">
     <h3 class="h6 mb-1"><a href="/nas-tim/<%= expert.slug %>" class="text-decoration-none text-dark"><%= expert.imePrezime %></a></h3>

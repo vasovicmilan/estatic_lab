@@ -15,7 +15,7 @@
 
     <div class="d-flex align-items-center gap-3 mb-5">
       <% if (data.post.autor && data.post.autor.avatar) { %>
-        <img src="<%= data.post.autor.avatar %>" alt="<%= data.post.autor.ime %>" class="avatar-md rounded-circle object-fit-cover">
+        <img src="<%= data.post.autor.avatar %>" alt="<%= data.post.autor.ime %>" class="avatar-md rounded-circle object-fit-cover" loading="lazy" decoding="async">
       <% } else { %>
         <div class="avatar-md rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-semibold small">
           <%= data.post.autor && data.post.autor.inicijali %>

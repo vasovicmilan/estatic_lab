@@ -1,6 +1,6 @@
 <div class="card h-100 shadow-sm <%= pkg.najbolji ? 'border-primary' : '' %>">
   <% if (pkg.slika && pkg.slika.url) { %>
-    <img src="<%= pkg.slika.url %>" class="card-img-top package-card-img" alt="<%= pkg.slika.alt || pkg.naziv %>">
+    <img src="<%= pkg.slika.url %>" class="card-img-top package-card-img" alt="<%= pkg.slika.alt || pkg.naziv %>" loading="lazy" decoding="async">
   <% } %>
   <div class="card-body d-flex flex-column">
     <% if (pkg.najbolji || pkg.oznaka) { %>

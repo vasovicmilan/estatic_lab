@@ -2,7 +2,7 @@
   <% const isEsma = service.kategorije && service.kategorije.some(function(k) { return String(k).toUpperCase() === "ESMA"; }); %>
   <% if (service.slika && service.slika.url) { %>
     <div class="position-relative">
-      <img src="<%= service.slika.url %>" class="card-img-top service-card-img" alt="<%= service.slika.alt || service.naziv %>">
+      <img src="<%= service.slika.url %>" class="card-img-top service-card-img" alt="<%= service.slika.alt || service.naziv %>" loading="lazy" decoding="async">
       <% if (service.istaknuto) { %>
         <span class="position-absolute top-0 start-0 m-3 badge text-bg-light">Istaknuto</span>
       <% } %>

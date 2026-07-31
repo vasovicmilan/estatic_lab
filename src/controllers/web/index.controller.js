@@ -6,6 +6,7 @@ import {
   prepareAboutPageData,
   prepareContactPageData,
 } from "../../presenters/public/index.presenter.js";
+import { buildWebsiteJsonLd } from "../../seo/utils.seo.js";
 import { logError, logWarn, logInfo } from "../../utils/logger.util.js";
 import { flashAndRedirect } from "../../utils/flash.util.js";
 import { getCapturedReferralCode } from "../../middlewares/coupon-capture.middleware.js";
@@ -14,6 +15,7 @@ export async function homePage(req, res, next) {
   try {
     const serviceData = await indexService.getLandingPageData();
     const viewData = prepareHomeData(serviceData);
+    serviceData.seo.jsonLd = [...(serviceData.seo.jsonLd || []), buildWebsiteJsonLd(req)];
 
     return res.render("landing/home", {
       pageTitle: serviceData.seo.pageTitle,

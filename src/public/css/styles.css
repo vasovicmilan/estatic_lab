@@ -256,25 +256,39 @@ h1, h2, h3, h4, h5, h6,
 }
 
 /* ---- Homepage hero ----
-   .hero-section alone renders the gradient fallback. When the presenter provides a
-   real photo (see index.presenter.js's hero.image), landing/home.ejs additionally
-   applies .hero-section-with-image, which overrides just background-image with the
-   darkened photo - background-size/position from the base rule still apply. This
-   keeps the template free of any inline style while still supporting an optional,
-   presenter-driven hero photo. */
+   .hero-section alone renders the gradient fallback for when no hero photo is
+   configured. When one is (see index.presenter.js's hero.image), landing/home.ejs
+   renders a real <img class="hero-bg-image"> instead of a CSS background-image -
+   this lets the browser's preload scanner discover it immediately and lets us set
+   fetchpriority="high", both of which a CSS background-image cannot get. A
+   separate .hero-overlay div provides the same darkening effect that used to be
+   a layered background-image gradient. */
 .hero-section {
   background-color: var(--bs-dark);
   background-image: linear-gradient(135deg, var(--bs-primary), var(--bs-dark));
-  background-size: cover;
-  background-position: center;
+  overflow: hidden;
 }
 
-.hero-section-with-image {
-  background-image: linear-gradient(rgba(46, 42, 36, 0.6), rgba(46, 42, 36, 0.55)), var(--hero-image);
+.hero-bg-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(46, 42, 36, 0.6), rgba(46, 42, 36, 0.55));
+  z-index: 1;
 }
 
 .hero-inner {
   min-height: 70vh;
+  z-index: 2;
 }
 
 .hero-eyebrow {

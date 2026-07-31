@@ -4,7 +4,7 @@
     <p class="fst-italic">"<%= testimonial.komentar %>"</p>
     <div class="d-flex align-items-center gap-2 mt-3">
       <% if (testimonial.slika && testimonial.slika.url) { %>
-        <img src="<%= testimonial.slika.url %>" class="rounded-circle avatar-sm" alt="<%= testimonial.ime %>">
+        <img src="<%= testimonial.slika.url %>" class="rounded-circle avatar-sm" alt="<%= testimonial.ime %>" loading="lazy" decoding="async">
       <% } %>
       <div>
         <div class="fw-semibold small"><%= testimonial.ime %></div>

@@ -1,11 +1,11 @@
-import { escape, buildCanonical } from "../utils.seo.js";
+import { escape, buildCanonical, appendPageParam } from "../utils.seo.js";
 
 export async function buildPageSeoWithReq(pageConfig, req, siteConfig = {}) {
   const siteName = siteConfig.siteName || "Estetik Lab";
   const title = pageConfig.title ? `${escape(pageConfig.title)} | ${siteName}` : siteName;
   const description = pageConfig.description || siteConfig.defaultDescription || "";
   const robots = pageConfig.noIndex ? "noindex, follow" : "index, follow";
-  const canonical = buildCanonical(req, pageConfig.slug || "/");
+  const canonical = appendPageParam(buildCanonical(req, pageConfig.slug || "/"), req.query?.page);
   const imageUrl = pageConfig.image || siteConfig.defaultImage || "/images/site/default-og.webp";
 
   return {

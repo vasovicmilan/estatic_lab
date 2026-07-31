@@ -20,6 +20,37 @@ export function buildCanonical(req, path) {
   return `${base}${path.startsWith("/") ? path : "/" + path}`;
 }
 
+// Appends ?page=N to a canonical URL when on page 2+ of a paginated listing -
+// self-referencing canonicals per page (Google's current pagination guidance)
+// rather than always pointing every paginated page back to page 1, which
+// suppresses page 2+ from being crawled/indexed as real, distinct results.
+// page=1 (explicit or implicit) is treated identically, so /usluge?page=1
+// canonicalizes to the same clean URL as /usluge.
+export function appendPageParam(canonical, page) {
+  const pageNum = parseInt(page, 10);
+  if (!pageNum || pageNum <= 1) return canonical;
+  const separator = canonical.includes("?") ? "&" : "?";
+  return `${canonical}${separator}page=${pageNum}`;
+}
+
+// Homepage-only (Google's own guidance: this should appear once, on the site's
+// root page, not on every page like the Organization schema). Tells Google the
+// real search endpoint behind the blog search box, which can unlock a sitelinks
+// searchbox directly in Google's results for a branded query.
+export function buildWebsiteJsonLd(req) {
+  const base = buildCanonical(req, "/");
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    url: base,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${base}blog/pretraga?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
 // Shared across every entity builder (service/product/package/post) so breadcrumb
 // shape stays identical site-wide. Items without both name+url are dropped rather
 // than rendered with a gap, since a broken ListItem is worse than a shorter trail.

@@ -1,7 +1,7 @@
 <div class="card h-100 shadow-sm">
   <div class="position-relative">
     <% if (product.slika && product.slika.url) { %>
-      <img src="<%= product.slika.url %>" class="card-img-top product-card-img" alt="<%= product.slika.alt || product.naziv %>">
+      <img src="<%= product.slika.url %>" class="card-img-top product-card-img" alt="<%= product.slika.alt || product.naziv %>" loading="lazy" decoding="async">
     <% } %>
     <% if (product.oznaka) { %>
       <span class="position-absolute top-0 start-0 m-2 badge <%= product.oznakaRaw === 'sale' ? 'bg-danger' : 'bg-primary' %>"><%= product.oznaka %></span>

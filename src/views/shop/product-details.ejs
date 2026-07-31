@@ -17,7 +17,8 @@
               <div class="ratio ratio-4x3 rounded-4 overflow-hidden">
                 <img src="<%= data.product.slika.url %>" alt="<%= data.product.slika.alt || data.product.naziv %>" class="w-100 h-100 object-fit-cover img-clickable"
                      data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
-                     data-full-src="<%= data.product.slika.url %>" data-full-alt="<%= data.product.naziv %>">
+                     data-full-src="<%= data.product.slika.url %>" data-full-alt="<%= data.product.naziv %>"
+                     loading="lazy" decoding="async">
               </div>
               <% if (data.product.oznaka) { %>
                 <span class="position-absolute top-0 start-0 m-3 badge <%= data.product.oznakaRaw === 'sale' ? 'bg-danger' : 'bg-primary' %>"><%= data.product.oznaka %></span>

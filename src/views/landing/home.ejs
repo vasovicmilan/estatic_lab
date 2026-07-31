@@ -1,8 +1,12 @@
 <%- include("../includes/head") %>
 <%- include("../includes/navigation") %>
 
-<header class="position-relative text-white hero-section <%= data.hero.image ? 'hero-section-with-image' : '' %>" <% if (data.hero.image) { %>data-hero-image="<%= data.hero.image %>"<% } %>>
-  <div class="container hero-inner">
+<header class="position-relative text-white hero-section">
+  <% if (data.hero.image) { %>
+    <img src="<%= data.hero.image %>" alt="" class="hero-bg-image" fetchpriority="high">
+    <div class="hero-overlay"></div>
+  <% } %>
+  <div class="container hero-inner position-relative">
     <div class="row align-items-center hero-inner">
       <div class="col-lg-7 py-5">
         <p class="section-eyebrow section-eyebrow-light"><%= data.hero.eyebrow %></p>

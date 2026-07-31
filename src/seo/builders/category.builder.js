@@ -1,4 +1,4 @@
-import { truncate, escape, buildCanonical } from "../utils.seo.js";
+import { truncate, escape, buildCanonical, appendPageParam } from "../utils.seo.js";
 
 export async function buildCategorySeo(category, req, siteConfig = {}) {
   const siteName = siteConfig.siteName || "Estetik Lab";
@@ -12,7 +12,7 @@ export async function buildCategorySeo(category, req, siteConfig = {}) {
       : category.domain === "product"
       ? `/prodavnica/kategorija/${category.slug}`
       : `/usluge/kategorija/${category.slug}`;
-  const canonical = buildCanonical(req, basePath);
+  const canonical = appendPageParam(buildCanonical(req, basePath), req.query?.page);
 
   return {
     title,

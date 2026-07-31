@@ -16,7 +16,7 @@ export async function getBlogLandingData({ limit = 9, page = 1, search = "" } = 
   const seo = buildPageSeo({
     title: "Blog | Estetik Lab",
     description: "Saveti o nezi, wellness rutinama i tretmanima - pratite Estetik Lab blog.",
-    canonical: "/blog",
+    canonical: page > 1 ? `/blog?page=${page}` : "/blog",
     isIndexable: true,
   });
 
@@ -38,7 +38,7 @@ export async function getBlogCategoryData(categorySlug, { limit = 9, page = 1 } 
   const seo = buildPageSeo({
     title: `${category.name} | Blog | Estetik Lab`,
     description: category.shortDescription || `Pročitajte sve blog objave iz kategorije ${category.name}.`,
-    canonical: `/blog/kategorija/${category.slug}`,
+    canonical: page > 1 ? `/blog/kategorija/${category.slug}?page=${page}` : `/blog/kategorija/${category.slug}`,
     isIndexable: true,
   });
 
@@ -67,7 +67,7 @@ export async function getBlogTagData(tagSlug, { limit = 9, page = 1 } = {}) {
   const seo = buildPageSeo({
     title: `#${tag.name} | Blog | Estetik Lab`,
     description: `Blog objave označene sa ${tag.name}.`,
-    canonical: `/blog/tag/${tag.slug}`,
+    canonical: page > 1 ? `/blog/tag/${tag.slug}?page=${page}` : `/blog/tag/${tag.slug}`,
     isIndexable: true,
   });
 

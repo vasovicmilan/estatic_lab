@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildItemListJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd } from "../../../src/seo/utils.seo.js";
+import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildItemListJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd, appendPageParam, buildWebsiteJsonLd } from "../../../src/seo/utils.seo.js";
 
 function fakeReq({ protocol = "https", host = "beautymedica.rs" } = {}) {
   return { protocol, get: (header) => (header === "host" ? host : null) };
@@ -68,6 +68,34 @@ describe("seo/utils.seo", () => {
     it("respects http vs https from the request", () => {
       const url = buildCanonical(fakeReq({ protocol: "http" }), "/");
       assert.match(url, /^http:\/\//);
+    });
+  });
+
+  describe("appendPageParam", () => {
+    it("leaves the canonical unchanged for page 1 or no page", () => {
+      assert.equal(appendPageParam("https://beautymedica.rs/usluge", 1), "https://beautymedica.rs/usluge");
+      assert.equal(appendPageParam("https://beautymedica.rs/usluge", undefined), "https://beautymedica.rs/usluge");
+      assert.equal(appendPageParam("https://beautymedica.rs/usluge", "not-a-number"), "https://beautymedica.rs/usluge");
+    });
+
+    it("appends ?page=N for page 2 and beyond, producing a self-referencing canonical", () => {
+      assert.equal(appendPageParam("https://beautymedica.rs/usluge", 2), "https://beautymedica.rs/usluge?page=2");
+      assert.equal(appendPageParam("https://beautymedica.rs/usluge", "3"), "https://beautymedica.rs/usluge?page=3");
+    });
+
+    it("uses & instead of ? when the canonical already has a query string", () => {
+      assert.equal(appendPageParam("https://beautymedica.rs/prodavnica?badge=sale", 2), "https://beautymedica.rs/prodavnica?badge=sale&page=2");
+    });
+  });
+
+  describe("buildWebsiteJsonLd", () => {
+    it("builds a valid WebSite schema with a SearchAction pointing at the real blog search route", () => {
+      const result = buildWebsiteJsonLd(fakeReq());
+      assert.equal(result["@type"], "WebSite");
+      assert.equal(result.url, "https://beautymedica.rs/");
+      assert.equal(result.potentialAction["@type"], "SearchAction");
+      assert.equal(result.potentialAction.target, "https://beautymedica.rs/blog/pretraga?q={search_term_string}");
+      assert.equal(result.potentialAction["query-input"], "required name=search_term_string");
     });
   });
 
