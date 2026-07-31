@@ -87,6 +87,13 @@ export async function pullServiceFromAllEmployees(serviceId, { session } = {}) {
   return Employee.updateMany({ services: serviceId }, { $pull: { services: serviceId } }, { session });
 }
 
+// Lean workingHours-only projection for employee.service.js's aggregate business
+// hours derivation (feeds the site-wide Organization JSON-LD) - no need for full
+// employee documents just to read everyone's schedule.
+export async function findActiveEmployeesWorkingHours() {
+  return Employee.find({ isActive: true }, { workingHours: 1 }).lean();
+}
+
 export default {
   createEmployee,
   findAllEmployeeUserIds,
@@ -98,4 +105,5 @@ export default {
   deleteEmployeeById,
   countEmployees,
   pullServiceFromAllEmployees,
+  findActiveEmployeesWorkingHours,
 }

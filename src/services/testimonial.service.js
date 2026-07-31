@@ -45,9 +45,6 @@ export async function submitTestimonial(data) {
 
   logInfo("Testimonial submitted", { testimonialId: created._id, name: created.name });
 
-  // Best-effort lookup so Telegram/email notifications can show what the review is
-  // actually about - the raw submitted `data` only has a bare service/package ObjectId,
-  // which is useless to read at a glance in a chat message or email subject.
   let subject = null;
   try {
     if (data.service) {
@@ -105,6 +102,10 @@ export async function getApprovedTestimonials({ limit = 10, featuredOnly = false
   return mapTestimonialsForPublic(testimonials);
 }
 
+export async function getRatingSummary({ service = null, package: pkg = null, product = null } = {}) {
+  return testimonialRepo.getRatingSummary({ service, package: pkg, product });
+}
+
 export default {
   listTestimonials,
   getTestimonialById,
@@ -113,4 +114,5 @@ export default {
   rejectTestimonial,
   deleteTestimonialById,
   getApprovedTestimonials,
+  getRatingSummary,
 };

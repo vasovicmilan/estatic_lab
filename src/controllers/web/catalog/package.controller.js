@@ -2,6 +2,7 @@ import * as packageService from "../../../services/package.service.js";
 import * as testimonialService from "../../../services/testimonial.service.js";
 import { preparePackageListData, preparePackageDetailData } from "../../../presenters/catalog/package.presenter.js";
 import { generateSeo } from "../../../seo/index.js";
+import { buildItemListJsonLd } from "../../../seo/utils.seo.js";
 import { logError } from "../../../utils/logger.util.js";
 
 export async function packageList(req, res, next) {
@@ -10,6 +11,8 @@ export async function packageList(req, res, next) {
     const result = await packageService.findActivePackages({ page: parseInt(page, 10) || 1, limit: 60 });
     const viewData = preparePackageListData(result, req.query);
     const seo = await generateSeo("page", { title: "Paketi", description: "Kombinovani paketi usluga po povoljnijoj ceni.", slug: "/paketi" }, req);
+    const itemList = buildItemListJsonLd(req, result.data.map((p) => ({ name: p.naziv, path: `/paketi/${p.slug}` })));
+    if (itemList) seo.jsonLd = [...(seo.jsonLd || []), itemList];
 
     return res.render("services/packages", {
       pageTitle: seo.title,
@@ -28,7 +31,10 @@ export async function packageDetails(req, res, next) {
     const { slug } = req.params;
     const pkg = await packageService.getPackageBySlug(slug);
     const testimonials = await testimonialService.getApprovedTestimonials({ limit: 6, package: pkg.id });
+    const ratingSummary = await testimonialService.getRatingSummary({ package: pkg.id });
     const viewData = preparePackageDetailData(pkg, { testimonials });
+    pkg.recenzije = testimonials;
+    pkg.ratingSummary = ratingSummary;
     const seo = await generateSeo("package", pkg, req);
 
     return res.render("services/package-details", {

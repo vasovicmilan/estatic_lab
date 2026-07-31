@@ -2,12 +2,6 @@ import Testimonial from "../models/testimonial.model.js";
 import { buildTestimonialFilter } from "./filters/testimonial.filter.js";
 import { resolveLimit, resolveSkip, buildPaginationMeta } from "../utils/pagination.util.js";
 
-// shared populate set - every read path (admin list/detail, public widget) needs
-// the same three relations resolved, or the mapper has nothing to work with:
-// service/package for "usluga"/"paket" name+slug, user for the "registered
-// customer" badge + avatar fallback. Previously only `service` was populated,
-// and only on the admin list - package, user, and the public-facing reads
-// never got it, so those fields silently rendered empty everywhere else.
 const TESTIMONIAL_POPULATE = [
   { path: "service", select: "name slug" },
   { path: "package", select: "name slug" },
@@ -81,6 +75,25 @@ export async function countTestimonials(filters = {}, { session } = {}) {
   return Testimonial.countDocuments(buildTestimonialFilter(filters)).session(session || null);
 }
 
+// Feeds AggregateRating JSON-LD on service/package/product detail pages. Computed
+// over ALL approved testimonials for the entity, not just the handful shown on the
+// page (findApprovedTestimonials is limited for display) - reviewCount must reflect
+// the true total, per Google's structured data guidelines, even though only a
+// sample of the actual review text is echoed back in the `review` array.
+export async function getRatingSummary({ service = null, package: pkg = null, product = null, session } = {}) {
+  const filter = { status: "approved" };
+  if (service) filter.service = service;
+  if (pkg) filter.package = pkg;
+  if (product) filter.product = product;
+
+  const [result] = await Testimonial.aggregate([
+    { $match: filter },
+    { $group: { _id: null, average: { $avg: "$rating" }, count: { $sum: 1 } } },
+  ]).session(session || null);
+
+  return result ? { average: result.average, count: result.count } : { average: 0, count: 0 };
+}
+
 export default {
   createTestimonial,
   findTestimonialById,
@@ -89,4 +102,5 @@ export default {
   updateTestimonialById,
   deleteTestimonialById,
   countTestimonials,
+  getRatingSummary,
 };

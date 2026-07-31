@@ -1,4 +1,4 @@
-import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd } from "../utils.seo.js";
+import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd } from "../utils.seo.js";
 
 // One Offer per active variation, carrying each variation's own price/sku/stock -
 // this is what lets Google (and price-aware AI answer engines) show real
@@ -19,6 +19,9 @@ function buildProductOffers(product, canonical) {
 
 function buildProductJsonLd(product, canonical, imageUrl, siteName) {
   const offers = buildProductOffers(product, canonical);
+  const aggregateRating = buildAggregateRatingJsonLd(product.ratingSummary);
+  const review = buildReviewJsonLd(product.recenzije);
+
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -29,6 +32,8 @@ function buildProductJsonLd(product, canonical, imageUrl, siteName) {
     ...(product.sku ? { sku: product.sku } : {}),
     brand: { "@type": "Brand", name: siteName },
     ...(offers ? { offers } : {}),
+    ...(aggregateRating ? { aggregateRating } : {}),
+    ...(review ? { review } : {}),
   };
 }
 

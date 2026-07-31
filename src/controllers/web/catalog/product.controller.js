@@ -10,6 +10,7 @@ import {
   prepareProductDetailData,
 } from "../../../presenters/catalog/product.presenter.js";
 import { generateSeo } from "../../../seo/index.js";
+import { buildItemListJsonLd } from "../../../seo/utils.seo.js";
 import { logError } from "../../../utils/logger.util.js";
 
 const BADGE_LABELS = {
@@ -44,6 +45,8 @@ export async function productList(req, res, next) {
     });
     const pageTitleBase = badgeFilter ? BADGE_LABELS[badgeFilter] : "Prodavnica";
     const seo = await generateSeo("page", { title: pageTitleBase, description: "Oprema, delovi i potrošni materijal za profesionalnu kozmetičku negu.", slug: "/prodavnica", noIndex: !!badgeFilter }, req);
+    const itemList = buildItemListJsonLd(req, result.data.map((p) => ({ name: p.naziv, path: `/prodavnica/${p.slug}` })));
+    if (itemList) seo.jsonLd = [...(seo.jsonLd || []), itemList];
 
     return res.render("shop/products", {
       pageTitle: seo.title,
@@ -78,6 +81,8 @@ export async function productCategory(req, res, next) {
       { categories, tags, totalCount }
     );
     const seo = await generateSeo("category", category, req);
+    const itemList = buildItemListJsonLd(req, result.data.map((p) => ({ name: p.naziv, path: `/prodavnica/${p.slug}` })));
+    if (itemList) seo.jsonLd = [...(seo.jsonLd || []), itemList];
 
     return res.render("shop/products", {
       pageTitle: seo.title,
@@ -112,6 +117,8 @@ export async function productTag(req, res, next) {
       { categories, tags, totalCount }
     );
     const seo = await generateSeo("tag", tag, req);
+    const itemList = buildItemListJsonLd(req, result.data.map((p) => ({ name: p.naziv, path: `/prodavnica/${p.slug}` })));
+    if (itemList) seo.jsonLd = [...(seo.jsonLd || []), itemList];
 
     return res.render("shop/products", {
       pageTitle: seo.title,
@@ -131,11 +138,14 @@ export async function productDetails(req, res, next) {
 
     const product = await productService.getPublicProductBySlug(slug);
     const testimonials = await testimonialService.getApprovedTestimonials({ product: product.id, limit: 10 });
+    const ratingSummary = await testimonialService.getRatingSummary({ product: product.id });
 
     const viewData = prepareProductDetailData(product, {
       relatedProducts: product.povezaniProizvodi || [],
       testimonials,
     });
+    product.recenzije = testimonials;
+    product.ratingSummary = ratingSummary;
     const seo = await generateSeo("product", product, req);
 
     return res.render("shop/product-details", {

@@ -6,6 +6,7 @@ import {
   prepareBlogPostData,
 } from "../../../presenters/blog/blog.presenter.js";
 import { generateSeo } from "../../../seo/index.js";
+import { buildItemListJsonLd } from "../../../seo/utils.seo.js";
 import { logError } from "../../../utils/logger.util.js";
 
 export async function blogHome(req, res, next) {
@@ -13,10 +14,13 @@ export async function blogHome(req, res, next) {
     const { page = 1, search } = req.query;
     const data = await blogService.getBlogLandingData({ page: parseInt(page, 10) || 1, search: search || "" });
     const viewData = prepareBlogListData(data, { query: req.query, categories: data.categories, tags: data.tags, totalCount: data.totalCount });
+    const itemList = buildItemListJsonLd(req, data.data.map((p) => ({ name: p.naslov, path: `/blog/${p.slug}` })));
+    if (itemList) data.seo.jsonLd = [...(data.seo.jsonLd || []), itemList];
 
     return res.render("blog/blog", {
       pageTitle: data.seo.pageTitle,
       pageDescription: data.seo.pageDescription,
+      seo: data.seo,
       data: viewData,
     });
   } catch (error) {
@@ -32,10 +36,13 @@ export async function blogCategory(req, res, next) {
 
     const data = await blogService.getBlogCategoryData(categorySlug, { page: parseInt(page, 10) || 1 });
     const viewData = prepareBlogCategoryData(data.category, data, req.query, { categories: data.categories, tags: data.tags, totalCount: data.totalCount });
+    const itemList = buildItemListJsonLd(req, data.data.map((p) => ({ name: p.naslov, path: `/blog/${p.slug}` })));
+    if (itemList) data.seo.jsonLd = [...(data.seo.jsonLd || []), itemList];
 
     return res.render("blog/blog", {
       pageTitle: data.seo.pageTitle,
       pageDescription: data.seo.pageDescription,
+      seo: data.seo,
       data: viewData,
     });
   } catch (error) {
@@ -51,10 +58,13 @@ export async function blogTag(req, res, next) {
 
     const data = await blogService.getBlogTagData(tagSlug, { page: parseInt(page, 10) || 1 });
     const viewData = prepareBlogTagData(data.tag, data, req.query, { categories: data.categories, tags: data.tags, totalCount: data.totalCount });
+    const itemList = buildItemListJsonLd(req, data.data.map((p) => ({ name: p.naslov, path: `/blog/${p.slug}` })));
+    if (itemList) data.seo.jsonLd = [...(data.seo.jsonLd || []), itemList];
 
     return res.render("blog/blog", {
       pageTitle: data.seo.pageTitle,
       pageDescription: data.seo.pageDescription,
+      seo: data.seo,
       data: viewData,
     });
   } catch (error) {
@@ -90,9 +100,13 @@ export async function searchBlog(req, res, next) {
     const data = await blogService.searchBlogPosts(q, { page: parseInt(page, 10) || 1 });
     const viewData = prepareBlogListData(data, { query: { ...req.query, search: q }, categories: data.categories, tags: data.tags, totalCount: data.totalCount });
 
+    // No ItemList here deliberately - this page is noindex (data.seo.robots), and
+    // search-result listings aren't meaningful as a schema.org ItemList since the
+    // set of results has no lasting identity to attach one to.
     return res.render("blog/blog", {
       pageTitle: data.seo.pageTitle,
       pageDescription: data.seo.pageDescription,
+      seo: data.seo,
       data: viewData,
     });
   } catch (error) {

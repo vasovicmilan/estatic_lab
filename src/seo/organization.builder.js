@@ -1,13 +1,18 @@
 import BUSINESS from "../config/business.config.js";
+import employeeService from "../services/employee.service.js";
 
 // Rendered once per request into every page via res.locals.orgJsonLd (set in
 // locals.config.js) - unlike generateSeo()'s per-type builders, this doesn't vary
-// by page, so it doesn't go through that registry. Previously this was a static
-// block hardcoded directly into head.ejs with only name/url/email/address; this
-// adds telephone/geo/logo and picks up sameAs/openingHours automatically once
-// real values exist in business.config.js.
-export function buildOrganizationJsonLd(req) {
+// by page, so it doesn't go through that registry.
+//
+// openingHoursSpecification comes from employeeService.getAggregateBusinessHours()
+// rather than a hardcoded schedule - there's no fixed salon schedule to hardcode,
+// since who's actually here on a given day depends on individual employee
+// schedules. That function is cached in-memory (see employee.service.js), so this
+// doesn't cost a DB round trip on every request.
+export async function buildOrganizationJsonLd(req) {
   const base = `${req.protocol}://${req.get("host")}`;
+  const hours = await employeeService.getAggregateBusinessHours();
 
   return {
     "@context": "https://schema.org",
@@ -32,7 +37,16 @@ export function buildOrganizationJsonLd(req) {
       longitude: BUSINESS.geo.longitude,
     },
     ...(BUSINESS.sameAs.length ? { sameAs: BUSINESS.sameAs } : {}),
-    ...(BUSINESS.openingHours.length ? { openingHoursSpecification: BUSINESS.openingHours } : {}),
+    ...(hours.length
+      ? {
+          openingHoursSpecification: hours.map((h) => ({
+            "@type": "OpeningHoursSpecification",
+            dayOfWeek: h.dayOfWeek,
+            opens: h.opens,
+            closes: h.closes,
+          })),
+        }
+      : {}),
   };
 }
 

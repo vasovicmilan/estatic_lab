@@ -4,6 +4,7 @@ import * as tagService from "../../../services/tag.service.js";
 import * as testimonialService from "../../../services/testimonial.service.js";
 import { prepareServiceListData, prepareServiceCategoryData, prepareServiceTagData, prepareServiceDetailData } from "../../../presenters/catalog/service.presenter.js";
 import { generateSeo } from "../../../seo/index.js";
+import { buildItemListJsonLd } from "../../../seo/utils.seo.js";
 import { logError } from "../../../utils/logger.util.js";
 
 export async function serviceList(req, res, next) {
@@ -20,6 +21,8 @@ export async function serviceList(req, res, next) {
 
     const viewData = prepareServiceListData(result, { query: req.query, categories, tags, totalCount });
     const seo = await generateSeo("page", { title: "Usluge", description: "Pregledajte sve usluge Estetik Lab wellness centra.", slug: "/usluge" }, req);
+    const itemList = buildItemListJsonLd(req, result.data.map((s) => ({ name: s.naziv, path: `/usluge/${s.slug}` })));
+    if (itemList) seo.jsonLd = [...(seo.jsonLd || []), itemList];
 
     return res.render("services/services", {
       pageTitle: seo.title,
@@ -49,6 +52,8 @@ export async function serviceCategory(req, res, next) {
 
     const viewData = prepareServiceCategoryData({ id: category._id.toString(), naziv: category.name, slug: category.slug }, result, req.query, { categories, tags, totalCount });
     const seo = await generateSeo("category", category, req);
+    const itemList = buildItemListJsonLd(req, result.data.map((s) => ({ name: s.naziv, path: `/usluge/${s.slug}` })));
+    if (itemList) seo.jsonLd = [...(seo.jsonLd || []), itemList];
 
     return res.render("services/services", {
       pageTitle: seo.title,
@@ -78,6 +83,8 @@ export async function serviceTag(req, res, next) {
 
     const viewData = prepareServiceTagData({ id: tag._id.toString(), naziv: tag.name, slug: tag.slug }, result, req.query, { categories, tags, totalCount });
     const seo = await generateSeo("page", { title: tag.name, description: `Usluge sa tagom ${tag.name}.`, slug: `/usluge/tag/${tag.slug}` }, req);
+    const itemList = buildItemListJsonLd(req, result.data.map((s) => ({ name: s.naziv, path: `/usluge/${s.slug}` })));
+    if (itemList) seo.jsonLd = [...(seo.jsonLd || []), itemList];
 
     return res.render("services/services", {
       pageTitle: seo.title,
@@ -97,8 +104,11 @@ export async function serviceDetails(req, res, next) {
 
     const service = await serviceService.getServiceBySlug(slug);
     const testimonials = await testimonialService.getApprovedTestimonials({ limit: 6, service: service.id });
+    const ratingSummary = await testimonialService.getRatingSummary({ service: service.id });
 
     const viewData = prepareServiceDetailData(service, { testimonials });
+    service.recenzije = testimonials;
+    service.ratingSummary = ratingSummary;
     const seo = await generateSeo("service", service, req);
 
     return res.render("services/service-details", {

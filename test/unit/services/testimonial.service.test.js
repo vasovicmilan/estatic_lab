@@ -58,4 +58,13 @@ describe("testimonial.service", () => {
       await assert.rejects(() => testimonialService.deleteTestimonialById("missing"), (err) => err.statusCode === 404);
     });
   });
+
+  describe("getRatingSummary", () => {
+    it("passes the entity filter through to the repository and returns its result as-is", async (t) => {
+      const repoMock = t.mock.method(testimonialRepo, "getRatingSummary", async () => ({ average: 4.5, count: 8 }));
+      const result = await testimonialService.getRatingSummary({ product: id() });
+      assert.deepEqual(result, { average: 4.5, count: 8 });
+      assert.equal(repoMock.mock.callCount(), 1);
+    });
+  });
 });

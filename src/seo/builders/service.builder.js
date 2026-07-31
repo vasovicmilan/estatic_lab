@@ -1,4 +1,4 @@
-import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd } from "../utils.seo.js";
+import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd } from "../utils.seo.js";
 
 // Each service package/tier (5 seansi, 10 seansi, ...) becomes its own Offer -
 // a service genuinely has multiple purchasable tiers at different prices, unlike
@@ -17,6 +17,9 @@ function buildServiceOffers(service) {
 
 function buildServiceJsonLd(service, canonical, imageUrl, siteName) {
   const offers = buildServiceOffers(service);
+  const aggregateRating = buildAggregateRatingJsonLd(service.ratingSummary);
+  const review = buildReviewJsonLd(service.recenzije);
+
   return {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -27,6 +30,8 @@ function buildServiceJsonLd(service, canonical, imageUrl, siteName) {
     provider: { "@type": "HealthAndBeautyBusiness", name: siteName },
     areaServed: "Novi Sad",
     ...(offers ? { offers } : {}),
+    ...(aggregateRating ? { aggregateRating } : {}),
+    ...(review ? { review } : {}),
   };
 }
 

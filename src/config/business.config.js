@@ -18,23 +18,13 @@ export const BUSINESS = {
     full: "Maksima Gorkog 6b, 21120 Novi Sad, Republika Srbija",
   },
 
-  // Extracted from the Google Maps embed URL already used on /kontakt and the
-  // homepage (the "!2d...!3d..." params in MAP_EMBED_PARAM - 2d is longitude,
-  // 3d is latitude) - real coordinates, not approximated from the address text.
   geo: {
     latitude: 45.24961274772971,
     longitude: 19.843611977018323,
   },
 
-  // Reuses the same default OG image already referenced in seo/index.js as a
-  // fallback - no separate logo asset is confirmed to exist yet. Swap this to
-  // a real square logo path once one is available; schema.org/logo technically
-  // wants a square-ish image, which default-og.webp likely isn't.
   logo: "/images/site/default-og.webp",
 
-  // Real social profiles - feeds directly into the Organization JSON-LD's `sameAs`
-  // field, one of the strongest entity-verification signals for both Google's
-  // Knowledge Panel and AI answer engines.
   sameAs: [
     "https://www.instagram.com/estetik.lab.ns",
     "https://www.facebook.com/share/1BrebmE8UG/",
@@ -42,11 +32,11 @@ export const BUSINESS = {
     "https://www.tiktok.com/@estetik.lab",
   ],
 
-  // TODO: no posted opening hours exist anywhere in the codebase yet. Once real
-  // hours exist, fill these in as schema.org OpeningHoursSpecification objects,
-  // e.g. { dayOfWeek: ["Monday","Tuesday",...], opens: "09:00", closes: "20:00" }
-  // - organization.builder.js already picks this array up automatically.
-  openingHours: [],
+  // TODO: no posted opening hours are stored here - there's no fixed salon
+  // schedule, since who's actually working on a given day depends on individual
+  // employee schedules (see Employee.workingHours). organization.builder.js
+  // derives real "hours when at least one active employee is here" dynamically
+  // via employeeService.getAggregateBusinessHours() instead.
 };
 
 export default BUSINESS;

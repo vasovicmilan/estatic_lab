@@ -7,6 +7,7 @@ import payoutRequestRepo from "../../../src/repositories/payout-request.reposito
 import userRepo from "../../../src/repositories/user.repository.js";
 import roleService from "../../../src/services/role.service.js";
 import * as employeeService from "../../../src/services/employee.service.js";
+import { _clearAggregateHoursCacheForTests } from "../../../src/services/employee.service.js";
 import { buildEmployee, buildRole, id } from "../../helpers/factories.js";
 
 describe("employee.service", () => {
@@ -187,12 +188,6 @@ describe("employee.service", () => {
     }
 
     it("deletes an employee with only settled history - terminal appointments, earned/paid commissions and payouts", async (t) => {
-      // These all return 0 because the *filters themselves* only ever match
-      // active/pending states (statusIn: ["pending","confirmed"] for appointments,
-      // status: "pending" for commissions, statusIn: ["requested","approved"] for
-      // payouts) - a mock returning 0 here specifically proves settled/terminal
-      // records don't block, since real terminal records would never match these
-      // filters in the first place.
       t.mock.method(employeeRepo, "findEmployeeById", async () => buildEmployee());
       t.mock.method(employeeRepo, "deleteEmployeeById", async () => true);
       mockNoReferences(t);
@@ -223,6 +218,66 @@ describe("employee.service", () => {
       t.mock.method(payoutRequestRepo, "countPayoutRequests", async () => 1);
 
       await assert.rejects(() => employeeService.deleteEmployeeById(id().toString()), (err) => err.statusCode === 400);
+    });
+  });
+
+  describe("getAggregateBusinessHours", () => {
+    it("takes the earliest opening and latest closing across all active employees for a day", async (t) => {
+      _clearAggregateHoursCacheForTests();
+      t.mock.method(employeeRepo, "findActiveEmployeesWorkingHours", async () => [
+        { workingHours: [{ day: "monday", slots: [{ from: "09:00", to: "15:00" }] }] },
+        { workingHours: [{ day: "monday", slots: [{ from: "11:00", to: "20:00" }] }] },
+      ]);
+
+      const hours = await employeeService.getAggregateBusinessHours();
+      const monday = hours.find((h) => h.dayOfWeek === "Monday");
+      assert.equal(monday.opens, "09:00");
+      assert.equal(monday.closes, "20:00");
+    });
+
+    it("omits a day entirely when no active employee works it, rather than inventing a value", async (t) => {
+      _clearAggregateHoursCacheForTests();
+      t.mock.method(employeeRepo, "findActiveEmployeesWorkingHours", async () => [
+        { workingHours: [{ day: "monday", slots: [{ from: "09:00", to: "17:00" }] }] },
+      ]);
+
+      const hours = await employeeService.getAggregateBusinessHours();
+      assert.ok(!hours.some((h) => h.dayOfWeek === "Sunday"));
+    });
+
+    it("returns an empty array when there are no active employees with any working hours", async (t) => {
+      _clearAggregateHoursCacheForTests();
+      t.mock.method(employeeRepo, "findActiveEmployeesWorkingHours", async () => []);
+
+      const hours = await employeeService.getAggregateBusinessHours();
+      assert.deepEqual(hours, []);
+    });
+
+    it("caches the result so a second call doesn't hit the repository again", async (t) => {
+      _clearAggregateHoursCacheForTests();
+      const repoMock = t.mock.method(employeeRepo, "findActiveEmployeesWorkingHours", async () => [
+        { workingHours: [{ day: "friday", slots: [{ from: "10:00", to: "18:00" }] }] },
+      ]);
+
+      await employeeService.getAggregateBusinessHours();
+      await employeeService.getAggregateBusinessHours();
+
+      assert.equal(repoMock.mock.callCount(), 1);
+    });
+
+    it("orders days Monday through Sunday regardless of the order employees are stored in", async (t) => {
+      _clearAggregateHoursCacheForTests();
+      t.mock.method(employeeRepo, "findActiveEmployeesWorkingHours", async () => [
+        {
+          workingHours: [
+            { day: "friday", slots: [{ from: "10:00", to: "18:00" }] },
+            { day: "monday", slots: [{ from: "09:00", to: "17:00" }] },
+          ],
+        },
+      ]);
+
+      const hours = await employeeService.getAggregateBusinessHours();
+      assert.deepEqual(hours.map((h) => h.dayOfWeek), ["Monday", "Friday"]);
     });
   });
 });

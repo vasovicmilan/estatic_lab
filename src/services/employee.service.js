@@ -151,12 +151,6 @@ export async function deleteEmployeeById(employeeId) {
   const existing = await employeeRepo.findEmployeeById(employeeId);
   if (!existing) notFound("Zaposleni");
 
-  // Now that Appointment/CommissionEntry/PayoutRequest all snapshot the employee's
-  // name at creation time (see appointment.service.js/commission.service.js/
-  // payout-request.service.js), Employee can follow the same tiered policy as
-  // Service: block only on active commitments, not on settled history. A terminal
-  // appointment or a paid/reversed commission/payout stays perfectly readable via
-  // its snapshot even after this document is gone.
   const [activeAppointments, pendingCommissions, unresolvedPayouts] = await Promise.all([
     appointmentRepo.countAppointments({ employeeId, statusIn: ["pending", "confirmed"] }),
     commissionEntryRepo.countCommissionEntries({ employee: employeeId, status: "pending" }),
@@ -204,12 +198,6 @@ export async function getEmployeeOptionsForService(serviceId) {
   }));
 }
 
-// Used to populate a point-in-time snapshot (Appointment.employeeSnapshot,
-// CommissionEntry.employeeSnapshot, PayoutRequest.employeeSnapshot) - resolved once
-// at the moment the record is created/assigned so it survives the Employee document
-// being deleted later. Returns null rather than throwing on a missing employee,
-// since callers use this defensively (a snapshot that ends up null just means "no
-// name available", not a reason to fail the booking/commission/payout itself).
 export async function getEmployeeNameById(employeeId) {
   if (!employeeId) return null;
   const employee = await employeeRepo.findEmployeeById(employeeId, {
@@ -221,6 +209,60 @@ export async function getEmployeeNameById(employeeId) {
 
 export async function getAllEmployeeUserIds() {
   return employeeRepo.findAllEmployeeUserIds();
+}
+
+// Feeds the site-wide Organization JSON-LD (organization.builder.js). There is no
+// fixed salon schedule to hardcode - who's actually here on a given day depends on
+// individual employee schedules, which change. So instead of a static config value
+// someone has to remember to update, this derives "hours when at least one active
+// employee is working" per weekday: earliest opening to latest closing across every
+// active employee's workingHours. A day with zero active employees scheduled is
+// omitted entirely (interpreted as closed, same schema.org convention as omitting a
+// closed day from OpeningHoursSpecification).
+//
+// Cached in-memory for HOURS_CACHE_TTL_MS: this now runs on every page render (via
+// locals.config.js), and schedules don't change often enough to justify a DB round
+// trip on every single request.
+const HOURS_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+let hoursCache = { data: null, expiresAt: 0 };
+
+export async function getAggregateBusinessHours() {
+  const now = Date.now();
+  if (hoursCache.data && hoursCache.expiresAt > now) return hoursCache.data;
+
+  const employees = await employeeRepo.findActiveEmployeesWorkingHours();
+  const byDay = {};
+
+  for (const employee of employees) {
+    for (const wh of employee.workingHours || []) {
+      for (const slot of wh.slots || []) {
+        if (!slot.from || !slot.to) continue;
+        const existing = byDay[wh.day];
+        if (!existing) {
+          byDay[wh.day] = { opens: slot.from, closes: slot.to };
+        } else {
+          if (slot.from < existing.opens) existing.opens = slot.from;
+          if (slot.to > existing.closes) existing.closes = slot.to;
+        }
+      }
+    }
+  }
+
+  const result = DAY_ORDER.filter((day) => byDay[day]).map((day) => ({
+    dayOfWeek: day.charAt(0).toUpperCase() + day.slice(1),
+    opens: byDay[day].opens,
+    closes: byDay[day].closes,
+  }));
+
+  hoursCache = { data: result, expiresAt: now + HOURS_CACHE_TTL_MS };
+  return result;
+}
+
+// Test-only: the in-memory cache above is exactly the point in production (avoids
+// a DB hit on every page render), but it means test cases in the same process would
+// otherwise see each other's cached results. Not used by any app code.
+export function _clearAggregateHoursCacheForTests() {
+  hoursCache = { data: null, expiresAt: 0 };
 }
 
 export default {
@@ -238,4 +280,5 @@ export default {
   getEmployeeOptionsForService,
   getEmployeeNameById,
   getAllEmployeeUserIds,
+  getAggregateBusinessHours,
 };

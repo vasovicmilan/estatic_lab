@@ -1,4 +1,4 @@
-import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd } from "../utils.seo.js";
+import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd } from "../utils.seo.js";
 
 // pkg.faq comes from the mapper as {pitanje, odgovor} pairs (Serbian field names
 // used throughout the public-facing mapped shape). Normalized here to
@@ -26,6 +26,9 @@ function buildFaqPageJsonLd(faqItems) {
 // price-aware AI answer engines) surface the price directly instead of having
 // to infer it from page text.
 function buildProductJsonLd(pkg, canonical, imageUrl, siteName) {
+  const aggregateRating = buildAggregateRatingJsonLd(pkg.ratingSummary);
+  const review = buildReviewJsonLd(pkg.recenzije);
+
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -41,6 +44,8 @@ function buildProductJsonLd(pkg, canonical, imageUrl, siteName) {
       price: pkg.cena,
       availability: "https://schema.org/InStock",
     },
+    ...(aggregateRating ? { aggregateRating } : {}),
+    ...(review ? { review } : {}),
   };
 }
 
