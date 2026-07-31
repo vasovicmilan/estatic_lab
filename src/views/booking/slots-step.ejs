@@ -19,14 +19,14 @@
           <form method="GET" class="row g-3 align-items-end mb-4">
             <input type="hidden" name="servicePackageId" value="<%= data.variant.id %>">
             <div class="col-auto">
-              <label class="form-label small text-muted">Datum</label>
-              <input type="date" name="date" class="form-control" value="<%= data.date %>"
+              <label class="form-label small text-muted" for="slots-date">Datum</label>
+              <input type="date" id="slots-date" name="date" class="form-control" value="<%= data.date %>"
                 min="<%= new Date().toISOString().slice(0,10) %>" onchange="this.form.submit()">
             </div>
             <% if (data.employees && data.employees.length> 0) { %>
               <div class="col-auto">
-                <label class="form-label small text-muted">Terapeut</label>
-                <select name="employeeId" class="form-select" onchange="this.form.submit()">
+                <label class="form-label small text-muted" for="slots-employeeId">Terapeut</label>
+                <select id="slots-employeeId" name="employeeId" class="form-select" onchange="this.form.submit()">
                   <option value="" <%=!data.employeeId ? 'selected' : '' %>>Nema preferenciju</option>
                   <% data.employees.forEach(function(emp) { %>
                     <option value="<%= emp.id %>" <%=String(data.employeeId)===String(emp.id) ? 'selected' : '' %>><%=

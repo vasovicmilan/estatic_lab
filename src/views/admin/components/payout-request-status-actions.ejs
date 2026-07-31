@@ -16,11 +16,11 @@
               <div class="modal-content">
                 <div class="modal-header">
                   <h5 class="modal-title"><%= action.label %></h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zatvori"></button>
                 </div>
                 <div class="modal-body">
-                  <label class="form-label">Razlog (opciono)</label>
-                  <textarea name="reason" class="form-control" rows="3"></textarea>
+                  <label class="form-label" for="reason-<%= index %>">Razlog (opciono)</label>
+                  <textarea id="reason-<%= index %>" name="reason" class="form-control" rows="3"></textarea>
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Otkaži</button>

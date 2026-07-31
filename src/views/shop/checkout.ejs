@@ -16,25 +16,25 @@
 
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            <label class="form-label">Ime <span class="text-danger">*</span></label>
-            <input type="text" name="firstName" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.firstName) || data.prefill.firstName %>" required>
+            <label class="form-label" for="checkout-firstName">Ime <span class="text-danger">*</span></label>
+            <input type="text" id="checkout-firstName" name="firstName" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.firstName) || data.prefill.firstName %>" required>
             <% if (data.errors && data.errors.firstName) { %><div class="text-danger small mt-1"><%= data.errors.firstName %></div><% } %>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Prezime</label>
-            <input type="text" name="lastName" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.lastName) || data.prefill.lastName %>">
+            <label class="form-label" for="checkout-lastName">Prezime</label>
+            <input type="text" id="checkout-lastName" name="lastName" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.lastName) || data.prefill.lastName %>">
           </div>
         </div>
 
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            <label class="form-label">Email <span class="text-danger">*</span></label>
-            <input type="email" name="email" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.email) || data.prefill.email %>" <%= data.isLoggedIn ? 'readonly' : '' %> required>
+            <label class="form-label" for="checkout-email">Email <span class="text-danger">*</span></label>
+            <input type="email" id="checkout-email" name="email" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.email) || data.prefill.email %>" <%= data.isLoggedIn ? 'readonly' : '' %> required>
             <% if (data.errors && data.errors.email) { %><div class="text-danger small mt-1"><%= data.errors.email %></div><% } %>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Telefon <span class="text-danger">*</span></label>
-            <input type="text" name="phone" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.phone) || data.prefill.phone %>" required>
+            <label class="form-label" for="checkout-phone">Telefon <span class="text-danger">*</span></label>
+            <input type="text" id="checkout-phone" name="phone" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.phone) || data.prefill.phone %>" required>
             <% if (data.errors && data.errors.phone) { %><div class="text-danger small mt-1"><%= data.errors.phone %></div><% } %>
           </div>
         </div>
@@ -49,8 +49,8 @@
 
         <% if (data.addresses && data.addresses.length > 0) { %>
           <div class="mb-3">
-            <label class="form-label">Sačuvana adresa</label>
-            <select class="form-select" onchange="
+            <label class="form-label" for="checkout-saved-address">Sačuvana adresa</label>
+            <select id="checkout-saved-address" class="form-select" onchange="
               const opt = this.options[this.selectedIndex];
               document.getElementById('addr-city').value = opt.dataset.city || '';
               document.getElementById('addr-postalCode').value = opt.dataset.postalCode || '';
@@ -76,12 +76,12 @@
 
         <div class="row g-3 mb-3">
           <div class="col-md-8">
-            <label class="form-label">Ulica <span class="text-danger">*</span></label>
+            <label class="form-label" for="addr-street">Ulica <span class="text-danger">*</span></label>
             <input type="text" id="addr-street" name="street" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.street) || data.addressPrefill.street %>" required>
             <% if (data.errors && data.errors.street) { %><div class="text-danger small mt-1"><%= data.errors.street %></div><% } %>
           </div>
           <div class="col-md-4">
-            <label class="form-label">Broj <span class="text-danger">*</span></label>
+            <label class="form-label" for="addr-number">Broj <span class="text-danger">*</span></label>
             <input type="text" id="addr-number" name="number" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.number) || data.addressPrefill.number %>" required>
             <% if (data.errors && data.errors.number) { %><div class="text-danger small mt-1"><%= data.errors.number %></div><% } %>
           </div>
@@ -89,20 +89,20 @@
 
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            <label class="form-label">Grad <span class="text-danger">*</span></label>
+            <label class="form-label" for="addr-city">Grad <span class="text-danger">*</span></label>
             <input type="text" id="addr-city" name="city" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.city) || data.addressPrefill.city %>" required>
             <% if (data.errors && data.errors.city) { %><div class="text-danger small mt-1"><%= data.errors.city %></div><% } %>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Poštanski broj <span class="text-danger">*</span></label>
+            <label class="form-label" for="addr-postalCode">Poštanski broj <span class="text-danger">*</span></label>
             <input type="text" id="addr-postalCode" name="postalCode" class="form-control" value="<%= (typeof formData !== 'undefined' && formData.postalCode) || data.addressPrefill.postalCode %>" required>
             <% if (data.errors && data.errors.postalCode) { %><div class="text-danger small mt-1"><%= data.errors.postalCode %></div><% } %>
           </div>
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Napomena</label>
-          <textarea name="note" class="form-control" rows="3"><%= (typeof formData !== 'undefined' && formData.note) || '' %></textarea>
+          <label class="form-label" for="checkout-note">Napomena</label>
+          <textarea id="checkout-note" name="note" class="form-control" rows="3"><%= (typeof formData !== 'undefined' && formData.note) || '' %></textarea>
         </div>
 
         <%- include("../includes/components/coupon-field", {

@@ -61,9 +61,13 @@
   --bs-body-color: #2e2a24;
   --bs-body-font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --bs-emphasis-color: #2e2a24;
-  --bs-secondary-color: rgba(46, 42, 36, 0.65);
+  /* Alpha values chosen to clear WCAG AA's 4.5:1 text contrast threshold against
+     every light background used site-wide (white, --bs-light, --bs-secondary-bg,
+     --bs-tertiary-bg) - the previous values (0.65 / 0.45) measured 4.48:1 and
+     2.63:1 respectively against some of those backgrounds, both real failures. */
+  --bs-secondary-color: rgba(46, 42, 36, 0.75);
   --bs-secondary-bg: #f1eae3;
-  --bs-tertiary-color: rgba(46, 42, 36, 0.45);
+  --bs-tertiary-color: rgba(46, 42, 36, 0.70);
   --bs-tertiary-bg: #f6f1eb;
 
   /* heading font - applied via element selectors in styles.css, not a new class */

@@ -27,19 +27,19 @@
       <% } else { %>
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            <label class="form-label">Ime</label>
-            <input type="text" name="name" class="form-control" required minlength="2" maxlength="100">
+            <label class="form-label" for="testimonial-name">Ime</label>
+            <input type="text" id="testimonial-name" name="name" class="form-control" required minlength="2" maxlength="100">
           </div>
           <div class="col-md-6">
-            <label class="form-label">Email (opciono)</label>
-            <input type="email" name="email" class="form-control">
+            <label class="form-label" for="testimonial-email">Email (opciono)</label>
+            <input type="email" id="testimonial-email" name="email" class="form-control">
           </div>
         </div>
       <% } %>
 
       <div class="mb-3">
-        <label class="form-label">Ocena</label>
-        <select name="rating" class="form-select" required>
+        <label class="form-label" for="testimonial-rating">Ocena</label>
+        <select id="testimonial-rating" name="rating" class="form-select" required>
           <option value="" selected disabled>Izaberite ocenu</option>
           <option value="5">5 - Odlično</option>
           <option value="4">4 - Vrlo dobro</option>
@@ -50,8 +50,8 @@
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Vaš utisak</label>
-        <textarea name="message" class="form-control" rows="4" required minlength="10" maxlength="1000"></textarea>
+        <label class="form-label" for="testimonial-message">Vaš utisak</label>
+        <textarea id="testimonial-message" name="message" class="form-control" rows="4" required minlength="10" maxlength="1000"></textarea>
       </div>
 
       <button type="submit" class="btn btn-primary">Pošalji utisak</button>

@@ -24,34 +24,34 @@
                 <input type="text" name="nickname" class="d-none" tabindex="-1" autocomplete="off">
                 <div class="row g-3 mb-3">
                   <div class="col-md-6">
-                    <label class="form-label">Ime</label>
-                    <input type="text" name="firstName" class="form-control" value="<%= data.formData.firstName || '' %>" required>
+                    <label class="form-label" for="contact-firstName">Ime</label>
+                    <input type="text" id="contact-firstName" name="firstName" class="form-control" value="<%= data.formData.firstName || '' %>" required>
                     <% if (data.errors && data.errors.firstName) { %><div class="text-danger small mt-1"><%= data.errors.firstName %></div><% } %>
                   </div>
                   <div class="col-md-6">
-                    <label class="form-label">Prezime</label>
-                    <input type="text" name="lastName" class="form-control" value="<%= data.formData.lastName || '' %>" required>
+                    <label class="form-label" for="contact-lastName">Prezime</label>
+                    <input type="text" id="contact-lastName" name="lastName" class="form-control" value="<%= data.formData.lastName || '' %>" required>
                     <% if (data.errors && data.errors.lastName) { %><div class="text-danger small mt-1"><%= data.errors.lastName %></div><% } %>
                   </div>
                 </div>
                 <div class="row g-3 mb-3">
                   <div class="col-md-6">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-control" value="<%= data.formData.email || '' %>" required>
+                    <label class="form-label" for="contact-email">Email</label>
+                    <input type="email" id="contact-email" name="email" class="form-control" value="<%= data.formData.email || '' %>" required>
                     <% if (data.errors && data.errors.email) { %><div class="text-danger small mt-1"><%= data.errors.email %></div><% } %>
                   </div>
                   <div class="col-md-6">
-                    <label class="form-label">Telefon</label>
-                    <input type="text" name="phone" class="form-control" value="<%= data.formData.phone || '' %>">
+                    <label class="form-label" for="contact-phone">Telefon</label>
+                    <input type="text" id="contact-phone" name="phone" class="form-control" value="<%= data.formData.phone || '' %>">
                   </div>
                 </div>
                 <div class="mb-3">
-                  <label class="form-label">Tema</label>
-                  <input type="text" name="topic" class="form-control" value="<%= data.formData.topic || '' %>">
+                  <label class="form-label" for="contact-topic">Tema</label>
+                  <input type="text" id="contact-topic" name="topic" class="form-control" value="<%= data.formData.topic || '' %>">
                 </div>
                 <div class="mb-3">
-                  <label class="form-label">Poruka</label>
-                  <textarea name="message" class="form-control" rows="5" required><%= data.formData.message || '' %></textarea>
+                  <label class="form-label" for="contact-message">Poruka</label>
+                  <textarea id="contact-message" name="message" class="form-control" rows="5" required><%= data.formData.message || '' %></textarea>
                   <% if (data.errors && data.errors.message) { %><div class="text-danger small mt-1"><%= data.errors.message %></div><% } %>
                 </div>
                 <div class="form-check mb-3">

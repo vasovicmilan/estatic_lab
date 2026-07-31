@@ -113,6 +113,15 @@ h1, h2, h3, h4, h5, h6,
   --bs-btn-focus-shadow-rgb: 217, 164, 65;
 }
 
+/* .text-bg-warning's text color is baked in by Sass color-contrast() at Bootstrap's
+   build time against Bootstrap's DEFAULT warning shade, not this theme's custom
+   --bs-warning (#d9a441) - unlike .btn-* variants, which use CSS custom properties
+   and are already re-themed above. Explicit override guarantees readable (dark)
+   text on this specific warning color regardless of what Bootstrap baked in. */
+.text-bg-warning {
+  color: #2e2a24 !important;
+}
+
 .btn-outline-warning {
   --bs-btn-color: #ad7c1f;
   --bs-btn-border-color: #d9a441;

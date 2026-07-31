@@ -40,10 +40,10 @@
                 <form action="/moj-nalog/termini/<%= data.appointment.id %>/odbij" method="POST">
                   <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
                   <div class="modal-content">
-                    <div class="modal-header"><h5 class="modal-title">Odbij termin</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-header"><h5 class="modal-title">Odbij termin</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zatvori"></button></div>
                     <div class="modal-body">
-                      <label class="form-label">Razlog (opciono)</label>
-                      <textarea name="reason" class="form-control" rows="3"></textarea>
+                      <label class="form-label" for="reject-reason">Razlog (opciono)</label>
+                      <textarea id="reject-reason" name="reason" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="modal-footer">
                       <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Otkaži</button>
@@ -67,10 +67,10 @@
                 <form action="/moj-nalog/termini/<%= data.appointment.id %>/nije-se-pojavio" method="POST">
                   <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
                   <div class="modal-content">
-                    <div class="modal-header"><h5 class="modal-title">Klijent se nije pojavio</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-header"><h5 class="modal-title">Klijent se nije pojavio</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zatvori"></button></div>
                     <div class="modal-body">
-                      <label class="form-label">Napomena (opciono)</label>
-                      <textarea name="note" class="form-control" rows="3"></textarea>
+                      <label class="form-label" for="noshow-note">Napomena (opciono)</label>
+                      <textarea id="noshow-note" name="note" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="modal-footer">
                       <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Otkaži</button>
