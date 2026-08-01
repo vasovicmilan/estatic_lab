@@ -211,6 +211,15 @@ export async function getAvailableSlots({ serviceId, servicePackageId, employeeI
 
   let flat = perEmployeeSlots.flat();
 
+  // Working-hours slot generation is date-only (it doesn't know what time "now" is),
+  // so a same-day request run at, say, 14:00 would otherwise still offer a 09:00 slot
+  // as free just because nothing had been booked into it. This is the one place that
+  // actually knows the current moment, so it's the right place to drop anything whose
+  // start has already passed - applies harmlessly to future dates too, since every
+  // slot on a future day already starts after `now`.
+  const now = new Date();
+  flat = flat.filter((slot) => slot.startTime > now);
+
   const resourceIds = resolveResourceIds(service);
   if (resourceIds.length) {
     const resources = await Promise.all(resourceIds.map((id) => resourceService.getResourceByIdRaw(id)));
@@ -249,28 +258,33 @@ export async function getAvailableSlots({ serviceId, servicePackageId, employeeI
 }
 
 /**
- * Write-time resolution - given a chosen start time and no specific employee
- * preference, picks the first candidate who is (still) actually free right now. Used
- * inside the booking transaction as the final source of truth, since the slot list the
- * visitor saw may be a few seconds stale.
+ * Write-time resolution - given a chosen start time, returns EVERY employee who is
+ * (still) actually free right now, not just the first one found. This is what lets
+ * the caller (bookAppointment) tell "there's exactly one option, just assign it" apart
+ * from "there's a real choice between several employees, an admin should pick" -
+ * collapsing to just the first candidate would silently auto-assign even when a
+ * genuine business decision was being deferred. Used both as the pre-transaction
+ * check and, with `session`, as the final source of truth inside the booking
+ * transaction, since the slot list the visitor saw may be a few seconds stale.
  *
- * When `resources` (an array of {resourceId, capacity} pairs) is given, EVERY
- * one of them is checked FIRST: if any is already at capacity, no employee can
- * help (the bottleneck isn't a person), so this returns null without even
- * looking at candidates.
+ * When `resources` (an array of {resourceId, capacity} pairs) is given, EVERY one of
+ * them is checked FIRST: if any is already at capacity, no employee can help (the
+ * bottleneck isn't a person), so this returns [] without even looking at candidates.
  */
-export async function findFirstAvailableEmployee(serviceId, startTime, endTime, { session, resources = [] } = {}) {
+export async function findAvailableEmployees(serviceId, startTime, endTime, { session, resources = [] } = {}) {
   for (const { resourceId, capacity } of resources) {
     const resourceCount = await appointmentService.countOverlappingResourceAppointments(resourceId, startTime, endTime, { session });
-    if (!capacity || resourceCount >= capacity) return null;
+    if (!capacity || resourceCount >= capacity) return [];
   }
 
   const candidates = await employeeService.findEmployeesByServiceRaw(serviceId, { session });
-  for (const employee of candidates) {
-    const isOverlapping = await appointmentService.hasOverlappingAppointment(employee._id, startTime, endTime, { session });
-    if (!isOverlapping) return employee;
-  }
-  return null;
+  const checks = await Promise.all(
+    candidates.map(async (employee) => ({
+      employee,
+      isFree: !(await appointmentService.hasOverlappingAppointment(employee._id, startTime, endTime, { session })),
+    }))
+  );
+  return checks.filter((c) => c.isFree).map((c) => c.employee);
 }
 
-export default { getAvailableSlots, findFirstAvailableEmployee };
+export default { getAvailableSlots, findAvailableEmployees };

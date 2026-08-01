@@ -48,6 +48,32 @@ function resolveResourceIds(service) {
   return service.resources.map((r) => (typeof r === "object" ? r._id?.toString() : r?.toString())).filter(Boolean);
 }
 
+/**
+ * Decides who (if anyone) gets an appointment when the customer didn't pick a
+ * specific employee. Throws if nobody is deliverable at all.
+ *
+ * - Exactly one employee actually free at this time -> auto-assign them. There's
+ *   no real decision being deferred here: whether that's because only one
+ *   employee can perform the service at all, or several can but only one is on
+ *   shift / not already booked elsewhere right now, the outcome is the same -
+ *   there's only one possible answer, so there's nothing for an admin to
+ *   decide. Leaving `employee` null in this case would just create a
+ *   scheduling blind spot: findBusyIntervals/findOverlappingAppointments only
+ *   match a non-null `employee` (or `assignedTo`), so an unassigned
+ *   appointment doesn't count against anyone's calendar until an admin
+ *   manually assigns it - which let this same person get double-booked into a
+ *   different service in the meantime.
+ * - Two or more employees genuinely free at this time -> leave it unassigned.
+ *   THIS is the case with a real business decision behind it (which of them
+ *   should take it), so it's left for an admin to pick from the appointment
+ *   details page (see reassignAppointment).
+ */
+async function resolveEmployeeAssignment(serviceId, start, end, resolvedResources, { session } = {}) {
+  const freeEmployees = await availabilityService.findAvailableEmployees(serviceId, start, end, { session, resources: resolvedResources });
+  if (!freeEmployees.length) badRequest("Nijedan terapeut nije dostupan za izabrani termin, izaberite drugi");
+  return freeEmployees.length === 1 ? freeEmployees[0]._id : null;
+}
+
 export async function findAppointments({ search = "", limit = 20, page = 1, requesterId = null, role = "user", filters = {} } = {}) {
   const scopedFilters = { ...filters };
   if (role === "user") scopedFilters.userId = requesterId;
@@ -217,31 +243,11 @@ export async function bookAppointment(input) {
 
     chosenEmployeeId = employeeId;
   } else {
-    // no employee explicitly chosen by the customer - verify the slot is actually
-    // deliverable by SOMEONE before accepting the booking, but don't silently commit
-    // to whichever employee happens to be free first when there's a REAL choice to
-    // make. The appointment is created unassigned; an admin picks the therapist from
-    // the appointment details page (see reassignAppointment) - see
-    // appointment-status-transitions.js/admin.routes.js for why this moved from
-    // automatic to admin-driven. Resource capacity is checked first inside
-    // findFirstAvailableEmployee - if any required resource is full, no employee
-    // search can fix that.
-    const candidates = await employeeService.findEmployeesByServiceRaw(serviceId);
-    const someoneFree = await availabilityService.findFirstAvailableEmployee(serviceId, start, end, { resources: resolvedResources });
-    if (!someoneFree) badRequest("Nijedan terapeut nije dostupan za izabrani termin, izaberite drugi");
-
-    // If exactly one employee can perform this service at all, there's no real
-    // decision being deferred to an admin - leaving `employee` null here would just
-    // create a scheduling blind spot: findBusyIntervals/findOverlappingAppointments
-    // only match a non-null `employee` (or `assignedTo`), so an unassigned
-    // appointment doesn't count against ANYONE's calendar until an admin manually
-    // assigns it. That let this same person get double-booked into a different
-    // service in the meantime. With 2+ candidates the ambiguity is real (which of
-    // them should do it is an actual business decision), so it's still left
-    // unassigned for an admin to pick in that case.
-    if (candidates.length === 1) {
-      chosenEmployeeId = someoneFree._id;
-    }
+    // no employee explicitly chosen by the customer - resolve who (if anyone)
+    // should get this appointment based on who's ACTUALLY free at this exact
+    // time, not just who's generally capable of the service. See
+    // resolveEmployeeAssignment below for the decision rule.
+    chosenEmployeeId = await resolveEmployeeAssignment(serviceId, start, end, resolvedResources);
   }
 
   let couponResult = null;
@@ -283,9 +289,12 @@ export async function bookAppointment(input) {
           const stillResourceCount = await appointmentRepo.countOverlappingResourceAppointments(resourceId, start, end, null, { session });
           if (stillResourceCount >= capacity) badRequest("Izabrani termin je upravo zauzet (resurs), pokušajte ponovo");
         }
-      } else {
-        const stillSomeoneFree = await availabilityService.findFirstAvailableEmployee(serviceId, start, end, { session, resources: resolvedResources });
-        if (!stillSomeoneFree) badRequest("Izabrani termin je upravo zauzet, pokušajte ponovo");
+      } else if (!employeeId) {
+        // was left unassigned pre-transaction because 2+ employees were free - re-run
+        // the same decision now. If the race window happened to leave exactly one of
+        // them free (someone else just took the other), this correctly collapses to
+        // an auto-assign instead of silently staying unassigned with a stale reason.
+        chosenEmployeeId = await resolveEmployeeAssignment(serviceId, start, end, resolvedResources, { session });
       }
 
       const discountApplied = couponResult?.discountAmount || 0;
