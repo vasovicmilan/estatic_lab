@@ -1,5 +1,6 @@
 import * as appointmentService from "../../../../services/appointment.service.js";
 import * as employeeService from "../../../../services/employee.service.js";
+import availabilityService from "../../../../services/availability.service.js";
 import { prepareAppointmentListData, prepareAppointmentDetailsData } from "../../../../presenters/admin/appointment/appointment.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -37,7 +38,27 @@ export async function appointmentDetails(req, res, next) {
   try {
     const { appointmentId } = req.params;
     const appointment = await appointmentService.getAppointmentById(appointmentId, req.session?.user?.id, "admin");
-    const employeeOptions = appointment.usluga.id ? await employeeService.getEmployeeOptionsForService(appointment.usluga.id) : [];
+
+    let employeeOptions = [];
+    if (appointment.usluga.id) {
+      const allOptionsForService = await employeeService.getEmployeeOptionsForService(appointment.usluga.id);
+      // Was previously every employee capable of the service, full stop - letting an
+      // admin "successfully" pick someone from the dropdown only to have
+      // reassignAppointment reject it (not on shift, or double-booked). This narrows
+      // the list to the same set that would actually pass that validation, using the
+      // exact same working-hours + conflict check reassignAppointment itself uses (see
+      // working-hours.util.js's isEmployeeWorkingAt) - excludeAppointmentId is this
+      // appointment itself, so the employee currently assigned to it still appears as
+      // a valid choice rather than "conflicting" with their own appointment.
+      const eligibleIds = await availabilityService.getEligibleEmployeeIdsForAppointment(
+        appointment.usluga.id,
+        appointment.termin.pocetakRaw,
+        appointment.termin.krajRaw,
+        appointmentId
+      );
+      employeeOptions = allOptionsForService.filter((option) => eligibleIds.includes(option.id));
+    }
+
     const viewData = prepareAppointmentDetailsData(appointment, { employeeOptions });
 
     return res.render("admin/_details", {

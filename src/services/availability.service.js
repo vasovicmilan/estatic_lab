@@ -284,4 +284,32 @@ export async function findAvailableEmployees(serviceId, startTime, endTime, { se
   return checks.filter((c) => c.isFree).map((c) => c.employee);
 }
 
-export default { getAvailableSlots, findAvailableEmployees };
+/**
+ * Employee IDs eligible to be (re)assigned to an EXISTING appointment - capable
+ * of the service, scheduled to work its exact time window, and not
+ * double-booked elsewhere at that time. `excludeAppointmentId` is the
+ * appointment being reassigned itself: without excluding it, the employee it's
+ * currently assigned to would show up as "conflicting" with their own
+ * appointment and get wrongly filtered out.
+ *
+ * Built for the admin appointment-detail reassignment dropdown, so it only
+ * ever offers choices that would actually pass reassignAppointment's own
+ * validation, instead of listing every employee capable of the service and
+ * letting the admin discover which ones are actually valid by trial and
+ * error (a select that lets you choose someone who isn't even on shift is
+ * worse than no dropdown at all).
+ */
+export async function getEligibleEmployeeIdsForAppointment(serviceId, startTime, endTime, excludeAppointmentId = null) {
+  const candidates = await employeeService.findEmployeesByServiceRaw(serviceId);
+  const onShift = candidates.filter((employee) => isEmployeeWorkingAt(employee, startTime, endTime));
+
+  const checks = await Promise.all(
+    onShift.map(async (employee) => ({
+      id: employee._id.toString(),
+      isFree: !(await appointmentService.hasOverlappingAppointment(employee._id, startTime, endTime, { excludeId: excludeAppointmentId })),
+    }))
+  );
+  return checks.filter((c) => c.isFree).map((c) => c.id);
+}
+
+export default { getAvailableSlots, findAvailableEmployees, getEligibleEmployeeIdsForAppointment };

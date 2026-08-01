@@ -89,10 +89,9 @@ export function mapAppointmentForAdminDetail(appointment) {
     termin: {
       pocetak: formatDateTime(appointment.startTime),
       kraj: formatDateTime(appointment.endTime),
+      pocetakRaw: appointment.startTime,
+      krajRaw: appointment.endTime,
     },
-    status: translateStatus(appointment.status),
-    statusRaw: appointment.status,
-    terapeutId: appointment.employee?._id?.toString() || appointment.employee?.toString() || null,
     terapeut: appointment.employeeSnapshot?.name || (appointment.employee ? getEmployeeName(appointment.employee) : null),
     dodeljenTerapeut: appointment.assignedTo ? getEmployeeName(appointment.assignedTo) : null,
     napomena: appointment.note || null,

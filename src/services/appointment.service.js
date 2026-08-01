@@ -134,10 +134,13 @@ export async function getResourceBusyIntervals(resourceId, dayStart, dayEnd) {
 /**
  * Whether an employee has any appointment overlapping the given window - for
  * availability.service.js's write-time final-check before actually booking,
- * since the slot list the visitor saw may be a few seconds stale by then.
+ * since the slot list the visitor saw may be a few seconds stale by then. Also
+ * used to build the admin reassignment dropdown (excludeId lets an appointment
+ * being reassigned skip its own conflict against itself, so the employee it's
+ * currently assigned to still shows up as an eligible option).
  */
-export async function hasOverlappingAppointment(employeeId, startTime, endTime, { session } = {}) {
-  const overlapping = await appointmentRepo.findOverlappingAppointments(employeeId, startTime, endTime, null, { session });
+export async function hasOverlappingAppointment(employeeId, startTime, endTime, { session, excludeId = null } = {}) {
+  const overlapping = await appointmentRepo.findOverlappingAppointments(employeeId, startTime, endTime, excludeId, { session });
   return overlapping.length > 0;
 }
 
