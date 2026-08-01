@@ -11,6 +11,7 @@ import packagePurchaseService from "./package-purchase.service.js";
 import { mapAppointment, mapAppointmentsForAdminList } from "../mappers/appointment.mapper.js";
 import { getAllowedStatuses } from "../models/appointment-status-transitions.js";
 import { canUserCancelAppointment } from "../utils/appointment-cancellation.util.js";
+import { buildPhoneRecord } from "../utils/phone.util.js";
 import { USER_CANCELLATION_CUTOFF_HOURS } from "../config/booking.config.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
@@ -345,7 +346,10 @@ export async function bookAppointment(input) {
             firstName: contact.firstName,
             lastName: contact.lastName || "",
             email: contact.email,
-            phone: contact.phone || "",
+            // encrypted + hashed, not plaintext - see phone.util.js/appointment.model.js.
+            // buildPhoneRecord returns null for an empty/missing number, matching the
+            // PhoneSchema field's expectation (not the "" this used to store).
+            phone: buildPhoneRecord(contact.phone),
           },
         },
         { session }

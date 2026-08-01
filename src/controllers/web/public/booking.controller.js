@@ -66,7 +66,18 @@ export async function slotsStep(req, res, next) {
       slots: slots.map((s) => ({
         startTime: s.startTime,
         endTime: s.endTime,
-        employeeId: s.employeeId || s.employeeIds?.[0] || null,
+        // Only ever a real value when the visitor explicitly filtered to one
+        // employee's calendar (s.employeeId is only set in that single-employee
+        // branch of getAvailableSlots - see availability.service.js). In merged
+        // "any employee" view, a slot can have several employeeIds free for it
+        // (s.employeeIds), and picking employeeIds[0] here used to silently bake
+        // an ARBITRARY specific employee into the booking URL - meaning by the
+        // time the request reached bookAppointment, employeeId was never
+        // actually null, so its whole resolveEmployeeAssignment logic (auto-
+        // assign when exactly one is free, leave unassigned for an admin to
+        // pick when several are) never got a chance to run. Leaving this null
+        // here lets the server make that decision correctly instead.
+        employeeId: s.employeeId || null,
       })),
     });
 

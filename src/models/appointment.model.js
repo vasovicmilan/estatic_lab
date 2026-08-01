@@ -1,5 +1,6 @@
 import { Schema, model } from "mongoose";
 import { APPOINTMENT_STATUSES } from "./appointment-status-transitions.js";
+import PhoneSchema from "./schemas/phone.schema.js";
 
 const AppointmentSchema = new Schema(
   {
@@ -129,7 +130,12 @@ const AppointmentSchema = new Schema(
       firstName: String,
       lastName: String,
       email: String,
-      phone: String,
+      // encrypted + hashed via PhoneSchema, same as Order/TemporaryOrder/User.phone -
+      // see phone.util.js's buildPhoneRecord/decryptPhone. firstName/lastName/email
+      // deliberately stay plaintext here, matching Order's contactSnapshot: admin
+      // search (appointment.filter.js) does a partial regex match against them, which
+      // encrypted ciphertext can't support - only phone gets the full treatment.
+      phone: PhoneSchema,
     },
   },
   { timestamps: true }

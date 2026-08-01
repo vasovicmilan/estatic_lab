@@ -40,7 +40,7 @@ function getUserEmail(appointment) {
 }
 
 function getUserPhone(appointment) {
-  if (appointment.contactSnapshot?.phone) return appointment.contactSnapshot.phone;
+  if (appointment.contactSnapshot?.phone) return decryptPhone(appointment.contactSnapshot.phone);
   if (appointment.user && typeof appointment.user === "object" && appointment.user.phone) return decryptPhone(appointment.user.phone);
   return null;
 }
