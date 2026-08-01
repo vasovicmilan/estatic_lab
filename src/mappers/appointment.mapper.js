@@ -154,10 +154,14 @@ export function mapAppointmentForEmployeeDetail(appointment) {
     status: translateStatus(appointment.status),
     napomenaKlijenta: appointment.note || null,
     konacnaCena: appointment.finalPrice != null ? `${appointment.finalPrice.toFixed(2)} RSD` : null,
-    mojaUloga:
-      appointment.employee?._id?.toString() === appointment.assignedTo?._id?.toString()
-        ? "Direktno zakazan"
-        : "Dodeljen od strane sistema",
+    // Was backwards before: employee===assignedTo is true exactly when an
+    // assignment DID happen (both fields get set together, whether by the
+    // system or an admin), so comparing them landed the labels on the wrong
+    // branch. Now reads assignedBy directly, which appointment.service.js's
+    // bookAppointment/reassignAppointment actually populate correctly - null
+    // means the customer picked this employee directly, "system"/"admin"
+    // means someone/something else decided it for them.
+    mojaUloga: appointment.assignedBy ? `Dodeljen (${translateActor(appointment.assignedBy)})` : "Direktno zakazan",
   };
 }
 

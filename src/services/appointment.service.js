@@ -231,6 +231,13 @@ export async function bookAppointment(input) {
   }
 
   let chosenEmployeeId = null;
+  // true only when the SYSTEM resolved the employee (see resolveEmployeeAssignment) -
+  // false for an explicit customer choice. Drives whether assignedTo/assignedBy/
+  // assignedAt get written below: a customer's direct pick isn't an "assignment"
+  // being recorded, it's just what they asked for, so those stay null for that case
+  // (see mapAppointment's "Direktno zakazan" vs "Dodeljen od strane sistema" logic,
+  // which depends on this distinction).
+  let systemAssigned = false;
 
   if (employeeId) {
     const overlapping = await appointmentRepo.findOverlappingAppointments(employeeId, start, end);
@@ -248,6 +255,7 @@ export async function bookAppointment(input) {
     // time, not just who's generally capable of the service. See
     // resolveEmployeeAssignment below for the decision rule.
     chosenEmployeeId = await resolveEmployeeAssignment(serviceId, start, end, resolvedResources);
+    if (chosenEmployeeId) systemAssigned = true;
   }
 
   let couponResult = null;
@@ -295,6 +303,7 @@ export async function bookAppointment(input) {
         // them free (someone else just took the other), this correctly collapses to
         // an auto-assign instead of silently staying unassigned with a stale reason.
         chosenEmployeeId = await resolveEmployeeAssignment(serviceId, start, end, resolvedResources, { session });
+        if (chosenEmployeeId) systemAssigned = true;
       }
 
       const discountApplied = couponResult?.discountAmount || 0;
@@ -313,9 +322,17 @@ export async function bookAppointment(input) {
           employee: chosenEmployeeId,
           employeeSnapshot: { name: employeeName },
           resources: resolvedResources.map((r) => ({ resource: r.resourceId, name: r.name })),
-          assignedTo: null,
-          assignedBy: null,
-          assignedAt: null,
+          // Written whenever the SYSTEM resolved who gets this appointment (see
+          // resolveEmployeeAssignment/systemAssigned above) - this is what actually
+          // makes an auto-assignment visible/auditable in the admin UI and mapper
+          // (dodeljenTerapeut/dodelio/dodeljenU), mirroring exactly what
+          // reassignAppointment already writes for an admin-driven assignment.
+          // Left null for both an explicit customer choice (nothing was "decided",
+          // they just picked) and a genuinely-unassigned appointment (2+ employees
+          // were free - an admin still needs to pick, same as before).
+          assignedTo: systemAssigned ? chosenEmployeeId : null,
+          assignedBy: systemAssigned ? "system" : null,
+          assignedAt: systemAssigned ? new Date() : null,
           startTime: start,
           endTime: end,
           status: "pending",
