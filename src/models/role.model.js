@@ -10,6 +10,7 @@ export const PERMISSIONS = [
   "manage_services",
   "manage_packages",
   "manage_taxonomy",
+  "manage_resources",
   "manage_blog",
   "manage_appointments_all",
   "manage_appointments_assigned",

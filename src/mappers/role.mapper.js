@@ -12,6 +12,7 @@ export function translatePermission(permission) {
     manage_services: "Upravljanje uslugama",
     manage_packages: "Upravljanje paketima",
     manage_taxonomy: "Upravljanje kategorijama i tagovima",
+    manage_resources: "Upravljanje resursima (stolovi, aparati, prostorije)",
     manage_blog: "Upravljanje blogom",
 
     manage_appointments_all: "Upravljanje svim terminima",
