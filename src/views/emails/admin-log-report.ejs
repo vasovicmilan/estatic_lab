@@ -21,6 +21,23 @@
   function statBlock(label, value) {
     return `<td style="padding:16px 20px; font-size:14px; color:#2d2a26; width:50%;"><span style="display:block; font-size:12px; color:#9b9490; margin-bottom:2px;">${label}</span><strong style="font-size:16px;">${value}</strong></td>`;
   }
+
+  // daysFound/startDate/endDate come from aggregateRange (log-report.service.js) - only
+  // present for weekly/monthly/yearly reports, not the daily one (which is a single
+  // LogSummary doc, not a range rollup) - hence the typeof guards, same pattern as
+  // csrfToken elsewhere in this codebase: referencing a genuinely absent EJS local
+  // throws, it doesn't just evaluate to undefined.
+  //
+  // If the daily-summary cron hasn't been running for the full period (a new
+  // deployment, or a gap from downtime), daysFound will be less than the calendar
+  // span, and every number in this report is a real, correctly-computed total for
+  // however many days WERE tracked, not a bug. This note is what makes that visible
+  // instead of a period with mostly/entirely zero data silently looking broken.
+  const hasRangeInfo = typeof daysFound !== "undefined" && typeof startDate !== "undefined" && typeof endDate !== "undefined";
+  const expectedDays = hasRangeInfo ? Math.round((new Date(endDate) - new Date(startDate)) / 86400000) + 1 : null;
+  const incompleteDataNote = hasRangeInfo && daysFound < expectedDays
+    ? `<p style="font-size:12px; color:#b3621a; background-color:#fdf3e7; border-radius:6px; padding:8px 12px; margin:0 0 20px;">Napomena: podaci dostupni za ${daysFound} od ${expectedDays} dana u ovom periodu (praćenje logova nije pokrivalo ceo period).</p>`
+    : "";
 %>
 <%- include("_layout", {
   title: `${periodLabel} - izveštaj sa sajta`,
@@ -29,6 +46,7 @@
   preheader: `${periodLabel} za period ${dateRangeLabel}`,
   body: `
     <p style="font-size:13px; color:#9b9490; margin:0 0 20px;">Period: ${dateRangeLabel}</p>
+    ${incompleteDataNote}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf8f6; border-radius:8px; margin:0 0 24px;">
       <tr>
         ${statBlock("Ukupno zahteva", requests.total)}
