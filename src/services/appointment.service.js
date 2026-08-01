@@ -12,6 +12,7 @@ import { mapAppointment, mapAppointmentsForAdminList } from "../mappers/appointm
 import { getAllowedStatuses } from "../models/appointment-status-transitions.js";
 import { canUserCancelAppointment } from "../utils/appointment-cancellation.util.js";
 import { buildPhoneRecord } from "../utils/phone.util.js";
+import { isEmployeeWorkingAt } from "../utils/working-hours.util.js";
 import { USER_CANCELLATION_CUTOFF_HOURS } from "../config/booking.config.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
@@ -241,6 +242,12 @@ export async function bookAppointment(input) {
   let systemAssigned = false;
 
   if (employeeId) {
+    const employeeDoc = await employeeService.getEmployeeByIdRaw(employeeId);
+    if (!employeeDoc) notFound("Zaposleni");
+    if (!isEmployeeWorkingAt(employeeDoc, start, end)) {
+      badRequest("Izabrani terapeut ne radi u ovom terminu, izaberite drugi termin ili terapeuta");
+    }
+
     const overlapping = await appointmentRepo.findOverlappingAppointments(employeeId, start, end);
     if (overlapping.length > 0) badRequest("Izabrani termin više nije dostupan, izaberite drugi");
 
@@ -487,6 +494,12 @@ export async function reassignAppointment(appointmentId, newEmployeeId, actorId)
 
   const appointment = await appointmentRepo.findAppointmentById(appointmentId);
   if (!appointment) notFound("Termin");
+
+  const newEmployeeDoc = await employeeService.getEmployeeByIdRaw(newEmployeeId);
+  if (!newEmployeeDoc) notFound("Zaposleni");
+  if (!isEmployeeWorkingAt(newEmployeeDoc, appointment.startTime, appointment.endTime)) {
+    badRequest("Izabrani zaposleni ne radi u terminu ovog zakazivanja");
+  }
 
   const overlapping = await appointmentRepo.findOverlappingAppointments(newEmployeeId, appointment.startTime, appointment.endTime, appointmentId);
   if (overlapping.length > 0) badRequest("Izabrani terapeut nije dostupan u ovom terminu");

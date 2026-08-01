@@ -4,22 +4,10 @@ import serviceService from "./service.service.js";
 import resourceService from "./resource.service.js";
 import { validationError, badRequest } from "../utils/error.util.js";
 import { BOOKING_BUFFER_MINUTES, SLOT_GRID_MINUTES } from "../config/booking.config.js";
+import { timeStringToDate, isEmployeeWorkingAt, dayOfWeek } from "../utils/working-hours.util.js";
 
 const BUFFER_MS = BOOKING_BUFFER_MINUTES * 60000;
 const GRID_MS = SLOT_GRID_MINUTES * 60000;
-
-const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-
-function dayOfWeek(date) {
-  return DAY_NAMES[date.getDay()];
-}
-
-function timeStringToDate(baseDate, hhmm) {
-  const [hours, minutes] = hhmm.split(":").map(Number);
-  const d = new Date(baseDate);
-  d.setHours(hours, minutes, 0, 0);
-  return d;
-}
 
 function dayBounds(date) {
   const start = new Date(date);
@@ -267,6 +255,13 @@ export async function getAvailableSlots({ serviceId, servicePackageId, employeeI
  * check and, with `session`, as the final source of truth inside the booking
  * transaction, since the slot list the visitor saw may be a few seconds stale.
  *
+ * "Free" requires BOTH: scheduled to work this exact window (isEmployeeWorkingAt) AND
+ * no conflicting appointment. Checking only the second one used to be the bug: an
+ * employee with a 10-6 shift has, by definition, no appointments booked at 8am, which
+ * made an 8am slot look "free" for them by conflict-checking alone even though they
+ * aren't clocked in yet. getEmployeeFreeSlotsForDay (the read path a visitor actually
+ * sees slots from) already got this right by construction; this now matches it.
+ *
  * When `resources` (an array of {resourceId, capacity} pairs) is given, EVERY one of
  * them is checked FIRST: if any is already at capacity, no employee can help (the
  * bottleneck isn't a person), so this returns [] without even looking at candidates.
@@ -278,8 +273,10 @@ export async function findAvailableEmployees(serviceId, startTime, endTime, { se
   }
 
   const candidates = await employeeService.findEmployeesByServiceRaw(serviceId, { session });
+  const onShift = candidates.filter((employee) => isEmployeeWorkingAt(employee, startTime, endTime));
+
   const checks = await Promise.all(
-    candidates.map(async (employee) => ({
+    onShift.map(async (employee) => ({
       employee,
       isFree: !(await appointmentService.hasOverlappingAppointment(employee._id, startTime, endTime, { session })),
     }))
