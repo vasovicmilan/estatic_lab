@@ -41,22 +41,29 @@ export async function appointmentDetails(req, res, next) {
 
     let employeeOptions = [];
     if (appointment.usluga.id) {
-      const allOptionsForService = await employeeService.getEmployeeOptionsForService(appointment.usluga.id);
-      // Was previously every employee capable of the service, full stop - letting an
-      // admin "successfully" pick someone from the dropdown only to have
-      // reassignAppointment reject it (not on shift, or double-booked). This narrows
-      // the list to the same set that would actually pass that validation, using the
-      // exact same working-hours + conflict check reassignAppointment itself uses (see
-      // working-hours.util.js's isEmployeeWorkingAt) - excludeAppointmentId is this
-      // appointment itself, so the employee currently assigned to it still appears as
-      // a valid choice rather than "conflicting" with their own appointment.
-      const eligibleIds = await availabilityService.getEligibleEmployeeIdsForAppointment(
-        appointment.usluga.id,
-        appointment.termin.pocetakRaw,
-        appointment.termin.krajRaw,
-        appointmentId
-      );
-      employeeOptions = allOptionsForService.filter((option) => eligibleIds.includes(option.id));
+      employeeOptions = await employeeService.getEmployeeOptionsForService(appointment.usluga.id);
+
+      // Narrows the list to employees who'd actually pass reassignAppointment's own
+      // validation (on shift + not double-booked), instead of every employee capable
+      // of the service - see availability.service.js's getEligibleEmployeeIdsForAppointment.
+      // Wrapped separately from the fetch above: if THIS specific computation fails for
+      // any reason, the page still renders with the old (unfiltered) behavior instead of
+      // taking down appointment details entirely - a worse dropdown is a much smaller
+      // problem than an unusable detail page.
+      try {
+        const eligibleIds = await availabilityService.getEligibleEmployeeIdsForAppointment(
+          appointment.usluga.id,
+          appointment.termin.pocetakRaw,
+          appointment.termin.krajRaw,
+          appointmentId
+        );
+        employeeOptions = employeeOptions.filter((option) => eligibleIds.includes(option.id));
+      } catch (eligibilityError) {
+        logError("[appointmentDetails] Greška pri filtriranju dostupnih terapeuta - prikazuje se nefiltrirana lista", eligibilityError, {
+          appointmentId,
+          serviceId: appointment.usluga.id,
+        });
+      }
     }
 
     const viewData = prepareAppointmentDetailsData(appointment, { employeeOptions });
