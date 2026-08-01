@@ -13,6 +13,14 @@ async function seedUserRole() {
   await Role.create({ name: "user", isDefault: true, priority: 0 });
 }
 
+// Covers every day of the week, all day - futureStartTime() below is relative to
+// "today", so the actual weekday varies with whenever the suite runs; a fixed single
+// day would make isEmployeeWorkingAt reject the employee intermittently.
+const ALL_WEEK_WORKING_HOURS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => ({
+  day,
+  slots: [{ from: "00:00", to: "23:59" }],
+}));
+
 async function createBookableService() {
   const service = await serviceRepo.createService({
     name: "Sportska Masaza",
@@ -32,7 +40,12 @@ async function createBookableService() {
     lastName: "Anic",
     role: role._id,
   });
-  await employeeRepo.createEmployee({ userId: employeeUser._id, services: [service._id], isActive: true });
+  await employeeRepo.createEmployee({
+    userId: employeeUser._id,
+    services: [service._id],
+    isActive: true,
+    workingHours: ALL_WEEK_WORKING_HOURS,
+  });
 
   return service;
 }
@@ -90,7 +103,7 @@ describe("public booking flow (HTTP)", () => {
   });
 
   describe("POST /zakazivanje/potvrda", () => {
-    it("books an appointment as a guest, leaving it unassigned even though an employee is available", async () => {
+    it("books an appointment as a guest, auto-assigning the sole available employee", async () => {
       const service = await createBookableService();
       const variantId = service.packages[0]._id.toString();
       const startTime = futureStartTime().toISOString();
@@ -119,10 +132,12 @@ describe("public booking flow (HTTP)", () => {
       const appointments = await appointmentRepo.findAppointments({});
       assert.equal(appointments.data.length, 1);
       assert.equal(appointments.data[0].contactSnapshot.email, "gost@example.com");
-      // assignment is admin-driven now, not automatic - the booking only checks that
-      // SOMEONE is free before accepting it, but doesn't commit to whoever that is
-      assert.equal(appointments.data[0].employee, null, "no employee should be auto-assigned at booking time");
-      assert.equal(appointments.data[0].assignedTo, null, "the appointment should stay unassigned until an admin assigns it");
+      // exactly one employee can perform this service - there's no real choice being
+      // deferred to an admin, so the system resolves it immediately (see
+      // appointment.service.js's resolveEmployeeAssignment)
+      assert.ok(appointments.data[0].employee, "the sole available employee should be auto-assigned at booking time");
+      assert.equal(appointments.data[0].assignedBy, "system");
+      assert.ok(appointments.data[0].assignedAt, "assignedAt should be recorded for a system assignment");
 
       const guest = await userRepo.findUserByEmail("gost@example.com");
       assert.ok(guest, "a guest account should have been created for a first-time booker");

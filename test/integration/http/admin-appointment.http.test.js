@@ -10,6 +10,15 @@ import employeeRepo from "../../../src/repositories/employee.repository.js";
 import userRepo from "../../../src/repositories/user.repository.js";
 import appointmentRepo from "../../../src/repositories/appointment.repository.js";
 
+// Covers every day of the week, all day - these tests book relative to Date.now(),
+// so the actual weekday varies with whenever the suite runs; a single fixed day
+// (e.g. "monday" only) would make isEmployeeWorkingAt reject the employee on any
+// other day and fail intermittently depending on the calendar.
+const ALL_WEEK_WORKING_HOURS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => ({
+  day,
+  slots: [{ from: "00:00", to: "23:59" }],
+}));
+
 async function createServiceAndEmployee() {
   const service = await serviceRepo.createService({
     name: "Sportska Masaza",
@@ -26,13 +35,19 @@ async function createServiceAndEmployee() {
     lastName: "Anic",
     role: employeeRole._id,
   });
-  const employee = await employeeRepo.createEmployee({ userId: employeeUser._id, services: [service._id], isActive: true });
+  const employee = await employeeRepo.createEmployee({
+    userId: employeeUser._id,
+    services: [service._id],
+    isActive: true,
+    workingHours: ALL_WEEK_WORKING_HOURS,
+  });
 
   return { service, employee };
 }
 
 function validAppointmentData(overrides = {}) {
   const start = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  start.setHours(10, 0, 0, 0); // pinned away from midnight - see appointment.service.test.js's tomorrowAt10() for why
   return {
     user: new mongoose.Types.ObjectId(),
     service: new mongoose.Types.ObjectId(),
@@ -40,7 +55,13 @@ function validAppointmentData(overrides = {}) {
     startTime: start,
     endTime: new Date(start.getTime() + 60 * 60000),
     status: "pending",
-    contactSnapshot: { firstName: "Marko", lastName: "Markovic", email: "marko@example.com", phone: "0601234567" },
+    // {hash, encrypted} - PhoneSchema shape (see phone.schema.js), not a raw string
+    contactSnapshot: {
+      firstName: "Marko",
+      lastName: "Markovic",
+      email: "marko@example.com",
+      phone: { hash: "test-phone-hash", encrypted: "test-encrypted-phone" },
+    },
     ...overrides,
   };
 }
@@ -148,6 +169,7 @@ describe("admin appointment actions (HTTP)", () => {
     const { employee } = await createServiceAndEmployee();
 
     const start = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  start.setHours(10, 0, 0, 0); // pinned away from midnight - see appointment.service.test.js's tomorrowAt10() for why
     const sharedTiming = { startTime: start, endTime: new Date(start.getTime() + 60 * 60000) };
 
     // the target employee is already booked at this exact time
@@ -156,7 +178,12 @@ describe("admin appointment actions (HTTP)", () => {
         ...sharedTiming,
         employee: employee._id,
         status: "confirmed",
-        contactSnapshot: { firstName: "Petar", lastName: "Petrovic", email: "petar@example.com", phone: "0601234567" },
+        contactSnapshot: {
+          firstName: "Petar",
+          lastName: "Petrovic",
+          email: "petar@example.com",
+          phone: { hash: "test-phone-hash-2", encrypted: "test-encrypted-phone-2" },
+        },
       })
     );
 

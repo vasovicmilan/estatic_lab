@@ -162,27 +162,59 @@ describe("availability.service", () => {
     });
   });
 
-  describe("findFirstAvailableEmployee", () => {
-    it("skips busy employees and returns the first free one", async (t) => {
-      const busyEmployee = buildEmployee();
-      const freeEmployee = buildEmployee();
+  describe("findAvailableEmployees", () => {
+    it("returns every free employee who's actually on shift, skipping busy ones", async (t) => {
+      const { date, dayName } = futureDateOnDay();
+      const start = new Date(date);
+      start.setHours(10, 0, 0, 0);
+      const end = new Date(start.getTime() + 60 * 60000);
+
+      const workingHours = [{ day: dayName, slots: [{ from: "09:00", to: "17:00" }] }];
+      const busyEmployee = buildEmployee({ workingHours });
+      const freeEmployee = buildEmployee({ workingHours });
       t.mock.method(employeeRepo, "findEmployeesByService", async () => [busyEmployee, freeEmployee]);
       t.mock.method(appointmentRepo, "findOverlappingAppointments", async (employeeId) =>
         String(employeeId) === String(busyEmployee._id) ? [{ _id: id() }] : []
       );
 
-      const result = await availabilityService.findFirstAvailableEmployee(id().toString(), new Date(), new Date());
+      const result = await availabilityService.findAvailableEmployees(id().toString(), start, end);
 
-      assert.equal(String(result._id), String(freeEmployee._id));
+      assert.equal(result.length, 1);
+      assert.equal(String(result[0]._id), String(freeEmployee._id));
     });
 
-    it("returns null when every candidate is busy", async (t) => {
-      t.mock.method(employeeRepo, "findEmployeesByService", async () => [buildEmployee()]);
+    it("excludes an employee who isn't scheduled to work this window, even with zero conflicting appointments", async (t) => {
+      const { date, dayName } = futureDateOnDay();
+      const start = new Date(date);
+      start.setHours(10, 0, 0, 0);
+      const end = new Date(start.getTime() + 60 * 60000);
+
+      // works a DIFFERENT day than the requested slot - has no appointments at all,
+      // which would make them look "free" by conflict-checking alone
+      const otherDay = dayName === "monday" ? "tuesday" : "monday";
+      const offShiftEmployee = buildEmployee({ workingHours: [{ day: otherDay, slots: [{ from: "09:00", to: "17:00" }] }] });
+      t.mock.method(employeeRepo, "findEmployeesByService", async () => [offShiftEmployee]);
+      t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+
+      const result = await availabilityService.findAvailableEmployees(id().toString(), start, end);
+
+      assert.deepEqual(result, []);
+    });
+
+    it("returns an empty array when every on-shift candidate is busy", async (t) => {
+      const { date, dayName } = futureDateOnDay();
+      const start = new Date(date);
+      start.setHours(10, 0, 0, 0);
+      const end = new Date(start.getTime() + 60 * 60000);
+
+      t.mock.method(employeeRepo, "findEmployeesByService", async () => [
+        buildEmployee({ workingHours: [{ day: dayName, slots: [{ from: "09:00", to: "17:00" }] }] }),
+      ]);
       t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => [{ _id: id() }]);
 
-      const result = await availabilityService.findFirstAvailableEmployee(id().toString(), new Date(), new Date());
+      const result = await availabilityService.findAvailableEmployees(id().toString(), start, end);
 
-      assert.equal(result, null);
+      assert.deepEqual(result, []);
     });
   });
 });

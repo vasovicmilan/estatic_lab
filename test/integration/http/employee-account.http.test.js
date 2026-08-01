@@ -40,7 +40,12 @@ async function createAppointmentForEmployee(employeeId) {
     startTime: start,
     endTime: new Date(start.getTime() + 60 * 60000),
     status: "pending",
-    contactSnapshot: { firstName: "Marko", lastName: "Markovic", email: "marko@example.com", phone: "0601234567" },
+    contactSnapshot: {
+      firstName: "Marko",
+      lastName: "Markovic",
+      email: "marko@example.com",
+      phone: { hash: "test-phone-hash", encrypted: "test-encrypted-phone" },
+    },
   });
 
   return { service, appointment };

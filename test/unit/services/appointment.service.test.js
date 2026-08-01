@@ -18,6 +18,20 @@ import {
   id,
 } from "../../helpers/factories.js";
 
+// Pinned to a safe mid-day hour, not just "now + 24h" - a raw offset preserves
+// whatever time-of-day the suite happens to run at, and if that's late evening,
+// start + a service's duration can spill past midnight into the next calendar
+// day. Working hours are checked per calendar day (see working-hours.util.js's
+// isEmployeeWorkingAt), so a booking that straddles two days can never be fully
+// covered by a single day's slot even with an "all day" 00:00-23:59 window -
+// this avoids that entirely, the same way booking.http.test.js's futureStartTime()
+// already does.
+function tomorrowAt10() {
+  const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  d.setHours(10, 0, 0, 0);
+  return d;
+}
+
 describe("appointment.service", () => {
   describe("getAppointmentById - access control", () => {
     it("throws 404 when the appointment doesn't exist", async (t) => {
@@ -156,9 +170,17 @@ describe("appointment.service", () => {
   });
 
   describe("reassignAppointment", () => {
+    // covers every day, all day - buildAppointment()'s default startTime is a fixed
+    // date, but using a full week here keeps this robust if that default ever changes
+    const alwaysWorking = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => ({
+      day,
+      slots: [{ from: "00:00", to: "23:59" }],
+    }));
+
     it("refuses to reassign to an employee who's busy at that time", async (t) => {
       const appointment = buildAppointment();
       t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      t.mock.method(employeeService, "getEmployeeByIdRaw", async () => buildEmployee({ workingHours: alwaysWorking }));
       t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => [buildAppointment()]);
 
       await assert.rejects(
@@ -167,9 +189,22 @@ describe("appointment.service", () => {
       );
     });
 
-    it("reassigns successfully when the new employee is free", async (t) => {
+    it("refuses to reassign to an employee who isn't scheduled to work at that time", async (t) => {
       const appointment = buildAppointment();
       t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      t.mock.method(employeeService, "getEmployeeByIdRaw", async () => buildEmployee({ workingHours: [] }));
+
+      await assert.rejects(
+        () => appointmentService.reassignAppointment(appointment._id.toString(), id().toString(), id().toString()),
+        (err) => err.statusCode === 400
+      );
+    });
+
+    it("reassigns successfully when the new employee is free and on shift", async (t) => {
+      const appointment = buildAppointment();
+      const newEmployeeId = id();
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      t.mock.method(employeeService, "getEmployeeByIdRaw", async () => buildEmployee({ _id: newEmployeeId, workingHours: alwaysWorking }));
       t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
       t.mock.method(employeeService, "getEmployeeNameById", async () => "Nova Terapeutkinja");
       let updatePayload;
@@ -178,10 +213,14 @@ describe("appointment.service", () => {
         return { ...appointment, ...patch };
       });
 
-      await appointmentService.reassignAppointment(appointment._id.toString(), id().toString(), id().toString());
+      await appointmentService.reassignAppointment(appointment._id.toString(), newEmployeeId.toString(), id().toString());
 
       assert.equal(updatePayload.assignedBy, "admin");
-      assert.equal(updatePayload.assignedTo, null);
+      // was previously asserting `null` here, matching a bug where reassignAppointment
+      // always wrote assignedTo: null regardless of who was actually assigned - it must
+      // now match the employee being assigned, or the admin detail page's "assigned
+      // therapist" display and the /admin/termini unassigned-queue filter break silently
+      assert.equal(String(updatePayload.assignedTo), String(newEmployeeId));
       assert.equal(updatePayload.employeeSnapshot.name, "Nova Terapeutkinja");
     });
   });
@@ -198,15 +237,18 @@ function fakeSession() {
 }
 
 describe("bookAppointment - employee assignment", () => {
-  it("leaves the appointment unassigned when the customer doesn't choose a specific employee, even though someone is free", async (t) => {
+  it("auto-assigns when exactly one employee is free - no real choice is being deferred", async (t) => {
+    const soleFreeEmployee = buildEmployee();
+
     t.mock.method(mongoose, "startSession", async () => fakeSession());
     t.mock.method(userService, "findUserByEmail", async () => null);
     t.mock.method(userService, "createGuestUser", async () => buildUser());
     t.mock.method(userService, "findUserById", async () => buildUser());
     t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
-    // someone IS free (a valid slot to book) - but nothing should ever write that
-    // employee onto the appointment; assignment is admin-driven now, not automatic
-    t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => buildEmployee());
+    // called twice in the happy path: once before the transaction, once as the
+    // in-transaction re-check - both need to agree "exactly one, and it's this one"
+    t.mock.method(availabilityService, "findAvailableEmployees", async () => [soleFreeEmployee]);
+    t.mock.method(employeeService, "getEmployeeNameById", async () => soleFreeEmployee.userId?.firstName || "Terapeutkinja");
     t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
     t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
 
@@ -219,7 +261,38 @@ describe("bookAppointment - employee assignment", () => {
     await appointmentService.bookAppointment({
       serviceId: id().toString(),
       servicePackageId: id().toString(),
-      startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      startTime: tomorrowAt10(),
+      contact: { firstName: "Ana", email: "ana@example.com" },
+    });
+
+    assert.equal(String(createdPayload.employee), String(soleFreeEmployee._id));
+    assert.equal(String(createdPayload.assignedTo), String(soleFreeEmployee._id));
+    assert.equal(createdPayload.assignedBy, "system");
+    assert.ok(createdPayload.assignedAt);
+  });
+
+  it("leaves the appointment unassigned when 2+ employees are genuinely free - a real choice for an admin", async (t) => {
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(userService, "findUserByEmail", async () => null);
+    t.mock.method(userService, "createGuestUser", async () => buildUser());
+    t.mock.method(userService, "findUserById", async () => buildUser());
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
+    // two DIFFERENT employees are free - genuine ambiguity, nothing should be
+    // auto-decided; assignment is left for an admin to pick (see reassignAppointment)
+    t.mock.method(availabilityService, "findAvailableEmployees", async () => [buildEmployee(), buildEmployee()]);
+    t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+
+    let createdPayload;
+    t.mock.method(appointmentRepo, "createAppointment", async (data) => {
+      createdPayload = data;
+      return { ...data, _id: id() };
+    });
+
+    await appointmentService.bookAppointment({
+      serviceId: id().toString(),
+      servicePackageId: id().toString(),
+      startTime: tomorrowAt10(),
       contact: { firstName: "Ana", email: "ana@example.com" },
     });
 
@@ -233,14 +306,14 @@ describe("bookAppointment - employee assignment", () => {
     t.mock.method(mongoose, "startSession", async () => fakeSession());
     t.mock.method(userService, "findUserByEmail", async () => null);
     t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
-    t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => null);
+    t.mock.method(availabilityService, "findAvailableEmployees", async () => []);
 
     await assert.rejects(
       () =>
         appointmentService.bookAppointment({
           serviceId: id().toString(),
           servicePackageId: id().toString(),
-          startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          startTime: tomorrowAt10(),
           contact: { firstName: "Ana", email: "ana@example.com" },
         }),
       (err) => err.statusCode === 400
@@ -249,12 +322,19 @@ describe("bookAppointment - employee assignment", () => {
 
   it("honors an explicitly chosen employee - that's a real customer choice, not automatic assignment", async (t) => {
     const chosen = buildEmployee();
+    // covers every day/time - this test's startTime is Date.now()+24h (dynamic), and
+    // the explicit-employeeId path now also verifies working hours (defense in depth)
+    const alwaysWorking = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => ({
+      day,
+      slots: [{ from: "00:00", to: "23:59" }],
+    }));
 
     t.mock.method(mongoose, "startSession", async () => fakeSession());
     t.mock.method(userService, "findUserByEmail", async () => null);
     t.mock.method(userService, "createGuestUser", async () => buildUser());
     t.mock.method(userService, "findUserById", async () => buildUser());
     t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
+    t.mock.method(employeeService, "getEmployeeByIdRaw", async () => ({ ...chosen, workingHours: alwaysWorking }));
     t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
     t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
     t.mock.method(employeeService, "getEmployeeNameById", async () => "Izabrana Terapeutkinja");
@@ -269,12 +349,13 @@ describe("bookAppointment - employee assignment", () => {
       serviceId: id().toString(),
       servicePackageId: id().toString(),
       employeeId: chosen._id.toString(),
-      startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      startTime: tomorrowAt10(),
       contact: { firstName: "Ana", email: "ana@example.com" },
     });
 
     assert.equal(String(createdPayload.employee), String(chosen._id));
     assert.equal(createdPayload.assignedTo, null);
+    assert.equal(createdPayload.assignedBy, null);
     assert.equal(createdPayload.employeeSnapshot.name, "Izabrana Terapeutkinja");
   });
 });
@@ -286,7 +367,7 @@ describe("bookAppointment - package purchase payment", () => {
         appointmentService.bookAppointment({
           serviceId: id().toString(),
           servicePackageId: id().toString(),
-          startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          startTime: tomorrowAt10(),
           isLoggedIn: false,
           contact: { firstName: "Gost", email: "gost@example.com" },
           packagePurchaseId: id().toString(),
@@ -302,7 +383,8 @@ describe("bookAppointment - package purchase payment", () => {
     t.mock.method(mongoose, "startSession", async () => fakeSession());
     t.mock.method(userService, "findUserById", async () => loggedInUser);
     t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 3000, duration: 60 }) }));
-    t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => buildEmployee());
+    t.mock.method(availabilityService, "findAvailableEmployees", async () => [buildEmployee()]);
+    t.mock.method(employeeService, "getEmployeeNameById", async () => "Terapeutkinja");
     t.mock.method(packagePurchaseService, "assertUsablePurchase", async () => purchase);
     t.mock.method(packagePurchaseService, "reserveSession", async () => {});
 
@@ -317,7 +399,7 @@ describe("bookAppointment - package purchase payment", () => {
     await appointmentService.bookAppointment({
       serviceId: purchase.items[0].service.toString(),
       servicePackageId: purchase.items[0].servicePackageId.toString(),
-      startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      startTime: tomorrowAt10(),
       isLoggedIn: true,
       userId: purchase.user.toString(),
       contact: { firstName: "Ana", email: "ana@example.com" },
@@ -336,7 +418,8 @@ describe("bookAppointment - package purchase payment", () => {
     t.mock.method(mongoose, "startSession", async () => fakeSession());
     t.mock.method(userService, "findUserById", async () => loggedInUser);
     t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 3000, duration: 60 }) }));
-    t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => buildEmployee());
+    t.mock.method(availabilityService, "findAvailableEmployees", async () => [buildEmployee()]);
+    t.mock.method(employeeService, "getEmployeeNameById", async () => "Terapeutkinja");
     t.mock.method(packagePurchaseService, "assertUsablePurchase", async () => purchase);
     t.mock.method(packagePurchaseService, "reserveSession", async () => {});
     const couponMock = t.mock.method(couponService, "validateCouponForBooking", async () => {
@@ -349,7 +432,7 @@ describe("bookAppointment - package purchase payment", () => {
     await appointmentService.bookAppointment({
       serviceId: purchase.items[0].service.toString(),
       servicePackageId: purchase.items[0].servicePackageId.toString(),
-      startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      startTime: tomorrowAt10(),
       isLoggedIn: true,
       userId: purchase.user.toString(),
       contact: { firstName: "Ana", email: "ana@example.com" },
@@ -367,7 +450,8 @@ describe("bookAppointment - package purchase payment", () => {
     t.mock.method(mongoose, "startSession", async () => fakeSession());
     t.mock.method(userService, "findUserById", async () => loggedInUser);
     t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 3000, duration: 60 }) }));
-    t.mock.method(availabilityService, "findFirstAvailableEmployee", async () => buildEmployee());
+    t.mock.method(availabilityService, "findAvailableEmployees", async () => [buildEmployee()]);
+    t.mock.method(employeeService, "getEmployeeNameById", async () => "Terapeutkinja");
     t.mock.method(packagePurchaseService, "assertUsablePurchase", async () => purchase);
     const reserveMock = t.mock.method(packagePurchaseService, "reserveSession", async () => {});
     const commitMock = t.mock.method(packagePurchaseService, "commitSession", async () => {});
@@ -378,7 +462,7 @@ describe("bookAppointment - package purchase payment", () => {
     await appointmentService.bookAppointment({
       serviceId: purchase.items[0].service.toString(),
       servicePackageId: purchase.items[0].servicePackageId.toString(),
-      startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      startTime: tomorrowAt10(),
       isLoggedIn: true,
       userId: purchase.user.toString(),
       contact: { firstName: "Ana", email: "ana@example.com" },

@@ -197,6 +197,8 @@ export function buildAppointment(overrides = {}) {
     service: buildService(),
     variant: { servicePackageId: id(), name: "60 minuta", duration: 60, price: 3000 },
     employee: null,
+    employeeSnapshot: { name: null },
+    resources: [],
     startTime: start,
     endTime: new Date(start.getTime() + 60 * 60000),
     status: "pending",
@@ -216,7 +218,16 @@ export function buildAppointment(overrides = {}) {
     discountApplied: 0,
     finalPrice: 3000,
     note: "",
-    contactSnapshot: { firstName: "Marko", lastName: "Markovic", email: "korisnik@example.com", phone: "0601234567" },
+    // {hash, encrypted} - PhoneSchema shape, not a raw string (see phone.schema.js/
+    // phone.util.js's buildPhoneRecord). Not real ciphertext - fine for fixtures that
+    // don't specifically assert on the decrypted value; anything that does should
+    // override this with buildPhoneRecord("...") from phone.util.js directly.
+    contactSnapshot: {
+      firstName: "Marko",
+      lastName: "Markovic",
+      email: "korisnik@example.com",
+      phone: { hash: "test-phone-hash", encrypted: "test-encrypted-phone" },
+    },
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

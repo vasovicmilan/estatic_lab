@@ -119,18 +119,26 @@ describe("appointment.mapper", () => {
     });
   });
 
-  describe("mapAppointmentForEmployeeDetail - mojaUloga (direct booking vs system-assigned)", () => {
-    it("says 'Direktno zakazan' when employee and assignedTo are the same", () => {
+  describe("mapAppointmentForEmployeeDetail - mojaUloga (direct booking vs system/admin-assigned)", () => {
+    it("says 'Direktno zakazan' when assignedBy is null (customer picked this employee directly)", () => {
       const employeeId = id();
-      const appointment = buildAppointment({ employee: { _id: employeeId }, assignedTo: { _id: employeeId } });
+      const appointment = buildAppointment({ employee: { _id: employeeId }, assignedTo: null, assignedBy: null });
       const mapped = mapAppointmentForEmployeeDetail(appointment);
       assert.equal(mapped.mojaUloga, "Direktno zakazan");
     });
 
-    it("says 'Dodeljen od strane sistema' when they differ", () => {
-      const appointment = buildAppointment({ employee: { _id: id() }, assignedTo: { _id: id() } });
+    it("says 'Dodeljen (Sistem)' when the system auto-resolved the assignment", () => {
+      const employeeId = id();
+      const appointment = buildAppointment({ employee: { _id: employeeId }, assignedTo: { _id: employeeId }, assignedBy: "system" });
       const mapped = mapAppointmentForEmployeeDetail(appointment);
-      assert.equal(mapped.mojaUloga, "Dodeljen od strane sistema");
+      assert.equal(mapped.mojaUloga, "Dodeljen (Sistem)");
+    });
+
+    it("says 'Dodeljen (Administrator)' when an admin manually reassigned it", () => {
+      const employeeId = id();
+      const appointment = buildAppointment({ employee: { _id: employeeId }, assignedTo: { _id: employeeId }, assignedBy: "admin" });
+      const mapped = mapAppointmentForEmployeeDetail(appointment);
+      assert.equal(mapped.mojaUloga, "Dodeljen (Administrator)");
     });
   });
 

@@ -15,6 +15,14 @@ async function seedUserRole() {
   await Role.create({ name: "user", isDefault: true, priority: 0 });
 }
 
+// Covers every day of the week, all day - futureStartTime() below is relative to
+// "today", so the actual weekday varies with whenever the suite runs; a fixed single
+// day would make isEmployeeWorkingAt reject the employee intermittently.
+const ALL_WEEK_WORKING_HOURS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => ({
+  day,
+  slots: [{ from: "00:00", to: "23:59" }],
+}));
+
 async function createBookableServiceWithEmployee() {
   const service = await serviceRepo.createService({
     name: "Sportska Masaza",
@@ -34,7 +42,12 @@ async function createBookableServiceWithEmployee() {
     lastName: "Anic",
     role: employeeRole._id,
   });
-  const employee = await employeeRepo.createEmployee({ userId: employeeUser._id, services: [service._id], isActive: true });
+  const employee = await employeeRepo.createEmployee({
+    userId: employeeUser._id,
+    services: [service._id],
+    isActive: true,
+    workingHours: ALL_WEEK_WORKING_HOURS,
+  });
 
   return { service, employeeId: employee._id.toString() };
 }
@@ -132,6 +145,7 @@ describe("booking concurrency (HTTP)", () => {
       userId: secondEmployeeUser._id,
       services: [service._id],
       isActive: true,
+      workingHours: ALL_WEEK_WORKING_HOURS,
     });
 
     const firstEmployee = await employeeRepo.findEmployeesByService(service._id);

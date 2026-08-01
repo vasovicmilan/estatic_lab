@@ -16,7 +16,13 @@ function validAppointment(overrides = {}) {
     startTime: start,
     endTime: new Date(start.getTime() + 60 * 60000),
     status: "pending",
-    contactSnapshot: { firstName: "Marko", lastName: "Markovic", email: "marko@example.com", phone: "0601234567" },
+    // {hash, encrypted} - PhoneSchema shape (see phone.schema.js), not a raw string
+    contactSnapshot: {
+      firstName: "Marko",
+      lastName: "Markovic",
+      email: "marko@example.com",
+      phone: { hash: "test-phone-hash", encrypted: "test-encrypted-phone" },
+    },
     ...overrides,
   };
 }
@@ -137,10 +143,10 @@ describe("appointment.repository", () => {
 
     it("searches by contact snapshot fields", async () => {
       await appointmentRepo.createAppointment(
-        validAppointment({ contactSnapshot: { firstName: "Jovana", lastName: "Jovanovic", email: "jovana@example.com", phone: "" } })
+        validAppointment({ contactSnapshot: { firstName: "Jovana", lastName: "Jovanovic", email: "jovana@example.com" } })
       );
       await appointmentRepo.createAppointment(
-        validAppointment({ contactSnapshot: { firstName: "Petar", lastName: "Petrovic", email: "petar@example.com", phone: "" } })
+        validAppointment({ contactSnapshot: { firstName: "Petar", lastName: "Petrovic", email: "petar@example.com" } })
       );
 
       const result = await appointmentRepo.findAppointments({ search: "Jovana" });
