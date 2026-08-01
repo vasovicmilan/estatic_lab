@@ -219,14 +219,29 @@ export async function bookAppointment(input) {
   } else {
     // no employee explicitly chosen by the customer - verify the slot is actually
     // deliverable by SOMEONE before accepting the booking, but don't silently commit
-    // to whichever employee happens to be free first. The appointment is created
-    // unassigned; an admin picks the therapist from the appointment details page
-    // (see reassignAppointment) - see appointment-status-transitions.js/admin.routes.js
-    // for why this moved from automatic to admin-driven. Resource capacity is checked
-    // first inside findFirstAvailableEmployee - if any required resource is full, no
-    // employee search can fix that.
+    // to whichever employee happens to be free first when there's a REAL choice to
+    // make. The appointment is created unassigned; an admin picks the therapist from
+    // the appointment details page (see reassignAppointment) - see
+    // appointment-status-transitions.js/admin.routes.js for why this moved from
+    // automatic to admin-driven. Resource capacity is checked first inside
+    // findFirstAvailableEmployee - if any required resource is full, no employee
+    // search can fix that.
+    const candidates = await employeeService.findEmployeesByServiceRaw(serviceId);
     const someoneFree = await availabilityService.findFirstAvailableEmployee(serviceId, start, end, { resources: resolvedResources });
     if (!someoneFree) badRequest("Nijedan terapeut nije dostupan za izabrani termin, izaberite drugi");
+
+    // If exactly one employee can perform this service at all, there's no real
+    // decision being deferred to an admin - leaving `employee` null here would just
+    // create a scheduling blind spot: findBusyIntervals/findOverlappingAppointments
+    // only match a non-null `employee` (or `assignedTo`), so an unassigned
+    // appointment doesn't count against ANYONE's calendar until an admin manually
+    // assigns it. That let this same person get double-booked into a different
+    // service in the meantime. With 2+ candidates the ambiguity is real (which of
+    // them should do it is an actual business decision), so it's still left
+    // unassigned for an admin to pick in that case.
+    if (candidates.length === 1) {
+      chosenEmployeeId = someoneFree._id;
+    }
   }
 
   let couponResult = null;
@@ -455,7 +470,12 @@ export async function reassignAppointment(appointmentId, newEmployeeId, actorId)
   const updated = await appointmentRepo.updateAppointmentById(appointmentId, {
     employee: newEmployeeId,
     employeeSnapshot: { name: employeeName },
-    assignedTo: null,
+    // `assignedTo` is what mapAppointment's "dodeljenTerapeut"/"dodelio"/"dodeljenU"
+    // fields and the /admin/termini "unassigned" queue filter actually read - it
+    // must be set to the same employee being assigned here, not left null, or the
+    // admin detail page silently shows an empty "assigned therapist" despite
+    // assignedBy/assignedAt being populated right below it.
+    assignedTo: newEmployeeId,
     assignedBy: "admin",
     assignedAt: new Date(),
   });
