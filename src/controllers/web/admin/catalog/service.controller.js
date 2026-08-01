@@ -2,6 +2,7 @@ import * as serviceService from "../../../../services/service.service.js";
 import * as categoryService from "../../../../services/category.service.js";
 import * as tagService from "../../../../services/tag.service.js";
 import * as employeeService from "../../../../services/employee.service.js";
+import * as resourceService from "../../../../services/resource.service.js";
 import {
   prepareServiceListData,
   prepareServiceDetailsData,
@@ -34,14 +35,16 @@ function parseJsonField(value, fallback = []) {
 // which employees can perform a service now lives only on Employee.services, assigned
 // from the employee's own edit form, not here (see service.model.js)
 async function loadFormOptions() {
-  const [categories, tags] = await Promise.all([
+  const [categories, tags, resources] = await Promise.all([
     categoryService.getCategoriesForSelect("service"),
     tagService.getTagsForSelect("service"),
+    resourceService.getResourcesForSelect(),
   ]);
 
   return {
     categoryOptions: categories,
     tagOptions: tags,
+    resourceOptions: resources,
   };
 }
 
@@ -58,6 +61,7 @@ function buildStep1Payload(req) {
 
   data.categories = Array.isArray(req.body.categories) ? req.body.categories.filter(Boolean) : req.body.categories ? [req.body.categories] : [];
   data.tags = Array.isArray(req.body.tags) ? req.body.tags.filter(Boolean) : req.body.tags ? [req.body.tags] : [];
+  data.resources = Array.isArray(req.body.resources) ? req.body.resources.filter(Boolean) : req.body.resources ? [req.body.resources] : [];
 
   return data;
 }
@@ -91,6 +95,7 @@ function buildServicePayload(req, existing = {}) {
 
   data.categories = Array.isArray(req.body.categories) ? req.body.categories.filter(Boolean) : req.body.categories ? [req.body.categories] : [];
   data.tags = Array.isArray(req.body.tags) ? req.body.tags.filter(Boolean) : req.body.tags ? [req.body.tags] : [];
+  data.resources = Array.isArray(req.body.resources) ? req.body.resources.filter(Boolean) : req.body.resources ? [req.body.resources] : [];
 
   data.features = parseJsonField(req.body.features, existing.features || []);
   data.packages = parseJsonField(req.body.packages, existing.packages || []);

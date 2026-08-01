@@ -6,6 +6,7 @@ import serviceService from "./service.service.js";
 import couponService from "./coupon.service.js";
 import availabilityService from "./availability.service.js";
 import employeeService from "./employee.service.js";
+import resourceService from "./resource.service.js";
 import packagePurchaseService from "./package-purchase.service.js";
 import { mapAppointment, mapAppointmentsForAdminList } from "../mappers/appointment.mapper.js";
 import { getAllowedStatuses } from "../models/appointment-status-transitions.js";
@@ -35,6 +36,16 @@ function canAccessAppointment(appointment, requesterId, requesterRole) {
 
 async function getPopulatedAppointment(id, { session } = {}) {
   return appointmentRepo.findAppointmentById(id, { populateFields: defaultPopulate, session });
+}
+
+// Each entry in service.resources can arrive as a raw ObjectId or a populated
+// doc depending on how the service was queried - see the same normalization in
+// availability.service.js and service.mapper.js. Returns the full list, since
+// a service can require more than one resource pool at once (e.g. an ESMA
+// device AND a table).
+function resolveResourceIds(service) {
+  if (!service?.resources || !Array.isArray(service.resources)) return [];
+  return service.resources.map((r) => (typeof r === "object" ? r._id?.toString() : r?.toString())).filter(Boolean);
 }
 
 export async function findAppointments({ search = "", limit = 20, page = 1, requesterId = null, role = "user", filters = {} } = {}) {
@@ -83,6 +94,16 @@ export async function getBusyIntervals(employeeId, dayStart, dayEnd) {
 }
 
 /**
+ * Raw busy intervals for a shared RESOURCE (table/device/room) on one day,
+ * across every employee - for availability.service.js's internal use only.
+ * Mirrors getBusyIntervals exactly, just keyed by resource instead of employee.
+ * Called once per required resource when a service needs more than one.
+ */
+export async function getResourceBusyIntervals(resourceId, dayStart, dayEnd) {
+  return appointmentRepo.findResourceBusyIntervals(resourceId, dayStart, dayEnd);
+}
+
+/**
  * Whether an employee has any appointment overlapping the given window - for
  * availability.service.js's write-time final-check before actually booking,
  * since the slot list the visitor saw may be a few seconds stale by then.
@@ -90,6 +111,16 @@ export async function getBusyIntervals(employeeId, dayStart, dayEnd) {
 export async function hasOverlappingAppointment(employeeId, startTime, endTime, { session } = {}) {
   const overlapping = await appointmentRepo.findOverlappingAppointments(employeeId, startTime, endTime, null, { session });
   return overlapping.length > 0;
+}
+
+/**
+ * How many active appointments are already occupying a resource in a window
+ * overlapping [startTime, endTime] - for availability.service.js and this
+ * file's own bookAppointment to compare against that resource's capacity.
+ * Called once per required resource when a service needs more than one.
+ */
+export async function countOverlappingResourceAppointments(resourceId, startTime, endTime, { session } = {}) {
+  return appointmentRepo.countOverlappingResourceAppointments(resourceId, startTime, endTime, null, { session });
 }
 
 /**
@@ -105,6 +136,13 @@ export async function hasOverlappingAppointment(employeeId, startTime, endTime, 
  * (not "consumes" - see package-purchase.service.js). The reservation is released if
  * the appointment is later cancelled/rejected, and only actually committed (moved
  * into sessionsUsed) once the appointment is marked completed - see transitionStatus.
+ *
+ * If the service requires shared resources (Service.resources - one or more
+ * tables/devices/rooms multiple employees compete for, see Resource model),
+ * booking also has to clear a resource-capacity check on top of the
+ * employee-availability check for EVERY required resource: an employee being
+ * free is not enough by itself if any one of the things this specific service
+ * needs is already fully booked by someone else's appointment.
  */
 export async function bookAppointment(input) {
   const {
@@ -132,8 +170,23 @@ export async function bookAppointment(input) {
   if (start < new Date()) badRequest("Ne možete zakazati termin u prošlosti");
 
   // ---- reads before the transaction ----
-  const { variant } = await serviceService.getActiveVariant(serviceId, servicePackageId);
+  const { variant, service } = await serviceService.getActiveVariant(serviceId, servicePackageId);
   const end = new Date(start.getTime() + variant.duration * 60000);
+
+  const resourceIds = resolveResourceIds(service);
+  let resolvedResources = []; // [{ resourceId, name, capacity }]
+  if (resourceIds.length) {
+    const rawResources = await Promise.all(resourceIds.map((id) => resourceService.getResourceByIdRaw(id)));
+    resolvedResources = resourceIds.map((resourceId, i) => ({
+      resourceId,
+      name: rawResources[i]?.name || null,
+      capacity: resourceService.getEffectiveCapacity(rawResources[i]),
+    }));
+    const unavailable = resolvedResources.find((r) => !r.capacity || r.capacity < 1);
+    if (unavailable) {
+      badRequest("Ova usluga trenutno nije dostupna za zakazivanje (resurs nije aktivan)");
+    }
+  }
 
   let buyerId = null;
   let needsGuestUser = false;
@@ -156,6 +209,12 @@ export async function bookAppointment(input) {
   if (employeeId) {
     const overlapping = await appointmentRepo.findOverlappingAppointments(employeeId, start, end);
     if (overlapping.length > 0) badRequest("Izabrani termin više nije dostupan, izaberite drugi");
+
+    for (const { resourceId, capacity } of resolvedResources) {
+      const resourceCount = await appointmentRepo.countOverlappingResourceAppointments(resourceId, start, end);
+      if (resourceCount >= capacity) badRequest("Izabrani termin više nije dostupan (resurs je zauzet), izaberite drugi");
+    }
+
     chosenEmployeeId = employeeId;
   } else {
     // no employee explicitly chosen by the customer - verify the slot is actually
@@ -163,8 +222,10 @@ export async function bookAppointment(input) {
     // to whichever employee happens to be free first. The appointment is created
     // unassigned; an admin picks the therapist from the appointment details page
     // (see reassignAppointment) - see appointment-status-transitions.js/admin.routes.js
-    // for why this moved from automatic to admin-driven.
-    const someoneFree = await availabilityService.findFirstAvailableEmployee(serviceId, start, end);
+    // for why this moved from automatic to admin-driven. Resource capacity is checked
+    // first inside findFirstAvailableEmployee - if any required resource is full, no
+    // employee search can fix that.
+    const someoneFree = await availabilityService.findFirstAvailableEmployee(serviceId, start, end, { resources: resolvedResources });
     if (!someoneFree) badRequest("Nijedan terapeut nije dostupan za izabrani termin, izaberite drugi");
   }
 
@@ -202,8 +263,13 @@ export async function bookAppointment(input) {
       if (chosenEmployeeId) {
         const stillFree = await appointmentRepo.findOverlappingAppointments(chosenEmployeeId, start, end, null, { session });
         if (stillFree.length > 0) badRequest("Izabrani termin je upravo zauzet, pokušajte ponovo");
+
+        for (const { resourceId, capacity } of resolvedResources) {
+          const stillResourceCount = await appointmentRepo.countOverlappingResourceAppointments(resourceId, start, end, null, { session });
+          if (stillResourceCount >= capacity) badRequest("Izabrani termin je upravo zauzet (resurs), pokušajte ponovo");
+        }
       } else {
-        const stillSomeoneFree = await availabilityService.findFirstAvailableEmployee(serviceId, start, end, { session });
+        const stillSomeoneFree = await availabilityService.findFirstAvailableEmployee(serviceId, start, end, { session, resources: resolvedResources });
         if (!stillSomeoneFree) badRequest("Izabrani termin je upravo zauzet, pokušajte ponovo");
       }
 
@@ -222,6 +288,7 @@ export async function bookAppointment(input) {
           },
           employee: chosenEmployeeId,
           employeeSnapshot: { name: employeeName },
+          resources: resolvedResources.map((r) => ({ resource: r.resourceId, name: r.name })),
           assignedTo: null,
           assignedBy: null,
           assignedAt: null,
@@ -272,7 +339,7 @@ export async function bookAppointment(input) {
     await session.endSession();
   }
 
-  logInfo("Appointment booked", { appointmentId: created._id, serviceId, userId: String(buyerId), accountJustCreated });
+  logInfo("Appointment booked", { appointmentId: created._id, serviceId, userId: String(buyerId), accountJustCreated, resourceIds });
 
   eventEmitter.emit("appointment:created", {
     appointmentId: created._id,
@@ -379,6 +446,10 @@ export async function reassignAppointment(appointmentId, newEmployeeId, actorId)
   const overlapping = await appointmentRepo.findOverlappingAppointments(newEmployeeId, appointment.startTime, appointment.endTime, appointmentId);
   if (overlapping.length > 0) badRequest("Izabrani terapeut nije dostupan u ovom terminu");
 
+  // Reassigning WHO performs the appointment doesn't change WHAT resources it
+  // occupies (still the same appointment, same time, same service) - so no
+  // resource-capacity re-check is needed here, only the employee-overlap one
+  // above.
   const employeeName = await employeeService.getEmployeeNameById(newEmployeeId);
 
   const updated = await appointmentRepo.updateAppointmentById(appointmentId, {
@@ -418,7 +489,9 @@ export default {
   getAppointmentById,
   getAppointmentForCommission,
   getBusyIntervals,
+  getResourceBusyIntervals,
   hasOverlappingAppointment,
+  countOverlappingResourceAppointments,
   bookAppointment,
   confirmAppointment,
   rejectAppointment,

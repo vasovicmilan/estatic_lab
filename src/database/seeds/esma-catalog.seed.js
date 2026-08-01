@@ -2,9 +2,29 @@ import Category from "../../models/category.model.js";
 import Tag from "../../models/tag.model.js";
 import Service from "../../models/service.model.js";
 import Package from "../../models/package.model.js";
+import { RESOURCE_MASSAGE_TABLE_ID, RESOURCE_ESMA_TABLE_ID } from "./resource.seed.js";
 import { logInfo } from "../../utils/logger.util.js";
 
 const DOMAIN = "service";
+
+// Which shared physical resource(s) each service occupies (see
+// resource.model.js/Service.resources) - kept as one flat map here rather
+// than a field on every serviceDefs entry below, so this stays a small,
+// reviewable diff instead of touching all 10 large service definitions.
+// New services added to serviceDefs later should get an entry here too, or
+// they'll default to no resource constraint (resources: []).
+const SERVICE_RESOURCE_MAP = {
+  "teslatone-24": [RESOURCE_ESMA_TABLE_ID],
+  "aquadrain-360": [RESOURCE_ESMA_TABLE_ID],
+  "lipolise-russianmax": [RESOURCE_ESMA_TABLE_ID],
+  "triactive-celluerase": [RESOURCE_ESMA_TABLE_ID],
+  "lasersonic-face-sculpt": [RESOURCE_ESMA_TABLE_ID],
+  "medicinski-bioreset": [RESOURCE_ESMA_TABLE_ID],
+  "relaks-masaza": [RESOURCE_MASSAGE_TABLE_ID],
+  "sportska-masaza": [RESOURCE_MASSAGE_TABLE_ID],
+  "terapeutska-masaza": [RESOURCE_MASSAGE_TABLE_ID],
+  "anticelulit-masaza": [RESOURCE_MASSAGE_TABLE_ID],
+};
 
 // ---------------------------------------------------------------------------
 // NAPOMENA O ČINJENIČNOJ PROVERI (pročitati pre korišćenja)
@@ -928,6 +948,7 @@ async function upsertServices(categoriesBySlug, tagsBySlug) {
       image: def.image || null,
       categories,
       tags,
+      resources: SERVICE_RESOURCE_MAP[def.slug] || [],
       defaultDuration: def.defaultDuration,
       ctaText: "Zakaži termin",
       features: def.features || [],

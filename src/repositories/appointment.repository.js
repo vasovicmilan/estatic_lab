@@ -77,6 +77,29 @@ export async function findBusyIntervals(employeeId, rangeStart, rangeEnd, { sess
 }
 
 /**
+ * Every busy interval a RESOURCE (table/device/room) is occupied within
+ * [rangeStart, rangeEnd), across ALL employees - this is what makes two
+ * different employees who each individually look free unable to both book the
+ * one thing they share. Mirrors findBusyIntervals' shape exactly so
+ * availability.service.js can pad/subtract it the same way, just against a
+ * resource instead of a person. Matching on "resources.resource" works against
+ * ANY appointment holding this resource, regardless of how many other
+ * resources (e.g. a paired device+table) that same appointment also holds.
+ */
+export async function findResourceBusyIntervals(resourceId, rangeStart, rangeEnd, { session } = {}) {
+  if (!resourceId) return [];
+  return Appointment.find({
+    "resources.resource": resourceId,
+    status: { $in: BLOCKING_STATUSES },
+    startTime: { $lt: rangeEnd },
+    endTime: { $gt: rangeStart },
+  })
+    .select("startTime endTime")
+    .session(session || null)
+    .lean();
+}
+
+/**
  * Write-time race guard - re-checked right before the transactional insert in case two
  * people booked the same slot within seconds of each other off the same availability list.
  * Requires a BOOKING_BUFFER_MINUTES gap on both sides of every existing appointment, not
@@ -93,6 +116,27 @@ export async function findOverlappingAppointments(employeeId, startTime, endTime
   };
   if (excludeId) filter._id = { $ne: excludeId };
   return Appointment.find(filter).session(session || null).lean();
+}
+
+/**
+ * How many active appointments are currently occupying a resource in a window
+ * that overlaps [startTime, endTime] (with the same booking buffer applied as
+ * the employee check above). The caller compares this against the resource's
+ * capacity - see appointment.service.js's bookAppointment and
+ * availability.service.js. Counts rather than returns a boolean because,
+ * unlike an employee, a resource can have capacity > 1. Called once per
+ * required resource when a service needs more than one (see Service.resources).
+ */
+export async function countOverlappingResourceAppointments(resourceId, startTime, endTime, excludeId = null, { session } = {}) {
+  if (!resourceId) return 0;
+  const filter = {
+    "resources.resource": resourceId,
+    status: { $in: BLOCKING_STATUSES },
+    startTime: { $lt: new Date(endTime.getTime() + BUFFER_MS) },
+    endTime: { $gt: new Date(startTime.getTime() - BUFFER_MS) },
+  };
+  if (excludeId) filter._id = { $ne: excludeId };
+  return Appointment.countDocuments(filter).session(session || null);
 }
 
 export async function findAppointmentsByUser(userId, options = {}) {
@@ -138,7 +182,9 @@ export default {
   findAppointmentById,
   findAppointments,
   findBusyIntervals,
+  findResourceBusyIntervals,
   findOverlappingAppointments,
+  countOverlappingResourceAppointments,
   findAppointmentsByUser,
   findAppointmentsByEmployee,
   updateAppointmentById,

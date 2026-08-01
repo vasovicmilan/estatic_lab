@@ -33,6 +33,29 @@ const ServiceSchema = new Schema(
     categories: [{ type: Schema.Types.ObjectId, ref: "Category" }],
     tags: [{ type: Schema.Types.ObjectId, ref: "Tag" }],
 
+    // Every shared physical thing an appointment for this service must hold
+    // AT THE SAME TIME - a massage table, an ESMA device, a room. Almost
+    // never actually empty in practice (nearly every service occupies at
+    // least one physical thing), but an empty array is still the correct,
+    // well-defined way to express "no shared-capacity constraint" for the
+    // rare service that has none (e.g. a phone consultation).
+    //
+    // This is a LIST, not a single resource, because one appointment can
+    // depend on more than one resource pool at once - an ESMA appointment
+    // needs both the ESMA device AND a table to lie on, and those come from
+    // two independent pools that can each become the bottleneck on their
+    // own (e.g. 3 devices but only 2 tables). Availability/booking requires
+    // EVERY resource in this list to have room - see Resource model and
+    // availability.service.js/appointment.service.js for how that's enforced.
+    //
+    // This does NOT support "either A or B" alternative resources (e.g. "a
+    // table OR a chair, whichever's free") - every entry here is required,
+    // not optional. That's a deliberately unbuilt feature for now; if it's
+    // ever needed, it should be a separate field (e.g. resourceAlternatives,
+    // an array of alternative-groups) rather than overloading this one, so
+    // existing AND-composition here doesn't need to change to support it.
+    resources: [{ type: Schema.Types.ObjectId, ref: "Resource" }],
+
     image: {
       type: ImageSchema,
     },
@@ -126,5 +149,6 @@ ServiceSchema.pre("findOneAndUpdate", async function () {
 
 ServiceSchema.index({ categories: 1 });
 ServiceSchema.index({ tags: 1 });
+ServiceSchema.index({ resources: 1 });
 
 export default model("Service", ServiceSchema);

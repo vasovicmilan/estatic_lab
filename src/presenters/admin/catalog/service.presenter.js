@@ -63,6 +63,7 @@ export function prepareServiceDetailsData(service, { employeeCount = 0 } = {}) {
           { label: "Kratak opis", value: service.kratakOpis || "-" },
           { label: "Kategorije", value: service.kategorije.join(", ") || "-" },
           { label: "Tagovi", value: service.tagovi.join(", ") || "-" },
+          { label: "Resursi (deljeni kapacitet)", value: service.resursi?.length ? service.resursi.join(", ") : "Nema - koristi se samo dostupnost zaposlenog" },
           { label: "Podrazumevano trajanje", value: service.trajanjePodrazumevano },
         ],
       },
@@ -130,7 +131,7 @@ export function prepareServiceDetailsData(service, { employeeCount = 0 } = {}) {
 // ---------------------------------------------------------------------------
 // Phase 1: core info + image
 // ---------------------------------------------------------------------------
-export function prepareServiceFormData(service = null, { categoryOptions = [], tagOptions = [] } = {}) {
+export function prepareServiceFormData(service = null, { categoryOptions = [], tagOptions = [], resourceOptions = [] } = {}) {
   const isEdit = !!service;
   const values = isEdit
     ? service
@@ -140,6 +141,7 @@ export function prepareServiceFormData(service = null, { categoryOptions = [], t
       longDescription: "",
       categories: [],
       tags: [],
+      resources: [],
       defaultDuration: 60,
       highlight: false,
       ctaText: "Zakaži termin",
@@ -165,6 +167,18 @@ export function prepareServiceFormData(service = null, { categoryOptions = [], t
       width: 6,
       value: (values.tags || []).map((t) => (typeof t === "object" ? t.id ?? t._id?.toString() : t)),
       options: tagOptions.map((t) => ({ value: t.id, label: t.naziv })),
+    },
+    {
+      name: "resources",
+      label: "Resursi (deljeni kapacitet)",
+      type: "multiselect",
+      width: 6,
+      value: (values.resources || []).map((r) => (typeof r === "object" ? r.id ?? r._id?.toString() : r)),
+      options: resourceOptions.map((r) => ({
+        value: r.id,
+        label: r.aktivan ? `${r.naziv} (kapacitet: ${r.kapacitet})` : `${r.naziv} (NEAKTIVAN)`,
+      })),
+      help: "Izaberite SVE fizičke stvari koje ova usluga zauzima istovremeno (npr. i ESMA aparat i sto na kom klijent leži). Sistem će sprečiti zakazivanje kad god bilo koji od izabranih resursa nema kapaciteta - čak i kad je zaposleni lično slobodan. Ostavite prazno ako usluga ne zahteva nikakav deljeni fizički resurs.",
     },
     { name: "defaultDuration", label: "Podrazumevano trajanje (min)", type: "number", min: 5, width: 6, value: values.defaultDuration },
     { name: "ctaText", label: "CTA tekst", type: "text", width: 6, value: values.ctaText },

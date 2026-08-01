@@ -39,6 +39,23 @@ const AppointmentSchema = new Schema(
       name: { type: String, default: null },
     },
 
+    // Frozen copy of Service.resources at booking time (see resource.model.js) -
+    // every shared physical thing (table/device/room) this specific appointment
+    // held simultaneously. A LIST because one appointment can occupy more than
+    // one resource pool at once (e.g. an ESMA device AND a table) - see
+    // Service.resources for the full reasoning. Each entry snapshots the
+    // resource's name for the same reason employeeSnapshot does: the Resource
+    // (or Service.resources assignment) can change after the fact, but "what did
+    // THIS appointment actually hold" must stay stable, and it lets
+    // availability/booking query Appointment directly by resource without a
+    // join back through Service on every check.
+    resources: [
+      {
+        resource: { type: Schema.Types.ObjectId, ref: "Resource" },
+        name: { type: String, default: null },
+      },
+    ],
+
     startTime: {
       type: Date,
       required: true,
@@ -156,5 +173,18 @@ AppointmentSchema.index(
     partialFilterExpression: { employee: { $type: "objectId" }, status: { $in: ["pending", "confirmed"] } },
   }
 );
+
+// Query-perf index for resource-capacity lookups (availability.service.js's
+// getResourceBusyIntervalsForDay, appointment.repository.js's
+// countOverlappingResourceAppointments). Mongo indexes into "resources.resource"
+// across every array element automatically (a multikey index), so a query
+// filtering on a single resource id still uses this efficiently even though
+// each appointment can hold several. Deliberately NOT unique: unlike the
+// employee index above, a resource's capacity can be >1, so more than one
+// active appointment is allowed to share (resource, startTime) as long as the
+// count stays under that resource's capacity - see appointment.service.js's
+// bookAppointment for how capacity is actually checked at write time, and the
+// same NOTE above about staggered-overlap races applies here too.
+AppointmentSchema.index({ "resources.resource": 1, startTime: 1 });
 
 export default model("Appointment", AppointmentSchema);

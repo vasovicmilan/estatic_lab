@@ -19,11 +19,14 @@ export async function findServiceBySlug(slug, { populateFields = [], session } =
   return query.lean();
 }
 
-// used at booking time to pull just the chosen variant snapshot + validate it's active
+// used at booking time to pull just the chosen variant snapshot + validate it's active -
+// `resources` is included here (not just projected on the outer service.service.js query)
+// because bookAppointment/availability.service.js need it directly off this result to
+// resolve resource capacity, without a second round-trip to fetch the full service
 export async function findServicePackageVariant(serviceId, servicePackageId, { session } = {}) {
   const service = await Service.findOne(
     { _id: serviceId, "packages._id": servicePackageId },
-    { "packages.$": 1, name: 1, employees: 1 }
+    { "packages.$": 1, name: 1, employees: 1, resources: 1 }
   )
     .session(session || null)
     .lean();

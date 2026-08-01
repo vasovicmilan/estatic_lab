@@ -18,6 +18,22 @@ function getTagNames(service) {
   return service.tags.filter((t) => t && typeof t === "object" && t.name).map((t) => t.name);
 }
 
+// Each entry in service.resources may arrive as a raw ObjectId (not populated)
+// or a populated {_id, name, capacity} document - same ambiguity the project's
+// other mappers already handle for other refs (see the mapper-bug pattern fix
+// noted for package/employee/testimonial mappers: typeof "object" alone can't
+// distinguish a raw ObjectId from a populated doc, since ObjectId is also
+// typeof "object" - only an actual populated field has a `.name`).
+function getResourceNames(service) {
+  if (!service.resources || !Array.isArray(service.resources)) return [];
+  return service.resources.filter((r) => r && typeof r === "object" && r.name).map((r) => r.name);
+}
+
+function getResourceIds(service) {
+  if (!service.resources || !Array.isArray(service.resources)) return [];
+  return service.resources.map((r) => (typeof r === "object" ? r._id?.toString() : r?.toString())).filter(Boolean);
+}
+
 function getPriceRange(service) {
   const prices = (service.packages || []).filter((p) => p.isActive).map((p) => p.totalPrice);
   if (!prices.length) return null;
@@ -83,6 +99,7 @@ export function mapServiceForAdminDetail(service) {
     dugiOpis: service.longDescription || "",
     kategorije: getCategoryNames(service),
     tagovi: getTagNames(service),
+    resursi: getResourceNames(service),
     slika: formatImage(service.image),
     galerija: (service.gallery || []).map(formatImage),
     trajanjePodrazumevano: `${service.defaultDuration} min`,
@@ -132,6 +149,7 @@ export function mapServiceForEdit(service) {
     longDescription: service.longDescription || "",
     categories: (service.categories || []).map((c) => c._id?.toString() || c.toString()),
     tags: (service.tags || []).map((t) => t._id?.toString() || t.toString()),
+    resources: getResourceIds(service),
     image: service.image || null,
     gallery: service.gallery || [],
     videos: service.videos || [],

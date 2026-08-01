@@ -20,6 +20,7 @@ import { logInfo } from "../utils/logger.util.js";
 const adminPopulate = [
   { path: "categories", select: "name slug" },
   { path: "tags", select: "name slug" },
+  { path: "resources", select: "name capacity isActive" },
 ];
 
 function validatePackages(packages = []) {
@@ -266,7 +267,9 @@ export async function deleteServiceById(serviceId) {
 
   // Tier 3 - current configuration, not a promise to anyone. Employee.services[] and
   // Coupon.applicableServices[] just mean "currently assigned/targeted" - safe to
-  // clean up automatically, atomically with the delete itself.
+  // clean up automatically, atomically with the delete itself. Service.resources is
+  // the same tier (just current config), but there's nothing to pull - the whole
+  // Service document is going away with it.
   const session = await mongoose.startSession();
   try {
     await session.withTransaction(async () => {
