@@ -1,10 +1,14 @@
 (function () {
   function buildSlotRow(slot) {
     const row = document.createElement("div");
-    row.className = "d-flex align-items-end gap-2 mb-2";
+    // column on phones (Od above Do, not squeezed side by side with two time
+    // inputs and a delete button all fighting for ~350px), row again from the sm
+    // breakpoint up where there's actually room
+    row.className = "d-flex flex-column flex-sm-row align-items-sm-end gap-2 mb-2";
     row.dataset.scheduleSlot = "";
 
     const fromWrap = document.createElement("div");
+    fromWrap.className = "flex-fill";
     const fromLabel = document.createElement("label");
     fromLabel.className = "form-label small mb-1";
     fromLabel.textContent = "Od";
@@ -16,7 +20,14 @@
     fromWrap.appendChild(fromLabel);
     fromWrap.appendChild(fromInput);
 
+    // Do + the delete button travel together as their own row, so on mobile the
+    // delete button sits right next to Do instead of becoming an isolated
+    // full-width row of its own underneath everything.
+    const toRow = document.createElement("div");
+    toRow.className = "d-flex align-items-end gap-2 flex-fill";
+
     const toWrap = document.createElement("div");
+    toWrap.className = "flex-fill";
     const toLabel = document.createElement("label");
     toLabel.className = "form-label small mb-1";
     toLabel.textContent = "Do";
@@ -34,9 +45,11 @@
     removeBtn.innerHTML = '<i class="bi bi-trash"></i>';
     removeBtn.dataset.scheduleRemoveSlot = "";
 
+    toRow.appendChild(toWrap);
+    toRow.appendChild(removeBtn);
+
     row.appendChild(fromWrap);
-    row.appendChild(toWrap);
-    row.appendChild(removeBtn);
+    row.appendChild(toRow);
     return row;
   }
 
