@@ -19,6 +19,7 @@ export async function buildOrganizationJsonLd(req) {
     "@type": "HealthAndBeautyBusiness",
     name: BUSINESS.name,
     legalName: BUSINESS.legalName,
+    alternateName: BUSINESS.alternateName,
     url: base,
     email: BUSINESS.email,
     telephone: BUSINESS.phone,

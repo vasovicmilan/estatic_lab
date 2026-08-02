@@ -6,6 +6,11 @@
 export const BUSINESS = {
   name: "Estetik Lab",
   legalName: "Estetik Lab wellness centar",
+  // Schema.org's correct field for a trading/AKA name distinct from the legal
+  // name - the domain is beautymedica.rs, but "Beauty Medica" appeared nowhere
+  // in the site's own content or structured data before this, so a search for
+  // that name had nothing on-site to match against.
+  alternateName: "Beauty Medica",
   email: "estetik.lab.ns@gmail.com",
   phone: "+381 65 977 4000",
   phoneHref: "+38165977400",

@@ -47,7 +47,7 @@ const GOOGLE_DATA_NOTICE = {
 export function prepareAboutPageData() {
   return {
     intro:
-      "Estetik Lab je wellness centar u Novom Sadu posvećen nezi tela i lica kroz stručne tretmane, modernu opremu i pažljiv, individualni pristup svakom klijentu.",
+      "Estetik Lab je kozmetički i wellness centar u Novom Sadu koji spaja stručne tretmane, prodaju profesionalne opreme i uređaja, i pažljiv, individualni pristup svakom klijentu.",
     contact: LEGAL_CONTACT,
     sections: [
       {
@@ -58,15 +58,25 @@ export function prepareAboutPageData() {
         ],
       },
       {
+        // Restructured around three explicit pillars instead of just listing
+        // treatments - "wellness centar" undersells what's actually here once
+        // equipment/device sales and (eventually) other product lines are part
+        // of the business, not just in-salon services.
         title: "Čime se bavimo",
         paragraphs: [
-          "Nudimo masaže, tretmane lica i tela, kao i estetske tretmane na profesionalnoj ESMA Favorit opremi - od miostimulacije i limfne drenaže do mikrostrujnog liftinga i laserske biorevitalizacije.",
+          "Estetik Lab danas stoji na tri noge, ne samo na tretmanima:",
         ],
         list: [
-          "Masaže - relaksacione, terapeutske i sportske",
-          "Tretmani lica - nega, čišćenje i anti-age tretmani",
-          "Tretmani tela - modelovanje, drenaža i regeneracija kože",
-          "Estetski tretmani - miostimulacija, mikrostrujni lifting, laserska biorevitalizacija",
+          "<strong>Tretmani u salonu</strong> - masaže, nega lica i tela, i estetski tretmani na profesionalnoj ESMA Favorit opremi (miostimulacija, limfna drenaža, mikrostrujni lifting, laserska biorevitalizacija)",
+          "<strong>Prodaja profesionalne opreme i uređaja</strong> - kozmetička oprema, uređaji, rezervni delovi i potrošni materijal iz naše <a href=\"/prodavnica\">prodavnice</a>, za profesionalnu upotrebu",
+          "<strong>Proizvodi za negu</strong> - asortiman koji dopunjuje tretmane i planiramo da ga vremenom proširimo",
+        ],
+      },
+      {
+        title: "Kako radimo",
+        paragraphs: [
+          "Pre svakog tretmana razgovaramo sa klijentom o cilju, koži, telu i eventualnim zdravstvenim napomenama - tretman biramo i prilagođavamo na osnovu toga, ne po unapred fiksnom šablonu.",
+          "Isti princip primenjujemo i kada nam se obratite za opremu ili uređaje iz naše ponude - pomažemo da izaberete rešenje koje realno odgovara vašim potrebama, uz jasne informacije o nameni i pravilnoj upotrebi.",
         ],
       },
       {
@@ -76,6 +86,7 @@ export function prepareAboutPageData() {
           "Sertifikovani terapeuti sa iskustvom u masaži i estetskim tretmanima",
           "Individualni pristup - svaki tretman prilagođavamo vašoj koži, telu i cilju",
           "Opuštajući, miran i negovan ambijent osmišljen za pravi predah od svakodnevice",
+          "Ista pažnja i kada kupujete opremu ili uređaje iz naše prodavnice, ne samo kada zakazujete tretman",
         ],
       },
       {
@@ -191,6 +202,7 @@ export function preparePrivacyPolicyData() {
         paragraphs: [
           "Naš sajt koristi neophodne kolačiće za rad sesije, CSRF zaštitu i bezbednu prijavu korisnika. Sesije se čuvaju u bazi podataka i ističu nakon 14 dana neaktivnosti.",
           "Ako niste prijavljeni, sadržaj korpe privremeno se čuva u vašoj sesiji (kolačić) dok ne završite ili napustite kupovinu, odnosno dok sesija ne istekne. Ako se prijavite ili registrujete, sadržaj korpe iz sesije prenosi se na vaš nalog.",
+          "Ako na sajt dođete putem linka jednog od naših partnera (sadrži parametar <code>?code=</code>), čuvamo kolačić koji beleži taj kod u trajanju od 30 dana, kako bismo eventualnu kasniju kupovinu ili zakazan termin mogli pripisati tom partneru radi obračuna provizije. Ovaj kolačić ne prati vašu aktivnost van našeg sajta i ne koristi se ni za šta osim za taj obračun.",
           "Ne koristimo kolačiće za oglašavanje trećih strana. Analitički ili marketing kolačići ne koriste se u trenutnoj verziji sajta, osim ako to posebno ne obavestimo i ne zatražimo vašu saglasnost.",
         ],
       },
@@ -204,6 +216,7 @@ export function preparePrivacyPolicyData() {
           "<strong>pružaocem email usluge</strong> - za slanje transakcionih poruka (potvrde termina i porudžbina, reset lozinke i sl.)",
           "<strong>kurirskom službom ili dostavljačem</strong> - kada naručite proizvod, ime, adresa za dostavu i telefon prosleđuju se dostavljaču isključivo radi izvršenja isporuke",
           "<strong>pružaocem hostinga i baze podataka</strong> - za tehničko skladištenje i rad aplikacije",
+          "<strong>našim partnerima u okviru partnerskog programa</strong> - ako ste do nas došli putem partnerovog linka, partner u svom nalogu vidi da je do termina/kupovine došlo preko njegovog referalnog koda i osnovne podatke o vrednosti transakcije, isključivo radi obračuna provizije - ne i vaše lične kontakt podatke",
         ],
         closingParagraphs: [
           "Vaše podatke ne prodajemo i ne iznajmljujemo trećim licima u marketinške svrhe.",
@@ -576,10 +589,63 @@ export function prepareContactPageData() {
   };
 }
 
+export function preparePartnershipPageData() {
+  return {
+    intro:
+      "Ako imate publiku kojoj verujete - klijente, pratioce, zajednicu - partnerski program vam omogućava da zarađujete proviziju svaki put kad neko preko vas rezerviše termin, kupi paket ili naruči proizvod iz naše prodavnice.",
+    steps: [
+      {
+        number: 1,
+        title: "Javite nam se",
+        description:
+          "Partnerski nalozi se trenutno otvaraju ručno, ne postoji javna prijava - pošaljite nam poruku preko <a href=\"/kontakt\">kontakt stranice</a> i dogovorićemo detalje i vašu proviziju.",
+      },
+      {
+        number: 2,
+        title: "Dobijate svoj jedinstveni link",
+        description:
+          "Nakon otvaranja naloga dobijate sopstveni referalni kod i link koji možete deliti - vodi na bilo koju stranicu sajta (početnu, konkretnu uslugu, paket ili proizvod), kod se automatski prenosi sa njim.",
+      },
+      {
+        number: 3,
+        title: "Delite ga svojoj publici",
+        description:
+          "Podelite link na način koji vama najviše odgovara - na društvenim mrežama, u razgovoru, u opisu profila. Svako ko klikne na njega dobija kolačić koji pamti da je došao preko vas narednih 30 dana.",
+      },
+      {
+        number: 4,
+        title: "Zarađujete proviziju",
+        description:
+          "Ako neko ko je došao preko vašeg linka zakaže termin, kupi paket tretmana ili naruči proizvod iz prodavnice u tih 30 dana, transakcija se automatski povezuje sa vama i beleži se provizija po unapred dogovorenoj stopi.",
+      },
+      {
+        number: 5,
+        title: "Pratite zaradu u realnom vremenu",
+        description:
+          "U svom partnerskom nalogu vidite pregled zarađene, isplaćene i rezervisane provizije, kao i istoriju svake transakcije koja vam je pripisana - bez ličnih podataka klijenta, samo vrsta transakcije i iznos.",
+      },
+      {
+        number: 6,
+        title: "Zatražite isplatu",
+        description:
+          "Kad se sakupi iznos koji vam odgovara, iz istog naloga podnosite zahtev za isplatu - mi ga pregledamo i obrađujemo.",
+      },
+    ],
+    highlights: [
+      "Provizija se računa na termine, kupljene pakete tretmana i porudžbine iz prodavnice - ne samo na jednu vrstu transakcije",
+      "Period praćenja od 30 dana - klijent ne mora da kupi istog trenutka da bi se transakcija povezala sa vama",
+      "Potpuna transparentnost - u svakom trenutku vidite tačno šta je zarađeno, šta je isplaćeno i šta je na čekanju",
+      "Nema tehničkih prepreka - jedan link, bez potrebe za dodatnim alatima ili nalozima",
+    ],
+    contact: LEGAL_CONTACT,
+  };
+}
+
 export default {
   prepareHomeData,
   preparePrivacyPolicyData,
   prepareTermsAndConditionsData,
   prepareAboutPageData,
+  preparePartnershipPageData,
   prepareContactPageData,
 };

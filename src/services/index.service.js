@@ -18,7 +18,7 @@ export async function getLandingPageData({
   const [highlightedServices, allExperts, testimonials, latestPosts, packagesResult] = await Promise.all([
     serviceService.findHighlightedServices({ limit: highlightedServiceLimit }),
     expertService.getActiveExperts(),
-    testimonialService.getApprovedTestimonials({ limit: testimonialLimit, featuredOnly: true }),
+    testimonialService.getApprovedTestimonials({ limit: testimonialLimit, featuredOnly: true, random: true }),
     postService.findPublishedPosts({ limit: latestPostLimit }),
     packageService.findActivePackages({ limit: bestPackageLimit }),
   ]);
@@ -46,6 +46,16 @@ export async function getAboutPageData() {
     title: "O nama | Estetik Lab",
     description: "Saznajte više o Estetik Lab wellness centru, našem timu i filozofiji nege.",
     canonical: "/o-nama",
+    isIndexable: true,
+  });
+  return { seo };
+}
+
+export async function getPartnershipPageData() {
+  const seo = buildPageSeo({
+    title: "Partnerski program | Estetik Lab",
+    description: "Zarađujte proviziju deleći svoj link - saznajte kako funkcioniše partnerski program Estetik Lab-a.",
+    canonical: "/partnerski-program",
     isIndexable: true,
   });
   return { seo };
@@ -124,6 +134,7 @@ export async function unsubscribeNewsletter(token) {
 export default {
   getLandingPageData,
   getAboutPageData,
+  getPartnershipPageData,
   getPrivacyPolicyPageData,
   getTermsAndConditionsPageData,
   getFaqPageData,

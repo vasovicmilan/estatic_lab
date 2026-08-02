@@ -97,8 +97,8 @@ export async function deleteTestimonialById(testimonialId) {
   return { success: true };
 }
 
-export async function getApprovedTestimonials({ limit = 10, featuredOnly = false, service = null, package: pkg = null, product = null } = {}) {
-  const testimonials = await testimonialRepo.findApprovedTestimonials({ limit, featuredOnly, service, package: pkg, product });
+export async function getApprovedTestimonials({ limit = 10, featuredOnly = false, service = null, package: pkg = null, product = null, random = false } = {}) {
+  const testimonials = await testimonialRepo.findApprovedTestimonials({ limit, featuredOnly, service, package: pkg, product, random });
   return mapTestimonialsForPublic(testimonials);
 }
 

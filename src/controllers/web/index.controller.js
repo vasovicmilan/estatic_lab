@@ -4,6 +4,7 @@ import {
   preparePrivacyPolicyData,
   prepareTermsAndConditionsData,
   prepareAboutPageData,
+  preparePartnershipPageData,
   prepareContactPageData,
 } from "../../presenters/public/index.presenter.js";
 import { buildWebsiteJsonLd } from "../../seo/utils.seo.js";
@@ -41,6 +42,21 @@ export async function aboutPage(req, res, next) {
     });
   } catch (error) {
     logError("[aboutPage] Greška pri učitavanju stranice o nama", error);
+    next(error);
+  }
+}
+
+export async function partnershipPage(req, res, next) {
+  try {
+    const serviceData = await indexService.getPartnershipPageData();
+    return res.render("landing/partnership", {
+      pageTitle: serviceData.seo.pageTitle,
+      pageDescription: serviceData.seo.pageDescription,
+      seo: serviceData.seo,
+      data: preparePartnershipPageData(),
+    });
+  } catch (error) {
+    logError("[partnershipPage] Greška pri učitavanju stranice partnerskog programa", error);
     next(error);
   }
 }
@@ -218,6 +234,7 @@ export async function unsubscribeNewsletter(req, res, next) {
 export default {
   homePage,
   aboutPage,
+  partnershipPage,
   privacyPage,
   termsPage,
   faqPage,

@@ -47,12 +47,33 @@ export async function findTestimonials({
 }
 
 // public "what our clients say" widget - approved only, featured first
-export async function findApprovedTestimonials({ limit = 10, featuredOnly = false, service = null, package: pkg = null, product = null, session } = {}) {
+export async function findApprovedTestimonials({ limit = 10, featuredOnly = false, service = null, package: pkg = null, product = null, random = false, session } = {}) {
   const filter = { status: "approved" };
   if (featuredOnly) filter.isFeatured = true;
   if (service) filter.service = service;
   if (pkg) filter.package = pkg;
   if (product) filter.product = product;
+
+  if (random) {
+    // $sample draws a fresh random subset on every call, at the DB level (cheaper
+    // than fetching everything and shuffling in JS once there are more than a
+    // handful of testimonials). Without this, a fixed "6 newest featured" set is
+    // the only thing that will ever show once more than `limit` testimonials get
+    // featured - everything featured earlier is permanently buried, never seen.
+    const sampled = await Testimonial.aggregate([{ $match: filter }, { $sample: { size: limit } }]).session(session || null);
+    const ids = sampled.map((t) => t._id);
+    if (!ids.length) return [];
+
+    let query = Testimonial.find({ _id: { $in: ids } }).session(session || null);
+    for (const field of TESTIMONIAL_POPULATE) query = query.populate(field);
+    const docs = await query.lean();
+
+    // $sample's order isn't preserved by a subsequent $in lookup, so restore it
+    // manually - otherwise "random" would silently collapse back to whatever
+    // order MongoDB happens to return matching documents in.
+    const byId = new Map(docs.map((d) => [d._id.toString(), d]));
+    return ids.map((id) => byId.get(id.toString())).filter(Boolean);
+  }
 
   let query = Testimonial.find(filter)
     .sort({ isFeatured: -1, createdAt: -1, _id: -1 })
