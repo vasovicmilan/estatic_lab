@@ -1,0 +1,34 @@
+<%
+  // Minimal top bar for authenticated self-service portals (employee/partner/user) -
+  // deliberately NOT the full marketing navigation.ejs. Someone checking their
+  // schedule between clients doesn't need Usluge/Paketi/Prodavnica/Blog/cart/"Zakažite
+  // termin" taking up space above their actual tools, especially on a phone where
+  // that's a full screen of irrelevant chrome to scroll past first.
+  const user = typeof locals.user !== "undefined" ? locals.user : null;
+  const resolvedPortalHome = typeof portalHome !== "undefined" ? portalHome : "/";
+%>
+<nav class="navbar navbar-light bg-white border-bottom sticky-top portal-header">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold fst-italic mb-0 fs-6" href="<%= resolvedPortalHome %>">Estetik Lab</a>
+
+    <div class="dropdown">
+      <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-label="Nalog">
+        <i class="bi bi-person-circle"></i> <span class="d-none d-sm-inline"><%= user?.firstName %></span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <% if (user?.roleName === "admin" || user?.permissions?.includes("access_admin_panel")) { %>
+          <li><a class="dropdown-item" href="/admin">Admin panel</a></li>
+        <% } %>
+        <% if (user?.isEmployee) { %>
+          <li><a class="dropdown-item <%= resolvedPortalHome === '/moj-nalog' ? 'active' : '' %>" href="/moj-nalog">Moj kalendar</a></li>
+        <% } %>
+        <% if (user?.isPartner) { %>
+          <li><a class="dropdown-item <%= resolvedPortalHome === '/moj-partner-nalog' ? 'active' : '' %>" href="/moj-partner-nalog">Partnerski nalog</a></li>
+        <% } %>
+        <li><a class="dropdown-item <%= resolvedPortalHome === '/nalog' ? 'active' : '' %>" href="/nalog">Nalog kupca</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item text-danger" href="/odjava">Odjava</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>

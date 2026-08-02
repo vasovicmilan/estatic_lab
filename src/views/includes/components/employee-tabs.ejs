@@ -1,0 +1,14 @@
+<%
+  const employeeTabs = [
+    { href: "/moj-nalog", label: "Pregled", icon: "bi-calendar3" },
+    { href: "/moj-nalog/termini", label: "Termini", icon: "bi-list-check", matchPrefix: "/moj-nalog/termini" },
+  ];
+  if (typeof data !== "undefined" && data.isCommissionBased) {
+    employeeTabs.push(
+      { href: "/moj-nalog/provizije", label: "Provizija", icon: "bi-cash-stack", matchPrefix: "/moj-nalog/provizije" },
+      { href: "/moj-nalog/isplate", label: "Isplate", icon: "bi-wallet2", matchPrefix: "/moj-nalog/isplate" }
+    );
+  }
+  employeeTabs.push({ href: "/moj-nalog/profil", label: "Profil", icon: "bi-person", matchPrefix: "/moj-nalog/profil" });
+%>
+<%- include("portal-nav", { tabs: employeeTabs, currentPath: typeof currentPath !== "undefined" ? currentPath : "" }) %>

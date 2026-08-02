@@ -1,0 +1,39 @@
+<%
+  // tabs: [{ href, label, icon, matchPrefix? }] - matchPrefix marks a tab active for
+  // any sub-route under it (e.g. /moj-nalog/termini/detalji/123 still highlights
+  // "Termini"), not just an exact path match.
+  const portalTabs = typeof tabs !== "undefined" ? tabs : [];
+  function isTabActive(tab) {
+    if (typeof currentPath === "undefined" || !currentPath) return false;
+    if (currentPath === tab.href) return true;
+    return Boolean(tab.matchPrefix && currentPath.startsWith(tab.matchPrefix));
+  }
+%>
+
+<!-- Mobile: fixed bottom tab bar. This is the primary nav on the 90% of traffic that's
+     on a phone - thumb reach beats a top bar, and it's the standard pattern every
+     native app / mobile web app already trains people on. Hidden at lg+ (portal-bottom-nav
+     CSS), where the pills row below takes over instead. -->
+<nav class="portal-bottom-nav" aria-label="Navigacija naloga">
+  <% portalTabs.forEach(function(tab) { %>
+    <a href="<%= tab.href %>" class="portal-bottom-nav-item <%= isTabActive(tab) ? 'active' : '' %>">
+      <span class="portal-bottom-nav-icon-wrap">
+        <i class="bi <%= tab.icon %>" aria-hidden="true"></i>
+        <% if (tab.badge) { %><span class="portal-bottom-nav-badge"><%= tab.badge > 99 ? '99+' : tab.badge %></span><% } %>
+      </span>
+      <span class="portal-bottom-nav-label"><%= tab.label %></span>
+    </a>
+  <% }) %>
+</nav>
+
+<!-- Desktop: ordinary pills row, in-flow at the top of the page like before. -->
+<ul class="nav nav-pills mb-4 portal-desktop-nav">
+  <% portalTabs.forEach(function(tab) { %>
+    <li class="nav-item">
+      <a class="nav-link <%= isTabActive(tab) ? 'active' : '' %>" href="<%= tab.href %>">
+        <i class="bi <%= tab.icon %> me-1" aria-hidden="true"></i><%= tab.label %>
+        <% if (tab.badge) { %><span class="badge bg-danger ms-1"><%= tab.badge > 99 ? '99+' : tab.badge %></span><% } %>
+      </a>
+    </li>
+  <% }) %>
+</ul>

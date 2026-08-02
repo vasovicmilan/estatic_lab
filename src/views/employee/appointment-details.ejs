@@ -1,30 +1,17 @@
 <%- include("../includes/head") %>
-<%- include("../includes/navigation") %>
+<%- include("../includes/components/portal-header", { portalHome: "/moj-nalog" }) %>
 
-<main class="container py-5">
+<main class="container py-4 has-portal-bottom-nav">
   <%- include("../includes/flash-messages") %>
+  <%- include("../includes/components/employee-tabs") %>
   <h1 class="h3 mb-4">Detalji termina</h1>
 
   <div class="row g-4">
-    <div class="col-md-7">
-      <div class="card">
-        <div class="card-body">
-          <dl class="row mb-0">
-            <dt class="col-4 text-muted">Klijent</dt><dd class="col-8"><%= data.appointment.klijent.ime %></dd>
-            <dt class="col-4 text-muted">Email</dt><dd class="col-8"><%= data.appointment.klijent.email %></dd>
-            <dt class="col-4 text-muted">Telefon</dt><dd class="col-8"><%= data.appointment.klijent.telefon || "-" %></dd>
-            <dt class="col-4 text-muted">Usluga</dt><dd class="col-8"><%= data.appointment.usluga.naziv %></dd>
-            <dt class="col-4 text-muted">Trajanje</dt><dd class="col-8"><%= data.appointment.usluga.trajanje %></dd>
-            <dt class="col-4 text-muted">Termin</dt><dd class="col-8"><%= data.appointment.termin.pocetak %> - <%= data.appointment.termin.kraj %></dd>
-            <dt class="col-4 text-muted">Status</dt><dd class="col-8"><%= data.appointment.status %></dd>
-            <dt class="col-4 text-muted">Cena</dt><dd class="col-8"><%= data.appointment.konacnaCena %></dd>
-            <% if (data.appointment.napomenaKlijenta) { %><dt class="col-4 text-muted">Napomena</dt><dd class="col-8"><%= data.appointment.napomenaKlijenta %></dd><% } %>
-          </dl>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-5">
+    <!-- Actions first on mobile (order-1) - the whole point of checking this on a
+         phone is usually to confirm/reject/complete right away, not to re-read every
+         detail first. Desktop keeps the conventional details-left, actions-right
+         layout (order-md-2 puts actions back on the right). -->
+    <div class="col-md-5 order-1 order-md-2">
       <div class="card">
         <div class="card-body d-flex flex-column gap-2">
           <% if (data.canConfirm) { %>
@@ -82,6 +69,24 @@
             </div>
           <% } %>
           <a href="<%= data.backUrl %>" class="btn btn-outline-secondary w-100">Nazad</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-7 order-2 order-md-1">
+      <div class="card">
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-4 text-muted">Klijent</dt><dd class="col-8"><%= data.appointment.klijent.ime %></dd>
+            <dt class="col-4 text-muted">Email</dt><dd class="col-8"><%= data.appointment.klijent.email %></dd>
+            <dt class="col-4 text-muted">Telefon</dt><dd class="col-8"><%= data.appointment.klijent.telefon || "-" %></dd>
+            <dt class="col-4 text-muted">Usluga</dt><dd class="col-8"><%= data.appointment.usluga.naziv %></dd>
+            <dt class="col-4 text-muted">Trajanje</dt><dd class="col-8"><%= data.appointment.usluga.trajanje %></dd>
+            <dt class="col-4 text-muted">Termin</dt><dd class="col-8"><%= data.appointment.termin.pocetak %> - <%= data.appointment.termin.kraj %></dd>
+            <dt class="col-4 text-muted">Status</dt><dd class="col-8"><%= data.appointment.status %></dd>
+            <dt class="col-4 text-muted">Cena</dt><dd class="col-8"><%= data.appointment.konacnaCena %></dd>
+            <% if (data.appointment.napomenaKlijenta) { %><dt class="col-4 text-muted">Napomena</dt><dd class="col-8"><%= data.appointment.napomenaKlijenta %></dd><% } %>
+          </dl>
         </div>
       </div>
     </div>

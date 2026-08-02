@@ -1,9 +1,9 @@
 <%- include("../includes/head") %>
-<%- include("../includes/navigation") %>
+<%- include("../includes/components/portal-header", { portalHome: "/moj-nalog" }) %>
 
-<main class="container py-5">
+<main class="container py-4 has-portal-bottom-nav">
   <h1 class="h3 mb-4">Moje isplate</h1>
-  <%- include("../includes/components/employee-nav", { currentPath: "/moj-nalog/isplate", isCommissionBased: data.isCommissionBased }) %>
+  <%- include("../includes/components/employee-tabs") %>
 
   <form method="GET" action="/moj-nalog/isplate" class="d-flex gap-2 mb-3">
     <select name="status" class="form-select form-select-sm" style="max-width:200px;" onchange="this.form.submit()">
@@ -13,11 +13,24 @@
     </select>
   </form>
 
-  <div class="card">
-    <div class="card-body p-0">
-      <% if (data.items.length === 0) { %>
-        <p class="text-muted p-3 mb-0">Nemate podnetih zahteva za isplatu.</p>
-      <% } else { %>
+  <% if (data.items.length === 0) { %>
+    <p class="text-muted">Nemate podnetih zahteva za isplatu.</p>
+  <% } else { %>
+    <div class="list-group d-lg-none">
+      <% data.items.forEach(function(p) { %>
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="fs-5 fw-bold text-primary"><%= p.iznos %></div>
+            <span class="badge bg-secondary"><%= p.status %></span>
+          </div>
+          <div class="text-muted small">Zatraženo: <%= p.zatrazeno %> &middot; Ažurirano: <%= p.azurirano %></div>
+          <% if (p.napomena) { %><div class="small mt-1"><%= p.napomena %></div><% } %>
+        </div>
+      <% }) %>
+    </div>
+
+    <div class="card d-none d-lg-block">
+      <div class="card-body p-0">
         <table class="table mb-0">
           <thead><tr><th>Iznos</th><th>Status</th><th>Zatraženo</th><th>Ažurirano</th><th>Napomena</th></tr></thead>
           <tbody>
@@ -32,9 +45,9 @@
             <% }) %>
           </tbody>
         </table>
-      <% } %>
+      </div>
     </div>
-  </div>
+  <% } %>
 
   <%- include("../includes/pagination", { pagination: data.pagination }) %>
 </main>

@@ -1,11 +1,11 @@
 <%- include("../includes/head") %>
-<%- include("../includes/navigation") %>
+<%- include("../includes/components/portal-header", { portalHome: "/moj-nalog" }) %>
 
-<main class="container py-5">
+<main class="container py-4 has-portal-bottom-nav">
   <%- include("../includes/flash-messages") %>
   <h1 class="h3 mb-4">Moj kalendar</h1>
 
-<%- include("../includes/components/employee-nav", { currentPath: "/moj-nalog", isCommissionBased: data.isCommissionBased }) %>
+<%- include("../includes/components/employee-tabs") %>
 
   <% if (data.isCommissionBased && data.balance) { %>
     <div class="row g-3 mb-4">

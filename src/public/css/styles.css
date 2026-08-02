@@ -869,3 +869,101 @@ h1, h2, h3, h4, h5, h6,
   width: 70px;
   flex-shrink: 0;
 }
+
+/* ================================================================
+   Portal navigation (employee/partner/user self-service portals -
+   see includes/components/portal-header.ejs and portal-nav.ejs)
+
+   90% of this traffic is mobile: someone checking their schedule between
+   clients, a partner glancing at commissions, a customer checking an order -
+   all quick, one-handed phone checks. The bottom tab bar is the primary nav
+   for that case (thumb reach, and it's the pattern every native/mobile-web
+   app already trains people on); the pills row is what desktop gets instead,
+   in the normal document flow like any other page.
+   ================================================================ */
+
+.portal-header .navbar-brand {
+  letter-spacing: 0.01em;
+}
+
+.portal-bottom-nav {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+  background: rgba(255, 253, 251, 0.97);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--bs-border-color);
+  /* iOS home-indicator clearance - without this the last row of icons sits under it */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.portal-bottom-nav-item {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  /* ≥48px tall tap target (Apple HIG / Material both recommend ≥44-48px) */
+  min-height: 56px;
+  padding: 6px 4px;
+  color: var(--bs-secondary-color);
+  text-decoration: none;
+  font-size: 0.6875rem;
+  line-height: 1.1;
+}
+
+.portal-bottom-nav-icon-wrap {
+  position: relative;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.portal-bottom-nav-item.active {
+  color: var(--bs-primary);
+  font-weight: 600;
+}
+
+.portal-bottom-nav-badge {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--bs-danger);
+  color: #fff;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+}
+
+.portal-desktop-nav {
+  display: none;
+}
+
+/* Content needs room at the bottom so the fixed bar never covers the last item -
+   applied by pages that include portal-nav, not globally, since not every page has
+   a bottom nav */
+.has-portal-bottom-nav {
+  padding-bottom: calc(56px + env(safe-area-inset-bottom, 0) + 1.5rem);
+}
+
+@media (min-width: 992px) {
+  .portal-bottom-nav {
+    display: none;
+  }
+
+  .portal-desktop-nav {
+    display: flex;
+  }
+
+  .has-portal-bottom-nav {
+    padding-bottom: inherit;
+  }
+}
