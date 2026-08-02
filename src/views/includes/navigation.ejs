@@ -75,7 +75,75 @@
   </div>
 </nav>
 
-<% if (typeof currentPath !== 'undefined' && currentPath.startsWith('/admin')) { %>
+<% if (typeof currentPath !== 'undefined' && currentPath.startsWith('/admin')) {
+  // 22 flat items in one row stopped being scannable a while ago - grouped here
+  // into logical dropdowns instead. Data-driven (not hand-written per group) so
+  // adding a future admin section is a one-line addition to a group's `items`
+  // array, not another copy-pasted <li> - same pattern as employee/partner/
+  // user-tabs.ejs use for the portal nav.
+  const adminNavGroups = [
+    {
+      label: "Zakazivanje", icon: "bi-calendar-check",
+      items: [
+        { href: "/admin/termini", label: "Termini", icon: "bi-calendar-check" },
+        { href: "/admin/resursi", label: "Resursi", icon: "bi-grid-3x3-gap" },
+      ],
+    },
+    {
+      label: "Katalog", icon: "bi-heart-pulse",
+      items: [
+        { href: "/admin/usluge", label: "Usluge", icon: "bi-heart-pulse" },
+        { href: "/admin/paketi", label: "Paketi", icon: "bi-box-seam" },
+        { href: "/admin/kupljeni-paketi", label: "Kupljeni paketi", icon: "bi-bag-check" },
+        { href: "/admin/kategorije", label: "Kategorije", icon: "bi-tags" },
+        { href: "/admin/tagovi", label: "Tagovi", icon: "bi-tag" },
+      ],
+    },
+    {
+      label: "Prodavnica", icon: "bi-shop",
+      items: [
+        { href: "/admin/proizvodi", label: "Proizvodi", icon: "bi-box2-heart" },
+        { href: "/admin/porudzbine", label: "Porudžbine", icon: "bi-receipt" },
+        { href: "/admin/privremene-porudzbine", label: "Privremene porudžbine", icon: "bi-hourglass-split" },
+        { href: "/admin/kuponi", label: "Kuponi", icon: "bi-ticket-perforated" },
+      ],
+    },
+    {
+      label: "Tim", icon: "bi-people",
+      items: [
+        { href: "/admin/zaposleni", label: "Zaposleni", icon: "bi-person-badge" },
+        { href: "/admin/eksperti", label: "Eksperti", icon: "bi-award" },
+        { href: "/admin/korisnici", label: "Korisnici", icon: "bi-people" },
+      ],
+    },
+    {
+      label: "Partnerski program", icon: "bi-handshake",
+      items: [
+        { href: "/admin/partneri", label: "Partneri", icon: "bi-handshake" },
+        { href: "/admin/isplate", label: "Isplate", icon: "bi-cash-coin" },
+      ],
+    },
+    {
+      label: "Sadržaj i marketing", icon: "bi-newspaper",
+      items: [
+        { href: "/admin/blog", label: "Blog", icon: "bi-newspaper" },
+        { href: "/admin/kontakt", label: "Kontakt", icon: "bi-envelope-paper" },
+        { href: "/admin/newsletter", label: "Newsletter", icon: "bi-send" },
+        { href: "/admin/testimoniali", label: "Testimoniali", icon: "bi-star" },
+      ],
+    },
+    {
+      label: "Sistem", icon: "bi-gear",
+      items: [
+        { href: "/admin/logovi", label: "Logovi", icon: "bi-clipboard-data" },
+        { href: "/admin/role", label: "Role", icon: "bi-shield-lock" },
+      ],
+    },
+  ];
+  function isGroupActive(group) {
+    return group.items.some((item) => currentPath.startsWith(item.href));
+  }
+%>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav" aria-controls="adminNav" aria-expanded="false" aria-label="Uključi/isključi admin navigaciju">
@@ -84,28 +152,18 @@
     <div class="collapse navbar-collapse" id="adminNav">
       <ul class="navbar-nav flex-wrap">
         <li class="nav-item"><a class="nav-link <%= currentPath === '/admin' ? 'active' : '' %>" href="/admin"><i class="bi bi-speedometer2 me-1"></i>Početna</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/termini') ? 'active' : '' %>" href="/admin/termini"><i class="bi bi-calendar-check me-1"></i>Termini</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/usluge') ? 'active' : '' %>" href="/admin/usluge"><i class="bi bi-heart-pulse me-1"></i>Usluge</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/resursi') ? 'active' : '' %>" href="/admin/resursi"><i class="bi bi-grid-3x3-gap me-1"></i>Resursi</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/paketi') ? 'active' : '' %>" href="/admin/paketi"><i class="bi bi-box-seam me-1"></i>Paketi</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/kupljeni-paketi') ? 'active' : '' %>" href="/admin/kupljeni-paketi"><i class="bi bi-bag-check me-1"></i>Kupljeni paketi</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/proizvodi') ? 'active' : '' %>" href="/admin/proizvodi"><i class="bi bi-box2-heart me-1"></i>Proizvodi</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/porudzbine') ? 'active' : '' %>" href="/admin/porudzbine"><i class="bi bi-receipt me-1"></i>Porudžbine</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/privremene-porudzbine') ? 'active' : '' %>" href="/admin/privremene-porudzbine"><i class="bi bi-hourglass-split me-1"></i>Privremene porudžbine</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/kategorije') ? 'active' : '' %>" href="/admin/kategorije"><i class="bi bi-tags me-1"></i>Kategorije</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/tagovi') ? 'active' : '' %>" href="/admin/tagovi"><i class="bi bi-tag me-1"></i>Tagovi</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/blog') ? 'active' : '' %>" href="/admin/blog"><i class="bi bi-newspaper me-1"></i>Blog</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/zaposleni') ? 'active' : '' %>" href="/admin/zaposleni"><i class="bi bi-person-badge me-1"></i>Zaposleni</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/partneri') ? 'active' : '' %>" href="/admin/partneri"><i class="bi bi-handshake me-1"></i>Partneri</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/isplate') ? 'active' : '' %>" href="/admin/isplate"><i class="bi bi-cash-coin me-1"></i>Isplate</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/logovi') ? 'active' : '' %>" href="/admin/logovi"><i class="bi bi-clipboard-data me-1"></i>Logovi</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/eksperti') ? 'active' : '' %>" href="/admin/eksperti"><i class="bi bi-award me-1"></i>Eksperti</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/korisnici') ? 'active' : '' %>" href="/admin/korisnici"><i class="bi bi-people me-1"></i>Korisnici</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/kuponi') ? 'active' : '' %>" href="/admin/kuponi"><i class="bi bi-ticket-perforated me-1"></i>Kuponi</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/kontakt') ? 'active' : '' %>" href="/admin/kontakt"><i class="bi bi-envelope-paper me-1"></i>Kontakt</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/newsletter') ? 'active' : '' %>" href="/admin/newsletter"><i class="bi bi-send me-1"></i>Newsletter</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/testimoniali') ? 'active' : '' %>" href="/admin/testimoniali"><i class="bi bi-star me-1"></i>Testimoniali</a></li>
-        <li class="nav-item"><a class="nav-link <%= currentPath.startsWith('/admin/role') ? 'active' : '' %>" href="/admin/role"><i class="bi bi-shield-lock me-1"></i>Role</a></li>
+        <% adminNavGroups.forEach(function(group) { %>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle <%= isGroupActive(group) ? 'active' : '' %>" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi <%= group.icon %> me-1"></i><%= group.label %>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark">
+              <% group.items.forEach(function(item) { %>
+                <li><a class="dropdown-item <%= currentPath.startsWith(item.href) ? 'active' : '' %>" href="<%= item.href %>"><i class="bi <%= item.icon %> me-2"></i><%= item.label %></a></li>
+              <% }) %>
+            </ul>
+          </li>
+        <% }) %>
       </ul>
     </div>
   </div>
