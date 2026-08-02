@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import { sendEmail } from "../integrations/email/email.provider.js";
 import { logError } from "../utils/logger.util.js";
 import { generateOrderInvoicePdf } from "../utils/invoice-pdf.util.js";
+import { infoRow, infoTable, statusTone, badge, ctaButton, linkFallback } from "../utils/email-content.util.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,7 +23,19 @@ async function renderTemplate(templateName, data) {
 
     return ejs.render(
       templateContent,
-      { ...data, BASE_URL, SITE_NAME, SUPPORT_EMAIL, currentYear: new Date().getFullYear() },
+      {
+        ...data,
+        BASE_URL,
+        SITE_NAME,
+        SUPPORT_EMAIL,
+        currentYear: new Date().getFullYear(),
+        infoRow,
+        infoTable,
+        statusTone,
+        badge,
+        ctaButton,
+        linkFallback,
+      },
       { cache: false, filename: templatePath, root: TEMPLATES_PATH }
     );
   } catch (error) {
