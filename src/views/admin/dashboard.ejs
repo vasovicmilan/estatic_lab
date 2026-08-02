@@ -7,72 +7,76 @@
 
   <h1 class="h3 mb-4">Admin panel</h1>
 
-  <div class="row g-3 mb-4">
-    <% data.stats.forEach(function(stat) { %>
-      <div class="col-6 col-md-4 col-lg-2">
-        <a href="<%= stat.url %>" class="text-decoration-none">
-          <div class="card h-100">
-            <div class="card-body text-center">
-              <i class="bi <%= stat.icon %> fs-3 text-primary mb-2 d-block"></i>
-              <div class="fw-bold fs-4"><%= stat.value %></div>
-              <div class="text-muted small"><%= stat.label %></div>
+  <% data.sections.forEach(function(section) { %>
+    <h2 class="h6 text-muted text-uppercase mb-2"><%= section.title %></h2>
+    <div class="row g-3 mb-4">
+      <% section.tiles.forEach(function(stat) { %>
+        <div class="col-6 col-md-4 col-lg-2">
+          <a href="<%= stat.url %>" class="text-decoration-none">
+            <div class="card h-100">
+              <div class="card-body text-center">
+                <i class="bi <%= stat.icon %> fs-3 text-primary mb-2 d-block"></i>
+                <div class="fw-bold fs-4"><%= stat.value %></div>
+                <div class="text-muted small"><%= stat.label %></div>
+              </div>
             </div>
-          </div>
-        </a>
-      </div>
-    <% }) %>
-  </div>
-
-  <div class="row g-4">
-    <div class="col-lg-6">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h2 class="h6 mb-0">Termini na čekanju</h2>
-          <a href="/admin/termini?status=pending" class="small">Vidi sve</a>
+          </a>
         </div>
-        <div class="card-body p-0">
-          <% if (data.recentAppointments && data.recentAppointments.length > 0) { %>
-            <ul class="list-group list-group-flush">
-              <% data.recentAppointments.forEach(function(a) { %>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <div>
-                    <div class="fw-semibold"><%= a.korisnik %></div>
-                    <div class="text-muted small"><%= a.usluga %> - <%= a.datum %></div>
-                  </div>
-                  <a href="/admin/termini/detalji/<%= a.id %>" class="btn btn-sm btn-outline-primary">Pregled</a>
-                </li>
-              <% }) %>
-            </ul>
-          <% } else { %>
-            <p class="text-muted p-3 mb-0">Nema termina na čekanju.</p>
-          <% } %>
-        </div>
-      </div>
+      <% }) %>
     </div>
+  <% }) %>
 
-    <div class="col-lg-6">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h2 class="h6 mb-0">Nove poruke</h2>
-          <a href="/admin/kontakt?status=new" class="small">Vidi sve</a>
-        </div>
-        <div class="card-body p-0">
-          <% if (data.recentContacts && data.recentContacts.length > 0) { %>
-            <ul class="list-group list-group-flush">
-              <% data.recentContacts.forEach(function(c) { %>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <div>
-                    <div class="fw-semibold"><%= c.imePrezime %></div>
-                    <div class="text-muted small"><%= c.email %> - <%= c.datum %></div>
-                  </div>
-                  <a href="/admin/kontakt/detalji/<%= c.id %>" class="btn btn-sm btn-outline-primary">Pregled</a>
-                </li>
-              <% }) %>
-            </ul>
-          <% } else { %>
-            <p class="text-muted p-3 mb-0">Nema novih poruka.</p>
-          <% } %>
-        </div>
+  <div class="card">
+    <div class="card-header">
+      <ul class="nav nav-tabs card-header-tabs" role="tablist">
+        <% data.activityTabs.forEach(function(tab, index) { %>
+          <li class="nav-item" role="presentation">
+            <button
+              class="nav-link <%= index === 0 ? 'active' : '' %>"
+              id="tab-btn-<%= tab.id %>"
+              data-bs-toggle="tab"
+              data-bs-target="#tab-<%= tab.id %>"
+              type="button"
+              role="tab"
+              aria-controls="tab-<%= tab.id %>"
+              aria-selected="<%= index === 0 ? 'true' : 'false' %>"
+            >
+              <%= tab.label %>
+              <% if (tab.items.length > 0) { %><span class="badge text-bg-secondary ms-1"><%= tab.items.length %></span><% } %>
+            </button>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+    <div class="card-body p-0">
+      <div class="tab-content">
+        <% data.activityTabs.forEach(function(tab, index) { %>
+          <div
+            class="tab-pane fade <%= index === 0 ? 'show active' : '' %>"
+            id="tab-<%= tab.id %>"
+            role="tabpanel"
+            aria-labelledby="tab-btn-<%= tab.id %>"
+          >
+            <div class="d-flex justify-content-end p-2 pb-0">
+              <a href="<%= tab.viewAllUrl %>" class="small">Vidi sve</a>
+            </div>
+            <% if (tab.items.length > 0) { %>
+              <ul class="list-group list-group-flush">
+                <% tab.items.forEach(function(item) { %>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                      <div class="fw-semibold"><%= item.title %></div>
+                      <div class="text-muted small"><%= item.subtitle %></div>
+                    </div>
+                    <a href="<%= item.url %>" class="btn btn-sm btn-outline-primary">Pregled</a>
+                  </li>
+                <% }) %>
+              </ul>
+            <% } else { %>
+              <p class="text-muted p-3 mb-0"><%= tab.emptyText %></p>
+            <% } %>
+          </div>
+        <% }) %>
       </div>
     </div>
   </div>

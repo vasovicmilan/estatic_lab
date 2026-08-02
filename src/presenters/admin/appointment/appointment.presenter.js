@@ -45,6 +45,16 @@ export function prepareAppointmentListData(result, query = {}) {
         },
         { type: "text", name: "dateFrom", label: "Od datuma", value: query.dateFrom || "" },
         { type: "text", name: "dateTo", label: "Do datuma", value: query.dateTo || "" },
+        {
+          type: "select",
+          name: "unassignedOnly",
+          label: "Dodela terapeuta",
+          value: query.unassignedOnly || "",
+          options: [
+            { value: "", label: "Svi" },
+            { value: "true", label: "Samo nedodeljeni" },
+          ],
+        },
       ],
     },
   };

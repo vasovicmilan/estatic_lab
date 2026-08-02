@@ -7,7 +7,7 @@ import { flashAndRedirect } from "../../../../utils/flash.util.js";
 
 export async function listAppointments(req, res, next) {
   try {
-    const { search, status, dateFrom, dateTo, page = 1, limit = 10 } = req.query;
+    const { search, status, dateFrom, dateTo, unassignedOnly, page = 1, limit = 10 } = req.query;
 
     const result = await appointmentService.findAppointments({
       search: search || "",
@@ -16,6 +16,7 @@ export async function listAppointments(req, res, next) {
         status: status || undefined,
         dateFrom: dateFrom ? new Date(dateFrom) : undefined,
         dateTo: dateTo ? new Date(dateTo) : undefined,
+        unassignedOnly: unassignedOnly === "true",
       },
       page: parseInt(page, 10) || 1,
       limit: parseInt(limit, 10) || 10,
