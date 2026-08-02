@@ -34,6 +34,7 @@ router.get("/", IndexController.homePage);
 
 // static pages
 router.get("/o-nama", IndexController.aboutPage);
+router.get("/partnerski-program", IndexController.partnershipPage);
 router.get("/politika-privatnosti", IndexController.privacyPage);
 router.get("/uslovi-koriscenja", IndexController.termsPage);
 router.get("/faq", IndexController.faqPage);
