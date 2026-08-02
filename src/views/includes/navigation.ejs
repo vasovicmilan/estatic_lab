@@ -49,12 +49,14 @@
               <% } %>
 
               <% if (user?.isEmployee) { %>
+                <!-- One entry point, not three - once inside /moj-nalog, its own
+                     pills-nav (desktop) / bottom tab bar (mobile) already covers
+                     Termini/Profil, so listing them again here is the same
+                     destination reachable two ways for no reason. -->
                 <li><a class="dropdown-item" href="/moj-nalog">Moj kalendar</a></li>
-                <li><a class="dropdown-item" href="/moj-nalog/termini">Moji termini (zaposleni)</a></li>
                 <% if (user.isPartner) { %>
                   <li><a class="dropdown-item" href="/moj-partner-nalog">Partnerski nalog</a></li>
                 <% } %>
-                <li><a class="dropdown-item" href="/moj-nalog/profil">Profil zaposlenog</a></li>
               <% } %>
 
               <% if (isAdmin || user?.isEmployee) { %>
@@ -101,12 +103,13 @@
 
           <% if (user?.isEmployee) { %>
             <div class="text-uppercase text-muted px-1 mb-1 mt-2 mobile-account-heading">Zaposleni</div>
+            <!-- One entry point, not three - see the matching comment on the desktop
+                 dropdown above; once inside /moj-nalog, its own bottom tab bar
+                 already covers Termini/Profil. -->
             <a class="nav-link px-1" href="/moj-nalog">Moj kalendar</a>
-            <a class="nav-link px-1" href="/moj-nalog/termini">Moji termini (zaposleni)</a>
             <% if (user.isPartner) { %>
               <a class="nav-link px-1" href="/moj-partner-nalog">Partnerski nalog</a>
             <% } %>
-            <a class="nav-link px-1" href="/moj-nalog/profil">Profil zaposlenog</a>
           <% } %>
 
           <div class="text-uppercase text-muted px-1 mb-1 mt-2 mobile-account-heading">Nalog</div>
