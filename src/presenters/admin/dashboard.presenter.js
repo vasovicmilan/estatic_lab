@@ -14,7 +14,7 @@ export function prepareDashboardData(stats, recent) {
         // left unassigned on purpose when 2+ employees were free at booking time (see
         // appointment.service.js's resolveEmployeeAssignment) - was invisible anywhere
         // on the dashboard before, easy to lose track of until a customer shows up
-        { label: "Nedodeljeni termini", value: stats.unassignedAppointments, url: "/admin/termini?unassignedOnly=true", icon: "bi-person-fill-question" },
+        { label: "Nedodeljeni termini", value: stats.unassignedAppointments, url: "/admin/termini?unassignedOnly=true", icon: "bi-person-fill-exclamation" },
         { label: "Nove poruke", value: stats.newContacts, url: "/admin/kontakt?status=new", icon: "bi-envelope" },
         { label: "Porudžbine na čekanju", value: stats.pendingOrders, url: "/admin/porudzbine?status=pending", icon: "bi-box-seam" },
         { label: "Zahtevi za isplatu", value: stats.pendingPayoutRequests, url: "/admin/isplate?status=requested", icon: "bi-cash-coin" },

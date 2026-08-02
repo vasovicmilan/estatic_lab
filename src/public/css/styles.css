@@ -967,3 +967,19 @@ h1, h2, h3, h4, h5, h6,
     padding-bottom: inherit;
   }
 }
+
+/* ================================================================
+   Mobile edge spacing (site-wide)
+
+   Bootstrap's default container gutter is 0.75rem (12px) per side on phones -
+   fine for cards/list-groups (which have their own internal padding on top of
+   it), but genuinely tight for plain body text/paragraphs sitting directly in
+   a container, which is what was making some pages feel like text ran right
+   up to the screen edge. A modest bump, not a redesign - just breathing room.
+   ================================================================ */
+@media (max-width: 575.98px) {
+  .container,
+  .container-fluid {
+    --bs-gutter-x: 2.5rem;
+  }
+}
