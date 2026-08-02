@@ -1,9 +1,9 @@
 <%- include("../includes/head") %>
-<%- include("../includes/navigation") %>
+<%- include("../includes/components/portal-header", { portalHome: "/moj-partner-nalog" }) %>
 
-<main class="container py-5">
+<main class="container py-4 has-portal-bottom-nav">
   <h1 class="h3 mb-4">Moja provizija</h1>
-  <%- include("../includes/components/partner-nav") %>
+  <%- include("../includes/components/partner-tabs") %>
 
   <form method="GET" action="/moj-partner-nalog/provizije" class="d-flex gap-2 mb-3">
     <select name="status" class="form-select form-select-sm" style="max-width:200px;" onchange="this.form.submit()">
@@ -18,11 +18,24 @@
     </select>
   </form>
 
-  <div class="card">
-    <div class="card-body p-0">
-      <% if (data.items.length === 0) { %>
-        <p class="text-muted p-3 mb-0">Nemate zabeleženu proviziju.</p>
-      <% } else { %>
+  <% if (data.items.length === 0) { %>
+    <p class="text-muted">Nemate zabeleženu proviziju.</p>
+  <% } else { %>
+    <div class="list-group d-lg-none">
+      <% data.items.forEach(function(c) { %>
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="fw-semibold"><%= c.izvor %></div>
+            <span class="badge bg-secondary"><%= c.status %></span>
+          </div>
+          <div class="fs-5 fw-bold text-primary"><%= c.iznos %></div>
+          <div class="text-muted small"><%= c.osnovnaVrednost %> &middot; <%= c.procenat %></div>
+        </div>
+      <% }) %>
+    </div>
+
+    <div class="card d-none d-lg-block">
+      <div class="card-body p-0">
         <table class="table mb-0">
           <thead><tr><th>Izvor</th><th>Osnovna vrednost</th><th>Procenat</th><th>Iznos</th><th>Status</th></tr></thead>
           <tbody>
@@ -37,9 +50,9 @@
             <% }) %>
           </tbody>
         </table>
-      <% } %>
+      </div>
     </div>
-  </div>
+  <% } %>
 
   <%- include("../includes/pagination", { pagination: data.pagination }) %>
 </main>

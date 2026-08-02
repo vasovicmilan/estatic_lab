@@ -1,10 +1,10 @@
 <%- include("../includes/head") %>
-<%- include("../includes/navigation") %>
+<%- include("../includes/components/portal-header", { portalHome: "/nalog" }) %>
 
-<main class="container py-5">
+<main class="container py-4 has-portal-bottom-nav">
   <%- include("../includes/flash-messages") %>
+  <%- include("../includes/components/user-tabs") %>
   <h1 class="h3 mb-4">Moj nalog</h1>
-  <%- include("../includes/components/account-nav") %>
 
   <div class="row g-4">
     <div class="col-md-7">
@@ -14,20 +14,20 @@
         <div class="list-group mb-4">
           <% data.addresses.forEach(function(a) { %>
             <div class="list-group-item">
-              <div class="d-flex justify-content-between align-items-start">
+              <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-start gap-2">
                 <div>
                   <% if (a.podrazumevana) { %><span class="badge bg-primary mb-1">Podrazumevana</span><% } %>
                   <% if (a.naziv) { %><div class="fw-semibold"><%= a.naziv %></div><% } %>
                   <div><%= a.ulica %> <%= a.broj %>, <%= a.grad %> <%= a.postanskiBroj %></div>
                 </div>
-                <div class="d-flex flex-column gap-1">
+                <div class="d-flex flex-row flex-sm-column gap-1">
                   <% if (!a.podrazumevana) { %>
-                    <form action="/nalog/adrese/<%= a.id %>/podrazumevana" method="POST">
+                    <form action="/nalog/adrese/<%= a.id %>/podrazumevana" method="POST" class="flex-fill">
                       <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
-                      <button type="submit" class="btn btn-outline-secondary btn-sm">Postavi kao podrazumevanu</button>
+                      <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Postavi kao podrazumevanu</button>
                     </form>
                   <% } %>
-                  <form action="/nalog/adrese/<%= a.id %>/ukloni" method="POST" data-confirm="Da li ste sigurni da želite da uklonite ovu adresu?">
+                  <form action="/nalog/adrese/<%= a.id %>/ukloni" method="POST" data-confirm="Da li ste sigurni da želite da uklonite ovu adresu?" class="flex-fill">
                     <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
                     <button type="submit" class="btn btn-outline-danger btn-sm w-100">Ukloni</button>
                   </form>

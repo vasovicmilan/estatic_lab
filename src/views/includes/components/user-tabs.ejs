@@ -1,0 +1,10 @@
+<%
+  const userTabs = [
+    { href: "/nalog", label: "Profil", icon: "bi-person" },
+    { href: "/nalog/termini", label: "Termini", icon: "bi-calendar3", matchPrefix: "/nalog/termini" },
+    { href: "/nalog/porudzbine", label: "Porudžbine", icon: "bi-box-seam", matchPrefix: "/nalog/porudzbine" },
+    { href: "/nalog/adrese", label: "Adrese", icon: "bi-geo-alt", matchPrefix: "/nalog/adrese" },
+    { href: "/nalog/podesavanja", label: "Podešavanja", icon: "bi-gear", matchPrefix: "/nalog/podesavanja" },
+  ];
+%>
+<%- include("portal-nav", { tabs: userTabs, currentPath: typeof currentPath !== "undefined" ? currentPath : "" }) %>

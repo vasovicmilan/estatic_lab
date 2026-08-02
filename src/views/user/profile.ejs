@@ -1,10 +1,10 @@
 <%- include("../includes/head") %>
-<%- include("../includes/navigation") %>
+<%- include("../includes/components/portal-header", { portalHome: "/nalog" }) %>
 
-<main class="container py-5">
+<main class="container py-4 has-portal-bottom-nav">
   <%- include("../includes/flash-messages") %>
   <h1 class="h3 mb-4">Moj nalog</h1>
-  <%- include("../includes/components/account-nav") %>
+  <%- include("../includes/components/user-tabs") %>
 
   <div class="card" style="max-width: 500px;">
     <div class="card-body">

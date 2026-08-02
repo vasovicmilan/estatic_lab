@@ -4,18 +4,26 @@
   // schedule between clients doesn't need Usluge/Paketi/Prodavnica/Blog/cart/"Zakažite
   // termin" taking up space above their actual tools, especially on a phone where
   // that's a full screen of irrelevant chrome to scroll past first.
+  //
+  // "Minimal" still has to leave an obvious way back to the actual site, though - the
+  // brand link goes to "/" (the universal "click the logo to go home" convention,
+  // which this was breaking before by pointing at the portal instead), and there's
+  // also an explicit menu item for it, since relying on the logo alone wasn't
+  // discoverable enough on its own.
   const user = typeof locals.user !== "undefined" ? locals.user : null;
   const resolvedPortalHome = typeof portalHome !== "undefined" ? portalHome : "/";
 %>
 <nav class="navbar navbar-light bg-white border-bottom sticky-top portal-header">
   <div class="container-fluid">
-    <a class="navbar-brand fw-bold fst-italic mb-0 fs-6" href="<%= resolvedPortalHome %>">Estetik Lab</a>
+    <a class="navbar-brand fw-bold fst-italic mb-0 fs-6" href="/">Estetik Lab</a>
 
     <div class="dropdown">
       <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-label="Nalog">
         <i class="bi bi-person-circle"></i> <span class="d-none d-sm-inline"><%= user?.firstName %></span>
       </button>
       <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="/"><i class="bi bi-arrow-left me-1"></i>Nazad na sajt</a></li>
+        <li><hr class="dropdown-divider"></li>
         <% if (user?.roleName === "admin" || user?.permissions?.includes("access_admin_panel")) { %>
           <li><a class="dropdown-item" href="/admin">Admin panel</a></li>
         <% } %>

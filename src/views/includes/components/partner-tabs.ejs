@@ -1,0 +1,9 @@
+<%
+  const partnerTabs = [
+    { href: "/moj-partner-nalog", label: "Pregled", icon: "bi-graph-up" },
+    { href: "/moj-partner-nalog/provizije", label: "Provizija", icon: "bi-cash-stack", matchPrefix: "/moj-partner-nalog/provizije" },
+    { href: "/moj-partner-nalog/isplate", label: "Isplate", icon: "bi-wallet2", matchPrefix: "/moj-partner-nalog/isplate" },
+    { href: "/moj-partner-nalog/katalog", label: "Katalog", icon: "bi-link-45deg", matchPrefix: "/moj-partner-nalog/katalog" },
+  ];
+%>
+<%- include("portal-nav", { tabs: partnerTabs, currentPath: typeof currentPath !== "undefined" ? currentPath : "" }) %>
