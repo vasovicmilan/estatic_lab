@@ -18,6 +18,7 @@
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/kontakt') ? 'active' : '' %>" href="/kontakt">Kontakt</a></li>
       </ul>
 
+      <% const isAdmin = user?.roleName === 'admin' || user?.permissions?.includes('access_admin_panel'); %>
       <div class="d-flex align-items-center gap-2">
         <a href="/usluge" class="btn btn-primary btn-sm">Zakažite termin</a>
 
@@ -32,12 +33,17 @@
         </a>
 
         <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
-          <div class="dropdown">
+          <!-- Desktop only - the floating dropdown works fine here, this isn't what
+               was broken. Hidden on mobile so it can't fall into the static-positioning
+               rule below (see the .navbar-collapse .dropdown-menu comment in styles.css) -
+               that rule is still needed for OTHER dropdowns in a scrollable open mobile
+               menu, just not a good fit for a 12-item account menu specifically. -->
+          <div class="dropdown d-none d-lg-block">
             <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
               <i class="bi bi-person-circle"></i> <%= user?.firstName %>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-              <% if (user?.roleName === 'admin' || user?.permissions?.includes('access_admin_panel')) { %>
+              <% if (isAdmin) { %>
                 <li><a class="dropdown-item" href="/admin">Admin panel</a></li>
                 <li><a class="dropdown-item" href="/admin/profil">Admin profil</a></li>
               <% } %>
@@ -51,7 +57,7 @@
                 <li><a class="dropdown-item" href="/moj-nalog/profil">Profil zaposlenog</a></li>
               <% } %>
 
-              <% if (user?.roleName === 'admin' || user?.permissions?.includes('access_admin_panel') || user?.isEmployee) { %>
+              <% if (isAdmin || user?.isEmployee) { %>
                 <li><hr class="dropdown-divider"></li>
               <% } %>
 
@@ -71,6 +77,49 @@
           <a href="/registracija" class="btn btn-outline-primary btn-sm">Registracija</a>
         <% } %>
       </div>
+
+      <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
+        <!-- Mobile only - a real dropdown-in-a-scrollable-collapse doesn't work well
+             for 12 items (see the styles.css comment on .navbar-collapse .dropdown-menu:
+             it has to render inline/static there to avoid getting clipped, which then
+             visually reflows everything after it in the flex row above). This is a
+             flat, always-visible, clearly labeled section instead of a dropdown
+             pretending to be inline - no floating positioning to fight with, and
+             grouping the 12 links under a few small headers is easier to scan than one
+             undifferentiated list. -->
+        <div class="d-lg-none border-top mt-3 pt-3">
+          <div class="d-flex align-items-center gap-2 px-1 mb-2 text-body">
+            <i class="bi bi-person-circle fs-5" aria-hidden="true"></i>
+            <span class="fw-semibold"><%= user?.firstName %></span>
+          </div>
+
+          <% if (isAdmin) { %>
+            <div class="text-uppercase text-muted px-1 mb-1 mobile-account-heading">Admin</div>
+            <a class="nav-link px-1" href="/admin">Admin panel</a>
+            <a class="nav-link px-1" href="/admin/profil">Admin profil</a>
+          <% } %>
+
+          <% if (user?.isEmployee) { %>
+            <div class="text-uppercase text-muted px-1 mb-1 mt-2 mobile-account-heading">Zaposleni</div>
+            <a class="nav-link px-1" href="/moj-nalog">Moj kalendar</a>
+            <a class="nav-link px-1" href="/moj-nalog/termini">Moji termini (zaposleni)</a>
+            <% if (user.isPartner) { %>
+              <a class="nav-link px-1" href="/moj-partner-nalog">Partnerski nalog</a>
+            <% } %>
+            <a class="nav-link px-1" href="/moj-nalog/profil">Profil zaposlenog</a>
+          <% } %>
+
+          <div class="text-uppercase text-muted px-1 mb-1 mt-2 mobile-account-heading">Nalog</div>
+          <a class="nav-link px-1" href="/nalog">Moj profil</a>
+          <a class="nav-link px-1" href="/nalog/termini">Moji termini</a>
+          <a class="nav-link px-1" href="/nalog/porudzbine">Moje porudžbine</a>
+          <a class="nav-link px-1" href="/nalog/adrese">Moje adrese</a>
+          <a class="nav-link px-1" href="/korpa">Korpa</a>
+          <a class="nav-link px-1" href="/nalog/podesavanja">Podešavanja</a>
+
+          <a class="nav-link px-1 mt-2 pt-2 border-top text-danger" href="/odjava">Odjava</a>
+        </div>
+      <% } %>
     </div>
   </div>
 </nav>

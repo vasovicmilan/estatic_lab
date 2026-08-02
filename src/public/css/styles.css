@@ -983,3 +983,11 @@ h1, h2, h3, h4, h5, h6,
     --bs-gutter-x: 2.5rem;
   }
 }
+
+/* small section labels in the mobile account menu (navigation.ejs) - Admin/
+   Zaposleni/Nalog groupings, same idea as a settings app's section headers */
+.mobile-account-heading {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
