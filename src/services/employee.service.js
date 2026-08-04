@@ -88,6 +88,8 @@ export async function createEmployee(data) {
     workingHours: data.workingHours || [],
     isActive: data.isActive ?? true,
     notes: data.notes || "",
+    googleCalendarId: data.googleCalendarId || null,
+    sredimeIcsUrl: data.sredimeIcsUrl || null,
   });
 
   // Only promote the user's role to "employee" - never downgrade someone who

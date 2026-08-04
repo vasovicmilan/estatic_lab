@@ -94,6 +94,13 @@ export async function findActiveEmployeesWorkingHours() {
   return Employee.find({ isActive: true }, { workingHours: 1 }).lean();
 }
 
+// Used by jobs/sredime-jobs.js - only employees who actually have a feed
+// configured are worth a network round trip on every cron tick. $nin: [null, ""]
+// covers both "never set" (null default) and an accidentally-saved empty string.
+export async function findEmployeesWithSredimeIcsUrl() {
+  return Employee.find({ sredimeIcsUrl: { $nin: [null, ""] } }, { sredimeIcsUrl: 1 }).lean();
+}
+
 export default {
   createEmployee,
   findAllEmployeeUserIds,
@@ -106,4 +113,5 @@ export default {
   countEmployees,
   pullServiceFromAllEmployees,
   findActiveEmployeesWorkingHours,
+  findEmployeesWithSredimeIcsUrl,
 }

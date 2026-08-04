@@ -71,6 +71,29 @@ const EmployeeSchema = new Schema(
       type: String,
       trim: true,
     },
+
+    // Google Calendar ID this employee's appointments get written to (e.g.
+    // "abc123...@group.calendar.google.com" for a dedicated calendar, or a plain
+    // email address if writing to someone's primary calendar). Null/absent means
+    // calendar sync is simply skipped for this employee - not a required field,
+    // since not every employee needs to be on Google Calendar for the app to work.
+    googleCalendarId: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
+    // SrediMe's outbound per-employee ICS/iCal feed URL - the reverse direction
+    // of googleCalendarId above. This is SrediMe's own generated link (from their
+    // "URL za izvoz SrediMe zakazivanja u druge softvere" setting), polled by our
+    // cron job to import bookings THEY took, so this employee's slot never gets
+    // double-booked from our side. Independent of googleCalendarId - an employee
+    // can have one, both, or neither configured.
+    sredimeIcsUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
   },
   { timestamps: true }
 );

@@ -127,6 +127,8 @@ export function mapEmployeeForAdminDetail(employee) {
     procenatProvizije: employee.payType === "commission" ? `${employee.commissionRate}%` : null,
     aktivan: employee.isActive ? "Da" : "Ne",
     napomena: employee.notes || null,
+    googleCalendarId: employee.googleCalendarId || null,
+    sredimeIcsUrl: employee.sredimeIcsUrl || null,
     vreme: {
       kreiran: formatDateTime(employee.createdAt),
       azuriran: formatDateTime(employee.updatedAt),
@@ -153,6 +155,8 @@ export function mapEmployeeForEdit(employee) {
     commissionRate: employee.commissionRate,
     isActive: employee.isActive,
     notes: employee.notes || "",
+    googleCalendarId: employee.googleCalendarId || "",
+    sredimeIcsUrl: employee.sredimeIcsUrl || "",
   };
 }
 

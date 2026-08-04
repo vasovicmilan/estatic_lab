@@ -1,5 +1,6 @@
 import employeeService from "./employee.service.js";
 import appointmentService from "./appointment.service.js";
+import externalBusyIntervalService from "./external-busy-interval.service.js";
 import serviceService from "./service.service.js";
 import resourceService from "./resource.service.js";
 import { validationError, badRequest } from "../utils/error.util.js";
@@ -91,12 +92,21 @@ async function getEmployeeFreeSlotsForDay(employee, date, durationMinutes) {
   if (!workingHoursEntry || !workingHoursEntry.slots?.length) return [];
 
   const { start: dayStart, end: dayEnd } = dayBounds(date);
-  const busyRaw = await appointmentService.getBusyIntervals(employee._id, dayStart, dayEnd);
+  const [busyRaw, externalBusyRaw] = await Promise.all([
+    appointmentService.getBusyIntervals(employee._id, dayStart, dayEnd),
+    externalBusyIntervalService.getExternalBusyIntervals(employee._id, dayStart, dayEnd),
+  ]);
   // pad every existing appointment by the required buffer on both sides before
   // subtracting - this is what actually keeps a gap before/after each appointment,
   // not just prevents literal overlap. Matches the buffer applied at write time in
   // findOverlappingAppointments (appointment.repository.js).
-  const busyIntervals = busyRaw.map((a) => ({
+  //
+  // External (SrediMe) intervals get the same buffer treatment for consistency,
+  // even though they weren't created through our own booking flow - there's no
+  // reason a SrediMe-booked appointment should butt right up against one booked
+  // directly, if the buffer's whole point is giving the employee breathing room
+  // between clients.
+  const busyIntervals = [...busyRaw, ...externalBusyRaw].map((a) => ({
     start: new Date(new Date(a.startTime).getTime() - BUFFER_MS),
     end: new Date(new Date(a.endTime).getTime() + BUFFER_MS),
   }));
@@ -276,10 +286,13 @@ export async function findAvailableEmployees(serviceId, startTime, endTime, { se
   const onShift = candidates.filter((employee) => isEmployeeWorkingAt(employee, startTime, endTime));
 
   const checks = await Promise.all(
-    onShift.map(async (employee) => ({
-      employee,
-      isFree: !(await appointmentService.hasOverlappingAppointment(employee._id, startTime, endTime, { session })),
-    }))
+    onShift.map(async (employee) => {
+      const [hasOwnOverlap, hasExternalOverlap] = await Promise.all([
+        appointmentService.hasOverlappingAppointment(employee._id, startTime, endTime, { session }),
+        externalBusyIntervalService.hasOverlappingExternalInterval(employee._id, startTime, endTime),
+      ]);
+      return { employee, isFree: !hasOwnOverlap && !hasExternalOverlap };
+    })
   );
   return checks.filter((c) => c.isFree).map((c) => c.employee);
 }
@@ -304,10 +317,13 @@ export async function getEligibleEmployeeIdsForAppointment(serviceId, startTime,
   const onShift = candidates.filter((employee) => isEmployeeWorkingAt(employee, startTime, endTime));
 
   const checks = await Promise.all(
-    onShift.map(async (employee) => ({
-      id: employee._id.toString(),
-      isFree: !(await appointmentService.hasOverlappingAppointment(employee._id, startTime, endTime, { excludeId: excludeAppointmentId })),
-    }))
+    onShift.map(async (employee) => {
+      const [hasOwnOverlap, hasExternalOverlap] = await Promise.all([
+        appointmentService.hasOverlappingAppointment(employee._id, startTime, endTime, { excludeId: excludeAppointmentId }),
+        externalBusyIntervalService.hasOverlappingExternalInterval(employee._id, startTime, endTime),
+      ]);
+      return { id: employee._id.toString(), isFree: !hasOwnOverlap && !hasExternalOverlap };
+    })
   );
   return checks.filter((c) => c.isFree).map((c) => c.id);
 }

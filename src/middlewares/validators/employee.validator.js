@@ -53,6 +53,21 @@ export const validateEmployeeCreate = [
     .trim()
     .isLength({ max: 500 }).withMessage("Napomena može imati najviše 500 karaktera"),
 
+  body("googleCalendarId")
+    .optional({ values: "falsy" })
+    .trim()
+    .isLength({ max: 255 }).withMessage("Google Calendar ID je predugačak")
+    // covers both shapes we actually issue: a dedicated calendar id
+    // (xxxx@group.calendar.google.com) and a plain email address for someone's
+    // primary calendar - anything else is almost certainly a paste mistake
+    .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).withMessage("Google Calendar ID mora izgledati kao email adresa ili x@group.calendar.google.com"),
+
+  body("sredimeIcsUrl")
+    .optional({ values: "falsy" })
+    .trim()
+    .isURL({ protocols: ["https"], require_protocol: true }).withMessage("Adresa mora biti validan https:// link")
+    .isLength({ max: 1000 }).withMessage("Adresa je predugačka"),
+
   collectValidationErrors,
 ];
 
@@ -77,6 +92,18 @@ export const validateEmployeeUpdate = [
     .optional()
     .trim()
     .isLength({ max: 500 }).withMessage("Napomena može imati najviše 500 karaktera"),
+
+  body("googleCalendarId")
+    .optional({ values: "falsy" })
+    .trim()
+    .isLength({ max: 255 }).withMessage("Google Calendar ID je predugačak")
+    .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).withMessage("Google Calendar ID mora izgledati kao email adresa ili x@group.calendar.google.com"),
+
+  body("sredimeIcsUrl")
+    .optional({ values: "falsy" })
+    .trim()
+    .isURL({ protocols: ["https"], require_protocol: true }).withMessage("Adresa mora biti validan https:// link")
+    .isLength({ max: 1000 }).withMessage("Adresa je predugačka"),
 
   collectValidationErrors,
 ];

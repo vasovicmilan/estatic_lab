@@ -96,6 +96,8 @@ export function prepareEmployeeDetailsData(employee, balance = null) {
           { label: "Način isplate", value: employee.nacinIsplate },
           ...(employee.procenatProvizije ? [{ label: "Procenat provizije", value: employee.procenatProvizije }] : []),
           { label: "Napomena", value: employee.napomena || "-" },
+          { label: "Google Calendar ID", value: employee.googleCalendarId || "Nije povezan" },
+          { label: "SrediMe ICS adresa", value: employee.sredimeIcsUrl || "Nije povezana" },
         ],
       },
       ...(balance
@@ -129,7 +131,7 @@ export function prepareEmployeeFormData(employee = null, { userOptions = [], ser
   const isEdit = !!employee;
   const values = isEdit
     ? employee
-    : { userId: "", expert: null, services: [], workingHours: [], payType: "salary", commissionRate: null, isActive: true, notes: "" };
+    : { userId: "", expert: null, services: [], workingHours: [], payType: "salary", commissionRate: null, isActive: true, notes: "", googleCalendarId: "", sredimeIcsUrl: "" };
   const weekDays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
   // employee has no slug at all - nothing to hide here, included for consistency
@@ -198,6 +200,22 @@ export function prepareEmployeeFormData(employee = null, { userOptions = [], ser
       help: "Obavezno samo ako je način isplate 'Provizija'.",
     },
     { name: "notes", label: "Napomena", type: "textarea", rows: 3, width: 12, value: values.notes, help: "Najviše 500 karaktera." },
+    {
+      name: "googleCalendarId",
+      label: "Google Calendar ID (opciono)",
+      type: "text",
+      width: 12,
+      value: values.googleCalendarId,
+      help: "ID kalendara u koji se automatski upisuju termini ovog zaposlenog (izgleda kao email adresa ili x@group.calendar.google.com). Ostavi prazno ako zaposleni nema povezan kalendar.",
+    },
+    {
+      name: "sredimeIcsUrl",
+      label: "SrediMe ICS adresa (opciono)",
+      type: "text",
+      width: 12,
+      value: values.sredimeIcsUrl,
+      help: "Link koji je SrediMe dao za ovog zaposlenog (opcija 'URL za izvoz SrediMe zakazivanja u druge softvere'). Koristi se da naš sistem povremeno preuzme termine zakazane preko SrediMe. Ostavi prazno ako zaposleni nije na SrediMe.",
+    },
     { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive }
   );
 

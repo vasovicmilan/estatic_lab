@@ -8,6 +8,7 @@ import {
 } from "./report-jobs.js";
 import { runCommissionGracePeriodSweep } from "./commission-jobs.js";
 import { runPublishScheduledPosts } from "./post-jobs.js";
+import { runSredimeSync } from "./sredime-jobs.js";
 import { logInfo } from "../utils/logger.util.js";
 
 const TIMEZONE = process.env.CRON_TIMEZONE || "Europe/Belgrade";
@@ -53,6 +54,12 @@ export function startScheduler() {
   // scheduled for e.g. 09:00 actually goes live close to 09:00 rather than sitting
   // "scheduled" for up to an hour, without being so frequent it's pointless load.
   cron.schedule("*/5 * * * *", runPublishScheduledPosts, { timezone: TIMEZONE });
+
+  // SrediMe ICS sync - every 15 minutes. Keeps cached external busy intervals
+  // (see external-busy-interval.model.js) fresh enough that a booking made
+  // through SrediMe reliably shows up here well before the next customer looks
+  // at that employee's slots, without hammering SrediMe's server every minute.
+  cron.schedule("*/15 * * * *", runSredimeSync, { timezone: TIMEZONE });
 
   logInfo(`[cron] Scheduler started (timezone: ${TIMEZONE})`);
 }
