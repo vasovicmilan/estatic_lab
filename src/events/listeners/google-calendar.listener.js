@@ -14,6 +14,7 @@ function safe(eventName, handler) {
   };
 }
 
+const FREED_STATUSES = ["cancelled", "rejected"];
 const ACTIVE_STATUSES = ["pending", "confirmed"];
 
 eventEmitter.on(
@@ -40,16 +41,15 @@ eventEmitter.on(
     if (!employee?.googleCalendarId) return;
 
     const googleEventId = await appointmentService.getGoogleEventId(appointmentId);
+    if (!googleEventId) return;
 
-    if (!ACTIVE_STATUSES.includes(status)) {
-      if (googleEventId) {
-        await googleCalendarService.deleteEventForAppointment(employee.googleCalendarId, googleEventId);
-        await appointmentService.setGoogleEventId(appointmentId, null);
-      }
+    if (FREED_STATUSES.includes(status)) {
+      await googleCalendarService.deleteEventForAppointment(employee.googleCalendarId, googleEventId);
+      await appointmentService.setGoogleEventId(appointmentId, null);
       return;
     }
 
-    if (googleEventId) {
+    if (ACTIVE_STATUSES.includes(status)) {
       await googleCalendarService.updateEventForAppointment(appointment, employee.googleCalendarId, googleEventId);
     }
   })
@@ -75,6 +75,18 @@ eventEmitter.on(
       const newGoogleEventId = await googleCalendarService.createEventForAppointment(appointment, newEmployee.googleCalendarId);
       if (newGoogleEventId) await appointmentService.setGoogleEventId(appointmentId, newGoogleEventId);
     }
+  })
+);
+
+eventEmitter.on(
+  "appointment:deleted",
+  safe("appointment:deleted", async ({ employeeId, googleEventId }) => {
+    if (!employeeId || !googleEventId) return;
+
+    const employee = await employeeService.getEmployeeByIdRaw(employeeId);
+    if (!employee?.googleCalendarId) return;
+
+    await googleCalendarService.deleteEventForAppointment(employee.googleCalendarId, googleEventId);
   })
 );
 

@@ -571,6 +571,17 @@ export async function deleteAppointmentById(appointmentId, actorId) {
 
   await appointmentRepo.deleteAppointmentById(appointmentId);
   logInfo("Appointment deleted", { appointmentId, actorId });
+
+  // Fired with employeeId/googleEventId captured above (the doc is gone by now,
+  // so google-calendar.listener.js can't re-fetch it the way the other handlers
+  // do) - without this, a hard-deleted appointment left its Google Calendar
+  // event behind forever, silently blocking a slot nobody actually has anymore.
+  eventEmitter.emit("appointment:deleted", {
+    appointmentId,
+    employeeId: appointment.employee ? appointment.employee.toString() : null,
+    googleEventId: appointment.googleEventId || null,
+  });
+
   return { success: true };
 }
 

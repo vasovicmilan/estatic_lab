@@ -1,8 +1,10 @@
 import googleCalendarProvider from "../integrations/google-calendar/google-calendar.provider.js";
 import GOOGLE_CALENDAR_CONFIG from "../integrations/google-calendar/google-calendar.config.js";
+import { BOOKING_BUFFER_MINUTES } from "../config/booking.config.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 
 const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
+const BUFFER_MS = BOOKING_BUFFER_MINUTES * 60000;
 
 // Every event this app pushes carries this marker in extendedProperties. This is
 // what will let the future SrediMe-facing sync (or any future poller reading this
@@ -15,6 +17,14 @@ function buildEventPayload(appointment) {
   const clientName = appointment.korisnik?.ime || "Klijent";
   const serviceName = appointment.usluga?.naziv || "Termin";
 
+  // End padded by BOOKING_BUFFER_MINUTES so the calendar itself reflects
+  // cleanup/prep time after the appointment, without relying on SrediMe (or
+  // anyone else reading this calendar) to independently apply the same buffer.
+  // Deliberately NOT padded before the start - Milan wants that on the calendar
+  // as fully bookable, unlike the "after" side.
+  const start = new Date(appointment.termin.pocetakRaw);
+  const paddedEnd = new Date(new Date(appointment.termin.krajRaw).getTime() + BUFFER_MS);
+
   return {
     summary: `${serviceName} - ${clientName}`,
     description: [
@@ -25,8 +35,8 @@ function buildEventPayload(appointment) {
     ]
       .filter(Boolean)
       .join("\n"),
-    start: { dateTime: new Date(appointment.termin.pocetakRaw).toISOString() },
-    end: { dateTime: new Date(appointment.termin.krajRaw).toISOString() },
+    start: { dateTime: start.toISOString() },
+    end: { dateTime: paddedEnd.toISOString() },
     extendedProperties: {
       private: {
         source: SOURCE_TAG,
