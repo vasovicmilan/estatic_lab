@@ -4,7 +4,9 @@ import app from "./app.js";
 import "./events/listeners/email.listener.js";
 import "./events/listeners/telegram.listener.js";
 import "./events/listeners/commission.listener.js";
+import "./events/listeners/google-calendar.listener.js";
 import { initTelegramBot, stopTelegramBot } from "./integrations/telegram/telegram.provider.js";
+import { initGoogleCalendarClient } from "./integrations/google-calendar/google-calendar.provider.js";
 import { startScheduler } from "./jobs/scheduler.js";
 import { logInfo, logError } from "./utils/logger.util.js";
 
@@ -16,6 +18,7 @@ async function start() {
     logInfo("MongoDB connected");
 
     initTelegramBot();
+    initGoogleCalendarClient();
     startScheduler();
 
     const server = app.listen(PORT, "0.0.0.0", () => {

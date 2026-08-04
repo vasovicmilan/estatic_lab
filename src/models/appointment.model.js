@@ -74,6 +74,16 @@ const AppointmentSchema = new Schema(
       index: true,
     },
 
+    // ID of the event this appointment was written to on the assigned employee's
+    // Google Calendar (see google-calendar.service.js). Null means either the
+    // employee has no googleCalendarId configured, sync is disabled, or the push
+    // failed - calendar sync is a side effect of booking, never a blocker for it,
+    // so this is intentionally never required.
+    googleEventId: {
+      type: String,
+      default: null,
+    },
+
     rejectedBy: { type: String, enum: ["system", "admin", "employee"] },
     rejectedAt: Date,
     rejectionReason: { type: String, trim: true },

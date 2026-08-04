@@ -498,6 +498,12 @@ export async function reassignAppointment(appointmentId, newEmployeeId, actorId)
   const appointment = await appointmentRepo.findAppointmentById(appointmentId);
   if (!appointment) notFound("Termin");
 
+  // captured before the update below overwrites it - google-calendar.listener.js
+  // needs to know which employee (and therefore which calendar) this appointment
+  // is moving AWAY from, since an event can't be "moved" between calendars via a
+  // patch call, only deleted from one and recreated on the other.
+  const previousEmployeeId = appointment.employee ? appointment.employee.toString() : null;
+
   const newEmployeeDoc = await employeeService.getEmployeeByIdRaw(newEmployeeId);
   if (!newEmployeeDoc) notFound("Zaposleni");
   if (!isEmployeeWorkingAt(newEmployeeDoc, appointment.startTime, appointment.endTime)) {
@@ -527,9 +533,27 @@ export async function reassignAppointment(appointmentId, newEmployeeId, actorId)
   });
 
   logInfo("Appointment reassigned", { appointmentId, newEmployeeId, actorId });
-  eventEmitter.emit("appointment:reassigned", { appointmentId, newEmployeeId: newEmployeeId.toString() });
+  eventEmitter.emit("appointment:reassigned", { appointmentId, newEmployeeId: newEmployeeId.toString(), previousEmployeeId });
   const populated = await getPopulatedAppointment(updated._id);
   return mapAppointment(populated, "admin", "detail");
+}
+
+// Written by google-calendar.listener.js after a successful push/move to Google
+// Calendar - not part of the normal appointment lifecycle, so it deliberately
+// skips getPopulatedAppointment/mapAppointment and doesn't emit any event of its
+// own (nothing downstream needs to react to "the calendar id changed").
+export async function setGoogleEventId(appointmentId, googleEventId) {
+  if (!appointmentId) validationError("appointmentId");
+  await appointmentRepo.updateAppointmentById(appointmentId, { googleEventId });
+}
+
+// Narrow raw getter for google-calendar.listener.js - googleEventId is never
+// exposed on any mapped shape (it's sync-internal bookkeeping, not something any
+// UI needs to show), so the mapped getAppointmentById can't be reused here.
+export async function getGoogleEventId(appointmentId) {
+  if (!appointmentId) return null;
+  const appointment = await appointmentRepo.findAppointmentById(appointmentId);
+  return appointment?.googleEventId || null;
 }
 
 export async function deleteAppointmentById(appointmentId, actorId) {
@@ -566,4 +590,6 @@ export default {
   noShowAppointment,
   reassignAppointment,
   deleteAppointmentById,
+  setGoogleEventId,
+  getGoogleEventId,
 };
