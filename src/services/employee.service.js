@@ -213,6 +213,13 @@ export async function getAllEmployeeUserIds() {
   return employeeRepo.findAllEmployeeUserIds();
 }
 
+// Used by jobs/sredime-jobs.js - raw (unmapped), same reasoning as
+// getEmployeeByIdRaw: the sync job needs sredimeIcsUrl directly, not any
+// display-formatted shape.
+export async function getEmployeesWithSredimeIcsUrl() {
+  return employeeRepo.findEmployeesWithSredimeIcsUrl();
+}
+
 // Feeds the site-wide Organization JSON-LD (organization.builder.js). There is no
 // fixed salon schedule to hardcode - who's actually here on a given day depends on
 // individual employee schedules, which change. So instead of a static config value
@@ -282,5 +289,6 @@ export default {
   getEmployeeOptionsForService,
   getEmployeeNameById,
   getAllEmployeeUserIds,
+  getEmployeesWithSredimeIcsUrl,
   getAggregateBusinessHours,
 };
