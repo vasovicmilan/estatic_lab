@@ -12,32 +12,67 @@ export function toDateKey(date) {
   return `${year}-${month}-${day}`;
 }
 
+// The app's single "business" timezone - matches scheduler.js's CRON_TIMEZONE and
+// zonedInputToUtcDate/utcDateToZonedInputValue below. Declared here (not just
+// further down) because formatDateTime needs it too - see that function's comment
+// for what was wrong before this existed.
+const APP_TIMEZONE = process.env.CRON_TIMEZONE || "Europe/Belgrade";
+
+// Formats a stored UTC Date for DISPLAY, converted into APP_TIMEZONE wall-clock
+// time. Previously used d.getDate()/getHours()/etc directly, which return
+// components in the SERVER PROCESS's own local timezone - correct only by
+// coincidence if that happens to be Europe/Belgrade. On this VPS (system time
+// is UTC), that silently displayed every appointment/order/etc time 1-2h
+// EARLIER than the real Belgrade time (CET/CEST) shown everywhere else
+// (Google Calendar, SrediMe, the customer's own clock) - e.g. a 15:00 Belgrade
+// appointment showed as "13:00" throughout the admin panel and user account
+// pages. Now uses the same Intl.DateTimeFormat approach as
+// utcDateToZonedInputValue, so every display of a date agrees with reality.
 export function formatDateTime(date) {
   if (!date) return null;
 
   const d = new Date(date);
   if (isNaN(d.getTime())) return null;
 
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
+  const dtf = new Intl.DateTimeFormat("en-CA", {
+    timeZone: APP_TIMEZONE,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const parts = dtf.formatToParts(d).reduce((acc, p) => {
+    acc[p.type] = p.value;
+    return acc;
+  }, {});
 
-  return `${day}.${month}.${year}. ${hours}:${minutes}`;
+  return `${parts.day}.${parts.month}.${parts.year}. ${parts.hour}:${parts.minute}`;
 }
 
+// Same SERVER-LOCAL-vs-APP_TIMEZONE issue as formatDateTime above, but for the
+// date-only case (e.g. a birthday, an order date shown without a time). Fixed
+// the same way - Intl.DateTimeFormat pinned to APP_TIMEZONE rather than
+// d.getDate()/getMonth()/getFullYear(), which read server-local components.
 export function formatDate(date) {
   if (!date) return null;
 
   const d = new Date(date);
   if (isNaN(d.getTime())) return null;
 
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
+  const dtf = new Intl.DateTimeFormat("en-CA", {
+    timeZone: APP_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = dtf.formatToParts(d).reduce((acc, p) => {
+    acc[p.type] = p.value;
+    return acc;
+  }, {});
 
-  return `${day}.${month}.${year}.`;
+  return `${parts.day}.${parts.month}.${parts.year}.`;
 }
 
 export function formatDateForInput(date) {
@@ -94,36 +129,15 @@ export function isValidDate(date) {
   return !isNaN(d.getTime());
 }
 
-// The app's single "business" timezone - matches scheduler.js's CRON_TIMEZONE,
-// since a scheduledFor value entered by an admin and the cron sweep that fires
-// on it need to agree on what wall-clock time actually means.
-const APP_TIMEZONE = process.env.CRON_TIMEZONE || "Europe/Belgrade";
-
-// Converts a naive "YYYY-MM-DDTHH:mm[:ss]" string - exactly what an
-// <input type="datetime-local"> submits, with NO timezone info attached -
-// into the real UTC instant it represents in `timeZone` (default: the app's
-// business timezone). Deliberately does NOT hand the raw string to `new
-// Date()`/Mongoose's Date caster: per the ECMA-262 Date Time String Format, a
-// string with a time component but no offset is parsed using the *server
-// process's own local time* - correct only by coincidence if that happens to
-// match `timeZone`. On a typical Ubuntu VPS running with system time in UTC,
-// that silently reinterprets "14:00 Belgrade" as "14:00 UTC", shifting the
-// real publish instant 1-2h later (CET/CEST) than the admin intended - which
-// is how a scheduled blog post can sail past the time shown on screen without
-// the publish-scheduled-posts cron ever picking it up as due.
-export function zonedInputToUtcDate(input, timeZone = APP_TIMEZONE) {
-  if (!input) return null;
-  const match = String(input).trim().match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
-  if (!match) return null;
-  const [, year, month, day, hour, minute, second = "00"] = match;
-
-  // Two-step correction: first take the wall-clock digits as if they were
-  // already UTC, ask what that UTC instant displays as inside `timeZone`,
-  // then shift by however far off that turned out to be. One pass is enough
-  // for every real-world zone (no zone's DST transition moves the instant by
-  // more than a couple of hours), so this converges without needing a
-  // timezone database dependency.
-  const asUTC = Date.UTC(+year, +month - 1, +day, +hour, +minute, +second);
+// Core primitive: the true UTC instant for a wall-clock moment
+// (year, month[1-12], day, hour, minute, second) as experienced in `timeZone`.
+// This is what zonedInputToUtcDate/timeStringToDate/dayBounds/etc all actually
+// need - "what real moment does this Belgrade wall-clock time correspond to" -
+// factored out here so every caller shares one correct implementation instead
+// of each reimplementing (and potentially getting wrong) the same DST-aware
+// two-step correction.
+export function zonedComponentsToUtcDate(year, month, day, hour, minute, second = 0, timeZone = APP_TIMEZONE) {
+  const asUTC = Date.UTC(year, month - 1, day, hour, minute, second);
   const dtf = new Intl.DateTimeFormat("en-US", {
     timeZone,
     hourCycle: "h23",
@@ -143,6 +157,61 @@ export function zonedInputToUtcDate(input, timeZone = APP_TIMEZONE) {
   return new Date(asUTC - offset);
 }
 
+// Reverse direction: the wall-clock calendar components (plus weekday, all
+// lowercase e.g. "monday" - matching working-hours.util.js's DAY_NAMES) a
+// stored UTC Date instant displays as inside `timeZone`. This is the ONLY
+// correct way to ask "what day/hour/minute is this in Belgrade" - Date's own
+// getDay()/getHours()/getDate() etc answer that question for the SERVER
+// PROCESS's own timezone instead, which silently gives the wrong answer
+// whenever the server isn't itself running in `timeZone` (this VPS runs UTC).
+export function getZonedComponents(date, timeZone = APP_TIMEZONE) {
+  const d = new Date(date);
+  const dtf = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    weekday: "long",
+  });
+  const parts = dtf.formatToParts(d).reduce((acc, p) => {
+    acc[p.type] = p.value;
+    return acc;
+  }, {});
+  return {
+    year: +parts.year,
+    month: +parts.month,
+    day: +parts.day,
+    hour: +parts.hour,
+    minute: +parts.minute,
+    second: +parts.second,
+    weekday: parts.weekday.toLowerCase(),
+  };
+}
+
+// Converts a naive "YYYY-MM-DDTHH:mm[:ss]" string - exactly what an
+// <input type="datetime-local"> submits, with NO timezone info attached -
+// into the real UTC instant it represents in `timeZone` (default: the app's
+// business timezone). Deliberately does NOT hand the raw string to `new
+// Date()`/Mongoose's Date caster: per the ECMA-262 Date Time String Format, a
+// string with a time component but no offset is parsed using the *server
+// process's own local time* - correct only by coincidence if that happens to
+// match `timeZone`. On a typical Ubuntu VPS running with system time in UTC,
+// that silently reinterprets "14:00 Belgrade" as "14:00 UTC", shifting the
+// real publish instant 1-2h later (CET/CEST) than the admin intended - which
+// is how a scheduled blog post can sail past the time shown on screen without
+// the publish-scheduled-posts cron ever picking it up as due.
+export function zonedInputToUtcDate(input, timeZone = APP_TIMEZONE) {
+  if (!input) return null;
+  const match = String(input).trim().match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (!match) return null;
+  const [, year, month, day, hour, minute, second = "00"] = match;
+  return zonedComponentsToUtcDate(+year, +month, +day, +hour, +minute, +second, timeZone);
+}
+
 // Inverse of zonedInputToUtcDate - formats a stored UTC Date back into the
 // "YYYY-MM-DDTHH:mm" wall-clock string `timeZone` would show, for pre-filling
 // a <input type="datetime-local"> on the edit form. Without this, the raw
@@ -154,20 +223,9 @@ export function utcDateToZonedInputValue(date, timeZone = APP_TIMEZONE) {
   const d = new Date(date);
   if (isNaN(d.getTime())) return "";
 
-  const dtf = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    hourCycle: "h23",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  const parts = dtf.formatToParts(d).reduce((acc, p) => {
-    acc[p.type] = p.value;
-    return acc;
-  }, {});
-  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+  const { year, month, day, hour, minute } = getZonedComponents(d, timeZone);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${year}-${pad(month)}-${pad(day)}T${pad(hour)}:${pad(minute)}`;
 }
 
 export default {
@@ -177,6 +235,8 @@ export default {
   formatDateTimeForInput,
   parseDate,
   isValidDate,
+  zonedComponentsToUtcDate,
+  getZonedComponents,
   zonedInputToUtcDate,
   utcDateToZonedInputValue,
 };

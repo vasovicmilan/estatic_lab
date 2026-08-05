@@ -4,6 +4,7 @@ import {
   RESCHEDULE_SAME_DAY_FLOOR_HOURS,
   RESCHEDULE_MIN_LEAD_MINUTES,
 } from "../config/booking.config.js";
+import { getZonedComponents } from "./date.time.util.js";
 
 /**
  * Whether a user (not admin/employee) is still allowed to cancel an appointment
@@ -62,14 +63,16 @@ export function hasMinimumRescheduleLeadTime(newStartTime, now = new Date()) {
 }
 
 /**
- * Whether two timestamps fall on the same calendar day, judged in server-local
- * time (matching how working hours/slot generation already reason about days
- * elsewhere in the app). Used to enforce the "same_day_only" reschedule window.
+ * Whether two timestamps fall on the same calendar day, judged in APP_TIMEZONE
+ * (Belgrade), not the server process's own timezone (UTC on this VPS) - was
+ * using getFullYear()/getMonth()/getDate() directly, which could disagree with
+ * the real Belgrade calendar day for anything within 1-2h of midnight. Used to
+ * enforce the "same_day_only" reschedule window.
  */
 export function isSameCalendarDay(dateA, dateB) {
-  const a = new Date(dateA);
-  const b = new Date(dateB);
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  const a = getZonedComponents(dateA);
+  const b = getZonedComponents(dateB);
+  return a.year === b.year && a.month === b.month && a.day === b.day;
 }
 
 export default { canUserCancelAppointment, getRescheduleWindow, hasMinimumRescheduleLeadTime, isSameCalendarDay };

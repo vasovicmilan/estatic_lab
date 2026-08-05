@@ -1,14 +1,28 @@
-const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+import { zonedComponentsToUtcDate, getZonedComponents } from "./date.time.util.js";
 
 export function dayOfWeek(date) {
-  return DAY_NAMES[date.getDay()];
+  // Was date.getDay() - reads the SERVER PROCESS's own timezone (UTC on this
+  // VPS), not Belgrade. Near midnight the two calendars can genuinely disagree
+  // (e.g. 00:30 Belgrade in winter is still 23:30 UTC the PREVIOUS day), which
+  // silently matched an appointment against the wrong day's working-hours
+  // entry. getZonedComponents resolves the weekday the same Belgrade-correct
+  // way every other date calculation in this app now does.
+  return getZonedComponents(date).weekday;
 }
 
 export function timeStringToDate(baseDate, hhmm) {
   const [hours, minutes] = hhmm.split(":").map(Number);
-  const d = new Date(baseDate);
-  d.setHours(hours, minutes, 0, 0);
-  return d;
+  // Was `new Date(baseDate); d.setHours(hours, minutes, 0, 0)` - setHours()
+  // sets the hour/minute in the SERVER PROCESS's own timezone, so a working-hours
+  // entry of "09:00" was silently being placed at 09:00 UTC (11:00 Belgrade in
+  // summer, 10:00 in winter) instead of the intended 09:00 Belgrade wall-clock
+  // time. This is the root cause behind slots/working-hours/appointments
+  // appearing shifted by 1-2h everywhere the value was later compared against
+  // a real-world instant (Google Calendar, the customer's own clock, etc).
+  // baseDate only supplies which CALENDAR DAY (in Belgrade) hhmm applies to -
+  // read via getZonedComponents so that's also correct near midnight.
+  const { year, month, day } = getZonedComponents(baseDate);
+  return zonedComponentsToUtcDate(year, month, day, hours, minutes, 0);
 }
 
 /**

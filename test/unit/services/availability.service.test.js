@@ -2,9 +2,22 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import employeeRepo from "../../../src/repositories/employee.repository.js";
 import appointmentRepo from "../../../src/repositories/appointment.repository.js";
+import externalBusyIntervalRepo from "../../../src/repositories/external-busy-interval.repository.js";
 import serviceService from "../../../src/services/service.service.js";
 import * as availabilityService from "../../../src/services/availability.service.js";
 import { buildEmployee, buildServicePackageVariant, id } from "../../helpers/factories.js";
+import { getZonedComponents } from "../../../src/utils/date.time.util.js";
+import { timeStringToDate } from "../../../src/utils/working-hours.util.js";
+
+// Slot instants are real UTC Date objects representing Belgrade wall-clock
+// time - reading them back with Date's own getHours()/getMinutes() answers
+// "what hour is this in the TEST RUNNER's own timezone", not Belgrade, so
+// assertions have to go through the same Belgrade-aware conversion the app
+// itself now uses everywhere.
+function belgradeTimeLabel(date) {
+  const { hour, minute } = getZonedComponents(date);
+  return `${hour}:${String(minute).padStart(2, "0")}`;
+}
 
 const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
@@ -44,6 +57,7 @@ describe("availability.service", () => {
       const employee = buildEmployee({ workingHours: [{ day: dayName, slots: [{ from: "09:00", to: "12:00" }] }] });
       t.mock.method(employeeRepo, "findEmployeeById", async () => employee);
       t.mock.method(appointmentRepo, "findBusyIntervals", async () => []);
+      t.mock.method(externalBusyIntervalRepo, "findByEmployeeAndRange", async () => []);
 
       const slots = await availabilityService.getAvailableSlots({
         serviceId: id().toString(),
@@ -54,7 +68,7 @@ describe("availability.service", () => {
 
       // 09:00-12:00 on the 30-min grid, 60-min service -> 09:00, 09:30, 10:00,
       // 10:30, 11:00 (11:30 would end at 12:30, past the 12:00 close, so it's excluded)
-      const slotTimes = slots.map((s) => `${s.startTime.getHours()}:${String(s.startTime.getMinutes()).padStart(2, "0")}`);
+      const slotTimes = slots.map((s) => belgradeTimeLabel(s.startTime));
       assert.deepEqual(slotTimes, ["9:00", "9:30", "10:00", "10:30", "11:00"]);
     });
 
@@ -66,6 +80,7 @@ describe("availability.service", () => {
       const employee = buildEmployee({ workingHours: [{ day: dayName, slots: [{ from: "09:00", to: "10:30" }] }] });
       t.mock.method(employeeRepo, "findEmployeeById", async () => employee);
       t.mock.method(appointmentRepo, "findBusyIntervals", async () => []);
+      t.mock.method(externalBusyIntervalRepo, "findByEmployeeAndRange", async () => []);
 
       const slots = await availabilityService.getAvailableSlots({
         serviceId: id().toString(),
@@ -76,7 +91,7 @@ describe("availability.service", () => {
 
       // 09:00-10:30, 45-min service, 30-min grid -> 09:00 (ends 09:45), 09:30
       // (ends 10:15). NOT 09:45/10:30 - those would be off-grid start times.
-      const slotTimes = slots.map((s) => `${s.startTime.getHours()}:${String(s.startTime.getMinutes()).padStart(2, "0")}`);
+      const slotTimes = slots.map((s) => belgradeTimeLabel(s.startTime));
       assert.deepEqual(slotTimes, ["9:00", "9:30"]);
     });
 
@@ -88,11 +103,10 @@ describe("availability.service", () => {
       const employee = buildEmployee({ workingHours: [{ day: dayName, slots: [{ from: "09:00", to: "13:00" }] }] });
       t.mock.method(employeeRepo, "findEmployeeById", async () => employee);
 
-      const busyStart = new Date(date);
-      busyStart.setHours(10, 0, 0, 0);
-      const busyEnd = new Date(date);
-      busyEnd.setHours(11, 0, 0, 0);
+      const busyStart = timeStringToDate(date, "10:00");
+      const busyEnd = timeStringToDate(date, "11:00");
       t.mock.method(appointmentRepo, "findBusyIntervals", async () => [{ startTime: busyStart, endTime: busyEnd }]);
+      t.mock.method(externalBusyIntervalRepo, "findByEmployeeAndRange", async () => []);
 
       const slots = await availabilityService.getAvailableSlots({
         serviceId: id().toString(),
@@ -105,7 +119,7 @@ describe("availability.service", () => {
       // Working hours are 09:00-13:00, so: [09:00-09:30] is only 30min (too short for a
       // 60min slot, so 09:00 must NOT appear), and [11:30-13:00] is 90min - on the 30-min
       // grid that fits two 60-min slots: 11:30 (ends 12:30) and 12:00 (ends 13:00 exactly).
-      const slotTimes = slots.map((s) => `${s.startTime.getHours()}:${String(s.startTime.getMinutes()).padStart(2, "0")}`);
+      const slotTimes = slots.map((s) => belgradeTimeLabel(s.startTime));
       assert.deepEqual(slotTimes, ["11:30", "12:00"]);
     });
 
@@ -139,6 +153,7 @@ describe("availability.service", () => {
       const employeeB = buildEmployee({ workingHours: [{ day: dayName, slots: [{ from: "09:00", to: "10:00" }] }] });
       t.mock.method(employeeRepo, "findEmployeesByService", async () => [employeeA, employeeB]);
       t.mock.method(appointmentRepo, "findBusyIntervals", async () => []);
+      t.mock.method(externalBusyIntervalRepo, "findByEmployeeAndRange", async () => []);
 
       const slots = await availabilityService.getAvailableSlots({
         serviceId: id().toString(),
@@ -176,6 +191,7 @@ describe("availability.service", () => {
       t.mock.method(appointmentRepo, "findOverlappingAppointments", async (employeeId) =>
         String(employeeId) === String(busyEmployee._id) ? [{ _id: id() }] : []
       );
+      t.mock.method(externalBusyIntervalRepo, "existsOverlapping", async () => false);
 
       const result = await availabilityService.findAvailableEmployees(id().toString(), start, end);
 
@@ -211,6 +227,7 @@ describe("availability.service", () => {
         buildEmployee({ workingHours: [{ day: dayName, slots: [{ from: "09:00", to: "17:00" }] }] }),
       ]);
       t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => [{ _id: id() }]);
+      t.mock.method(externalBusyIntervalRepo, "existsOverlapping", async () => false);
 
       const result = await availabilityService.findAvailableEmployees(id().toString(), start, end);
 

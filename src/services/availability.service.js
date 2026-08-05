@@ -6,15 +6,20 @@ import resourceService from "./resource.service.js";
 import { validationError, badRequest } from "../utils/error.util.js";
 import { BOOKING_BUFFER_MINUTES, SLOT_GRID_MINUTES } from "../config/booking.config.js";
 import { timeStringToDate, isEmployeeWorkingAt, dayOfWeek } from "../utils/working-hours.util.js";
+import { zonedComponentsToUtcDate, getZonedComponents } from "../utils/date.time.util.js";
 
 const BUFFER_MS = BOOKING_BUFFER_MINUTES * 60000;
 const GRID_MS = SLOT_GRID_MINUTES * 60000;
 
 function dayBounds(date) {
-  const start = new Date(date);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(date);
-  end.setHours(23, 59, 59, 999);
+  // Was `new Date(date); start.setHours(0,0,0,0)` - setHours() operates in the
+  // SERVER PROCESS's own timezone (UTC on this VPS), so "start of day" was
+  // silently computed as UTC midnight, not Belgrade midnight - shifting the
+  // whole day's slot-generation window by 1-2h and, worse, sometimes pulling
+  // in slots that actually belong to the adjacent calendar day in Belgrade.
+  const { year, month, day } = getZonedComponents(date);
+  const start = zonedComponentsToUtcDate(year, month, day, 0, 0, 0);
+  const end = new Date(zonedComponentsToUtcDate(year, month, day, 23, 59, 59).getTime() + 999);
   return { start, end };
 }
 
@@ -53,16 +58,27 @@ function subtractBusyIntervals(freeInterval, busyIntervals) {
  * timezone offset), e.g. 09:07 -> 09:30, 09:30 -> 09:30 (already aligned).
  */
 function ceilToGrid(date) {
-  const rounded = new Date(date);
-  const totalMinutes = rounded.getHours() * 60 + rounded.getMinutes();
+  // Grid alignment (":00, :30...") has to be judged against Belgrade wall-clock
+  // hour/minute - was rounded.getHours()/getMinutes(), the SERVER PROCESS's own
+  // timezone (UTC here), which round-tripped every slot to the wrong grid mark
+  // entirely (e.g. a Belgrade 15:07 - UTC 13:07 in summer - rounds differently
+  // than intended once "07 minutes past the hour" is being read from the wrong
+  // hour). Seconds/milliseconds are unaffected by whole-hour zone offsets, so
+  // those stay read directly from the instant (via UTC accessors, so this
+  // never silently depends on the server's own configured OS timezone either).
+  const { hour, minute } = getZonedComponents(date);
+  const totalMinutes = hour * 60 + minute;
   const remainder = totalMinutes % SLOT_GRID_MINUTES;
-  const hasSubMinutePart = rounded.getSeconds() > 0 || rounded.getMilliseconds() > 0;
+  const hasSubMinutePart = date.getUTCSeconds() > 0 || date.getUTCMilliseconds() > 0;
 
-  if (remainder === 0 && !hasSubMinutePart) return rounded;
+  if (remainder === 0 && !hasSubMinutePart) return new Date(date);
 
   const minutesToAdd = remainder === 0 ? SLOT_GRID_MINUTES : SLOT_GRID_MINUTES - remainder;
-  rounded.setMinutes(rounded.getMinutes() + minutesToAdd, 0, 0);
-  return rounded;
+  // Advancing by a plain millisecond offset (rather than reconstructing wall-clock
+  // components and re-converting) sidesteps day-rollover entirely and is safe for
+  // an increment this small - correct even across a DST transition instant itself,
+  // which reconstructing components could get wrong at exactly the ambiguous hour.
+  return new Date(date.getTime() + minutesToAdd * 60000);
 }
 
 /**
@@ -193,7 +209,12 @@ export async function getAvailableSlots({ serviceId, servicePackageId, employeeI
 
   const targetDate = date instanceof Date ? date : new Date(date);
   if (isNaN(targetDate.getTime())) badRequest("Neispravan datum");
-  if (targetDate < new Date(new Date().setHours(0, 0, 0, 0))) badRequest("Ne možete zakazati termin u prošlosti");
+  // Was `new Date(new Date().setHours(0,0,0,0))` - server-local (UTC) midnight,
+  // not Belgrade midnight. Reuses dayBounds' own Belgrade-correct "start of
+  // today" so this comparison agrees with the same day boundary the rest of
+  // the slot-generation pipeline uses.
+  const { start: todayStart } = dayBounds(new Date());
+  if (targetDate < todayStart) badRequest("Ne možete zakazati termin u prošlosti");
 
   const { variant, service } = await serviceService.getActiveVariant(serviceId, servicePackageId);
 
