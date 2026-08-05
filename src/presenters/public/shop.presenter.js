@@ -1,3 +1,5 @@
+import { formatDateTime } from "../../utils/date.time.util.js";
+
 export function prepareCartData(cart) {
   return {
     cart,
@@ -17,8 +19,6 @@ export function prepareCheckoutStepData(cart, { isLoggedIn = false, user = null,
   return {
     cart,
     isLoggedIn,
-    // for the coupon widget - validateCouponForOrder needs to know which products
-    // are actually in the cart (to check applicableProducts) and the cart total
     productIds: cart.stavke.map((s) => s.productId),
     orderValue: cart.ukupnaCena,
     prefill: isLoggedIn
@@ -46,7 +46,9 @@ export function prepareCheckoutStepData(cart, { isLoggedIn = false, user = null,
 export function prepareCheckoutPendingData({ email, tokenExpiration } = {}) {
   return {
     email,
-    tokenExpiration,
+    // Pre-formatted here, not left for the view's own new Date().toLocaleString()
+    // (that read the SERVER PROCESS's own timezone - UTC - not Belgrade).
+    tokenExpiration: formatDateTime(tokenExpiration),
     breadcrumbs: [{ label: "Potvrdite porudžbinu", url: null }],
   };
 }
@@ -56,7 +58,7 @@ export function prepareCheckoutPendingData({ email, tokenExpiration } = {}) {
 export function prepareOrderConfirmedData(order, { accountJustCreated = false } = {}) {
   return {
     order,
-    accountJustCreated, // true when a guest User was auto-created - prompts a "claim your account" banner, same as booking's confirmation screen
+    accountJustCreated,
     breadcrumbs: [{ label: "Porudžbina potvrđena", url: null }],
   };
 }

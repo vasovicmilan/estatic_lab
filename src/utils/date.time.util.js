@@ -75,6 +75,26 @@ export function formatDate(date) {
   return `${parts.day}.${parts.month}.${parts.year}.`;
 }
 
+// HH:MM in APP_TIMEZONE - the time-only counterpart to formatDateTime, for
+// contexts that only ever show a time, never a date (e.g. the booking
+// widget's slot buttons). Same Intl.DateTimeFormat approach, same reasoning:
+// never format a stored UTC instant using anything that reads the SERVER
+// PROCESS's own timezone.
+export function formatTime(date, timeZone = APP_TIMEZONE) {
+  if (!date) return null;
+
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return null;
+
+  const dtf = new Intl.DateTimeFormat("sr-RS", {
+    timeZone,
+    hourCycle: "h23",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return dtf.format(d);
+}
+
 export function formatDateForInput(date) {
   if (!date) return null;
 
@@ -231,6 +251,7 @@ export function utcDateToZonedInputValue(date, timeZone = APP_TIMEZONE) {
 export default {
   formatDateTime,
   formatDate,
+  formatTime,
   formatDateForInput,
   formatDateTimeForInput,
   parseDate,

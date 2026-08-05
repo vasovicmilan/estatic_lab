@@ -1,3 +1,5 @@
+import { formatTime, formatDateTime } from "../../utils/date.time.util.js";
+
 // Step 1: service + variant selection
 export function prepareBookingServiceStepData(service) {
   return {
@@ -26,6 +28,12 @@ export function prepareBookingSlotsStepData(service, variant, { date, employeeId
       pocetak: s.startTime,
       kraj: s.endTime,
       terapeutId: s.employeeId || null,
+      // Computed here (not in the view via .toLocaleTimeString() without a
+      // timeZone) - that was reading the SERVER PROCESS's own timezone (UTC),
+      // not Belgrade, showing the customer e.g. "14:00" for a slot whose real,
+      // correctly-stored instant was 16:00 Belgrade - they'd click "14:00"
+      // intending that time and actually book two hours later.
+      vreme: formatTime(s.startTime),
     })),
     backUrl: `/usluge/${service.slug}`,
     breadcrumbs: [
@@ -62,7 +70,7 @@ export function prepareBookingContactStepData(
   return {
     service,
     variant,
-    slot,
+    slot: { ...slot, formatirano: formatDateTime(slot.startTime) },
     step: 3,
     isLoggedIn,
     prefill: isLoggedIn

@@ -6,6 +6,7 @@ import { sendEmail } from "../integrations/email/email.provider.js";
 import { logError } from "../utils/logger.util.js";
 import { generateOrderInvoicePdf } from "../utils/invoice-pdf.util.js";
 import { infoRow, infoTable, statusTone, badge, ctaButton, linkFallback } from "../utils/email-content.util.js";
+import { formatDateTime } from "../utils/date.time.util.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -141,11 +142,10 @@ export async function notifyAdminAppointmentCancelled(appointment) {
 // ==================== ORDERS ====================
 
 export async function sendOrderConfirmationRequestEmail({ email, firstName }, { temporaryOrderId, verificationToken, tokenExpiration }) {
-  const expirationDate = new Date(tokenExpiration);
   const html = await renderTemplate("order-confirmation-request", {
     firstName,
     confirmUrl: `${BASE_URL}/korpa/potvrda/${temporaryOrderId}/${verificationToken}`,
-    tokenExpiration: expirationDate.toLocaleString("sr-RS", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }),
+    tokenExpiration: formatDateTime(tokenExpiration),
   });
   return sendEmail({ to: email, subject: `Potvrdite porudžbinu - ${SITE_NAME}`, html });
 }

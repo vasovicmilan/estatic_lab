@@ -41,13 +41,12 @@
           <% if (data.slots && data.slots.length> 0) { %>
             <div class="row g-2">
               <% data.slots.forEach(function(slot) { %>
-                <% const start=new Date(slot.pocetak); const timeLabel=start.toLocaleTimeString('sr-RS', {
-                  hour: '2-digit' , minute: '2-digit' }); const params=new URLSearchParams({ servicePackageId:
+                <% const start=new Date(slot.pocetak); const params=new URLSearchParams({ servicePackageId:
                   data.variant.id, startTime: start.toISOString(), employeeId: slot.terapeutId || '' , }); %>
                   <div class="col-auto">
                     <a href="/zakazivanje/<%= data.service.slug %>/podaci?<%= params.toString() %>"
                       class="btn btn-outline-primary">
-                      <%= timeLabel %>
+                      <%= slot.vreme %>
                     </a>
                   </div>
                   <% }) %>

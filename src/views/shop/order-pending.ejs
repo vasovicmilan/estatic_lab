@@ -13,7 +13,7 @@
         Kliknite na link u emailu da biste je finalizovali.
       </p>
       <% if (data.tokenExpiration) { %>
-        <p class="text-muted small">Link važi do: <%= new Date(data.tokenExpiration).toLocaleString("sr-RS") %></p>
+        <p class="text-muted small">Link važi do: <%= data.tokenExpiration %></p>
       <% } %>
       <a href="/" class="btn btn-outline-primary mt-3">Nazad na početnu</a>
     </div>
