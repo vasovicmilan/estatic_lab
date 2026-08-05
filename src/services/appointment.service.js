@@ -10,10 +10,10 @@ import resourceService from "./resource.service.js";
 import packagePurchaseService from "./package-purchase.service.js";
 import { mapAppointment, mapAppointmentsForAdminList } from "../mappers/appointment.mapper.js";
 import { getAllowedStatuses } from "../models/appointment-status-transitions.js";
-import { canUserCancelAppointment } from "../utils/appointment-cancellation.util.js";
+import { canUserCancelAppointment, getRescheduleWindow, hasMinimumRescheduleLeadTime, isSameCalendarDay } from "../utils/appointment-cancellation.util.js";
 import { buildPhoneRecord } from "../utils/phone.util.js";
 import { isEmployeeWorkingAt } from "../utils/working-hours.util.js";
-import { USER_CANCELLATION_CUTOFF_HOURS } from "../config/booking.config.js";
+import { USER_CANCELLATION_CUTOFF_HOURS, RESCHEDULE_CUTOFF_HOURS, RESCHEDULE_SAME_DAY_FLOOR_HOURS, RESCHEDULE_MIN_LEAD_MINUTES } from "../config/booking.config.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 
@@ -538,6 +538,96 @@ export async function reassignAppointment(appointmentId, newEmployeeId, actorId)
   return mapAppointment(populated, "admin", "detail");
 }
 
+/**
+ * Moves an existing appointment to a new start time - same employee, same
+ * service/resources, only the window changes. Distinct action from
+ * reassignAppointment (which changes WHO, not WHEN).
+ *
+ * Business rules (see appointment-cancellation.util.js for the actual checks):
+ * - Tiered by how close we are to the CURRENT appointment's start time, for
+ *   non-admin actors (admin bypasses this tier entirely - staff override):
+ *     >= RESCHEDULE_CUTOFF_HOURS away  -> any future day/time
+ *     RESCHEDULE_SAME_DAY_FLOOR_HOURS to RESCHEDULE_CUTOFF_HOURS -> same
+ *       calendar day as the current appointment only
+ *     < RESCHEDULE_SAME_DAY_FLOOR_HOURS -> not allowed at all
+ * - The NEW time must ALWAYS have at least RESCHEDULE_MIN_LEAD_MINUTES of lead
+ *   from right now - this one applies to every actor including admin, since
+ *   it's a baseline sanity/prep-time floor rather than a customer-facing
+ *   protection.
+ * - The new window still has to clear the exact same availability checks a
+ *   fresh booking would (employee's working hours, no overlap, resource
+ *   capacity) - moving a slot doesn't get to skip the checks that created it.
+ */
+export async function rescheduleAppointment(appointmentId, newStartTime, actorId, actorRole) {
+  if (!appointmentId) validationError("appointmentId");
+  if (!newStartTime) validationError("newStartTime");
+
+  const appointment = await appointmentRepo.findAppointmentById(appointmentId);
+  if (!appointment) notFound("Termin");
+  if (!canAccessAppointment(appointment, actorId, actorRole)) forbidden("Nemate pristup ovom terminu");
+
+  if (!["pending", "confirmed"].includes(appointment.status)) {
+    badRequest(`Termin sa statusom "${appointment.status}" se ne može pomeriti`);
+  }
+
+  const newStart = newStartTime instanceof Date ? newStartTime : new Date(newStartTime);
+  if (isNaN(newStart.getTime())) badRequest("Neispravno novo vreme termina");
+  if (!hasMinimumRescheduleLeadTime(newStart)) {
+    badRequest(`Izabrano vreme mora biti bar ${RESCHEDULE_MIN_LEAD_MINUTES} minuta unapred`);
+  }
+
+  // admin bypasses the tiered window entirely (staff override) - everyone else
+  // gets checked against how close we already are to the CURRENT appointment
+  if (actorRole !== "admin") {
+    const window = getRescheduleWindow(appointment.status, appointment.startTime);
+
+    if (window === "forbidden") {
+      badRequest(`Termin se više ne može pomeriti - manje je od ${RESCHEDULE_SAME_DAY_FLOOR_HOURS}h do termina`);
+    }
+
+    if (window === "same_day_only" && !isSameCalendarDay(newStart, appointment.startTime)) {
+      badRequest(`Kada je manje od ${RESCHEDULE_CUTOFF_HOURS}h do termina, novo vreme mora biti isti dan`);
+    }
+  }
+
+  const newEnd = new Date(newStart.getTime() + appointment.variant.duration * 60000);
+
+  if (appointment.employee) {
+    const employeeDoc = await employeeService.getEmployeeByIdRaw(appointment.employee);
+    if (!employeeDoc) notFound("Zaposleni");
+    if (!isEmployeeWorkingAt(employeeDoc, newStart, newEnd)) {
+      badRequest("Zaposleni ne radi u izabranom novom terminu");
+    }
+
+    const overlapping = await appointmentRepo.findOverlappingAppointments(appointment.employee, newStart, newEnd, appointmentId);
+    if (overlapping.length > 0) badRequest("Izabrano novo vreme više nije dostupno, izaberite drugo");
+  }
+
+  for (const { resource } of appointment.resources || []) {
+    const resourceDoc = await resourceService.getResourceByIdRaw(resource);
+    const capacity = resourceService.getEffectiveCapacity(resourceDoc);
+    if (!capacity) badRequest("Resurs potreban za ovu uslugu trenutno nije dostupan");
+    const resourceCount = await appointmentRepo.countOverlappingResourceAppointments(resource, newStart, newEnd, appointmentId);
+    if (resourceCount >= capacity) badRequest("Izabrano novo vreme nije dostupno (resurs je zauzet), izaberite drugo");
+  }
+
+  let updated;
+  try {
+    updated = await appointmentRepo.updateAppointmentById(appointmentId, { startTime: newStart, endTime: newEnd });
+  } catch (error) {
+    // same E11000 race-guard reasoning as bookAppointment - the unique
+    // (employee, startTime) index is the final word if two changes collided
+    if (error.code === 11000) badRequest("Izabrano novo vreme je upravo zauzeto, pokušajte ponovo");
+    throw error;
+  }
+
+  logInfo("Appointment rescheduled", { appointmentId, oldStartTime: appointment.startTime, newStartTime: newStart, actorId, actorRole });
+  eventEmitter.emit("appointment:rescheduled", { appointmentId, oldStartTime: appointment.startTime, newStartTime: newStart });
+
+  const populated = await getPopulatedAppointment(updated._id);
+  return mapAppointment(populated, actorRole, "detail");
+}
+
 // Written by google-calendar.listener.js after a successful push/move to Google
 // Calendar - not part of the normal appointment lifecycle, so it deliberately
 // skips getPopulatedAppointment/mapAppointment and doesn't emit any event of its
@@ -600,6 +690,7 @@ export default {
   completeAppointment,
   noShowAppointment,
   reassignAppointment,
+  rescheduleAppointment,
   deleteAppointmentById,
   setGoogleEventId,
   getGoogleEventId,

@@ -1,6 +1,7 @@
 import { formatDateTime } from "../../utils/date.time.util.js";
 import { formatPrice } from "../../utils/price.util.js";
 import { translateCommissionSourceType, translateCommissionStatus } from "../../utils/commission-display.util.js";
+import { getRescheduleWindow } from "../../utils/appointment-cancellation.util.js";
 
 const PAYOUT_STATUS_LABELS = { requested: "Zatraženo", approved: "Odobreno", paid: "Isplaćeno", rejected: "Odbijeno" };
 
@@ -49,12 +50,16 @@ export function prepareEmployeeAppointmentTabData(result, query = {}) {
 }
 
 export function prepareEmployeeAppointmentDetailData(appointment) {
+  const rescheduleWindow = getRescheduleWindow(appointment.statusRaw, appointment.termin?.pocetakRaw);
   return {
     appointment,
     canConfirm: appointment.status === "Na čekanju",
     canReject: appointment.status === "Na čekanju",
     canComplete: appointment.status === "Potvrđeno",
     canNoShow: appointment.status === "Potvrđeno",
+    canReschedule: rescheduleWindow !== "forbidden",
+    rescheduleWindow,
+    rescheduleActionUrl: `/moj-nalog/termini/${appointment.id}/pomeri`,
     backUrl: "/moj-nalog/termini",
   };
 }

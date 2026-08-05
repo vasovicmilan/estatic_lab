@@ -130,6 +130,23 @@ export function prepareAppointmentDetailsData(appointment, { employeeOptions = [
           employeeOptions,
         },
       },
+      // Admin bypasses the tiered reschedule window entirely (see
+      // rescheduleAppointment) - only gated on status here, same as the other
+      // status-dependent actions above.
+      ...(["pending", "confirmed"].includes(appointment.statusRaw)
+        ? [
+            {
+              title: "Pomeri termin",
+              type: "custom",
+              content: "appointment-reschedule-form",
+              data: {
+                appointmentId: appointment.id,
+                actionUrl: `/admin/termini/${appointment.id}/pomeri`,
+                currentStartTime: appointment.termin.pocetakRaw,
+              },
+            },
+          ]
+        : []),
       {
         title: "Istorija",
         type: "table",

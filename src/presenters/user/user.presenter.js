@@ -1,4 +1,4 @@
-import { canUserCancelAppointment } from "../../utils/appointment-cancellation.util.js";
+import { canUserCancelAppointment, getRescheduleWindow } from "../../utils/appointment-cancellation.util.js";
 import { canUserCancelOrder } from "../../models/order-status-transitions.js";
 
 export function prepareProfileTabData(user) {
@@ -28,9 +28,17 @@ export function prepareAppointmentTabData(result, query = {}) {
 }
 
 export function prepareAppointmentDetailData(appointment) {
+  const rescheduleWindow = getRescheduleWindow(appointment.statusRaw, appointment.termin?.pocetakRaw);
   return {
     appointment,
     canCancel: canUserCancelAppointment(appointment.statusRaw, appointment.termin?.pocetakRaw),
+    // "forbidden" hides the reschedule action entirely; "same_day_only" still
+    // shows it but the form/UI should constrain date pickers to the current
+    // appointment's day - the raw window value lets the view decide how to
+    // present that constraint without re-deriving the rule itself.
+    canReschedule: rescheduleWindow !== "forbidden",
+    rescheduleWindow,
+    rescheduleActionUrl: `/nalog/termini/${appointment.id}/pomeri`,
     backUrl: "/nalog/termini",
   };
 }

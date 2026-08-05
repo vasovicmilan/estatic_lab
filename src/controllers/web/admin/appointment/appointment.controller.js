@@ -191,6 +191,27 @@ export async function reassignAppointment(req, res, next) {
   }
 }
 
+export async function rescheduleAppointment(req, res, next) {
+  try {
+    const { appointmentId } = req.params;
+
+    if (req.validationErrors) {
+      logWarn(`[rescheduleAppointment] Validacione greške za appointmentId=${appointmentId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
+      return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), `/admin/termini/detalji/${appointmentId}`);
+    }
+
+    await appointmentService.rescheduleAppointment(appointmentId, req.body.newStartTime, req.session?.user?.id, "admin");
+    logInfo(`[rescheduleAppointment] Termin #${appointmentId} pomeren od strane admina`, { appointmentId, newStartTime: req.body.newStartTime, adminId: req.session?.user?.id });
+    return flashAndRedirect(req, res, "success", "Termin je pomeren na novo vreme", `/admin/termini/detalji/${appointmentId}`);
+  } catch (error) {
+    logError("[rescheduleAppointment] Greška pri pomeranju termina", error, { appointmentId: req.params.appointmentId, userId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, `/admin/termini/detalji/${req.params.appointmentId}`);
+    }
+    next(error);
+  }
+}
+
 export async function deleteAppointment(req, res, next) {
   try {
     const { appointmentId } = req.params;
@@ -215,5 +236,6 @@ export default {
   completeAppointment,
   noShowAppointment,
   reassignAppointment,
+  rescheduleAppointment,
   deleteAppointment,
 };

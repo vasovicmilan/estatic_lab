@@ -5,6 +5,7 @@ import {
   validateAppointmentNoShow,
   validateAppointmentCancel,
   validateAppointmentReassign,
+  validateAppointmentReschedule,
   validateAppointmentId,
 } from "../../../middlewares/validators/appointment.validator.js";
 import { validateSearch } from "../../../middlewares/validators/search.validator.js";
@@ -20,6 +21,7 @@ router.put("/:appointmentId/otkazi", validateAppointmentId, validateAppointmentC
 router.put("/:appointmentId/zavrsi", validateAppointmentId, AppointmentController.completeAppointment);
 router.put("/:appointmentId/nije-se-pojavio", validateAppointmentId, validateAppointmentNoShow, AppointmentController.noShowAppointment);
 router.put("/:appointmentId/preraspodeli", validateAppointmentId, validateAppointmentReassign, AppointmentController.reassignAppointment);
+router.put("/:appointmentId/pomeri", validateAppointmentId, validateAppointmentReschedule, AppointmentController.rescheduleAppointment);
 
 router.delete("/:appointmentId", validateAppointmentId, AppointmentController.deleteAppointment);
 

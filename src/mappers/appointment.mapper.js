@@ -152,8 +152,10 @@ export function mapAppointmentForEmployeeDetail(appointment) {
     termin: {
       pocetak: formatDateTime(appointment.startTime),
       kraj: formatDateTime(appointment.endTime),
+      pocetakRaw: appointment.startTime,
     },
     status: translateStatus(appointment.status),
+    statusRaw: appointment.status,
     napomenaKlijenta: appointment.note || null,
     konacnaCena: appointment.finalPrice != null ? `${appointment.finalPrice.toFixed(2)} RSD` : null,
     // Was backwards before: employee===assignedTo is true exactly when an

@@ -68,6 +68,30 @@
               </div>
             </div>
           <% } %>
+          <% if (data.canReschedule) { %>
+            <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#rescheduleModal">Pomeri termin</button>
+            <div class="modal fade" id="rescheduleModal" tabindex="-1">
+              <div class="modal-dialog">
+                <form action="/moj-nalog/termini/<%= data.appointment.id %>/pomeri" method="POST">
+                  <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+                  <div class="modal-content">
+                    <div class="modal-header"><h5 class="modal-title">Pomeri termin</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zatvori"></button></div>
+                    <div class="modal-body">
+                      <% if (data.rescheduleWindow === "same_day_only") { %>
+                        <p class="text-muted small">Pošto je termin uskoro, novo vreme mora biti isti dan.</p>
+                      <% } %>
+                      <label class="form-label" for="reschedule-new-start">Novo vreme</label>
+                      <input type="datetime-local" id="reschedule-new-start" name="newStartTime" class="form-control" required>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Otkaži</button>
+                      <button type="submit" class="btn btn-primary btn-sm">Pomeri</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          <% } %>
           <a href="<%= data.backUrl %>" class="btn btn-outline-secondary w-100">Nazad</a>
         </div>
       </div>

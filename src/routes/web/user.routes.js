@@ -2,7 +2,7 @@ import { Router } from "express";
 import * as UserController from "../../controllers/web/user/user.controller.js";
 import { validateProfileUpdate, validateAddressCreate, validateAddressId } from "../../middlewares/validators/user.validator.js";
 import { validateChangePassword, validateDeactivateAccount } from "../../middlewares/validators/auth.validator.js";
-import { validateAppointmentId, validateAppointmentCancel } from "../../middlewares/validators/appointment.validator.js";
+import { validateAppointmentId, validateAppointmentCancel, validateAppointmentReschedule } from "../../middlewares/validators/appointment.validator.js";
 import { validateOrderId, validateOrderCancel } from "../../middlewares/validators/order.validator.js";
 import * as AuthController from "../../controllers/web/auth/auth.controller.js";
 
@@ -12,6 +12,7 @@ router.get("/", UserController.profile);
 router.get("/termini", UserController.appointments);
 router.get("/termini/detalji/:appointmentId", validateAppointmentId, UserController.appointmentDetails);
 router.post("/termini/:appointmentId/otkazi", validateAppointmentId, validateAppointmentCancel, UserController.cancelAppointment);
+router.post("/termini/:appointmentId/pomeri", validateAppointmentId, validateAppointmentReschedule, UserController.rescheduleAppointment);
 
 router.get("/porudzbine", UserController.orders);
 router.get("/porudzbine/detalji/:orderId", validateOrderId, UserController.orderDetails);

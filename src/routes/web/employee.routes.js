@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { employeeMiddleware } from "../../middlewares/employee.middleware.js";
 import * as EmployeeController from "../../controllers/web/employee/employee.controller.js";
-import { validateAppointmentId, validateAppointmentReject, validateAppointmentNoShow } from "../../middlewares/validators/appointment.validator.js";
+import { validateAppointmentId, validateAppointmentReject, validateAppointmentNoShow, validateAppointmentReschedule } from "../../middlewares/validators/appointment.validator.js";
 import { validateWorkingHoursUpdate } from "../../middlewares/validators/employee.validator.js";
 import { validatePayoutRequest } from "../../middlewares/validators/payout-request.validator.js";
 import { parseJsonFields } from "../../middlewares/parse-json-fields.middleware.js";
@@ -21,6 +21,7 @@ router.post("/termini/:appointmentId/potvrdi", validateAppointmentId, EmployeeCo
 router.post("/termini/:appointmentId/odbij", validateAppointmentId, validateAppointmentReject, EmployeeController.rejectAppointment);
 router.post("/termini/:appointmentId/zavrsi", validateAppointmentId, EmployeeController.completeAppointment);
 router.post("/termini/:appointmentId/nije-se-pojavio", validateAppointmentId, validateAppointmentNoShow, EmployeeController.noShowAppointment);
+router.post("/termini/:appointmentId/pomeri", validateAppointmentId, validateAppointmentReschedule, EmployeeController.rescheduleAppointment);
 
 router.get("/provizije", EmployeeController.commissions);
 router.get("/isplate", EmployeeController.payoutHistory);

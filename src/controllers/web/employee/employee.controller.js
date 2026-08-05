@@ -200,6 +200,28 @@ export async function noShowAppointment(req, res, next) {
   }
 }
 
+export async function rescheduleAppointment(req, res, next) {
+  try {
+    const { appointmentId } = req.params;
+
+    if (req.validationErrors) {
+      logWarn(`[rescheduleAppointment] Validacione greške za appointmentId=${appointmentId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
+      return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), `/moj-nalog/termini/detalji/${appointmentId}`);
+    }
+
+    const employeeId = employeeIdOf(await getOwnEmployee(req));
+    await appointmentService.rescheduleAppointment(appointmentId, req.body.newStartTime, employeeId, "employee");
+    logInfo(`[rescheduleAppointment] Zaposleni pomerio termin #${appointmentId}`, { appointmentId, newStartTime: req.body.newStartTime, userId: req.session.user.id });
+    return flashAndRedirect(req, res, "success", "Termin je uspešno pomeren", `/moj-nalog/termini/detalji/${appointmentId}`);
+  } catch (error) {
+    logError("[rescheduleAppointment] Greška pri pomeranju termina", error, { appointmentId: req.params.appointmentId, userId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, `/moj-nalog/termini/detalji/${req.params.appointmentId}`);
+    }
+    next(error);
+  }
+}
+
 export async function profile(req, res, next) {
   try {
     const employee = await getOwnEmployee(req);
@@ -327,6 +349,7 @@ export default {
   rejectAppointment,
   completeAppointment,
   noShowAppointment,
+  rescheduleAppointment,
   profile,
   updateWorkingHours,
   commissions,

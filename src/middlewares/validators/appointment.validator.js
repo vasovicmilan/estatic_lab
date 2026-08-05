@@ -37,6 +37,15 @@ export const validateAppointmentReassign = [
   collectValidationErrors,
 ];
 
+export const validateAppointmentReschedule = [
+  body("newStartTime")
+    .notEmpty().withMessage("Novo vreme je obavezno")
+    .isISO8601().withMessage("Neispravan format vremena")
+    .toDate(),
+
+  collectValidationErrors,
+];
+
 export const validateAppointmentId = mongoIdParamValidator("appointmentId", "termina");
 
 export default {
@@ -44,5 +53,6 @@ export default {
   validateAppointmentNoShow,
   validateAppointmentCancel,
   validateAppointmentReassign,
+  validateAppointmentReschedule,
   validateAppointmentId,
 };
