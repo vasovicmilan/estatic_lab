@@ -11,14 +11,14 @@ Full control over what's offered and sold: services and their variants, multi-se
 Administrators manage every account type on the platform:
 
 - **Users** — general customer accounts, including their status and role.
-- **Employees** — staff profiles, their compensation setup, the services they're qualified for, and their working hours.
+- **Employees** — staff profiles, their compensation setup, the services they're qualified for, their working hours, and (optionally) the calendar-sync configuration described in `11-external-integrations.md`.
 - **Partners** — referral-program participants and their commission rate.
 
 Promoting a user into an Employee or Partner profile is handled with the safeguard described in `01-users-roles-permissions.md`, so it never accidentally reduces someone's existing access.
 
 ## Bookings and orders
 
-Administrators have full visibility into every appointment and every shop order, and can move either through its lifecycle on behalf of a customer or staff member when needed — confirming, completing, cancelling, and so on, following the same rules described in `02-services-booking-appointments.md` and `04-shop-products-orders.md`.
+Administrators have full visibility into every appointment and every shop order, and can move either through its lifecycle on behalf of a customer or staff member when needed — confirming, completing, cancelling, reassigning to a different staff member, rescheduling to a new time, and so on, following the same rules described in `02-services-booking-appointments.md` and `04-shop-products-orders.md`.
 
 ## Package purchases
 

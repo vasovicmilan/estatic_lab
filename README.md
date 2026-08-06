@@ -1,6 +1,6 @@
 # Estatic Lab
 
-Wellness studio booking and e-commerce platform — appointments, multi-session packages, shop orders, and a full partner/affiliate referral program, built on Node.js/Express, MongoDB, and EJS.
+Wellness studio booking and e-commerce platform — appointments, multi-session packages, shop orders, a full partner/affiliate referral program, and two-way calendar sync with Google Calendar and the SrediMe booking marketplace — built on Node.js/Express, MongoDB, and EJS.
 
 **Live site:** [beautymedica.rs](https://beautymedica.rs)
 
@@ -25,6 +25,7 @@ Each set covers:
 | 08 | Payouts & Balances |
 | 09 | Admin Operations |
 | 10 | Logs & Audit Trail |
+| 11 | External Integrations — Google Calendar & SrediMe |
 
 ## Stack
 

@@ -11,14 +11,14 @@ Puna kontrola nad onim što se nudi i prodaje: usluge i njihove varijante, paket
 Administratori upravljaju svakim tipom naloga na platformi:
 
 - **Korisnici** — opšti nalozi klijenata, uključujući njihov status i rolu.
-- **Zaposleni** — profili osoblja, njihov način naknade, usluge za koje su kvalifikovani, i njihovo radno vreme.
+- **Zaposleni** — profili osoblja, njihov način naknade, usluge za koje su kvalifikovani, njihovo radno vreme, i (opciono) podešavanje sinhronizacije kalendara opisano u `11-eksterne-integracije.md`.
 - **Partneri** — učesnici partnerskog programa i njihov procenat provizije.
 
 Unapređenje korisnika u profil Zaposlenog ili Partnera se obrađuje sa zaštitom opisanom u `01-korisnici-role-dozvole.md`, tako da nikada slučajno ne smanji nečiji postojeći pristup.
 
 ## Zakazivanja i porudžbine
 
-Administratori imaju punu vidljivost nad svakim terminom i svakom porudžbinom iz prodavnice, i mogu da pomere bilo koji kroz njegov životni ciklus u ime klijenta ili zaposlenog kada je potrebno — potvrđujući, završavajući, otkazujući, i slično, prateći ista pravila opisana u `02-usluge-zakazivanje-termini.md` i `04-prodavnica-proizvodi-porudzbine.md`.
+Administratori imaju punu vidljivost nad svakim terminom i svakom porudžbinom iz prodavnice, i mogu da pomere bilo koji kroz njegov životni ciklus u ime klijenta ili zaposlenog kada je potrebno — potvrđujući, završavajući, otkazujući, preraspodeljujući drugom zaposlenom, pomerajući na novo vreme, i slično, prateći ista pravila opisana u `02-usluge-zakazivanje-termini.md` i `04-prodavnica-proizvodi-porudzbine.md`.
 
 ## Kupovine paketa
 

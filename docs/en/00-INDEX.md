@@ -14,5 +14,6 @@ This documentation is split into focused files, each covering one area of the bu
 | `08-payouts-and-balances.md` | How an earner's payable balance is calculated and how money actually moves |
 | `09-admin-operations.md` | What administrators can see and do across the platform |
 | `10-logs-and-audit-trail.md` | Operational visibility and accountability — who did what, and site health reporting |
+| `11-external-integrations.md` | Two-way sync with Google Calendar (per-employee calendars) and the SrediMe booking marketplace |
 
-Each file stands on its own — you don't need to read them in order, though `06` (affiliate program) draws on concepts from `03`, `05`, and `07`.
+Each file stands on its own — you don't need to read them in order, though `06` (affiliate program) draws on concepts from `03`, `05`, and `07`, and `11` builds on the appointment lifecycle described in `02`.
