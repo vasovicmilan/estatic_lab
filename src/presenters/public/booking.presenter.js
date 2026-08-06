@@ -1,4 +1,4 @@
-import { formatTime, formatDateTime } from "../../utils/date.time.util.js";
+import { formatTime, formatDateTime, getZonedComponents } from "../../utils/date.time.util.js";
 
 // Step 1: service + variant selection
 export function prepareBookingServiceStepData(service) {
@@ -34,6 +34,11 @@ export function prepareBookingSlotsStepData(service, variant, { date, employeeId
       // correctly-stored instant was 16:00 Belgrade - they'd click "14:00"
       // intending that time and actually book two hours later.
       vreme: formatTime(s.startTime),
+      // "Before noon" judged by Belgrade wall-clock hour (not the server's own
+      // timezone, same reasoning as vreme above) - lets the view group slots
+      // into "Pre podne"/"Posle podne" sections without recomputing anything
+      // timezone-sensitive itself.
+      period: getZonedComponents(s.startTime).hour < 12 ? "am" : "pm",
     })),
     backUrl: `/usluge/${service.slug}`,
     breadcrumbs: [

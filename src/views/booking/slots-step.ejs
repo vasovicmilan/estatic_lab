@@ -39,21 +39,32 @@
           </form>
 
           <% if (data.slots && data.slots.length> 0) { %>
-            <div class="row g-2">
-              <% data.slots.forEach(function(slot) { %>
-                <% const start=new Date(slot.pocetak); const params=new URLSearchParams({ servicePackageId:
-                  data.variant.id, startTime: start.toISOString(), employeeId: slot.terapeutId || '' , }); %>
-                  <div class="col-auto">
-                    <a href="/zakazivanje/<%= data.service.slug %>/podaci?<%= params.toString() %>"
-                      class="btn btn-outline-primary">
-                      <%= slot.vreme %>
-                    </a>
-                  </div>
-                  <% }) %>
-            </div>
-            <% } else { %>
-              <p class="text-muted">Nema dostupnih termina za izabrani datum. Pokušajte drugi datum.</p>
+            <% const amSlots=data.slots.filter(function(s) { return s.period==='am' }); const pmSlots=data.slots.filter(function(s) { return s.period==='pm' }); %>
+            <% function renderSlotGroup(slotList) { %>
+              <div class="row g-2">
+                <% slotList.forEach(function(slot) { %>
+                  <% const start=new Date(slot.pocetak); const params=new URLSearchParams({ servicePackageId:
+                    data.variant.id, startTime: start.toISOString(), employeeId: slot.terapeutId || '' , }); %>
+                    <div class="col-auto">
+                      <a href="/zakazivanje/<%= data.service.slug %>/podaci?<%= params.toString() %>"
+                        class="btn btn-outline-primary">
+                        <%= slot.vreme %>
+                      </a>
+                    </div>
+                    <% }) %>
+              </div>
               <% } %>
+                <% if (amSlots.length> 0) { %>
+                  <h2 class="h6 text-muted mb-2">Pre podne</h2>
+                  <% renderSlotGroup(amSlots) %>
+                  <% } %>
+                    <% if (pmSlots.length> 0) { %>
+                      <h2 class="h6 text-muted mb-2 <%= amSlots.length> 0 ? 'mt-4' : '' %>">Posle podne</h2>
+                      <% renderSlotGroup(pmSlots) %>
+                      <% } %>
+                        <% } else { %>
+                          <p class="text-muted">Nema dostupnih termina za izabrani datum. Pokušajte drugi datum.</p>
+                          <% } %>
 
                 <a href="<%= data.backUrl %>" class="btn btn-link mt-4">&larr; Nazad na izbor varijante</a>
     </main>
