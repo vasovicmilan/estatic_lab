@@ -52,7 +52,7 @@
         <thead class="table-light">
           <tr>
             <% data.columns.forEach(function(col) { %>
-              <th><%= col.label %></th>
+              <th<%= col.type === 'image' ? ' style="width: 64px;"' : '' %>><%= col.label %></th>
             <% }) %>
             <% if (data.actions && data.actions.length > 0) { %><th class="text-end">Akcije</th><% } %>
           </tr>
@@ -64,10 +64,22 @@
           <% data.items.forEach(function(item) { %>
             <tr>
               <% data.columns.forEach(function(col) {
+                   if (col.type === 'image') {
+              %>
+                <td>
+                  <% if (item[col.key] && item[col.key].url) { %>
+                    <img src="<%= item[col.key].url %>" alt="<%= item[col.key].alt || '' %>" class="rounded" style="width: 48px; height: 48px; object-fit: cover;">
+                  <% } else { %>
+                    <div class="d-flex align-items-center justify-content-center bg-light rounded text-muted" style="width: 48px; height: 48px;">
+                      <i class="bi bi-image" aria-hidden="true"></i>
+                    </div>
+                  <% } %>
+                </td>
+              <% } else {
                    const val = Array.isArray(item[col.key]) ? item[col.key].join(", ") : item[col.key];
               %>
                 <td><% if (val !== undefined && val !== null && val !== "") { %><%= val %><% } else { %><span class="text-muted">&mdash;</span><% } %></td>
-              <% }) %>
+              <% } }) %>
               <% if (data.actions && data.actions.length > 0) { %>
                 <td class="text-end text-nowrap">
                   <% data.actions.forEach(function(action) { %>

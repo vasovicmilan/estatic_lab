@@ -44,6 +44,15 @@ export function prepareCategoryListData(result, query = {}) {
       createLabel: "Nova kategorija",
       searchUrl: "/admin/kategorije/pretraga",
       search: query.search || "",
+      filters: [
+        {
+          type: "select",
+          name: "domain",
+          label: "Domen",
+          value: query.domain || "",
+          options: [{ value: "", label: "Svi domeni" }, ...getDomainOptions()],
+        },
+      ],
     },
   };
 }

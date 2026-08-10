@@ -1,19 +1,21 @@
 import "dotenv/config";
 import mongoose from "mongoose";
-import { seedPostContent } from "./post-content.seed.js";
+import { seedServicePackages } from "./service-packages.seed.js";
 
 /**
- * Run once with: node src/database/seeds/run-post-seed.js
+ * Run once with: node src/database/seeds/run-service-packages.seed.js
  * Uses the same MONGO_URI your app already connects with (via .env).
  *
- * Optional: set POST_SEED_AUTHOR_EMAIL in .env to a specific user's email if you
- * want a particular admin/employee credited as the author. Otherwise the seed
- * uses the earliest-created "admin"-role user it finds.
+ * IMPORTANT: run run-service-catalog.seed.js FIRST - this seed looks up
+ * existing services/variants/tags by slug and throws if any of them don't
+ * exist yet, rather than silently creating incomplete packages.
  *
- * NOTE: this deliberately uses plain console.log/console.error instead of the
- * app's logInfo/logError, same reasoning as run-esma-seed.js - pino's worker
- * thread transport can lose buffered output if the process exits too fast for
- * a short-lived CLI script.
+ * Seeds all 24 Package documents: 18 single-service bundles ("N tretmana"
+ * for the 6 base ESMA usluge + 4 hibridna protokola) and 6 premium
+ * combinations (two different services, e.g. 5 ESMA + 3 masaže).
+ *
+ * NOTE: this deliberately uses plain console.log/console.error instead of
+ * the app's logInfo/logError - see run-service-catalog.seed.js for why.
  */
 async function run() {
   const uri = process.env.MONGO_URI;
@@ -28,14 +30,14 @@ async function run() {
     await mongoose.connect(uri, { serverSelectionTimeoutMS: 8000 });
     console.log("✓ MongoDB connected");
 
-    console.log("→ Seeding blog post content (categories, tags, posts)...");
-    const summary = await seedPostContent();
+    console.log("→ Seeding service packages (18 bundlova + 6 premium kombinacija)...");
+    const summary = await seedServicePackages();
     console.log("✓ Done:", summary);
 
     await mongoose.connection.close();
     process.exit(0);
   } catch (error) {
-    console.error("✗ Failed to seed post content:");
+    console.error("✗ Failed to seed service packages:");
     console.error(error);
     try {
       await mongoose.connection.close();

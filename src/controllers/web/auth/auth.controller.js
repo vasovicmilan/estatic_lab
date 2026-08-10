@@ -5,9 +5,18 @@ import {
   prepareForgotPasswordFormData,
   prepareResetPasswordFormData,
 } from "../../../presenters/auth/auth.presenter.js";
+import { generateSeo } from "../../../seo/index.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 import { generateRandomToken } from "../../../services/crypto.service.js";
+
+// Login/register/reset-password are all public (no auth wall - see auth.routes.js),
+// but none of them are content worth indexing, and the reset/claim-account links in
+// particular carry a one-time token in the URL that must never end up indexed or
+// cached by a search engine. All noindex, same convention as booking/shop controllers.
+async function authSeo(req, { title, description }) {
+  return generateSeo("page", { title, description, slug: req.originalUrl, noIndex: true }, req);
+}
 
 async function exchangeGoogleCodeForProfile(code) {
   const tokenUrl = "https://oauth2.googleapis.com/token";
@@ -63,9 +72,11 @@ export async function loginForm(req, res, next) {
   try {
     if (req.session?.isLoggedIn) return res.redirect("/");
     const viewData = prepareLoginFormData({ redirectTo: req.query.redirect || "/" });
+    const seo = await authSeo(req, { title: "Prijava", description: "Prijavite se na vaš nalog" });
     return res.render("auth/_auth-form", {
-      pageTitle: "Prijava",
-      pageDescription: "Prijavite se na vaš nalog",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -84,6 +95,7 @@ export async function login(req, res, next) {
       return res.status(400).render("auth/_auth-form", {
         pageTitle: "Prijava",
         pageDescription: "Prijavite se na vaš nalog",
+        seo: await authSeo(req, { title: "Prijava", description: "Prijavite se na vaš nalog" }),
         data: { ...viewData, csrfToken: res.locals.csrfToken },
       });
     }
@@ -102,6 +114,7 @@ export async function login(req, res, next) {
       return res.status(error.statusCode).render("auth/_auth-form", {
         pageTitle: "Prijava",
         pageDescription: "Prijavite se na vaš nalog",
+        seo: await authSeo(req, { title: "Prijava", description: "Prijavite se na vaš nalog" }),
         data: { ...viewData, csrfToken: res.locals.csrfToken },
       });
     }
@@ -113,9 +126,11 @@ export async function registerForm(req, res, next) {
   try {
     if (req.session?.isLoggedIn) return res.redirect("/");
     const viewData = prepareRegisterFormData({});
+    const seo = await authSeo(req, { title: "Registracija", description: "Kreirajte novi nalog" });
     return res.render("auth/_auth-form", {
-      pageTitle: "Registracija",
-      pageDescription: "Kreirajte novi nalog",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -132,6 +147,7 @@ export async function register(req, res, next) {
       return res.status(400).render("auth/_auth-form", {
         pageTitle: "Registracija",
         pageDescription: "Kreirajte novi nalog",
+        seo: await authSeo(req, { title: "Registracija", description: "Kreirajte novi nalog" }),
         data: { ...viewData, csrfToken: res.locals.csrfToken },
       });
     }
@@ -156,6 +172,7 @@ export async function register(req, res, next) {
       return res.status(error.statusCode).render("auth/_auth-form", {
         pageTitle: "Registracija",
         pageDescription: "Kreirajte novi nalog",
+        seo: await authSeo(req, { title: "Registracija", description: "Kreirajte novi nalog" }),
         data: { ...viewData, csrfToken: res.locals.csrfToken },
       });
     }
@@ -241,9 +258,11 @@ export async function verifyAccount(req, res, next) {
 export async function forgotPasswordForm(req, res, next) {
   try {
     const viewData = prepareForgotPasswordFormData({});
+    const seo = await authSeo(req, { title: "Zaboravljena lozinka", description: "Resetujte vašu lozinku" });
     return res.render("auth/_auth-form", {
-      pageTitle: "Zaboravljena lozinka",
-      pageDescription: "Resetujte vašu lozinku",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -259,6 +278,7 @@ export async function requestPasswordReset(req, res, next) {
       return res.status(400).render("auth/_auth-form", {
         pageTitle: "Zaboravljena lozinka",
         pageDescription: "Resetujte vašu lozinku",
+        seo: await authSeo(req, { title: "Zaboravljena lozinka", description: "Resetujte vašu lozinku" }),
         data: { ...viewData, csrfToken: res.locals.csrfToken },
       });
     }
@@ -275,9 +295,11 @@ export async function resetPasswordForm(req, res, next) {
   try {
     const isAccountClaim = req.path.startsWith("/preuzmi-nalog");
     const viewData = prepareResetPasswordFormData(req.params.token, { isAccountClaim });
+    const seo = await authSeo(req, { title: "Nova lozinka", description: "Postavite novu lozinku" });
     return res.render("auth/_auth-form", {
-      pageTitle: "Nova lozinka",
-      pageDescription: "Postavite novu lozinku",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -294,6 +316,7 @@ export async function resetPassword(req, res, next) {
       return res.status(400).render("auth/_auth-form", {
         pageTitle: "Nova lozinka",
         pageDescription: "Postavite novu lozinku",
+        seo: await authSeo(req, { title: "Nova lozinka", description: "Postavite novu lozinku" }),
         data: { ...viewData, csrfToken: res.locals.csrfToken },
       });
     }
@@ -309,6 +332,7 @@ export async function resetPassword(req, res, next) {
       return res.status(400).render("auth/_auth-form", {
         pageTitle: "Nova lozinka",
         pageDescription: "Postavite novu lozinku",
+        seo: await authSeo(req, { title: "Nova lozinka", description: "Postavite novu lozinku" }),
         data: { ...viewData, csrfToken: res.locals.csrfToken },
       });
     }

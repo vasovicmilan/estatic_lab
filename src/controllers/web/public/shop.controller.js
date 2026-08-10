@@ -6,11 +6,21 @@ import {
   prepareCheckoutPendingData,
   prepareOrderConfirmedData,
 } from "../../../presenters/public/shop.presenter.js";
+import { generateSeo } from "../../../seo/index.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 import { normalizeError } from "../../../utils/error.util.js";
 import { getCapturedReferralCode } from "../../../middlewares/coupon-capture.middleware.js";
 import { tryApplyCoupon } from "./coupon.controller.js";
+
+// Cart/checkout/order-confirmation pages are all public (no auth wall - see
+// shop.routes.js), but every one of them is personal, session/token-specific
+// content with no lasting canonical identity - and /korpa/potvrda/:orderId/:token
+// in particular carries a token in the URL that must never end up indexed or
+// cached by a search engine. All noindex, same convention as booking.controller.js.
+async function shopSeo(req, { title, description }) {
+  return generateSeo("page", { title, description, slug: req.originalUrl, noIndex: true }, req);
+}
 
 function getAuth(req) {
   const isLoggedIn = !!req.session?.isLoggedIn;
@@ -27,9 +37,11 @@ export async function cartPage(req, res, next) {
     const cart = await shopService.getCart({ isLoggedIn, userId, guestCart: getGuestCart(req) });
     const viewData = prepareCartData(cart);
 
+    const seo = await shopSeo(req, { title: "Korpa", description: "Pregled vaše korpe" });
     return res.render("shop/cart", {
-      pageTitle: "Korpa",
-      pageDescription: "Pregled vaše korpe",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -141,9 +153,11 @@ export async function checkoutStep(req, res, next) {
       }
     }
 
+    const seo = await shopSeo(req, { title: "Naplata", description: "Unesite podatke za dostavu" });
     return res.render("shop/checkout", {
-      pageTitle: "Naplata",
-      pageDescription: "Unesite podatke za dostavu",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: { ...viewData, activeCoupon: req.session?.activeCoupon?.context === "order" ? req.session.activeCoupon : null, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -167,6 +181,7 @@ export async function submitCheckout(req, res, next) {
       return res.status(400).render("shop/checkout", {
         pageTitle: "Naplata",
         pageDescription: "Unesite podatke za dostavu",
+        seo: await shopSeo(req, { title: "Naplata", description: "Unesite podatke za dostavu" }),
         data: { ...viewData, activeCoupon: req.session?.activeCoupon?.context === "order" ? req.session.activeCoupon : null, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
@@ -207,6 +222,7 @@ export async function submitCheckout(req, res, next) {
         return res.status(400).render("shop/checkout", {
           pageTitle: "Naplata",
           pageDescription: "Unesite podatke za dostavu",
+          seo: await shopSeo(req, { title: "Naplata", description: "Unesite podatke za dostavu" }),
           data: { ...viewData, activeCoupon: req.session?.activeCoupon?.context === "order" ? req.session.activeCoupon : null, formData: req.body, csrfToken: res.locals.csrfToken },
         });
       } catch (renderError) {
@@ -231,9 +247,11 @@ export async function checkoutPending(req, res, next) {
 
     const viewData = prepareCheckoutPendingData(pending);
 
+    const seo = await shopSeo(req, { title: "Potvrdite porudžbinu", description: "Proverite email da potvrdite porudžbinu" });
     return res.render("shop/order-pending", {
-      pageTitle: "Potvrdite porudžbinu",
-      pageDescription: "Proverite email da potvrdite porudžbinu",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: viewData,
     });
   } catch (error) {
@@ -251,9 +269,11 @@ export async function confirmOrder(req, res, next) {
     logInfo(`[confirmOrder] Porudžbina potvrđena`, { orderId: order.id });
 
     const viewData = prepareOrderConfirmedData(order);
+    const seo = await shopSeo(req, { title: "Porudžbina potvrđena", description: "Vaša porudžbina je uspešno potvrđena" });
     return res.render("shop/order-confirmed", {
-      pageTitle: "Porudžbina potvrđena",
-      pageDescription: "Vaša porudžbina je uspešno potvrđena",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: viewData,
     });
   } catch (error) {

@@ -1,18 +1,43 @@
 import Category from "../../models/category.model.js";
 import Tag from "../../models/tag.model.js";
 import Service from "../../models/service.model.js";
-import Package from "../../models/package.model.js";
 import { RESOURCE_MASSAGE_TABLE_ID, RESOURCE_ESMA_TABLE_ID } from "./resource.seed.js";
 import { logInfo } from "../../utils/logger.util.js";
 
 const DOMAIN = "service";
 
-// Which shared physical resource(s) each service occupies (see
-// resource.model.js/Service.resources) - kept as one flat map here rather
-// than a field on every serviceDefs entry below, so this stays a small,
-// reviewable diff instead of touching all 10 large service definitions.
-// New services added to serviceDefs later should get an entry here too, or
-// they'll default to no resource constraint (resources: []).
+// ---------------------------------------------------------------------------
+// NAPOMENA (konsolidacija, avgust 2026.)
+// ---------------------------------------------------------------------------
+// Ovaj fajl zamenjuje i objedinjuje SVE što se ranije nalazilo u:
+//   - esma-catalog.seed.js  (kategorije, tagovi, 6 ESMA + 4 masaže)
+//   - esma-masaza-protokoli.seed.js (4 kombinovana ESMA+masaža protokola,
+//     jedna seansa u jednoj poseti - Full Body Contouring 3u1,
+//     Anticelulit & Tightening Kombo, Fizio-Express Back Relief,
+//     Post-Op & Regeneracija)
+// u JEDAN fajl, jer sve ovo čini isti logički celina: KATALOG USLUGA
+// (kategorije + tagovi + 14 usluga) za domain "service". Sadržaj (opisi,
+// FAQ, SEO keywords, cene, comparisonTable) je 1:1 preuzet iz ta dva fajla
+// bez izmena - ovo je čisto strukturna konsolidacija, provereno protiv
+// stvarnog exporta baze (test_services.json/test_categories.json/
+// test_tags.json, avgust 2026.) da se sadržaj poklapa sa onim što je
+// trenutno live.
+//
+// PAKETI (Package model - "5/10 tretmana" bundlovi i "premium" kombinacije
+// dve usluge) su namerno u ODVOJENOM fajlu: service-packages.seed.js. Taj
+// fajl zavisi od ovog (traži usluge/varijante po slugu), pa ga pokreni POSLE
+// ovog seed-a.
+//
+// STARI fajlovi (esma-catalog.seed.js, esma-masaza-protokoli.seed.js) i
+// njihovi runneri (run-esma-seed.js, run-esma-masaza-protokoli.seed.js) se
+// mogu obrisati iz repo-a - ovaj fajl je njihova potpuna zamena.
+// ---------------------------------------------------------------------------
+
+// Koji deljeni fizički resurs(i) svaka usluga zauzima (Service.resources) -
+// ESMA usluge zauzimaju sto za ESMA/uređaje, ručne masaže zauzimaju sto za
+// masažu, a 4 hibridna protokola (jedna seansa koja koristi OBA) zauzimaju
+// OBA stola za CEO termin, jer model resursa ne podržava "prva 2/3 termina
+// resurs A, poslednja 1/3 resurs B" - rezervacija je uvek pun blok vremena.
 const SERVICE_RESOURCE_MAP = {
   "teslatone-24": [RESOURCE_ESMA_TABLE_ID],
   "aquadrain-360": [RESOURCE_ESMA_TABLE_ID],
@@ -24,34 +49,13 @@ const SERVICE_RESOURCE_MAP = {
   "sportska-masaza": [RESOURCE_MASSAGE_TABLE_ID],
   "terapeutska-masaza": [RESOURCE_MASSAGE_TABLE_ID],
   "anticelulit-masaza": [RESOURCE_MASSAGE_TABLE_ID],
-};
+  "full-body-contouring-3u1": [RESOURCE_ESMA_TABLE_ID, RESOURCE_MASSAGE_TABLE_ID],
+  "anticelulit-tightening-kombo": [RESOURCE_ESMA_TABLE_ID, RESOURCE_MASSAGE_TABLE_ID],
+  "fizio-express-back-relief": [RESOURCE_ESMA_TABLE_ID, RESOURCE_MASSAGE_TABLE_ID],
+  "post-op-regeneracija": [RESOURCE_ESMA_TABLE_ID, RESOURCE_MASSAGE_TABLE_ID],};
 
 // ---------------------------------------------------------------------------
-// NAPOMENA O ČINJENIČNOJ PROVERI (pročitati pre korišćenja)
-// ---------------------------------------------------------------------------
-// Prethodna verzija ovog seed-a je na više mesta tvrdila da ESMA Favorit ima
-// tačno "24 nezavisna kanala". Proverio sam ovo kod zvaničnog proizvođača
-// (esma.ru) i kod više nezavisnih prodavaca opreme - svi navode da uređaj
-// (zvanično: ESMA 12.48 Favorit) ima "veliki broj nezavisnih izlaznih
-// kanala" i omogućava do 3-4 nezavisne procedure/klijenta istovremeno, ali
-// NIGDE se ne navodi konkretan broj "24". Taj broj je uklonjen iz opisa
-// tretmana ispod. Nazivi tretmana (npr. "Tesla-Tone 24", "Aqua-Drain 360")
-// su ostavljeni nepromenjeni jer deluju kao stilizovani nazivi proizvoda, a
-// ne kao tehnička specifikacija - ali ako želite da i to promenite radi
-// doslednosti, javite mi.
-//
-// Takođe sam ublažio par prejakih tvrdnji (npr. "kontrahuje 100% mišićnih
-// vlakana", "trajno smanjuje broj masnih ćelija") jer nisu potkrepljene i
-// mogu se tumačiti kao medicinski obećavajuće tvrdnje koje aparat/tretman
-// ne može garantovano da ispuni. Broj gotovih programa/šablona (koji se u
-// marketinškim porukama pominjao kao "300+") je kod većine zvaničnih
-// prodavaca naveden kao "100", pa taj broj namerno NIJE naveden nigde u
-// tekstu ispod - ako želite da ga ipak istaknete, preporučujem "preko 100"
-// jer je to najčešće potvrđena vrednost.
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// Kategorije (ostaju iste)
+// Kategorije
 // ---------------------------------------------------------------------------
 
 const topLevelCategories = [
@@ -69,8 +73,7 @@ const topLevelCategories = [
     slug: "esma",
     name: "ESMA",
     shortDescription: "Tretmani na profesionalnom fizioterapeutskom aparatu ESMA Favorit, koji u jednom uređaju kombinuje miostimulaciju, limfnu drenažu, mikrostrujnu terapiju, ultrazvuk i svetlosnu (laser) terapiju.",
-  },
-];
+  },];
 
 const childCategories = [
   {
@@ -84,11 +87,10 @@ const childCategories = [
     name: "Ultrazvuk",
     parentSlug: "esma",
     shortDescription: "Ultrazvučni piling, ultrafonoforeza i ultrazvučna kavitacija na ESMA Favorit aparatu.",
-  },
-];
+  },];
 
 // ---------------------------------------------------------------------------
-// Tagovi (dodati novi)
+// Tagovi
 // ---------------------------------------------------------------------------
 
 const tagDefs = [
@@ -136,10 +138,24 @@ const tagDefs = [
   { slug: "masaza-za-bol-u-ledjima", name: "Masaža za bol u leđima" },
   { slug: "anticelulit-masaza-tag", name: "Anticelulit masaža" },
   { slug: "rucna-masaza", name: "Ručna masaža" },
-];
+  { slug: "premium-paket", name: "Premium paket" },
+  { slug: "esma-i-masaza", name: "ESMA + masaža" },
+  { slug: "esma-i-rucna-masaza-protokol", name: "ESMA + ručna masaža protokol" },
+  { slug: "oblikovanje-tela-protokol", name: "Oblikovanje tela protokol" },
+  { slug: "fizio-terapeutski-protokol", name: "Fizio-terapeutski protokol" },
+  { slug: "post-operativna-nega", name: "Post-operativna nega" },
+  { slug: "dekontrakcija-misica", name: "Dekontrakcija mišića" },
+  { slug: "leda-i-vrat-tretman", name: "Leđa i vrat tretman" },];
 
 // ---------------------------------------------------------------------------
-// Usluge – ESMA (ispravljene, SEO optimizovane)
+// Usluge - 14 ukupno:
+//   1-6:   ESMA Favorit tretmani (Tesla-Tone 24, Aqua-Drain 360, Lipolise
+//          Russian-Max, Tri-Active Cellu-Erase, Laser-Sonic Face Sculpt,
+//          Medicinski Bio-Reset)
+//   7-10:  Ručne masaže (Relaks, Sportska, Terapeutska, Anticelulit)
+//   11-14: Kombinovani ESMA + ručna masaža protokoli, jedna seansa u jednoj
+//          poseti (Full Body Contouring 3u1, Anticelulit & Tightening Kombo,
+//          Fizio-Express Back Relief, Post-Op & Regeneracija)
 // ---------------------------------------------------------------------------
 
 const serviceDefs = [
@@ -553,324 +569,331 @@ const serviceDefs = [
       { label: "Trajanje tretmana", values: ["30-60 min", "45 min", "75 min"] },
     ],
   },
-];
+
+  // ---------------------------------------------------------------------------
+  // Usluge - kombinovani ESMA + ručna masaža protokoli (jedna seansa, jedna poseta)
+  // ---------------------------------------------------------------------------
+
+  // 1. Full Body Contouring 3u1
+  {
+    slug: "full-body-contouring-3u1",
+    name: "Full Body Contouring 3u1",
+    categorySlugs: ["esma", "struja", "ultrazvuk", "masaze"],
+    tagSlugs: [
+      "kombinovani-tretmani",
+      "anticelulit",
+      "limfodrenaza",
+      "celulit-tretman",
+      "rucna-masaza",
+      "esma-favorit-beograd",
+      "oblikovanje-tela-protokol",
+      "esma-i-rucna-masaza-protokol",
+    ],
+    shortDescription:
+      "ESMA struja za celo telo + ciljani ultrazvuk + 30 min ručne limfne drenaže ili anticelulit masaže, sve u jednoj poseti. Kompletno oblikovanje tela u Novom Sadu.",
+    longDescription:
+      "Full Body Contouring 3u1 je naš najsveobuhvatniji protokol za oblikovanje tela u jednoj poseti - spaja aparaturni i ručni rad u istom terminu, umesto da zahteva dve odvojene posete. Tretman počinje 24-kanalnom ESMA strujom koja radi na tonusu mišića celog tela, nastavlja se ESMA terapijskim ultrazvukom fokusiranim na kritične zone (stomak, bokovi, butine), a završava se sa 30 minuta ručne limfne drenaže ili anticelulit masaže, po proceni terapeuta ili želji klijenta. Aparaturni deo radi na dubljim slojevima (mišićni tonus, masne naslage), dok ručni deo u istom terminu odmah dopunjuje efekat kroz cirkulaciju i limfnu drenažu - bez čekanja na drugi termin. Namenjen je klijentima koji žele efikasan, sveobuhvatan pristup oblikovanju tela uz redovnu fizičku aktivnost i zdravu ishranu za najbolje rezultate. Pogledajte i naš tekst o razlici između ručne masaže i aparaturnih tretmana: beautymedica.rs/blog/masaza-vs-aparaturni-tretmani.",
+    defaultDuration: 75,
+    image: {
+      img: "https://placehold.co/800x600?text=Full%20Body%20Contouring%203u1",
+      imgDesc: "Full Body Contouring 3u1 - privremena placeholder slika, zameniti pravom fotografijom",
+    },
+    seoKeywords: [
+      "full body contouring novi sad",
+      "esma i masaza u jednoj poseti",
+      "oblikovanje tela paket novi sad",
+      "kombinovani tretman telo i masaza",
+    ],
+    features: [
+      { name: "⚡ ESMA struja celo telo", description: "24-kanalna struja radi na tonusu mišića celog tela.", icon: "bi bi-lightning-charge", order: 1 },
+      { name: "🎯 Ciljani ultrazvuk", description: "ESMA terapijski ultrazvuk fokusiran na kritične zone (stomak, bokovi, butine).", icon: "bi bi-bullseye", order: 2 },
+      { name: "💆 Ručna drenaža ili masaža", description: "30 min ručne limfne drenaže ili anticelulit masaže, u istom terminu.", icon: "bi bi-heart-pulse", order: 3 },
+      { name: "⏱️ Sve u jednoj poseti", description: "Aparaturni i ručni deo u jednom terminu od 75 minuta, bez dodatnog zakazivanja.", icon: "bi bi-clock-history", order: 4 },
+    ],
+    packages: [
+      {
+        name: "Jedan tretman (75 min)",
+        slug: "jedan-tretman-75-min",
+        sessions: 1,
+        duration: 75,
+        totalPrice: 6000,
+        order: 1,
+        isBest: false,
+      },
+    ],
+    faq: [
+      {
+        question: "Po čemu se ovaj protokol razlikuje od ostalih paketa koji kombinuju ESMA i masažu?",
+        answer:
+          "Kod ostalih premium paketa ESMA tretmani i masaže se zakazuju kao odvojeni termini (npr. 5 ESMA + 3 masaže tokom nekoliko nedelja). Full Body Contouring 3u1 spaja oba dela u JEDAN termin od 75 minuta - aparaturni i ručni rad se rade odmah jedan za drugim, u istoj poseti.",
+        order: 1,
+      },
+      {
+        question: "Da li ja biram da li će biti limfna drenaža ili anticelulit masaža?",
+        answer:
+          "Terapeut na konsultaciji predlaže koja varijanta više odgovara vašem cilju - limfna drenaža za osećaj lakoće i smanjenje zadržavanja tečnosti, anticelulit masaža za rad na teksturi kože. Uzimamo u obzir i vašu želju.",
+        order: 2,
+      },
+      {
+        question: "Koliko tretmana je potrebno za vidljive rezultate?",
+        answer: "Za primetniju promenu preporučuje se serija od 6 do 10 tretmana - zato nudimo paket od 6 i paket od 10 tretmana po povoljnijoj ceni po tretmanu.",
+        order: 3,
+      },
+      {
+        question: "Ko ne bi trebalo da radi ovaj tretman?",
+        answer:
+          "Tretman se ne preporučuje trudnicama, osobama sa pejsmejkerom, malignim oboljenjima ili akutnim upalama kože, bez prethodne konsultacije sa terapeutom.",
+        order: 4,
+      },
+    ],
+    comparisonColumns: ["Full Body Contouring 3u1", "ESMA tretman i masaža u dve posete"],
+    comparisonTable: [
+      { label: "Broj poseta", values: ["1 poseta (75 min)", "2 odvojene posete"] },
+      { label: "Tehnologije", values: ["Struja + Ultrazvuk + Ručna masaža", "Zavisi šta se zakaže"] },
+      { label: "Ušteda vremena", values: ["Da - sve u jednom terminu", "Ne - potrebna dva dolaska"] },
+    ],
+  },
+
+  // 2. Anticelulit & Tightening Kombo
+  {
+    slug: "anticelulit-tightening-kombo",
+    name: "Anticelulit & Tightening Kombo",
+    categorySlugs: ["esma", "ultrazvuk", "laser", "masaze"],
+    tagSlugs: [
+      "kombinovani-tretmani",
+      "anticelulit",
+      "zatezanje-koze",
+      "celulit-tretman",
+      "ultrazvucni-piling",
+      "rucna-masaza",
+      "esma-favorit-beograd",
+      "esma-i-rucna-masaza-protokol",
+    ],
+    shortDescription:
+      "ESMA ultrazvuk sa lipolitičkim gelom + ESMA biostimulativni laser za zatezanje kože + 30 min ručne anticelulit masaže, u jednoj poseti od 60 minuta.",
+    longDescription:
+      "Anticelulit & Tightening Kombo je protokol koji u jednoj poseti spaja tri koraka rada na celulitu i teksturi kože. Tretman počinje ESMA terapijskim ultrazvukom sa lipolitičkim gelom (20 minuta), koji radi mikromasažu tkiva u zonama sklonim celulitu. Nastavlja se ESMA biostimulativnim laserom, koji doprinosi osećaju zategnutije kože nakon tretmana. Poslednji korak je 30 minuta ručne anticelulit masaže, koja intenzivnijim tehnikama gnječenja i rolanja dodatno podstiče lokalnu cirkulaciju krvi i limfe. Protokol je namenjen klijentima koji žele sveobuhvatniji pristup radu na celulitu u jednom terminu, umesto da aparaturni i ručni deo zakazuju odvojeno. Za trajniji efekat preporučuje se redovna serija tretmana, uz zdravu ishranu i fizičku aktivnost. Više o anticelulit tretmanima pročitajte na blogu: beautymedica.rs/blog/anticelulit-tretmani-celulit.",
+    defaultDuration: 60,
+    image: {
+      img: "https://placehold.co/800x600?text=Anticelulit%20%26%20Tightening%20Kombo",
+      imgDesc: "Anticelulit & Tightening Kombo - privremena placeholder slika, zameniti pravom fotografijom",
+    },
+    seoKeywords: [
+      "anticelulit tightening kombo",
+      "esma ultrazvuk i masaza celulit",
+      "zatezanje koze i anticelulit masaza novi sad",
+      "kombinovani anticelulit protokol",
+    ],
+    features: [
+      { name: "🌊 Ultrazvuk sa lipolitičkim gelom", description: "20 min ESMA terapijskog ultrazvuka usmerenog na zone sklone celulitu.", icon: "bi bi-water", order: 1 },
+      { name: "✨ Biostimulativni laser", description: "Doprinosi osećaju zategnutije kože nakon tretmana.", icon: "bi bi-stars", order: 2 },
+      { name: "💆 Ručna anticelulit masaža", description: "30 min intenzivnije ručne masaže za teksturu kože i cirkulaciju.", icon: "bi bi-heart-pulse", order: 3 },
+      { name: "🔄 Tri koraka, jedna poseta", description: "Aparaturni i ručni rad odmah jedan za drugim, bez dodatnog zakazivanja.", icon: "bi bi-arrow-repeat", order: 4 },
+    ],
+    packages: [
+      {
+        name: "Jedan tretman (60 min)",
+        slug: "jedan-tretman-60-min",
+        sessions: 1,
+        duration: 60,
+        totalPrice: 4500,
+        order: 1,
+        isBest: false,
+      },
+    ],
+    faq: [
+      {
+        question: "Da li ovaj protokol trajno uklanja celulit?",
+        answer:
+          "Ne postoji tretman koji garantovano i trajno uklanja celulit. Kombinacija ultrazvuka, laserske biostimulacije i ručne masaže može doprineti boljoj teksturi kože i cirkulaciji, naročito uz redovnu seriju tretmana, zdravu ishranu i fizičku aktivnost.",
+        order: 1,
+      },
+      {
+        question: "Po čemu se razlikuje od Tri-Active Cellu-Erase tretmana?",
+        answer:
+          "Tri-Active Cellu-Erase kombinuje ultrazvuk, struju i lasersku terapiju u jednoj ESMA proceduri od 75 min. Anticelulit & Tightening Kombo je kraći (60 min) i ručnu anticelulit masažu uključuje direktno u isti termin, umesto da se ona zakazuje posebno.",
+        order: 2,
+      },
+      {
+        question: "Koliko često treba dolaziti na ovaj protokol?",
+        answer: "Za primetniju razliku preporučuje se paket od 8 tretmana, sa dinamikom koju terapeut predlaže na konsultaciji prema stanju kože.",
+        order: 3,
+      },
+      {
+        question: "Ko ne bi trebalo da radi ovaj tretman?",
+        answer:
+          "Tretman se ne preporučuje trudnicama, osobama sa pejsmejkerom, malignim oboljenjima, akutnim upalama kože ili trombozom, bez prethodne konsultacije sa terapeutom.",
+        order: 4,
+      },
+    ],
+    comparisonColumns: ["Anticelulit & Tightening Kombo", "Samo anticelulit masaža"],
+    comparisonTable: [
+      { label: "Tehnologije", values: ["Ultrazvuk + Laser + Ručna masaža", "Samo ručna masaža"] },
+      { label: "Trajanje", values: ["60 min", "30-60 min"] },
+      { label: "Fokus", values: ["Celulit i tekstura kože, dublje i površinski", "Cirkulacija i tekstura kože"] },
+    ],
+  },
+
+  // 3. Fizio-Express Back Relief
+  {
+    slug: "fizio-express-back-relief",
+    name: "Fizio-Express Back Relief",
+    categorySlugs: ["esma", "struja", "ultrazvuk", "masaze"],
+    tagSlugs: [
+      "terapija-bola",
+      "oporavak-misica",
+      "analgezija",
+      "rucna-masaza",
+      "esma-favorit-beograd",
+      "fizio-terapeutski-protokol",
+      "leda-i-vrat-tretman",
+      "dekontrakcija-misica",
+    ],
+    shortDescription:
+      "ESMA terapijski ultrazvuk ili interferentne struje na bolnim zonama (20 min) + 30 min ručne terapeutske masaže. Fizio protokol za leđa i vrat, u jednoj poseti od 50 minuta.",
+    longDescription:
+      "Fizio-Express Back Relief je fizio protokol namenjen bolovima i napetosti u leđima i vratu, koji u jednoj poseti od 50 minuta spaja aparaturni i ručni rad. Tretman počinje sa 20 minuta ESMA terapijskog ultrazvuka ili interferentnih struja usmerenih na bolne zone - ovaj deo pomaže u omekšavanju zategnutih mišićnih čvorova pre ručnog rada. Nastavlja se sa 30 minuta ručne terapeutske masaže, koja ciljano radi na već opuštenijem mišiću. Protokol je namenjen osobama sa bolovima u leđima ili vratu nastalim usled dugog sedenja, stresa ili fizičkog naprezanja, kao dopuna - ne zamena - redovnoj fizikalnoj terapiji i lekarskom pregledu. Kod jakog, iznenadnog ili dugotrajnog bola prvo se obratite lekaru ili fizijatru. Više o razlici između ručne masaže i aparaturnih tretmana pročitajte na blogu: beautymedica.rs/blog/masaza-vs-aparaturni-tretmani.",
+    defaultDuration: 50,
+    image: {
+      img: "https://placehold.co/800x600?text=Fizio-Express%20Back%20Relief",
+      imgDesc: "Fizio-Express Back Relief - privremena placeholder slika, zameniti pravom fotografijom",
+    },
+    seoKeywords: [
+      "fizio express back relief",
+      "tretman za bol u ledjima novi sad",
+      "esma i masaza za vrat i ledja",
+      "fizio terapeutski protokol novi sad",
+    ],
+    features: [
+      { name: "⚡ Ultrazvuk ili struje", description: "20 min ESMA terapijskog ultrazvuka ili interferentnih struja na bolnim zonama.", icon: "bi bi-lightning-charge", order: 1 },
+      { name: "🧘 Omekšavanje čvorova", description: "Aparaturni deo priprema zategnut mišić pre ručnog rada.", icon: "bi bi-arrow-repeat", order: 2 },
+      { name: "💆 Terapeutska masaža", description: "30 min ručne terapeutske masaže na već opuštenijem mišiću.", icon: "bi bi-heart-pulse", order: 3 },
+      { name: "🏃 Dopuna oporavku", description: "Koristan dodatak fizikalnoj terapiji, ne zamena za lekarski pregled.", icon: "bi bi-activity", order: 4 },
+    ],
+    packages: [
+      {
+        name: "Jedan tretman (50 min)",
+        slug: "jedan-tretman-50-min",
+        sessions: 1,
+        duration: 50,
+        totalPrice: 4200,
+        order: 1,
+        isBest: false,
+      },
+    ],
+    faq: [
+      {
+        question: "Da li ovaj protokol leči bol u leđima?",
+        answer:
+          "Ne. Fizio-Express Back Relief može doprineti smanjenju mišićne napetosti i osećaja bola, ali ne predstavlja medicinsko lečenje niti zamenu za pregled lekara ili fizijatra. Kod jakog ili dugotrajnog bola obavezno se prvo obratite lekaru.",
+        order: 1,
+      },
+      {
+        question: "Zašto se prvo radi aparaturni deo, pa tek onda masaža?",
+        answer:
+          "Ultrazvuk ili interferentne struje pomažu u omekšavanju zategnutih mišićnih čvorova, tako da ručna terapeutska masaža koja sledi radi na već opuštenijem mišiću i klijent lakše podnosi dublji pritisak.",
+        order: 2,
+      },
+      {
+        question: "Koliko tretmana je potrebno kod hroničnih bolova u leđima ili vratu?",
+        answer: "Za hronične tegobe preporučuje se serija od 5 do 10 tretmana, u zavisnosti od stanja i preporuke terapeuta - zato nudimo paket od 5 i paket od 10 tretmana.",
+        order: 3,
+      },
+      {
+        question: "Ko ne bi trebalo da radi ovaj tretman?",
+        answer:
+          "Tretman se ne preporučuje trudnicama, osobama sa pejsmejkerom, akutnim upalama, malignim oboljenjima ili neposredno nakon operacije, bez prethodne konsultacije sa lekarom.",
+        order: 4,
+      },
+    ],
+    comparisonColumns: ["Fizio-Express Back Relief", "Samo terapeutska masaža"],
+    comparisonTable: [
+      { label: "Priprema mišića pre masaže", values: ["Da - ultrazvuk/struje", "Ne"] },
+      { label: "Trajanje", values: ["50 min", "60 min"] },
+      { label: "Fokus", values: ["Bolne zone leđa i vrata, ciljano", "Celo telo ili odabrana zona"] },
+    ],
+  },
+
+  // 4. Post-Op & Regeneracija
+  {
+    slug: "post-op-regeneracija",
+    name: "Post-Op & Regeneracija",
+    categorySlugs: ["esma", "struja", "laser", "masaze"],
+    tagSlugs: [
+      "oporavak-misica",
+      "limfodrenaza",
+      "rucna-masaza",
+      "esma-favorit-beograd",
+      "post-operativna-nega",
+      "fizio-terapeutski-protokol",
+    ],
+    shortDescription:
+      "ESMA biostimulativni laser + drenažni program na ESMA kanalima + lagana ručna limfna drenaža, u jednoj poseti od 60 minuta. Podrška oporavku nakon estetskih zahvata ili teških treninga.",
+    longDescription:
+      "Post-Op & Regeneracija je protokol namenjen podršci oporavku nakon estetskih ili hirurških zahvata, kao i nakon posebno zahtevnih treninga. Tretman kombinuje ESMA biostimulativni laser, drenažni program na ESMA kanalima i 30 minuta lagane ručne limfne drenaže, u jednoj poseti od 60 minuta. Aparaturni deo podstiče lokalnu cirkulaciju, dok lagana ručna limfna drenaža dodatno pomaže u smanjenju osećaja otečenosti u tretiranoj zoni. Protokol je isključivo podrška oporavku - ne predstavlja medicinski tretman niti zamenu za uputstva lekara koji je izvršio zahvat. Pre zakazivanja, posebno nakon skorašnje operacije, obavezno se prvo konsultujte sa svojim lekarom o tome kada je bezbedno započeti ovakav tretman. Za sportiste i rekreativce nakon posebno zahtevnih treninga, protokol može doprineti osećaju bržeg oporavka mišića.",
+    defaultDuration: 60,
+    image: {
+      img: "https://placehold.co/800x600?text=Post-Op%20%26%20Regeneracija",
+      imgDesc: "Post-Op & Regeneracija - privremena placeholder slika, zameniti pravom fotografijom",
+    },
+    seoKeywords: [
+      "post op regeneracija novi sad",
+      "oporavak nakon estetskog zahvata",
+      "limfna drenaza posle operacije",
+      "regeneracija nakon treninga esma",
+    ],
+    features: [
+      { name: "✨ Biostimulativni laser", description: "Podstiče lokalnu cirkulaciju u tretiranoj zoni.", icon: "bi bi-sun", order: 1 },
+      { name: "⚡ Drenažni program", description: "ESMA kanali rade na smanjenju osećaja otečenosti.", icon: "bi bi-lightning-charge", order: 2 },
+      { name: "💆 Lagana ručna drenaža", description: "30 min blage ručne limfne drenaže, prilagođene osetljivom stanju tkiva.", icon: "bi bi-heart-pulse", order: 3 },
+      { name: "🛡️ Podrška, ne zamena", description: "Dopuna oporavku, uz obaveznu prethodnu konsultaciju sa lekarom.", icon: "bi bi-shield-check", order: 4 },
+    ],
+    packages: [
+      {
+        name: "Jedan tretman (60 min)",
+        slug: "jedan-tretman-60-min",
+        sessions: 1,
+        duration: 60,
+        totalPrice: 4800,
+        order: 1,
+        isBest: false,
+      },
+    ],
+    faq: [
+      {
+        question: "Kada je bezbedno početi ovaj protokol nakon operacije?",
+        answer:
+          "To zavisi od vrste zahvata i individualnog oporavka, i mora proceniti lekar koji je izvršio zahvat. Obavezno se prvo konsultujte sa svojim lekarom pre zakazivanja, posebno u ranoj fazi oporavka.",
+        order: 1,
+      },
+      {
+        question: "Da li protokol ubrzava zarastanje?",
+        answer:
+          "Protokol je podrška oporavku kroz podsticanje cirkulacije i laganu limfnu drenažu, ali ne predstavlja medicinski tretman niti garantuje ubrzano zarastanje - ne zamenjuje uputstva vašeg lekara.",
+        order: 2,
+      },
+      {
+        question: "Da li je pogodan i za sportiste bez operacije, samo nakon teškog treninga?",
+        answer: "Da, protokol se koristi i kao podrška oporavku mišića nakon posebno zahtevnih treninga, ne samo nakon zahvata.",
+        order: 3,
+      },
+      {
+        question: "Zašto je ručna drenaža ovde 'lagana', za razliku od drugih protokola?",
+        answer:
+          "Tkivo u ranoj fazi oporavka je osetljivije, pa se intenzitet ručnog rada namerno prilagođava - terapeut procenjuje pritisak individualno, u dogovoru sa vama.",
+        order: 4,
+      },
+    ],
+    comparisonColumns: ["Post-Op & Regeneracija", "Samo lagana ručna drenaža"],
+    comparisonTable: [
+      { label: "Tehnologije", values: ["Laser + ESMA drenažni program + Ručna drenaža", "Samo ručna drenaža"] },
+      { label: "Trajanje", values: ["60 min", "30-60 min"] },
+      { label: "Namena", values: ["Podrška oporavku nakon zahvata/treninga", "Opšte smanjenje otoka"] },
+    ],
+  },];
 
 // ---------------------------------------------------------------------------
-// TOP-LEVEL TABELE ZA UPOREĐIVANJE PAKETA (samo za ESMA usluge)
-// ---------------------------------------------------------------------------
-
-const comparisonTables = {
-  packages5: {
-    columns: ["Paket", "Trajanje", "Cena", "Popust", "Ušteda", "Preporuka"],
-    rows: [
-      { label: "Tesla‑Tone 24", values: ["5 x 45 min", "15.750 RSD", "10%", "1.750 RSD", "⭐"] },
-      { label: "Aqua‑Drain 360", values: ["5 x 45 min", "15.750 RSD", "10%", "1.750 RSD", "⭐"] },
-      { label: "Lipolise Russian‑Max", values: ["5 x 45 min", "18.000 RSD", "10%", "2.000 RSD", "⭐"] },
-      { label: "Tri‑Active Cellu‑Erase", values: ["5 x 75 min", "24.750 RSD", "10%", "2.750 RSD", "⭐⭐"] },
-      { label: "Laser‑Sonic Face Sculpt", values: ["5 x 45 min", "20.250 RSD", "10%", "2.250 RSD", "⭐⭐"] },
-      { label: "Medicinski Bio‑Reset", values: ["5 x 45 min", "20.250 RSD", "10%", "2.250 RSD", "⭐⭐"] },
-    ],
-  },
-  packages10: {
-    columns: ["Paket", "Trajanje", "Cena", "Popust", "Ušteda", "Preporuka"],
-    rows: [
-      { label: "Tesla‑Tone 24", values: ["10 x 45 min", "28.000 RSD", "20%", "7.000 RSD", "⭐⭐⭐"] },
-      { label: "Aqua‑Drain 360", values: ["10 x 45 min", "28.000 RSD", "20%", "7.000 RSD", "⭐⭐⭐"] },
-      { label: "Lipolise Russian‑Max", values: ["10 x 45 min", "32.000 RSD", "20%", "8.000 RSD", "⭐⭐⭐"] },
-      { label: "Tri‑Active Cellu‑Erase", values: ["10 x 75 min", "44.000 RSD", "20%", "11.000 RSD", "⭐⭐⭐⭐"] },
-      { label: "Laser‑Sonic Face Sculpt", values: ["10 x 45 min", "36.000 RSD", "20%", "9.000 RSD", "⭐⭐⭐⭐"] },
-      { label: "Medicinski Bio‑Reset", values: ["10 x 45 min", "36.000 RSD", "20%", "9.000 RSD", "⭐⭐⭐⭐"] },
-    ],
-  },
-};
-
-// ---------------------------------------------------------------------------
-// Paketi (top-level) – 5 i 10 sesija, SAMO za usluge koje to dozvoljavaju
-// (masaže imaju skipBundlePackages: true i preskaču se)
-// Popusti: 5 sesija = 10% popusta, 10 sesija = 20% popusta
-// ---------------------------------------------------------------------------
-
-// Popusti: 5 sesija = 10% popusta, 10 sesija = 20% popusta u odnosu na cenu
-// pojedinačnog tretmana x broj sesija (basePrice). Cene su usklađene sa
-// stvarnim podacima iz produkcije (Package export, jul 2026.) - namerno se ne
-// izračunavaju dinamički ovde da bi seed ostao čitljiv i lako proverljiv red po red.
-const packageDefs = [
-  // --- Tesla-Tone 24 ---
-  {
-    serviceSlug: "teslatone-24",
-    variantSlug: "jedan-tretman-45-min",
-    sessions: 5,
-    slug: "tesla-tone-24-5-tretmana",
-    name: "Tesla‑Tone 24 – paket od 5 tretmana",
-    shortDescription: "5 tretmana Tesla‑Tone 24 po povoljnijoj ceni. Ušteda 10% u odnosu na pojedinačne tretmane.",
-    description: "Paket od 5 tretmana Tesla‑Tone 24. Sesije se zakazuju pojedinačno, u dogovoru sa terapeutom.",
-    totalPrice: 15750,
-    basePrice: 17500,
-    badge: "POPUST 10%",
-    isBest: false,
-    seoKeywords: ["tesla tone 24 paket", "miostimulacija paket", "5 tretmana miostimulacije"],
-    faq: [
-      { question: "Da li moram sve tretmane da zakažem odjednom?", answer: "Ne. Paket se plaća unapred, a sesije se zakazuju pojedinačno u dogovoru sa terapeutom, prema vašem rasporedu.", order: 1 },
-      { question: "Da li paket ima rok trajanja?", answer: "Preporučujemo da svih 5 tretmana iskoristite u razmaku od nekoliko nedelja, jer se najbolji rezultati postižu redovnošću. Za tačan rok važenja pitajte na konsultaciji.", order: 2 },
-      { question: "Šta ako mi zatreba više tretmana od 5?", answer: "Uvek možete kupiti dodatni paket ili preći na paket od 10 tretmana za još povoljniju cenu po tretmanu.", order: 3 },
-    ],
-  },
-  {
-    serviceSlug: "teslatone-24",
-    variantSlug: "jedan-tretman-45-min",
-    sessions: 10,
-    slug: "tesla-tone-24-10-tretmana",
-    name: "Tesla‑Tone 24 – paket od 10 tretmana",
-    shortDescription: "10 tretmana Tesla‑Tone 24 po povoljnijoj ceni. Ušteda 20% u odnosu na pojedinačne tretmane.",
-    description: "Paket od 10 tretmana Tesla‑Tone 24. Sesije se zakazuju pojedinačno, u dogovoru sa terapeutom. Preporučeno za dugoročne rezultate i maksimalnu transformaciju.",
-    totalPrice: 28000,
-    basePrice: 35000,
-    badge: "NAJBOLJA VREDNOST",
-    isBest: true,
-    seoKeywords: ["tesla tone 24 paket 10 tretmana", "miostimulacija serija tretmana"],
-    faq: [
-      { question: "Zašto je paket od 10 tretmana povoljniji?", answer: "Popust raste sa brojem tretmana - paket od 10 nosi 20% popusta u odnosu na pojedinačnu cenu, dvostruko više od paketa od 5.", order: 1 },
-      { question: "Kome se preporučuje ovaj paket?", answer: "Onima koji žele primetniju i dugotrajniju promenu tonusa mišića, ne samo održavanje - terapeut na konsultaciji potvrđuje da li je 10 tretmana realan cilj za vas.", order: 2 },
-    ],
-  },
-
-  // --- Aqua-Drain 360 ---
-  {
-    serviceSlug: "aquadrain-360",
-    variantSlug: "jedan-tretman-45-min",
-    sessions: 5,
-    slug: "aqua-drain-360-5-tretmana",
-    name: "Aqua‑Drain 360 – paket od 5 tretmana",
-    shortDescription: "5 tretmana Aqua‑Drain 360 po povoljnijoj ceni. Ušteda 10% u odnosu na pojedinačne tretmane.",
-    description: "Paket od 5 tretmana Aqua‑Drain 360. Sesije se zakazuju pojedinačno, u dogovoru sa terapeutom.",
-    totalPrice: 15750,
-    basePrice: 17500,
-    badge: "POPUST 10%",
-    isBest: false,
-    seoKeywords: ["aqua drain 360 paket", "limfna drenaza paket", "5 tretmana limfne drenaze"],
-    faq: [
-      { question: "Koliko često treba dolaziti u okviru paketa?", answer: "Za osećaj olakšanja preporučuje se nekoliko puta nedeljno u intenzivnijoj fazi, a terapeut prilagođava dinamiku vašem stanju.", order: 1 },
-      { question: "Da li paket pokriva celo telo svaki put?", answer: "Da, svaka sesija u okviru paketa je 45-minutni tretman celog tela, isto kao pojedinačna poseta.", order: 2 },
-    ],
-  },
-  {
-    serviceSlug: "aquadrain-360",
-    variantSlug: "jedan-tretman-45-min",
-    sessions: 10,
-    slug: "aqua-drain-360-10-tretmana",
-    name: "Aqua‑Drain 360 – paket od 10 tretmana",
-    shortDescription: "10 tretmana Aqua‑Drain 360 po povoljnijoj ceni. Ušteda 20% u odnosu na pojedinačne tretmane.",
-    description: "Paket od 10 tretmana Aqua‑Drain 360. Sesije se zakazuju pojedinačno, u dogovoru sa terapeutom.",
-    totalPrice: 28000,
-    basePrice: 35000,
-    badge: "NAJBOLJA VREDNOST",
-    isBest: true,
-    seoKeywords: ["aqua drain 360 paket 10 tretmana", "limfna drenaza serija"],
-    faq: [
-      { question: "Da li 10 tretmana daje trajniji efekat od 5?", answer: "Duži ciklus redovnih tretmana obično daje primetniju i dužu razliku u osećaju cirkulacije, ali svaki organizam reaguje individualno.", order: 1 },
-    ],
-  },
-
-  // --- Lipolise Russian-Max ---
-  {
-    serviceSlug: "lipolise-russianmax",
-    variantSlug: "jedan-tretman-45-min",
-    sessions: 5,
-    slug: "lipolise-russian-max-5-tretmana",
-    name: "Lipolise Russian‑Max – paket od 5 tretmana",
-    shortDescription: "5 tretmana Lipolise Russian‑Max po povoljnijoj ceni. Ušteda 10% u odnosu na pojedinačne tretmane.",
-    description: "Paket od 5 tretmana Lipolise Russian‑Max. Sesije se zakazuju pojedinačno, u dogovoru sa terapeutom.",
-    totalPrice: 18000,
-    basePrice: 20000,
-    badge: "POPUST 10%",
-    isBest: false,
-    seoKeywords: ["lipolise russian max paket", "elektrolipoliza paket"],
-    faq: [
-      { question: "Da li je 5 tretmana dovoljno za rezultate?", answer: "Za lokalizovane manje zone može biti dovoljno kao početna serija, ali za izraženije naslage terapeut često predlaže nastavak paketom od 10.", order: 1 },
-    ],
-  },
-  {
-    serviceSlug: "lipolise-russianmax",
-    variantSlug: "jedan-tretman-45-min",
-    sessions: 10,
-    slug: "lipolise-russian-max-10-tretmana",
-    name: "Lipolise Russian‑Max – paket od 10 tretmana",
-    shortDescription: "10 tretmana Lipolise Russian‑Max po povoljnijoj ceni. Ušteda 20% u odnosu na pojedinačne tretmane.",
-    description: "Paket od 10 tretmana Lipolise Russian‑Max. Sesije se zakazuju pojedinačno, u dogovoru sa terapeutom.",
-    totalPrice: 32000,
-    basePrice: 40000,
-    badge: "NAJBOLJA VREDNOST",
-    isBest: true,
-    seoKeywords: ["lipolise russian max paket 10 tretmana", "elektrolipoliza serija"],
-    faq: [
-      { question: "Da li mogu kombinovati ovaj paket sa anticelulit masažom?", answer: "Da, terapeut može predložiti kombinaciju elektrolipolize i ručne anticelulit masaže za dodatnu podršku cirkulaciji.", order: 1 },
-    ],
-  },
-
-  // --- Tri-Active Cellu-Erase ---
-  {
-    serviceSlug: "triactive-celluerase",
-    variantSlug: "jedan-tretman-75-min",
-    sessions: 5,
-    slug: "tri-active-cellu-erase-5-tretmana",
-    name: "Tri‑Active Cellu‑Erase – paket od 5 tretmana",
-    shortDescription: "5 tretmana Tri‑Active Cellu‑Erase po povoljnijoj ceni. Ušteda 10% u odnosu na pojedinačne tretmane.",
-    description: "Paket od 5 tretmana Tri‑Active Cellu‑Erase. Sesije se zakazuju pojedinačno, u dogovoru sa terapeutom.",
-    totalPrice: 24750,
-    basePrice: 27500,
-    badge: "POPUST 10%",
-    isBest: false,
-    seoKeywords: ["tri active cellu erase paket", "kombinovani anticelulit tretman paket"],
-    faq: [
-      { question: "Zašto je ovaj paket skuplji od ostalih ESMA paketa?", answer: "Tri-Active Cellu-Erase je 75-minutni kombinovani tretman (ultrazvuk + struja + svetlosna terapija), duži i sveobuhvatniji od standardnog 45-minutnog tretmana, što se odražava na cenu.", order: 1 },
-    ],
-  },
-  {
-    serviceSlug: "triactive-celluerase",
-    variantSlug: "jedan-tretman-75-min",
-    sessions: 10,
-    slug: "tri-active-cellu-erase-10-tretmana",
-    name: "Tri‑Active Cellu‑Erase – paket od 10 tretmana",
-    shortDescription: "10 tretmana Tri‑Active Cellu‑Erase po povoljnijoj ceni. Ušteda 20% u odnosu na pojedinačne tretmane.",
-    description: "Paket od 10 tretmana Tri‑Active Cellu‑Erase. Sesije se zakazuju pojedinačno, u dogovoru sa terapeutom.",
-    totalPrice: 44000,
-    basePrice: 55000,
-    badge: "NAJBOLJA VREDNOST",
-    isBest: true,
-    seoKeywords: ["tri active cellu erase paket 10 tretmana", "celulit tretman serija"],
-    faq: [
-      { question: "Kome se preporučuje paket od 10 tretmana?", answer: "Klijentima sa dugotrajnim, tvrdokornim celulitom kojima je potreban duži ciklus da bi se videla primetnija razlika.", order: 1 },
-    ],
-  },
-
-  // --- Laser-Sonic Face Sculpt ---
-  {
-    serviceSlug: "lasersonic-face-sculpt",
-    variantSlug: "jedan-tretman-45-min",
-    sessions: 5,
-    slug: "laser-sonic-face-sculpt-5-tretmana",
-    name: "Laser‑Sonic Face Sculpt – paket od 5 tretmana",
-    shortDescription: "5 tretmana Laser‑Sonic Face Sculpt po povoljnijoj ceni. Ušteda 10% u odnosu na pojedinačne tretmane.",
-    description: "Paket od 5 tretmana Laser‑Sonic Face Sculpt. Sesije se zakazuju pojedinačno, u dogovoru sa terapeutom.",
-    totalPrice: 20250,
-    basePrice: 22500,
-    badge: "POPUST 10%",
-    isBest: false,
-    seoKeywords: ["laser sonic face sculpt paket", "lifting lica paket", "mikrostrujni lifting serija"],
-    faq: [
-      { question: "Da li je 5 tretmana dovoljno za lifting lica?", answer: "Za suptilniju, postepenu promenu da - za izraženiji i duži efekat terapeuti češće preporučuju paket od 10 tretmana.", order: 1 },
-    ],
-  },
-  {
-    serviceSlug: "lasersonic-face-sculpt",
-    variantSlug: "jedan-tretman-45-min",
-    sessions: 10,
-    slug: "laser-sonic-face-sculpt-10-tretmana",
-    name: "Laser‑Sonic Face Sculpt – paket od 10 tretmana",
-    shortDescription: "10 tretmana Laser‑Sonic Face Sculpt po povoljnijoj ceni. Ušteda 20% u odnosu na pojedinačne tretmane.",
-    description: "Paket od 10 tretmana Laser‑Sonic Face Sculpt. Sesije se zakazuju pojedinačno, u dogovoru sa terapeutom.",
-    totalPrice: 36000,
-    basePrice: 45000,
-    badge: "NAJBOLJA VREDNOST",
-    isBest: true,
-    seoKeywords: ["laser sonic face sculpt paket 10 tretmana", "lifting lica serija tretmana"],
-    faq: [
-      { question: "Koliko često se preporučuje dolazak u okviru ovog paketa?", answer: "Terapeut najčešće predlaže tretmane u razmaku od nedelju do dve, uz periodično održavanje nakon završetka paketa.", order: 1 },
-    ],
-  },
-
-  // --- Medicinski Bio-Reset ---
-  {
-    serviceSlug: "medicinski-bioreset",
-    variantSlug: "jedan-tretman-45-min",
-    sessions: 5,
-    slug: "medicinski-bio-reset-5-tretmana",
-    name: "Medicinski Bio‑Reset – paket od 5 tretmana",
-    shortDescription: "5 tretmana Medicinski Bio‑Reset po povoljnijoj ceni. Ušteda 10% u odnosu na pojedinačne tretmane.",
-    description: "Paket od 5 tretmana Medicinski Bio‑Reset. Sesije se zakazuju pojedinačno, u dogovoru sa terapeutom.",
-    totalPrice: 20250,
-    basePrice: 22500,
-    badge: "POPUST 10%",
-    isBest: false,
-    seoKeywords: ["medicinski bio reset paket", "fizikalna terapija paket", "terapija bola serija"],
-    faq: [
-      { question: "Da li ovaj paket zamenjuje lekarski tretman?", answer: "Ne. Medicinski Bio-Reset je dopuna, ne zamena za pregled lekara ili fizijatra - kod jakog ili dugotrajnog bola prvo se obratite lekaru.", order: 1 },
-    ],
-  },
-  {
-    serviceSlug: "medicinski-bioreset",
-    variantSlug: "jedan-tretman-45-min",
-    sessions: 10,
-    slug: "medicinski-bio-reset-10-tretmana",
-    name: "Medicinski Bio‑Reset – paket od 10 tretmana",
-    shortDescription: "10 tretmana Medicinski Bio‑Reset po povoljnijoj ceni. Ušteda 20% u odnosu na pojedinačne tretmane.",
-    description: "Paket od 10 tretmana Medicinski Bio‑Reset. Sesije se zakazuju pojedinačno, u dogovoru sa terapeutom.",
-    totalPrice: 36000,
-    basePrice: 45000,
-    badge: "NAJBOLJA VREDNOST",
-    isBest: true,
-    seoKeywords: ["medicinski bio reset paket 10 tretmana", "terapija bola serija tretmana"],
-    faq: [
-      { question: "Kome se preporučuje duži paket od 10 tretmana?", answer: "Sportistima i osobama sa hroničnom napetošću kojima je potrebna redovna, dugotrajnija podrška oporavku, uz procenu terapeuta na konsultaciji.", order: 1 },
-    ],
-  },
-];
-
-function createPackagesForService(serviceSlug, variantSlug, singlePrice, duration, serviceName) {
-  const sessionsOptions = [
-    { count: 5, discount: 0.9, badge: "POPUST 10%", isBest: false },
-    { count: 10, discount: 0.8, badge: "NAJBOLJA VREDNOST", isBest: true },
-  ];
-
-  return sessionsOptions.map((opt) => {
-    const totalPrice = Math.round(singlePrice * opt.count * opt.discount);
-    const basePrice = singlePrice * opt.count;
-    const totalDuration = duration * opt.count;
-    const slug = `${serviceSlug}-${opt.count}-tretmana`;
-    const name = `${serviceName} – paket od ${opt.count} tretmana`;
-    const shortDescription = `${opt.count} tretmana ${serviceName} po povoljnijoj ceni. Ušteda ${Math.round((1 - opt.discount) * 100)}% u odnosu na pojedinačne tretmane.`;
-    let description = `Paket od ${opt.count} tretmana ${serviceName}. Sesije se zakazuju pojedinačno, u dogovoru sa terapeutom.`;
-    if (opt.count === 10) {
-      description += " Preporučeno za dugoročne rezultate i maksimalnu transformaciju.";
-    }
-    if (serviceSlug === "triactive-celluerase" || serviceSlug === "lasersonic-face-sculpt" || serviceSlug === "medicinski-bioreset") {
-      description += " Kombinovani tretman koji objedinjuje više tehnologija u okviru jedne procedure.";
-    }
-    return {
-      slug,
-      name,
-      serviceSlug,
-      variantSlug,
-      sessions: opt.count,
-      shortDescription,
-      description,
-      totalPrice,
-      basePrice,
-      badge: opt.badge,
-      isBest: opt.isBest,
-      categorySlugs: [],
-      tagSlugs: [],
-    };
-  });
-}
-
-// Generišemo pakete samo za usluge koje ne preskaču bundlovanje (npr. masaže)
-serviceDefs.forEach((svc) => {
-  if (svc.skipBundlePackages) return;
-
-  const singleVariant = svc.packages[0];
-  const singlePrice = singleVariant.totalPrice;
-  const duration = singleVariant.duration;
-  const serviceName = svc.name;
-  const serviceSlug = svc.slug;
-  const variantSlug = singleVariant.slug;
-
-  const packs = createPackagesForService(serviceSlug, variantSlug, singlePrice, duration, serviceName);
-  packageDefs.push(...packs);
-});
-
-// ---------------------------------------------------------------------------
-// Upsert funkcije (ostaju iste)
+// Upsert funkcije
 // ---------------------------------------------------------------------------
 
 async function upsertTopLevelCategories() {
@@ -979,76 +1002,33 @@ async function upsertServices(categoriesBySlug, tagsBySlug) {
   return { serviceIdsBySlug, variantIdsBySlug };
 }
 
-async function upsertPackages(categoriesBySlug, tagsBySlug, serviceIdsBySlug, variantIdsBySlug) {
-  const created = [];
-  for (const def of packageDefs) {
-    const serviceId = serviceIdsBySlug[def.serviceSlug];
-    const variantId = variantIdsBySlug[def.serviceSlug]?.[def.variantSlug];
-    if (!serviceId || !variantId) {
-      throw new Error(`Package "${def.slug}" references unknown service/variant slug (${def.serviceSlug}/${def.variantSlug})`);
-    }
-
-    const parentService = await Service.findById(serviceId).lean();
-    const categories = parentService.categories.map((id) => id);
-    const tags = parentService.tags.map((id) => id);
-
-    const variant = parentService.packages.find((p) => p._id.equals(variantId));
-    const duration = variant.duration;
-
-    const payload = {
-      name: def.name,
-      slug: def.slug,
-      description: def.description,
-      shortDescription: def.shortDescription,
-      items: [{ service: serviceId, servicePackageId: variantId, sessions: def.sessions }],
-      totalPrice: def.totalPrice,
-      basePrice: def.basePrice,
-      totalDuration: def.sessions * duration,
-      badge: def.badge,
-      isBest: def.isBest || false,
-      categories,
-      tags,
-      faq: def.faq || [],
-      seoKeywords: def.seoKeywords || [],
-      isActive: true,
-    };
-
-    const doc = await Package.findOneAndUpdate({ slug: def.slug }, payload, {
-      upsert: true,
-      new: true,
-      setDefaultsOnInsert: true,
-      runValidators: true,
-    });
-    created.push(doc);
-  }
-  return created;
-}
-
 // ---------------------------------------------------------------------------
 // Glavna seed funkcija
 // ---------------------------------------------------------------------------
 
-export async function seedEsmaCatalog() {
+export async function seedServiceCatalog() {
   let categoriesBySlug = await upsertTopLevelCategories();
   categoriesBySlug = await upsertChildCategories(categoriesBySlug);
   const tagsBySlug = await upsertTags();
   const { serviceIdsBySlug, variantIdsBySlug } = await upsertServices(categoriesBySlug, tagsBySlug);
-  const packages = await upsertPackages(categoriesBySlug, tagsBySlug, serviceIdsBySlug, variantIdsBySlug);
 
-  console.log("\n📊 TABELA ZA UPOREĐIVANJE – PAKETI OD 5 TRETMANA:");
-  console.table(comparisonTables.packages5.rows);
-  console.log("\n📊 TABELA ZA UPOREĐIVANJE – PAKETI OD 10 TRETMANA:");
-  console.table(comparisonTables.packages10.rows);
+  console.log("\n📊 KATALOG USLUGA (14 ukupno):");
+  console.table(
+    serviceDefs.map((s) => ({
+      naziv: s.name,
+      trajanje: `${s.defaultDuration} min`,
+      pojedinacnaCena: `${s.packages[0].totalPrice} RSD`,
+    }))
+  );
 
   const summary = {
     categories: Object.keys(categoriesBySlug).length,
     tags: Object.keys(tagsBySlug).length,
     services: Object.keys(serviceIdsBySlug).length,
-    packages: packages.length,
   };
 
-  logInfo("ESMA + masaže katalog seedovan (ispravljene ESMA tvrdnje + nove masaže)", summary);
-  return summary;
+  logInfo("Katalog usluga (kategorije + tagovi + 14 usluga) seedovan", summary);
+  return { ...summary, serviceIdsBySlug, variantIdsBySlug };
 }
 
-export default seedEsmaCatalog;
+export default seedServiceCatalog;

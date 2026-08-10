@@ -10,11 +10,19 @@ import {
   preparePartnerCommissionsTabData,
   preparePartnerPayoutsTabData,
 } from "../../../presenters/partner/partner-account.presenter.js";
+import { generateSeo } from "../../../seo/index.js";
 import { logError, logInfo, logWarn } from "../../../utils/logger.util.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 
 const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
+
+// Everything under /moj-partner-nalog is already behind webAuthMiddleware (see
+// web.routes.js) - explicitly noindex anyway, same defense-in-depth convention
+// as user.controller.js/employee.controller.js.
+async function partnerSeo(req, { title, description }) {
+  return generateSeo("page", { title, description, slug: req.originalUrl, noIndex: true }, req);
+}
 
 async function getOwnPartnerId(req) {
   const partner = await partnerService.findPartnerByUserId(req.session.user.id);
@@ -41,6 +49,7 @@ export async function dashboard(req, res, next) {
     return res.render("partner/dashboard", {
       pageTitle: "Moj partnerski nalog",
       pageDescription: "Pregled provizije i referalnog linka",
+      seo: await partnerSeo(req, { title: "Moj partnerski nalog", description: "Pregled provizije i referalnog linka" }),
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -67,6 +76,7 @@ export async function commissions(req, res, next) {
     return res.render("partner/commissions", {
       pageTitle: "Moja provizija",
       pageDescription: "Istorija zarađene provizije",
+      seo: await partnerSeo(req, { title: "Moja provizija", description: "Istorija zarađene provizije" }),
       data: viewData,
     });
   } catch (error) {
@@ -92,6 +102,7 @@ export async function payoutHistory(req, res, next) {
     return res.render("partner/payouts", {
       pageTitle: "Moje isplate",
       pageDescription: "Istorija zahteva za isplatu",
+      seo: await partnerSeo(req, { title: "Moje isplate", description: "Istorija zahteva za isplatu" }),
       data: viewData,
     });
   } catch (error) {
@@ -150,6 +161,7 @@ export async function catalog(req, res, next) {
     return res.render("partner/catalog", {
       pageTitle: "Katalog za deljenje",
       pageDescription: "Usluge, paketi i proizvodi sa vašim referalnim linkom",
+      seo: await partnerSeo(req, { title: "Katalog za deljenje", description: "Usluge, paketi i proizvodi sa vašim referalnim linkom" }),
       data: {
         hasCode: !!code,
         search,

@@ -112,7 +112,11 @@ describe("user account routes (HTTP)", () => {
     const outsiderAgent = request.agent(app);
     await registerAndLogin(outsiderAgent, { email: "drugi@example.com", roleName: "user" });
 
-    const { token } = await getCsrfToken(outsiderAgent, "/nalog");
+    // /nalog itself is a read-only profile summary with no form on it at all - fetching
+    // a CSRF token from it always returns an empty string, which the CSRF middleware
+    // then correctly rejects with its own 403, before the authorization check this
+    // test actually wants to exercise ever runs. /nalog/podesavanja has a real form.
+    const { token } = await getCsrfToken(outsiderAgent, "/nalog/podesavanja");
     const res = await outsiderAgent
       .post(`/nalog/termini/${appointment._id}/otkazi`)
       .type("form")

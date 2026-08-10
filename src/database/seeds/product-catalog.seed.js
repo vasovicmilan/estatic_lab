@@ -1,4 +1,5 @@
 import Category from "../../models/category.model.js";
+import Tag from "../../models/tag.model.js";
 import Product from "../../models/product.model.js";
 import { logInfo } from "../../utils/logger.util.js";
 
@@ -7,79 +8,119 @@ const DOMAIN = "product";
 // ---------------------------------------------------------------------------
 // NAPOMENA (pročitati pre pokretanja)
 // ---------------------------------------------------------------------------
-// Ovaj seed je generisan na osnovu dostavljenog kataloga proizvođača opreme.
-// Taj katalog meša DVE potpuno različite vrste stavki:
+// Ovaj seed je generisan na osnovu dostavljenog kataloga proizvođača opreme
+// (fotromed.com, avgust 2026) i objedinjuje SVE što je ranije bilo u dva
+// odvojena fajla:
+//   - product-catalog.seed.js (kategorije + 50 proizvoda)
+//   - tags.seed.js            (47 "benefit" tagova za domain "product")
+// u JEDAN fajl - isti princip konsolidacije kao service-catalog.seed.js.
 //
-//   1) ~45 profesionalnih estetskih uređaja (HIFU, laseri, EMS uređaji itd.) -
-//      oprema vrednosti od nekoliko stotina do desetine hiljada evra. Ovo NIJE
-//      tipičan "dodaj u korpu" maloprodajni proizvod.
-//   2) 5 Tiferono kozmetičkih proizvoda (sprej, krema, krema za sunčanje, serum,
-//      maska) - ovo SU pravi maloprodajni proizvodi, idealni za prodavnicu.
+// VAŽNA ISPRAVKA U ODNOSU NA STARI product-catalog.seed.js: onaj fajl je
+// povezivao tagove sa proizvodima preko ČVRSTO UKUCANOG spiska ObjectId-jeva
+// (TAG_ID_MAP), kopiranog iz jednog konkretnog DB exporta. To je bilo
+// bezbedno SAMO dok se baza nikad ne briše - čim se baza obriše i ponovo
+// seeduje, tags.seed.js pravi SASVIM NOVE ObjectId-jeve za iste tagove, pa bi
+// stari čvrsto ukucani ID-jevi pokazivali na tagove koji više ne postoje
+// (proizvodi bi ostali bez ijednog povezanog taga, bez ijedne greške pri
+// pokretanju - tiha greška). Ovaj fajl umesto toga tagove povezuje
+// DINAMIČKI, po slugu, kroz upsertTags() + lookup u upsertProducts() - isti
+// princip kao service-catalog.seed.js - i radi ispravno bez obzira na to
+// kada/koliko puta je baza brisana i ponovo seedovana.
 //
-// Pošto izvorni katalog NEMA cene ni količine na stanju ni za jednu stavku, svaka
-// varijanta ovde ima placeholder cenu od 12345 RSD (namerno upadljiv broj,
-// lako pretraživ) i količinu na stanju 0. SVI proizvodi su seedovani sa
-// isActive: false (draft) - NEĆE se pojaviti u prodavnici dok im ručno ne
-// dodate pravu cenu, količinu na stanju, pravu fotografiju i ne postavite
-// isActive: true. Ovo je namerno, da se izbegne da 45 uređaja od hiljade evra
-// slučajno postane naručivo za 12.345 RSD.
+// KATEGORIJE (ispravka - prati Excel 1:1): kategorije NISU generička grupa od
+// 8 stavki kao ranije, već tačnih 16 kategorija iz Fotromed cenovnika (kolona
+// "Kategorija / Tretman", npr. "HIFU – lifting lica i tela", "RF
+// mikroigličenje", "Q-Switch Nd:YAG laser – tetovaže i pigmentacija" itd.) -
+// isti nazivi, isti broj proizvoda po kategoriji kao u izvornoj tabeli.
 //
-// Fotografije su placeholder slike (https://placehold.co), isti obrazac kao u
-// esma-catalog.seed.js i post-content.seed.js - zameniti pravim fotografijama.
+// SVA POLJA IZ EXCEL TABELE: pošto Product model NEMA posebna polja za
+// garancija/rok isporuke/dostupnost/šifra proizvođača, ta polja iz Excel-a
+// (identična za svih 59 stavki: 12-24 meseca garancije, 30-60 dana isporuka,
+// "Na upit" dostupnost, plus šifra tipa "FM-HIFU-22D" po proizvodu) su
+// ugrađena kao čitljiv odeljak "Nabavni podaci" na kraju longDescription
+// SVAKOG proizvoda - podaci nisu izgubljeni, samo su smešteni unutar
+// postojeće strukture modela umesto da zahtevaju izmenu šeme.
+//
+// NOVI PROIZVODI (avgust 2026, iz Fotromed cenovnika): dodato je 12 novih
+// stavki uporedivši postojećih 50 proizvoda sa punim Fotromed katalogom
+// (59 stavki) - 10 potpuno novih proizvoda + HydroRevive Pro podeljen na 2
+// odvojena proizvoda (9-u-1 i 15-u-1), pošto Fotromed katalog ima 2 odvojene
+// šifre/fotografije za tu liniju, ne jednu. Ukupno: 61 proizvod.
+//
+// SVI proizvodi (postojećih 50 i novih 12) i dalje imaju placeholder cenu od
+// 12345 RSD, količinu na stanju 0 i isActive: false (draft) - popuni pravu
+// cenu, količinu, fotografiju i postavi isActive: true pre nego što se
+// pojave u prodavnici.
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// TAG ID MAP – kopirano iz test.tags.json (samo product domain tagovi)
+// Tagovi ("benefit" tagovi - šta proizvod pruža korisniku)
 // ---------------------------------------------------------------------------
 
-const TAG_ID_MAP = {
-  "zatezanje-koze": "6a69131375497c5b2c2d3b61",
-  "lifting-lica": "6a69131375497c5b2c2d3b62",
-  "neinvazivni-lifting": "6a69131375497c5b2c2d3b63",
-  "podmladjivanje-lica": "6a69131375497c5b2c2d3b64",
-  "konturisanje-lica": "6a69131375497c5b2c2d3b65",
-  "uklanjanje-bora": "6a69131375497c5b2c2d3b66",
-  "uklanjanje-finih-linija": "6a69131375497c5b2c2d3b67",
-  "trajna-depilacija": "6a69131375497c5b2c2d3b68",
-  "uklanjanje-dlaka": "6a69131375497c5b2c2d3b69",
-  "srh-depilacija": "6a69131375497c5b2c2d3b6a",
-  "laserska-depilacija": "6a69131375497c5b2c2d3b6b",
-  "podmladjivanje-koze": "6a69131375497c5b2c2d3b6c",
-  "obnova-koze": "6a69131375497c5b2c2d3b6d",
-  "stimulacija-kolagena": "6a69131375497c5b2c2d3b6e",
-  "poboljsanje-elastienosti": "6a69131375497c5b2c2d3b6f",
-  "hidratacija-koze": "6a69131475497c5b2c2d3b70",
-  "ciscenje-koze": "6a69131475497c5b2c2d3b71",
-  "dubinsko-ciscenje": "6a69131475497c5b2c2d3b72",
-  "uklanjanje-oziljaka": "6a69131475497c5b2c2d3b73",
-  "tretman-akni": "6a69131475497c5b2c2d3b74",
-  "uklanjanje-pigmentacija": "6a69131475497c5b2c2d3b75",
-  "uklanjanje-tetovaza": "6a69131475497c5b2c2d3b76",
-  "uklanjanje-trajne-sminke": "6a69131475497c5b2c2d3b77",
-  "tretman-strija": "6a69131475497c5b2c2d3b78",
-  "uklanjanje-bradavica": "6a69131475497c5b2c2d3b79",
-  "tretman-krvnih-sudova": "6a69131475497c5b2c2d3b7a",
-  "uklanjanje-celulita": "6a69131475497c5b2c2d3b7b",
-  "oblikovanje-tela": "6a69131475497c5b2c2d3b7c",
-  "redukcija-masti": "6a69131475497c5b2c2d3b7d",
-  "kriolipoliza": "6a69131475497c5b2c2d3b7e",
-  "jacanje-misica": "6a69131475497c5b2c2d3b7f",
-  "zatezanje-tela": "6a69131475497c5b2c2d3b80",
-  "intimna-nega": "6a69131475497c5b2c2d3b81",
-  "vaginalna-rejuvenacija": "6a69131475497c5b2c2d3b82",
-  "jacanje-karlicnog-dna": "6a69131475497c5b2c2d3b83",
-  "tretman-inkontinencije": "6a69131475497c5b2c2d3b84",
-  "analiza-koze": "6a69131475497c5b2c2d3b85",
-  "dijagnostika-koze": "6a69131475497c5b2c2d3b86",
-  "ai-analiza": "6a69131475497c5b2c2d3b87",
-  "kiseonicki-tretman": "6a69131475497c5b2c2d3b88",
-  "relaksacija": "6a69131575497c5b2c2d3b89",
-  "wellness": "6a69131575497c5b2c2d3b8a",
-  "fda-odobren": "6a69131575497c5b2c2d3b8b",
-  "bez-oporavka": "6a69131575497c5b2c2d3b8c",
-  "bezbolan-tretman": "6a69131575497c5b2c2d3b8d",
-  "neinvazivno": "6a69131575497c5b2c2d3b8e",
-};
+const tagDefs = [
+  // === LIFTING I ZATEZANJE ===
+  { name: "Zatezanje kože", slug: "zatezanje-koze" },
+  { name: "Lifting lica", slug: "lifting-lica" },
+  { name: "Neinvazivni lifting", slug: "neinvazivni-lifting" },
+  { name: "Podmlađivanje lica", slug: "podmladjivanje-lica" },
+  { name: "Konturisanje lica", slug: "konturisanje-lica" },
+  { name: "Uklanjanje bora", slug: "uklanjanje-bora" },
+  { name: "Uklanjanje finih linija", slug: "uklanjanje-finih-linija" },
+
+  // === DEPILACIJA ===
+  { name: "Trajna depilacija", slug: "trajna-depilacija" },
+  { name: "Uklanjanje dlačica", slug: "uklanjanje-dlaka" },
+  { name: "SHR depilacija", slug: "srh-depilacija" },
+  { name: "Laserska depilacija", slug: "laserska-depilacija" },
+
+  // === TRETMAN KOŽE ===
+  { name: "Podmlađivanje kože", slug: "podmladjivanje-koze" },
+  { name: "Obnova kože", slug: "obnova-koze" },
+  { name: "Stimulacija kolagena", slug: "stimulacija-kolagena" },
+  { name: "Poboljšanje elastičnosti", slug: "poboljsanje-elastienosti" },
+  { name: "Hidratacija kože", slug: "hidratacija-koze" },
+  { name: "Čišćenje kože", slug: "ciscenje-koze" },
+  { name: "Dubinsko čišćenje", slug: "dubinsko-ciscenje" },
+
+  // === TRETMAN NEPRAVILNOSTI ===
+  { name: "Uklanjanje ožiljaka", slug: "uklanjanje-oziljaka" },
+  { name: "Tretman akni", slug: "tretman-akni" },
+  { name: "Uklanjanje pigmentacija", slug: "uklanjanje-pigmentacija" },
+  { name: "Uklanjanje tetovaža", slug: "uklanjanje-tetovaza" },
+  { name: "Uklanjanje trajne šminke", slug: "uklanjanje-trajne-sminke" },
+  { name: "Tretman strija", slug: "tretman-strija" },
+  { name: "Uklanjanje bradavica", slug: "uklanjanje-bradavica" },
+  { name: "Tretman krvnih sudova", slug: "tretman-krvnih-sudova" },
+  { name: "Uklanjanje celulita", slug: "uklanjanje-celulita" },
+
+  // === OBLIKOVANJE TELA ===
+  { name: "Oblikovanje tela", slug: "oblikovanje-tela" },
+  { name: "Redukcija masti", slug: "redukcija-masti" },
+  { name: "Kriolipoliza", slug: "kriolipoliza" },
+  { name: "Jačanje mišića", slug: "jacanje-misica" },
+  { name: "Zatezanje tela", slug: "zatezanje-tela" },
+
+  // === INTIMNA NEGA ===
+  { name: "Intimna nega", slug: "intimna-nega" },
+  { name: "Vaginalna rejuvenacija", slug: "vaginalna-rejuvenacija" },
+  { name: "Jačanje karličnog dna", slug: "jacanje-karlicnog-dna" },
+  { name: "Tretman inkontinencije", slug: "tretman-inkontinencije" },
+
+  // === DIJAGNOSTIKA ===
+  { name: "Analiza kože", slug: "analiza-koze" },
+  { name: "Dijagnostika kože", slug: "dijagnostika-koze" },
+  { name: "AI analiza", slug: "ai-analiza" },
+
+  // === WELLNESS ===
+  { name: "Kiseonični tretman", slug: "kiseonicki-tretman" },
+  { name: "Relaksacija", slug: "relaksacija" },
+  { name: "Wellness", slug: "wellness" },
+
+  // === SIGURNOST I KVALITET ===
+  { name: "FDA odobren", slug: "fda-odobren" },
+  { name: "Bez oporavka", slug: "bez-oporavka" },
+  { name: "Bezbolan tretman", slug: "bezbolan-tretman" },
+  { name: "Neinvazivno", slug: "neinvazivno" },];
 
 // ---------------------------------------------------------------------------
 // MAPPING: product-slug -> [tag-slug, ...]
@@ -102,7 +143,8 @@ const productTagMapping = {
   "derma-pulse-xl": ["podmladjivanje-koze", "uklanjanje-oziljaka", "tretman-akni", "stimulacija-kolagena"],
   "fda-approved-rf-microneedling": ["podmladjivanje-koze", "uklanjanje-oziljaka", "uklanjanje-bora", "fda-odobren", "bez-oporavka"],
   "oxygen-revive": ["kiseonicki-tretman", "dubinsko-ciscenje", "hidratacija-koze", "relaksacija", "wellness"],
-  "hydrorevive-pro": ["dubinsko-ciscenje", "hidratacija-koze", "ciscenje-koze"],
+  "hydrorevive-pro-9in1": ["dubinsko-ciscenje", "hidratacija-koze", "ciscenje-koze"],
+  "hydrorevive-pro-15in1": ["dubinsko-ciscenje", "hidratacija-koze", "ciscenje-koze", "podmladjivanje-koze"],
   "hydraglow-6-in-1": ["dubinsko-ciscenje", "hidratacija-koze", "podmladjivanje-koze", "ciscenje-koze"],
   "dermaclear-analyzer": ["analiza-koze", "dijagnostika-koze", "ai-analiza"],
   "oxygeneno-bubble-cleanser": ["dubinsko-ciscenje", "ciscenje-koze", "hidratacija-koze"],
@@ -136,7 +178,17 @@ const productTagMapping = {
   "post-treatment-defense": ["neinvazivno", "wellness"],
   "post-treatment-collagen-serum": ["podmladjivanje-koze", "stimulacija-kolagena", "hidratacija-koze"],
   "post-treatment-repair-mask": ["hidratacija-koze", "obnova-koze", "bez-oporavka"],
-};
+  // --- Novi proizvodi iz Fotromed kataloga (avgust 2026) ---
+  "hifu-22d-max": ["lifting-lica", "zatezanje-koze", "neinvazivni-lifting"],
+  "hifu-12d": ["lifting-lica", "zatezanje-koze", "intimna-nega", "vaginalna-rejuvenacija"],
+  "ultralift-7d-pro": ["lifting-lica", "zatezanje-koze", "neinvazivni-lifting", "stimulacija-kolagena"],
+  "hydrafacial-ice-blue-7in1": ["dubinsko-ciscenje", "hidratacija-koze", "ciscenje-koze"],
+  "scalp-analysis-machine": ["analiza-koze", "dijagnostika-koze"],
+  "hydrojelly-mask": ["hidratacija-koze", "relaksacija"],
+  "carbon-gel": [],
+  "zastitne-naocare-ipl-led-pacijent": [],
+  "zastitne-naocare-ipl": [],
+  "zastitne-naocare-dijodni-laser": [],};
 
 // ---------------------------------------------------------------------------
 // Helper funkcije
@@ -155,44 +207,89 @@ function placeholderImage(label) {
 
 const categoryDefs = [
   {
-    slug: "podmladjivanje-koze",
-    name: "Podmlađivanje kože",
-    shortDescription: "Uređaji za podmlađivanje i obnovu kože.",
+    slug: "hifu-lifting-lica-i-tela",
+    name: "HIFU – lifting lica i tela",
+    shortDescription: "HIFU uređaji za neinvazivni lifting i zatezanje lica i tela fokusiranim ultrazvukom.",
   },
   {
-    slug: "lifting-lica",
-    name: "Lifting lica",
-    shortDescription: "Uređaji za nehirurški lifting i zatezanje lica.",
+    slug: "hidrafacijal-nega-i-dubinsko-ciscenje-koze",
+    name: "Hidrafacijal – nega i dubinsko čišćenje kože",
+    shortDescription: "Hidra-dermabrazija i kombinovani sistemi za dubinsko čišćenje, hidrataciju i podmlađivanje kože lica.",
   },
   {
-    slug: "nega-lica",
-    name: "Nega lica",
-    shortDescription: "Uređaji za profesionalnu negu i čišćenje lica.",
+    slug: "frakcioni-co2-laser",
+    name: "Frakcioni CO2 laser",
+    shortDescription: "Ablativni frakcioni CO2 laseri za resurfacing kože, ožiljke od akni i teksturu kože.",
   },
   {
-    slug: "oziljci-tvorevine-depilacija",
-    name: "Ožiljci, tvorevine i depilacija",
-    shortDescription: "Laserski uređaji za uklanjanje ožiljaka, kožnih tvorevina, tetovaža i dlačica.",
+    slug: "ems-hiemt-oblikovanje-tela-i-lica",
+    name: "EMS/HIEMT – oblikovanje tela i lica",
+    shortDescription: "Uređaji sa fokusiranim elektromagnetnim poljem za jačanje mišića i oblikovanje tela i lica.",
+  },
+  {
+    slug: "krioliposukcija-redukcija-masnih-naslaga",
+    name: "Krioliposukcija – redukcija masnih naslaga",
+    shortDescription: "Kontrolisano smrzavanje masnih naslaga za neinvazivnu redukciju lokalizovanih masti.",
+  },
+  {
+    slug: "tulijum-laser-1927nm",
+    name: "Tulijum laser 1927nm – neablativno pomlađivanje",
+    shortDescription: "Neablativni frakcioni tulijum laser za remodelovanje kolagena, pigmentaciju i teksturu kože.",
+  },
+  {
+    slug: "plazma-aparat",
+    name: "Plazma aparat",
+    shortDescription: "Hladna i topla plazma tehnologija za zatezanje i regeneraciju kože.",
+  },
+  {
+    slug: "rf-mikroiglicenje",
+    name: "RF mikroigličenje",
+    shortDescription: "Frakciono RF mikroigličenje za podmlađivanje kože, ožiljke i bore, sa ili bez vakuumske asistencije.",
+  },
+  {
+    slug: "pdt-led-terapija",
+    name: "PDT LED terapija",
+    shortDescription: "LED fototerapija za stimulaciju kolagena, cirkulacije i regeneracije kože.",
+  },
+  {
+    slug: "ipl-fotoepilacija-i-fotopodmladjivanje",
+    name: "IPL – fotoepilacija i fotopodmlađivanje",
+    shortDescription: "IPL i SHR sistemi za trajno uklanjanje dlačica, fotopodmlađivanje i tretman pigmentacije.",
+  },
+  {
+    slug: "q-switch-nd-yag-laser",
+    name: "Q-Switch Nd:YAG laser – tetovaže i pigmentacija",
+    shortDescription: "Q-Switch Nd:YAG laseri za uklanjanje tetovaža, pigmentacija i permanentnog make-upa.",
   },
   {
     slug: "analiza-koze",
     name: "Analiza kože",
-    shortDescription: "Uređaji za profesionalnu dijagnostiku i analizu stanja kože.",
+    shortDescription: "Uređaji za profesionalnu dijagnostiku i analizu stanja kože i vlasišta.",
   },
   {
-    slug: "tretmani-tela",
-    name: "Tretmani tela",
-    shortDescription: "Uređaji za oblikovanje tela, redukciju masnog tkiva i jačanje mišića.",
+    slug: "dijodni-laser-trajna-depilacija",
+    name: "Dijodni laser – trajna depilacija",
+    shortDescription: "Dijodni laseri sa više talasnih dužina za trajno uklanjanje dlačica na svim tipovima kože.",
   },
   {
-    slug: "tiferono-kozmetika",
-    name: "Tiferono kozmetika",
-    shortDescription: "Tiferono linija kozmetičkih preparata za negu nakon tretmana.",
+    slug: "kavitacija-i-rf-terapija",
+    name: "Kavitacija i RF terapija – oblikovanje tela",
+    shortDescription: "Ultrazvučna kavitacija i RF vakuum terapija za neinvazivno oblikovanje tela i redukciju celulita.",
+  },
+  {
+    slug: "kozmeticki-proizvodi-post-tretman",
+    name: "Kozmetički proizvodi za post-tretman negu",
+    shortDescription: "Kozmetički preparati za negu, hidrataciju i smirivanje kože nakon estetskih tretmana.",
+  },
+  {
+    slug: "potrosni-materijal",
+    name: "Potrošni materijal i rezervni delovi",
+    shortDescription: "Potrošni materijal, zaštitna oprema i rezervni delovi uz estetske uređaje.",
   },
 ];
 
 // ---------------------------------------------------------------------------
-// Proizvodi (definicije)
+// Proizvodi (definicije) - 61 ukupno (50 postojećih + 12 novih/podeljenih)
 // ---------------------------------------------------------------------------
 
 const productDefs = [
@@ -228,8 +325,15 @@ const productDefs = [
 - Dimenzije (Š x D x V): 525mm x 490mm x 1080mm
 - Težina (neto): 45kg
 - Snaga: 3000VA
-- Napon: AC230V, 50Hz`,
-    categorySlug: "podmladjivanje-koze",
+- Napon: AC230V, 50Hz
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-IPL-PULSE-PRO
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "ipl-fotoepilacija-i-fotopodmladjivanje",
     image: placeholderImage("FotoMed Pulse Pro"),
     seoKeywords: [
       "fotomed pulse pro",
@@ -306,8 +410,15 @@ const productDefs = [
 - Veličina tačke: SR: 15*50mm, Elight: 10*50mm
 - SHR lampa: Uvezena iz UK
 - SHR impulsi: 300.000 impulsa
-- Pakovanje: Aluminijumski kofer`,
-    categorySlug: "podmladjivanje-koze",
+- Pakovanje: Aluminijumski kofer
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-IPL-PULSE-MINI
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "ipl-fotoepilacija-i-fotopodmladjivanje",
     image: placeholderImage("FotoMed Pulse Mini"),
     seoKeywords: [
       "fotomed pulse mini",
@@ -375,8 +486,15 @@ const productDefs = [
 - Dužina: 5.0-25mm [1.0mm step]
 - Ekran: Sub LCD na ručici
 - Dimenzije: 400 × 290 × 530cm
-- Težina: 15kg`,
-    categorySlug: "lifting-lica",
+- Težina: 15kg
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HIFU-SD
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hifu-lifting-lica-i-tela",
     image: placeholderImage("UltraLift SD Compact"),
     seoKeywords: [
       "ultralift sd compact",
@@ -443,8 +561,15 @@ const productDefs = [
 - Dubina fokusa: 4.5mm (SMAS), 3mm (dermis)
 - Frekvencija: 4MHz, 7MHz
 - Energija: Podesiva
-- Ekran: Touch screen`,
-    categorySlug: "lifting-lica",
+- Ekran: Touch screen
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HIFU-DLX
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hifu-lifting-lica-i-tela",
     image: placeholderImage("FotoHIFU delux"),
     seoKeywords: [
       "fotohifu delux",
@@ -514,8 +639,15 @@ const productDefs = [
 - Vek trajanja PEN sonde: 60000 impulsa
 - Dimenzije: 31*44*50cm
 - Težina: 15KG
-- Napon: AC110V-240V, 50/60Hz`,
-    categorySlug: "lifting-lica",
+- Napon: AC110V-240V, 50/60Hz
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HIFU-DUAL
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hifu-lifting-lica-i-tela",
     image: placeholderImage("FotoHIFU Dual"),
     seoKeywords: [
       "fotohifu dual",
@@ -578,8 +710,15 @@ const productDefs = [
 - HIFU dužina: 5-25mm(1.0mm step,20steps)
 - Dimenzije: 20*40*54cm
 - Težina: About 15Kg
-- Napon: AC100V-240V,50/60Hz`,
-    categorySlug: "lifting-lica",
+- Napon: AC100V-240V,50/60Hz
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HIFU-FEMI
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hifu-lifting-lica-i-tela",
     image: placeholderImage("FotoHifu Femi"),
     seoKeywords: [
       "fotohifu femi",
@@ -642,8 +781,15 @@ const productDefs = [
 - Opcije nastavaka: FotoHIFU catridges:1.5mm/3.0mm/4.5mm/6.0mm/8.0mm/10.0mm/13.0mm/16.0mm (optional); Vmax probe:1.5mm/3.0mm/4.5mm/8.0mm/13.0mm(optional); Lipo cartridge: 8.0mm and 13.0mm Vaginal tightening probe: 3.0mm, 4.5mm
 - Vek trajanja nastavaka: FotoHIFU:20000 impulsa, Vmax/62000 impulsa
 - Izlazna energija: 0.1-2j Adjustable
-- Snaga: 800W`,
-    categorySlug: "lifting-lica",
+- Snaga: 800W
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HIFU-MAX
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hifu-lifting-lica-i-tela",
     image: placeholderImage("FotoHIFU Max"),
     seoKeywords: [
       "fotohifu max",
@@ -696,8 +842,15 @@ const productDefs = [
 - Dužina: 5~25mm(5mm/step)
 - Napajanje: AC100~240V, 50/60Hz
 - Težina: 35kg
-- Dimenzije: 500x515x1310(WxDxH)`,
-    categorySlug: "lifting-lica",
+- Dimenzije: 500x515x1310(WxDxH)
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HIFU-UF7D
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hifu-lifting-lica-i-tela",
     image: placeholderImage("Ultrafarma 7D HIFU Machine"),
     seoKeywords: [
       "ultrafarma 7d hifu",
@@ -751,8 +904,15 @@ const productDefs = [
 - Ultrazvučni izlaz: 0.1-3.0 (korak 0.1)
 - Ponavljanje: 0.1-1.05EC (korak 0.15EC)
 - Dužina: 5-25mm (korak 5mm)
-- Tačka: 0.1-2.0mm (korak 0.1mm)`,
-    categorySlug: "lifting-lica",
+- Tačka: 0.1-2.0mm (korak 0.1mm)
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HIFU-25D
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hifu-lifting-lica-i-tela",
     image: placeholderImage("360 Max HIFU"),
     seoKeywords: [
       "360 max hifu",
@@ -818,8 +978,15 @@ const productDefs = [
 - Ručke: 6 kom
 - Snaga: 550VA
 - Napajanje: AC100-240V, 50-60HZ
-- Utikači: US, EU, CN, AU, UK, JP, ZA, IT`,
-    categorySlug: "lifting-lica",
+- Utikači: US, EU, CN, AU, UK, JP, ZA, IT
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-EMS-MLP
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "ems-hiemt-oblikovanje-tela-i-lica",
     image: placeholderImage("MagniLift EMS Pro"),
     seoKeywords: [
       "magnilift ems pro",
@@ -885,8 +1052,15 @@ const productDefs = [
 - Ručke: 6 kom
 - Snaga: 550VA
 - Napajanje: AC100-240V, 50-60HZ
-- Utikači: US, EU, CN, AU, UK, JP, ZA, IT`,
-    categorySlug: "lifting-lica",
+- Utikači: US, EU, CN, AU, UK, JP, ZA, IT
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-EMS-MLC
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "ems-hiemt-oblikovanje-tela-i-lica",
     image: placeholderImage("MagniLift EMS Compact"),
     seoKeywords: [
       "magnilift ems compact",
@@ -957,8 +1131,15 @@ const productDefs = [
 - RF energija: 10W-150W
 - Veličine igala: 10, 25, 64 igle i nastavak bez igle
 - Diodni laser indikator: 650nm 50mw
-- Napon: 110V/220V/60Hz/50Hz`,
-    categorySlug: "podmladjivanje-koze",
+- Napon: 110V/220V/60Hz/50Hz
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-RFM-VAC
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "rf-mikroiglicenje",
     image: placeholderImage("Derma Frac MNRF"),
     seoKeywords: [
       "derma frac mnrf",
@@ -1021,8 +1202,15 @@ const productDefs = [
 - Radni napon: AC110V～230V±10%, 50Hz-60Hz
 - Snaga: 10-300W
 - Dimenzije kućišta: 40×43×42cm
-- Bruto težina: 12.8kg`,
-    categorySlug: "podmladjivanje-koze",
+- Bruto težina: 12.8kg
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-RFM-PORT
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "rf-mikroiglicenje",
     image: placeholderImage("Derma Pulse"),
     seoKeywords: [
       "derma pulse",
@@ -1081,8 +1269,15 @@ const productDefs = [
 - Radni napon: AC110V~230V±10%, 50Hz-60Hz
 - Snaga: 10-300W
 - Dimenzije kućišta: 49×46×102cm
-- Bruto težina: 28.4kg`,
-    categorySlug: "podmladjivanje-koze",
+- Bruto težina: 28.4kg
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-RFM-XL
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "rf-mikroiglicenje",
     image: placeholderImage("Derma Pulse xl"),
     seoKeywords: [
       "derma pulse xl",
@@ -1144,8 +1339,15 @@ const productDefs = [
 - Dubina penetracije igle: 0.5mm - 3.5mm
 - Dimenzije uređaja: 350mm × 345mm × 425mm
 - Napon: AC 100V-240V; 50/60Hz
-- Kontrola: Dualna (pedala / dugme na ručici)`,
-    categorySlug: "podmladjivanje-koze",
+- Kontrola: Dualna (pedala / dugme na ručici)
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-RFM-FDA
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "rf-mikroiglicenje",
     image: placeholderImage("FDA Approved RF Microneedling Machine"),
     seoKeywords: [
       "fda approved rf microneedling",
@@ -1209,8 +1411,15 @@ const productDefs = [
 - Napon: 110-240VAC, 50/60Hz
 - Spoljne dimenzije: 60*56*113cm³
 - Težina: 52kg
-- Tehnologije (ručke): 1) Hidra dermabrazija, 2) Dijamantska dermabrazija, 3) Kiseonični pištolj za maglu, 4) PDT LED ručka, 5) Skin scrubber, 6) Bio microcurrent wand, 7) Kiseonična maska za inhalaciju, 8) Visokofrekventna ručka, 9) Ultrazvučna facialna ručka`,
-    categorySlug: "nega-lica",
+- Tehnologije (ručke): 1) Hidra dermabrazija, 2) Dijamantska dermabrazija, 3) Kiseonični pištolj za maglu, 4) PDT LED ručka, 5) Skin scrubber, 6) Bio microcurrent wand, 7) Kiseonična maska za inhalaciju, 8) Visokofrekventna ručka, 9) Ultrazvučna facialna ručka
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HYD-OXR
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hidrafacijal-nega-i-dubinsko-ciscenje-koze",
     image: placeholderImage("Oxygen Revive"),
     seoKeywords: [
       "oxygen revive",
@@ -1247,53 +1456,6 @@ const productDefs = [
     isActive: false,
   },
   {
-    slug: "hydrorevive-pro",
-    sku: "EST-HYDROREVIVE-PRO",
-    name: "HydroRevive Pro",
-    shortDescription: "Profesionalni sistem za hidra dermabraziju i dubinsko čišćenje kože.",
-    longDescription: `HydroRevive Pro je profesionalni uređaj za hidra dermabraziju, namenjen dubinskom čišćenju i podmlađivanju kože. Koristi naprednu tehnologiju za efikasno uklanjanje nečistoća i mrtvih ćelija.
-
-**Princip rada:** Kombinuje abrazivni hidra vrh sa vakuumom za nežno uklanjanje mrtvih ćelija i nečistoća, uz istovremenu hidrataciju kože.
-
-**Namena:**
-- Dubinsko čišćenje kože
-- Hidratacija i podmlađivanje
-- Poboljšanje teksture kože
-
-**Ključne karakteristike:**
-- Napredna hidra dermabrazija
-- Više različitih vrhova za različite tretmane
-- Jednostavan za korišćenje`,
-    categorySlug: "nega-lica",
-    image: placeholderImage("HydroRevive Pro"),
-    seoKeywords: [
-      "hydrorevive pro",
-      "hidra dermabrazija",
-      "dubinsko čišćenje kože",
-      "hidratacija kože",
-      "podmlađivanje",
-    ],
-    metaDescription:
-      "HydroRevive Pro - profesionalni uređaj za hidra dermabraziju i dubinsko čišćenje kože. Nežan i efikasan tretman za sve tipove kože.",
-    faq: [
-      {
-        question: "Koliko često se preporučuje tretman hidra dermabrazijom?",
-        answer:
-          "Preporučuje se jednom mesečno za održavanje zdravlja kože, mada učestalost može varirati u zavisnosti od potreba kože.",
-      },
-    ],
-    variations: [
-      {
-        label: "Standardna varijanta",
-        price: 12345,
-        stock: 0,
-        isActive: true,
-      },
-    ],
-    badge: "none",
-    isActive: false,
-  },
-  {
     slug: "hydraglow-6-in-1",
     sku: "EST-HYDRAGLOW-6-IN-1",
     name: "HydraGlow 6-in-1 Facial Rejuvenation System H2O2",
@@ -1315,8 +1477,15 @@ const productDefs = [
 - Napon: 110V-240V, 50/60Hz
 - Snaga: 250W
 - Kontrolni sistem: Touch screen
-- Pribor: 1) Hydra Water, 2) Ultrasound, 3) Skin Scrubber, 4) RF, 5) Cold hammer, 6) Hydrogen Oxygen(H2O2) Spray Gun, 7) Držač za pribor`,
-    categorySlug: "nega-lica",
+- Pribor: 1) Hydra Water, 2) Ultrasound, 3) Skin Scrubber, 4) RF, 5) Cold hammer, 6) Hydrogen Oxygen(H2O2) Spray Gun, 7) Držač za pribor
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HYD-H2O2
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hidrafacijal-nega-i-dubinsko-ciscenje-koze",
     image: placeholderImage("HydraGlow 6-in-1 Facial Rejuvenation System H2O2"),
     seoKeywords: [
       "hydraglow 6-in-1",
@@ -1365,8 +1534,15 @@ const productDefs = [
 - Visokokvalitetna kamera
 - Spektralno snimanje
 - AI podrška za analizu
-- Jednostavan interfejs`,
-    categorySlug: "nega-lica",
+- Jednostavan interfejs
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-SKN-MIRROR
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "analiza-koze",
     image: placeholderImage("DermaClear Analyzer"),
     seoKeywords: [
       "dermaclear analyzer",
@@ -1404,8 +1580,15 @@ const productDefs = [
 
 **Princip rada:** Kiseonični mehurići prodiru u pore i uklanjaju nečistoće, istovremeno hidrirajući i osvežavajući kožu.
 
-**Namena:** Dubinsko čišćenje kože lica i tela.`,
-    categorySlug: "nega-lica",
+**Namena:** Dubinsko čišćenje kože lica i tela.
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HYD-CO2B
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hidrafacijal-nega-i-dubinsko-ciscenje-koze",
     image: placeholderImage("Oxygeneno Bubble Cleanser"),
     seoKeywords: [
       "oxygeneno bubble cleanser",
@@ -1440,8 +1623,15 @@ const productDefs = [
     shortDescription: "Profesionalni uređaj za centrifugiranje i pripremu uzoraka za estetske tretmane.",
     longDescription: `Foto Centrifix je profesionalni uređaj za centrifugiranje, namenjen pripremi uzoraka za estetske tretmane, poput PRP (Platelet Rich Plasma) terapije.
 
-**Namena:** Priprema PRP-a i drugih uzoraka za tretmane podmlađivanja i regeneracije kože.`,
-    categorySlug: "nega-lica",
+**Namena:** Priprema PRP-a i drugih uzoraka za tretmane podmlađivanja i regeneracije kože.
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): nije u zvaničnom katalogu (avgust 2026) - proveriti kod dobavljača
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "potrosni-materijal",
     image: placeholderImage("Foto Centrifix"),
     seoKeywords: [
       "foto centrifix",
@@ -1494,8 +1684,15 @@ const productDefs = [
 - Vreme: 1-60 minuta
 - Pakovanje: Flight case
 - Dimenzije: 102*50*47 cm
-- Bruto težina: 28kg`,
-    categorySlug: "nega-lica",
+- Bruto težina: 28kg
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-LED-100
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "pdt-led-terapija",
     image: placeholderImage("LumiThera LED-100"),
     seoKeywords: [
       "lumithera led-100",
@@ -1563,8 +1760,15 @@ const productDefs = [
 - Osigurači: AC220/230V, T3.0AL/250V; AC110/120V, T5.0AL/250V
 - Radno okruženje: 5~40°C, vlažnost ≤85%, pritisak 700hPa~1060hPa
 - Vrhunci spektra: Crvena 633nm, Plava 417nm, Žuta 590nm, Infracrvena 850nm
-- Efikasna ozračenost: Crvena 20~96mW/cm2, Plava 10~120mW/cm2, Žuta 5~42mW/cm2, Infracrvena 10~96mW/cm2`,
-    categorySlug: "nega-lica",
+- Efikasna ozračenost: Crvena 20~96mW/cm2, Plava 10~120mW/cm2, Žuta 5~42mW/cm2, Infracrvena 10~96mW/cm2
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-LED-300
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "pdt-led-terapija",
     image: placeholderImage("LumiThera LED-300"),
     seoKeywords: [
       "lumithera led-300",
@@ -1632,8 +1836,15 @@ const productDefs = [
 - Vreme tretmana: Podesivo, 1-60 minuta
 - Dimenzije: 102 x 54 x 47 cm
 - Težina: 36 kg
-- Pakovanje: Flight case`,
-    categorySlug: "nega-lica",
+- Pakovanje: Flight case
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-LED-PRO
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "pdt-led-terapija",
     image: placeholderImage("LumiThera LED-Pro"),
     seoKeywords: [
       "lumithera led-pro",
@@ -1684,8 +1895,15 @@ const productDefs = [
 - Težina: 13kg
 - Težina sa pakovanjem: 23.5kg
 - Dimenzije: 40*30*18cm
-- Dimenzije pakovanja: 40*35*57cm`,
-    categorySlug: "nega-lica",
+- Dimenzije pakovanja: 40*35*57cm
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-PLASMA-01
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "plazma-aparat",
     image: placeholderImage("Plasma Machine"),
     seoKeywords: [
       "plasma machine",
@@ -1747,8 +1965,15 @@ const productDefs = [
 - Sistem hlađenja: Zatvorena cirkulacija vode
 - Dimenzije: 59cm x 106cm x 87cm
 - Težina: 62kg
-- Napajanje: AC220V, 50/60Hz, 10A`,
-    categorySlug: "oziljci-tvorevine-depilacija",
+- Napajanje: AC220V, 50/60Hz, 10A
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-CO2-CPT
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "frakcioni-co2-laser",
     image: placeholderImage("Co2 CeloLaser Compact"),
     seoKeywords: [
       "co2 celolaser compact",
@@ -1798,8 +2023,15 @@ const productDefs = [
 - Uklanjanje ožiljaka (uključujući akne)
 - Smanjenje bora i finih linija
 - Uklanjanje kožnih tvorevina
-- Podmlađivanje kože`,
-    categorySlug: "oziljci-tvorevine-depilacija",
+- Podmlađivanje kože
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-CO2-PRO
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "frakcioni-co2-laser",
     image: placeholderImage("Co2 CeloLaser Pro"),
     seoKeywords: [
       "co2 celolaser pro",
@@ -1843,8 +2075,15 @@ const productDefs = [
 - Uklanjanje ožiljaka (uključujući akne)
 - Smanjenje bora i finih linija
 - Uklanjanje kožnih tvorevina
-- Podmlađivanje kože`,
-    categorySlug: "oziljci-tvorevine-depilacija",
+- Podmlađivanje kože
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-CO2-CEL
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "frakcioni-co2-laser",
     image: placeholderImage("CeloLaser Co2"),
     seoKeywords: [
       "celolaser co2",
@@ -1894,8 +2133,15 @@ const productDefs = [
 - Tip lasera: Q-Switched Nd:YAG
 - Talasne dužine: 1064nm i 532nm
 - Širina impulsa: 5ns
-- Izlazna energija: do 1000mJ`,
-    categorySlug: "oziljci-tvorevine-depilacija",
+- Izlazna energija: do 1000mJ
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-QSW-FQL
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "q-switch-nd-yag-laser",
     image: placeholderImage("FotroQlaser"),
     seoKeywords: [
       "fotroqlaser",
@@ -1955,8 +2201,15 @@ const productDefs = [
 - Trajanje impulsa: 10ns
 - Sistem hlađenja: Voda + vazduh
 - Neto težina: 8 kg
-- Napajanje: 230VAC, 50~60Hz`,
-    categorySlug: "oziljci-tvorevine-depilacija",
+- Napajanje: 230VAC, 50~60Hz
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-QSW-MINI
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "q-switch-nd-yag-laser",
     image: placeholderImage("FotroMini Nd laser"),
     seoKeywords: [
       "fotromini nd laser",
@@ -2009,8 +2262,15 @@ const productDefs = [
 **Tehničke specifikacije:**
 - Tip lasera: Nd:YAG
 - Interfejs: Touch screen
-- Sistem hlađenja: Integrisan`,
-    categorySlug: "oziljci-tvorevine-depilacija",
+- Sistem hlađenja: Integrisan
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-QSW-VERT
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "q-switch-nd-yag-laser",
     image: placeholderImage("FotroVertical Nd laser"),
     seoKeywords: [
       "fotrovertical nd laser",
@@ -2061,8 +2321,15 @@ const productDefs = [
 - Interfejs: 7.0" Color LCD touch screen
 - Hlađenje: Vazduh
 - Neto/Bruto težina: 5kg/11kg
-- Dimenzije (flight case): 350mm x 290mm x (185mm-345mm) / 460mm x 440mm x 270mm`,
-    categorySlug: "oziljci-tvorevine-depilacija",
+- Dimenzije (flight case): 350mm x 290mm x (185mm-345mm) / 460mm x 440mm x 270mm
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): nije u zvaničnom katalogu (avgust 2026) - proveriti kod dobavljača
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "q-switch-nd-yag-laser",
     image: placeholderImage("VenaLite 980"),
     seoKeywords: [
       "venalite 980",
@@ -2122,8 +2389,15 @@ const productDefs = [
 - Snaga laserske šipke za uklanjanje tetovaža: 500W
 - Snaga uređaja: 1600W
 - Bruto težina: 38kg
-- Dimenzije (ŠxVxD): 540x540x750mm`,
-    categorySlug: "oziljci-tvorevine-depilacija",
+- Dimenzije (ŠxVxD): 540x540x750mm
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-QSW-755
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "q-switch-nd-yag-laser",
     image: placeholderImage("FotroMini 755"),
     seoKeywords: [
       "fotromini 755",
@@ -2178,8 +2452,15 @@ const productDefs = [
 - Laserske šipke: 12
 - Laserska snaga: 1600W
 - Izlazna snaga: 3000W
-- Veličina tačke: 16x35mm`,
-    categorySlug: "oziljci-tvorevine-depilacija",
+- Veličina tačke: 16x35mm
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-DL-PRO
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "dijodni-laser-trajna-depilacija",
     image: placeholderImage("Lasemooth Pro"),
     seoKeywords: [
       "lasemooth pro",
@@ -2233,8 +2514,15 @@ const productDefs = [
 - Energija: 1-120 J/cm²
 - Frekvencija: 1-10 Hz
 - Napon: 220V/50Hz (110V opciono)
-- Veličina tačke: 14x14 mm`,
-    categorySlug: "oziljci-tvorevine-depilacija",
+- Veličina tačke: 14x14 mm
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-DL-SMART
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "dijodni-laser-trajna-depilacija",
     image: placeholderImage("Lasemooth Smart"),
     seoKeywords: [
       "lasemooth smart",
@@ -2295,8 +2583,15 @@ const productDefs = [
 - Zaštita temperature vode: 5-35°C
 - Rezervoar za vodu: 5L
 - Kućište: ABS (metalna unutrašnja struktura)
-- Dimenzije pakovanja: 62x49x137cm`,
-    categorySlug: "oziljci-tvorevine-depilacija",
+- Dimenzije pakovanja: 62x49x137cm
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-IPL-LUMI4
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "ipl-fotoepilacija-i-fotopodmladjivanje",
     image: placeholderImage("LuminMax 4 in 1"),
     seoKeywords: [
       "luminmax 4 in 1",
@@ -2361,8 +2656,15 @@ const productDefs = [
 - Razmak skeniranja: 0.1-2.0mm (korak 0.1mm)
 - Dimenzije: 310x275x86(DxWxH)mm
 - Napajanje: 220VAC, 50/60Hz, 200VA
-- Sistem hlađenja: Vazduh`,
-    categorySlug: "oziljci-tvorevine-depilacija",
+- Sistem hlađenja: Vazduh
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-THUL-1927
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "tulijum-laser-1927nm",
     image: placeholderImage("1927nm Thulium Laser"),
     seoKeywords: [
       "1927nm thulium laser",
@@ -2432,7 +2734,14 @@ const productDefs = [
 - Kamera: 20 Megapiksela
 - Neto težina: 8 kg
 - Veličina ekrana: 10.1 inch
-- Bruto težina: 12kg`,
+- Bruto težina: 12kg
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-SKN-AI
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
     categorySlug: "analiza-koze",
     image: placeholderImage("DermaVision Plus"),
     seoKeywords: [
@@ -2500,7 +2809,14 @@ const productDefs = [
 - Bruto težina: 9 kg
 - Ekran: 15.6 inča
 - RAM: 2GB
-- Neto težina: 5 kg`,
+- Neto težina: 5 kg
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-SKN-2IN1
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
     categorySlug: "analiza-koze",
     image: placeholderImage("DermaVision X"),
     seoKeywords: [
@@ -2574,7 +2890,14 @@ const productDefs = [
 - Dimenzije: 66.2 × 56.2 × 40.5cm
 - Ambalaža: Talasasti karton + pamuk
 - Izlazna snaga: 30W
-- Napajanje: 100~240VAC`,
+- Napajanje: 100~240VAC
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-SKN-X5
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
     categorySlug: "analiza-koze",
     image: placeholderImage("DermaVision Master"),
     seoKeywords: [
@@ -2625,8 +2948,15 @@ const productDefs = [
 - Izlazni napon: AC110V-230V
 - Izlazna snaga: 300W-3000W
 - Izlazna frekvencija: 3-150Hz
-- Osigurač: 20A`,
-    categorySlug: "tretmani-tela",
+- Osigurač: 20A
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-EMS-CELLU
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "ems-hiemt-oblikovanje-tela-i-lica",
     image: placeholderImage("CelluSculpt pro"),
     seoKeywords: [
       "cellusculpt pro",
@@ -2693,8 +3023,15 @@ const productDefs = [
 - RF lice: 3MHz
 - Laserska talasna dužina: 650nm
 - RF frekvencija: 5MHz
-- Broj laserskih dioda: 72`,
-    categorySlug: "tretmani-tela",
+- Broj laserskih dioda: 72
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-BODY-ICE360
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "krioliposukcija-redukcija-masnih-naslaga",
     image: placeholderImage("IceSculpt 360"),
     seoKeywords: [
       "icesculpt 360",
@@ -2757,8 +3094,15 @@ const productDefs = [
 - Dimenzije uređaja: 500x490x1190mm
 - Bruto težina: 52kg
 - Težina uređaja: 45kg
-- Dimenzije pakovanja: 600x590x1310mm`,
-    categorySlug: "tretmani-tela",
+- Dimenzije pakovanja: 600x590x1310mm
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-EMS-DYNA
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "ems-hiemt-oblikovanje-tela-i-lica",
     image: placeholderImage("DynaLines"),
     seoKeywords: [
       "dynalines",
@@ -2822,8 +3166,15 @@ const productDefs = [
 - Izlazna frekvencija: 3-200Hz
 - Osigurač: 20A
 - Dimenzije pakovanja stolice: 85×74×71cm
-- Ukupna težina: 50kg`,
-    categorySlug: "tretmani-tela",
+- Ukupna težina: 50kg
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-EMS-CHAIR
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "ems-hiemt-oblikovanje-tela-i-lica",
     image: placeholderImage("EMS Chair"),
     seoKeywords: [
       "ems chair",
@@ -2889,8 +3240,15 @@ const productDefs = [
 - Nominalna ulazna snaga: 750VA
 - Napajanje: AC230V+10%, 50Hz / AC110V+10%, 60Hz
 - Bruto težina: 62.8kg, 16.5kg
-- Dimenzije pakovanja: 70x170x62cm, 67x57x31cm`,
-    categorySlug: "tretmani-tela",
+- Dimenzije pakovanja: 70x170x62cm, 67x57x31cm
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-RFT-CELLU
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "kavitacija-i-rf-terapija",
     image: placeholderImage("Cellushape"),
     seoKeywords: [
       "cellushape",
@@ -2940,8 +3298,15 @@ const productDefs = [
 **Napomena:** Samo za spoljašnju upotrebu. Izbegavati kontakt sa očima. U slučaju iritacije prekinuti upotrebu i konsultovati lekara.
 
 **Tehničke specifikacije:**
-- Neto zapremina: 120ml`,
-    categorySlug: "tiferono-kozmetika",
+- Neto zapremina: 120ml
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-SKC-SPRAY
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "kozmeticki-proizvodi-post-tretman",
     image: placeholderImage("Tiferono sprej za negu nakon tretmana"),
     seoKeywords: [
       "tiferono sprej",
@@ -2992,8 +3357,15 @@ const productDefs = [
 - Smanjuje crvenilo i iritaciju
 
 **Tehničke specifikacije:**
-- Neto zapremina: 50ml`,
-    categorySlug: "tiferono-kozmetika",
+- Neto zapremina: 50ml
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-SKC-CREAM
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "kozmeticki-proizvodi-post-tretman",
     image: placeholderImage("Tiferono krema za regeneraciju nakon tretmana"),
     seoKeywords: [
       "tiferono krema",
@@ -3044,8 +3416,15 @@ const productDefs = [
 - Sadrži umirujuće biljne sastojke za dodatnu negu
 
 **Tehničke specifikacije:**
-- Neto zapremina: 30ml`,
-    categorySlug: "tiferono-kozmetika",
+- Neto zapremina: 30ml
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-SKC-SPF
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "kozmeticki-proizvodi-post-tretman",
     image: placeholderImage("Tiferono fizička krema za sunčanje SPF 41"),
     seoKeywords: [
       "tiferono krema za sunčanje",
@@ -3096,8 +3475,15 @@ const productDefs = [
 - Smanjuje fine linije i bore
 
 **Tehničke specifikacije:**
-- Neto zapremina: 30ml`,
-    categorySlug: "tiferono-kozmetika",
+- Neto zapremina: 30ml
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-SKC-SERUM
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "kozmeticki-proizvodi-post-tretman",
     image: placeholderImage("Tiferono serum sa kolagenom za negu nakon tretmana"),
     seoKeywords: [
       "tiferono serum",
@@ -3149,8 +3535,15 @@ const productDefs = [
 - Poboljšava otpornost i smirenost kože
 
 **Tehničke specifikacije:**
-- Neto zapremina: 5 komada`,
-    categorySlug: "tiferono-kozmetika",
+- Neto zapremina: 5 komada
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-SKC-MASK
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "kozmeticki-proizvodi-post-tretman",
     image: placeholderImage("Tiferono maska za regeneraciju nakon tretmana"),
     seoKeywords: [
       "tiferono maska",
@@ -3185,11 +3578,552 @@ const productDefs = [
     badge: "none",
     isActive: false,
   },
-];
+
+  // ---------------------------------------------------------------------------
+  // NOVI proizvodi - dodati na osnovu Fotromed cenovnika (avgust 2026), posle
+  // poređenja sa postojećim katalogom. HydroRevive Pro je podeljen na 2
+  // odvojena proizvoda (9-u-1 i 15-u-1) jer Fotromed katalog ima 2 odvojene
+  // šifre/fotografije za tu liniju umesto jedne generičke.
+  // ---------------------------------------------------------------------------
+  {
+    slug: "hifu-22d-max",
+    sku: "EST-HIFU-22D-MAX",
+    name: "22D Max HIFU Machine",
+    shortDescription: "HIFU uređaj sa superpulse tehnologijom koji kombinuje 13D HIFU i 18D RF za lifting lica i tela na više dubina tretmana.",
+    longDescription: `22D Max HIFU Machine je profesionalni HIFU uređaj namenjen neinvazivnom liftingu lica i tela, sa naprednom superpulse tehnologijom za stabilan i fokusiran ultrazvuk.
+
+**Princip rada:** Superpulse tehnologija isporučuje fokusirani ultrazvuk kroz kožu do dubljih slojeva (uključujući SMAS sloj), gde termalna energija podstiče kontrakciju postojećeg i stvaranje novog kolagena, bez oštećenja površine kože.
+
+**Namena:**
+- Nehirurški lifting lica i vrata
+- Zatezanje tela
+- Redefinisanje kontura lica
+
+**Ključne karakteristike:**
+- Superpulse tehnologija za stabilan fokusirani ultrazvuk
+- Dubine tretmana od 1,5 do 18mm
+- Kombinuje 13D HIFU i 18D RF u jednom uređaju
+- MP režim za linijsko skeniranje, za ravnomerniju pokrivenost tretirane zone
+
+*Napomena: tehnički podaci su prevod zvaničnih specifikacija sa fotromed.com (avgust 2026) - potvrdite tačne vrednosti u zvaničnoj B2B ponudi pre kupovine.*
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HIFU-22D
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hifu-lifting-lica-i-tela",
+    image: placeholderImage("22D Max HIFU Machine"),
+    seoKeywords: ["22D HIFU", "HIFU lifting lica", "superpulse HIFU", "13D HIFU", "18D RF", "neinvazivni lifting"],
+    metaDescription:
+      "22D Max HIFU Machine - profesionalni HIFU uređaj sa superpulse tehnologijom, 13D HIFU i 18D RF za lifting lica i tela.",
+    faq: [
+      {
+        question: "Po čemu se 22D Max HIFU razlikuje od standardnih HIFU uređaja?",
+        answer:
+          "Kombinuje 13D HIFU i 18D RF u jednom sistemu sa superpulse tehnologijom, što omogućava stabilniji fokusirani ultrazvuk i pokrivenost šireg opsega dubina tretmana (1,5-18mm) u odnosu na osnovne HIFU modele.",
+      },
+    ],
+    variations: [
+      {
+        label: "Standardna varijanta",
+        price: 12345,
+        stock: 0,
+        isActive: true,
+      },
+    ],
+    badge: "none",
+    isActive: false,
+  },
+  {
+    slug: "hifu-12d",
+    sku: "EST-HIFU-12D",
+    name: "12D HIFU Machine – lice, telo i intimna regija",
+    shortDescription: "HIFU uređaj sa 7 multi-frekventnih sondi za lice, telo i intimnu regiju, uključujući namenske sonde sa merenjem laksiteta.",
+    longDescription: `12D HIFU Machine je svestran HIFU sistem koji, pored standardnog liftinga lica i tela, uključuje i namenske sonde za intimnu regiju.
+
+**Princip rada:** 7 multi-frekventnih sondi (1,5-16mm), uključujući dubinu SMAS sloja, isporučuju fokusiranu ultrazvučnu energiju koja stimuliše proizvodnju kolagena i zatezanje tkiva.
+
+**Namena:**
+- Lifting lica i tela
+- Intimna regija - namenske 3,0/4,5mm sonde sa merenjem laksiteta (opuštenosti tkiva)
+
+**Ključne karakteristike:**
+- 7 multi-frekventnih sondi, dubine 1,5-16mm
+- Dupli nastavci za veću fleksibilnost tretmana
+- Namenske sonde za intimnu regiju sa merenjem laksiteta
+
+*Napomena: tehnički podaci su prevod zvaničnih specifikacija sa fotromed.com (avgust 2026) - potvrdite tačne vrednosti u zvaničnoj B2B ponudi pre kupovine. Tretmani intimne regije zahtevaju odgovarajuću obuku i, u zavisnosti od regulative, licencu zdravstvenog radnika.*
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HIFU-12D
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hifu-lifting-lica-i-tela",
+    image: placeholderImage("12D HIFU Machine"),
+    seoKeywords: ["12D HIFU", "HIFU intimna regija", "vaginalno pomladjivanje HIFU", "HIFU lice i telo"],
+    metaDescription:
+      "12D HIFU Machine - HIFU uređaj sa 7 sondi za lice, telo i intimnu regiju, sa merenjem laksiteta tkiva.",
+    faq: [
+      {
+        question: "Da li je za tretmane intimne regije potrebna posebna obuka?",
+        answer:
+          "Da. Tretmani intimne regije zahtevaju dodatnu obuku i, u zavisnosti od lokalne regulative, odgovarajuću licencu ili kvalifikaciju zdravstvenog radnika - proverite uslove pre uvođenja ove usluge.",
+      },
+    ],
+    variations: [
+      {
+        label: "Standardna varijanta",
+        price: 12345,
+        stock: 0,
+        isActive: true,
+      },
+    ],
+    badge: "none",
+    isActive: false,
+  },
+  {
+    slug: "ultralift-7d-pro",
+    sku: "EST-ULTRALIFT-7D-PRO",
+    name: "ULTRALIFT 7D Pro – MMFU tehnologija",
+    shortDescription: "HIFU uređaj sa MMFU (mikro i makro fokusirani ultrazvuk) tehnologijom i ekskluzivnim kertridžom za predeo oka.",
+    longDescription: `ULTRALIFT 7D Pro koristi MMFU (dvostruki mehanizam mikro i makro fokusiranog ultrazvuka) tehnologiju za tretman više slojeva kože u jednom prolazu.
+
+**Princip rada:** Dvostruki mehanizam cilja 7 slojeva kože istovremeno, sa termičkom koagulacijom u opsegu 65-75°C koja podstiče remodeliranje kolagena.
+
+**Namena:**
+- Lifting i zatezanje lica, uključujući osetljivo područje oko očiju
+- Oblikovanje i zatezanje tela
+
+**Ključne karakteristike:**
+- MMFU tehnologija - dvostruki mehanizam za 7 slojeva kože
+- Ekskluzivni 2,0mm kertridž namenjen predelu oka
+- Makro kertridži 6/9/13mm za telo
+- Termička koagulacija 65-75°C
+
+*Napomena: tehnički podaci su prevod zvaničnih specifikacija sa fotromed.com (avgust 2026) - potvrdite tačne vrednosti u zvaničnoj B2B ponudi pre kupovine.*
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HIFU-7D
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hifu-lifting-lica-i-tela",
+    image: placeholderImage("ULTRALIFT 7D Pro"),
+    seoKeywords: ["ULTRALIFT 7D Pro", "MMFU HIFU", "HIFU za predeo oka", "HIFU lifting tela"],
+    metaDescription:
+      "ULTRALIFT 7D Pro - MMFU HIFU uređaj sa ekskluzivnim kertridžom za predeo oka i makro kertridžima za telo.",
+    faq: [
+      {
+        question: "Po čemu se razlikuje od modela UltraLift SD Compact koji već imamo?",
+        answer:
+          "UltraLift SD Compact koristi Synergy Dotting (MFU + RF u svakom impulsu), dok 7D Pro koristi MMFU - dvostruki mikro/makro fokusirani ultrazvuk sa posebnim kertridžom za osetljivo područje oko očiju, što ga čini pogodnijim za precizniji rad na toj zoni.",
+      },
+    ],
+    variations: [
+      {
+        label: "Standardna varijanta",
+        price: 12345,
+        stock: 0,
+        isActive: true,
+      },
+    ],
+    badge: "none",
+    isActive: false,
+  },
+  {
+    slug: "hydrafacial-ice-blue-7in1",
+    sku: "EST-HYDRAFACIAL-ICEBLUE-7IN1",
+    name: "7-u-1 Smart Ice Blue Hydra Facial aparat",
+    shortDescription: "Napredni 7-u-1 hidrafacijal sistem sa hlađenjem i pametnim touch-screen interfejsom za profesionalne klinike.",
+    longDescription: `7-u-1 Smart Ice Blue Hydra Facial aparat je napredni sistem za dubinsko čišćenje i negu kože, namenjen profesionalnim klinikama sa većim obimom klijenata.
+
+**Princip rada:** Kombinuje hidra-dermabraziju sa dodatnim modalitetima (7 funkcija ukupno) i integrisanim sistemom hlađenja za dodatni komfor tokom tretmana.
+
+**Namena:**
+- Dubinsko čišćenje i hidratacija kože
+- Podmlađivanje lica
+
+**Ključne karakteristike:**
+- 7 funkcija u jednom uređaju
+- Ugrađeni sistem hlađenja
+- Pametan touch-screen interfejs za lako upravljanje
+
+*Napomena: tehnički podaci su prevod zvaničnih specifikacija sa fotromed.com (avgust 2026) - potvrdite tačne vrednosti u zvaničnoj B2B ponudi pre kupovine.*
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HYD-ICEBLU
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hidrafacijal-nega-i-dubinsko-ciscenje-koze",
+    image: placeholderImage("7-u-1 Smart Ice Blue Hydra Facial"),
+    seoKeywords: ["Smart Ice Blue Hydra Facial", "7 u 1 hidrafacijal", "hidra dermabrazija sa hladjenjem"],
+    metaDescription:
+      "7-u-1 Smart Ice Blue Hydra Facial - napredni hidrafacijal sistem sa hlađenjem i touch-screen interfejsom.",
+    faq: [],
+    variations: [
+      {
+        label: "Standardna varijanta",
+        price: 12345,
+        stock: 0,
+        isActive: true,
+      },
+    ],
+    badge: "none",
+    isActive: false,
+  },
+  {
+    slug: "hydrorevive-pro-9in1",
+    sku: "EST-HYDROREVIVE-PRO-9IN1",
+    name: "HydroRevive Pro 9-u-1",
+    shortDescription: "Sveobuhvatna 9-u-1 hidrafacijal platforma za hidra dermabraziju i dubinsko čišćenje, namenjena salonima sa većim obimom klijenata.",
+    longDescription: `HydroRevive Pro 9-u-1 je profesionalni uređaj za hidra dermabraziju iz HydroRevive Pro linije, namenjen salonima i distributerima koji žele sveobuhvatniju platformu za negu lica.
+
+**Princip rada:** Kombinuje abrazivni hidra vrh sa vakuumom za nežno uklanjanje mrtvih ćelija i nečistoća, uz istovremenu hidrataciju kože, uz dodatnih 9 funkcija ukupno na jednom uređaju.
+
+**Namena:**
+- Dubinsko čišćenje kože
+- Hidratacija i podmlađivanje
+- Poboljšanje teksture kože
+
+**Ključne karakteristike:**
+- Sveobuhvatna platforma sa 9 funkcija
+- Pogodna za salone, spa centre i veći obim klijenata
+- Više različitih vrhova za različite tretmane
+
+*Napomena: broj funkcija (9) preuzet je sa fotografije proizvoda na zvaničnom sajtu ("HydroRevive Pro 9-in-1") - excel cenovnik dobavljača u koloni naziva greškom navodi "14 u 1" za ovaj model, verovatno štamparska/prevodilačka greška u izvornom katalogu. Potvrdite tačan broj funkcija u zvaničnoj ponudi pre objavljivanja na sajtu.*
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HYD-14IN1
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hidrafacijal-nega-i-dubinsko-ciscenje-koze",
+    image: placeholderImage("HydroRevive Pro 9-u-1"),
+    seoKeywords: ["hydrorevive pro 9 u 1", "hidra dermabrazija", "dubinsko čišćenje kože", "hidrafacijal salon"],
+    metaDescription:
+      "HydroRevive Pro 9-u-1 - sveobuhvatna hidrafacijal platforma za salone i distributere, dubinsko čišćenje i hidratacija kože.",
+    faq: [
+      {
+        question: "Koliko često se preporučuje tretman hidra dermabrazijom?",
+        answer:
+          "Preporučuje se jednom mesečno za održavanje zdravlja kože, mada učestalost može varirati u zavisnosti od potreba kože.",
+      },
+    ],
+    variations: [
+      {
+        label: "Standardna varijanta",
+        price: 12345,
+        stock: 0,
+        isActive: true,
+      },
+    ],
+    badge: "none",
+    isActive: false,
+  },
+  {
+    slug: "hydrorevive-pro-15in1",
+    sku: "EST-HYDROREVIVE-PRO-15IN1",
+    name: "HydroRevive Pro 15-u-1",
+    shortDescription: "Napredna 15-u-1 hidro dermabrazija platforma sa patentiranom hidro-kiseoničnom tehnologijom, za klinike.",
+    longDescription: `HydroRevive Pro 15-u-1 je najopremljeniji model iz HydroRevive Pro linije, namenjen klinikama koje žele najširi mogući raspon funkcija na jednom uređaju.
+
+**Princip rada:** Patentirana hidro-kiseonična dermabrazija kombinovana sa dodatnim modalitetima, uz smart touch upravljanje za precizno podešavanje parametara po klijentu.
+
+**Namena:**
+- Dubinsko čišćenje i hidratacija kože, za sve uzraste i delove tela
+- Podmlađivanje i poboljšanje teksture kože
+
+**Ključne karakteristike:**
+- Patentirana hidro-kiseonična dermabrazija
+- 15 funkcija u jednom uređaju
+- Smart touch upravljanje
+- Pogodno za sve uzraste i delove tela
+
+*Napomena: ovo je "veći" model iz iste HydroRevive Pro linije kao HydroRevive Pro 9-u-1 (isti proizvođač, viša konfiguracija) - potvrdite tačnu specifikaciju i cenovnu razliku u zvaničnoj ponudi.*
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-HYD-15IN1
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "hidrafacijal-nega-i-dubinsko-ciscenje-koze",
+    image: placeholderImage("HydroRevive Pro 15-u-1"),
+    seoKeywords: ["hydrorevive pro 15 u 1", "hidro kiseonicna dermabrazija", "hidrafacijal klinika"],
+    metaDescription:
+      "HydroRevive Pro 15-u-1 - napredna hidro-kiseonična dermabrazija platforma sa 15 funkcija, za klinike.",
+    faq: [],
+    variations: [
+      {
+        label: "Standardna varijanta",
+        price: 12345,
+        stock: 0,
+        isActive: true,
+      },
+    ],
+    badge: "none",
+    isActive: false,
+  },
+  {
+    slug: "scalp-analysis-machine",
+    sku: "EST-SCALP-ANALYSIS",
+    name: "Scalp Analysis Machine",
+    shortDescription: "Specijalizovan uređaj za analizu vlasišta i kose, namenjen trihološkim i dermatološkim konsultacijama.",
+    longDescription: `Scalp Analysis Machine je specijalizovan dijagnostički uređaj posvećen isključivo analizi vlasišta i kose, za razliku od kombinovanih koža+vlasište analizatora iz ponude.
+
+**Princip rada:** Uveličano i osvetljeno snimanje vlasišta i korena kose omogućava detaljan uvid u stanje folikula, gustinu kose i eventualne probleme vlasišta.
+
+**Namena:**
+- Trihološke konsultacije (analiza opadanja kose, stanja folikula)
+- Dermatološke konsultacije vezane za vlasište
+
+**Ključne karakteristike:**
+- Specijalizovana, isključivo za analizu vlasišta i kose (ne kombinovan uređaj)
+- Namenjen preciznim trihološkim i dermatološkim konsultacijama
+
+*Napomena: tehnički podaci su prevod zvaničnih specifikacija sa fotromed.com (avgust 2026) - potvrdite tačne vrednosti u zvaničnoj B2B ponudi pre kupovine.*
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-SKN-SCALP
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "analiza-koze",
+    image: placeholderImage("Scalp Analysis Machine"),
+    seoKeywords: ["analiza vlasišta", "trihoskopija aparat", "scalp analyzer", "analiza kose"],
+    metaDescription:
+      "Scalp Analysis Machine - specijalizovan uređaj za analizu vlasišta i kose za trihološke konsultacije.",
+    faq: [],
+    variations: [
+      {
+        label: "Standardna varijanta",
+        price: 12345,
+        stock: 0,
+        isActive: true,
+      },
+    ],
+    badge: "none",
+    isActive: false,
+  },
+  {
+    slug: "hydrojelly-mask",
+    sku: "EST-HYDROJELLY-MASK",
+    name: "Hydrojelly Mask",
+    shortDescription: "Hidratantna želatinasta maska za smirivanje kože nakon estetskih tretmana.",
+    longDescription: `Hydrojelly Mask je hidratantna želatinasta maska namenjena nezi kože neposredno nakon estetskih tretmana, kada je koža osetljivija i treba joj dodatno smirivanje.
+
+**Namena:**
+- Smirivanje i hidratacija kože nakon tretmana (HIFU, laser, mikroigličenje i sl.)
+- Umirujuća nega osetljive kože
+
+**Ključne karakteristike:**
+- Želatinasta (jelly) tekstura koja se lako nanosi i skida u jednom komadu
+- Hidratantno i umirujuće dejstvo
+
+*Napomena: ovo je proizvod iz Fotromed kataloga potrošne robe (za razliku od Tiferono linije koju već imate u ponudi) - proverite brend/sastav u zvaničnoj ponudi pre nabavke.*
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-SKC-JELLY
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "kozmeticki-proizvodi-post-tretman",
+    image: placeholderImage("Hydrojelly Mask"),
+    seoKeywords: ["hydrojelly mask", "želatinasta maska za lice", "nega kože nakon tretmana"],
+    metaDescription:
+      "Hydrojelly Mask - hidratantna želatinasta maska za smirivanje kože nakon estetskih tretmana.",
+    faq: [],
+    variations: [
+      {
+        label: "Standardna varijanta",
+        price: 12345,
+        stock: 0,
+        isActive: true,
+      },
+    ],
+    badge: "none",
+    isActive: false,
+  },
+  {
+    slug: "carbon-gel",
+    sku: "EST-CARBON-GEL",
+    name: "Carbon Gel",
+    shortDescription: "Nano biljni ugljenični gel za carbon peeling tretmane, dovoljan za 20+ tretmana po pakovanju.",
+    longDescription: `Carbon Gel je potrošni materijal namenjen carbon peeling tretmanima (laserski carbon peeling), gde se gel nanosi na kožu pre laserskog dela tretmana.
+
+**Namena:**
+- Carbon peeling tretmani (u kombinaciji sa odgovarajućim laserom, npr. Q-Switch Nd:YAG)
+
+**Ključne karakteristike:**
+- Nano biljni ugljenični sastav
+- Jedno pakovanje dovoljno za 20+ tretmana
+
+*Napomena: ovo je potrošni materijal, ne samostalan uređaj - koristi se uz postojeći laserski aparat za carbon peeling tretmane.*
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-CON-CARBON
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "potrosni-materijal",
+    image: placeholderImage("Carbon Gel"),
+    seoKeywords: ["carbon gel", "carbon peeling", "potrošni materijal laser tretman"],
+    metaDescription: "Carbon Gel - nano biljni ugljenični gel za carbon peeling tretmane, za 20+ tretmana po pakovanju.",
+    faq: [],
+    variations: [
+      {
+        label: "Standardna varijanta",
+        price: 12345,
+        stock: 0,
+        isActive: true,
+      },
+    ],
+    badge: "none",
+    isActive: false,
+  },
+  {
+    slug: "zastitne-naocare-ipl-led-pacijent",
+    sku: "EST-ZASTITNE-NAOCARE-IPL-LED-PACIJENT",
+    name: "Zaštitne naočare/maske za IPL i LED (pacijent)",
+    shortDescription: "Zaštitne naočare/maske za oči klijenta tokom IPL i LED tretmana, udoban dizajn za višekratnu upotrebu.",
+    longDescription: `Zaštitne naočare/maske za IPL i LED tretmane namenjene su zaštiti očiju klijenta (pacijenta) tokom trajanja tretmana svetlosnim uređajima.
+
+**Namena:**
+- Zaštita očiju klijenta tokom IPL i LED tretmana
+
+**Ključne karakteristike:**
+- Optimalna zaštita očiju
+- Udoban dizajn za višekratnu upotrebu
+
+*Napomena: ovo je lična zaštitna oprema za klijenta, obavezna oprema uz svaki IPL/LED uređaj u ponudi (npr. FotoMed Pulse Pro/Mini, LumiThera LED serija).*
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-CON-GOGGLE
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "potrosni-materijal",
+    image: placeholderImage("Zaštitne naočare IPL i LED (pacijent)"),
+    seoKeywords: ["zaštitne naočare IPL", "zaštita očiju LED tretman", "naočare za pacijenta IPL"],
+    metaDescription: "Zaštitne naočare/maske za IPL i LED tretmane - zaštita očiju klijenta, za višekratnu upotrebu.",
+    faq: [],
+    variations: [
+      {
+        label: "Standardna varijanta",
+        price: 12345,
+        stock: 0,
+        isActive: true,
+      },
+    ],
+    badge: "none",
+    isActive: false,
+  },
+  {
+    slug: "zastitne-naocare-ipl",
+    sku: "EST-ZASTITNE-NAOCARE-IPL",
+    name: "Zaštitne naočare za IPL",
+    shortDescription: "Zaštitne naočare za IPL tretmane sa velikim sočivima za širok vidni ugao i zaštitom obrva.",
+    longDescription: `Zaštitne naočare za IPL namenjene su terapeutu/operateru tokom rada sa IPL uređajima.
+
+**Namena:**
+- Zaštita očiju terapeuta tokom IPL tretmana
+
+**Ključne karakteristike:**
+- Velika sočiva za širok vidni ugao
+- Izdržljiv polikarbonatni materijal
+- Zaštita obrva
+
+*Napomena: obavezna lična zaštitna oprema za terapeuta uz svaki IPL uređaj u ponudi.*
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-CON-IPLGL
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "potrosni-materijal",
+    image: placeholderImage("Zaštitne naočare za IPL"),
+    seoKeywords: ["zaštitne naočare IPL terapeut", "IPL zaštitna oprema"],
+    metaDescription: "Zaštitne naočare za IPL - lična zaštitna oprema za terapeuta, izdržljiv polikarbonatni materijal.",
+    faq: [],
+    variations: [
+      {
+        label: "Standardna varijanta",
+        price: 12345,
+        stock: 0,
+        isActive: true,
+      },
+    ],
+    badge: "none",
+    isActive: false,
+  },
+  {
+    slug: "zastitne-naocare-dijodni-laser",
+    sku: "EST-ZASTITNE-NAOCARE-DIJODNI-LASER",
+    name: "Zaštitne naočare za dijodni laser",
+    shortDescription: "Zaštitne naočare za rad sa dijodnim laserom, za talasne dužine 755/808/1064nm.",
+    longDescription: `Zaštitne naočare za dijodni laser namenjene su terapeutu/operateru tokom rada sa dijodnim laserskim uređajima za trajnu depilaciju.
+
+**Namena:**
+- Zaštita očiju terapeuta tokom rada sa dijodnim laserom (npr. Lasemooth Pro/Smart)
+
+**Ključne karakteristike:**
+- Zaštita za talasne dužine 755/808/1064nm
+- Udoban otvoreni dizajn za dužu upotrebu
+
+*Napomena: obavezna lična zaštitna oprema za terapeuta uz dijodne lasere u ponudi.*
+
+**Nabavni podaci (Fotromed cenovnik, avgust 2026):**
+- Šifra proizvođača (Fotromed): FM-CON-DLGL
+- Garancija: 12-24 meseca (zavisi od modela)
+- Rok isporuke: 30-60 dana (standardno)
+- Dostupnost: Na upit (MOQ 1 komad)
+- Nabavna i preporučena maloprodajna cena nisu javno objavljene od strane Fotromed - potrebna zvanična B2B ponuda.`,
+    categorySlug: "potrosni-materijal",
+    image: placeholderImage("Zaštitne naočare za dijodni laser"),
+    seoKeywords: ["zaštitne naočare dijodni laser", "laser zaštitna oprema 755 808 1064"],
+    metaDescription: "Zaštitne naočare za dijodni laser - zaštita za 755/808/1064nm, udoban dizajn za dužu upotrebu.",
+    faq: [],
+    variations: [
+      {
+        label: "Standardna varijanta",
+        price: 12345,
+        stock: 0,
+        isActive: true,
+      },
+    ],
+    badge: "none",
+    isActive: false,
+  },];
 
 // ---------------------------------------------------------------------------
 // Upsert funkcije
 // ---------------------------------------------------------------------------
+
+async function upsertTags() {
+  const bySlug = {};
+  for (const def of tagDefs) {
+    const doc = await Tag.findOneAndUpdate(
+      { slug: def.slug, domain: DOMAIN },
+      { name: def.name, slug: def.slug, domain: DOMAIN, isActive: true },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    bySlug[def.slug] = doc;
+  }
+  return bySlug;
+}
 
 async function upsertCategories() {
   const bySlug = {};
@@ -3210,23 +4144,28 @@ async function upsertCategories() {
   return bySlug;
 }
 
-async function upsertProducts(categoriesBySlug) {
+async function upsertProducts(categoriesBySlug, tagsBySlug) {
   const productIdsBySlug = {};
 
   for (const def of productDefs) {
     const category = categoriesBySlug[def.categorySlug];
     if (!category) {
-      throw new Error(
-        `Proizvod "${def.slug}" referenciše nepostojeću kategoriju "${def.categorySlug}".`
-      );
+      throw new Error(`Proizvod "${def.slug}" referenciše nepostojeću kategoriju "${def.categorySlug}".`);
     }
+
+    const tagSlugs = productTagMapping[def.slug] || [];
+    const tags = tagSlugs.map((slug) => {
+      const tag = tagsBySlug[slug];
+      if (!tag) {
+        throw new Error(`Proizvod "${def.slug}" referenciše nepostojeći tagSlug "${slug}" - proveri tagDefs.`);
+      }
+      return tag._id;
+    });
 
     const existing = await Product.findOne({ slug: def.slug });
 
     const variations = def.variations.map((v) => {
-      const existingVariation = existing?.variations?.find(
-        (ev) => ev.label === v.label
-      );
+      const existingVariation = existing?.variations?.find((ev) => ev.label === v.label);
       return existingVariation ? { ...v, _id: existingVariation._id } : v;
     });
 
@@ -3237,7 +4176,7 @@ async function upsertProducts(categoriesBySlug) {
       shortDescription: def.shortDescription,
       longDescription: def.longDescription,
       categories: [category._id],
-      tags: [], // biće dodato naknadno
+      tags,
       image: def.image,
       seoKeywords: def.seoKeywords,
       metaDescription: def.metaDescription,
@@ -3256,17 +4195,6 @@ async function upsertProducts(categoriesBySlug) {
       doc = await Product.create(payload);
     }
 
-    // ---------- POVEZIVANJE TAGOVA ----------
-    if (doc) {
-      const tagSlugs = productTagMapping[def.slug] || [];
-      const tagIds = tagSlugs.map((slug) => TAG_ID_MAP[slug]).filter(Boolean);
-      if (tagIds.length > 0) {
-        doc.tags = tagIds;
-        await doc.save();
-      }
-    }
-    // ---------- KRAJ POVEZIVANJA ----------
-
     productIdsBySlug[def.slug] = doc._id;
   }
 
@@ -3278,17 +4206,18 @@ async function upsertProducts(categoriesBySlug) {
 // ---------------------------------------------------------------------------
 
 export async function seedProductCatalog() {
+  const tagsBySlug = await upsertTags();
   const categoriesBySlug = await upsertCategories();
-  const productIdsBySlug = await upsertProducts(categoriesBySlug);
+  const productIdsBySlug = await upsertProducts(categoriesBySlug, tagsBySlug);
 
   const summary = {
+    tags: Object.keys(tagsBySlug).length,
     categories: Object.keys(categoriesBySlug).length,
     products: Object.keys(productIdsBySlug).length,
   };
 
-  logInfo(
-    "Katalog proizvoda (oprema + Tiferono kozmetika) seedovan - SVI kao draft (isActive: false)",
-    summary
-  );
+  logInfo("Katalog proizvoda (tagovi + kategorije + 61 proizvod) seedovan - SVI kao draft (isActive: false)", summary);
   return summary;
 }
+
+export default seedProductCatalog;

@@ -9,10 +9,21 @@ import {
   prepareBookingContactStepData,
   prepareBookingConfirmationData,
 } from "../../../presenters/public/booking.presenter.js";
+import { generateSeo } from "../../../seo/index.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 import { getCapturedReferralCode } from "../../../middlewares/coupon-capture.middleware.js";
 import { tryApplyCoupon } from "./coupon.controller.js";
+
+// Every step of the booking flow is public (no auth wall - see booking.routes.js),
+// but each page is a personalized, single-use step of a multi-step form with no
+// lasting canonical identity of its own (same service can be reached mid-flow via
+// many different query strings/dates/times) - so all of them are deliberately
+// noindex, same convention as blog.service.js's search results page. Kept as a
+// small local helper (not global middleware/res.locals) since only this file needs it.
+async function bookingSeo(req, { title, description }) {
+  return generateSeo("page", { title, description, slug: req.originalUrl, noIndex: true }, req);
+}
 
 // Step 1 - GET /zakazivanje/:serviceSlug
 export async function serviceStep(req, res, next) {
@@ -21,9 +32,11 @@ export async function serviceStep(req, res, next) {
     const service = await serviceService.getServiceBySlug(serviceSlug);
     const viewData = prepareBookingServiceStepData(service);
 
+    const seo = await bookingSeo(req, { title: `Zakazivanje - ${service.naziv}`, description: "Izaberite varijantu usluge" });
     return res.render("booking/service-step", {
-      pageTitle: `Zakazivanje - ${service.naziv}`,
-      pageDescription: "Izaberite varijantu usluge",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -81,9 +94,11 @@ export async function slotsStep(req, res, next) {
       })),
     });
 
+    const seo = await bookingSeo(req, { title: `Zakazivanje - ${service.naziv}`, description: "Izaberite datum i termin" });
     return res.render("booking/slots-step", {
-      pageTitle: `Zakazivanje - ${service.naziv}`,
-      pageDescription: "Izaberite datum i termin",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -127,9 +142,11 @@ export async function contactStep(req, res, next) {
       }
     }
 
+    const seo = await bookingSeo(req, { title: `Zakazivanje - ${service.naziv}`, description: "Unesite podatke za kontakt" });
     return res.render("booking/contact-step", {
-      pageTitle: `Zakazivanje - ${service.naziv}`,
-      pageDescription: "Unesite podatke za kontakt",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: { ...viewData, activeCoupon: req.session?.activeCoupon?.context === "booking" ? req.session.activeCoupon : null, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -173,6 +190,7 @@ export async function confirmBooking(req, res, next) {
       return res.status(400).render("booking/contact-step", {
         pageTitle: `Zakazivanje - ${service.naziv}`,
         pageDescription: "Unesite podatke za kontakt",
+        seo: await bookingSeo(req, { title: `Zakazivanje - ${service.naziv}`, description: "Unesite podatke za kontakt" }),
         data: { ...viewData, activeCoupon: req.session?.activeCoupon?.context === "booking" ? req.session.activeCoupon : null, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
@@ -223,6 +241,7 @@ export async function confirmBooking(req, res, next) {
         return res.status(400).render("booking/contact-step", {
           pageTitle: `Zakazivanje - ${service.naziv}`,
           pageDescription: "Unesite podatke za kontakt",
+          seo: await bookingSeo(req, { title: `Zakazivanje - ${service.naziv}`, description: "Unesite podatke za kontakt" }),
           data: { ...viewData, activeCoupon: req.session?.activeCoupon?.context === "booking" ? req.session.activeCoupon : null, formData: req.body, csrfToken: res.locals.csrfToken },
         });
       } catch (renderError) {
@@ -246,9 +265,11 @@ export async function confirmation(req, res, next) {
 
     const viewData = prepareBookingConfirmationData(pending.appointment, { accountJustCreated: pending.accountJustCreated });
 
+    const seo = await bookingSeo(req, { title: "Termin zakazan", description: "Vaš termin je uspešno zakazan" });
     return res.render("booking/confirmation", {
-      pageTitle: "Termin zakazan",
-      pageDescription: "Vaš termin je uspešno zakazan",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: viewData,
     });
   } catch (error) {

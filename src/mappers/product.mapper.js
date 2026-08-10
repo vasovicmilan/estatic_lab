@@ -63,6 +63,7 @@ export function mapProductsForAdminList(products = []) {
       return {
         id: product._id.toString(),
         naziv: product.name,
+        slika: formatImage(product.image),
         sku: product.sku,
         slug: product.slug,
         kategorije: getCategoryNames(product),

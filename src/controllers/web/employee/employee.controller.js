@@ -10,9 +10,17 @@ import {
   prepareEmployeeCommissionsTabData,
   prepareEmployeePayoutsTabData,
 } from "../../../presenters/employee/employee.presenter.js";
+import { generateSeo } from "../../../seo/index.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
+
+// Everything under /moj-nalog is already behind webAuthMiddleware (see
+// web.routes.js) - explicitly noindex anyway, same defense-in-depth convention
+// as user.controller.js.
+async function employeeSeo(req, { title, description }) {
+  return generateSeo("page", { title, description, slug: req.originalUrl, noIndex: true }, req);
+}
 
 // returns the full raw employee record (not just the id) - payType/commissionRate
 // are needed on every page to decide whether the commission/payout nav tabs
@@ -67,6 +75,7 @@ export async function dashboard(req, res, next) {
     return res.render("employee/dashboard", {
       pageTitle: "Moj kalendar",
       pageDescription: "Pregled vaših termina",
+      seo: await employeeSeo(req, { title: "Moj kalendar", description: "Pregled vaših termina" }),
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -94,6 +103,7 @@ export async function appointments(req, res, next) {
     return res.render("employee/appointments", {
       pageTitle: "Moji termini",
       pageDescription: "Pregled svih vaših termina",
+      seo: await employeeSeo(req, { title: "Moji termini", description: "Pregled svih vaših termina" }),
       data: { ...viewData, isCommissionBased: isCommissionBased(employee) },
     });
   } catch (error) {
@@ -113,6 +123,7 @@ export async function appointmentDetails(req, res, next) {
     return res.render("employee/appointment-details", {
       pageTitle: `Termin - ${appointment.klijent.ime}`,
       pageDescription: appointment.usluga.naziv,
+      seo: await employeeSeo(req, { title: `Termin - ${appointment.klijent.ime}`, description: appointment.usluga.naziv }),
       data: { ...viewData, isCommissionBased: isCommissionBased(employee), csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -231,6 +242,7 @@ export async function profile(req, res, next) {
     return res.render("employee/profile", {
       pageTitle: "Moj profil",
       pageDescription: "Pregled vašeg profila i radnog vremena",
+      seo: await employeeSeo(req, { title: "Moj profil", description: "Pregled vašeg profila i radnog vremena" }),
       data: { ...viewData, isCommissionBased: isCommissionBased(employee), csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -278,6 +290,7 @@ export async function commissions(req, res, next) {
     return res.render("employee/commissions", {
       pageTitle: "Moja provizija",
       pageDescription: "Istorija zarađene provizije",
+      seo: await employeeSeo(req, { title: "Moja provizija", description: "Istorija zarađene provizije" }),
       data: { ...viewData, isCommissionBased: isCommissionBased(employee) },
     });
   } catch (error) {
@@ -304,6 +317,7 @@ export async function payoutHistory(req, res, next) {
     return res.render("employee/payouts", {
       pageTitle: "Moje isplate",
       pageDescription: "Istorija zahteva za isplatu",
+      seo: await employeeSeo(req, { title: "Moje isplate", description: "Istorija zahteva za isplatu" }),
       data: { ...viewData, isCommissionBased: isCommissionBased(employee) },
     });
   } catch (error) {

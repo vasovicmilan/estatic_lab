@@ -10,17 +10,29 @@ import {
   prepareOrderDetailData,
   prepareAddressesTabData,
 } from "../../../presenters/user/user.presenter.js";
+import { generateSeo } from "../../../seo/index.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
+
+// Everything under /nalog is already behind webAuthMiddleware (see web.routes.js) -
+// a crawler can never reach it without a session. Still explicitly noindex, same
+// defense-in-depth convention as the public booking/shop/auth controllers: a future
+// middleware bug or leaked URL shouldn't be the only thing standing between a
+// customer's personal appointments/orders/addresses and a search index.
+async function userSeo(req, { title, description }) {
+  return generateSeo("page", { title, description, slug: req.originalUrl, noIndex: true }, req);
+}
 
 export async function profile(req, res, next) {
   try {
     const user = await userService.findUserProfile(req.session.user.id);
     const viewData = prepareProfileTabData(user);
 
+    const seo = await userSeo(req, { title: "Moj profil", description: user.imePrezime });
     return res.render("user/profile", {
-      pageTitle: "Moj profil",
-      pageDescription: user.imePrezime,
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: viewData,
     });
   } catch (error) {
@@ -43,9 +55,11 @@ export async function appointments(req, res, next) {
 
     const viewData = prepareAppointmentTabData(result, req.query);
 
+    const seo = await userSeo(req, { title: "Moji termini", description: "Pregled vaših zakazanih termina" });
     return res.render("user/_appointment-tab", {
-      pageTitle: "Moji termini",
-      pageDescription: "Pregled vaših zakazanih termina",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: viewData,
     });
   } catch (error) {
@@ -60,9 +74,11 @@ export async function appointmentDetails(req, res, next) {
     const appointment = await appointmentService.getAppointmentById(appointmentId, req.session.user.id, "user");
     const viewData = prepareAppointmentDetailData(appointment);
 
+    const seo = await userSeo(req, { title: `Termin - ${appointment.usluga.naziv}`, description: appointment.termin.pocetak });
     return res.render("user/appointment-details", {
-      pageTitle: `Termin - ${appointment.usluga.naziv}`,
-      pageDescription: appointment.termin.pocetak,
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -123,9 +139,11 @@ export async function settingsForm(req, res, next) {
     const user = await userService.findUserProfile(req.session.user.id);
     const viewData = prepareSettingsTabData(user);
 
+    const seo = await userSeo(req, { title: "Podešavanja naloga", description: user.imePrezime });
     return res.render("user/_settings-tab", {
-      pageTitle: "Podešavanja naloga",
-      pageDescription: user.imePrezime,
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -143,6 +161,7 @@ export async function updateSettings(req, res, next) {
       return res.status(400).render("user/_settings-tab", {
         pageTitle: "Podešavanja naloga",
         pageDescription: user.imePrezime,
+        seo: await userSeo(req, { title: "Podešavanja naloga", description: user.imePrezime }),
         data: { ...viewData, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
@@ -163,6 +182,7 @@ export async function updateSettings(req, res, next) {
       return res.status(error.statusCode).render("user/_settings-tab", {
         pageTitle: "Podešavanja naloga",
         pageDescription: user?.imePrezime || "",
+        seo: await userSeo(req, { title: "Podešavanja naloga", description: user?.imePrezime || "" }),
         data: { ...viewData, formData: req.body, csrfToken: res.locals.csrfToken },
       });
     }
@@ -186,9 +206,11 @@ export async function orders(req, res, next) {
 
     const viewData = prepareOrdersTabData(result, req.query);
 
+    const seo = await userSeo(req, { title: "Moje porudžbine", description: "Pregled vaših porudžbina" });
     return res.render("user/_order-tab", {
-      pageTitle: "Moje porudžbine",
-      pageDescription: "Pregled vaših porudžbina",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: viewData,
     });
   } catch (error) {
@@ -203,9 +225,11 @@ export async function orderDetails(req, res, next) {
     const order = await orderService.getOrderById(orderId, req.session.user.id, "user");
     const viewData = prepareOrderDetailData(order);
 
+    const seo = await userSeo(req, { title: "Detalji porudžbine", description: order.ukupnaCena });
     return res.render("user/order-details", {
-      pageTitle: "Detalji porudžbine",
-      pageDescription: order.ukupnaCena,
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
@@ -243,9 +267,11 @@ export async function addresses(req, res, next) {
     const addressList = await userService.getAddresses(req.session.user.id);
     const viewData = prepareAddressesTabData(addressList);
 
+    const seo = await userSeo(req, { title: "Moje adrese", description: "Upravljajte sačuvanim adresama za dostavu" });
     return res.render("user/_addresses-tab", {
-      pageTitle: "Moje adrese",
-      pageDescription: "Upravljajte sačuvanim adresama za dostavu",
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
       data: { ...viewData, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {

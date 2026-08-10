@@ -2,6 +2,7 @@ export function prepareProductListData(result, query = {}) {
   return {
     items: result.data,
     columns: [
+      { key: "slika", label: "Slika", type: "image" },
       { key: "naziv", label: "Naziv" },
       { key: "sku", label: "SKU" },
       { key: "kategorije", label: "Kategorije" },
