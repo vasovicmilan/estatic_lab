@@ -1,4 +1,4 @@
-export function prepareUserListData(result, query = {}) {
+export function prepareUserListData(result, query = {}, roleOptions = []) {
   return {
     items: result.data,
     columns: [
@@ -30,6 +30,13 @@ export function prepareUserListData(result, query = {}) {
       searchUrl: "/admin/korisnici/pretraga",
       search: query.search || "",
       filters: [
+        {
+          type: "select",
+          name: "role",
+          label: "Uloga",
+          value: query.role || "",
+          options: [{ value: "", label: "Sve uloge" }, ...roleOptions.map((r) => ({ value: r.id, label: r.naziv }))],
+        },
         {
           type: "select",
           name: "status",

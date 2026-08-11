@@ -10,17 +10,20 @@ export async function listUsers(req, res, next) {
   try {
     const { search, status, role, provider, page = 1, limit = 10 } = req.query;
 
-    const result = await userService.listUsers({
-      search: search || "",
-      status: status || undefined,
-      role: role || undefined,
-      provider: provider || undefined,
-      excludeUserId: req.session?.user?.id,
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
-    });
+    const [result, roleOptions] = await Promise.all([
+      userService.listUsers({
+        search: search || "",
+        status: status || undefined,
+        role: role || undefined,
+        provider: provider || undefined,
+        excludeUserId: req.session?.user?.id,
+        page: parseInt(page, 10) || 1,
+        limit: parseInt(limit, 10) || 10,
+      }),
+      roleService.getRolesForSelect(),
+    ]);
 
-    const viewData = prepareUserListData(result, req.query);
+    const viewData = prepareUserListData(result, req.query, roleOptions);
 
     return res.render("admin/_list", {
       pageTitle: search ? `Pretraga: ${search}` : "Korisnici",
