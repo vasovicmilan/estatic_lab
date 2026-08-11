@@ -18,6 +18,7 @@ export function prepareCategoryListData(result, query = {}) {
   return {
     items: result.data,
     columns: [
+      { key: "slika", label: "Slika", type: "image" },
       { key: "naziv", label: "Naziv" },
       { key: "domen", label: "Domen" },
       { key: "roditelj", label: "Roditelj" },

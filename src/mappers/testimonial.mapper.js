@@ -90,6 +90,7 @@ export function mapTestimonialsForAdminList(testimonials = []) {
       return {
         id: t._id.toString(),
         ime: getDisplayName(t),
+        slika: getAvatar(t),
         email: t.email || "",
         ocena: renderStars(t.rating),
         ocenaRaw: t.rating,

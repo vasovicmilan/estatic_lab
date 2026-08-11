@@ -26,6 +26,7 @@ export function mapExpertsForAdminList(experts = []) {
       return {
         id: expert._id.toString(),
         imePrezime: getFullName(expert),
+        slika: formatImage(expert.image),
         titula: expert.title || "",
         slug: expert.slug,
         brojUsluga: expert.services?.length || 0,

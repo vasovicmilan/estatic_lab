@@ -2,6 +2,7 @@ export function prepareTestimonialListData(result, query = {}) {
   return {
     items: result.data,
     columns: [
+      { key: "slika", label: "Slika", type: "image" },
       { key: "ime", label: "Ime" },
       { key: "email", label: "Email" },
       { key: "ocena", label: "Ocena" },

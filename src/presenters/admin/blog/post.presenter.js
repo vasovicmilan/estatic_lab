@@ -4,6 +4,7 @@ export function preparePostListData(result, query = {}) {
   return {
     items: result.data,
     columns: [
+      { key: "slika", label: "Slika", type: "image" },
       { key: "naslov", label: "Naslov" },
       { key: "status", label: "Status" },
       { key: "autor", label: "Autor" },

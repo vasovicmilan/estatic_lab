@@ -48,6 +48,7 @@ export function mapUserForAdminShort(user) {
   return {
     id: user._id.toString(),
     imePrezime: getFullName(user),
+    slika: user.avatar ? { url: user.avatar, alt: getFullName(user) } : null,
     email: user.email,
     telefon: decryptPhone(user.phone),
     uloga: getRoleName(user),

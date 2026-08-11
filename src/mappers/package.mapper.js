@@ -93,6 +93,7 @@ export function mapPackagesForAdminList(packages = []) {
       return {
         id: pkg._id.toString(),
         naziv: pkg.name,
+        slika: formatImage(pkg.image),
         slug: pkg.slug,
         stavke: getItemsSummary(pkg.items),
         cena: `${pkg.totalPrice} RSD`,

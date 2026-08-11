@@ -2,6 +2,7 @@ export function prepareServiceListData(result, query = {}) {
   return {
     items: result.data,
     columns: [
+      { key: "slika", label: "Slika", type: "image" },
       { key: "naziv", label: "Naziv" },
       { key: "kategorije", label: "Kategorije" },
       { key: "cena", label: "Cena" },

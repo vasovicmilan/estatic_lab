@@ -76,6 +76,7 @@ export function mapServicesForAdminList(services = []) {
       return {
         id: service._id.toString(),
         naziv: service.name,
+        slika: formatImage(service.image),
         slug: service.slug,
         kategorije: getCategoryNames(service),
         cena: getPriceRange(service),

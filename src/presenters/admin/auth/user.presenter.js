@@ -2,6 +2,7 @@ export function prepareUserListData(result, query = {}) {
   return {
     items: result.data,
     columns: [
+      { key: "slika", label: "Slika", type: "image" },
       { key: "imePrezime", label: "Ime i prezime" },
       { key: "email", label: "Email" },
       { key: "telefon", label: "Telefon" },

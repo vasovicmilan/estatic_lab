@@ -2,6 +2,7 @@ export function prepareExpertListData(result, query = {}) {
   return {
     items: result.data,
     columns: [
+      { key: "slika", label: "Slika", type: "image" },
       { key: "imePrezime", label: "Ime i prezime" },
       { key: "titula", label: "Titula" },
       { key: "brojUsluga", label: "Broj usluga" },

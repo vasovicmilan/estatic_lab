@@ -81,6 +81,7 @@ export function mapPostsForAdminList(posts = []) {
       return {
         id: post._id.toString(),
         naslov: post.title,
+        slika: formatCoverImage(post.coverImage),
         slug: post.slug,
         status: translateStatus(post.status),
         statusRaw: post.status,

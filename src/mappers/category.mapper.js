@@ -1,5 +1,13 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 
+function formatImage(image) {
+  if (!image || !image.img) return null;
+  return {
+    url: image.img,
+    alt: image.imgDesc || null,
+  };
+}
+
 function translateDomain(domain) {
   const map = {
     post: "Blog",
@@ -24,6 +32,7 @@ export function mapCategoriesForAdminList(categories = []) {
       return {
         id: category._id.toString(),
         naziv: category.name,
+        slika: formatImage(category.featureImage),
         slug: category.slug,
         domen: translateDomain(category.domain),
         domenRaw: category.domain,
