@@ -12,6 +12,7 @@ import {
 } from "../../../presenters/user/user.presenter.js";
 import { generateSeo } from "../../../seo/index.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
+import auditLogService from "../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 
 // Everything under /nalog is already behind webAuthMiddleware (see web.routes.js) -
@@ -95,6 +96,14 @@ export async function cancelAppointment(req, res, next) {
     const { appointmentId } = req.params;
     await appointmentService.cancelAppointment(appointmentId, req.body.reason, req.session.user.id, "user");
     logInfo(`[cancelAppointment] Korisnik otkazao termin #${appointmentId}`, { appointmentId, userId: req.session.user.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "APPOINTMENT_CANCELLED",
+      entity: { type: "Appointment", id: appointmentId },
+      changes: { reason: { old: null, new: req.body.reason || null } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Termin je uspešno otkazan", "/nalog/termini");
   } catch (error) {
@@ -118,8 +127,17 @@ export async function rescheduleAppointment(req, res, next) {
       return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), `/nalog/termini/detalji/${appointmentId}`);
     }
 
+    const existing = await appointmentService.getAppointmentById(appointmentId, req.session.user.id, "user").catch(() => null);
     await appointmentService.rescheduleAppointment(appointmentId, req.body.newStartTime, req.session.user.id, "user");
     logInfo(`[rescheduleAppointment] Korisnik pomerio termin #${appointmentId}`, { appointmentId, newStartTime: req.body.newStartTime, userId: req.session.user.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "APPOINTMENT_RESCHEDULED",
+      entity: { type: "Appointment", id: appointmentId },
+      changes: { pocetak: { old: existing?.termin?.pocetakRaw ?? null, new: req.body.newStartTime || null } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Termin je uspešno pomeren", `/nalog/termini/detalji/${appointmentId}`);
   } catch (error) {
@@ -166,11 +184,21 @@ export async function updateSettings(req, res, next) {
       });
     }
 
+    const existing = await userService.findUserProfile(req.session.user.id);
     const updated = await userService.updateProfile(req.session.user.id, req.body);
     req.session.user.firstName = updated.firstName;
     req.session.user.lastName = updated.lastName;
 
     logInfo(`[updateSettings] Korisnik #${req.session.user.id} ažurirao podešavanja`, { userId: req.session.user.id });
+    const changes = auditLogService.computeChanges(existing, updated, ["firstName", "lastName", "telefon"]);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "USER_SETTINGS_UPDATED",
+      entity: { type: "User", id: req.session.user.id },
+      changes,
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Podešavanja su uspešno ažurirana", "/nalog/podesavanja");
   } catch (error) {
@@ -246,6 +274,14 @@ export async function cancelOrder(req, res, next) {
     const { orderId } = req.params;
     await orderService.cancelOrder(orderId, req.body.reason, req.session.user.id, "user");
     logInfo(`[cancelOrder] Korisnik otkazao porudžbinu #${orderId}`, { orderId, userId: req.session.user.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "ORDER_CANCELLED",
+      entity: { type: "Order", id: orderId },
+      changes: { reason: { old: null, new: req.body.reason || null } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Porudžbina je uspešno otkazana", "/nalog/porudzbine");
   } catch (error) {
@@ -296,6 +332,13 @@ export async function addAddress(req, res, next) {
       isDefault: req.body.isDefault === "true" || req.body.isDefault === "on",
     });
     logInfo("[addAddress] Adresa dodata", { userId: req.session.user.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "USER_ADDRESS_ADDED",
+      entity: { type: "User", id: req.session.user.id },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Adresa je uspešno dodata", "/nalog/adrese");
   } catch (error) {
@@ -312,6 +355,13 @@ export async function removeAddress(req, res, next) {
     const { addressId } = req.params;
     await userService.removeAddress(req.session.user.id, addressId);
     logInfo("[removeAddress] Adresa uklonjena", { userId: req.session.user.id, addressId });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "USER_ADDRESS_REMOVED",
+      entity: { type: "User", id: req.session.user.id },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Adresa je uklonjena", "/nalog/adrese");
   } catch (error) {
@@ -328,6 +378,14 @@ export async function setDefaultAddress(req, res, next) {
     const { addressId } = req.params;
     await userService.setDefaultAddress(req.session.user.id, addressId);
     logInfo("[setDefaultAddress] Podrazumevana adresa promenjena", { userId: req.session.user.id, addressId });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "USER_DEFAULT_ADDRESS_CHANGED",
+      entity: { type: "User", id: req.session.user.id },
+      changes: { addressId: { old: null, new: addressId } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Podrazumevana adresa je ažurirana", "/nalog/adrese");
   } catch (error) {

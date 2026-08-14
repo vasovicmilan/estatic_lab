@@ -141,6 +141,13 @@ export async function confirmAppointment(req, res, next) {
     const employeeId = employeeIdOf(await getOwnEmployee(req));
     await appointmentService.confirmAppointment(appointmentId, employeeId, "employee");
     logInfo(`[confirmAppointment] Zaposleni potvrdio termin #${appointmentId}`, { appointmentId, userId: req.session.user.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "APPOINTMENT_CONFIRMED",
+      entity: { type: "Appointment", id: appointmentId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Termin je potvrđen", `/moj-nalog/termini/detalji/${appointmentId}`);
   } catch (error) {
     logError("[confirmAppointment] Greška pri potvrđivanju termina", error, { appointmentId: req.params.appointmentId, userId: req.session?.user?.id });
@@ -163,6 +170,14 @@ export async function rejectAppointment(req, res, next) {
     const employeeId = employeeIdOf(await getOwnEmployee(req));
     await appointmentService.rejectAppointment(appointmentId, req.body.reason, employeeId, "employee");
     logInfo(`[rejectAppointment] Zaposleni odbio termin #${appointmentId}`, { appointmentId, userId: req.session.user.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "APPOINTMENT_REJECTED",
+      entity: { type: "Appointment", id: appointmentId },
+      changes: { reason: { old: null, new: req.body.reason || null } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Termin je odbijen", `/moj-nalog/termini/detalji/${appointmentId}`);
   } catch (error) {
     logError("[rejectAppointment] Greška pri odbijanju termina", error, { appointmentId: req.params.appointmentId, userId: req.session?.user?.id });
@@ -179,6 +194,13 @@ export async function completeAppointment(req, res, next) {
     const employeeId = employeeIdOf(await getOwnEmployee(req));
     await appointmentService.completeAppointment(appointmentId, employeeId, "employee");
     logInfo(`[completeAppointment] Zaposleni završio termin #${appointmentId}`, { appointmentId, userId: req.session.user.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "APPOINTMENT_COMPLETED",
+      entity: { type: "Appointment", id: appointmentId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Termin je označen kao završen", `/moj-nalog/termini/detalji/${appointmentId}`);
   } catch (error) {
     logError("[completeAppointment] Greška pri završavanju termina", error, { appointmentId: req.params.appointmentId, userId: req.session?.user?.id });
@@ -201,6 +223,14 @@ export async function noShowAppointment(req, res, next) {
     const employeeId = employeeIdOf(await getOwnEmployee(req));
     await appointmentService.noShowAppointment(appointmentId, req.body.note, employeeId, "employee");
     logInfo(`[noShowAppointment] Zaposleni označio termin #${appointmentId} kao 'nije se pojavio'`, { appointmentId, userId: req.session.user.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "APPOINTMENT_NO_SHOW",
+      entity: { type: "Appointment", id: appointmentId },
+      changes: { note: { old: null, new: req.body.note || null } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Termin je označen kao 'klijent se nije pojavio'", `/moj-nalog/termini/detalji/${appointmentId}`);
   } catch (error) {
     logError("[noShowAppointment] Greška pri označavanju termina kao 'nije se pojavio'", error, { appointmentId: req.params.appointmentId, userId: req.session?.user?.id });
@@ -221,8 +251,17 @@ export async function rescheduleAppointment(req, res, next) {
     }
 
     const employeeId = employeeIdOf(await getOwnEmployee(req));
+    const existing = await appointmentService.getAppointmentById(appointmentId, employeeId, "employee").catch(() => null);
     await appointmentService.rescheduleAppointment(appointmentId, req.body.newStartTime, employeeId, "employee");
     logInfo(`[rescheduleAppointment] Zaposleni pomerio termin #${appointmentId}`, { appointmentId, newStartTime: req.body.newStartTime, userId: req.session.user.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "APPOINTMENT_RESCHEDULED",
+      entity: { type: "Appointment", id: appointmentId },
+      changes: { pocetak: { old: existing?.termin?.pocetakRaw ?? null, new: req.body.newStartTime || null } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Termin je uspešno pomeren", `/moj-nalog/termini/detalji/${appointmentId}`);
   } catch (error) {
     logError("[rescheduleAppointment] Greška pri pomeranju termina", error, { appointmentId: req.params.appointmentId, userId: req.session?.user?.id });
@@ -259,8 +298,17 @@ export async function updateWorkingHours(req, res, next) {
     }
 
     const employeeId = employeeIdOf(await getOwnEmployee(req));
+    const existingProfile = await employeeService.findEmployeeProfile(req.session.user.id, "employee").catch(() => null);
     await employeeService.manageWorkingHours(employeeId, req.body.workingHours || [], req.session.user.id, "employee");
     logInfo(`[updateWorkingHours] Zaposleni #${req.session.user.id} ažurirao radno vreme`, { userId: req.session.user.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "EMPLOYEE_WORKING_HOURS_UPDATED",
+      entity: { type: "Employee", id: employeeId },
+      changes: { workingHours: { old: existingProfile?.workingHours ?? null, new: req.body.workingHours || [] } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Radno vreme je uspešno ažurirano", "/moj-nalog/profil");
   } catch (error) {
     logError("[updateWorkingHours] Greška pri ažuriranju radnog vremena", error, { userId: req.session?.user?.id });
