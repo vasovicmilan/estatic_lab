@@ -22,6 +22,20 @@ export function prepareAuditLogListData(result, query = {}, availableActions = [
           { value: "false", label: "Neuspešno" },
         ],
       },
+      actorRole: {
+        value: query.actorRole || "",
+        options: [
+          { value: "", label: "Sve role" },
+          { value: "admin", label: "Admin" },
+          { value: "employee", label: "Zaposleni" },
+          { value: "partner", label: "Partner" },
+          { value: "user", label: "Korisnik" },
+        ],
+      },
+      search: { value: query.search || "" },
+      dateFrom: { value: query.dateFrom || "" },
+      dateTo: { value: query.dateTo || "" },
+      sortOrder: { value: query.sortOrder === "asc" ? "asc" : "desc" },
     },
   };
 }
@@ -51,6 +65,11 @@ function entity_label(type) {
     PayoutRequest: "Zahtev za isplatu",
     User: "Korisnik",
     Role: "Rola",
+    Category: "Kategorija",
+    Tag: "Tag",
+    Post: "Blog objava",
+    Order: "Porudžbina",
+    Appointment: "Termin",
   };
   return map[type] || type;
 }

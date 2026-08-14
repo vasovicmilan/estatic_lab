@@ -4,7 +4,7 @@ import { logError } from "../../../../utils/logger.util.js";
 
 export async function auditLogList(req, res, next) {
   try {
-    const { page = 1, limit = 25, action, success, actorId, entityType, entityId } = req.query;
+    const { page = 1, limit = 25, action, success, actorId, actorRole, entityType, entityId, search, dateFrom, dateTo, sortOrder } = req.query;
 
     const [result, availableActions] = await Promise.all([
       auditLogService.listAuditLogs({
@@ -12,8 +12,13 @@ export async function auditLogList(req, res, next) {
           action: action || undefined,
           success: success === "" || success === undefined ? undefined : success === "true",
           actorId: actorId || undefined,
+          actorRole: actorRole || undefined,
           entityType: entityType || undefined,
           entityId: entityId || undefined,
+          search: search || undefined,
+          dateFrom: dateFrom ? new Date(dateFrom) : undefined,
+          dateTo: dateTo ? new Date(dateTo) : undefined,
+          sortOrder: sortOrder === "asc" ? "asc" : "desc",
         },
         page: parseInt(page, 10) || 1,
         limit: parseInt(limit, 10) || 25,
