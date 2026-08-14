@@ -55,9 +55,6 @@
                      Termini/Profil, so listing them again here is the same
                      destination reachable two ways for no reason. -->
                 <li><a class="dropdown-item" href="/moj-nalog">Moj kalendar</a></li>
-                <% if (user.isPartner) { %>
-                  <li><a class="dropdown-item" href="/moj-partner-nalog">Partnerski nalog</a></li>
-                <% } %>
               <% } %>
 
               <% if (isAdmin || user?.isEmployee) { %>
@@ -70,6 +67,9 @@
               <li><a class="dropdown-item" href="/nalog/adrese">Moje adrese</a></li>
               <li><a class="dropdown-item" href="/korpa">Korpa</a></li>
               <li><a class="dropdown-item" href="/nalog/podesavanja">Podešavanja</a></li>
+              <% if (user?.isPartner) { %>
+                <li><a class="dropdown-item" href="/moj-partner-nalog">Partnerski nalog</a></li>
+              <% } %>
 
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="/odjava">Odjava</a></li>
@@ -108,9 +108,6 @@
                  dropdown above; once inside /moj-nalog, its own bottom tab bar
                  already covers Termini/Profil. -->
             <a class="nav-link px-1" href="/moj-nalog">Moj kalendar</a>
-            <% if (user.isPartner) { %>
-              <a class="nav-link px-1" href="/moj-partner-nalog">Partnerski nalog</a>
-            <% } %>
           <% } %>
 
           <div class="text-uppercase text-muted px-1 mb-1 mt-2 mobile-account-heading">Nalog</div>
@@ -120,6 +117,9 @@
           <a class="nav-link px-1" href="/nalog/adrese">Moje adrese</a>
           <a class="nav-link px-1" href="/korpa">Korpa</a>
           <a class="nav-link px-1" href="/nalog/podesavanja">Podešavanja</a>
+          <% if (user?.isPartner) { %>
+            <a class="nav-link px-1" href="/moj-partner-nalog">Partnerski nalog</a>
+          <% } %>
 
           <a class="nav-link px-1 mt-2 pt-2 border-top text-danger" href="/odjava">Odjava</a>
         </div>
