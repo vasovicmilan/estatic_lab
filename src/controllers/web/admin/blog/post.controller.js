@@ -9,6 +9,7 @@ import {
   preparePostSeoFormData,
 } from "../../../../presenters/admin/blog/post.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
@@ -162,6 +163,13 @@ export async function createPost(req, res, next) {
 
     const post = await postService.createPost(data);
     logInfo(`[createPost] Post kreiran: "${post.naslov}"`, { postId: post.id, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "POST_CREATED",
+      entity: { type: "Post", id: post.id },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Post je uspešno kreiran", `/admin/blog/detalji/${post.id}`);
   } catch (error) {
@@ -201,6 +209,16 @@ export async function updatePost(req, res, next) {
     const data = buildPostPayload(req, existing);
     const updated = await postService.updatePostById(postId, data);
     logInfo(`[updatePost] Post #${postId} ažuriran`, { postId, adminId: req.session?.user?.id });
+    const afterUpdate = await postService.getPostForEdit(postId);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, ["title", "excerpt", "status", "author"]);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "POST_UPDATED",
+      entity: { type: "Post", id: postId },
+      changes,
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Post je uspešno ažuriran", `/admin/blog/detalji/${updated.id}`);
   } catch (error) {
@@ -227,8 +245,17 @@ export async function updatePostStatus(req, res, next) {
     // Same conversion as buildPostPayload above - see date.time.util.js's
     // zonedInputToUtcDate for why this can't just be the raw form value.
     const scheduledFor = req.body.scheduledFor ? zonedInputToUtcDate(req.body.scheduledFor) : null;
+    const existing = await postService.getPostForEdit(postId).catch(() => null);
     await postService.updatePostStatus(postId, req.body.status, { scheduledFor });
     logInfo(`[updatePostStatus] Status posta #${postId} promenjen na "${req.body.status}"`, { postId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "POST_STATUS_CHANGED",
+      entity: { type: "Post", id: postId },
+      changes: { status: { old: existing?.status ?? null, new: req.body.status } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Status posta je uspešno promenjen", `/admin/blog/detalji/${postId}`);
   } catch (error) {
     logError("[updatePostStatus] Greška pri promeni statusa posta", error, { postId: req.params.postId, userId: req.session?.user?.id });
@@ -270,6 +297,13 @@ export async function updatePostSeo(req, res, next) {
 
     const updated = await postService.updatePostSeo(postId, seo);
     logInfo(`[updatePostSeo] SEO posta #${postId} ažuriran`, { postId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "POST_SEO_UPDATED",
+      entity: { type: "Post", id: postId },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "SEO podaci su uspešno ažurirani", `/admin/blog/detalji/${updated.id}`);
   } catch (error) {
@@ -287,6 +321,13 @@ export async function deletePost(req, res, next) {
     const { postId } = req.params;
     await postService.deletePostById(postId);
     logInfo(`[deletePost] Post #${postId} obrisan`, { postId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "POST_DELETED",
+      entity: { type: "Post", id: postId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Post je uspešno obrisan", "/admin/blog");
   } catch (error) {
     logError("[deletePost] Greška pri brisanju posta", error, { postId: req.params.postId, userId: req.session?.user?.id });

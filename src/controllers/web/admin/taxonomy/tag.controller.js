@@ -1,6 +1,7 @@
 import * as tagService from "../../../../services/tag.service.js";
 import { prepareTagListData, prepareTagDetailsData, prepareTagFormData } from "../../../../presenters/admin/taxonomy/tag.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
@@ -92,6 +93,13 @@ export async function createTag(req, res, next) {
     const data = { ...req.body, isActive: parseCheckbox(req.body.isActive, true) };
     const tag = await tagService.createTag(data);
     logInfo(`[createTag] Tag kreiran: "${tag.naziv}"`, { tagId: tag.id, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "TAG_CREATED",
+      entity: { type: "Tag", id: tag.id },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Tag je uspešno kreiran", `/admin/tagovi/detalji/${tag.id}`);
   } catch (error) {
@@ -128,6 +136,19 @@ export async function updateTag(req, res, next) {
     const data = { ...req.body, isActive: parseCheckbox(req.body.isActive, existing.isActive) };
     const updated = await tagService.updateTagById(tagId, data);
     logInfo(`[updateTag] Tag #${tagId} ažuriran`, { tagId, adminId: req.session?.user?.id });
+    // updateTagById vraca istu mapiranu formu kao getTagById (naziv/...), ne getTagForEdit
+    // (name/...) - za poredjenje polja moramo ponovo da povucemo "edit" oblik, isto kao
+    // kod kategorije/proizvoda, da ne bismo poredili razlicite formate polja.
+    const afterUpdate = await tagService.getTagForEdit(tagId);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, ["name", "domain", "isActive"]);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "TAG_UPDATED",
+      entity: { type: "Tag", id: tagId },
+      changes,
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Tag je uspešno ažuriran", `/admin/tagovi/detalji/${updated.id}`);
   } catch (error) {
@@ -151,6 +172,13 @@ export async function deleteTag(req, res, next) {
     const { tagId } = req.params;
     await tagService.deleteTagById(tagId);
     logInfo(`[deleteTag] Tag #${tagId} obrisan`, { tagId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "TAG_DELETED",
+      entity: { type: "Tag", id: tagId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Tag je uspešno obrisan", "/admin/tagovi");
   } catch (error) {
     logError("[deleteTag] Greška pri brisanju taga", error, { tagId: req.params.tagId, userId: req.session?.user?.id });

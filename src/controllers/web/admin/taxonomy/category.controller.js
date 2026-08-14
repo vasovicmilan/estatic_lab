@@ -1,6 +1,7 @@
 import * as categoryService from "../../../../services/category.service.js";
 import { prepareCategoryListData, prepareCategoryDetailsData, prepareCategoryFormData } from "../../../../presenters/admin/taxonomy/category.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
@@ -126,6 +127,13 @@ export async function createCategory(req, res, next) {
 
     const category = await categoryService.createCategory(data);
     logInfo(`[createCategory] Kategorija kreirana: "${category.naziv}"`, { categoryId: category.id, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "CATEGORY_CREATED",
+      entity: { type: "Category", id: category.id },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Kategorija je uspešno kreirana", `/admin/kategorije/detalji/${category.id}`);
   } catch (error) {
@@ -175,6 +183,16 @@ export async function updateCategory(req, res, next) {
 
     const updated = await categoryService.updateCategoryById(categoryId, data);
     logInfo(`[updateCategory] Kategorija #${categoryId} ažurirana`, { categoryId, adminId: req.session?.user?.id });
+    const afterUpdate = await categoryService.getCategoryForEdit(categoryId);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, ["name", "domain", "parent", "isIndexable", "isActive"]);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "CATEGORY_UPDATED",
+      entity: { type: "Category", id: categoryId },
+      changes,
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Kategorija je uspešno ažurirana", `/admin/kategorije/detalji/${updated.id}`);
   } catch (error) {
@@ -204,6 +222,13 @@ export async function deleteCategory(req, res, next) {
     const { categoryId } = req.params;
     await categoryService.deleteCategoryById(categoryId);
     logInfo(`[deleteCategory] Kategorija #${categoryId} obrisana`, { categoryId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "CATEGORY_DELETED",
+      entity: { type: "Category", id: categoryId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Kategorija je uspešno obrisana", "/admin/kategorije");
   } catch (error) {
     logError("[deleteCategory] Greška pri brisanju kategorije", error, { categoryId: req.params.categoryId, userId: req.session?.user?.id });

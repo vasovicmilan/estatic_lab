@@ -5,6 +5,7 @@ import * as productService from "../../../../services/product.service.js";
 import partnerService from "../../../../services/partner.service.js";
 import { prepareCouponListData, prepareCouponDetailsData, prepareCouponFormData } from "../../../../presenters/admin/marketing/coupon.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
@@ -141,6 +142,13 @@ export async function createCoupon(req, res, next) {
     const data = buildCouponPayload(req);
     const coupon = await couponService.createCoupon(data);
     logInfo(`[createCoupon] Kupon "${coupon.osnovno.kod}" kreiran`, { couponId: coupon.id, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "COUPON_CREATED",
+      entity: { type: "Coupon", id: coupon.id },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Kupon je uspešno kreiran", `/admin/kuponi/detalji/${coupon.id}`);
   } catch (error) {
@@ -175,9 +183,31 @@ export async function updateCoupon(req, res, next) {
       });
     }
 
+    const existing = await couponService.getCouponForEdit(couponId);
     const data = buildCouponPayload(req);
     const updated = await couponService.updateCouponById(couponId, data);
     logInfo(`[updateCoupon] Kupon #${couponId} ažuriran`, { couponId, adminId: req.session?.user?.id });
+    // updateCouponById vraca getCouponById oblik (detalji), ne getCouponForEdit -
+    // ponovo povuci "edit" oblik da bi computeChanges poredio ista imena polja.
+    const afterUpdate = await couponService.getCouponForEdit(couponId);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, [
+      "code",
+      "discountType",
+      "discountValue",
+      "minAppointmentValue",
+      "maxUses",
+      "maxUsesPerUser",
+      "validUntil",
+      "isActive",
+    ]);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "COUPON_UPDATED",
+      entity: { type: "Coupon", id: couponId },
+      changes,
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Kupon je uspešno ažuriran", `/admin/kuponi/detalji/${updated.id}`);
   } catch (error) {
@@ -202,6 +232,13 @@ export async function deleteCoupon(req, res, next) {
     const { couponId } = req.params;
     await couponService.deleteCouponById(couponId);
     logInfo(`[deleteCoupon] Kupon #${couponId} obrisan`, { couponId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "COUPON_DELETED",
+      entity: { type: "Coupon", id: couponId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Kupon je uspešno obrisan", "/admin/kuponi");
   } catch (error) {
     logError("[deleteCoupon] Greška pri brisanju kupona", error, { couponId: req.params.couponId, userId: req.session?.user?.id });
