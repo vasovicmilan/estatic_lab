@@ -1,6 +1,7 @@
 import * as testimonialService from "../../../../services/testimonial.service.js";
 import { prepareTestimonialListData, prepareTestimonialDetailsData } from "../../../../presenters/admin/marketing/testimonial.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
@@ -57,12 +58,28 @@ export async function approveTestimonial(req, res, next) {
 
     await testimonialService.approveTestimonial(testimonialId, { isFeatured });
     logInfo(`[approveTestimonial] Testimonijal #${testimonialId} odobren`, { testimonialId, isFeatured, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "TESTIMONIAL_APPROVED",
+      entity: { type: "Testimonial", id: testimonialId },
+      changes: { status: { old: "pending", new: "approved" }, isFeatured: { old: null, new: isFeatured } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Testimonijal je uspešno odobren", `/admin/testimoniali/detalji/${testimonialId}`);
   } catch (error) {
     logError("[approveTestimonial] Greška pri odobravanju testimoniala", error, {
       testimonialId: req.params.testimonialId,
       userId: req.session?.user?.id,
+    });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "TESTIMONIAL_APPROVED",
+      entity: { type: "Testimonial", id: req.params.testimonialId },
+      req,
+      success: false,
+      errorMessage: error.message,
     });
     if (error.statusCode) {
       return flashAndRedirect(req, res, "error", error.message, `/admin/testimoniali/detalji/${req.params.testimonialId}`);
@@ -76,11 +93,27 @@ export async function rejectTestimonial(req, res, next) {
     const { testimonialId } = req.params;
     await testimonialService.rejectTestimonial(testimonialId);
     logInfo(`[rejectTestimonial] Testimonijal #${testimonialId} odbijen`, { testimonialId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "TESTIMONIAL_REJECTED",
+      entity: { type: "Testimonial", id: testimonialId },
+      changes: { status: { old: "pending", new: "rejected" } },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Testimonijal je odbijen", `/admin/testimoniali/detalji/${testimonialId}`);
   } catch (error) {
     logError("[rejectTestimonial] Greška pri odbijanju testimoniala", error, {
       testimonialId: req.params.testimonialId,
       userId: req.session?.user?.id,
+    });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "TESTIMONIAL_REJECTED",
+      entity: { type: "Testimonial", id: req.params.testimonialId },
+      req,
+      success: false,
+      errorMessage: error.message,
     });
     if (error.statusCode) {
       return flashAndRedirect(req, res, "error", error.message, `/admin/testimoniali/detalji/${req.params.testimonialId}`);
@@ -94,6 +127,13 @@ export async function deleteTestimonial(req, res, next) {
     const { testimonialId } = req.params;
     await testimonialService.deleteTestimonialById(testimonialId);
     logInfo(`[deleteTestimonial] Testimonijal #${testimonialId} obrisan`, { testimonialId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "TESTIMONIAL_DELETED",
+      entity: { type: "Testimonial", id: testimonialId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Testimonijal je uspešno obrisan", "/admin/testimoniali");
   } catch (error) {
     logError("[deleteTestimonial] Greška pri brisanju testimoniala", error, {

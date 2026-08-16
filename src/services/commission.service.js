@@ -58,14 +58,15 @@ export async function recordAppointmentCommissions(appointmentId) {
   const partnerBaseValue = appointment.finalPrice || 0;
   if (partnerBaseValue > 0 && appointment.coupon?.partner) {
     const partner = appointment.coupon.partner;
+    const rate = partner.commissionRateServices ?? 0;
     entries.push({
       earnerType: "partner",
       partner: partner._id || partner,
       sourceType: "appointment",
       appointment: appointment._id,
       baseValue: partnerBaseValue,
-      rate: partner.commissionRate ?? 0,
-      amount: round2(partnerBaseValue * ((partner.commissionRate ?? 0) / 100)),
+      rate,
+      amount: applyCap(round2(partnerBaseValue * (rate / 100)), partner.maxCommissionAmountServices),
       status: "earned",
       earnedAt: new Date(),
     });
@@ -113,14 +114,15 @@ export async function recordOrderCommission(orderId) {
   if (baseValue <= 0) return;
 
   const partner = order.coupon.partner;
+  const rate = partner.commissionRateProducts ?? 0;
   await commissionRepo.createCommissionEntry({
     earnerType: "partner",
     partner: partner._id || partner,
     sourceType: "order",
     order: order._id,
     baseValue,
-    rate: partner.commissionRate ?? 0,
-    amount: round2(baseValue * ((partner.commissionRate ?? 0) / 100)),
+    rate,
+    amount: applyCap(round2(baseValue * (rate / 100)), partner.maxCommissionAmountProducts),
     status: "pending",
   });
 
@@ -149,14 +151,15 @@ export async function recordPackagePurchaseCommission(packagePurchaseId) {
   if (baseValue <= 0) return;
 
   const partner = purchase.coupon.partner;
+  const rate = partner.commissionRateServices ?? 0;
   await commissionRepo.createCommissionEntry({
     earnerType: "partner",
     partner: partner._id || partner,
     sourceType: "package_purchase",
     packagePurchase: purchase._id,
     baseValue,
-    rate: partner.commissionRate ?? 0,
-    amount: round2(baseValue * ((partner.commissionRate ?? 0) / 100)),
+    rate,
+    amount: applyCap(round2(baseValue * (rate / 100)), partner.maxCommissionAmountServices),
     status: "earned",
     earnedAt: new Date(),
   });
@@ -254,6 +257,17 @@ export async function processGracePeriodCommissions() {
 
 function round2(value) {
   return Math.round(value * 100) / 100;
+}
+
+// Caps a computed commission amount at the earner's configured ceiling for
+// that source (services/packages vs products), if one is set. Applied AFTER
+// the rate is computed, never folded into the rate itself, so the stored
+// `rate` on the entry always reflects the partner's actual configured rate -
+// the cap is a separate, visible reason an amount was reduced (see
+// commission-entry.model.js's amount/rate fields).
+function applyCap(amount, maxCap) {
+  if (maxCap == null) return amount;
+  return Math.min(amount, maxCap);
 }
 
 /**

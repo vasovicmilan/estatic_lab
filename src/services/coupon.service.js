@@ -69,6 +69,22 @@ export async function deleteCouponById(couponId) {
  * double-submit still can't bypass the global `maxUses` cap, only (in the rare
  * brand-new-guest edge case) the per-user cap on their very first booking.
  */
+/**
+ * Read-only validation shared by both redemption paths (appointment booking, package
+ * purchase). Returns { coupon, discountAmount } on success, throws AppError otherwise.
+ * `userId` may be null (a brand-new guest hasn't been created yet at this point) - in
+ * that case the per-user limit simply can't be checked yet and is skipped; it's re-verified
+ * implicitly by `redeemCoupon`'s atomic push once the user does exist, so a determined
+ * double-submit still can't bypass the global `maxUses` cap, only (in the rare
+ * brand-new-guest edge case) the per-user cap on their very first booking.
+ *
+ * "order" (products/shop) is handled on a completely separate rule set from
+ * "appointment"/"packagePurchase" (services/packages) - see coupon.model.js's
+ * productDiscount block. A coupon with no productDiscount configured simply
+ * cannot be redeemed for an order at all, regardless of what its main
+ * discountType/discountValue says - there is no fallback to the services/
+ * packages rules for a product purchase.
+ */
 async function validateCoupon(code, { userId = null, kind, targetId, value } = {}) {
   if (!code) validationError("code");
 
@@ -79,29 +95,6 @@ async function validateCoupon(code, { userId = null, kind, targetId, value } = {
   const now = new Date();
   if (coupon.validFrom && now < new Date(coupon.validFrom)) badRequest("Kupon još nije aktivan");
   if (coupon.validUntil && now > new Date(coupon.validUntil)) badRequest("Kupon je istekao");
-
-  if (coupon.minAppointmentValue && value < coupon.minAppointmentValue) {
-    badRequest(`Kupon važi za iznos od najmanje ${coupon.minAppointmentValue} RSD`);
-  }
-
-  if (kind === "appointment") {
-    if (coupon.applicableServices?.length && !coupon.applicableServices.some((s) => String(s) === String(targetId))) {
-      badRequest("Kupon ne važi za izabranu uslugu");
-    }
-  } else if (kind === "packagePurchase") {
-    if (coupon.applicablePackages?.length && !coupon.applicablePackages.some((p) => String(p) === String(targetId))) {
-      badRequest("Kupon ne važi za izabrani paket");
-    }
-  } else if (kind === "order") {
-    // targetId is an array of product ids for an order (multiple line items,
-    // unlike appointment/packagePurchase which only ever have one target) - valid
-    // if the coupon has no restriction, or at least one item in the cart matches
-    if (coupon.applicableProducts?.length) {
-      const targetIds = Array.isArray(targetId) ? targetId : [targetId];
-      const matches = targetIds.some((id) => coupon.applicableProducts.some((p) => String(p) === String(id)));
-      if (!matches) badRequest("Kupon ne važi ni za jedan proizvod u porudžbini");
-    }
-  }
 
   if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
     badRequest("Kupon je dostigao maksimalan broj upotreba");
@@ -114,10 +107,61 @@ async function validateCoupon(code, { userId = null, kind, targetId, value } = {
     }
   }
 
-  const discountAmount =
-    coupon.discountType === "percentage" ? Math.round((value * coupon.discountValue) / 100) : coupon.discountValue;
+  if (kind === "order") {
+    return validateProductDiscount(coupon, { targetId, value });
+  }
+  return validateServiceOrPackageDiscount(coupon, { kind, targetId, value });
+}
 
-  return { coupon, discountAmount: Math.min(discountAmount, value) };
+function computeDiscount(discountType, discountValue, maxDiscountAmount, value) {
+  const discountAmount = discountType === "percentage" ? Math.round((value * discountValue) / 100) : discountValue;
+  const capped = maxDiscountAmount != null ? Math.min(discountAmount, maxDiscountAmount) : discountAmount;
+  return Math.min(capped, value);
+}
+
+function validateServiceOrPackageDiscount(coupon, { kind, targetId, value }) {
+  if (coupon.minValue && value < coupon.minValue) {
+    badRequest(`Kupon važi za iznos od najmanje ${coupon.minValue} RSD`);
+  }
+
+  if (kind === "appointment") {
+    if (coupon.applicableServices?.length && !coupon.applicableServices.some((s) => String(s) === String(targetId))) {
+      badRequest("Kupon ne važi za izabranu uslugu");
+    }
+  } else if (kind === "packagePurchase") {
+    if (coupon.applicablePackages?.length && !coupon.applicablePackages.some((p) => String(p) === String(targetId))) {
+      badRequest("Kupon ne važi za izabrani paket");
+    }
+  }
+
+  const discountAmount = computeDiscount(coupon.discountType, coupon.discountValue, coupon.maxDiscountAmount, value);
+  return { coupon, discountAmount };
+}
+
+function validateProductDiscount(coupon, { targetId, value }) {
+  const productDiscount = coupon.productDiscount;
+  if (!productDiscount) badRequest("Kupon ne važi za proizvode");
+
+  if (productDiscount.minOrderValue && value < productDiscount.minOrderValue) {
+    badRequest(`Kupon važi za porudžbine od najmanje ${productDiscount.minOrderValue} RSD`);
+  }
+
+  // targetId is an array of product ids for an order (multiple line items,
+  // unlike appointment/packagePurchase which only ever have one target) - valid
+  // if productDiscount has no restriction, or at least one item in the cart matches
+  if (productDiscount.applicableProducts?.length) {
+    const targetIds = Array.isArray(targetId) ? targetId : [targetId];
+    const matches = targetIds.some((id) => productDiscount.applicableProducts.some((p) => String(p) === String(id)));
+    if (!matches) badRequest("Kupon ne važi ni za jedan proizvod u porudžbini");
+  }
+
+  const discountAmount = computeDiscount(
+    productDiscount.discountType,
+    productDiscount.discountValue,
+    productDiscount.maxDiscountAmount,
+    value
+  );
+  return { coupon, discountAmount };
 }
 
 // unchanged external behavior/signature from before - every existing caller/test keeps working

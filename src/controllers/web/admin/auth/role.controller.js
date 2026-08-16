@@ -3,6 +3,7 @@ import { PERMISSIONS } from "../../../../models/role.model.js";
 import { translatePermission } from "../../../../mappers/role.mapper.js";
 import { prepareRoleListData, prepareRoleDetailsData, prepareRoleFormData } from "../../../../presenters/admin/auth/role.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 
 function getAvailablePermissions() {
@@ -104,6 +105,13 @@ export async function createRole(req, res, next) {
 
     const role = await roleService.createRole(req.body);
     logInfo(`[createRole] Rola kreirana: "${role.osnovno.naziv}"`, { roleId: role.id, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "ROLE_CREATED",
+      entity: { type: "Role", id: role.id },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Rola je uspešno kreirana", `/admin/role/detalji/${role.id}`);
   } catch (error) {
@@ -136,8 +144,23 @@ export async function updateRole(req, res, next) {
       });
     }
 
+    const existing = await roleService.getRoleForEdit(roleId);
     const updated = await roleService.updateRoleById(roleId, req.body);
     logInfo(`[updateRole] Rola #${roleId} ažurirana`, { roleId, adminId: req.session?.user?.id });
+    // updateRoleById vraca mapRoleForAdminDetail oblik (osnovno/permisije), ne
+    // getRoleForEdit oblik (name/permissions) - za poredjenje polja moramo ponovo
+    // da povucemo "edit" oblik, isto kao kod taga/kategorije, da ne bismo poredili
+    // razlicite formate polja.
+    const afterUpdate = await roleService.getRoleForEdit(roleId);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, ["name", "description", "permissions", "isDefault", "priority"]);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "ROLE_UPDATED",
+      entity: { type: "Role", id: roleId },
+      changes,
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Rola je uspešno ažurirana", `/admin/role/detalji/${updated.id}`);
   } catch (error) {
@@ -161,6 +184,13 @@ export async function deleteRole(req, res, next) {
     const { roleId } = req.params;
     await roleService.deleteRoleById(roleId);
     logInfo(`[deleteRole] Rola #${roleId} obrisana`, { roleId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "ROLE_DELETED",
+      entity: { type: "Role", id: roleId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Rola je uspešno obrisana", "/admin/role");
   } catch (error) {
     logError("[deleteRole] Greška pri brisanju role", error, { roleId: req.params.roleId, userId: req.session?.user?.id });

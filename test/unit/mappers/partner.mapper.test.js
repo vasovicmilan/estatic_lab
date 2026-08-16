@@ -15,7 +15,10 @@ function buildPartner(overrides = {}) {
   return {
     _id: id(),
     userId: buildUser(),
-    commissionRate: 10,
+    commissionRateServices: 10,
+    commissionRateProducts: 5,
+    maxCommissionAmountServices: null,
+    maxCommissionAmountProducts: null,
     isActive: true,
     notes: "",
     createdAt: new Date(),
@@ -44,11 +47,12 @@ describe("partner.mapper", () => {
   });
 
   describe("mapPartnerForAdminShort / mapPartnersForAdminList", () => {
-    it("translates isActive to Da/Ne and formats the commission rate with a % suffix", () => {
-      const partner = buildPartner({ isActive: false, commissionRate: 15 });
+    it("translates isActive to Da/Ne and formats both commission rates with a % suffix", () => {
+      const partner = buildPartner({ isActive: false, commissionRateServices: 15, commissionRateProducts: 3 });
       const mapped = mapPartnerForAdminShort(partner);
       assert.equal(mapped.aktivan, "Ne");
-      assert.equal(mapped.procenatProvizije, "15%");
+      assert.equal(mapped.procenatProvizijeUsluge, "15%");
+      assert.equal(mapped.procenatProvizijeArtikli, "3%");
     });
 
     it("mapPartnersForAdminList maps a whole array", () => {
@@ -62,11 +66,23 @@ describe("partner.mapper", () => {
       assert.equal(mapPartnerForAdminDetail(null), null);
     });
 
-    it("includes both the formatted and raw commission rate", () => {
-      const partner = buildPartner({ commissionRate: 12 });
+    it("includes both the formatted and raw commission rate for services AND products, independently", () => {
+      const partner = buildPartner({ commissionRateServices: 12, commissionRateProducts: 4 });
       const mapped = mapPartnerForAdminDetail(partner);
-      assert.equal(mapped.procenatProvizije, "12%");
-      assert.equal(mapped.procenatProvizijeRaw, 12);
+      assert.equal(mapped.procenatProvizijeUsluge, "12%");
+      assert.equal(mapped.procenatProvizijeUslugeRaw, 12);
+      assert.equal(mapped.procenatProvizijeArtikli, "4%");
+      assert.equal(mapped.procenatProvizijeArtikliRaw, 4);
+    });
+
+    it("shows 'Bez ograničenja' when a max commission amount is null, the formatted amount otherwise", () => {
+      const unlimited = mapPartnerForAdminDetail(buildPartner({ maxCommissionAmountServices: null, maxCommissionAmountProducts: null }));
+      assert.equal(unlimited.maxProvizijaUsluge, "Bez ograničenja");
+      assert.equal(unlimited.maxProvizijaArtikli, "Bez ograničenja");
+
+      const capped = mapPartnerForAdminDetail(buildPartner({ maxCommissionAmountServices: 5000, maxCommissionAmountProducts: 50000 }));
+      assert.equal(capped.maxProvizijaUsluge, "5000 RSD");
+      assert.equal(capped.maxProvizijaArtikli, "50000 RSD");
     });
 
     it("defaults notes to null when empty", () => {
@@ -94,10 +110,10 @@ describe("partner.mapper", () => {
   });
 
   describe("mapPartnerForPartnerDetail - the partner's own dashboard, no admin-only fields", () => {
-    it("exposes only id/name/commission rate", () => {
+    it("exposes only id/name/both commission rates", () => {
       const partner = buildPartner();
       const mapped = mapPartnerForPartnerDetail(partner);
-      assert.deepEqual(Object.keys(mapped).sort(), ["id", "imePrezime", "procenatProvizije"]);
+      assert.deepEqual(Object.keys(mapped).sort(), ["id", "imePrezime", "procenatProvizijeArtikli", "procenatProvizijeUsluge"]);
     });
   });
 
@@ -125,7 +141,7 @@ describe("partner.mapper", () => {
 
     it("routes any non-admin role to mapPartnerForPartnerDetail", () => {
       const mapped = mapPartner(buildPartner(), "partner", "detail");
-      assert.deepEqual(Object.keys(mapped).sort(), ["id", "imePrezime", "procenatProvizije"]);
+      assert.deepEqual(Object.keys(mapped).sort(), ["id", "imePrezime", "procenatProvizijeArtikli", "procenatProvizijeUsluge"]);
     });
   });
 });

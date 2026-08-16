@@ -240,18 +240,33 @@ export function buildCoupon(overrides = {}) {
     code: "DOBRODOSLI10",
     discountType: "percentage",
     discountValue: 10,
-    minAppointmentValue: 0,
+    maxDiscountAmount: null,
+    minValue: 0,
     maxUses: null,
     maxUsesPerUser: 1,
     usedCount: 0,
     usageHistory: [],
     applicableServices: [],
     applicablePackages: [],
+    // null = ne vazi za artikle uopste, isti "namerno restriktivan" default kao
+    // u samoj shemi - videti coupon.model.js
+    productDiscount: null,
     validFrom: new Date("2026-01-01"),
     validUntil: new Date("2026-12-31"),
     isActive: true,
     createdAt: new Date(),
     updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+export function buildProductDiscount(overrides = {}) {
+  return {
+    discountType: "percentage",
+    discountValue: 10,
+    maxDiscountAmount: null,
+    minOrderValue: 0,
+    applicableProducts: [],
     ...overrides,
   };
 }
@@ -499,6 +514,7 @@ export default {
   buildPackage,
   buildAppointment,
   buildCoupon,
+  buildProductDiscount,
   buildPackagePurchase,
   buildPost,
   buildContact,

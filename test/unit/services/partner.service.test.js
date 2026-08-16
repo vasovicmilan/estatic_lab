@@ -24,7 +24,10 @@ function buildPartner(overrides = {}) {
   return {
     _id: id(),
     userId: { _id: id(), firstName: "Petar", lastName: "Petrovic", email: "petar@example.com" },
-    commissionRate: 10,
+    commissionRateServices: 10,
+    commissionRateProducts: 5,
+    maxCommissionAmountServices: null,
+    maxCommissionAmountProducts: null,
     isActive: true,
     notes: "",
     createdAt: new Date(),
@@ -35,20 +38,44 @@ function buildPartner(overrides = {}) {
 
 describe("partner.service", () => {
   describe("createPartner - validation", () => {
-    it("requires a commissionRate to be provided at all", async () => {
-      await assert.rejects(() => partnerService.createPartner({ userId: id() }), (err) => err.statusCode === 400);
-    });
-
-    it("rejects a commissionRate below 0", async () => {
+    it("requires a commissionRateServices to be provided at all", async () => {
       await assert.rejects(
-        () => partnerService.createPartner({ userId: id(), commissionRate: -5 }),
+        () => partnerService.createPartner({ userId: id(), commissionRateProducts: 5 }),
         (err) => err.statusCode === 400
       );
     });
 
-    it("rejects a commissionRate above 100", async () => {
+    it("requires a commissionRateProducts to be provided at all", async () => {
       await assert.rejects(
-        () => partnerService.createPartner({ userId: id(), commissionRate: 150 }),
+        () => partnerService.createPartner({ userId: id(), commissionRateServices: 10 }),
+        (err) => err.statusCode === 400
+      );
+    });
+
+    it("rejects a commissionRateServices below 0", async () => {
+      await assert.rejects(
+        () => partnerService.createPartner({ userId: id(), commissionRateServices: -5, commissionRateProducts: 5 }),
+        (err) => err.statusCode === 400
+      );
+    });
+
+    it("rejects a commissionRateServices above 100", async () => {
+      await assert.rejects(
+        () => partnerService.createPartner({ userId: id(), commissionRateServices: 150, commissionRateProducts: 5 }),
+        (err) => err.statusCode === 400
+      );
+    });
+
+    it("rejects a commissionRateProducts below 0", async () => {
+      await assert.rejects(
+        () => partnerService.createPartner({ userId: id(), commissionRateServices: 10, commissionRateProducts: -1 }),
+        (err) => err.statusCode === 400
+      );
+    });
+
+    it("rejects a commissionRateProducts above 100", async () => {
+      await assert.rejects(
+        () => partnerService.createPartner({ userId: id(), commissionRateServices: 10, commissionRateProducts: 150 }),
         (err) => err.statusCode === 400
       );
     });
@@ -56,7 +83,7 @@ describe("partner.service", () => {
     it("rejects a user who already has a partner profile", async (t) => {
       t.mock.method(partnerRepo, "findPartnerByUserId", async () => buildPartner());
       await assert.rejects(
-        () => partnerService.createPartner({ userId: id(), commissionRate: 10 }),
+        () => partnerService.createPartner({ userId: id(), commissionRateServices: 10, commissionRateProducts: 5 }),
         (err) => err.statusCode === 409
       );
     });
@@ -65,7 +92,7 @@ describe("partner.service", () => {
       t.mock.method(partnerRepo, "findPartnerByUserId", async () => null);
       t.mock.method(roleService, "findRoleByName", async () => null);
       await assert.rejects(
-        () => partnerService.createPartner({ userId: id(), commissionRate: 10 }),
+        () => partnerService.createPartner({ userId: id(), commissionRateServices: 10, commissionRateProducts: 5 }),
         (err) => err.statusCode === 400
       );
     });
@@ -85,7 +112,7 @@ describe("partner.service", () => {
       });
       t.mock.method(partnerRepo, "findPartnerById", async () => created);
 
-      await partnerService.createPartner({ userId: id(), commissionRate: 10 });
+      await partnerService.createPartner({ userId: id(), commissionRateServices: 10, commissionRateProducts: 5 });
 
       assert.deepEqual(updatedRolePayload.role, partnerRole._id);
     });
@@ -103,16 +130,23 @@ describe("partner.service", () => {
       });
       t.mock.method(partnerRepo, "findPartnerById", async () => created);
 
-      await partnerService.createPartner({ userId: id(), commissionRate: 10 });
+      await partnerService.createPartner({ userId: id(), commissionRateServices: 10, commissionRateProducts: 5 });
 
       assert.equal(updateCalled, false, "an existing admin's role must never be silently downgraded to partner");
     });
   });
 
   describe("updatePartnerById", () => {
-    it("rejects an out-of-range commissionRate on update too", async () => {
+    it("rejects an out-of-range commissionRateServices on update too", async () => {
       await assert.rejects(
-        () => partnerService.updatePartnerById(id().toString(), { commissionRate: 200 }),
+        () => partnerService.updatePartnerById(id().toString(), { commissionRateServices: 200 }),
+        (err) => err.statusCode === 400
+      );
+    });
+
+    it("rejects an out-of-range commissionRateProducts on update too", async () => {
+      await assert.rejects(
+        () => partnerService.updatePartnerById(id().toString(), { commissionRateProducts: -10 }),
         (err) => err.statusCode === 400
       );
     });
@@ -122,7 +156,7 @@ describe("partner.service", () => {
       await assert.rejects(() => partnerService.updatePartnerById(id().toString(), { notes: "x" }), (err) => err.statusCode === 404);
     });
 
-    it("allows an update that omits commissionRate entirely (partial update)", async (t) => {
+    it("allows an update that omits both commission rates entirely (partial update)", async (t) => {
       const updated = buildPartner();
       t.mock.method(partnerRepo, "updatePartnerById", async () => updated);
       t.mock.method(partnerRepo, "findPartnerById", async () => updated);

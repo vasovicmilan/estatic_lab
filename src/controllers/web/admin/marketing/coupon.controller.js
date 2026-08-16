@@ -34,10 +34,10 @@ function buildCouponPayload(req) {
   const data = { ...req.body };
   data.applicableServices = toIdArray(req.body.applicableServices);
   data.applicablePackages = toIdArray(req.body.applicablePackages);
-  data.applicableProducts = toIdArray(req.body.applicableProducts);
   data.partner = req.body.partner || null;
   data.discountValue = req.body.discountValue != null ? Number(req.body.discountValue) : undefined;
-  data.minAppointmentValue = req.body.minAppointmentValue ? Number(req.body.minAppointmentValue) : 0;
+  data.maxDiscountAmount = req.body.maxDiscountAmount ? Number(req.body.maxDiscountAmount) : null;
+  data.minValue = req.body.minValue ? Number(req.body.minValue) : 0;
   // 0 and blank both mean "no limit" - normalized to null here so there's one
   // canonical "unlimited" representation everywhere downstream. Previously this
   // used a plain truthy check (`req.body.maxUses ? ... : null`), which mishandled
@@ -49,6 +49,33 @@ function buildCouponPayload(req) {
   data.maxUsesPerUser = req.body.maxUsesPerUser && Number(req.body.maxUsesPerUser) > 0 ? Number(req.body.maxUsesPerUser) : null;
   data.validUntil = req.body.validUntil || null;
   data.isActive = parseCheckbox(req.body.isActive, true);
+
+  // productDiscount arrives as flat fields from the generic admin form (see
+  // coupon.mapper.js's mapCouponForEdit for the matching unflatten-on-read side) -
+  // rebuilt into the nested shape the schema expects here. Unchecking the
+  // "enable" checkbox (or never checking it) stores null, not an object with
+  // zeroed-out values - null is what coupon.service.js's validateProductDiscount
+  // treats as "this coupon cannot be used on a product order at all", which is
+  // the intended default, not "0% off everything".
+  const productDiscountEnabled = parseCheckbox(req.body.productDiscountEnabled, false);
+  data.productDiscount = productDiscountEnabled
+    ? {
+        discountType: req.body.productDiscountType,
+        discountValue: req.body.productDiscountValue != null ? Number(req.body.productDiscountValue) : 0,
+        maxDiscountAmount: req.body.productDiscountMaxAmount ? Number(req.body.productDiscountMaxAmount) : null,
+        minOrderValue: req.body.productMinOrderValue ? Number(req.body.productMinOrderValue) : 0,
+        applicableProducts: toIdArray(req.body.applicableProducts),
+      }
+    : null;
+  // these were only ever inputs for the block above, never real top-level schema
+  // fields - drop them so they don't get passed through to Mongoose as stray keys
+  delete data.productDiscountEnabled;
+  delete data.productDiscountType;
+  delete data.productDiscountValue;
+  delete data.productDiscountMaxAmount;
+  delete data.productMinOrderValue;
+  delete data.applicableProducts;
+
   return data;
 }
 
@@ -194,11 +221,17 @@ export async function updateCoupon(req, res, next) {
       "code",
       "discountType",
       "discountValue",
-      "minAppointmentValue",
+      "maxDiscountAmount",
+      "minValue",
       "maxUses",
       "maxUsesPerUser",
       "validUntil",
       "isActive",
+      "productDiscountEnabled",
+      "productDiscountType",
+      "productDiscountValue",
+      "productDiscountMaxAmount",
+      "productMinOrderValue",
     ]);
     await auditLogService.recordAuditLog({
       actor: req.session?.user,

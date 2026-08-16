@@ -5,6 +5,7 @@ import {
   prepareResourceFormData,
 } from "../../../../presenters/admin/catalog/resource.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
@@ -95,6 +96,13 @@ export async function createResource(req, res, next) {
     const data = { ...req.body, isActive: parseCheckbox(req.body.isActive, true) };
     const resource = await resourceService.createResource(data);
     logInfo(`[createResource] Resurs kreiran: "${resource.naziv}"`, { resourceId: resource.id, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "RESOURCE_CREATED",
+      entity: { type: "Resource", id: resource.id },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Resurs je uspešno kreiran", `/admin/resursi/detalji/${resource.id}`);
   } catch (error) {
@@ -131,6 +139,16 @@ export async function updateResource(req, res, next) {
     const data = { ...req.body, isActive: parseCheckbox(req.body.isActive, existing.isActive) };
     const updated = await resourceService.updateResourceById(resourceId, data);
     logInfo(`[updateResource] Resurs #${resourceId} ažuriran`, { resourceId, adminId: req.session?.user?.id });
+    const afterUpdate = await resourceService.getResourceForEdit(resourceId);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, ["name", "capacity", "isActive", "notes"]);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "RESOURCE_UPDATED",
+      entity: { type: "Resource", id: resourceId },
+      changes,
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Resurs je uspešno ažuriran", `/admin/resursi/detalji/${updated.id}`);
   } catch (error) {
@@ -154,6 +172,13 @@ export async function deleteResource(req, res, next) {
     const { resourceId } = req.params;
     await resourceService.deleteResourceById(resourceId);
     logInfo(`[deleteResource] Resurs #${resourceId} obrisan`, { resourceId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "RESOURCE_DELETED",
+      entity: { type: "Resource", id: resourceId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Resurs je uspešno obrisan", "/admin/resursi");
   } catch (error) {
     logError("[deleteResource] Greška pri brisanju resursa", error, { resourceId: req.params.resourceId, userId: req.session?.user?.id });

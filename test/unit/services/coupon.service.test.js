@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import couponRepo from "../../../src/repositories/coupon.repository.js";
 import * as couponService from "../../../src/services/coupon.service.js";
-import { buildCoupon, id } from "../../helpers/factories.js";
+import { buildCoupon, buildProductDiscount, id } from "../../helpers/factories.js";
 
 describe("coupon.service", () => {
   describe("createCoupon", () => {
@@ -65,7 +65,7 @@ describe("coupon.service", () => {
     });
 
     it("rejects a booking value below the coupon's minimum", async (t) => {
-      t.mock.method(couponRepo, "findCouponByCode", async () => buildCoupon({ minAppointmentValue: 5000 }));
+      t.mock.method(couponRepo, "findCouponByCode", async () => buildCoupon({ minValue: 5000 }));
       await assert.rejects(
         () => couponService.validateCouponForBooking("KOD", { appointmentValue: 3000 }),
         (err) => err.statusCode === 400
@@ -129,6 +129,23 @@ describe("coupon.service", () => {
       const result = await couponService.validateCouponForBooking("KOD", { appointmentValue: 2000 });
       assert.equal(result.discountAmount, 2000);
     });
+
+    it("caps a percentage discount at maxDiscountAmount when set", async (t) => {
+      t.mock.method(couponRepo, "findCouponByCode", async () =>
+        buildCoupon({ discountType: "percentage", discountValue: 50, maxDiscountAmount: 300 })
+      );
+      // 50% of 1000 would be 500, but the cap limits it to 300
+      const result = await couponService.validateCouponForBooking("KOD", { appointmentValue: 1000 });
+      assert.equal(result.discountAmount, 300);
+    });
+
+    it("does not apply any cap when maxDiscountAmount is null", async (t) => {
+      t.mock.method(couponRepo, "findCouponByCode", async () =>
+        buildCoupon({ discountType: "percentage", discountValue: 50, maxDiscountAmount: null })
+      );
+      const result = await couponService.validateCouponForBooking("KOD", { appointmentValue: 1000 });
+      assert.equal(result.discountAmount, 500);
+    });
   });
 });
 
@@ -175,6 +192,93 @@ describe("validateCouponForPackagePurchase", () => {
     t.mock.method(couponRepo, "findCouponByCode", async () => buildCoupon({ maxUses: 1, usedCount: 1 }));
     await assert.rejects(
       () => couponService.validateCouponForPackagePurchase("KOD", { packageId: id(), purchaseValue: 8000 }),
+      (err) => err.statusCode === 400
+    );
+  });
+});
+
+describe("validateCouponForOrder - separate rule set for products (artikli)", () => {
+  it("rejects a coupon with no productDiscount configured at all - main discountType/Value never apply to orders", async (t) => {
+    // main block says 50% off, but productDiscount was never set up for this
+    // coupon - it must be unusable on a product order regardless
+    t.mock.method(couponRepo, "findCouponByCode", async () => buildCoupon({ discountType: "percentage", discountValue: 50, productDiscount: null }));
+    await assert.rejects(
+      () => couponService.validateCouponForOrder("KOD", { productIds: [id()], orderValue: 10000 }),
+      (err) => err.statusCode === 400
+    );
+  });
+
+  it("rejects an order value below productDiscount.minOrderValue", async (t) => {
+    t.mock.method(couponRepo, "findCouponByCode", async () =>
+      buildCoupon({ productDiscount: buildProductDiscount({ minOrderValue: 5000 }) })
+    );
+    await assert.rejects(
+      () => couponService.validateCouponForOrder("KOD", { productIds: [id()], orderValue: 3000 }),
+      (err) => err.statusCode === 400
+    );
+  });
+
+  it("rejects when none of the order's products are on productDiscount.applicableProducts", async (t) => {
+    const allowedProductId = id();
+    t.mock.method(couponRepo, "findCouponByCode", async () =>
+      buildCoupon({ productDiscount: buildProductDiscount({ applicableProducts: [allowedProductId] }) })
+    );
+    await assert.rejects(
+      () => couponService.validateCouponForOrder("KOD", { productIds: [id(), id()], orderValue: 10000 }),
+      (err) => err.statusCode === 400
+    );
+  });
+
+  it("accepts when at least one product in the order matches applicableProducts", async (t) => {
+    const allowedProductId = id();
+    const otherProductId = id();
+    t.mock.method(couponRepo, "findCouponByCode", async () =>
+      buildCoupon({
+        productDiscount: buildProductDiscount({ applicableProducts: [allowedProductId], discountType: "fixed", discountValue: 2000 }),
+      })
+    );
+    const result = await couponService.validateCouponForOrder("KOD", { productIds: [otherProductId, allowedProductId], orderValue: 15000 });
+    assert.equal(result.discountAmount, 2000);
+  });
+
+  it("computes a percentage discount against the productDiscount rate, independent of the main discountType/Value", async (t) => {
+    t.mock.method(couponRepo, "findCouponByCode", async () =>
+      buildCoupon({
+        discountType: "fixed",
+        discountValue: 999, // main block value - must be ignored entirely for an order
+        productDiscount: buildProductDiscount({ discountType: "percentage", discountValue: 5 }),
+      })
+    );
+    // 5% of 20000 = 1000, not anywhere near the main block's fixed 999
+    const result = await couponService.validateCouponForOrder("KOD", { productIds: [id()], orderValue: 20000 });
+    assert.equal(result.discountAmount, 1000);
+  });
+
+  it("caps a percentage product discount at productDiscount.maxDiscountAmount - the exact scenario a device sale needs", async (t) => {
+    t.mock.method(couponRepo, "findCouponByCode", async () =>
+      buildCoupon({
+        productDiscount: buildProductDiscount({ discountType: "percentage", discountValue: 15, maxDiscountAmount: 5000 }),
+      })
+    );
+    // 15% of a 200000 RSD device would be 30000, capped down to 5000
+    const result = await couponService.validateCouponForOrder("KOD", { productIds: [id()], orderValue: 200000 });
+    assert.equal(result.discountAmount, 5000);
+  });
+
+  it("never discounts more than the order's own value", async (t) => {
+    t.mock.method(couponRepo, "findCouponByCode", async () =>
+      buildCoupon({ productDiscount: buildProductDiscount({ discountType: "fixed", discountValue: 50000 }) })
+    );
+    const result = await couponService.validateCouponForOrder("KOD", { productIds: [id()], orderValue: 3000 });
+    assert.equal(result.discountAmount, 3000);
+  });
+
+  it("respects the same maxUses cap as booking/package redemptions", async (t) => {
+    t.mock.method(couponRepo, "findCouponByCode", async () =>
+      buildCoupon({ maxUses: 1, usedCount: 1, productDiscount: buildProductDiscount() })
+    );
+    await assert.rejects(
+      () => couponService.validateCouponForOrder("KOD", { productIds: [id()], orderValue: 10000 }),
       (err) => err.statusCode === 400
     );
   });

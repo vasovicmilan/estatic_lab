@@ -119,13 +119,23 @@ export async function createPartner(req, res, next) {
       });
     }
 
-    const partner = await partnerService.createPartner({ ...req.body, commissionRate: Number(req.body.commissionRate) });
+    const partner = await partnerService.createPartner({
+      ...req.body,
+      commissionRateServices: Number(req.body.commissionRateServices),
+      commissionRateProducts: Number(req.body.commissionRateProducts),
+      maxCommissionAmountServices: req.body.maxCommissionAmountServices ? Number(req.body.maxCommissionAmountServices) : null,
+      maxCommissionAmountProducts: req.body.maxCommissionAmountProducts ? Number(req.body.maxCommissionAmountProducts) : null,
+    });
     logInfo(`[createPartner] Partner kreiran za korisnika #${req.body.userId}`, { partnerId: partner.id, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "PARTNER_CREATED",
       entity: { type: "Partner", id: partner.id },
-      changes: { userId: { old: null, new: req.body.userId }, commissionRate: { old: null, new: Number(req.body.commissionRate) } },
+      changes: {
+        userId: { old: null, new: req.body.userId },
+        commissionRateServices: { old: null, new: Number(req.body.commissionRateServices) },
+        commissionRateProducts: { old: null, new: Number(req.body.commissionRateProducts) },
+      },
       req,
       success: true,
     });
@@ -166,12 +176,26 @@ export async function updatePartner(req, res, next) {
     const existing = await partnerService.getPartnerForEdit(partnerId);
     const updated = await partnerService.updatePartnerById(partnerId, {
       ...req.body,
-      ...(req.body.commissionRate !== undefined ? { commissionRate: Number(req.body.commissionRate) } : {}),
+      ...(req.body.commissionRateServices !== undefined ? { commissionRateServices: Number(req.body.commissionRateServices) } : {}),
+      ...(req.body.commissionRateProducts !== undefined ? { commissionRateProducts: Number(req.body.commissionRateProducts) } : {}),
+      ...(req.body.maxCommissionAmountServices !== undefined
+        ? { maxCommissionAmountServices: req.body.maxCommissionAmountServices ? Number(req.body.maxCommissionAmountServices) : null }
+        : {}),
+      ...(req.body.maxCommissionAmountProducts !== undefined
+        ? { maxCommissionAmountProducts: req.body.maxCommissionAmountProducts ? Number(req.body.maxCommissionAmountProducts) : null }
+        : {}),
     });
     logInfo(`[updatePartner] Partner #${partnerId} ažuriran`, { partnerId, adminId: req.session?.user?.id });
 
     const afterUpdate = await partnerService.getPartnerForEdit(partnerId);
-    const changes = auditLogService.computeChanges(existing, afterUpdate, ["commissionRate", "isActive", "notes"]);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, [
+      "commissionRateServices",
+      "commissionRateProducts",
+      "maxCommissionAmountServices",
+      "maxCommissionAmountProducts",
+      "isActive",
+      "notes",
+    ]);
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "PARTNER_UPDATED",

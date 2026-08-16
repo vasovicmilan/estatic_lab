@@ -7,7 +7,8 @@ export function preparePartnerListData(result, query = {}) {
     columns: [
       { key: "imePrezime", label: "Ime i prezime" },
       { key: "email", label: "Email" },
-      { key: "procenatProvizije", label: "Procenat provizije" },
+      { key: "procenatProvizijeUsluge", label: "Provizija - usluge/paketi" },
+      { key: "procenatProvizijeArtikli", label: "Provizija - artikli" },
       { key: "aktivan", label: "Aktivan" },
       { key: "kreiran", label: "Kreiran" },
     ],
@@ -92,7 +93,10 @@ export function preparePartnerDetailsData(partner, balance = null, coupons = [],
         title: "Status",
         type: "table",
         rows: [
-          { label: "Procenat provizije", value: partner.procenatProvizije },
+          { label: "Provizija - usluge/paketi", value: partner.procenatProvizijeUsluge },
+          { label: "Provizija - artikli", value: partner.procenatProvizijeArtikli },
+          { label: "Max. provizija po transakciji - usluge/paketi", value: partner.maxProvizijaUsluge },
+          { label: "Max. provizija po transakciji - artikli", value: partner.maxProvizijaArtikli },
           { label: "Aktivan", value: partner.aktivan },
           { label: "Napomena", value: partner.napomena || "-" },
         ],
@@ -141,7 +145,17 @@ export function preparePartnerDetailsData(partner, balance = null, coupons = [],
 
 export function preparePartnerFormData(partner = null, { userOptions = [] } = {}) {
   const isEdit = !!partner;
-  const values = isEdit ? partner : { userId: "", commissionRate: "", isActive: true, notes: "" };
+  const values = isEdit
+    ? partner
+    : {
+        userId: "",
+        commissionRateServices: "",
+        commissionRateProducts: "",
+        maxCommissionAmountServices: null,
+        maxCommissionAmountProducts: null,
+        isActive: true,
+        notes: "",
+      };
 
   const fields = [];
 
@@ -160,16 +174,47 @@ export function preparePartnerFormData(partner = null, { userOptions = [] } = {}
 
   fields.push(
     {
-      name: "commissionRate",
-      label: "Procenat provizije",
+      name: "commissionRateServices",
+      label: "Procenat provizije - usluge i paketi",
       type: "number",
       required: true,
       min: 0,
       max: 100,
       step: "0.01",
       width: 6,
-      value: values.commissionRate,
-      help: "Procenat od diskontovane vrednosti prodaje koji partner dobija kao proviziju.",
+      value: values.commissionRateServices,
+      help: "Procenat od diskontovane vrednosti termina/paketa koji partner dobija kao proviziju.",
+    },
+    {
+      name: "commissionRateProducts",
+      label: "Procenat provizije - artikli (shop)",
+      type: "number",
+      required: true,
+      min: 0,
+      max: 100,
+      step: "0.01",
+      width: 6,
+      value: values.commissionRateProducts,
+      help: "Odvojeno od gornje stope - katalog artikala ide od sitnog potrošnog materijala do skupih uređaja, pa ista % stopa retko ima smisla za oboje.",
+    },
+    {
+      name: "maxCommissionAmountServices",
+      label: "Maksimalna provizija po transakciji - usluge/paketi u RSD (opciono)",
+      type: "number",
+      min: 0,
+      step: "0.01",
+      width: 6,
+      value: values.maxCommissionAmountServices,
+    },
+    {
+      name: "maxCommissionAmountProducts",
+      label: "Maksimalna provizija po transakciji - artikli u RSD (opciono)",
+      type: "number",
+      min: 0,
+      step: "0.01",
+      width: 6,
+      value: values.maxCommissionAmountProducts,
+      help: "Preporučeno podesiti ako partner ima kupon koji važi i za skuplje uređaje - sprečava da jedna velika porudžbina generiše neproporcionalno visoku proviziju.",
     },
     { name: "notes", label: "Napomena", type: "textarea", rows: 3, width: 12, value: values.notes, help: "Najviše 500 karaktera." },
     { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive }

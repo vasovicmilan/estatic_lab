@@ -29,7 +29,8 @@ export function mapPartnerForAdminShort(partner) {
     id: partner._id.toString(),
     imePrezime: getFullName(partner),
     email: getEmail(partner),
-    procenatProvizije: `${partner.commissionRate}%`,
+    procenatProvizijeUsluge: `${partner.commissionRateServices}%`,
+    procenatProvizijeArtikli: `${partner.commissionRateProducts}%`,
     aktivan: partner.isActive ? "Da" : "Ne",
     kreiran: formatDateTime(partner.createdAt),
   };
@@ -48,8 +49,12 @@ export function mapPartnerForAdminDetail(partner) {
       email: getEmail(partner),
       telefon: getPhone(partner),
     },
-    procenatProvizije: `${partner.commissionRate}%`,
-    procenatProvizijeRaw: partner.commissionRate,
+    procenatProvizijeUsluge: `${partner.commissionRateServices}%`,
+    procenatProvizijeUslugeRaw: partner.commissionRateServices,
+    procenatProvizijeArtikli: `${partner.commissionRateProducts}%`,
+    procenatProvizijeArtikliRaw: partner.commissionRateProducts,
+    maxProvizijaUsluge: partner.maxCommissionAmountServices ? `${partner.maxCommissionAmountServices} RSD` : "Bez ograničenja",
+    maxProvizijaArtikli: partner.maxCommissionAmountProducts ? `${partner.maxCommissionAmountProducts} RSD` : "Bez ograničenja",
     aktivan: partner.isActive ? "Da" : "Ne",
     napomena: partner.notes || null,
     vreme: {
@@ -68,7 +73,10 @@ export function mapPartnerForEdit(partner) {
     imePrezime: getFullName(partner),
     email: getEmail(partner),
     userId: partner.userId?._id?.toString() || partner.userId?.toString(),
-    commissionRate: partner.commissionRate,
+    commissionRateServices: partner.commissionRateServices,
+    commissionRateProducts: partner.commissionRateProducts,
+    maxCommissionAmountServices: partner.maxCommissionAmountServices ?? null,
+    maxCommissionAmountProducts: partner.maxCommissionAmountProducts ?? null,
     isActive: partner.isActive,
     notes: partner.notes || "",
   };
@@ -79,7 +87,8 @@ export function mapPartnerForPartnerDetail(partner) {
   return {
     id: partner._id.toString(),
     imePrezime: getFullName(partner),
-    procenatProvizije: `${partner.commissionRate}%`,
+    procenatProvizijeUsluge: `${partner.commissionRateServices}%`,
+    procenatProvizijeArtikli: `${partner.commissionRateProducts}%`,
   };
 }
 

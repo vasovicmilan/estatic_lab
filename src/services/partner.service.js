@@ -52,8 +52,10 @@ export async function findPartnerProfile(userId) {
 export async function createPartner(data) {
   if (!data) validationError("data");
   if (!data.userId) validationError("userId");
-  if (data.commissionRate === undefined || data.commissionRate === null) validationError("commissionRate");
-  if (data.commissionRate < 0 || data.commissionRate > 100) badRequest("Procenat provizije mora biti između 0 i 100");
+  if (data.commissionRateServices === undefined || data.commissionRateServices === null) validationError("commissionRateServices");
+  if (data.commissionRateProducts === undefined || data.commissionRateProducts === null) validationError("commissionRateProducts");
+  if (data.commissionRateServices < 0 || data.commissionRateServices > 100) badRequest("Procenat provizije za usluge/pakete mora biti između 0 i 100");
+  if (data.commissionRateProducts < 0 || data.commissionRateProducts > 100) badRequest("Procenat provizije za artikle mora biti između 0 i 100");
 
   const existing = await partnerRepo.findPartnerByUserId(data.userId);
   if (existing) conflict("Ovaj korisnik već ima profil partnera");
@@ -63,7 +65,10 @@ export async function createPartner(data) {
 
   const created = await partnerRepo.createPartner({
     userId: data.userId,
-    commissionRate: data.commissionRate,
+    commissionRateServices: data.commissionRateServices,
+    commissionRateProducts: data.commissionRateProducts,
+    maxCommissionAmountServices: data.maxCommissionAmountServices ?? null,
+    maxCommissionAmountProducts: data.maxCommissionAmountProducts ?? null,
     isActive: data.isActive ?? true,
     notes: data.notes || "",
   });
@@ -84,14 +89,22 @@ export async function createPartner(data) {
     });
   }
 
-  logInfo("Partner created", { partnerId: created._id, userId: data.userId, commissionRate: data.commissionRate });
+  logInfo("Partner created", {
+    partnerId: created._id,
+    userId: data.userId,
+    commissionRateServices: data.commissionRateServices,
+    commissionRateProducts: data.commissionRateProducts,
+  });
   return getPartnerById(created._id);
 }
 
 export async function updatePartnerById(partnerId, data) {
   if (!partnerId) validationError("partnerId");
-  if (data.commissionRate !== undefined && (data.commissionRate < 0 || data.commissionRate > 100)) {
-    badRequest("Procenat provizije mora biti između 0 i 100");
+  if (data.commissionRateServices !== undefined && (data.commissionRateServices < 0 || data.commissionRateServices > 100)) {
+    badRequest("Procenat provizije za usluge/pakete mora biti između 0 i 100");
+  }
+  if (data.commissionRateProducts !== undefined && (data.commissionRateProducts < 0 || data.commissionRateProducts > 100)) {
+    badRequest("Procenat provizije za artikle mora biti između 0 i 100");
   }
 
   const updated = await partnerRepo.updatePartnerById(partnerId, data);

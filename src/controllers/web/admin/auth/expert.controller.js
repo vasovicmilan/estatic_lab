@@ -2,6 +2,7 @@ import * as expertService from "../../../../services/expert.service.js";
 import * as serviceService from "../../../../services/service.service.js";
 import { prepareExpertListData, prepareExpertDetailsData, prepareExpertFormData } from "../../../../presenters/admin/auth/expert.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
 
@@ -124,6 +125,13 @@ export async function createExpert(req, res, next) {
 
     const expert = await expertService.createExpert(data);
     logInfo(`[createExpert] Ekspert kreiran: "${expert.osnovno.ime} ${expert.osnovno.prezime}"`, { expertId: expert.id, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "EXPERT_CREATED",
+      entity: { type: "Expert", id: expert.id },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Ekspert je uspešno kreiran", `/admin/eksperti/detalji/${expert.id}`);
   } catch (error) {
@@ -167,6 +175,26 @@ export async function updateExpert(req, res, next) {
 
     const updated = await expertService.updateExpertById(expertId, data);
     logInfo(`[updateExpert] Ekspert #${expertId} ažuriran`, { expertId, adminId: req.session?.user?.id });
+    const afterUpdate = await expertService.getExpertForEdit(expertId);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, [
+      "firstName",
+      "lastName",
+      "title",
+      "shortBio",
+      "bio",
+      "specializations",
+      "services",
+      "isActive",
+      "order",
+    ]);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "EXPERT_UPDATED",
+      entity: { type: "Expert", id: expertId },
+      changes,
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Ekspert je uspešno ažuriran", `/admin/eksperti/detalji/${updated.id}`);
   } catch (error) {
@@ -196,6 +224,13 @@ export async function deleteExpert(req, res, next) {
     const { expertId } = req.params;
     await expertService.deleteExpertById(expertId);
     logInfo(`[deleteExpert] Ekspert #${expertId} obrisan`, { expertId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "EXPERT_DELETED",
+      entity: { type: "Expert", id: expertId },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Ekspert je uspešno obrisan", "/admin/eksperti");
   } catch (error) {
     logError("[deleteExpert] Greška pri brisanju eksperta", error, { expertId: req.params.expertId, userId: req.session?.user?.id });

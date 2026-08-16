@@ -18,7 +18,11 @@ export const validateCouponCreate = [
     .notEmpty().withMessage("Vrednost popusta je obavezna")
     .isFloat({ min: 0 }).withMessage("Vrednost popusta mora biti pozitivan broj"),
 
-  body("minAppointmentValue")
+  body("maxDiscountAmount")
+    .optional({ values: "falsy" })
+    .isFloat({ min: 0 }).withMessage("Maksimalan iznos popusta mora biti pozitivan broj"),
+
+  body("minValue")
     .optional()
     .isFloat({ min: 0 }).withMessage("Minimalna vrednost mora biti pozitivan broj"),
 
@@ -37,6 +41,25 @@ export const validateCouponCreate = [
   body("applicablePackages")
     .optional()
     .custom(isArrayOrString).withMessage("Neispravni paketi"),
+
+  // ---- deo za artikle (opciono - videti productDiscountEnabled) ----
+  booleanishField("productDiscountEnabled", true),
+
+  body("productDiscountType")
+    .optional({ values: "falsy" })
+    .isIn(["percentage", "fixed"]).withMessage("Tip mora biti 'percentage' ili 'fixed'"),
+
+  body("productDiscountValue")
+    .optional({ values: "falsy" })
+    .isFloat({ min: 0 }).withMessage("Vrednost popusta za artikle mora biti pozitivan broj"),
+
+  body("productDiscountMaxAmount")
+    .optional({ values: "falsy" })
+    .isFloat({ min: 0 }).withMessage("Maksimalan iznos popusta za artikle mora biti pozitivan broj"),
+
+  body("productMinOrderValue")
+    .optional({ values: "falsy" })
+    .isFloat({ min: 0 }).withMessage("Minimalna vrednost porudžbine mora biti pozitivan broj"),
 
   body("applicableProducts")
     .optional()
@@ -64,6 +87,14 @@ export const validateCouponUpdate = [
     .optional()
     .isFloat({ min: 0 }).withMessage("Vrednost popusta mora biti pozitivan broj"),
 
+  body("maxDiscountAmount")
+    .optional({ values: "falsy" })
+    .isFloat({ min: 0 }).withMessage("Maksimalan iznos popusta mora biti pozitivan broj"),
+
+  body("minValue")
+    .optional()
+    .isFloat({ min: 0 }).withMessage("Minimalna vrednost mora biti pozitivan broj"),
+
   body("maxUses")
     .optional({ values: "falsy" })
     .isInt({ min: 0 }).withMessage("Maksimalan broj upotreba mora biti 0 (neograničeno) ili pozitivan broj"),
@@ -83,6 +114,24 @@ export const validateCouponUpdate = [
   body("applicablePackages")
     .optional()
     .custom(isArrayOrString).withMessage("Neispravni paketi"),
+
+  booleanishField("productDiscountEnabled", true),
+
+  body("productDiscountType")
+    .optional({ values: "falsy" })
+    .isIn(["percentage", "fixed"]).withMessage("Tip mora biti 'percentage' ili 'fixed'"),
+
+  body("productDiscountValue")
+    .optional({ values: "falsy" })
+    .isFloat({ min: 0 }).withMessage("Vrednost popusta za artikle mora biti pozitivan broj"),
+
+  body("productDiscountMaxAmount")
+    .optional({ values: "falsy" })
+    .isFloat({ min: 0 }).withMessage("Maksimalan iznos popusta za artikle mora biti pozitivan broj"),
+
+  body("productMinOrderValue")
+    .optional({ values: "falsy" })
+    .isFloat({ min: 0 }).withMessage("Minimalna vrednost porudžbine mora biti pozitivan broj"),
 
   body("applicableProducts")
     .optional()

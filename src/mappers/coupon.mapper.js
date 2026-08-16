@@ -22,8 +22,8 @@ function formatMaxUses(maxUses) {
   return maxUses;
 }
 
-function formatDiscountValue(coupon) {
-  return coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `${coupon.discountValue} RSD`;
+function formatDiscountValue(discountType, discountValue) {
+  return discountType === "percentage" ? `${discountValue}%` : `${discountValue} RSD`;
 }
 
 export function mapCouponsForAdminList(coupons = []) {
@@ -34,7 +34,7 @@ export function mapCouponsForAdminList(coupons = []) {
         id: coupon._id.toString(),
         kod: coupon.code,
         tip: translateDiscountType(coupon.discountType),
-        popust: formatDiscountValue(coupon),
+        popust: formatDiscountValue(coupon.discountType, coupon.discountValue),
         maxUpotreba: formatMaxUses(coupon.maxUses),
         iskorisceno: coupon.usedCount || 0,
         aktivnost: translateActive(coupon.isActive),
@@ -54,10 +54,24 @@ export function mapCouponForAdminDetail(coupon) {
     osnovno: {
       kod: coupon.code,
       tip: translateDiscountType(coupon.discountType),
-      popust: formatDiscountValue(coupon),
-      minimalnaVrednostTermina: coupon.minAppointmentValue ? `${coupon.minAppointmentValue} RSD` : null,
+      popust: formatDiscountValue(coupon.discountType, coupon.discountValue),
+      maxPopust: coupon.maxDiscountAmount ? `${coupon.maxDiscountAmount} RSD` : null,
+      minimalnaVrednost: coupon.minValue ? `${coupon.minValue} RSD` : null,
       aktivnost: translateActive(coupon.isActive),
     },
+    // odvojen, opcioni deo kupona za artikle (shop) - potpuno nezavisan tip/vrednost/
+    // ograničenja od gornjeg "osnovno" bloka koji važi za usluge/pakete. Ako
+    // productDiscount nije podešen, ovaj kupon se uopšte ne može iskoristiti na
+    // porudžbini artikala (videti coupon.service.js's validateProductDiscount)
+    proizvodi: coupon.productDiscount
+      ? {
+          aktivno: true,
+          tip: translateDiscountType(coupon.productDiscount.discountType),
+          popust: formatDiscountValue(coupon.productDiscount.discountType, coupon.productDiscount.discountValue),
+          maxPopust: coupon.productDiscount.maxDiscountAmount ? `${coupon.productDiscount.maxDiscountAmount} RSD` : null,
+          minimalnaVrednostPorudzbine: coupon.productDiscount.minOrderValue ? `${coupon.productDiscount.minOrderValue} RSD` : null,
+        }
+      : { aktivno: false },
     ogranicenja: {
       maxUpotreba: formatMaxUses(coupon.maxUses),
       maxUpotrebaPoKorisniku: formatMaxUses(coupon.maxUsesPerUser),
@@ -73,7 +87,7 @@ export function mapCouponForAdminDetail(coupon) {
     primenljivoNaPakete: (coupon.applicablePackages || []).map((p) =>
       p?.name ? { id: p._id.toString(), naziv: p.name } : { id: resolveRefId(p) }
     ),
-    primenljivoNaProizvode: (coupon.applicableProducts || []).map((p) =>
+    primenljivoNaProizvode: (coupon.productDiscount?.applicableProducts || []).map((p) =>
       p?.name ? { id: p._id.toString(), naziv: p.name } : { id: resolveRefId(p) }
     ),
     partner: coupon.partner
@@ -108,12 +122,22 @@ export function mapCouponForEdit(coupon) {
     code: coupon.code,
     discountType: coupon.discountType,
     discountValue: coupon.discountValue,
-    minAppointmentValue: coupon.minAppointmentValue || 0,
+    maxDiscountAmount: coupon.maxDiscountAmount ?? null,
+    minValue: coupon.minValue || 0,
     maxUses: coupon.maxUses,
     maxUsesPerUser: coupon.maxUsesPerUser,
     applicableServices: (coupon.applicableServices || []).map((s) => s._id?.toString() || s.toString()),
     applicablePackages: (coupon.applicablePackages || []).map((p) => p._id?.toString() || p.toString()),
-    applicableProducts: (coupon.applicableProducts || []).map((p) => p._id?.toString() || p.toString()),
+    // spljošteno iz coupon.productDiscount (ugnježdeni objekat u bazi) u ravna
+    // polja, pošto generička admin forma vezuje flat imena polja - videti
+    // coupon.controller.js's buildCouponPayload, koji radi obrnutu transformaciju
+    // pri čuvanju.
+    productDiscountEnabled: !!coupon.productDiscount,
+    productDiscountType: coupon.productDiscount?.discountType || "percentage",
+    productDiscountValue: coupon.productDiscount?.discountValue ?? 0,
+    productDiscountMaxAmount: coupon.productDiscount?.maxDiscountAmount ?? null,
+    productMinOrderValue: coupon.productDiscount?.minOrderValue ?? 0,
+    applicableProducts: (coupon.productDiscount?.applicableProducts || []).map((p) => p._id?.toString() || p.toString()),
     partner: coupon.partner ? resolveRefId(coupon.partner) : null,
     validFrom: coupon.validFrom,
     validUntil: coupon.validUntil,
@@ -127,8 +151,8 @@ export function mapCouponForBookingPreview(coupon) {
 
   return {
     kod: coupon.code,
-    popust: formatDiscountValue(coupon),
-    minimalnaVrednostTermina: coupon.minAppointmentValue || 0,
+    popust: formatDiscountValue(coupon.discountType, coupon.discountValue),
+    minimalnaVrednostTermina: coupon.minValue || 0,
     vaziDo: formatDate(coupon.validUntil),
   };
 }

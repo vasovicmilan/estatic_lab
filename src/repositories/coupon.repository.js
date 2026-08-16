@@ -11,7 +11,7 @@ export async function findCouponById(id, { session } = {}) {
   return Coupon.findById(id)
     .populate("applicableServices", "name")
     .populate("applicablePackages", "name")
-    .populate("applicableProducts", "name")
+    .populate("productDiscount.applicableProducts", "name")
     .populate({ path: "partner", populate: { path: "userId", select: "firstName lastName" } })
     .session(session || null)
     .lean();
@@ -115,7 +115,11 @@ export async function pullPackageFromAllCoupons(packageId, { session } = {}) {
 }
 
 export async function pullProductFromAllCoupons(productId, { session } = {}) {
-  return Coupon.updateMany({ applicableProducts: productId }, { $pull: { applicableProducts: productId } }, { session });
+  return Coupon.updateMany(
+    { "productDiscount.applicableProducts": productId },
+    { $pull: { "productDiscount.applicableProducts": productId } },
+    { session }
+  );
 }
 
 // Called when a Partner is deleted - Coupon.partner is current referral-attribution
