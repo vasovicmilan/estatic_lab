@@ -63,6 +63,10 @@ export const validateProductSeoPublishStep = [
     .optional()
     .custom(isJsonArrayOrArray).withMessage("FAQ nije u ispravnom formatu"),
 
+  body("shippingClass")
+    .optional()
+    .isIn(["standard", "freight"]).withMessage("Način dostave mora biti 'standard' ili 'freight'"),
+
   booleanishField("isActive", true),
 
   collectValidationErrors,
@@ -97,6 +101,10 @@ export const validateProductUpdate = [
   body("variations")
     .optional()
     .custom(isJsonArrayOrArray).withMessage("Varijante nisu u ispravnom formatu"),
+
+  body("shippingClass")
+    .optional()
+    .isIn(["standard", "freight"]).withMessage("Način dostave mora biti 'standard' ili 'freight'"),
 
   booleanishField("isActive", true),
 

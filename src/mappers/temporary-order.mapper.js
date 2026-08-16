@@ -23,6 +23,7 @@ export function mapTemporaryOrdersForAdminList(orders = []) {
         korisnik: `${order.contactSnapshot?.firstName || ""} ${order.contactSnapshot?.lastName || ""}`.trim(),
         email: order.contactSnapshot?.email || null,
         ukupnaCena: order.totalPrice != null ? `${order.totalPrice.toFixed(2)} RSD` : "0 RSD",
+        zahtevaProceenuDostave: order.requiresShippingQuote ? "Da" : "Ne",
         istice: formatDateTime(order.tokenExpiration),
         kreirano: formatDateTime(order.createdAt),
       };
@@ -52,6 +53,11 @@ export function mapTemporaryOrderForAdminDetail(order) {
     stavke: mapItems(order.items),
     subtotal: order.subtotal,
     dostava: order.shipping,
+    // true = "freight" artikal u korpi (videti product.model.js's shippingClass) -
+    // dostava iznad je samo placeholder 0 dok admin ne unese stvarnu cenu (videti
+    // temporary-order.service.js's updateTemporaryOrderShipping). Klijent ne moze
+    // sam da potvrdi porudzbinu dok je ovo true (order.service.js's confirmOrder).
+    zahtevaProceenuDostave: order.requiresShippingQuote || false,
     kupon: order.coupon?.code || null,
     popust: order.discountApplied || 0,
     ukupnaCena: order.totalPrice,
@@ -79,6 +85,7 @@ export function mapTemporaryOrderForConfirmation(order) {
     items: order.items,
     subtotal: order.subtotal,
     shipping: order.shipping,
+    requiresShippingQuote: order.requiresShippingQuote || false,
     coupon: order.coupon,
     discountApplied: order.discountApplied,
     totalPrice: order.totalPrice,

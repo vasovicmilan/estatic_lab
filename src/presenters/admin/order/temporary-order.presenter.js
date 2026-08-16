@@ -5,6 +5,7 @@ export function prepareTempOrderListData(result, query = {}) {
       { key: "korisnik", label: "Korisnik" },
       { key: "email", label: "Email" },
       { key: "ukupnaCena", label: "Ukupno" },
+      { key: "zahtevaProceenuDostave", label: "Čeka procenu dostave" },
       { key: "istice", label: "Ističe" },
       { key: "kreirano", label: "Kreirano" },
     ],
@@ -63,13 +64,23 @@ export function prepareTempOrderDetailsData(order) {
         type: "table",
         rows: [
           { label: "Subtotal", value: `${order.subtotal} RSD` },
-          { label: "Dostava", value: `${order.dostava} RSD` },
+          { label: "Dostava", value: order.zahtevaProceenuDostave ? "Čeka procenu (veliki/teški artikal)" : `${order.dostava} RSD` },
           { label: "Kupon", value: order.kupon || "-" },
-          { label: "Ukupno", value: `${order.ukupnaCena} RSD` },
+          { label: "Ukupno", value: order.zahtevaProceenuDostave ? "Zavisi od cene dostave" : `${order.ukupnaCena} RSD` },
         ],
       },
     ],
     sidebar: [
+      ...(order.zahtevaProceenuDostave
+        ? [
+            {
+              title: "Potrebna procena dostave",
+              type: "custom",
+              content: "temporary-order-shipping-form",
+              data: { orderId: order.id },
+            },
+          ]
+        : []),
       {
         title: "Potvrdi porudžbinu",
         type: "custom",

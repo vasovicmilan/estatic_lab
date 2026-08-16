@@ -40,6 +40,13 @@ const TemporaryOrderSchema = new Schema(
     },
 
     subtotal: { type: Number, required: true, min: 0, default: 0 },
+    // when true, `shipping` is a placeholder (0), not a real quote - the cart
+    // contained at least one "freight" shippingClass product (see product.model.js)
+    // that can't ship via regular post, so no automatic price could be computed.
+    // An admin sets the real amount by hand before the order can be confirmed - see
+    // order.service.js's confirmOrder, which refuses to proceed while this is still
+    // true.
+    requiresShippingQuote: { type: Boolean, default: false },
     shipping: { type: Number, required: true, min: 0, default: 0 },
 
     coupon: {

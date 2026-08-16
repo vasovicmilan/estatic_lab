@@ -122,6 +122,7 @@ export function prepareProductDetailsData(product) {
         rows: [
           { label: "Aktivan", value: product.aktivan ? "Da" : "Ne (nacrt)" },
           { label: "Oznaka", value: product.oznaka || "Bez oznake" },
+          { label: "Način dostave", value: product.nacinDostave },
           { label: "Ukupno na stanju", value: product.stanjeUkupno },
           { label: "Broj varijanti", value: product.varijante.length },
         ],
@@ -246,6 +247,18 @@ export function prepareProductFormData(product, { categoryOptions = [], tagOptio
         { value: "sale", label: "Na akciji" },
       ],
       help: "Prikazuje se kao značka na kartici proizvoda i određuje da li se proizvod pojavljuje u odgovarajućoj sekciji na naslovnoj strani prodavnice.",
+    },
+    {
+      name: "shippingClass",
+      label: "Način dostave",
+      type: "select",
+      width: 6,
+      value: values.shippingClass || "standard",
+      options: [
+        { value: "standard", label: "Redovna pošta" },
+        { value: "freight", label: "Veliki/težak artikal (cena dostave se procenjuje ručno)" },
+      ],
+      help: "Za velike ili teške uređaje koji se ne mogu poslati redovnom poštom - kupac neće dobiti automatsku cenu dostave, admin je unosi ručno pre potvrde porudžbine.",
     },
     { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive },
   ];
@@ -398,6 +411,18 @@ export function prepareProductSeoPublishStepData(product, { productOptions = [] 
         { value: "sale", label: "Na akciji" },
       ],
       help: "Prikazuje se kao značka na kartici proizvoda i određuje da li se proizvod pojavljuje u odgovarajućoj sekciji na naslovnoj strani prodavnice.",
+    },
+    {
+      name: "shippingClass",
+      label: "Način dostave",
+      type: "select",
+      width: 6,
+      value: product.shippingClass || "standard",
+      options: [
+        { value: "standard", label: "Redovna pošta" },
+        { value: "freight", label: "Veliki/težak artikal (cena dostave se procenjuje ručno)" },
+      ],
+      help: "Za velike ili teške uređaje koji se ne mogu poslati redovnom poštom - kupac neće dobiti automatsku cenu dostave, admin je unosi ručno pre potvrde porudžbine.",
     },
     {
       name: "isActive",

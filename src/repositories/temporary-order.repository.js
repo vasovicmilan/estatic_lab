@@ -41,6 +41,20 @@ export async function deleteTemporaryOrderById(id, { session } = {}) {
   return TemporaryOrder.findByIdAndDelete(id, { session }).lean();
 }
 
+// Sets the real shipping cost for a freight-quote order and clears the flag - the
+// only mutation a TemporaryOrder gets between checkout and confirmation. Goes
+// through .save() (not findByIdAndUpdate) so the model's pre("save") hook recomputes
+// totalPrice from the new shipping value - findByIdAndUpdate would silently skip that
+// and leave totalPrice stale.
+export async function updateShippingById(id, shippingAmount, { session } = {}) {
+  const order = await TemporaryOrder.findById(id).session(session || null);
+  if (!order) return null;
+  order.shipping = shippingAmount;
+  order.requiresShippingQuote = false;
+  await order.save({ session });
+  return order.toObject();
+}
+
 export async function countTemporaryOrders(filters = {}, { session } = {}) {
   return TemporaryOrder.countDocuments(buildTemporaryOrderFilter(filters)).session(session || null);
 }
@@ -64,6 +78,7 @@ export default {
   findTemporaryOrders,
   findTemporaryOrdersPastRetention,
   deleteTemporaryOrderById,
+  updateShippingById,
   countTemporaryOrders,
   countActiveTemporaryOrdersReferencingProduct,
 };

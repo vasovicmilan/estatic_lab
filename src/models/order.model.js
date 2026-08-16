@@ -43,6 +43,10 @@ const OrderSchema = new Schema(
     },
 
     subtotal: { type: Number, required: true, min: 0, default: 0 },
+    // carried over from the TemporaryOrder this Order was created from - see that
+    // model's comment. Admin edits `shipping` to the real amount and clears this
+    // flag via updateOrderShipping (order.service.js) before the order can ship.
+    requiresShippingQuote: { type: Boolean, default: false },
     shipping: { type: Number, min: 0, default: 0 },
 
     coupon: {

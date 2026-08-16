@@ -47,6 +47,7 @@ async function createOrderFromTemporaryOrder(tempOrder) {
           items: tempOrder.items,
           subtotal: tempOrder.subtotal,
           shipping: tempOrder.shipping,
+          requiresShippingQuote: tempOrder.requiresShippingQuote || false,
           coupon: tempOrder.coupon,
           discountApplied: tempOrder.discountApplied || 0,
           note: tempOrder.note,
@@ -86,6 +87,16 @@ async function createOrderFromTemporaryOrder(tempOrder) {
 
 export async function confirmOrder(orderId, token, { ignoreExpiration = false } = {}) {
   const tempOrder = await tempOrderService.verifyToken(orderId, token, { ignoreExpiration });
+  // Freight-class items (see product.model.js's shippingClass) have no automatic
+  // shipping price - an admin has to set the real cost first (see
+  // updateTemporaryOrderShipping below). Blocking self-confirm here, rather than
+  // letting the customer lock in a `shipping: 0` order, is deliberate: the alternative
+  // is a real Order with the wrong total that someone then has to notice and fix after
+  // the fact. confirmOrderByAdmin is NOT blocked by this - an admin who has already
+  // set the real shipping amount confirms normally through that path.
+  if (tempOrder.requiresShippingQuote) {
+    badRequest("Za ovu porudžbinu je potrebna procena troškova dostave. Kontaktiraćemo vas uskoro sa cenom dostave.");
+  }
   const created = await createOrderFromTemporaryOrder(tempOrder);
 
   const populated = await orderRepo.findOrderById(created._id);
@@ -104,6 +115,13 @@ export async function confirmOrder(orderId, token, { ignoreExpiration = false } 
  */
 export async function confirmOrderByAdmin(orderId, adminId) {
   const rawTempOrder = await tempOrderService.getTemporaryOrderRawById(orderId);
+  // Same rule as confirmOrder above, no admin bypass - a placeholder shipping value
+  // shouldn't get locked into a real Order just because the admin path skips the
+  // customer-facing token check. Set the real amount first via
+  // updateTemporaryOrderShipping, then confirm.
+  if (rawTempOrder.requiresShippingQuote) {
+    badRequest("Za ovu porudžbinu je potrebno prvo uneti cenu dostave.");
+  }
   const tempOrder = { ...rawTempOrder, temporaryOrderId: rawTempOrder._id.toString() };
   const created = await createOrderFromTemporaryOrder(tempOrder);
 

@@ -83,6 +83,7 @@ function buildPhase3Payload(req) {
     relatedProducts: toIdArray(req.body.relatedProducts),
     faq: parseJsonField(req.body.faq),
     badge: ["none", "featured", "sale"].includes(req.body.badge) ? req.body.badge : "none",
+    shippingClass: ["standard", "freight"].includes(req.body.shippingClass) ? req.body.shippingClass : "standard",
     isActive: parseCheckbox(req.body.isActive),
   };
 }
@@ -100,6 +101,7 @@ function buildProductPayload(req, existing = {}) {
   data.variations = parseJsonField(req.body.variations, existing.variations || []);
   data.faq = parseJsonField(req.body.faq, existing.faq || []);
   data.badge = ["none", "featured", "sale"].includes(req.body.badge) ? req.body.badge : existing.badge || "none";
+  data.shippingClass = ["standard", "freight"].includes(req.body.shippingClass) ? req.body.shippingClass : existing.shippingClass || "standard";
   data.isActive = parseCheckbox(req.body.isActive, existing.isActive ?? false);
 
   return data;
@@ -373,7 +375,7 @@ export async function updateProduct(req, res, next) {
     // a different shape than mapProductForEdit (name/shortDescription/isActive),
     // which made every "new" value in the audit diff come through as null
     const afterUpdate = await productService.getProductForEdit(productId);
-    const changes = auditLogService.computeChanges(existing, afterUpdate, ["name", "shortDescription", "isActive", "badge"]);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, ["name", "shortDescription", "isActive", "badge", "shippingClass"]);
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "PRODUCT_UPDATED",

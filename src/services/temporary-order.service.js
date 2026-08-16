@@ -48,12 +48,14 @@ export async function createTemporaryOrder(input) {
   // throws and aborts the transaction, same acceptable-race tradeoff bookAppointment
   // already makes for slot availability.
   let previewSubtotal = 0;
+  let hasFreightItem = false;
   for (const item of items) {
     if (!item.productId) validationError("productId");
     if (!item.variantId) validationError("variantId");
     if (!item.quantity || item.quantity <= 0) validationError("quantity");
-    const { variation } = await productService.getVariationRaw(item.productId, item.variantId);
+    const { product, variation } = await productService.getVariationRaw(item.productId, item.variantId);
     previewSubtotal += variation.price * item.quantity;
+    if (product.shippingClass === "freight") hasFreightItem = true;
   }
 
   let buyerId = null;
@@ -81,7 +83,12 @@ export async function createTemporaryOrder(input) {
     });
   }
 
-  const shipping = DEFAULT_SHIPPING_PRICE;
+  // A cart with any "freight" item (too large/heavy for regular post - see
+  // product.model.js's shippingClass) can't get an automatic price. `shipping`
+  // stays 0 as a placeholder and requiresShippingQuote flags it for an admin to
+  // fill in by hand - see order.service.js's confirmOrder, which refuses to
+  // confirm while this is still true.
+  const shipping = hasFreightItem ? 0 : DEFAULT_SHIPPING_PRICE;
 
   // ---- transaction ----
   const session = await mongoose.startSession();
@@ -135,6 +142,7 @@ export async function createTemporaryOrder(input) {
           items: orderItems,
           subtotal,
           shipping,
+          requiresShippingQuote: hasFreightItem,
           coupon: couponResult?.coupon._id || null,
           discountApplied,
           note,
@@ -226,6 +234,19 @@ export async function getTemporaryOrderRawById(orderId) {
   return order;
 }
 
+// Admin fills in the real shipping cost for a freight-quote order (see
+// product.model.js's shippingClass and this file's createTemporaryOrder) - clears
+// requiresShippingQuote so the customer's confirmation link (order.service.js's
+// confirmOrder) stops being blocked.
+export async function updateTemporaryOrderShipping(orderId, shippingAmount, adminId) {
+  if (!orderId) validationError("orderId");
+  if (shippingAmount == null || shippingAmount < 0) validationError("shippingAmount");
+  const updated = await tempOrderRepo.updateShippingById(orderId, shippingAmount);
+  if (!updated) notFound("Privremena porudžbina");
+  logInfo("Temporary order shipping cost set", { temporaryOrderId: orderId, shippingAmount, adminId });
+  return mapTemporaryOrderForAdminDetail(updated);
+}
+
 /**
  * Releases stock for checkouts nobody confirmed within the full retention window -
  * not the moment the token expires, but TEMP_ORDER_RETENTION_HOURS after that. The
@@ -270,5 +291,6 @@ export default {
   verifyToken,
   deleteTemporaryOrder,
   getTemporaryOrderRawById,
+  updateTemporaryOrderShipping,
   cleanupExpiredTemporaryOrders,
 };

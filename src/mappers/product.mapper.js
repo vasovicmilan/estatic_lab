@@ -10,6 +10,15 @@ function translateBadge(badge) {
   return BADGE_LABELS[badge] ?? null;
 }
 
+const SHIPPING_CLASS_LABELS = {
+  standard: "Redovna pošta",
+  freight: "Veliki/težak artikal - cena dostave se procenjuje ručno",
+};
+
+function translateShippingClass(shippingClass) {
+  return SHIPPING_CLASS_LABELS[shippingClass] || SHIPPING_CLASS_LABELS.standard;
+}
+
 function formatImage(image) {
   if (!image) return null;
   return {
@@ -102,6 +111,8 @@ export function mapProductForAdminDetail(product) {
     seoKljucneReci: product.seoKeywords || [],
     oznaka: translateBadge(product.badge),
     oznakaRaw: product.badge || "none",
+    nacinDostave: translateShippingClass(product.shippingClass),
+    nacinDostaveRaw: product.shippingClass || "standard",
     aktivan: product.isActive,
     vreme: {
       kreiran: formatDateTime(product.createdAt),
@@ -132,6 +143,7 @@ export function mapProductForEdit(product) {
     relatedProducts: (product.relatedProducts || []).map((p) => p._id?.toString() || p.toString()),
     faq: product.faq || [],
     badge: product.badge || "none",
+    shippingClass: product.shippingClass || "standard",
     isActive: product.isActive,
   };
 }

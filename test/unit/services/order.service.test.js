@@ -100,6 +100,18 @@ describe("order.service", () => {
 
       assert.equal(redeemMock.mock.calls.length, 0);
     });
+
+    it("refuses to confirm while requiresShippingQuote is still true - a freight item's placeholder shipping value must never be locked into a real Order", async (t) => {
+      const tempOrder = buildTemporaryOrder({ requiresShippingQuote: true, shipping: 0 });
+      t.mock.method(tempOrderService, "verifyToken", async () => ({ ...tempOrder, temporaryOrderId: tempOrder._id.toString() }));
+      const createMock = t.mock.method(orderRepo, "createOrder", async () => buildOrder());
+
+      await assert.rejects(
+        () => orderService.confirmOrder(id().toString(), "sometoken"),
+        (err) => err.statusCode === 400
+      );
+      assert.equal(createMock.mock.calls.length, 0, "no Order should ever be created while shipping is still unresolved");
+    });
   });
 
   describe("confirmOrderByAdmin", () => {
@@ -116,6 +128,18 @@ describe("order.service", () => {
 
       assert.equal(rawFetchMock.mock.calls.length, 1);
       assert.equal(result.id, created._id.toString());
+    });
+
+    it("refuses to confirm while requiresShippingQuote is still true - the admin path is not a bypass for this rule", async (t) => {
+      const tempOrder = buildTemporaryOrder({ requiresShippingQuote: true, shipping: 0 });
+      t.mock.method(tempOrderService, "getTemporaryOrderRawById", async () => tempOrder);
+      const createMock = t.mock.method(orderRepo, "createOrder", async () => buildOrder());
+
+      await assert.rejects(
+        () => orderService.confirmOrderByAdmin(tempOrder._id.toString(), id().toString()),
+        (err) => err.statusCode === 400
+      );
+      assert.equal(createMock.mock.calls.length, 0);
     });
   });
 

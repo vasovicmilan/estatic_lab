@@ -74,6 +74,20 @@ const ProductSchema = new Schema(
       index: true,
     },
 
+    // "standard" = ships via regular post at the flat DEFAULT_SHIPPING_PRICE rate
+    // (see shop.config.js) - fine for lightweight consumables/accessories. "freight" =
+    // too large/heavy for regular post (e.g. multi-kg devices) - checkout can't quote
+    // an automatic price for these, so an admin sets the real shipping cost by hand
+    // before confirming the order (see temporary-order.service.js's shipping
+    // resolution and Order/TemporaryOrder's requiresShippingQuote flag). Product-level,
+    // not per-variation - a device's physical size doesn't change between color/size
+    // variants the way its price does.
+    shippingClass: {
+      type: String,
+      enum: ["standard", "freight"],
+      default: "standard",
+    },
+
     isActive: {
       type: Boolean,
       default: false,

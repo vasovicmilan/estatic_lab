@@ -6,7 +6,7 @@ import userService from "../../../src/services/user.service.js";
 import productService from "../../../src/services/product.service.js";
 import couponService from "../../../src/services/coupon.service.js";
 import * as tempOrderService from "../../../src/services/temporary-order.service.js";
-import { buildTemporaryOrder, buildOrderItem, buildProductVariation, id } from "../../helpers/factories.js";
+import { buildTemporaryOrder, buildOrderItem, buildProduct, buildProductVariation, id } from "../../helpers/factories.js";
 
 function mockSession(t) {
   t.mock.method(mongoose, "startSession", async () => ({
@@ -67,7 +67,7 @@ describe("temporary-order.service", () => {
     it("uses the logged-in user's id directly, without checking by email", async (t) => {
       mockSession(t);
       const variation = buildProductVariation({ price: 2000 });
-      t.mock.method(productService, "getVariationRaw", async () => ({ variation }));
+      t.mock.method(productService, "getVariationRaw", async () => ({ product: buildProduct(), variation }));
       const userId = id();
       const findByIdMock = t.mock.method(userService, "findUserById", async () => ({ _id: userId }));
       const findByEmailMock = t.mock.method(userService, "findUserByEmail", async () => null);
@@ -89,7 +89,7 @@ describe("temporary-order.service", () => {
     it("attaches the order to an existing account found by email (guest checkout, but the email is already registered)", async (t) => {
       mockSession(t);
       const variation = buildProductVariation({ price: 2000 });
-      t.mock.method(productService, "getVariationRaw", async () => ({ variation }));
+      t.mock.method(productService, "getVariationRaw", async () => ({ product: buildProduct(), variation }));
       const existingUserId = id();
       t.mock.method(userService, "findUserByEmail", async () => ({ _id: existingUserId }));
       const createGuestMock = t.mock.method(userService, "createGuestUser", async () => ({ _id: id() }));
@@ -111,7 +111,7 @@ describe("temporary-order.service", () => {
     it("creates a guest account when the email isn't registered, and emits user:guest_created", async (t) => {
       mockSession(t);
       const variation = buildProductVariation({ price: 2000 });
-      t.mock.method(productService, "getVariationRaw", async () => ({ variation }));
+      t.mock.method(productService, "getVariationRaw", async () => ({ product: buildProduct(), variation }));
       t.mock.method(userService, "findUserByEmail", async () => null);
       const newGuestId = id();
       t.mock.method(userService, "createGuestUser", async () => ({ _id: newGuestId }));
@@ -143,7 +143,7 @@ describe("temporary-order.service", () => {
       const variationA = buildProductVariation({ price: 1000 });
       const variationB = buildProductVariation({ price: 500 });
       let call = 0;
-      t.mock.method(productService, "getVariationRaw", async () => (call++ === 0 ? { variation: variationA } : { variation: variationB }));
+      t.mock.method(productService, "getVariationRaw", async () => (call++ === 0 ? { product: buildProduct(), variation: variationA } : { product: buildProduct(), variation: variationB }));
       t.mock.method(userService, "findUserByEmail", async () => ({ _id: id() }));
       let decreaseCall = 0;
       t.mock.method(productService, "decreaseVariationStock", async () =>
@@ -170,7 +170,7 @@ describe("temporary-order.service", () => {
     it("reserves stock once per item via decreaseVariationStock", async (t) => {
       mockSession(t);
       const variation = buildProductVariation({ price: 1000 });
-      t.mock.method(productService, "getVariationRaw", async () => ({ variation }));
+      t.mock.method(productService, "getVariationRaw", async () => ({ product: buildProduct(), variation }));
       t.mock.method(userService, "findUserByEmail", async () => ({ _id: id() }));
       const decreaseMock = t.mock.method(productService, "decreaseVariationStock", async () => fakeProductWithVariation(variation));
       t.mock.method(tempOrderRepo, "createTemporaryOrder", async (data) => ({ ...buildTemporaryOrder(), ...data, _id: id() }));
@@ -190,7 +190,7 @@ describe("temporary-order.service", () => {
     it("applies a valid coupon's discount and stores the coupon id", async (t) => {
       mockSession(t);
       const variation = buildProductVariation({ price: 2000 });
-      t.mock.method(productService, "getVariationRaw", async () => ({ variation }));
+      t.mock.method(productService, "getVariationRaw", async () => ({ product: buildProduct(), variation }));
       t.mock.method(userService, "findUserByEmail", async () => ({ _id: id() }));
       t.mock.method(productService, "decreaseVariationStock", async () => fakeProductWithVariation(variation));
       const couponId = id();
@@ -215,7 +215,7 @@ describe("temporary-order.service", () => {
     it("does not call coupon validation at all when no code is given", async (t) => {
       mockSession(t);
       const variation = buildProductVariation({ price: 2000 });
-      t.mock.method(productService, "getVariationRaw", async () => ({ variation }));
+      t.mock.method(productService, "getVariationRaw", async () => ({ product: buildProduct(), variation }));
       t.mock.method(userService, "findUserByEmail", async () => ({ _id: id() }));
       t.mock.method(productService, "decreaseVariationStock", async () => fakeProductWithVariation(variation));
       const validateMock = t.mock.method(couponService, "validateCouponForOrder", async () => ({}));
@@ -327,6 +327,82 @@ describe("temporary-order.service", () => {
     it("throws 404 for a nonexistent order when fetched raw", async (t) => {
       t.mock.method(tempOrderRepo, "findTemporaryOrderById", async () => null);
       await assert.rejects(() => tempOrderService.getTemporaryOrderRawById(id().toString()), (err) => err.statusCode === 404);
+    });
+  });
+
+  describe("createTemporaryOrder - freight shippingClass -> requiresShippingQuote", () => {
+    it("charges the normal DEFAULT_SHIPPING_PRICE and leaves requiresShippingQuote false when every item is 'standard'", async (t) => {
+      mockSession(t);
+      const variation = buildProductVariation({ price: 2000 });
+      t.mock.method(productService, "getVariationRaw", async () => ({ product: buildProduct({ shippingClass: "standard" }), variation }));
+      t.mock.method(userService, "findUserByEmail", async () => ({ _id: id() }));
+      t.mock.method(productService, "decreaseVariationStock", async () => fakeProductWithVariation(variation));
+      let createdPayload;
+      t.mock.method(tempOrderRepo, "createTemporaryOrder", async (data) => {
+        createdPayload = data;
+        return { ...buildTemporaryOrder(), ...data, _id: id() };
+      });
+
+      await tempOrderService.createTemporaryOrder(
+        validInput({ items: [{ productId: id().toString(), variantId: variation._id.toString(), quantity: 1 }] })
+      );
+
+      assert.equal(createdPayload.requiresShippingQuote, false);
+      assert.ok(createdPayload.shipping > 0, "standard items should still get the normal flat shipping price");
+    });
+
+    it("zeroes out shipping and sets requiresShippingQuote when any item is 'freight'", async (t) => {
+      mockSession(t);
+      const variation = buildProductVariation({ price: 2000 });
+      t.mock.method(productService, "getVariationRaw", async () => ({ product: buildProduct({ shippingClass: "freight" }), variation }));
+      t.mock.method(userService, "findUserByEmail", async () => ({ _id: id() }));
+      t.mock.method(productService, "decreaseVariationStock", async () => fakeProductWithVariation(variation));
+      let createdPayload;
+      t.mock.method(tempOrderRepo, "createTemporaryOrder", async (data) => {
+        createdPayload = data;
+        return { ...buildTemporaryOrder(), ...data, _id: id() };
+      });
+
+      await tempOrderService.createTemporaryOrder(
+        validInput({ items: [{ productId: id().toString(), variantId: variation._id.toString(), quantity: 1 }] })
+      );
+
+      assert.equal(createdPayload.requiresShippingQuote, true);
+      assert.equal(createdPayload.shipping, 0, "shipping is a placeholder until an admin sets the real amount");
+    });
+
+    it("flags requiresShippingQuote true if even one of several items in the cart is 'freight'", async (t) => {
+      mockSession(t);
+      const variationA = buildProductVariation({ price: 1500 });
+      const variationB = buildProductVariation({ price: 500 });
+      let call = 0;
+      t.mock.method(productService, "getVariationRaw", async () =>
+        call++ === 0
+          ? { product: buildProduct({ shippingClass: "standard" }), variation: variationA }
+          : { product: buildProduct({ shippingClass: "freight" }), variation: variationB }
+      );
+      t.mock.method(userService, "findUserByEmail", async () => ({ _id: id() }));
+      let decreaseCall = 0;
+      t.mock.method(productService, "decreaseVariationStock", async () =>
+        fakeProductWithVariation(decreaseCall++ === 0 ? variationA : variationB)
+      );
+      let createdPayload;
+      t.mock.method(tempOrderRepo, "createTemporaryOrder", async (data) => {
+        createdPayload = data;
+        return { ...buildTemporaryOrder(), ...data, _id: id() };
+      });
+
+      await tempOrderService.createTemporaryOrder(
+        validInput({
+          items: [
+            { productId: id().toString(), variantId: variationA._id.toString(), quantity: 1 },
+            { productId: id().toString(), variantId: variationB._id.toString(), quantity: 1 },
+          ],
+        })
+      );
+
+      assert.equal(createdPayload.requiresShippingQuote, true);
+      assert.equal(createdPayload.shipping, 0);
     });
   });
 });

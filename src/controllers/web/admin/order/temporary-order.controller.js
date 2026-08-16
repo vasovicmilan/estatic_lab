@@ -63,4 +63,24 @@ export async function confirmTemporaryOrderByAdmin(req, res, next) {
   }
 }
 
-export default { listTemporaryOrders, temporaryOrderDetails, confirmTemporaryOrderByAdmin };
+// Sets the real shipping cost on a freight-quote temporary order (see
+// product.model.js's shippingClass) - unblocks the customer's own confirmation link
+// once saved (order.service.js's confirmOrder).
+export async function setTemporaryOrderShipping(req, res, next) {
+  try {
+    const { orderId } = req.params;
+    const shippingAmount = Number(req.body.shippingAmount);
+    await tempOrderService.updateTemporaryOrderShipping(orderId, shippingAmount, req.session?.user?.id);
+    logInfo(`[setTemporaryOrderShipping] Cena dostave postavljena za privremenu porudžbinu #${orderId}`, { orderId, shippingAmount, adminId: req.session?.user?.id });
+
+    return flashAndRedirect(req, res, "success", "Cena dostave je sačuvana", `/admin/privremene-porudzbine/detalji/${orderId}`);
+  } catch (error) {
+    logError("[setTemporaryOrderShipping] Greška pri postavljanju cene dostave", error, { orderId: req.params.orderId, userId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, `/admin/privremene-porudzbine/detalji/${req.params.orderId}`);
+    }
+    next(error);
+  }
+}
+
+export default { listTemporaryOrders, temporaryOrderDetails, confirmTemporaryOrderByAdmin, setTemporaryOrderShipping };
