@@ -27,11 +27,22 @@ function buildServiceJsonLd(service, canonical, imageUrl, siteName) {
     name: service.naziv,
     description: truncate(service.kratakOpis || service.dugiOpis || "", 300),
     image: imageUrl,
-    provider: { "@type": "HealthAndBeautyBusiness", name: siteName },
+    // review/aggregateRating live on `provider`, not on this Service node itself.
+    // Google's Rich Results validator only renders star-rating snippets for a
+    // fixed whitelist of @types (Product, LocalBusiness and its subtypes,
+    // Organization, Recipe, Course, ...) - "Service" isn't on that list, even
+    // though schema.org's own vocabulary allows `review` on virtually any Thing.
+    // HealthAndBeautyBusiness (below) IS a LocalBusiness subtype, so it's
+    // eligible - putting the same testimonials there instead is what actually
+    // gets them considered for rich results, not just valid-but-inert markup.
+    provider: {
+      "@type": "HealthAndBeautyBusiness",
+      name: siteName,
+      ...(aggregateRating ? { aggregateRating } : {}),
+      ...(review ? { review } : {}),
+    },
     areaServed: "Novi Sad",
     ...(offers ? { offers } : {}),
-    ...(aggregateRating ? { aggregateRating } : {}),
-    ...(review ? { review } : {}),
   };
 }
 
