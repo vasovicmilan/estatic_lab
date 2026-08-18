@@ -15,5 +15,6 @@ Ova dokumentacija je podeljena na fokusirane fajlove, gde svaki pokriva jednu ob
 | `09-admin-operacije.md` | Šta administratori mogu da vide i rade na platformi |
 | `10-logovi-i-revizija.md` | Operativna vidljivost i odgovornost — ko je šta uradio, i izveštaji o stanju sajta |
 | `11-eksterne-integracije.md` | Dvosmerna sinhronizacija sa Google Calendar-om (kalendar po zaposlenom) i SrediMe pijacom za zakazivanje |
+| `12-testiranje.md` | Tri sloja testova (jedinični, integracioni, E2E), šta svaki pokriva, kako se pokreću, i obrasci/zamke otkriveni pri pisanju E2E testova |
 
 Svaki fajl je samostalan — nije potrebno da ih čitate po redosledu, iako `06` (partnerski program) koristi pojmove iz `03`, `05` i `07`, a `11` se nadovezuje na životni ciklus termina opisan u `02`.

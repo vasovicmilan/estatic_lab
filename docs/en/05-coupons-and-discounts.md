@@ -10,7 +10,11 @@ A **Coupon** is a discount code redeemable against a booking, a package purchase
 
 ## Where a Coupon can be used
 
-The same coupon system serves three different purchase contexts — a service booking, a package purchase, and a shop order — through one shared set of validation rules, so a code behaves consistently no matter where it's redeemed: is it currently active, does it apply to what's being purchased, and has it (or has this specific customer) already used up its allowance.
+The same coupon system serves three different purchase contexts — a service booking, a package purchase, and a shop order. Bookings and package purchases share one common block of the coupon (discount type, value, restrictions) — consistent behavior no matter which of the two the coupon is applied to.
+
+**Shop orders are handled separately.** The product catalog ranges from small consumables to devices worth several thousand euros, so the same percentage or flat amount rarely makes sense for both. A coupon therefore has a **separate, optional block dedicated exclusively to products** — its own discount type, value, and restrictions, entirely independent of the services/packages block. If that block isn't explicitly configured, the coupon **can't be redeemed at all** on a shop order, regardless of what the services/packages block says — a deliberately restrictive default, so a referral or promo code built for services never accidentally ends up applying to an expensive device.
+
+Either block — services/packages or products — can optionally carry an **upper cap on the discount amount**, regardless of whether the discount is a percentage or a flat amount. This matters most for percentage discounts: a rate that's reasonable for a typical service can be disproportionately large once applied to an expensive item, and the cap acts as a safety net.
 
 ## Coupons and the referral program
 

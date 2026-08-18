@@ -6,3 +6,6 @@ src/public/videos
 src/public/icons
 site.webmanifest
 favicon.ico
+/test-results/
+/playwright-report/
+/blob-report/

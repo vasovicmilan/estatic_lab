@@ -10,7 +10,11 @@
 
 ## Gde se Kupon može koristiti
 
-Isti sistem kupona opslužuje tri različita konteksta kupovine — zakazivanje usluge, kupovinu paketa, i porudžbinu iz prodavnice — kroz jedan zajednički skup pravila validacije, tako da se kod ponaša dosledno bez obzira gde se koristi: da li je trenutno aktivan, da li se odnosi na ono što se kupuje, i da li je (ili da li je ovaj konkretan klijent) već iskoristio svoju kvotu.
+Isti sistem kupona opslužuje tri različita konteksta kupovine — zakazivanje usluge, kupovinu paketa, i porudžbinu iz prodavnice. Zakazivanje i kupovina paketa dele jedan zajednički deo kupona (vrsta popusta, vrednost, ograničenja) — dosledno ponašanje bez obzira na koje od to dvoje kupon primenite.
+
+**Porudžbine iz prodavnice su odvojene.** Katalog artikala ide od sitnog potrošnog materijala do skupih uređaja vrednih nekoliko hiljada evra, pa isti procenat ili iznos popusta retko ima smisla za oboje. Zato kupon ima **poseban, opcioni deo posvećen isključivo artiklima** — sopstvena vrsta popusta, vrednost, i ograničenja, potpuno nezavisna od dela za usluge/pakete. Ako taj deo nije eksplicitno podešen, kupon se **uopšte ne može iskoristiti** na porudžbini iz prodavnice, bez obzira šta kaže deo za usluge/pakete — namerno restriktivan podrazumevani izbor, da se referalni kod ili promotivni kod napravljen za usluge nikad slučajno ne primeni na skup uređaj.
+
+Oba dela — za usluge/pakete i za artikle — mogu opciono imati **gornju granicu iznosa popusta**, bez obzira na to da li je popust procenat ili fiksan iznos. Ovo je posebno bitno kod procentualnog popusta: procenat koji je razuman za uobičajenu uslugu može biti neproporcionalno visok kada se primeni na skup artikal, pa granica deluje kao sigurnosna mreža.
 
 ## Kuponi i partnerski program
 

@@ -30,6 +30,12 @@ Three kinds of purchases can generate partner commission, and each is handled wi
 
 A referred package purchase and the staff commission earned later when someone actually uses a session from that package are two entirely separate things. A partner earns their commission once, when the referral led to the sale itself. Separately, if a commission-based staff member performs a session from that package, their own commission is calculated on the real value of the service they performed — see `07-employee-compensation.md` for exactly how that's valued fairly even though the customer isn't paying anything new at that specific appointment.
 
+## Separate rates for services/packages and for products
+
+Every partner has **two independent commission rates** — one for bookings and package purchases, another for shop orders — rather than a single flat rate across the board. The reason is the product catalog: it ranges from small consumables to devices worth several thousand euros, so a rate that makes sense for an appointment rarely makes sense for that kind of sale too.
+
+Alongside each of those two rates, a partner can optionally have an **upper cap on the commission amount per individual transaction** — independent of the rate itself. This is the last line of defense: even if a rate is mistakenly set too high for some specific case, a single transaction can't generate a disproportionately large commission.
+
 ## Requesting and receiving payment
 
 A partner can see, at any time, their running totals: how much they've earned in total, how much has already been paid out to them, how much is currently reserved (pending the order-return window above), and how much is genuinely available to request right now. They can request a payout for any amount up to what's currently available.

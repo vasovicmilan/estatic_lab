@@ -19,3 +19,9 @@ Usput, porudžbina može umesto toga biti **otkazana** (pre slanja), **vraćena*
 ## Popusti na porudžbinama
 
 Porudžbina može nositi jedan kod za popust, primenjen prilikom plaćanja, na isti način kao i zakazivanje. Pogledajte `05-kuponi-i-popusti.md` za kako kodovi za popust funkcionišu i na šta mogu biti ograničeni.
+
+## Dostava
+
+Katalog proizvoda ide od sitnog potrošnog materijala do velikih/teških uređaja koji se ne mogu poslati redovnom poštom. Svaki proizvod je označen kao **standardna** dostava (uobičajena, fiksna cena, obračunata automatski pri plaćanju) ili **teretna** (veliki/teški artikal).
+
+Kada korpa sadrži bar jedan artikal iz teretne kategorije, cena dostave se ne obračunava automatski — porudžbina ide na čekanje procene, a administrator ručno unosi stvarnu cenu dostave (npr. nakon dogovora sa kurirskom službom) pre nego što klijent uopšte može da potvrdi porudžbinu putem linka koji je dobio na email. Ovo sprečava da porudžbina sa neispravnom (ili nikakvom) cenom dostave ikad postane finalna.

@@ -30,6 +30,12 @@ Tri vrste kupovina mogu generisati proviziju partneru, i svaka se obrađuje sa t
 
 Referirana kupovina paketa i provizija zaposlenog koja se kasnije zaradi kada neko zaista iskoristi seansu iz tog paketa su dve potpuno odvojene stvari. Partner zarađuje svoju proviziju jednom, kada je referal doveo do same prodaje. Odvojeno, ako zaposleni na proviziji obavi seansu iz tog paketa, njegova sopstvena provizija se računa na stvarnu vrednost usluge koju je obavio — pogledajte `07-naknade-zaposlenih.md` za tačno kako se to pravedno vrednuje iako klijent ne plaća ništa novo na tom konkretnom terminu.
 
+## Odvojena stopa za usluge/pakete i za artikle
+
+Svaki partner ima **dve nezavisne stope provizije** — jednu za zakazivanja i kupovine paketa, drugu za porudžbine iz prodavnice — umesto jedne jedinstvene stope za sve. Razlog je katalog artikala: ide od sitnog potrošnog materijala do uređaja vrednih nekoliko hiljada evra, pa stopa koja ima smisla za termin retko ima smisla i za takvu prodaju.
+
+Uz svaku od te dve stope, partner opciono može imati i **gornju granicu iznosa provizije po pojedinačnoj transakciji** — nezavisno od same stope. Ovo je poslednja linija odbrane: čak i ako je stopa greškom postavljena previsoko za neki konkretan slučaj, jedna transakcija ne može generisati neproporcionalno visoku proviziju.
+
 ## Zahtev i primanje isplate
 
 Partner u bilo kom trenutku može da vidi svoje tekuće brojke: koliko je ukupno zaradio, koliko mu je već isplaćeno, koliko je trenutno rezervisano (čekajući period vraćanja porudžbine iznad), i koliko je zaista raspoloživo da zatraži odmah. Može zatražiti isplatu za bilo koji iznos do onoga što je trenutno raspoloživo.

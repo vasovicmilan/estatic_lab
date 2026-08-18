@@ -59,6 +59,55 @@ export function buildEmployee(overrides = {}) {
   };
 }
 
+export function buildPartner(overrides = {}) {
+  return {
+    _id: id(),
+    userId: buildUser(),
+    commissionRateServices: 10,
+    commissionRateProducts: 5,
+    maxCommissionAmountServices: null,
+    maxCommissionAmountProducts: null,
+    isActive: true,
+    notes: "",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+export function buildPayoutRequest(overrides = {}) {
+  return {
+    _id: id(),
+    earnerType: "employee",
+    employee: buildEmployee(),
+    partner: null,
+    employeeSnapshot: { name: "Marko Markovic" },
+    amount: 1000,
+    status: "requested",
+    adminNote: "",
+    requestedAt: new Date(),
+    approvedAt: null,
+    paidAt: null,
+    rejectedAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+export function buildResource(overrides = {}) {
+  return {
+    _id: id(),
+    name: "Soba za masažu 1",
+    capacity: 1,
+    isActive: true,
+    notes: "",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
 export function buildExpert(overrides = {}) {
   return {
     _id: id(),
@@ -509,6 +558,9 @@ export default {
   buildRole,
   buildUser,
   buildEmployee,
+  buildPartner,
+  buildPayoutRequest,
+  buildResource,
   buildExpert,
   buildCategory,
   buildTag,

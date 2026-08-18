@@ -19,3 +19,9 @@ Along the way, an order can instead be **cancelled** (before it ships), **return
 ## Discounts on orders
 
 An order can carry a single discount code, applied at checkout, the same way a booking can. See `05-coupons-and-discounts.md` for how discount codes work and what they can be restricted to.
+
+## Shipping
+
+The product catalog ranges from small consumables to large/heavy devices that can't ship via regular post. Every product is tagged as either **standard** shipping (the usual flat, automatically-calculated rate) or **freight** (a large/heavy item).
+
+When a cart contains at least one freight item, shipping isn't priced automatically — the order is flagged as awaiting a shipping quote, and an admin manually enters the real shipping cost (e.g. after negotiating with a courier) before the customer can even confirm the order through the link they received by email. This prevents an order with a missing or wrong shipping cost from ever becoming final.

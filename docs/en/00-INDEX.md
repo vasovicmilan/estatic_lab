@@ -15,5 +15,6 @@ This documentation is split into focused files, each covering one area of the bu
 | `09-admin-operations.md` | What administrators can see and do across the platform |
 | `10-logs-and-audit-trail.md` | Operational visibility and accountability — who did what, and site health reporting |
 | `11-external-integrations.md` | Two-way sync with Google Calendar (per-employee calendars) and the SrediMe booking marketplace |
+| `12-testing.md` | The three test layers (unit, integration, E2E), what each covers, how to run them, and patterns/gotchas discovered while writing E2E tests |
 
 Each file stands on its own — you don't need to read them in order, though `06` (affiliate program) draws on concepts from `03`, `05`, and `07`, and `11` builds on the appointment lifecycle described in `02`.

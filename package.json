@@ -9,9 +9,9 @@
   "scripts": {
     "start": "NODE_ENV=production node src/server.js",
     "start-dev": "NODE_ENV=development nodemon src/server.js",
-    "test": "node --env-file=.env.test --test",
-    "test:watch": "node --env-file=.env.test --test --watch",
-    "test:coverage": "node --env-file=.env.test --test --experimental-test-coverage",
+    "test": "node --env-file=.env.test --test \"test/unit/**/*.test.js\" \"test/integration/**/*.test.js\"",
+    "test:watch": "node --env-file=.env.test --test --watch \"test/unit/**/*.test.js\" \"test/integration/**/*.test.js\"",
+    "test:coverage": "node --env-file=.env.test --test --experimental-test-coverage \"test/unit/**/*.test.js\" \"test/integration/**/*.test.js\"",
     "report:daily": "NODE_ENV=production node scripts/daily-log-report.js",
     "report:weekly": "NODE_ENV=production node scripts/weekly-log-report.js",
     "report:monthly": "NODE_ENV=production node scripts/monthly-log-report.js",
@@ -54,6 +54,7 @@
     "uuid": "^14.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "mongodb-memory-server": "^11.2.0",
     "nodemon": "^3.1.14",
     "supertest": "^7.2.2"
