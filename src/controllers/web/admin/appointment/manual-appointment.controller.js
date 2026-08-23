@@ -22,18 +22,19 @@ async function loadFormOptions() {
     userService.listUsers({ status: "active", limit: 200 }),
   ]);
 
-  // one lookup per service (same getEmployeeOptionsForService the public
-  // booking flow's slotsStep already uses), not one over the whole employee
-  // list - the admin list shape (mapEmployeeForAdminShort) doesn't carry each
-  // employee's service ids, only a count, so this is the option that's
-  // actually available without a new mapper field
-  const employeeEntries = await Promise.all(
-    servicesResult.data.map(async (s) => [s.id, await employeeService.getEmployeeOptionsForService(s.id)])
-  );
-  const employeesByService = Object.fromEntries(employeeEntries);
+  // findActiveServices returns the public "card" shape (mapServiceForPublicCard) -
+  // just a price RANGE string, no per-variant array at all. The full packages/
+  // variants list only exists on a single service's detail shape (getServiceById /
+  // getServiceBySlug), so each active service needs its own follow-up fetch here.
+  const [servicesWithVariants, employeeOptionsPerService] = await Promise.all([
+    Promise.all(servicesResult.data.map((s) => serviceService.getServiceById(s.id))),
+    Promise.all(servicesResult.data.map((s) => employeeService.getEmployeeOptionsForService(s.id))),
+  ]);
+
+  const employeesByService = Object.fromEntries(servicesResult.data.map((s, i) => [s.id, employeeOptionsPerService[i]]));
 
   return {
-    services: servicesResult.data.map((s) => ({
+    services: servicesWithVariants.map((s) => ({
       id: s.id,
       name: s.naziv,
       variants: (s.varijante || [])
