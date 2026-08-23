@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as AppointmentController from "../../../controllers/web/admin/appointment/appointment.controller.js";
+import * as ManualAppointmentController from "../../../controllers/web/admin/appointment/manual-appointment.controller.js";
 import {
   validateAppointmentReject,
   validateAppointmentNoShow,
@@ -7,12 +8,15 @@ import {
   validateAppointmentReassign,
   validateAppointmentReschedule,
   validateAppointmentId,
+  validateManualAppointmentCreate,
 } from "../../../middlewares/validators/appointment.validator.js";
 import { validateSearch } from "../../../middlewares/validators/search.validator.js";
 
 const router = Router();
 
 router.get("/", validateSearch, AppointmentController.listAppointments);
+router.get("/rucno-kreiranje", ManualAppointmentController.newManualAppointmentForm);
+router.post("/rucno-kreiranje", validateManualAppointmentCreate, ManualAppointmentController.createManualAppointment);
 router.get("/detalji/:appointmentId", validateAppointmentId, AppointmentController.appointmentDetails);
 
 router.put("/:appointmentId/potvrdi", validateAppointmentId, AppointmentController.confirmAppointment);

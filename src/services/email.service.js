@@ -5,8 +5,9 @@ import { fileURLToPath } from "url";
 import { sendEmail } from "../integrations/email/email.provider.js";
 import { logError } from "../utils/logger.util.js";
 import { generateOrderInvoicePdf } from "../utils/invoice-pdf.util.js";
-import { infoRow, infoTable, statusTone, badge, ctaButton, linkFallback } from "../utils/email-content.util.js";
+import { infoRow, infoTable, statusTone, badge, ctaButton, linkFallback, couponBlock } from "../utils/email-content.util.js";
 import { formatDateTime } from "../utils/date.time.util.js";
+import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,6 +37,7 @@ async function renderTemplate(templateName, data) {
         badge,
         ctaButton,
         linkFallback,
+        couponBlock,
       },
       { cache: false, filename: templatePath, root: TEMPLATES_PATH }
     );
@@ -58,8 +60,24 @@ export async function sendAccountConfirmationEmail({ email, firstName }, confirm
   const html = await renderTemplate("account-confirmation", {
     firstName,
     confirmationUrl: `${BASE_URL}/auth/verifikacija/${confirmToken}`,
+    couponCode: WELCOME_COUPON_CODE,
+    couponDiscount: WELCOME_COUPON_DISCOUNT_VALUE,
   });
   return sendEmail({ to: email, subject: `Dobrodošli u ${SITE_NAME} - potvrdite vaš nalog`, html });
+}
+
+// Google sign-ins skip account confirmation entirely (their email is already
+// verified by Google - see auth.service.js's googleAuth / email.listener.js's
+// user:registered handler), so this is their one and only "you're in" moment.
+// Without it a Google-registered user got no email at all and no welcome coupon,
+// unlike the password/registration flow above.
+export async function sendWelcomeEmail({ email, firstName }) {
+  const html = await renderTemplate("welcome", {
+    firstName,
+    couponCode: WELCOME_COUPON_CODE,
+    couponDiscount: WELCOME_COUPON_DISCOUNT_VALUE,
+  });
+  return sendEmail({ to: email, subject: `Dobrodošli u ${SITE_NAME}!`, html });
 }
 
 // sent when a guest booking auto-creates a lightweight account - invites them to set a
@@ -259,6 +277,7 @@ export async function sendLogReportEmail(periodLabel, dateRangeLabel, summary, a
 
 export default {
   sendAccountConfirmationEmail,
+  sendWelcomeEmail,
   sendClaimAccountEmail,
   sendPasswordResetEmail,
   sendPasswordChangedEmail,

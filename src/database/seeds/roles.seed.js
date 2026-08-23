@@ -23,6 +23,7 @@ const defaultRoles = [
       "manage_orders",
       "manage_partners",
       "manage_payouts",
+      "manage_site_content",
       "view_logs",
     ],
     isDefault: false,

@@ -1,0 +1,128 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container-fluid py-4">
+  <%- include("../includes/breadcrumbs") %>
+  <%- include("../includes/flash-messages") %>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-body">
+          <p class="text-muted small mb-3">
+            Za slučajeve poput nagrada, poklona, ili termina koje klijent nije sam zakazao. Cena se po potrebi može ručno podesiti - u tom slučaju kupon i plaćanje paketom nisu dostupni za ovaj termin.
+          </p>
+
+          <form method="POST" action="<%= data.formAction %>" novalidate data-manual-appointment-form>
+            <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+
+            <% if (typeof data.errors !== 'undefined' && data.errors.general) { %>
+              <div class="alert alert-danger" role="alert"><%= data.errors.general %></div>
+            <% } %>
+
+            <div class="row g-3">
+              <div class="col-md-6 mb-3">
+                <label for="serviceId" class="form-label">Usluga</label>
+                <select class="form-select" id="serviceId" name="serviceId" required data-manual-service-select>
+                  <option value="">Izaberite...</option>
+                  <% data.services.forEach(function(s) { %>
+                    <option value="<%= s.id %>"><%= s.name %></option>
+                  <% }) %>
+                </select>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="servicePackageId" class="form-label">Varijanta</label>
+                <select class="form-select" id="servicePackageId" name="servicePackageId" required data-manual-variant-select disabled>
+                  <option value="">Prvo izaberite uslugu</option>
+                </select>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="employeeId" class="form-label">Terapeut (opciono)</label>
+                <select class="form-select" id="employeeId" name="employeeId" data-manual-employee-select disabled>
+                  <option value="">Automatski / bilo koji dostupan</option>
+                </select>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="startTime" class="form-label">Datum i vreme</label>
+                <input type="datetime-local" class="form-control" id="startTime" name="startTime" required>
+              </div>
+
+              <div class="col-12">
+                <hr>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" id="useExistingUser" data-manual-existing-user-toggle>
+                  <label class="form-check-label" for="useExistingUser">Postojeći registrovani korisnik</label>
+                </div>
+              </div>
+
+              <div class="col-md-8 mb-3" data-manual-existing-user-field style="display:none;">
+                <label for="existingUserId" class="form-label">Korisnik</label>
+                <select class="form-select" id="existingUserId" name="existingUserId">
+                  <option value="">Izaberite...</option>
+                  <% data.userOptions.forEach(function(u) { %>
+                    <option value="<%= u.value %>"><%= u.label %></option>
+                  <% }) %>
+                </select>
+                <div class="form-text">Kontakt podaci (ime, email, telefon) preuzimaju se iz naloga korisnika, osim ako ih dole izričito unesete.</div>
+              </div>
+
+              <div class="col-md-6 mb-3" data-manual-contact-field>
+                <label for="firstName" class="form-label">Ime</label>
+                <input type="text" class="form-control" id="firstName" name="firstName" required data-manual-contact-required>
+              </div>
+              <div class="col-md-6 mb-3" data-manual-contact-field>
+                <label for="lastName" class="form-label">Prezime</label>
+                <input type="text" class="form-control" id="lastName" name="lastName">
+              </div>
+              <div class="col-md-6 mb-3" data-manual-contact-field>
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" required data-manual-contact-required>
+              </div>
+              <div class="col-md-6 mb-3" data-manual-contact-field>
+                <label for="phone" class="form-label">Telefon</label>
+                <input type="text" class="form-control" id="phone" name="phone">
+              </div>
+
+              <div class="col-12">
+                <hr>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" id="overridePrice" name="overridePrice" value="1" data-manual-override-toggle>
+                  <label class="form-check-label" for="overridePrice">Ručno podesi cenu (nagrada, poklon, i slično)</label>
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3" data-manual-override-field style="display:none;">
+                <label for="priceOverride" class="form-label">Cena (RSD)</label>
+                <input type="number" class="form-control" id="priceOverride" name="priceOverride" min="0" step="0.01">
+                <div class="form-text">Ova cena u potpunosti zamenjuje cenu usluge/varijante - kupon i paket nisu dostupni uz ovu opciju.</div>
+              </div>
+
+              <div class="col-12 mb-3">
+                <label for="note" class="form-label">Napomena (opciono)</label>
+                <textarea class="form-control" id="note" name="note" rows="2" placeholder="npr. „dobitnik nagradne igre na Instagramu”"></textarea>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+              <button type="submit" class="btn btn-primary">Kreiraj termin</button>
+              <a href="<%= data.cancelUrl %>" class="btn btn-outline-secondary">Otkaži</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  window.__manualAppointmentData = {
+    services: <%- JSON.stringify(data.services) %>,
+    employeesByService: <%- JSON.stringify(data.employeesByService) %>,
+  };
+</script>
+<script src="/js/admin-manual-appointment.js"></script>
+
+<%- include("../includes/footer") %>

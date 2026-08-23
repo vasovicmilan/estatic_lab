@@ -3,7 +3,7 @@
 
 <header class="position-relative text-white hero-section">
   <% if (data.hero.image) { %>
-    <img src="<%= data.hero.image %>" alt="" class="hero-bg-image" fetchpriority="high">
+    <img src="<%= data.hero.image %>" alt="<%= data.hero.imageAlt || '' %>" class="hero-bg-image" fetchpriority="high">
     <div class="hero-overlay"></div>
   <% } %>
   <div class="container hero-inner position-relative">

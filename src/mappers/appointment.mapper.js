@@ -101,6 +101,7 @@ export function mapAppointmentForAdminDetail(appointment) {
     popust: appointment.discountApplied ? `${appointment.discountApplied} RSD` : null,
     konacnaCena: appointment.finalPrice != null ? `${appointment.finalPrice.toFixed(2)} RSD` : null,
     kupon: appointment.coupon?.code || null,
+    rucnoKreiran: !!appointment.manualBooking,
 
     odbio: appointment.rejectedBy ? translateActor(appointment.rejectedBy) : null,
     odbijenU: formatDateTime(appointment.rejectedAt),

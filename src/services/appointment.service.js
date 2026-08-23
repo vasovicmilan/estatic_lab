@@ -187,6 +187,18 @@ export async function bookAppointment(input) {
     note = "",
     couponCode = null,
     packagePurchaseId = null,
+    // ---- manual/admin booking only (see createManualAppointment in this file) ----
+    // Lets an admin (or employee, if ever given the permission) set the actual
+    // charged price by hand instead of the service's catalog price - for
+    // giveaways, prizes, and similar cases where the real price genuinely isn't
+    // the service's normal price, but running it through a coupon would be
+    // either mathematically wrong (coupons discount a percentage/fixed amount
+    // OFF the catalog price, they don't replace it outright) or a security
+    // concern (a coupon is a code any authenticated caller could theoretically
+    // try to replay - a price override is not, it never leaves the admin panel
+    // and is validated against actorRole below, not against a redeemable code).
+    priceOverride = null,
+    actorRole = null,
   } = input;
 
   if (!serviceId) validationError("serviceId");
@@ -196,13 +208,31 @@ export async function bookAppointment(input) {
   if (!contact.firstName) validationError("firstName");
   if (packagePurchaseId && !isLoggedIn) badRequest("Plaćanje paketom je dostupno samo prijavljenim korisnicima");
 
+  if (priceOverride != null) {
+    if (actorRole !== "admin" && actorRole !== "employee") {
+      forbidden("Samo administrator ili zaposleni mogu ručno podesiti cenu termina");
+    }
+    if (typeof priceOverride !== "number" || isNaN(priceOverride) || priceOverride < 0) {
+      badRequest("Neispravna ručno uneta cena");
+    }
+    if (couponCode || packagePurchaseId) {
+      badRequest("Ručno podešena cena ne može se kombinovati sa kuponom ili plaćanjem paketom");
+    }
+  }
+
   const start = startTime instanceof Date ? startTime : new Date(startTime);
   if (isNaN(start.getTime())) badRequest("Neispravno vreme termina");
-  if (start < new Date()) badRequest("Ne možete zakazati termin u prošlosti");
+  // A manual admin/employee booking is explicitly allowed to backdate (e.g.
+  // logging a walk-in giveaway redemption that already happened) - the
+  // in-the-past guard below only makes sense for the public self-service flow.
+  if (priceOverride == null && start < new Date()) badRequest("Ne možete zakazati termin u prošlosti");
 
   // ---- reads before the transaction ----
   const { variant, service } = await serviceService.getActiveVariant(serviceId, servicePackageId);
   const end = new Date(start.getTime() + variant.duration * 60000);
+  // The price actually charged for this appointment - the service's catalog
+  // price unless an admin/employee explicitly overrode it above.
+  const effectivePrice = priceOverride != null ? priceOverride : variant.totalPrice;
 
   const resourceIds = resolveResourceIds(service);
   let resolvedResources = []; // [{ resourceId, name, capacity }]
@@ -278,7 +308,7 @@ export async function bookAppointment(input) {
     couponResult = await couponService.validateCouponForBooking(couponCode, {
       userId: buyerId,
       serviceId,
-      appointmentValue: variant.totalPrice,
+      appointmentValue: effectivePrice,
     });
   }
 
@@ -328,7 +358,7 @@ export async function bookAppointment(input) {
             servicePackageId,
             name: variant.name,
             duration: variant.duration,
-            price: variant.totalPrice,
+            price: effectivePrice,
           },
           employee: chosenEmployeeId,
           employeeSnapshot: { name: employeeName },
@@ -351,7 +381,8 @@ export async function bookAppointment(input) {
           coupon: couponResult?.coupon._id || null,
           packagePurchase: resolvedPackagePurchase?._id || null,
           discountApplied,
-          finalPrice: resolvedPackagePurchase ? 0 : Math.max(0, variant.totalPrice - discountApplied),
+          finalPrice: resolvedPackagePurchase ? 0 : Math.max(0, effectivePrice - discountApplied),
+          manualBooking: priceOverride != null,
           contactSnapshot: {
             firstName: contact.firstName,
             lastName: contact.lastName || "",
@@ -415,6 +446,67 @@ export async function bookAppointment(input) {
 
   const populated = await getPopulatedAppointment(created._id);
   return { appointment: mapAppointment(populated, "user", "detail"), accountJustCreated };
+}
+
+/**
+ * Admin/employee-only entry point for manually creating an appointment - walk-ins,
+ * giveaways, prizes, and similar cases where staff are booking on someone's behalf
+ * rather than the customer booking themselves. Thin wrapper around bookAppointment:
+ * reuses its entire transaction, availability/resource-capacity checking, and
+ * employee-assignment logic untouched, and only adds resolving `existingUserId`
+ * (an admin picking a registered customer from search) into the isLoggedIn/userId/
+ * contact shape bookAppointment already expects. A booking with no existingUserId
+ * still works exactly like a guest/walk-in booking - same account-creation path a
+ * customer's own guest checkout uses.
+ *
+ * `priceOverride` and `actorRole` are forwarded as-is - see bookAppointment for the
+ * actual permission check and the coupon/package mutual-exclusion rule. `actorRole`
+ * is required here (not optional) since this function's entire reason to exist is
+ * the manual price override use case; a caller with no real actor role has no
+ * business calling this instead of the public bookAppointment directly.
+ */
+export async function createManualAppointment(input, { actorId = null, actorRole } = {}) {
+  if (actorRole !== "admin" && actorRole !== "employee") {
+    forbidden("Samo administrator ili zaposleni mogu ručno kreirati termin");
+  }
+
+  const { existingUserId = null, contact = {}, ...rest } = input;
+
+  let isLoggedIn = false;
+  let userId = null;
+  let resolvedContact = contact;
+
+  if (existingUserId) {
+    const user = await userService.findUserById(existingUserId);
+    if (!user) notFound("Korisnik");
+    isLoggedIn = true;
+    userId = existingUserId;
+    // an admin picking an existing user from search doesn't have to re-type their
+    // contact info - fall back to what's already on file, but still let an
+    // explicitly-typed override win (e.g. correcting a stale phone number)
+    resolvedContact = {
+      firstName: contact.firstName || user.firstName,
+      lastName: contact.lastName || user.lastName,
+      email: contact.email || user.email,
+      phone: contact.phone || user.phone,
+    };
+  }
+
+  logInfo("Manual appointment booking initiated", { actorId, actorRole, existingUserId, hasPriceOverride: rest.priceOverride != null });
+
+  return bookAppointment({
+    ...rest,
+    isLoggedIn,
+    userId,
+    contact: resolvedContact,
+    actorRole,
+    // a manually-created appointment is never paid via a customer's coupon or
+    // package purchase - see bookAppointment's own mutual-exclusion check with
+    // priceOverride, enforced again here so a stray couponCode/packagePurchaseId
+    // in the admin form payload can never slip through
+    couponCode: null,
+    packagePurchaseId: null,
+  });
 }
 
 async function transitionStatus(appointmentId, nextStatus, actorId, actorRole, extra = {}) {
@@ -684,6 +776,7 @@ export default {
   hasOverlappingAppointment,
   countOverlappingResourceAppointments,
   bookAppointment,
+  createManualAppointment,
   confirmAppointment,
   rejectAppointment,
   cancelAppointment,

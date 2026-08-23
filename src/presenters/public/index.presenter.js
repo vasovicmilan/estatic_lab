@@ -523,6 +523,7 @@ export function prepareHomeData({
   testimonials = [],
   latestPosts = [],
   bestPackages = [],
+  heroContent = null,
 } = {}) {
   return {
     hero: {
@@ -534,7 +535,12 @@ export function prepareHomeData({
           ctaUrl: "/usluge",
           secondaryCtaLabel: "Pogledajte pakete",
           secondaryCtaUrl: "/paketi",
-          image: "/images/site/hero-medium.webp",
+          // admin-editable via /admin/sajt (see site-settings.service.js's
+          // getHeroContent) - falls back to the original hardcoded image if
+          // heroContent wasn't passed in (e.g. a caller that skips
+          // index.service.js's getLandingPageData entirely)
+          image: heroContent?.image || "/images/site/hero-medium.webp",
+          imageAlt: heroContent?.imageAlt || "",
         },
 
     intro: {

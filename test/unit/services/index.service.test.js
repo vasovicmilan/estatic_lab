@@ -7,16 +7,18 @@ import postService from "../../../src/services/post.service.js";
 import packageService from "../../../src/services/package.service.js";
 import contactService from "../../../src/services/contact.service.js";
 import newsLetterService from "../../../src/services/news-letter.service.js";
+import siteSettingsService from "../../../src/services/site-settings.service.js";
 import * as indexService from "../../../src/services/index.service.js";
 
 describe("index.service", () => {
   describe("getLandingPageData", () => {
-    it("aggregates all five sources and trims featured experts to the requested limit", async (t) => {
+    it("aggregates all six sources and trims featured experts to the requested limit", async (t) => {
       t.mock.method(serviceService, "findHighlightedServices", async () => [{ id: "s1" }]);
       t.mock.method(expertService, "getActiveExperts", async () => [{ id: "e1" }, { id: "e2" }, { id: "e3" }]);
       t.mock.method(testimonialService, "getApprovedTestimonials", async () => [{ id: "t1" }]);
       t.mock.method(postService, "findPublishedPosts", async () => ({ data: [{ id: "p1" }] }));
       t.mock.method(packageService, "findActivePackages", async () => ({ data: [{ id: "pkg1" }] }));
+      t.mock.method(siteSettingsService, "getHeroContent", async () => ({ image: "/images/site/hero-medium.webp", imageAlt: "" }));
 
       const result = await indexService.getLandingPageData({ featuredExpertLimit: 2 });
 
@@ -25,6 +27,7 @@ describe("index.service", () => {
       assert.equal(result.testimonials.length, 1);
       assert.equal(result.latestPosts.length, 1);
       assert.equal(result.bestPackages.length, 1);
+      assert.equal(result.heroContent.image, "/images/site/hero-medium.webp");
       assert.ok(result.seo.pageTitle);
     });
   });

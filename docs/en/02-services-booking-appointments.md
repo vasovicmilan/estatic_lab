@@ -56,3 +56,13 @@ Rescheduling is governed by how much notice there is before the appointment's *c
 | Less than 4 hours | Not allowed |
 
 Regardless of which tier applies, the newly chosen time always has to be at least 30 minutes from the moment the reschedule is requested — nobody can move an appointment to a time that's already effectively now.
+
+## Staff-created appointments
+
+Besides a customer booking themselves through the public booking flow, an administrator (and an employee) can create an appointment directly from the admin panel (`/admin/termini/rucno-kreiranje`) — for walk-in customers who show up without a prior reservation, giveaway/contest prizes, and similar cases where the appointment isn't the result of the customer's own booking.
+
+This flow reuses exactly the same mechanics as public booking (the transactional availability, resource, and overlap checking, automatic/manual staff assignment) — the only differences are where the request comes from, and the option to manually set a price:
+
+- **Manual price override** — available to admins and employees only (never to public booking), and deliberately **excludes** coupons and package payment for that appointment - combining them would be both mathematically wrong (a coupon discounts the catalog price by a percentage/fixed amount, it doesn't replace it outright) and a security concern (a coupon is a code that could theoretically be replayed; a manual price never leaves the admin panel). An appointment created this way is flagged (`manualBooking` in the database, shown on the appointment's detail page) for transparency and reporting.
+- **Existing customer or walk-in** — an admin can pick an existing registered customer (their contact info is pulled from their account automatically, unless explicitly typed over), or enter a new customer's details who has no account - in that case a guest account is created, exactly like a public guest booking.
+- Unlike public booking, staff-created appointments **allow a past date** - useful for logging something that already happened after the fact (e.g. a walk-in that's already been completed).

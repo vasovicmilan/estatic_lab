@@ -4,6 +4,7 @@ import * as appointmentService from "../../services/appointment.service.js";
 import * as employeeService from "../../services/employee.service.js";
 import * as packagePurchaseService from "../../services/package-purchase.service.js";
 import * as orderService from "../../services/order.service.js";
+import couponService from "../../services/coupon.service.js";
 import { translateStatus as translatePayoutStatus } from "../../mappers/payout-request.mapper.js";
 import { logError } from "../../utils/logger.util.js";
 
@@ -35,10 +36,22 @@ function safe(eventName, handler) {
 eventEmitter.on(
   "user:registered",
   safe("user:registered", async ({ email, firstName, confirmToken }) => {
-    // Google sign-ins emit this too but with no confirmToken - their email is already
-    // verified by Google, so there's nothing to confirm and nothing to send.
-    if (!confirmToken) return;
-    await emailService.sendAccountConfirmationEmail({ email, firstName }, confirmToken);
+    // Idempotent - creates the shared welcome coupon on the very first
+    // registration ever and does nothing on every one after that (see
+    // coupon.service.js's ensureWelcomeCoupon). Runs before either branch
+    // below so the coupon code is guaranteed to exist by the time either
+    // email template tries to render it.
+    await couponService.ensureWelcomeCoupon();
+
+    if (confirmToken) {
+      await emailService.sendAccountConfirmationEmail({ email, firstName }, confirmToken);
+    } else {
+      // Google sign-ins emit this too but with no confirmToken - their email is
+      // already verified by Google, so there's nothing to confirm. That used to
+      // mean nothing was sent at all; now they get a dedicated welcome email
+      // with the same welcome coupon the password-registration path gets.
+      await emailService.sendWelcomeEmail({ email, firstName });
+    }
   })
 );
 

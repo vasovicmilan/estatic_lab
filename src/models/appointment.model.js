@@ -131,6 +131,18 @@ const AppointmentSchema = new Schema(
       min: 0,
     },
 
+    // true when this appointment was created directly by an admin/employee via
+    // createManualAppointment (appointment.service.js), with a hand-set price
+    // instead of the service's catalog price - giveaways, prizes, and similar
+    // cases. Purely informational/reporting (shows a badge on the admin detail
+    // page - see appointment.mapper.js) - it never gates any business logic on
+    // its own; the actual price-override permission check happens once, at
+    // creation time, in bookAppointment.
+    manualBooking: {
+      type: Boolean,
+      default: false,
+    },
+
     note: {
       type: String,
       trim: true,

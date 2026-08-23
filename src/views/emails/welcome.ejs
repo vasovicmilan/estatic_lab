@@ -1,14 +1,12 @@
 <%- include("_layout", {
-  title: "Potvrdite vaš nalog",
+  title: "Dobrodošli",
   eyebrow: "Nalog",
   heading: `Dobrodošli${typeof firstName !== 'undefined' && firstName ? ', ' + firstName : ''}!`,
-  preheader: "Kliknite da potvrdite vašu email adresu",
+  preheader: "Vaš nalog je spreman - evo poklon koda za početak",
   body: `
     <p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0 0 8px;">
-      Hvala što ste se registrovali. Potvrdite email adresu da aktivirate nalog.
+      Vaš nalog je uspešno kreiran i spreman je za korišćenje.
     </p>
-    ${ctaButton(confirmationUrl, "Potvrdi nalog")}
-    ${linkFallback(confirmationUrl)}
     ${typeof couponCode !== 'undefined' && couponCode ? couponBlock(couponCode, `Iskoristite ${couponDiscount}% popusta na vašu prvu uslugu ili paket.`) : ''}
   `
 }) %>

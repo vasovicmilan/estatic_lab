@@ -2,6 +2,7 @@ import couponRepo from "../repositories/coupon.repository.js";
 import { mapCouponsForAdminList, mapCouponForAdminDetail, mapCouponForEdit } from "../mappers/coupon.mapper.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
+import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
 
 export async function listCoupons({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
   const result = await couponRepo.findCoupons({ search, limit, page, filters });
@@ -58,6 +59,47 @@ export async function deleteCouponById(couponId) {
   await couponRepo.deleteCouponById(couponId);
   logInfo("Coupon deleted", { couponId });
   return { success: true };
+}
+
+/**
+ * Idempotently makes sure the shared "welcome" coupon (WELCOME_COUPON_CODE)
+ * exists, creating it with sane defaults on first call and doing nothing on
+ * every call after that. Called from email.listener.js right before a
+ * registration welcome email goes out - lazily-on-first-use rather than a
+ * seed script, so it self-heals if the coupon is ever deleted by mistake.
+ *
+ * One shared code for every new user, not a unique code minted per user: the
+ * existing maxUsesPerUser (default 1, see coupon.model.js) already enforces
+ * "once per person" at redemption time via usageHistory, which makes a
+ * per-user code unnecessary - it would just be the same protection with more
+ * documents to manage. Deliberately created with productDiscount left null
+ * and applicableServices/applicablePackages left empty, so it applies to
+ * every service/package but, per coupon.model.js's restrictive-by-default
+ * rule, never to product orders - matching the "usluge i paketi" scope this
+ * coupon is meant for. If that scope is ever wrong for an already-created
+ * coupon, edit it directly in the admin panel (Marketing > Kuponi) - this
+ * function only ever sets the initial defaults, it never overwrites an
+ * existing coupon on later calls.
+ */
+export async function ensureWelcomeCoupon() {
+  const existing = await couponRepo.findCouponByCode(WELCOME_COUPON_CODE);
+  if (existing) return existing;
+
+  const created = await couponRepo.createCoupon({
+    code: WELCOME_COUPON_CODE,
+    discountType: "percentage",
+    discountValue: WELCOME_COUPON_DISCOUNT_VALUE,
+    maxDiscountAmount: null,
+    minValue: 0,
+    maxUses: null,
+    maxUsesPerUser: 1,
+    applicableServices: [],
+    applicablePackages: [],
+    productDiscount: null,
+    isActive: true,
+  });
+  logInfo("Welcome coupon auto-created on first use", { couponId: created._id, code: created.code });
+  return created;
 }
 
 /**
@@ -215,6 +257,7 @@ export default {
   createCoupon,
   updateCouponById,
   deleteCouponById,
+  ensureWelcomeCoupon,
   validateCouponForBooking,
   validateCouponForPackagePurchase,
   validateCouponForOrder,

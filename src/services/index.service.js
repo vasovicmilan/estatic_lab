@@ -5,6 +5,7 @@ import postService from "./post.service.js";
 import packageService from "./package.service.js";
 import contactService from "./contact.service.js";
 import newsLetterService from "./news-letter.service.js";
+import siteSettingsService from "./site-settings.service.js";
 import { buildPageSeo } from "../seo/index.js";
 import { validationError } from "../utils/error.util.js";
 
@@ -15,12 +16,13 @@ export async function getLandingPageData({
   latestPostLimit = 3,
   bestPackageLimit = 3,
 } = {}) {
-  const [highlightedServices, allExperts, testimonials, latestPosts, packagesResult] = await Promise.all([
+  const [highlightedServices, allExperts, testimonials, latestPosts, packagesResult, heroContent] = await Promise.all([
     serviceService.findHighlightedServices({ limit: highlightedServiceLimit }),
     expertService.getActiveExperts(),
     testimonialService.getApprovedTestimonials({ limit: testimonialLimit, featuredOnly: true, random: true }),
     postService.findPublishedPosts({ limit: latestPostLimit }),
     packageService.findActivePackages({ limit: bestPackageLimit }),
+    siteSettingsService.getHeroContent(),
   ]);
 
   const seo = buildPageSeo({
@@ -37,6 +39,7 @@ export async function getLandingPageData({
     testimonials,
     latestPosts: latestPosts.data || [],
     bestPackages: packagesResult.data || [],
+    heroContent,
     seo,
   };
 }

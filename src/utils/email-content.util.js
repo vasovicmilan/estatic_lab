@@ -55,4 +55,17 @@ export function linkFallback(url) {
   </p>`;
 }
 
-export default { infoRow, infoTable, statusTone, badge, ctaButton, linkFallback };
+// Dashed-border "coupon" callout - code in a monospace-ish tracked-out block plus a
+// one-line description underneath. Used by account-confirmation.ejs and welcome.ejs
+// for the auto-issued welcome coupon (see coupon.service.js's ensureWelcomeCoupon).
+export function couponBlock(code, description) {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+    <tr><td style="padding:20px; text-align:center; background-color:#faf5ee; border:1.5px dashed #c9a876; border-radius:10px;">
+      <p style="margin:0 0 8px; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#a5794f;">Vaš poklon kod</p>
+      <p style="margin:0 0 8px; font-size:22px; font-weight:800; letter-spacing:.06em; color:#2d2a26;">${code}</p>
+      <p style="margin:0; font-size:13px; color:#5b564f;">${description}</p>
+    </td></tr>
+  </table>`;
+}
+
+export default { infoRow, infoTable, statusTone, badge, ctaButton, linkFallback, couponBlock };

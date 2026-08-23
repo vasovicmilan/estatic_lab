@@ -25,6 +25,8 @@ export function prepareAppointmentListData(result, query = {}) {
       { label: "Termini", url: null },
     ],
     topbar: {
+      createUrl: "/admin/termini/rucno-kreiranje",
+      createLabel: "Novi termin (ručno)",
       searchUrl: "/admin/termini/pretraga",
       search: query.search || "",
       filters: [
@@ -106,6 +108,7 @@ export function prepareAppointmentDetailsData(appointment, { employeeOptions = [
           { label: "Kupon", value: appointment.kupon || "-" },
           { label: "Popust", value: appointment.popust || "-" },
           { label: "Konačna cena", value: appointment.konacnaCena },
+          ...(appointment.rucnoKreiran ? [{ label: "Napomena", value: "Ručno kreiran termin - cena ručno podešena od strane osoblja" }] : []),
         ],
       },
     ],

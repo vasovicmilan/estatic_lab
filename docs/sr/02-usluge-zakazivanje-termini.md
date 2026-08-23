@@ -56,3 +56,13 @@ Pomeranje termina zavisi od toga koliko je vremena ostalo do *trenutnog* početk
 | Manje od 4 sata | Nije dozvoljeno |
 
 Bez obzira na to koji se prag primenjuje, novo izabrano vreme uvek mora biti bar 30 minuta od trenutka kada se pomeranje zahteva — niko ne može da pomeri termin na vreme koje je praktično već sada.
+
+## Ručno kreiranje termina od strane osoblja
+
+Osim što klijent sam zakazuje termin kroz javni tok zakazivanja, administrator (i zaposleni) mogu direktno kreirati termin iz admin panela (`/admin/termini/rucno-kreiranje`) — za walk-in klijente koji dođu bez prethodne rezervacije, poklone, nagrade sa nagradnih igara, i slične slučajeve gde termin nije rezultat klijentovog sopstvenog zakazivanja.
+
+Ovaj tok koristi potpuno istu mehaniku kao i javno zakazivanje (transakciona provera dostupnosti, resursa, i sudara termina, automatsko/ručno dodeljivanje zaposlenog) — jedina razlika je odakle dolazi zahtev, i opcija ručnog podešavanja cene:
+
+- **Ručno podešena cena** — dostupna samo administratoru i zaposlenom (nikad javnom zakazivanju), i namerno **isključuje** kupon i plaćanje paketom za taj termin — kombinovanje bi bilo i matematički pogrešno (kupon umanjuje cenu iz kataloga za procenat/fiksan iznos, a ne zamenjuje je potpuno) i bezbednosno rizično (kupon je kod koji bi teorijski mogao biti ponovo iskorišćen; ručna cena nikad ne napušta admin panel). Termin kreiran na ovaj način je označen (`manualBooking` u bazi, prikazano na stranici detalja termina) radi transparentnosti i izveštavanja.
+- **Postojeći korisnik ili walk-in** — administrator može izabrati postojećeg registrovanog korisnika (kontakt podaci se automatski preuzimaju sa njegovog naloga, osim ako se izričito unesu drugačiji), ili uneti podatke novog klijenta koji nema nalog — u tom slučaju se kreira gostinski nalog, isto kao i kod javnog zakazivanja bez prijave.
+- Za razliku od javnog zakazivanja, ručno kreiranje termina **dozvoljava datum u prošlosti** — korisno za naknadno evidentiranje nečega što se već desilo (npr. walk-in koji je već obavljen).

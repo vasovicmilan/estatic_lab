@@ -360,6 +360,294 @@ describe("bookAppointment - employee assignment", () => {
   });
 });
 
+describe("bookAppointment - manual price override (admin/employee only)", () => {
+  it("rejects priceOverride when no privileged actorRole is given", async () => {
+    await assert.rejects(
+      () =>
+        appointmentService.bookAppointment({
+          serviceId: id().toString(),
+          servicePackageId: id().toString(),
+          startTime: tomorrowAt10(),
+          contact: { firstName: "Ana", email: "ana@example.com" },
+          priceOverride: 500,
+        }),
+      (err) => err.statusCode === 403
+    );
+  });
+
+  it("rejects priceOverride when actorRole is a plain user, not admin/employee", async () => {
+    await assert.rejects(
+      () =>
+        appointmentService.bookAppointment({
+          serviceId: id().toString(),
+          servicePackageId: id().toString(),
+          startTime: tomorrowAt10(),
+          contact: { firstName: "Ana", email: "ana@example.com" },
+          priceOverride: 500,
+          actorRole: "user",
+        }),
+      (err) => err.statusCode === 403
+    );
+  });
+
+  it("rejects a negative or non-numeric priceOverride even from a privileged actor", async () => {
+    await assert.rejects(
+      () =>
+        appointmentService.bookAppointment({
+          serviceId: id().toString(),
+          servicePackageId: id().toString(),
+          startTime: tomorrowAt10(),
+          contact: { firstName: "Ana", email: "ana@example.com" },
+          priceOverride: -50,
+          actorRole: "admin",
+        }),
+      (err) => err.statusCode === 400
+    );
+  });
+
+  it("rejects combining priceOverride with a coupon code", async () => {
+    await assert.rejects(
+      () =>
+        appointmentService.bookAppointment({
+          serviceId: id().toString(),
+          servicePackageId: id().toString(),
+          startTime: tomorrowAt10(),
+          contact: { firstName: "Ana", email: "ana@example.com" },
+          priceOverride: 500,
+          actorRole: "admin",
+          couponCode: "SOMECODE",
+        }),
+      (err) => err.statusCode === 400
+    );
+  });
+
+  it("rejects combining priceOverride with packagePurchaseId", async () => {
+    await assert.rejects(
+      () =>
+        appointmentService.bookAppointment({
+          serviceId: id().toString(),
+          servicePackageId: id().toString(),
+          startTime: tomorrowAt10(),
+          isLoggedIn: true,
+          userId: id().toString(),
+          contact: { firstName: "Ana", email: "ana@example.com" },
+          priceOverride: 500,
+          actorRole: "admin",
+          packagePurchaseId: id().toString(),
+        }),
+      (err) => err.statusCode === 400
+    );
+  });
+
+  it("stores the overridden price as both variant.price and finalPrice, and flags manualBooking", async (t) => {
+    const soleFreeEmployee = buildEmployee();
+
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(userService, "findUserByEmail", async () => null);
+    t.mock.method(userService, "createGuestUser", async () => buildUser());
+    t.mock.method(userService, "findUserById", async () => buildUser());
+    // catalog price is 2800 - the override below should win everywhere, not this
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
+    t.mock.method(availabilityService, "findAvailableEmployees", async () => [soleFreeEmployee]);
+    t.mock.method(employeeService, "getEmployeeNameById", async () => "Terapeutkinja");
+    t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+
+    let createdPayload;
+    t.mock.method(appointmentRepo, "createAppointment", async (data) => {
+      createdPayload = data;
+      return { ...data, _id: id() };
+    });
+
+    await appointmentService.bookAppointment({
+      serviceId: id().toString(),
+      servicePackageId: id().toString(),
+      startTime: tomorrowAt10(),
+      contact: { firstName: "Dobitnica", email: "dobitnica@example.com" },
+      priceOverride: 500,
+      actorRole: "admin",
+    });
+
+    assert.equal(createdPayload.variant.price, 500);
+    assert.equal(createdPayload.finalPrice, 500);
+    assert.equal(createdPayload.discountApplied, 0);
+    assert.equal(createdPayload.manualBooking, true);
+    assert.equal(createdPayload.coupon, null);
+  });
+
+  it("treats a priceOverride of exactly 0 (a fully free giveaway) as a real override, not a missing one", async (t) => {
+    const soleFreeEmployee = buildEmployee();
+
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(userService, "findUserByEmail", async () => null);
+    t.mock.method(userService, "createGuestUser", async () => buildUser());
+    t.mock.method(userService, "findUserById", async () => buildUser());
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
+    t.mock.method(availabilityService, "findAvailableEmployees", async () => [soleFreeEmployee]);
+    t.mock.method(employeeService, "getEmployeeNameById", async () => "Terapeutkinja");
+    t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+
+    let createdPayload;
+    t.mock.method(appointmentRepo, "createAppointment", async (data) => {
+      createdPayload = data;
+      return { ...data, _id: id() };
+    });
+
+    // a start time in the past is allowed for a manual/override booking (e.g.
+    // logging a walk-in that already happened) - proves the guard skip keys off
+    // priceOverride being non-null, not off it being truthy
+    const pastStart = new Date(Date.now() - 60 * 60 * 1000);
+
+    await appointmentService.bookAppointment({
+      serviceId: id().toString(),
+      servicePackageId: id().toString(),
+      startTime: pastStart,
+      contact: { firstName: "Dobitnik", email: "dobitnik@example.com" },
+      priceOverride: 0,
+      actorRole: "admin",
+    });
+
+    assert.equal(createdPayload.variant.price, 0);
+    assert.equal(createdPayload.finalPrice, 0);
+    assert.equal(createdPayload.manualBooking, true);
+  });
+
+  it("leaves manualBooking false and price untouched for a normal (non-override) booking", async (t) => {
+    const soleFreeEmployee = buildEmployee();
+
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(userService, "findUserByEmail", async () => null);
+    t.mock.method(userService, "createGuestUser", async () => buildUser());
+    t.mock.method(userService, "findUserById", async () => buildUser());
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
+    t.mock.method(availabilityService, "findAvailableEmployees", async () => [soleFreeEmployee]);
+    t.mock.method(employeeService, "getEmployeeNameById", async () => "Terapeutkinja");
+    t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+
+    let createdPayload;
+    t.mock.method(appointmentRepo, "createAppointment", async (data) => {
+      createdPayload = data;
+      return { ...data, _id: id() };
+    });
+
+    await appointmentService.bookAppointment({
+      serviceId: id().toString(),
+      servicePackageId: id().toString(),
+      startTime: tomorrowAt10(),
+      contact: { firstName: "Ana", email: "ana@example.com" },
+    });
+
+    assert.equal(createdPayload.variant.price, 2800);
+    assert.equal(createdPayload.finalPrice, 2800);
+    assert.equal(createdPayload.manualBooking, false);
+  });
+});
+
+describe("createManualAppointment - admin/employee wrapper", () => {
+  it("rejects when actorRole isn't admin or employee", async () => {
+    await assert.rejects(
+      () =>
+        appointmentService.createManualAppointment(
+          { serviceId: id().toString(), servicePackageId: id().toString(), startTime: tomorrowAt10(), contact: { firstName: "Ana", email: "ana@example.com" } },
+          { actorId: id().toString(), actorRole: "user" }
+        ),
+      (err) => err.statusCode === 403
+    );
+  });
+
+  it("throws 404 when existingUserId doesn't resolve to a real user", async (t) => {
+    t.mock.method(userService, "findUserById", async () => null);
+
+    await assert.rejects(
+      () =>
+        appointmentService.createManualAppointment(
+          {
+            serviceId: id().toString(),
+            servicePackageId: id().toString(),
+            startTime: tomorrowAt10(),
+            existingUserId: id().toString(),
+            contact: {},
+          },
+          { actorId: id().toString(), actorRole: "admin" }
+        ),
+      (err) => err.statusCode === 404
+    );
+  });
+
+  it("fills in contact info from the existing user's own record when the form left it blank", async (t) => {
+    const soleFreeEmployee = buildEmployee();
+    const existingUser = buildUser({ firstName: "Marija", lastName: "Petrović", email: "marija@example.com" });
+
+    t.mock.method(userService, "findUserById", async (uid) => (String(uid) === String(existingUser._id) ? existingUser : buildUser()));
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 3000, duration: 40 }) }));
+    t.mock.method(availabilityService, "findAvailableEmployees", async () => [soleFreeEmployee]);
+    t.mock.method(employeeService, "getEmployeeNameById", async () => "Terapeutkinja");
+    t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+
+    let createdPayload;
+    t.mock.method(appointmentRepo, "createAppointment", async (data) => {
+      createdPayload = data;
+      return { ...data, _id: id() };
+    });
+
+    await appointmentService.createManualAppointment(
+      {
+        serviceId: id().toString(),
+        servicePackageId: id().toString(),
+        startTime: tomorrowAt10(),
+        existingUserId: existingUser._id.toString(),
+        contact: { firstName: "", lastName: "", email: "", phone: "" },
+        priceOverride: 750,
+      },
+      { actorId: id().toString(), actorRole: "admin" }
+    );
+
+    assert.equal(createdPayload.contactSnapshot.firstName, "Marija");
+    assert.equal(createdPayload.contactSnapshot.email, "marija@example.com");
+    assert.equal(String(createdPayload.user), String(existingUser._id));
+    assert.equal(createdPayload.variant.price, 750);
+    assert.equal(createdPayload.manualBooking, true);
+  });
+
+  it("strips any couponCode/packagePurchaseId a caller might still pass, since a manual booking never redeems either", async (t) => {
+    const soleFreeEmployee = buildEmployee();
+
+    t.mock.method(userService, "findUserByEmail", async () => null);
+    t.mock.method(userService, "createGuestUser", async () => buildUser());
+    t.mock.method(userService, "findUserById", async () => buildUser());
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 3000, duration: 40 }) }));
+    t.mock.method(availabilityService, "findAvailableEmployees", async () => [soleFreeEmployee]);
+    t.mock.method(employeeService, "getEmployeeNameById", async () => "Terapeutkinja");
+    t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+    const couponMock = t.mock.method(couponService, "validateCouponForBooking", async () => {
+      throw new Error("should never be called for a manual booking");
+    });
+
+    t.mock.method(appointmentRepo, "createAppointment", async (data) => ({ ...data, _id: id() }));
+
+    await appointmentService.createManualAppointment(
+      {
+        serviceId: id().toString(),
+        servicePackageId: id().toString(),
+        startTime: tomorrowAt10(),
+        contact: { firstName: "Nagrada", email: "nagrada@example.com" },
+        priceOverride: 0,
+        couponCode: "SHOULDBESTRIPPED",
+        packagePurchaseId: id().toString(),
+      },
+      { actorId: id().toString(), actorRole: "employee" }
+    );
+
+    assert.equal(couponMock.mock.calls.length, 0);
+  });
+});
+
 describe("bookAppointment - package purchase payment", () => {
   it("rejects packagePurchaseId when the booker isn't logged in", async () => {
     await assert.rejects(

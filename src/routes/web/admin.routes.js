@@ -27,6 +27,7 @@ import testimonialRoutes from "./admin/testimonial.routes.js";
 import productRoutes from "./admin/product.routes.js";
 import orderRoutes from "./admin/order.routes.js";
 import temporaryOrderRoutes from "./admin/temporary-order.routes.js";
+import siteSettingsRoutes from "./admin/site-settings.routes.js";
 
 const router = Router();
 
@@ -58,5 +59,6 @@ router.use("/testimoniali", requirePermission("manage_marketing"), testimonialRo
 router.use("/proizvodi", requirePermission("manage_products"), productRoutes);
 router.use("/porudzbine", requirePermission("manage_orders"), orderRoutes);
 router.use("/privremene-porudzbine", requirePermission("manage_orders"), temporaryOrderRoutes);
+router.use("/sajt", requirePermission("manage_site_content"), siteSettingsRoutes);
 
 export default router;
