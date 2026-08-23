@@ -124,6 +124,7 @@ export async function addSeoAndPublish(productId, data) {
     relatedProducts: data.relatedProducts ?? existing.relatedProducts ?? [],
     faq: data.faq ?? existing.faq ?? [],
     badge: data.badge ?? existing.badge ?? "none",
+    shippingClass: data.shippingClass ?? existing.shippingClass ?? "standard",
     isActive: data.isActive ?? true,
   };
 

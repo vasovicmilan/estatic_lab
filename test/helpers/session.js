@@ -7,7 +7,12 @@ export async function ensureRole(name) {
   const existing = await Role.findOne({ name });
   if (existing) return existing;
 
-  const priority = name === "admin" ? 100 : name === "employee" ? 50 : 0;
+  // matches src/database/seeds/roles.seed.js's real priority values - a role
+  // created here with the wrong priority silently breaks anything that compares
+  // priorities (e.g. partner.service.js's createPartner only promotes a user's
+  // role when currentPriority < partnerRole.priority; a "partner" role stuck at
+  // the same priority as "user" would never actually promote anyone)
+  const priority = name === "admin" ? 100 : name === "employee" ? 50 : name === "partner" ? 40 : 0;
   const permissions = name === "admin" ? PERMISSIONS : [];
 
   return Role.create({ name, isDefault: name === "user", priority, permissions });
