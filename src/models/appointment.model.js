@@ -95,6 +95,16 @@ const AppointmentSchema = new Schema(
     confirmedBy: { type: String, enum: ["system", "admin", "employee"] },
     confirmedAt: Date,
 
+    // Idempotency guards for the reminder cron jobs (see
+    // src/jobs/appointment-reminder-jobs.js) - null means "not sent yet", a
+    // timestamp means "already sent, don't send again". Two separate fields
+    // rather than one array/count because the two reminders are genuinely
+    // independent (a job crash or a config change removing one shouldn't
+    // affect the other), and a plain null check is a trivial, race-safe
+    // query filter for the cron to use.
+    reminder24hSentAt: { type: Date, default: null },
+    reminder4hSentAt: { type: Date, default: null },
+
     assignedTo: {
       type: Schema.Types.ObjectId,
       ref: "Employee",

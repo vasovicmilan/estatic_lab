@@ -860,3 +860,47 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
     assert.equal(releaseMock.mock.calls.length, 0);
   });
 });
+
+describe("findAppointmentsDueForReminder / markReminderSent", () => {
+  it("maps each raw appointment returned by the repo to the same shape email templates expect", async (t) => {
+    const rawDue = buildAppointment({ status: "confirmed" });
+
+    t.mock.method(appointmentRepo, "findAppointmentsDueForReminder", async (sentAtField, windowHours) => {
+      assert.equal(sentAtField, "reminder24hSentAt");
+      assert.equal(windowHours, 24);
+      return [rawDue];
+    });
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => rawDue);
+
+    const results = await appointmentService.findAppointmentsDueForReminder("reminder24hSentAt", 24);
+
+    assert.equal(results.length, 1);
+    // mapped shape - id is a string, not the raw ObjectId, and the fields the
+    // reminder email template reads (appointment.usluga/termin/terapeut) exist
+    assert.equal(results[0].id, rawDue._id.toString());
+    assert.ok("usluga" in results[0]);
+    assert.ok("termin" in results[0]);
+  });
+
+  it("returns an empty array without extra lookups when nothing is due", async (t) => {
+    t.mock.method(appointmentRepo, "findAppointmentsDueForReminder", async () => []);
+    const findByIdMock = t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+
+    const results = await appointmentService.findAppointmentsDueForReminder("reminder4hSentAt", 4);
+
+    assert.deepEqual(results, []);
+    assert.equal(findByIdMock.mock.calls.length, 0);
+  });
+
+  it("markReminderSent stamps the given field with the current time via updateAppointmentById", async (t) => {
+    const appointmentId = id().toString();
+    const updateMock = t.mock.method(appointmentRepo, "updateAppointmentById", async (targetId, data) => ({ _id: targetId, ...data }));
+
+    await appointmentService.markReminderSent(appointmentId, "reminder4hSentAt");
+
+    assert.equal(updateMock.mock.calls.length, 1);
+    const [calledId, calledData] = updateMock.mock.calls[0].arguments;
+    assert.equal(calledId, appointmentId);
+    assert.ok(calledData.reminder4hSentAt instanceof Date);
+  });
+});

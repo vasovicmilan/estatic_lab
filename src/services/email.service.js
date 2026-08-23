@@ -127,6 +127,18 @@ export async function sendAppointmentCancelledEmail({ email, firstName }, appoin
   return sendEmail({ to: email, subject: `Termin otkazan - ${SITE_NAME}`, html });
 }
 
+// One template, reused for both the 24h and 4h reminder (see
+// appointment-reminder-jobs.js) - the subject line is the only thing that
+// differs between the two, the body always shows the actual date/time rather
+// than claiming "tomorrow"/"in 4 hours", which stays accurate even if a
+// reminder ends up firing later than its usual window (e.g. after downtime -
+// see appointment.repository.js's findAppointmentsDueForReminder).
+export async function sendAppointmentReminderEmail({ email, firstName }, appointment, hoursBefore) {
+  const html = await renderTemplate("appointment-reminder", { firstName, appointment });
+  const subject = hoursBefore >= 24 ? `Podsetnik: termin sutra - ${SITE_NAME}` : `Podsetnik: termin danas - ${SITE_NAME}`;
+  return sendEmail({ to: email, subject, html });
+}
+
 // generic fallback for rejected/completed/no_show status changes
 export async function sendAppointmentStatusUpdateEmail({ email, firstName }, appointment, status) {
   const html = await renderTemplate("appointment-status-update", { firstName, appointment, status });
@@ -285,6 +297,7 @@ export default {
   sendAppointmentReceivedEmail,
   sendAppointmentConfirmedEmail,
   sendAppointmentCancelledEmail,
+  sendAppointmentReminderEmail,
   sendAppointmentStatusUpdateEmail,
   sendPayoutStatusUpdateEmail,
   sendAppointmentReassignedEmail,

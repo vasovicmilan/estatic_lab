@@ -767,6 +767,21 @@ export async function deleteAppointmentById(appointmentId, actorId) {
   return { success: true };
 }
 
+/**
+ * Confirmed appointments due for a given reminder window, already mapped to the
+ * same "user" detail shape the email templates already expect (see
+ * appointment-confirmation.ejs's appointment.usluga/termin/terapeut fields) -
+ * used by appointment-reminder-jobs.js.
+ */
+export async function findAppointmentsDueForReminder(sentAtField, windowHours) {
+  const due = await appointmentRepo.findAppointmentsDueForReminder(sentAtField, windowHours);
+  return Promise.all(due.map((a) => getPopulatedAppointment(a._id).then((full) => mapAppointment(full, "user", "detail"))));
+}
+
+export async function markReminderSent(appointmentId, sentAtField) {
+  return appointmentRepo.updateAppointmentById(appointmentId, { [sentAtField]: new Date() });
+}
+
 export default {
   findAppointments,
   getAppointmentById,
@@ -787,4 +802,6 @@ export default {
   deleteAppointmentById,
   setGoogleEventId,
   getGoogleEventId,
+  findAppointmentsDueForReminder,
+  markReminderSent,
 };

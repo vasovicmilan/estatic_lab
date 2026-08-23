@@ -9,6 +9,7 @@ import {
 import { runCommissionGracePeriodSweep } from "./commission-jobs.js";
 import { runPublishScheduledPosts } from "./post-jobs.js";
 import { runSredimeSync } from "./sredime-jobs.js";
+import { runAppointmentReminders } from "./appointment-reminder-jobs.js";
 import { logInfo } from "../utils/logger.util.js";
 
 const TIMEZONE = process.env.CRON_TIMEZONE || "Europe/Belgrade";
@@ -60,6 +61,15 @@ export function startScheduler() {
   // through SrediMe reliably shows up here well before the next customer looks
   // at that employee's slots, without hammering SrediMe's server every minute.
   cron.schedule("*/15 * * * *", runSredimeSync, { timezone: TIMEZONE });
+
+  // Appointment reminders (24h and 4h before, see reminder.config.js) - every
+  // 15 minutes. The underlying query window is wide (now up to the window
+  // edge, guarded by the reminderXSentAt null check - see
+  // appointment.repository.js's findAppointmentsDueForReminder), so this
+  // frequency is about responsiveness, not correctness: a missed run just
+  // means the reminder goes out a few minutes later next tick, never twice
+  // and never silently skipped.
+  cron.schedule("*/15 * * * *", runAppointmentReminders, { timezone: TIMEZONE });
 
   logInfo(`[cron] Scheduler started (timezone: ${TIMEZONE})`);
 }

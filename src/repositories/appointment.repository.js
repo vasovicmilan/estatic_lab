@@ -177,6 +177,27 @@ export async function countAppointments(filters = {}, { session } = {}) {
   return Appointment.countDocuments(buildAppointmentFilter(filters)).session(session || null);
 }
 
+/**
+ * Confirmed appointments starting within the next `windowHours` that haven't
+ * had this particular reminder sent yet (`sentAtField` is null). Deliberately
+ * a wide "anytime between now and the window edge" query rather than a narrow
+ * slice matching the cron's own tick interval - if a cron run is ever missed
+ * (deploy, restart, brief downtime), the next run still catches these instead
+ * of silently skipping them forever, since the guard field is what prevents
+ * duplicates, not the window's tightness. See appointment-reminder-jobs.js.
+ */
+export async function findAppointmentsDueForReminder(sentAtField, windowHours, { session } = {}) {
+  const now = new Date();
+  const windowEnd = new Date(now.getTime() + windowHours * 60 * 60 * 1000);
+  return Appointment.find({
+    status: "confirmed",
+    startTime: { $gt: now, $lte: windowEnd },
+    [sentAtField]: null,
+  })
+    .session(session || null)
+    .lean();
+}
+
 export default {
   createAppointment,
   findAppointmentById,
@@ -190,4 +211,5 @@ export default {
   updateAppointmentById,
   deleteAppointmentById,
   countAppointments,
+  findAppointmentsDueForReminder,
 }

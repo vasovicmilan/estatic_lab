@@ -262,4 +262,45 @@ describe("appointment.repository", () => {
       assert.equal(count, 1);
     });
   });
+
+  describe("findAppointmentsDueForReminder", () => {
+    function inHours(hours) {
+      return new Date(Date.now() + hours * 60 * 60 * 1000);
+    }
+
+    it("returns confirmed appointments starting within the window that haven't been reminded yet", async () => {
+      const due = await appointmentRepo.createAppointment(
+        validAppointment({ status: "confirmed", startTime: inHours(20), reminder24hSentAt: null })
+      );
+      // outside the 24h window - starts in 30h
+      await appointmentRepo.createAppointment(validAppointment({ status: "confirmed", startTime: inHours(30), reminder24hSentAt: null }));
+      // inside the window but not confirmed yet - shouldn't be reminded
+      await appointmentRepo.createAppointment(validAppointment({ status: "pending", startTime: inHours(20), reminder24hSentAt: null }));
+      // inside the window and confirmed, but already reminded
+      await appointmentRepo.createAppointment(
+        validAppointment({ status: "confirmed", startTime: inHours(20), reminder24hSentAt: new Date() })
+      );
+      // already in the past - shouldn't be reminded
+      await appointmentRepo.createAppointment(
+        validAppointment({ status: "confirmed", startTime: new Date(Date.now() - 60 * 60 * 1000), reminder24hSentAt: null })
+      );
+
+      const results = await appointmentRepo.findAppointmentsDueForReminder("reminder24hSentAt", 24);
+
+      assert.equal(results.length, 1);
+      assert.equal(String(results[0]._id), String(due._id));
+    });
+
+    it("keeps the 24h and 4h reminder guards independent of each other", async () => {
+      await appointmentRepo.createAppointment(
+        validAppointment({ status: "confirmed", startTime: inHours(3), reminder24hSentAt: new Date(), reminder4hSentAt: null })
+      );
+
+      const dueFor24h = await appointmentRepo.findAppointmentsDueForReminder("reminder24hSentAt", 24);
+      const dueFor4h = await appointmentRepo.findAppointmentsDueForReminder("reminder4hSentAt", 4);
+
+      assert.equal(dueFor24h.length, 0); // already sent
+      assert.equal(dueFor4h.length, 1); // not sent yet, and within the 4h window
+    });
+  });
 });
