@@ -21,6 +21,7 @@ export const PERMISSIONS = [
   "manage_orders",
   "manage_partners",
   "manage_payouts",
+  "manage_site_content",
   "view_own_commissions",
   "view_logs",
   "view_dashboard",

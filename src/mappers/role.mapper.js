@@ -27,6 +27,7 @@ export function translatePermission(permission) {
 
     manage_partners: "Upravljanje partnerima",
     manage_payouts: "Upravljanje isplatama",
+    manage_site_content: "Upravljanje sadržajem sajta (hero slika)",
     view_own_commissions: "Pregled sopstvene provizije",
     view_logs: "Pregled logova",
   };
