@@ -20,7 +20,7 @@ Unapređenje korisnika u profil Zaposlenog ili Partnera se obrađuje sa zaštito
 
 Administratori imaju punu vidljivost nad svakim terminom i svakom porudžbinom iz prodavnice, i mogu da pomere bilo koji kroz njegov životni ciklus u ime klijenta ili zaposlenog kada je potrebno — potvrđujući, završavajući, otkazujući, preraspodeljujući drugom zaposlenom, pomerajući na novo vreme, i slično, prateći ista pravila opisana u `02-usluge-zakazivanje-termini.md` i `04-prodavnica-proizvodi-porudzbine.md`.
 
-Administrator (ili zaposleni) takođe može direktno kreirati termin iz admin panela (`/admin/termini/rucno-kreiranje`) umesto da ga klijent sam zakaže — za walk-in klijente, poklone, nagrade, i slične slučajeve. Pri tome se opciono može ručno podesiti cena za taj konkretan termin, umesto cene iz kataloga usluge — pogledajte `02-usluge-zakazivanje-termini.md` za punu mehaniku i razlog zašto je ovo namerno odvojeno od sistema kupona.
+Administrator takođe može direktno kreirati termin iz admin panela (`/admin/termini/rucno-kreiranje`) umesto da ga klijent sam zakaže — za walk-in klijente, poklone, nagrade, i slične slučajeve. Pri tome se opciono može ručno podesiti cena za taj konkretan termin, umesto cene iz kataloga usluge — pogledajte `02-usluge-zakazivanje-termini.md` za punu mehaniku i razlog zašto je ovo namerno odvojeno od sistema kupona. Trenutno dostupno samo administratoru — zaposleni nemaju pristup `/admin` panelu uopšte (imaju svoj poseban portal), iako je servisni sloj već spreman da podrži i njih ako se to ikad odluči da otvori.
 
 ## Kupovine paketa
 
@@ -30,9 +30,17 @@ Pošto se kupovine paketa evidentiraju od strane administratora umesto da ih kli
 
 Kodovi za popust, kuponi povezani sa referalima, i strana isplata partnerskog programa se svi upravljaju iz admin panela, pored opšteg marketinškog sadržaja poput newsletter-a i preporuka klijenata.
 
-## Sadržaj sajta
+## Sadržaj sajta i podešavanja
 
-Naslovna (hero) slika početne strane se menja iz admin panela (Sadržaj i marketing → Sadržaj sajta, `/admin/sajt`), bez potrebe za izmenom koda ili redeploy-om. Podaci se čuvaju u jednom (singleton) `SiteSettings` dokumentu — ako nikad nije ručno postavljena, koristi se podrazumevana slika iz koda. Ovo je namerno odvojeno od `business.config.js`, koji ostaje statičan, kod-definisan izvor istine za identitet biznisa (naziv, adresa, radno vreme...) — `SiteSettings` je uređivan sadržaj koji se menja bez deploy-a, spreman da se u budućnosti proširi (npr. sadržaj stranice "O nama").
+Iz admin panela (Sadržaj i marketing → Sadržaj sajta, `/admin/sajt`) se menja sve u jednom (singleton) `SiteSettings` dokumentu, bez potrebe za izmenom koda ili redeploy-om:
+
+- **Hero slika** — naslovna slika početne strane. Ako nikad nije ručno postavljena, koristi se podrazumevana slika iz koda.
+- **Politika zakazivanja** — razmak između termina, korak ponuđenih termina, rok za samostalno otkazivanje, pragovi za pomeranje termina (videti `02-usluge-zakazivanje-termini.md`). Bilo hardkodovano u `booking.config.js`, sada admin-editable.
+- **Valuta** — kod, simbol za prikaz, i pozicija simbola. Menja samo kako se cena prikazuje (npr. "2500 RSD" vs "€2500"); ne menja same podatke u bazi niti vrši konverziju valuta.
+
+Izmene ovde su odmah aktivne, bez restart-a servera — sistem drži trenutne vrednosti u memoriji (`runtime-settings.cache.js`) i osvežava ih čim se sačuva izmena.
+
+Ovo je namerno odvojeno od `business.config.js`, koji ostaje statičan, kod-definisan izvor istine za identitet biznisa (naziv, adresa, radno vreme...) — `SiteSettings` je uređivan sadržaj koji se menja bez deploy-a, spreman da se u budućnosti proširi (npr. sadržaj stranice "O nama").
 
 ## Nadzor i izveštavanje
 

@@ -26,11 +26,29 @@ Each set covers:
 | 09 | Admin Operations |
 | 10 | Logs & Audit Trail |
 | 11 | External Integrations — Google Calendar & SrediMe |
+| 12 | Testing |
+
+For a higher-level walkthrough of *why* each part of the system is built the way it is (business challenge → approach → solution, across every domain), see [`POSLOVNA-LOGIKA.md`](POSLOVNA-LOGIKA.md) (Serbian).
+
+## Admin-configurable settings
+
+Hero image, booking policy (appointment buffer, cancellation/reschedule windows), and currency are all editable from the admin panel (`/admin/sajt`) — no code change or redeploy needed, and changes take effect immediately. Everything else about the catalog (services, packages, products, staff) is entered through the admin panel as well. See `09-admin-operations.md` and `DEPLOYMENT.md`.
 
 ## Stack
 
 Node.js · Express 5 · MongoDB / Mongoose 9 · EJS · Bootstrap 5
 
+## Testing
+
+Three layers - unit (mocked dependencies), integration (real HTTP requests against an in-memory MongoDB), and E2E (Playwright, real browser against a real running server). See `docs/en/12-testing.md` / `docs/sr/12-testiranje.md`.
+
+```bash
+npm test              # unit + integration
+npx playwright test   # E2E
+```
+
 ## Deployment
 
-PM2 (cluster mode) + nginx + Cloudflare.
+PM2 (cluster mode) + nginx + Cloudflare, one deployment per client (hosted white-label, not multi-tenant).
+
+For onboarding a **new client** — environment setup, the one mandatory seed step, first-admin bootstrap, and what's admin-panel-configurable vs. what still needs a manual code change per client — see [`DEPLOYMENT.md`](DEPLOYMENT.md) and [`.env.example`](.env.example).

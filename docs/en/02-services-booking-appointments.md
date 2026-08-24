@@ -14,6 +14,8 @@ Booking is a guided, three-step process:
 
 Slot availability is calculated from each staff member's working hours, minus whatever appointments they already have booked, with a 30-minute buffer built in on both sides of each existing appointment so back-to-back bookings don't run into each other without any breathing room for cleanup or prep. This same calculation also accounts for any bookings that came in through SrediMe, an external booking marketplace the business also lists on — see `11-external-integrations.md` for how that sync works.
 
+> The numbers quoted throughout this document (30-minute buffer, 24-hour cancellation cutoff, etc.) are **defaults** - an admin can change any of them at any time through `/admin/sajt` (Booking Policy), no code change or server restart needed. See `09-admin-operations.md`.
+
 When a customer doesn't request a specific staff member, the system assigns the first genuinely available person for that service at the moment of booking — checked at the exact instant the appointment is created, so two customers booking the same slot at the same time can't both succeed and end up double-booked. If more than one staff member is genuinely free, the appointment is deliberately left unassigned rather than picked arbitrarily, so an administrator makes that call instead.
 
 ## What a booking costs

@@ -14,6 +14,8 @@ Zakazivanje je vođen proces u tri koraka:
 
 Dostupnost termina se računa na osnovu radnog vremena svakog zaposlenog, umanjeno za termine koje već ima zakazane, sa ugrađenim razmakom od 30 minuta sa obe strane svakog postojećeg termina, tako da zakazivanja jedno za drugim ne kolidiraju bez prostora za pripremu ili čišćenje. Isti ovaj proračun uzima u obzir i termine koji stižu preko SrediMe-a, eksterne pijace za zakazivanje na kojoj je poslovanje takođe prisutno — pogledajte `11-eksterne-integracije.md` za detalje te sinhronizacije.
 
+> Brojevi navedeni u ovom dokumentu (30 minuta razmaka, 24 sata rok otkazivanja, itd.) su **podrazumevane vrednosti** — admin ih može promeniti u bilo kom trenutku kroz `/admin/sajt` (Politika zakazivanja), bez izmene koda ili restart-a servera. Videti `09-admin-operacije.md`.
+
 Kada klijent ne zahteva konkretnog zaposlenog, sistem dodeljuje prvu zaista dostupnu osobu za tu uslugu u trenutku zakazivanja — proveravano u tačnom trenutku kreiranja termina, tako da dva klijenta koja zakazuju isti termin u isto vreme ne mogu oba uspeti i završiti sa duplim zakazivanjem. Ako je dostupno više od jednog zaposlenog, termin se namerno ostavlja nedodeljen umesto da se nasumično bira, tako da tu odluku donosi administrator.
 
 ## Šta zakazivanje košta
