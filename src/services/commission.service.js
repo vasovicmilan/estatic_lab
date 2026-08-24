@@ -82,12 +82,28 @@ export async function recordAppointmentCommissions(appointmentId) {
 
 /**
  * Finds the package purchase item matching this appointment's specific
- * service+variant, and pro-rates its snapshotted a la carte unitPrice by the
- * package's actual discount ratio (pricePaid / originalPrice) - so every
- * service in a package is discounted by the same overall rate the customer
- * actually got, rather than assuming a flat value per session regardless of
- * which service was performed.
+ * service+variant, and pro-rates its snapshotted a la carte unitPrice by how
+ * much of the package's TRUE a la carte value the customer actually paid -
+ * so every service in a package is discounted by the same overall rate the
+ * customer actually got, rather than assuming a flat value per session
+ * regardless of which service was performed.
+ *
+ * BUG FIX (see commit history): this used to divide by packagePurchase.originalPrice,
+ * but originalPrice is the package's OWN selling price (Package.totalPrice - already
+ * a discounted bundle price, e.g. 15750 where the true a la carte total/Package.basePrice
+ * is 17500) - not the pre-discount reference. Dividing pricePaid by originalPrice only
+ * ever captured a COUPON's incremental discount on top of the bundle price; on a package
+ * sold with no coupon at all, the ratio came out to exactly 1.0 and every employee was
+ * paid commission on the FULL undiscounted a la carte price, silently ignoring the
+ * package's own bundle discount entirely. The fix: divide by the sum of every item's
+ * own unitPrice x sessionsTotal - the genuine "if bought individually" reference value -
+ * so the ratio correctly reflects the bundle discount AND any coupon discount together,
+ * exactly matching what pricePaid actually represents.
  */
+function getALaCarteTotal(items = []) {
+  return items.reduce((sum, item) => sum + (item.unitPrice || 0) * (item.sessionsTotal || 0), 0);
+}
+
 function getPackageProRatedValue(appointment, packagePurchase) {
   const item = (packagePurchase.items || []).find(
     (i) =>
@@ -96,7 +112,8 @@ function getPackageProRatedValue(appointment, packagePurchase) {
   );
   if (!item) return 0;
 
-  const discountRatio = packagePurchase.originalPrice > 0 ? packagePurchase.pricePaid / packagePurchase.originalPrice : 1;
+  const aLaCarteTotal = getALaCarteTotal(packagePurchase.items);
+  const discountRatio = aLaCarteTotal > 0 ? packagePurchase.pricePaid / aLaCarteTotal : 1;
   return round2(item.unitPrice * discountRatio);
 }
 

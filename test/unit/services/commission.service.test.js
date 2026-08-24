@@ -57,20 +57,27 @@ describe("commission.service", () => {
       assert.equal(createMock.mock.calls.length, 0);
     });
 
-    it("pro-rates the employee's base value against the package's actual discount ratio when the appointment came from a package", async (t) => {
+    it("pro-rates the employee's base value against the package's TRUE a la carte total, not against originalPrice (which is already the discounted bundle price)", async (t) => {
       const employee = buildEmployee({ payType: "commission", commissionRate: 10 });
       const serviceId = id();
       const servicePackageId = id();
+      // Realistic shape: a 5-session package where each session is normally
+      // 3000 a la carte (true total 15000), sold as a bundle for 12000 with NO
+      // coupon at all - originalPrice equals pricePaid here exactly like
+      // package-purchase.service.js's createPurchaseForUser actually produces
+      // it (originalPrice defaults to the package's own totalPrice, which is
+      // already the discounted bundle price - see Package.basePrice vs
+      // Package.totalPrice in the seed data for real examples of this gap).
       const packagePurchase = buildPackagePurchase({
         serviceId,
         servicePackageId,
-        originalPrice: 10000,
-        pricePaid: 8000, // 80% of a la carte - a 20% package discount
-        items: [{ service: serviceId, servicePackageId, unitPrice: 3000, sessionsTotal: 3, sessionsUsed: 1, sessionsReserved: 0 }],
+        originalPrice: 12000,
+        pricePaid: 12000, // no coupon - this is the REGRESSION case that exposed the bug
+        items: [{ service: serviceId, servicePackageId, unitPrice: 3000, sessionsTotal: 5, sessionsUsed: 1, sessionsReserved: 0 }],
       });
       const appointment = buildAppointment({
         employee,
-        finalPrice: 0, // package-covered visit - nothing newly collected at this appointment
+        finalPrice: 0,
         packagePurchase,
         service: serviceId,
         variant: { servicePackageId },
@@ -83,10 +90,84 @@ describe("commission.service", () => {
 
       assert.equal(createMock.mock.calls.length, 1);
       const entry = createMock.mock.calls[0].arguments[0];
-      // unitPrice 3000 * (8000/10000 discount ratio) = 2400, not the full 3000 a la
-      // carte price and not 0 despite finalPrice being 0
+      // REGRESSION: unitPrice 3000 * (12000 paid / 15000 true a la carte total) = 2400.
+      // The old buggy formula compared pricePaid against originalPrice (both 12000,
+      // since no coupon was used) giving a ratio of 1.0 - paying commission on the
+      // full undiscounted 3000 and silently ignoring the package's own 20% bundle
+      // discount on every package sold without a coupon.
       assert.equal(entry.baseValue, 2400);
       assert.equal(entry.amount, 240);
+    });
+
+    it("compounds a coupon's discount on top of the package's own bundle discount correctly", async (t) => {
+      const employee = buildEmployee({ payType: "commission", commissionRate: 10 });
+      const serviceId = id();
+      const servicePackageId = id();
+      // Same 15000 true a la carte total (5 sessions x 3000), bundle price
+      // 12000 (20% package discount), PLUS a 10% referral coupon on top:
+      // pricePaid = 12000 * 0.9 = 10800. Combined discount off the true a la
+      // carte value: 10800/15000 = 0.72 (not just the coupon's 0.9, and not
+      // just the bundle's 0.8 - both stack, exactly matching what the
+      // customer actually paid relative to the real value of what they got).
+      const packagePurchase = buildPackagePurchase({
+        serviceId,
+        servicePackageId,
+        originalPrice: 12000,
+        pricePaid: 10800,
+        discountApplied: 1200,
+        items: [{ service: serviceId, servicePackageId, unitPrice: 3000, sessionsTotal: 5, sessionsUsed: 1, sessionsReserved: 0 }],
+      });
+      const appointment = buildAppointment({
+        employee,
+        finalPrice: 0,
+        packagePurchase,
+        service: serviceId,
+        variant: { servicePackageId },
+        coupon: null,
+      });
+      t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
+      const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
+
+      await commissionService.recordAppointmentCommissions(appointment._id.toString());
+
+      const entry = createMock.mock.calls[0].arguments[0];
+      // 3000 * 0.72 = 2160
+      assert.equal(entry.baseValue, 2160);
+      assert.equal(entry.amount, 216);
+    });
+
+    it("computes the discount ratio against the whole package's true a la carte total, correctly weighting a package that bundles two different-priced services", async (t) => {
+      const employee = buildEmployee({ payType: "commission", commissionRate: 10 });
+      const serviceId = id();
+      const servicePackageId = id();
+      const otherServiceId = id();
+      const otherServicePackageId = id();
+      // A la carte total: (3000*3) + (5000*2) = 19000. Bundle sold for 16000
+      // (~84.2% of true value) with no coupon.
+      const packagePurchase = buildPackagePurchase({
+        originalPrice: 16000,
+        pricePaid: 16000,
+        items: [
+          { service: serviceId, servicePackageId, unitPrice: 3000, sessionsTotal: 3, sessionsUsed: 0, sessionsReserved: 0 },
+          { service: otherServiceId, servicePackageId: otherServicePackageId, unitPrice: 5000, sessionsTotal: 2, sessionsUsed: 0, sessionsReserved: 0 },
+        ],
+      });
+      const appointment = buildAppointment({
+        employee,
+        finalPrice: 0,
+        packagePurchase,
+        service: otherServiceId,
+        variant: { servicePackageId: otherServicePackageId },
+        coupon: null,
+      });
+      t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
+      const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
+
+      await commissionService.recordAppointmentCommissions(appointment._id.toString());
+
+      const entry = createMock.mock.calls[0].arguments[0];
+      // 5000 * (16000/19000) = 4210.526... -> round2 -> 4210.53
+      assert.equal(entry.baseValue, 4210.53);
     });
 
     it("skips the employee entry entirely when no matching package item can be found (pro-rated value is 0)", async (t) => {
