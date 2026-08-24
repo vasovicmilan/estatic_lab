@@ -863,7 +863,10 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
 
 describe("findAppointmentsDueForReminder / markReminderSent", () => {
   it("maps each raw appointment returned by the repo to the same shape email templates expect", async (t) => {
-    const rawDue = buildAppointment({ status: "confirmed" });
+    const rawDue = buildAppointment({
+      status: "confirmed",
+      contactSnapshot: { firstName: "Ana", lastName: "Anic", email: "ana@example.com" },
+    });
 
     t.mock.method(appointmentRepo, "findAppointmentsDueForReminder", async (sentAtField, windowHours) => {
       assert.equal(sentAtField, "reminder24hSentAt");
@@ -880,6 +883,15 @@ describe("findAppointmentsDueForReminder / markReminderSent", () => {
     assert.equal(results[0].id, rawDue._id.toString());
     assert.ok("usluga" in results[0]);
     assert.ok("termin" in results[0]);
+    // REGRESSION: appointment-reminder-jobs.js reads appointment.korisnik?.email
+    // and appointment.korisnik?.ime to decide who to email and how to greet them -
+    // the "user" detail mapper never includes a korisnik field at all (a user
+    // doesn't need their own contact info echoed back to them), which silently
+    // made every single reminder skip its `if (!email) continue` guard in
+    // production. This must come from the "admin" mapper instead, which does
+    // include korisnik.ime/korisnik.email.
+    assert.equal(results[0].korisnik.email, "ana@example.com");
+    assert.equal(results[0].korisnik.ime, "Ana Anic");
   });
 
   it("returns an empty array without extra lookups when nothing is due", async (t) => {

@@ -24,9 +24,9 @@ async function runJob(name, fn) {
   }
 }
 
-export async function runDailyLogReport() {
+export async function runDailyLogReport(now = new Date()) {
   return runJob("daily-log-report", async () => {
-    const yesterday = new Date();
+    const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     const dateStr = toDateKey(yesterday);
 
@@ -38,9 +38,9 @@ export async function runDailyLogReport() {
   });
 }
 
-export async function runWeeklyLogReport() {
+export async function runWeeklyLogReport(now = new Date()) {
   return runJob("weekly-log-report", async () => {
-    const yesterday = new Date();
+    const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     const endDateStr = toDateKey(yesterday);
 
@@ -50,11 +50,10 @@ export async function runWeeklyLogReport() {
   });
 }
 
-export async function runMonthlyLogReport() {
+export async function runMonthlyLogReport(now = new Date()) {
   return runJob("monthly-log-report", async () => {
-    const today = new Date();
-    const year = today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
-    const month = today.getMonth() === 0 ? 12 : today.getMonth();
+    const year = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    const month = now.getMonth() === 0 ? 12 : now.getMonth();
 
     const summary = await logReportService.getMonthlySummary(year, month);
     const rangeLabel = `${MONTH_NAMES[month - 1]} ${year}`;
@@ -62,9 +61,9 @@ export async function runMonthlyLogReport() {
   });
 }
 
-export async function runYearlyLogReport() {
+export async function runYearlyLogReport(now = new Date()) {
   return runJob("yearly-log-report", async () => {
-    const year = new Date().getFullYear() - 1;
+    const year = now.getFullYear() - 1;
     const summary = await logReportService.getYearlySummary(year);
     await emailService.sendLogReportEmail("Godišnji izveštaj", String(year), summary);
   });

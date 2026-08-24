@@ -1,5 +1,5 @@
 import appointmentService from "../services/appointment.service.js";
-import * as emailService from "../services/email.service.js";
+import emailService from "../services/email.service.js";
 import { APPOINTMENT_REMINDER_WINDOWS } from "../config/reminder.config.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 import { alertError } from "../utils/telegram-alert.util.js";

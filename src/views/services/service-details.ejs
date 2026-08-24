@@ -9,7 +9,7 @@
   if (prices.length === 1) {
     priceRange = variants[0].cena;
   } else if (prices.length > 1) {
-    priceRange = `od ${Math.min.apply(null, prices)} ${window.__currencySymbol || "RSD"}`;
+    priceRange = `od ${Math.min.apply(null, prices)} ${typeof currencySymbol !== "undefined" ? currencySymbol : "RSD"}`;
   }
   const opisPasusi = (data.service.dugiOpis || "").split(/\n+/).map(function(p) { return p.trim(); }).filter(Boolean);
 %>

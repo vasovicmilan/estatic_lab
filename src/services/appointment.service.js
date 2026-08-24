@@ -775,7 +775,14 @@ export async function deleteAppointmentById(appointmentId, actorId) {
  */
 export async function findAppointmentsDueForReminder(sentAtField, windowHours) {
   const due = await appointmentRepo.findAppointmentsDueForReminder(sentAtField, windowHours);
-  return Promise.all(due.map((a) => getPopulatedAppointment(a._id).then((full) => mapAppointment(full, "user", "detail"))));
+  // "admin" (not "user") detail mapper - deliberately, not a copy-paste slip: the
+  // "user" mapper is meant for showing an appointment back to the customer who
+  // already owns it, so it never includes a korisnik.ime/korisnik.email field at
+  // all (a user doesn't need their own contact info echoed to them). This job
+  // needs to actually READ that contact info to send the reminder, so it needs
+  // the "admin" shape, which does include it - see appointment.mapper.js's
+  // mapAppointmentForAdminDetail vs mapAppointmentForUserDetail.
+  return Promise.all(due.map((a) => getPopulatedAppointment(a._id).then((full) => mapAppointment(full, "admin", "detail"))));
 }
 
 export async function markReminderSent(appointmentId, sentAtField) {
