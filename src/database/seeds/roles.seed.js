@@ -58,7 +58,7 @@ export async function seedRoles() {
   for (const roleData of defaultRoles) {
     const role = await Role.findOneAndUpdate({ name: roleData.name }, roleData, {
       upsert: true,
-      new: true,
+      returnDocument: "after",
       setDefaultsOnInsert: true,
     });
     results.push(role);

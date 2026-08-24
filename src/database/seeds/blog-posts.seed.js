@@ -4030,7 +4030,7 @@ async function upsertCategories() {
     const doc = await Category.findOneAndUpdate(
       { slug: def.slug, domain: DOMAIN },
       { name: def.name, slug: def.slug, domain: DOMAIN, shortDescription: def.shortDescription, parent: null },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
     bySlug[def.slug] = doc;
   }
@@ -4043,7 +4043,7 @@ async function upsertTags() {
     const doc = await Tag.findOneAndUpdate(
       { slug: def.slug, domain: DOMAIN },
       { name: def.name, slug: def.slug, domain: DOMAIN, isActive: true },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
     bySlug[def.slug] = doc;
   }
@@ -4125,7 +4125,7 @@ async function upsertPosts(categoriesBySlug, tagsBySlug, authorId) {
 
     const doc = await Post.findOneAndUpdate({ slug: def.slug }, payload, {
       upsert: true,
-      new: true,
+      returnDocument: "after",
       setDefaultsOnInsert: true,
       runValidators: true,
     });

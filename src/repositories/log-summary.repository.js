@@ -5,7 +5,7 @@ export async function upsertDailySummary(date, data) {
   return LogSummary.findOneAndUpdate(
     { date },
     { ...data, date, generatedAt: new Date() },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
+    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
   ).lean();
 }
 

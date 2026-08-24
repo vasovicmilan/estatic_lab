@@ -902,7 +902,7 @@ async function upsertTopLevelCategories() {
     const doc = await Category.findOneAndUpdate(
       { slug: def.slug, domain: DOMAIN },
       { name: def.name, slug: def.slug, domain: DOMAIN, shortDescription: def.shortDescription, parent: null },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
     bySlug[def.slug] = doc;
   }
@@ -915,7 +915,7 @@ async function upsertChildCategories(bySlug) {
     const doc = await Category.findOneAndUpdate(
       { slug: def.slug, domain: DOMAIN },
       { name: def.name, slug: def.slug, domain: DOMAIN, shortDescription: def.shortDescription, parent: parent._id },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
     bySlug[def.slug] = doc;
   }
@@ -928,7 +928,7 @@ async function upsertTags() {
     const doc = await Tag.findOneAndUpdate(
       { slug: def.slug, domain: DOMAIN },
       { name: def.name, slug: def.slug, domain: DOMAIN, isActive: true },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
     bySlug[def.slug] = doc;
   }

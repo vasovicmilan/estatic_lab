@@ -4118,7 +4118,7 @@ async function upsertTags() {
     const doc = await Tag.findOneAndUpdate(
       { slug: def.slug, domain: DOMAIN },
       { name: def.name, slug: def.slug, domain: DOMAIN, isActive: true },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
     bySlug[def.slug] = doc;
   }
@@ -4137,7 +4137,7 @@ async function upsertCategories() {
         shortDescription: def.shortDescription,
         parent: null,
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
     bySlug[def.slug] = doc;
   }

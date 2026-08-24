@@ -46,7 +46,7 @@ export async function seedResources() {
     const resource = await Resource.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId(_id) },
       { $setOnInsert: rest },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
     );
     results.push(resource);
   }

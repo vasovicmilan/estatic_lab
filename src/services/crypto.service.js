@@ -27,12 +27,18 @@ export function generateRandomToken(bytes = 32) {
 
 const ALGO = "aes-256-gcm";
 const KEY = Buffer.from(AES_SECRET, "utf8");
+// Standard, full-length GCM auth tag - was already what getAuthTag()/setAuthTag()
+// produced and consumed below (16-byte slice), just never stated explicitly.
+// Node now deprecates NOT stating this at cipher/decipher creation time - not
+// stating it upfront is what a truncation/downgrade attack would rely on, since
+// the cipher would otherwise accept a shorter tag than genuinely intended.
+const AUTH_TAG_LENGTH = 16;
 
 // available for any future field that needs encryption at rest (e.g. appointment
 // contact snapshot phone numbers) - not used by any model yet
 export function encrypt(text) {
   const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv(ALGO, KEY, iv);
+  const cipher = crypto.createCipheriv(ALGO, KEY, iv, { authTagLength: AUTH_TAG_LENGTH });
   const encrypted = Buffer.concat([cipher.update(text, "utf8"), cipher.final()]);
   const tag = cipher.getAuthTag();
   return Buffer.concat([iv, tag, encrypted]).toString("base64");
@@ -43,7 +49,7 @@ export function decrypt(payload) {
   const iv = data.subarray(0, 12);
   const tag = data.subarray(12, 28);
   const encrypted = data.subarray(28);
-  const decipher = crypto.createDecipheriv(ALGO, KEY, iv);
+  const decipher = crypto.createDecipheriv(ALGO, KEY, iv, { authTagLength: AUTH_TAG_LENGTH });
   decipher.setAuthTag(tag);
   const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
   return decrypted.toString("utf8");

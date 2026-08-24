@@ -622,7 +622,7 @@ async function upsertBundlePackages() {
 
     const doc = await Package.findOneAndUpdate({ slug: def.slug }, payload, {
       upsert: true,
-      new: true,
+      returnDocument: "after",
       setDefaultsOnInsert: true,
       runValidators: true,
     });
@@ -680,7 +680,7 @@ async function upsertComboPackages(premiumTagIds) {
 
     const doc = await Package.findOneAndUpdate({ slug: def.slug }, payload, {
       upsert: true,
-      new: true,
+      returnDocument: "after",
       setDefaultsOnInsert: true,
       runValidators: true,
     });

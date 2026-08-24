@@ -1,39 +1,35 @@
-◇ injected env (5) from .env.test // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-[WebServer] (node:582297) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
-[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
-[WebServer] (node:582297) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
-[WebServer] (node:582297) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
-[WebServer] (node:582297) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+◇ injected env (5) from .env.test // tip: ⌘ enable debugging { debug: true }
 [WebServer] [e2e] ready on http://localhost:4100
 
 Running 25 tests using 1 worker
 
-◇ injected env (0) from .env.test // tip: ⌘ suppress logs { quiet: true }
-[WebServer] (node:582297) [DEP0044] DeprecationWarning: The `util.isArray` API is deprecated. Please use `Array.isArray()` instead.
-  ✓   1 [chromium] › test/e2e/appointment-reassign.spec.js:25:3 › Admin reassigns an appointment to a different employee › reassigns to a free employee; an employee already booked at the exact same time is never even offered as an option (7.9s)
-  ✓   2 [chromium] › test/e2e/booking-appointment-commission.spec.js:41:3 › Booking - appointment scheduling and services-side commission › books an appointment end-to-end, and records both the employee's and the partner's commission - at commissionRateServices, not Products - once an admin completes it (15.0s)
-  ✓   3 [chromium] › test/e2e/checkout-freight-shipping.spec.js:33:3 › Checkout - freight (large/heavy) product shipping quote flow › blocks automatic shipping, lets an admin set the real price, and only then lets the customer confirm (12.5s)
-  ✓   4 [chromium] › test/e2e/checkout-freight-shipping.spec.js:113:3 › Checkout - freight (large/heavy) product shipping quote flow › a cart with only standard-shipping items gets the normal flat price immediately, no quote step (4.8s)
-  ✓   5 [chromium] › test/e2e/coupon-product-discount.spec.js:32:3 › Checkout - coupon productDiscount block › applies the product-side discount (capped), and records the partner's commission at the products rate, not the services rate (7.8s)
-  ✓   6 [chromium] › test/e2e/coupon-product-discount.spec.js:97:3 › Checkout - coupon productDiscount block › a coupon with no productDiscount block is rejected for a product order (4.7s)
-  ✓   7 [chromium] › test/e2e/customer-self-service.spec.js:35:3 › Customer self-service - viewing and cancelling own appointments/orders › a customer sees, then cancels, their own upcoming appointment (5.5s)
-  ✓   8 [chromium] › test/e2e/customer-self-service.spec.js:60:3 › Customer self-service - viewing and cancelling own appointments/orders › a customer cannot cancel an appointment too close to its start time (3.8s)
-  ✓   9 [chromium] › test/e2e/customer-self-service.spec.js:78:3 › Customer self-service - viewing and cancelling own appointments/orders › a customer cannot see or cancel another customer's appointment (4.2s)
-  ✓  10 [chromium] › test/e2e/customer-self-service.spec.js:89:3 › Customer self-service - viewing and cancelling own appointments/orders › a customer sees, then cancels, their own pending order (5.0s)
-  ✓  11 [chromium] › test/e2e/customer-self-service.spec.js:110:3 › Customer self-service - viewing and cancelling own appointments/orders › a customer cannot cancel an order that's already past 'pending' (e.g. processing) (3.9s)
-  ✓  12 [chromium] › test/e2e/employee-appointment-management.spec.js:31:3 › Employee self-service - managing assigned appointments › an employee sees their assigned appointment, confirms it, completes it, and earns a commission entry (3.8s)
-  ✓  13 [chromium] › test/e2e/employee-appointment-management.spec.js:74:3 › Employee self-service - managing assigned appointments › an employee cannot see or act on an appointment assigned to someone else (3.9s)
-  ✓  14 [chromium] › test/e2e/employee-working-hours.spec.js:38:3 › Employee working hours - effect on booking availability › a day with no working hours shows no slots; adding hours for that day makes slots appear (3.5s)
-  ✓  15 [chromium] › test/e2e/employee-working-hours.spec.js:69:3 › Employee working hours - effect on booking availability › narrowing working hours to a single short window still only offers slots inside that window (6.4s)
-  ✓  16 [chromium] › test/e2e/order-cancellation.spec.js:33:3 › Order cancellation/return restores product stock › cancelling a pending order gives its reserved stock back (6.5s)
-  ✓  17 [chromium] › test/e2e/order-cancellation.spec.js:66:3 › Order cancellation/return restores product stock › marking a delivered order as returned also restores its stock (7.1s)
-  ✓  18 [chromium] › test/e2e/order-completion-commission.spec.js:35:3 › Order completion promotes its partner commission from pending to earned › commission stays pending through processing/shipped/delivered, and only becomes earned once the order is marked completed (10.8s)
-  ✓  19 [chromium] › test/e2e/package-purchase-commission.spec.js:44:3 › Package purchase commission - employee pro-rating and partner referral › employee's commission on a package session is pro-rated by the package's real discount, not by its already-discounted selling price (14.8s)
-  ✓  20 [chromium] › test/e2e/package-purchase-commission.spec.js:126:3 › Package purchase commission - employee pro-rating and partner referral › a package bought through a partner's referral coupon correctly compounds the coupon discount with the package's own built-in discount, for both the partner's and the employee's commission (20.4s)
-  ✓  21 [chromium] › test/e2e/package-purchase.spec.js:36:3 › Package purchase - admin assigns, customer redeems a session via booking › customer books a session from their package for free, and completing it commits the session as used (23.3s)
-  ✓  22 [chromium] › test/e2e/package-purchase.spec.js:113:3 › Package purchase - admin assigns, customer redeems a session via booking › a package with all sessions already used no longer offers the 'pay from package' option (5.1s)
-  ✓  23 [chromium] › test/e2e/payout-cycle.spec.js:31:3 › Payout request lifecycle › employee requests a payout, admin approves it, then marks it paid (11.9s)
-  ✓  24 [chromium] › test/e2e/payout-cycle.spec.js:92:3 › Payout request lifecycle › admin rejects a requested payout (10.5s)
-  ✓  25 [chromium] › test/e2e/payout-cycle.spec.js:121:3 › Payout request lifecycle › partner requests a payout through their own dashboard, and the admin approves + marks it paid (11.8s)
+◇ injected env (0) from .env.test // tip: ◈ secrets for agents [www.dotenvx.com]
+[WebServer] (node:594113) [DEP0044] DeprecationWarning: The `util.isArray` API is deprecated. Please use `Array.isArray()` instead.
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+  ✓   1 [chromium] › test/e2e/appointment-reassign.spec.js:25:3 › Admin reassigns an appointment to a different employee › reassigns to a free employee; an employee already booked at the exact same time is never even offered as an option (10.0s)
+  ✓   2 [chromium] › test/e2e/booking-appointment-commission.spec.js:41:3 › Booking - appointment scheduling and services-side commission › books an appointment end-to-end, and records both the employee's and the partner's commission - at commissionRateServices, not Products - once an admin completes it (17.6s)
+  ✓   3 [chromium] › test/e2e/checkout-freight-shipping.spec.js:33:3 › Checkout - freight (large/heavy) product shipping quote flow › blocks automatic shipping, lets an admin set the real price, and only then lets the customer confirm (15.9s)
+  ✓   4 [chromium] › test/e2e/checkout-freight-shipping.spec.js:113:3 › Checkout - freight (large/heavy) product shipping quote flow › a cart with only standard-shipping items gets the normal flat price immediately, no quote step (5.7s)
+  ✓   5 [chromium] › test/e2e/coupon-product-discount.spec.js:32:3 › Checkout - coupon productDiscount block › applies the product-side discount (capped), and records the partner's commission at the products rate, not the services rate (7.1s)
+  ✓   6 [chromium] › test/e2e/coupon-product-discount.spec.js:97:3 › Checkout - coupon productDiscount block › a coupon with no productDiscount block is rejected for a product order (6.5s)
+  ✓   7 [chromium] › test/e2e/customer-self-service.spec.js:35:3 › Customer self-service - viewing and cancelling own appointments/orders › a customer sees, then cancels, their own upcoming appointment (6.1s)
+  ✓   8 [chromium] › test/e2e/customer-self-service.spec.js:60:3 › Customer self-service - viewing and cancelling own appointments/orders › a customer cannot cancel an appointment too close to its start time (4.8s)
+  ✓   9 [chromium] › test/e2e/customer-self-service.spec.js:78:3 › Customer self-service - viewing and cancelling own appointments/orders › a customer cannot see or cancel another customer's appointment (5.5s)
+  ✓  10 [chromium] › test/e2e/customer-self-service.spec.js:89:3 › Customer self-service - viewing and cancelling own appointments/orders › a customer sees, then cancels, their own pending order (6.3s)
+  ✓  11 [chromium] › test/e2e/customer-self-service.spec.js:110:3 › Customer self-service - viewing and cancelling own appointments/orders › a customer cannot cancel an order that's already past 'pending' (e.g. processing) (5.6s)
+  ✓  12 [chromium] › test/e2e/employee-appointment-management.spec.js:31:3 › Employee self-service - managing assigned appointments › an employee sees their assigned appointment, confirms it, completes it, and earns a commission entry (5.9s)
+  ✓  13 [chromium] › test/e2e/employee-appointment-management.spec.js:74:3 › Employee self-service - managing assigned appointments › an employee cannot see or act on an appointment assigned to someone else (5.0s)
+  ✓  14 [chromium] › test/e2e/employee-working-hours.spec.js:38:3 › Employee working hours - effect on booking availability › a day with no working hours shows no slots; adding hours for that day makes slots appear (5.6s)
+  ✓  15 [chromium] › test/e2e/employee-working-hours.spec.js:69:3 › Employee working hours - effect on booking availability › narrowing working hours to a single short window still only offers slots inside that window (5.3s)
+  ✓  16 [chromium] › test/e2e/order-cancellation.spec.js:33:3 › Order cancellation/return restores product stock › cancelling a pending order gives its reserved stock back (8.4s)
+  ✓  17 [chromium] › test/e2e/order-cancellation.spec.js:66:3 › Order cancellation/return restores product stock › marking a delivered order as returned also restores its stock (8.1s)
+  ✓  18 [chromium] › test/e2e/order-completion-commission.spec.js:35:3 › Order completion promotes its partner commission from pending to earned › commission stays pending through processing/shipped/delivered, and only becomes earned once the order is marked completed (13.8s)
+  ✓  19 [chromium] › test/e2e/package-purchase-commission.spec.js:44:3 › Package purchase commission - employee pro-rating and partner referral › employee's commission on a package session is pro-rated by the package's real discount, not by its already-discounted selling price (18.3s)
+  ✓  20 [chromium] › test/e2e/package-purchase-commission.spec.js:126:3 › Package purchase commission - employee pro-rating and partner referral › a package bought through a partner's referral coupon correctly compounds the coupon discount with the package's own built-in discount, for both the partner's and the employee's commission (19.5s)
+  ✓  21 [chromium] › test/e2e/package-purchase.spec.js:36:3 › Package purchase - admin assigns, customer redeems a session via booking › customer books a session from their package for free, and completing it commits the session as used (18.1s)
+  ✓  22 [chromium] › test/e2e/package-purchase.spec.js:113:3 › Package purchase - admin assigns, customer redeems a session via booking › a package with all sessions already used no longer offers the 'pay from package' option (6.6s)
+  ✓  23 [chromium] › test/e2e/payout-cycle.spec.js:31:3 › Payout request lifecycle › employee requests a payout, admin approves it, then marks it paid (18.5s)
+  ✓  24 [chromium] › test/e2e/payout-cycle.spec.js:92:3 › Payout request lifecycle › admin rejects a requested payout (14.1s)
+  ✓  25 [chromium] › test/e2e/payout-cycle.spec.js:121:3 › Payout request lifecycle › partner requests a payout through their own dashboard, and the admin approves + marks it paid (13.9s)
 
-  25 passed (3.7m)
+  25 passed (4.3m)

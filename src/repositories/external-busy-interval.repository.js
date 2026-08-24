@@ -31,7 +31,7 @@ export async function upsertInterval(employeeId, source, externalUid, { startTim
   return ExternalBusyInterval.findOneAndUpdate(
     { employee: employeeId, source, externalUid },
     { startTime, endTime, summary: summary || null },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
+    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
   );
 }
 
