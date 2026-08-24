@@ -40,7 +40,7 @@ Node.js · Express 5 · MongoDB / Mongoose 9 · EJS · Bootstrap 5
 
 ## Testing
 
-Three layers: unit (mocked dependencies), integration (real HTTP requests against an in-memory MongoDB), and E2E (Playwright, real browser against a real running server). Latest run: **2,222/2,222** unit and integration tests, **23/23** E2E tests. See `docs/en/12-testing.md` / `docs/sr/12-testiranje.md`.
+Three layers: unit (mocked dependencies), integration (real HTTP requests against an in-memory MongoDB), and E2E (Playwright, real browser against a real running server). Latest run: **2,224/2,224** unit and integration tests, **25/25** E2E tests. See `docs/en/12-testing.md` / `docs/sr/12-testiranje.md`.
 
 ```bash
 npm test              # unit + integration

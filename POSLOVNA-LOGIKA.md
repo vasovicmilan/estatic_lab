@@ -339,8 +339,8 @@ Spremno da se u budućnosti proširi (npr. sadržaj stranice "O nama") bez potre
 **Zašto sva tri, ne samo jedan.** Jedinični test dokazuje da obračun provizije daje tačan broj. Integracioni dokazuje da HTTP zahtev sa pogrešnim podacima vrati tačan status kod (a ne 500 gde treba 400, ili obrnuto, tiho progutana greška). E2E dokazuje da klijent *stvarno može* da završi kupovinu od početka do kraja kroz pravu formu, uključujući stvari koje samo pregledač radi (skrivena polja, JS vidžeti, sesijski kolačići).
 
 **Trenutno stanje (poslednje pokretanje, potpuno zeleno):**
-- **2222 od 2222** jedinična i integraciona testa prolaze, sa finansijski najosetljivijim servisima (`commission.service.js`, `payout-request.service.js`, `resource.service.js`) na 100% pokrivenosti linija i funkcija.
-- **23 od 23** E2E testa prolaze, po jedan ili više po ključnom poslovnom toku od početka do kraja: zakazivanje sa provizijom, kupon sa posebnim popustom za artikle, otkazivanje sa vraćanjem zaliha, kompletan ciklus isplate, i tako dalje.
+- **2224 od 2224** jedinična i integraciona testa prolaze, sa finansijski najosetljivijim servisima (`commission.service.js`, `payout-request.service.js`, `resource.service.js`) na 100% pokrivenosti linija i funkcija.
+- **25 od 25** E2E testa prolaze, po jedan ili više po ključnom poslovnom toku od početka do kraja: zakazivanje sa provizijom, kupon sa posebnim popustom za artikle, otkazivanje sa vraćanjem zaliha, kompletan ciklus isplate, i (dodato posle otkrivanja bag-a iz sekcije 9) provizija zaposlenog na paketu, sa i bez partnerskog referalnog koda, i tako dalje.
 
 ---
 

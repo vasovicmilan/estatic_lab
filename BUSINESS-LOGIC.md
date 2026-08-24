@@ -339,8 +339,8 @@ Built to grow later (e.g. an "about us" page's content) without needing a new mo
 **Why all three, not just one.** A unit test proves a commission calculation produces the right number. An integration test proves an HTTP request with bad data returns the right status code (not a 500 where a 400 belongs, or the reverse, a silently swallowed error). An E2E test proves a customer *can actually* complete a purchase start to finish through the real form, including things only a browser does (hidden fields, JS widgets, session cookies).
 
 **Current state (latest run, fully green):**
-- **2,222 of 2,222** unit and integration tests pass, with the most financially sensitive services (`commission.service.js`, `payout-request.service.js`, `resource.service.js`) at 100% line and function coverage.
-- **23 of 23** E2E tests pass, one or more per key business flow start to finish: booking with commission, a coupon with a distinct discount for items, cancellation with stock restored, a full payout cycle, and so on.
+- **2,224 of 2,224** unit and integration tests pass, with the most financially sensitive services (`commission.service.js`, `payout-request.service.js`, `resource.service.js`) at 100% line and function coverage.
+- **25 of 25** E2E tests pass, one or more per key business flow start to finish: booking with commission, a coupon with a distinct discount for items, cancellation with stock restored, a full payout cycle, and (added after the section 9 bug was found) an employee's commission on a package, both with and without a partner referral code, and so on.
 
 ---
 
