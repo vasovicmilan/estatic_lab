@@ -4,6 +4,7 @@ import fs from "fs-extra";
 import path from "path";
 import os from "os";
 import { seedRoles } from "../../../src/database/seeds/roles.seed.js";
+import { loadRuntimeSettings } from "../../../src/config/runtime-settings.cache.js";
 import { logInfo, logError } from "../../../src/utils/logger.util.js";
 
 const PORT = process.env.E2E_PORT || 4100;
@@ -53,6 +54,7 @@ async function start() {
 
     await mongoose.connect(mongoServer.getUri());
     await Promise.all(mongoose.modelNames().map((name) => mongoose.model(name).init()));
+    await loadRuntimeSettings();
 
     // roles are baseline data every E2E flow needs (registration/login assigns the
     // "user" role, admin login needs "admin" to exist) - seeded once here rather than

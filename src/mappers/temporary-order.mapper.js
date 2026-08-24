@@ -1,6 +1,7 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 import { decryptPhone } from "../utils/phone.util.js";
 import { decryptAddress } from "../utils/address.util.js";
+import { formatMoney } from "../utils/price.util.js";
 
 function mapItems(items = []) {
   return items.map((item) => ({
@@ -22,7 +23,7 @@ export function mapTemporaryOrdersForAdminList(orders = []) {
         id: order._id.toString(),
         korisnik: `${order.contactSnapshot?.firstName || ""} ${order.contactSnapshot?.lastName || ""}`.trim(),
         email: order.contactSnapshot?.email || null,
-        ukupnaCena: order.totalPrice != null ? `${order.totalPrice.toFixed(2)} RSD` : "0 RSD",
+        ukupnaCena: order.totalPrice != null ? formatMoney(order.totalPrice) : formatMoney(0),
         zahtevaProceenuDostave: order.requiresShippingQuote ? "Da" : "Ne",
         istice: formatDateTime(order.tokenExpiration),
         kreirano: formatDateTime(order.createdAt),

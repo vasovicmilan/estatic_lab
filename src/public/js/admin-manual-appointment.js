@@ -34,7 +34,7 @@
     service.variants.forEach((v) => {
       const opt = document.createElement("option");
       opt.value = v.id;
-      opt.textContent = `${v.name} - ${v.duration} min - ${v.price} RSD`;
+      opt.textContent = `${v.name} - ${v.duration} min - ${v.price} ${window.__currencySymbol || "RSD"}`;
       variantSelect.appendChild(opt);
     });
     variantSelect.disabled = false;

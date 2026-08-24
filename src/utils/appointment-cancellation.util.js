@@ -1,15 +1,11 @@
-import {
-  USER_CANCELLATION_CUTOFF_HOURS,
-  RESCHEDULE_CUTOFF_HOURS,
-  RESCHEDULE_SAME_DAY_FLOOR_HOURS,
-  RESCHEDULE_MIN_LEAD_MINUTES,
-} from "../config/booking.config.js";
+import { getBookingPolicy } from "../config/runtime-settings.cache.js";
 import { getZonedComponents } from "./date.time.util.js";
 
 /**
  * Whether a user (not admin/employee) is still allowed to cancel an appointment
  * themselves - true only if the status is cancellable AND we're still more than
- * USER_CANCELLATION_CUTOFF_HOURS away from the start time.
+ * the configured cancellation cutoff (see runtime-settings.cache.js's
+ * getBookingPolicy - admin-editable, default 24h) away from the start time.
  *
  * Single source of truth for this rule - appointment.service.js's cancelAppointment
  * enforces it server-side, and user.presenter.js uses it to decide whether to even
@@ -21,22 +17,22 @@ export function canUserCancelAppointment(status, startTime, now = new Date()) {
   if (!startTime) return false;
 
   const hoursUntilStart = (new Date(startTime).getTime() - now.getTime()) / 3600000;
-  return hoursUntilStart >= USER_CANCELLATION_CUTOFF_HOURS;
+  return hoursUntilStart >= getBookingPolicy().userCancellationCutoffHours;
 }
 
 /**
  * How much reschedule flexibility a non-admin actor (user or employee) has
  * right now, based purely on how close we are to the CURRENT appointment's
- * start time:
+ * start time (thresholds from runtime-settings.cache.js's getBookingPolicy):
  *
- * - "forbidden"     - status isn't reschedulable, or under RESCHEDULE_SAME_DAY_FLOOR_HOURS
- *                      away - too close to touch at all.
- * - "same_day_only" - between the floor and RESCHEDULE_CUTOFF_HOURS away - can
- *                      still move it, but only to a new time on the SAME
- *                      calendar day as the current appointment.
- * - "any_day"        - RESCHEDULE_CUTOFF_HOURS or more away - full flexibility,
- *                      any future day/time (subject to the normal availability
- *                      checks a fresh booking would go through).
+ * - "forbidden"     - status isn't reschedulable, or under the same-day floor -
+ *                      too close to touch at all.
+ * - "same_day_only" - between the floor and the cutoff - can still move it,
+ *                      but only to a new time on the SAME calendar day as the
+ *                      current appointment.
+ * - "any_day"        - at or beyond the cutoff - full flexibility, any future
+ *                      day/time (subject to the normal availability checks a
+ *                      fresh booking would go through).
  *
  * Admin bypasses this entirely - see appointment.service.js's
  * rescheduleAppointment, which only calls this for actorRole !== "admin".
@@ -45,10 +41,11 @@ export function getRescheduleWindow(status, currentStartTime, now = new Date()) 
   if (!["pending", "confirmed"].includes(status)) return "forbidden";
   if (!currentStartTime) return "forbidden";
 
+  const policy = getBookingPolicy();
   const hoursUntilStart = (new Date(currentStartTime).getTime() - now.getTime()) / 3600000;
 
-  if (hoursUntilStart < RESCHEDULE_SAME_DAY_FLOOR_HOURS) return "forbidden";
-  if (hoursUntilStart < RESCHEDULE_CUTOFF_HOURS) return "same_day_only";
+  if (hoursUntilStart < policy.rescheduleSameDayFloorHours) return "forbidden";
+  if (hoursUntilStart < policy.rescheduleCutoffHours) return "same_day_only";
   return "any_day";
 }
 
@@ -59,7 +56,7 @@ export function getRescheduleWindow(status, currentStartTime, now = new Date()) 
  */
 export function hasMinimumRescheduleLeadTime(newStartTime, now = new Date()) {
   const minutesUntilTarget = (new Date(newStartTime).getTime() - now.getTime()) / 60000;
-  return minutesUntilTarget >= RESCHEDULE_MIN_LEAD_MINUTES;
+  return minutesUntilTarget >= getBookingPolicy().rescheduleMinLeadMinutes;
 }
 
 /**

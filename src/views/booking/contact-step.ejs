@@ -113,7 +113,7 @@
             <dt class="col-6 text-muted">Cena</dt>
             <dd class="col-6">
               <% if (data.usablePackagePurchase) { %>
-                <span id="priceDisplay"><%= data.variant.cena %> <span class="text-muted small">(0 RSD ako plaćate iz paketa)</span></span>
+                <span id="priceDisplay"><%= data.variant.cena %> <span class="text-muted small">(0 <%= currencySymbol %> ako plaćate iz paketa)</span></span>
               <% } else { %>
                 <%= data.variant.cena %>
               <% } %>

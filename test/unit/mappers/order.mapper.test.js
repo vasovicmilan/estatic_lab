@@ -36,10 +36,10 @@ describe("order.mapper", () => {
       assert.equal(mapped.stavke[0].ukupno, 4500);
     });
 
-    it("formats ukupnaCena with two decimal places and RSD suffix", () => {
+    it("formats ukupnaCena as a whole number with the configured currency suffix", () => {
       const order = buildOrder({ totalPrice: 2350 });
       const mapped = mapOrderForUserDetail(order);
-      assert.equal(mapped.ukupnaCena, "2350.00 RSD");
+      assert.equal(mapped.ukupnaCena, "2350 RSD");
     });
 
     it("shows null for ukupnaCena rather than crashing when totalPrice is missing", () => {

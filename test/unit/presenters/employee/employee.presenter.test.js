@@ -15,14 +15,15 @@ describe("prepareEmployeeDashboardData", () => {
     assert.equal(view.balance, null);
   });
 
-  it("formats every balance figure as a whole number for a commission-based employee", () => {
+  it("formats every balance figure with the currency suffix, and keeps a raw whole-number availableRaw for the withdrawal form", () => {
     const view = prepareEmployeeDashboardData({
       isCommissionBased: true,
       balance: { earned: 5000.5, paid: 2000, reserved: 500, available: 2500.5 },
     });
 
-    assert.equal(view.balance.earned, 5001);
-    assert.equal(view.balance.available, 2501);
+    assert.equal(view.balance.earned, "5001 RSD");
+    assert.equal(view.balance.available, "2501 RSD");
+    assert.equal(view.balance.availableRaw, 2501);
   });
 
   it("translates each recent commission entry's source type and status", () => {

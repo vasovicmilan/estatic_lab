@@ -1,4 +1,5 @@
 import { formatDateTime } from "../utils/date.time.util.js";
+import { formatMoney } from "../utils/price.util.js";
 
 function formatImage(image) {
   if (!image) return null;
@@ -96,7 +97,7 @@ export function mapPackagesForAdminList(packages = []) {
         slika: formatImage(pkg.image),
         slug: pkg.slug,
         stavke: getItemsSummary(pkg.items),
-        cena: `${pkg.totalPrice} RSD`,
+        cena: formatMoney(pkg.totalPrice),
         najbolji: pkg.isBest ? "Da" : "Ne",
         aktivan: pkg.isActive ? "Da" : "Ne",
         kreiran: formatDateTime(pkg.createdAt),
@@ -175,8 +176,8 @@ export function mapPackageForPublicCard(pkg) {
     slug: pkg.slug,
     kratakOpis: pkg.shortDescription || "",
     stavke: getItemsSummary(pkg.items),
-    cena: `${pkg.totalPrice} RSD`,
-    staraCena: pkg.basePrice ? `${pkg.basePrice} RSD` : null,
+    cena: formatMoney(pkg.totalPrice),
+    staraCena: pkg.basePrice ? formatMoney(pkg.basePrice) : null,
     ustedaProcenat: getSavingsPercent(pkg),
     oznaka: pkg.badge || null,
     najbolji: Boolean(pkg.isBest),

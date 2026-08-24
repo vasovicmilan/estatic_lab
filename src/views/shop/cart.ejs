@@ -35,7 +35,7 @@
                   </div>
                 </div>
               </td>
-              <td><%= item.cena %> RSD</td>
+              <td><%= item.cena %> <%= currencySymbol %></td>
               <td style="max-width:120px;">
                 <form action="/korpa/azuriraj" method="POST" class="d-flex gap-2">
                   <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
@@ -48,7 +48,7 @@
                   <input type="number" name="quantity" value="<%= item.kolicina %>" min="0" max="99" class="form-control form-control-sm" onchange="this.form.submit()">
                 </form>
               </td>
-              <td><%= item.ukupno %> RSD</td>
+              <td><%= item.ukupno %> <%= currencySymbol %></td>
               <td>
                 <form action="/korpa/ukloni" method="POST">
                   <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
@@ -73,7 +73,7 @@
           <div class="card-body">
             <div class="d-flex justify-content-between mb-2">
               <span class="text-muted">Ukupno</span>
-              <strong><%= data.cart.ukupnaCena %> RSD</strong>
+              <strong><%= data.cart.ukupnaCena %> <%= currencySymbol %></strong>
             </div>
             <a href="<%= data.checkoutUrl %>" class="btn btn-primary w-100">Nastavi na naplatu</a>
             <a href="<%= data.continueShoppingUrl %>" class="btn btn-outline-secondary w-100 mt-2">Nastavi kupovinu</a>

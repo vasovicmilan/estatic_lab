@@ -1,3 +1,4 @@
+import { formatMoney } from "../../../utils/price.util.js";
 export function preparePackageListData(result, query = {}) {
   return {
     items: result.data,
@@ -82,8 +83,8 @@ export function preparePackageDetailsData(pkg) {
         title: "Cena",
         type: "table",
         rows: [
-          { label: "Cena", value: `${pkg.cena} RSD` },
-          { label: "Stara cena", value: pkg.staraCena ? `${pkg.staraCena} RSD` : "-" },
+          { label: "Cena", value: formatMoney(pkg.cena) },
+          { label: "Stara cena", value: pkg.staraCena ? formatMoney(pkg.staraCena) : "-" },
           { label: "Ukupno trajanje", value: pkg.ukupnoTrajanje || "-" },
           { label: "Oznaka", value: pkg.oznaka || "-" },
           { label: "Najbolji izbor", value: pkg.najbolji ? "Da" : "Ne" },

@@ -13,7 +13,7 @@
         <% data.order.stavke.forEach(function(item) { %>
           <li class="list-group-item d-flex justify-content-between px-0">
             <span><%= item.naziv %> (<%= item.varijanta %>) &times; <%= item.kolicina %></span>
-            <strong><%= item.ukupno %> RSD</strong>
+            <strong><%= item.ukupno %> <%= currencySymbol %></strong>
           </li>
         <% }) %>
       </ul>
@@ -24,9 +24,9 @@
           <dd class="col-7"><%= data.order.adresa.ulica %> <%= data.order.adresa.broj %>, <%= data.order.adresa.grad %> <%= data.order.adresa.postanskiBroj %></dd>
         <% } %>
         <dt class="col-5 text-muted">Status</dt><dd class="col-7"><%= data.order.status %></dd>
-        <dt class="col-5 text-muted">Subtotal</dt><dd class="col-7"><%= data.order.subtotal %> RSD</dd>
-        <dt class="col-5 text-muted">Dostava</dt><dd class="col-7"><%= data.order.dostava %> RSD</dd>
-        <% if (data.order.kupon) { %><dt class="col-5 text-muted">Kupon</dt><dd class="col-7"><%= data.order.kupon %> (-<%= data.order.popust %> RSD)</dd><% } %>
+        <dt class="col-5 text-muted">Subtotal</dt><dd class="col-7"><%= data.order.subtotal %> <%= currencySymbol %></dd>
+        <dt class="col-5 text-muted">Dostava</dt><dd class="col-7"><%= data.order.dostava %> <%= currencySymbol %></dd>
+        <% if (data.order.kupon) { %><dt class="col-5 text-muted">Kupon</dt><dd class="col-7"><%= data.order.kupon %> (-<%= data.order.popust %> <%= currencySymbol %>)</dd><% } %>
         <dt class="col-5 text-muted">Ukupno</dt><dd class="col-7"><strong><%= data.order.ukupnaCena %></strong></dd>
         <dt class="col-5 text-muted">Datum</dt><dd class="col-7"><%= data.order.datum %></dd>
         <% if (data.order.napomena) { %><dt class="col-5 text-muted">Napomena</dt><dd class="col-7"><%= data.order.napomena %></dd><% } %>

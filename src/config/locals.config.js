@@ -1,5 +1,6 @@
 import userService from "../services/user.service.js";
 import { buildOrganizationJsonLd } from "../seo/organization.builder.js";
+import { getCurrency } from "./runtime-settings.cache.js";
 import { logError } from "../utils/logger.util.js";
 
 const ASSET_VERSION = Date.now();
@@ -10,6 +11,12 @@ export async function localsMiddleware(req, res, next) {
   res.locals.user = req.session?.user || null;
   res.locals.assetVersion = ASSET_VERSION;
   res.locals.orgJsonLd = await buildOrganizationJsonLd(req);
+  // Admin-editable (see /admin/sajt) - synchronous cache read, not a DB call
+  // (runtime-settings.cache.js). For templates that decorate a raw number with
+  // a hardcoded currency label directly (rather than going through a mapper's
+  // formatMoney call) - e.g. "Iznos u <%= currencySymbol %>" instead of a
+  // literal "Iznos u RSD".
+  res.locals.currencySymbol = getCurrency().symbol;
 
   res.locals.success = req.flash ? req.flash("success") : [];
   res.locals.error = req.flash ? req.flash("error") : [];

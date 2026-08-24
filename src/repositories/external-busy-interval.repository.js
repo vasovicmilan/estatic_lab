@@ -1,7 +1,12 @@
 import ExternalBusyInterval from "../models/external-busy-interval.model.js";
-import { BOOKING_BUFFER_MINUTES } from "../config/booking.config.js";
+import { getBookingPolicy } from "../config/runtime-settings.cache.js";
 
-const BUFFER_MS = BOOKING_BUFFER_MINUTES * 60000;
+// Computed fresh on every call, not once at module load - booking policy is
+// admin-editable now (see runtime-settings.cache.js), so a frozen constant
+// here would mean a policy change only took effect after a server restart.
+function bufferMs() {
+  return getBookingPolicy().bufferMinutes * 60000;
+}
 
 /**
  * Every external busy interval for one employee within [rangeStart, rangeEnd) -
@@ -61,8 +66,8 @@ export async function existsOverlapping(employeeId, source, startTime, endTime) 
   const match = await ExternalBusyInterval.exists({
     employee: employeeId,
     source,
-    startTime: { $lt: new Date(endTime.getTime() + BUFFER_MS) },
-    endTime: { $gt: new Date(startTime.getTime() - BUFFER_MS) },
+    startTime: { $lt: new Date(endTime.getTime() + bufferMs()) },
+    endTime: { $gt: new Date(startTime.getTime() - bufferMs()) },
   });
   return !!match;
 }

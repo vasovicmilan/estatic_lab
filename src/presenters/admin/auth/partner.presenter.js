@@ -1,4 +1,4 @@
-import { formatPrice } from "../../../utils/price.util.js";
+import { formatPrice, formatMoney } from "../../../utils/price.util.js";
 import { translateCommissionSourceType, translateCommissionStatus } from "../../../utils/commission-display.util.js";
 
 export function preparePartnerListData(result, query = {}) {
@@ -70,7 +70,7 @@ export function preparePartnerDetailsData(partner, balance = null, coupons = [],
           coupons.length > 0
             ? coupons.map((c) => ({
                 label: c.code,
-                value: `${c.discountType === "percentage" ? c.discountValue + "%" : c.discountValue + " RSD"} popust${
+                value: `${c.discountType === "percentage" ? c.discountValue + "%" : formatMoney(c.discountValue)} popust${
                   c.isActive ? "" : " (neaktivan)"
                 } - <a href="/admin/kuponi/detalji/${c.id}">detalji</a>`,
               }))
@@ -82,8 +82,8 @@ export function preparePartnerDetailsData(partner, balance = null, coupons = [],
         rows:
           commissions.length > 0
             ? commissions.map((c) => ({
-                label: `${translateCommissionSourceType(c.sourceType)} - ${formatPrice(c.baseValue)} RSD x ${c.rate}%`,
-                value: `${formatPrice(c.amount)} RSD (${translateCommissionStatus(c.status)})`,
+                label: `${translateCommissionSourceType(c.sourceType)} - ${formatMoney(c.baseValue)} x ${c.rate}%`,
+                value: `${formatMoney(c.amount)} (${translateCommissionStatus(c.status)})`,
               }))
             : [{ label: "Nema zabeleženih provizija", value: "-" }],
       },
@@ -107,17 +107,17 @@ export function preparePartnerDetailsData(partner, balance = null, coupons = [],
               title: "Stanje",
               type: "table",
               rows: [
-                { label: "Ukupno zarađeno", value: `${formatPrice(balance.earned)} RSD` },
-                { label: "Isplaćeno", value: `${formatPrice(balance.paid)} RSD` },
-                { label: "Rezervisano (na čekanju)", value: `${formatPrice(balance.reserved)} RSD` },
-                { label: "Raspoloživo za isplatu", value: `${formatPrice(balance.available)} RSD` },
+                { label: "Ukupno zarađeno", value: formatMoney(balance.earned) },
+                { label: "Isplaćeno", value: formatMoney(balance.paid) },
+                { label: "Rezervisano (na čekanju)", value: formatMoney(balance.reserved) },
+                { label: "Raspoloživo za isplatu", value: formatMoney(balance.available) },
               ],
             },
             {
               title: "Zabeleži isplatu",
               type: "custom",
               content: "payout-record-form",
-              data: { earnerType: "partner", earnerId: partner.id, available: formatPrice(balance.available) },
+              data: { earnerType: "partner", earnerId: partner.id, available: formatPrice(balance.available), availableDisplay: formatMoney(balance.available) },
             },
             {
               title: "Sve isplate",

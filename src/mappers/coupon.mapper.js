@@ -1,4 +1,5 @@
 import { formatDateTime, formatDate } from "../utils/date.time.util.js";
+import { formatMoney } from "../utils/price.util.js";
 
 function resolveRefId(ref) {
   if (!ref) return null;
@@ -23,7 +24,7 @@ function formatMaxUses(maxUses) {
 }
 
 function formatDiscountValue(discountType, discountValue) {
-  return discountType === "percentage" ? `${discountValue}%` : `${discountValue} RSD`;
+  return discountType === "percentage" ? `${discountValue}%` : formatMoney(discountValue);
 }
 
 export function mapCouponsForAdminList(coupons = []) {
@@ -55,8 +56,8 @@ export function mapCouponForAdminDetail(coupon) {
       kod: coupon.code,
       tip: translateDiscountType(coupon.discountType),
       popust: formatDiscountValue(coupon.discountType, coupon.discountValue),
-      maxPopust: coupon.maxDiscountAmount ? `${coupon.maxDiscountAmount} RSD` : null,
-      minimalnaVrednost: coupon.minValue ? `${coupon.minValue} RSD` : null,
+      maxPopust: coupon.maxDiscountAmount ? formatMoney(coupon.maxDiscountAmount) : null,
+      minimalnaVrednost: coupon.minValue ? formatMoney(coupon.minValue) : null,
       aktivnost: translateActive(coupon.isActive),
     },
     // odvojen, opcioni deo kupona za artikle (shop) - potpuno nezavisan tip/vrednost/
@@ -68,8 +69,8 @@ export function mapCouponForAdminDetail(coupon) {
           aktivno: true,
           tip: translateDiscountType(coupon.productDiscount.discountType),
           popust: formatDiscountValue(coupon.productDiscount.discountType, coupon.productDiscount.discountValue),
-          maxPopust: coupon.productDiscount.maxDiscountAmount ? `${coupon.productDiscount.maxDiscountAmount} RSD` : null,
-          minimalnaVrednostPorudzbine: coupon.productDiscount.minOrderValue ? `${coupon.productDiscount.minOrderValue} RSD` : null,
+          maxPopust: coupon.productDiscount.maxDiscountAmount ? formatMoney(coupon.productDiscount.maxDiscountAmount) : null,
+          minimalnaVrednostPorudzbine: coupon.productDiscount.minOrderValue ? formatMoney(coupon.productDiscount.minOrderValue) : null,
         }
       : { aktivno: false },
     ogranicenja: {
@@ -104,7 +105,7 @@ export function mapCouponForAdminDetail(coupon) {
       terminId: resolveRefId(u.appointment),
       paketId: resolveRefId(u.packagePurchase),
       porudzbinaId: resolveRefId(u.order),
-      iznosPopusta: `${u.discountAmount} RSD`,
+      iznosPopusta: formatMoney(u.discountAmount),
       iskoriscenoU: formatDateTime(u.usedAt),
     })),
     vreme: {

@@ -7,6 +7,7 @@ import { logError } from "../utils/logger.util.js";
 import { generateOrderInvoicePdf } from "../utils/invoice-pdf.util.js";
 import { infoRow, infoTable, statusTone, badge, ctaButton, linkFallback, couponBlock } from "../utils/email-content.util.js";
 import { formatDateTime } from "../utils/date.time.util.js";
+import { getCurrency } from "../config/runtime-settings.cache.js";
 import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -31,6 +32,7 @@ async function renderTemplate(templateName, data) {
         SITE_NAME,
         SUPPORT_EMAIL,
         currentYear: new Date().getFullYear(),
+        currencySymbol: getCurrency().symbol,
         infoRow,
         infoTable,
         statusTone,

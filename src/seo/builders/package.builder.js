@@ -1,4 +1,5 @@
 import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd } from "../utils.seo.js";
+import { getCurrency } from "../../config/runtime-settings.cache.js";
 
 // pkg.faq comes from the mapper as {pitanje, odgovor} pairs (Serbian field names
 // used throughout the public-facing mapped shape). Normalized here to
@@ -40,7 +41,7 @@ function buildProductJsonLd(pkg, canonical, imageUrl, siteName) {
     offers: {
       "@type": "Offer",
       url: canonical,
-      priceCurrency: "RSD",
+      priceCurrency: getCurrency().code,
       price: pkg.cena,
       availability: "https://schema.org/InStock",
     },

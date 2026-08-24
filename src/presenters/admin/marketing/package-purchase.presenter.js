@@ -1,3 +1,4 @@
+import { formatMoney } from "../../../utils/price.util.js";
 export function preparePackagePurchaseListData(result, query = {}) {
   return {
     items: result.data,
@@ -77,9 +78,9 @@ export function preparePackagePurchaseDetailsData(purchase) {
         title: "Cena",
         type: "table",
         rows: [
-          { label: "Originalna cena", value: `${purchase.originalnaCena} RSD` },
-          { label: "Popust", value: `${purchase.popust} RSD` },
-          { label: "Plaćeno", value: `${purchase.placeno} RSD` },
+          { label: "Originalna cena", value: formatMoney(purchase.originalnaCena) },
+          { label: "Popust", value: formatMoney(purchase.popust) },
+          { label: "Plaćeno", value: formatMoney(purchase.placeno) },
         ],
       },
       {

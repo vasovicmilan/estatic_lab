@@ -1,4 +1,5 @@
 import { formatDateTime } from "../utils/date.time.util.js";
+import { formatPrice, formatMoney } from "../utils/price.util.js";
 
 const BADGE_LABELS = {
   none: null,
@@ -42,7 +43,7 @@ function getPriceRange(product) {
   if (!prices.length) return null;
   const min = Math.min(...prices);
   const max = Math.max(...prices);
-  return min === max ? `${min} RSD` : `${min} - ${max} RSD`;
+  return min === max ? formatMoney(min) : `${formatPrice(min)} - ${formatMoney(max)}`;
 }
 
 function getTotalStock(product) {

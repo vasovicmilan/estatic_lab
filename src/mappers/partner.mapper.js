@@ -1,5 +1,6 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 import { decryptPhone } from "../utils/phone.util.js";
+import { formatMoney } from "../utils/price.util.js";
 
 function getFullName(partner) {
   if (partner.userId && typeof partner.userId === "object") {
@@ -53,8 +54,8 @@ export function mapPartnerForAdminDetail(partner) {
     procenatProvizijeUslugeRaw: partner.commissionRateServices,
     procenatProvizijeArtikli: `${partner.commissionRateProducts}%`,
     procenatProvizijeArtikliRaw: partner.commissionRateProducts,
-    maxProvizijaUsluge: partner.maxCommissionAmountServices ? `${partner.maxCommissionAmountServices} RSD` : "Bez ograničenja",
-    maxProvizijaArtikli: partner.maxCommissionAmountProducts ? `${partner.maxCommissionAmountProducts} RSD` : "Bez ograničenja",
+    maxProvizijaUsluge: partner.maxCommissionAmountServices ? formatMoney(partner.maxCommissionAmountServices) : "Bez ograničenja",
+    maxProvizijaArtikli: partner.maxCommissionAmountProducts ? formatMoney(partner.maxCommissionAmountProducts) : "Bez ograničenja",
     aktivan: partner.isActive ? "Da" : "Ne",
     napomena: partner.notes || null,
     vreme: {

@@ -1,0 +1,18 @@
+<%- include("_layout", {
+  title: "Podsetnik za termin",
+  eyebrow: "Termin",
+  heading: `Podsetnik${typeof firstName !== 'undefined' && firstName ? ', ' + firstName : ''}!`,
+  preheader: "Vaš termin se približava",
+  body: `
+    <p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0 0 20px;">Vidimo se uskoro - evo podsetnika za vaš zakazani termin.</p>
+    ${infoTable(
+      infoRow("Usluga", appointment.usluga?.naziv || "-") +
+      infoRow("Termin", appointment.termin?.pocetak || "-") +
+      infoRow("Terapeut", appointment.terapeut || "Biće dodeljen") +
+      infoRow("Cena", appointment.konacnaCena || "-")
+    )}
+    <p style="font-size:13px; color:#8a8478; line-height:1.6; margin:20px 0 0;">
+      Ako ne možete da dođete, otkažite termin u vašem nalogu što je pre moguće kako biste oslobodili termin za druge klijente.
+    </p>
+  `
+}) %>

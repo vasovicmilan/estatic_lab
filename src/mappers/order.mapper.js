@@ -1,6 +1,7 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 import { decryptPhone } from "../utils/phone.util.js";
 import { decryptAddress } from "../utils/address.util.js";
+import { formatMoney } from "../utils/price.util.js";
 
 export function translateStatus(status) {
   const map = {
@@ -69,7 +70,7 @@ export function mapOrdersForAdminList(orders = []) {
         id: order._id.toString(),
         korisnik: getUserName(order),
         brojStavki: order.items?.length || 0,
-        ukupnaCena: order.totalPrice != null ? `${order.totalPrice.toFixed(2)} RSD` : "0 RSD",
+        ukupnaCena: order.totalPrice != null ? formatMoney(order.totalPrice) : formatMoney(0),
         status: translateStatus(order.status),
         statusRaw: order.status,
         datum: formatDateTime(order.createdAt),
@@ -95,7 +96,7 @@ export function mapOrderForAdminDetail(order) {
     zahtevaProceenuDostave: order.requiresShippingQuote || false,
     kupon: order.coupon?.code || null,
     popust: order.discountApplied || 0,
-    ukupnaCena: order.totalPrice != null ? `${order.totalPrice.toFixed(2)} RSD` : null,
+    ukupnaCena: order.totalPrice != null ? formatMoney(order.totalPrice) : null,
     napomena: order.note || null,
     status: translateStatus(order.status),
     statusRaw: order.status,
@@ -124,7 +125,7 @@ export function mapOrderForUserShort(order) {
   return {
     id: order._id.toString(),
     brojStavki: order.items?.length || 0,
-    ukupnaCena: order.totalPrice != null ? `${order.totalPrice.toFixed(2)} RSD` : null,
+    ukupnaCena: order.totalPrice != null ? formatMoney(order.totalPrice) : null,
     status: translateStatus(order.status),
     statusRaw: order.status,
     datum: formatDateTime(order.createdAt),
@@ -143,7 +144,7 @@ export function mapOrderForUserDetail(order) {
     zahtevaProceenuDostave: order.requiresShippingQuote || false,
     kupon: order.coupon?.code || null,
     popust: order.discountApplied || 0,
-    ukupnaCena: order.totalPrice != null ? `${order.totalPrice.toFixed(2)} RSD` : null,
+    ukupnaCena: order.totalPrice != null ? formatMoney(order.totalPrice) : null,
     napomena: order.note || null,
     status: translateStatus(order.status),
     statusRaw: order.status,

@@ -1,4 +1,5 @@
 import { formatDateTime, formatDate } from "../utils/date.time.util.js";
+import { formatMoney } from "../utils/price.util.js";
 
 // Same fix as package.mapper.js's isPopulatedService: a raw (unpopulated) Mongoose
 // ObjectId is ALSO typeof "object", so a plain typeof check can't tell it apart from
@@ -55,7 +56,7 @@ export function mapPackagePurchasesForAdminList(purchases = []) {
         id: p._id.toString(),
         paket: p.package?.name || p.package?.toString(),
         stavke: mapItems(p.items),
-        cena: `${p.pricePaid} RSD`,
+        cena: formatMoney(p.pricePaid),
         status: translateStatus(p.status),
         statusRaw: p.status,
         kupljeno: formatDate(p.purchasedAt),

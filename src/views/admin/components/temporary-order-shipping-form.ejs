@@ -5,7 +5,7 @@
     Porudžbina sadrži artikal koji se ne šalje redovnom poštom (veliki/teški uređaj) - unesite stvarnu cenu dostave da bi kupac mogao sam da potvrdi porudžbinu.
   </p>
   <div class="input-group input-group-sm">
-    <input type="number" name="shippingAmount" class="form-control" min="0" step="0.01" placeholder="Cena dostave u RSD" required>
+    <input type="number" name="shippingAmount" class="form-control" min="0" step="0.01" placeholder="Cena dostave u <%= currencySymbol %>" required>
     <button type="submit" class="btn btn-warning">Sačuvaj cenu dostave</button>
   </div>
 </form>

@@ -98,14 +98,14 @@ describe("appointment.mapper", () => {
   });
 
   describe("price formatting", () => {
-    it("formats finalPrice with two decimals and RSD suffix", () => {
+    it("formats finalPrice as a whole number with the configured currency suffix", () => {
       const appointment = buildAppointment({ finalPrice: 2500 });
-      assert.equal(mapAppointmentForAdminDetail(appointment).konacnaCena, "2500.00 RSD");
+      assert.equal(mapAppointmentForAdminDetail(appointment).konacnaCena, "2500 RSD");
     });
 
-    it("treats finalPrice: 0 as a real price (shows '0.00 RSD'), not as missing", () => {
+    it("treats finalPrice: 0 as a real price (shows '0 RSD'), not as missing", () => {
       const appointment = buildAppointment({ finalPrice: 0 });
-      assert.equal(mapAppointmentForAdminDetail(appointment).konacnaCena, "0.00 RSD");
+      assert.equal(mapAppointmentForAdminDetail(appointment).konacnaCena, "0 RSD");
     });
 
     it("shows null (not '0.00 RSD') when finalPrice is genuinely not set", () => {

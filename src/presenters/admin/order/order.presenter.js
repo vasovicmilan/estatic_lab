@@ -1,3 +1,4 @@
+import { formatMoney } from "../../../utils/price.util.js";
 import { getAllowedStatuses } from "../../../models/order-status-transitions.js";
 
 export function prepareOrderListData(result, query = {}) {
@@ -92,17 +93,17 @@ export function prepareOrderDetailsData(order) {
         type: "table",
         rows: order.stavke.map((s) => ({
           label: `${s.naziv} - ${s.varijanta}`,
-          value: `${s.kolicina} x ${s.cena} RSD = ${s.ukupno} RSD`,
+          value: `${s.kolicina} x ${formatMoney(s.cena)} = ${formatMoney(s.ukupno)}`,
         })),
       },
       {
         title: "Cena",
         type: "table",
         rows: [
-          { label: "Subtotal", value: `${order.subtotal} RSD` },
-          { label: "Dostava", value: `${order.dostava} RSD` },
+          { label: "Subtotal", value: formatMoney(order.subtotal) },
+          { label: "Dostava", value: formatMoney(order.dostava) },
           { label: "Kupon", value: order.kupon || "-" },
-          { label: "Popust", value: `${order.popust} RSD` },
+          { label: "Popust", value: formatMoney(order.popust) },
           { label: "Ukupno", value: order.ukupnaCena },
         ],
       },

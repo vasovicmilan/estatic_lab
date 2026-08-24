@@ -27,14 +27,14 @@
           <% data.order.stavke.forEach(function(item) { %>
             <li class="list-group-item d-flex justify-content-between">
               <span><%= item.naziv %> (<%= item.varijanta %>) &times; <%= item.kolicina %></span>
-              <strong><%= item.ukupno %> RSD</strong>
+              <strong><%= item.ukupno %> <%= currencySymbol %></strong>
             </li>
           <% }) %>
         </ul>
         <div class="card-body">
           <dl class="row mb-0">
             <dt class="col-5 text-muted">Status</dt><dd class="col-7"><%= data.order.status %></dd>
-            <dt class="col-5 text-muted">Dostava</dt><dd class="col-7"><%= data.order.dostava %> RSD</dd>
+            <dt class="col-5 text-muted">Dostava</dt><dd class="col-7"><%= data.order.dostava %> <%= currencySymbol %></dd>
             <% if (data.order.kupon) { %><dt class="col-5 text-muted">Kupon</dt><dd class="col-7"><%= data.order.kupon %></dd><% } %>
             <dt class="col-5 text-muted">Ukupno</dt><dd class="col-7"><strong><%= data.order.ukupnaCena %></strong></dd>
           </dl>

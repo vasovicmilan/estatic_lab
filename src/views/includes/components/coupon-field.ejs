@@ -23,7 +23,7 @@
 
   <div class="mt-2 <%= applied ? '' : 'd-none' %>" data-coupon-applied-badge>
     <span class="badge bg-success">
-      Kupon "<span data-coupon-applied-code><%= applied ? applied.code : '' %></span>" primenjen - popust: <span data-coupon-applied-discount><%= applied ? applied.discountAmount : '' %></span> RSD
+      Kupon "<span data-coupon-applied-code><%= applied ? applied.code : '' %></span>" primenjen - popust: <span data-coupon-applied-discount><%= applied ? applied.discountAmount : '' %></span> <%= currencySymbol %>
     </span>
     <button type="button" class="btn btn-link btn-sm text-danger p-0 ms-2" data-coupon-remove-btn>Ukloni</button>
   </div>

@@ -1,3 +1,5 @@
+import { getCurrency } from "../config/runtime-settings.cache.js";
+
 function escapeHtml(value = "") {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -23,7 +25,7 @@ export function buildNewAppointmentMessage(appointment) {
   if (appointment.duration) lines.push(`⏱ <b>Trajanje:</b> ${escapeHtml(appointment.duration)}`);
   lines.push(`🕐 <b>Termin:</b> ${escapeHtml(appointment.startTime || "-")}`);
   if (appointment.therapist) lines.push(`🧑‍⚕️ <b>Terapeut:</b> ${escapeHtml(appointment.therapist)}`);
-  lines.push(`💰 <b>Cena:</b> ${formatPrice(appointment.finalPrice)} RSD`);
+  lines.push(`💰 <b>Cena:</b> ${formatPrice(appointment.finalPrice)} ${getCurrency().symbol}`);
   if (appointment.coupon) lines.push(`🏷 <b>Kupon:</b> ${escapeHtml(appointment.coupon)}`);
   if (appointment.note) lines.push(`📝 <b>Napomena klijenta:</b> ${escapeHtml(appointment.note)}`);
   if (appointment.adminUrl) lines.push("", `🔗 <a href="${appointment.adminUrl}">Otvori u adminu</a>`);
@@ -51,7 +53,7 @@ export function buildAppointmentStatusChangeMessage(appointment, oldStatus, newS
   ];
   if (appointment.startTime) lines.push(`🕐 <b>Termin:</b> ${escapeHtml(appointment.startTime)}`);
   if (appointment.therapist) lines.push(`🧑‍⚕️ <b>Terapeut:</b> ${escapeHtml(appointment.therapist)}`);
-  lines.push(`💰 <b>Cena:</b> ${formatPrice(appointment.finalPrice)} RSD`);
+  lines.push(`💰 <b>Cena:</b> ${formatPrice(appointment.finalPrice)} ${getCurrency().symbol}`);
   if (appointment.note) lines.push(`📝 <b>Napomena:</b> ${escapeHtml(appointment.note)}`);
   if (appointment.adminUrl) lines.push("", `🔗 <a href="${appointment.adminUrl}">Otvori u adminu</a>`);
 
@@ -163,7 +165,7 @@ export function buildNewPackagePurchaseMessage(purchase) {
     "",
     `👤 <b>Korisnik:</b> ${escapeHtml(purchase.korisnik || "-")}`,
     `📦 <b>Paket:</b> ${escapeHtml(purchase.paket || "-")}`,
-    `💰 <b>Plaćeno:</b> ${formatPrice(purchase.placeno)} RSD`,
+    `💰 <b>Plaćeno:</b> ${formatPrice(purchase.placeno)} ${getCurrency().symbol}`,
   ].join("\n");
 }
 

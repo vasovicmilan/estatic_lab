@@ -55,7 +55,8 @@
       const data = await res.json();
 
       if (data.success) {
-        showCouponNote("text-success", `Kupon važi - popust ${data.discountAmount} RSD. Cena sa kuponom: ${data.finalPrice} RSD.`);
+        const symbol = window.__currencySymbol || "RSD";
+        showCouponNote("text-success", `Kupon važi - popust ${data.discountAmount} ${symbol}. Cena sa kuponom: ${data.finalPrice} ${symbol}.`);
       } else {
         showCouponNote("text-danger", data.message || "Kupon nije važeći.");
       }

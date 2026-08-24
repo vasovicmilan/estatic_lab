@@ -4,12 +4,21 @@ import externalBusyIntervalService from "./external-busy-interval.service.js";
 import serviceService from "./service.service.js";
 import resourceService from "./resource.service.js";
 import { validationError, badRequest } from "../utils/error.util.js";
-import { BOOKING_BUFFER_MINUTES, SLOT_GRID_MINUTES } from "../config/booking.config.js";
+import { getBookingPolicy } from "../config/runtime-settings.cache.js";
 import { timeStringToDate, isEmployeeWorkingAt, dayOfWeek } from "../utils/working-hours.util.js";
 import { zonedComponentsToUtcDate, getZonedComponents } from "../utils/date.time.util.js";
 
-const BUFFER_MS = BOOKING_BUFFER_MINUTES * 60000;
-const GRID_MS = SLOT_GRID_MINUTES * 60000;
+// Computed fresh from the cache on every call, not once at module load -
+// booking policy is admin-editable now (see runtime-settings.cache.js), so a
+// frozen constant here would mean a policy change only took effect after a
+// server restart, silently. The cache read itself is a plain object property
+// lookup, not a DB call, so calling this per-use has no real cost.
+function bufferMs() {
+  return getBookingPolicy().bufferMinutes * 60000;
+}
+function gridMs() {
+  return getBookingPolicy().slotGridMinutes * 60000;
+}
 
 function dayBounds(date) {
   // Was `new Date(date); start.setHours(0,0,0,0)` - setHours() operates in the
@@ -58,6 +67,7 @@ function subtractBusyIntervals(freeInterval, busyIntervals) {
  * timezone offset), e.g. 09:07 -> 09:30, 09:30 -> 09:30 (already aligned).
  */
 function ceilToGrid(date) {
+  const slotGridMinutes = getBookingPolicy().slotGridMinutes;
   // Grid alignment (":00, :30...") has to be judged against Belgrade wall-clock
   // hour/minute - was rounded.getHours()/getMinutes(), the SERVER PROCESS's own
   // timezone (UTC here), which round-tripped every slot to the wrong grid mark
@@ -68,12 +78,12 @@ function ceilToGrid(date) {
   // never silently depends on the server's own configured OS timezone either).
   const { hour, minute } = getZonedComponents(date);
   const totalMinutes = hour * 60 + minute;
-  const remainder = totalMinutes % SLOT_GRID_MINUTES;
+  const remainder = totalMinutes % slotGridMinutes;
   const hasSubMinutePart = date.getUTCSeconds() > 0 || date.getUTCMilliseconds() > 0;
 
   if (remainder === 0 && !hasSubMinutePart) return new Date(date);
 
-  const minutesToAdd = remainder === 0 ? SLOT_GRID_MINUTES : SLOT_GRID_MINUTES - remainder;
+  const minutesToAdd = remainder === 0 ? slotGridMinutes : slotGridMinutes - remainder;
   // Advancing by a plain millisecond offset (rather than reconstructing wall-clock
   // components and re-converting) sidesteps day-rollover entirely and is safe for
   // an increment this small - correct even across a DST transition instant itself,
@@ -96,7 +106,7 @@ function sliceIntoSlots(interval, durationMinutes) {
   while (cursor.getTime() + durationMs <= interval.end.getTime()) {
     const slotEnd = new Date(cursor.getTime() + durationMs);
     slots.push({ startTime: new Date(cursor), endTime: slotEnd });
-    cursor = new Date(cursor.getTime() + GRID_MS);
+    cursor = new Date(cursor.getTime() + gridMs());
   }
 
   return slots;
@@ -123,8 +133,8 @@ async function getEmployeeFreeSlotsForDay(employee, date, durationMinutes) {
   // directly, if the buffer's whole point is giving the employee breathing room
   // between clients.
   const busyIntervals = [...busyRaw, ...externalBusyRaw].map((a) => ({
-    start: new Date(new Date(a.startTime).getTime() - BUFFER_MS),
-    end: new Date(new Date(a.endTime).getTime() + BUFFER_MS),
+    start: new Date(new Date(a.startTime).getTime() - bufferMs()),
+    end: new Date(new Date(a.endTime).getTime() + bufferMs()),
   }));
 
   const allSlots = [];
@@ -159,8 +169,8 @@ async function getResourceBusyIntervalsForDay(resourceId, date) {
   const { start: dayStart, end: dayEnd } = dayBounds(date);
   const busyRaw = await appointmentService.getResourceBusyIntervals(resourceId, dayStart, dayEnd);
   return busyRaw.map((a) => ({
-    start: new Date(new Date(a.startTime).getTime() - BUFFER_MS),
-    end: new Date(new Date(a.endTime).getTime() + BUFFER_MS),
+    start: new Date(new Date(a.startTime).getTime() - bufferMs()),
+    end: new Date(new Date(a.endTime).getTime() + bufferMs()),
   }));
 }
 

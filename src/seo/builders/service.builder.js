@@ -1,4 +1,5 @@
 import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd } from "../utils.seo.js";
+import { getCurrency } from "../../config/runtime-settings.cache.js";
 
 // Each service package/tier (5 seansi, 10 seansi, ...) becomes its own Offer -
 // a service genuinely has multiple purchasable tiers at different prices, unlike
@@ -9,7 +10,7 @@ function buildServiceOffers(service) {
   return variants.map((v) => ({
     "@type": "Offer",
     name: v.naziv,
-    priceCurrency: "RSD",
+    priceCurrency: getCurrency().code,
     price: v.cenaRaw,
     availability: "https://schema.org/InStock",
   }));

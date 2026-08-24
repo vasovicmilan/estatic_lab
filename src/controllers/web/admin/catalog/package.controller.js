@@ -1,3 +1,4 @@
+import { formatMoney } from "../../../../utils/price.util.js";
 import * as packageService from "../../../../services/package.service.js";
 import * as serviceService from "../../../../services/service.service.js";
 import * as categoryService from "../../../../services/category.service.js";
@@ -51,7 +52,7 @@ async function loadFormOptions() {
   const variantOptions = fullServices.flatMap((service) =>
     (service.varijante || []).map((variant) => ({
       value: `${service.id}::${variant.id}`,
-      label: `${service.naziv} - ${variant.naziv} (${variant.cena} RSD)`,
+      label: `${service.naziv} - ${variant.naziv} (${formatMoney(variant.cena)})`,
     }))
   );
 

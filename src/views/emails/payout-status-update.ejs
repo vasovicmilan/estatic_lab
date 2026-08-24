@@ -5,7 +5,7 @@
   preheader: `Vaš zahtev za isplatu je ažuriran: ${status}`,
   body: `
     <p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0 0 20px;">Novi status: ${badge(status, statusTone(status))}</p>
-    ${infoTable(infoRow("Iznos", `${Math.round(Number(payoutRequest.amount) || 0)} RSD`))}
+    ${infoTable(infoRow("Iznos", `${Math.round(Number(payoutRequest.amount) || 0)} ${currencySymbol}`))}
     ${payoutRequest.adminNote ? `<p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0 0 20px;"><strong>Napomena:</strong> ${payoutRequest.adminNote}</p>` : ""}
     <p style="font-size:13px; color:#9b9490; line-height:1.6; margin:0;">
       Detalje pratite na svom partnerskom nalogu. Pitanja? <a href="mailto:${SUPPORT_EMAIL}" style="color:#7a5c3e;">${SUPPORT_EMAIL}</a>.

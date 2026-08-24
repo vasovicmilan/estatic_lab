@@ -77,8 +77,8 @@
               <div class="card-body d-flex flex-column">
                 <h3 class="h5"><%= variant.naziv %></h3>
                 <div class="d-flex align-items-baseline gap-2 mb-3">
-                  <strong class="fs-5"><%= variant.cena %> RSD</strong>
-                  <% if (variant.staraCena) { %><span class="text-muted text-decoration-line-through small"><%= variant.staraCena %> RSD</span><% } %>
+                  <strong class="fs-5"><%= variant.cena %> <%= currencySymbol %></strong>
+                  <% if (variant.staraCena) { %><span class="text-muted text-decoration-line-through small"><%= variant.staraCena %> <%= currencySymbol %></span><% } %>
                 </div>
 
                 <% if (variant.naStanju) { %>

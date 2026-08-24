@@ -1,4 +1,5 @@
 import { formatDateTime } from "../utils/date.time.util.js";
+import { formatPrice, formatMoney } from "../utils/price.util.js";
 
 function formatImage(image) {
   if (!image) return null;
@@ -39,7 +40,7 @@ function getPriceRange(service) {
   if (!prices.length) return null;
   const min = Math.min(...prices);
   const max = Math.max(...prices);
-  return min === max ? `${min} RSD` : `${min} - ${max} RSD`;
+  return min === max ? formatMoney(min) : `${formatPrice(min)} - ${formatMoney(max)}`;
 }
 
 function mapPackages(packages = []) {
@@ -49,8 +50,8 @@ function mapPackages(packages = []) {
     slug: p.slug,
     brojSeansi: p.sessions,
     trajanje: `${p.duration} min`,
-    cena: `${p.totalPrice} RSD`,
-    staraCena: p.basePrice ? `${p.basePrice} RSD` : null,
+    cena: formatMoney(p.totalPrice),
+    staraCena: p.basePrice ? formatMoney(p.basePrice) : null,
     oznaka: p.badge || null,
     najbolji: Boolean(p.isBest),
     aktivan: Boolean(p.isActive),

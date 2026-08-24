@@ -1,10 +1,15 @@
 import googleCalendarProvider from "../integrations/google-calendar/google-calendar.provider.js";
 import GOOGLE_CALENDAR_CONFIG from "../integrations/google-calendar/google-calendar.config.js";
-import { BOOKING_BUFFER_MINUTES } from "../config/booking.config.js";
+import { getBookingPolicy } from "../config/runtime-settings.cache.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 
 const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
-const BUFFER_MS = BOOKING_BUFFER_MINUTES * 60000;
+// Computed fresh on every call, not once at module load - booking policy is
+// admin-editable now (see runtime-settings.cache.js), so a frozen constant
+// here would mean a policy change only took effect after a server restart.
+function bufferMs() {
+  return getBookingPolicy().bufferMinutes * 60000;
+}
 
 // Every event this app pushes carries this marker in extendedProperties. This is
 // what will let the future SrediMe-facing sync (or any future poller reading this
@@ -23,7 +28,7 @@ function buildEventPayload(appointment) {
   // Deliberately NOT padded before the start - Milan wants that on the calendar
   // as fully bookable, unlike the "after" side.
   const start = new Date(appointment.termin.pocetakRaw);
-  const paddedEnd = new Date(new Date(appointment.termin.krajRaw).getTime() + BUFFER_MS);
+  const paddedEnd = new Date(new Date(appointment.termin.krajRaw).getTime() + bufferMs());
 
   return {
     summary: `${serviceName} - ${clientName}`,

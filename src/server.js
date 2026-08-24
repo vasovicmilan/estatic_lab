@@ -8,6 +8,7 @@ import "./events/listeners/google-calendar.listener.js";
 import { initTelegramBot, stopTelegramBot } from "./integrations/telegram/telegram.provider.js";
 import { initGoogleCalendarClient } from "./integrations/google-calendar/google-calendar.provider.js";
 import { startScheduler } from "./jobs/scheduler.js";
+import { loadRuntimeSettings } from "./config/runtime-settings.cache.js";
 import { logInfo, logError } from "./utils/logger.util.js";
 
 const PORT = process.env.PORT || 3000;
@@ -16,6 +17,12 @@ async function start() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
     logInfo("MongoDB connected");
+
+    // Populates the in-memory booking-policy/currency cache from SiteSettings
+    // before anything starts serving traffic - see runtime-settings.cache.js.
+    // Deliberately awaited (not fire-and-forget): the first request should
+    // already see the real configured values, not the fallback defaults.
+    await loadRuntimeSettings();
 
     initTelegramBot();
     initGoogleCalendarClient();

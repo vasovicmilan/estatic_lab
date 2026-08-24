@@ -1,5 +1,5 @@
 import { formatDateTime } from "../../utils/date.time.util.js";
-import { formatPrice } from "../../utils/price.util.js";
+import { formatPrice, formatMoney } from "../../utils/price.util.js";
 import { translateCommissionSourceType, translateCommissionStatus } from "../../utils/commission-display.util.js";
 
 const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
@@ -10,10 +10,13 @@ export function preparePartnerDashboardData({ partner, balance, coupons, recentC
   return {
     partner,
     balance: {
-      earned: formatPrice(balance.earned),
-      paid: formatPrice(balance.paid),
-      reserved: formatPrice(balance.reserved),
-      available: formatPrice(balance.available),
+      earned: formatMoney(balance.earned),
+      paid: formatMoney(balance.paid),
+      reserved: formatMoney(balance.reserved),
+      available: formatMoney(balance.available),
+      // the withdrawal form's `max`/`placeholder` need a bare number, not a
+      // "1234 RSD" display string - see views/partner/dashboard.ejs
+      availableRaw: formatPrice(balance.available),
     },
     // one referral link per coupon that references this partner - a partner could
     // theoretically have more than one active code (e.g. a seasonal promo alongside
@@ -30,7 +33,7 @@ export function preparePartnerDashboardData({ partner, balance, coupons, recentC
 
 function mapPayoutRequestRow(request) {
   return {
-    iznos: `${formatPrice(request.amount)} RSD`,
+    iznos: formatMoney(request.amount),
     status: PAYOUT_STATUS_LABELS[request.status] || request.status,
     statusRaw: request.status,
     napomena: request.adminNote || null,
@@ -107,15 +110,15 @@ function mapCommissionRow(entry) {
   return {
     id: entry._id?.toString?.() || entry.id,
     izvor: translateCommissionSourceType(entry.sourceType),
-    osnovnaVrednost: `${formatPrice(entry.baseValue)} RSD`,
+    osnovnaVrednost: formatMoney(entry.baseValue),
     procenat: `${entry.rate}%`,
-    iznos: `${formatPrice(entry.amount)} RSD`,
+    iznos: formatMoney(entry.amount),
     status: translateCommissionStatus(entry.status),
     datum: entry.earnedAt || entry.createdAt,
   };
 }
 
 function describeCoupon(coupon) {
-  const discount = coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `${coupon.discountValue} RSD`;
+  const discount = coupon.discountType === "percentage" ? `${coupon.discountValue}%` : formatMoney(coupon.discountValue);
   return `Popust od ${discount} za korisnike koji koriste ovaj link`;
 }

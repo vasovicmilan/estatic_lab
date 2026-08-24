@@ -12,25 +12,25 @@
       <div class="col-md-3">
         <div class="card h-100"><div class="card-body">
           <p class="text-muted small mb-1">Ukupno zarađeno</p>
-          <p class="h4 mb-0"><%= data.balance.earned %> RSD</p>
+          <p class="h4 mb-0"><%= data.balance.earned %></p>
         </div></div>
       </div>
       <div class="col-md-3">
         <div class="card h-100"><div class="card-body">
           <p class="text-muted small mb-1">Isplaćeno</p>
-          <p class="h4 mb-0"><%= data.balance.paid %> RSD</p>
+          <p class="h4 mb-0"><%= data.balance.paid %></p>
         </div></div>
       </div>
       <div class="col-md-3">
         <div class="card h-100"><div class="card-body">
           <p class="text-muted small mb-1">Rezervisano (na čekanju)</p>
-          <p class="h4 mb-0"><%= data.balance.reserved %> RSD</p>
+          <p class="h4 mb-0"><%= data.balance.reserved %></p>
         </div></div>
       </div>
       <div class="col-md-3">
         <div class="card h-100 border-primary"><div class="card-body">
           <p class="text-muted small mb-1">Raspoloživo za isplatu</p>
-          <p class="h4 mb-0 text-primary"><%= data.balance.available %> RSD</p>
+          <p class="h4 mb-0 text-primary"><%= data.balance.available %></p>
         </div></div>
       </div>
     </div>
@@ -40,15 +40,15 @@
         <div class="card h-100">
           <div class="card-header">Zatraži isplatu</div>
           <div class="card-body">
-            <% if (data.balance.available <= 0) { %>
+            <% if (data.balance.availableRaw <= 0) { %>
               <p class="text-muted mb-0">Trenutno nemate raspoloživ iznos za isplatu.</p>
             <% } else { %>
               <form action="/moj-nalog/isplata" method="POST" class="d-flex gap-2">
                 <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
-                <input type="number" name="amount" class="form-control" min="1" max="<%= data.balance.available %>" step="0.01" placeholder="Iznos u RSD" required>
+                <input type="number" name="amount" class="form-control" min="1" max="<%= data.balance.availableRaw %>" step="0.01" placeholder="Iznos" required>
                 <button type="submit" class="btn btn-primary text-nowrap">Pošalji zahtev</button>
               </form>
-              <small class="text-muted d-block mt-2">Najviše <%= data.balance.available %> RSD.</small>
+              <small class="text-muted d-block mt-2">Najviše <%= data.balance.available %>.</small>
             <% } %>
           </div>
         </div>

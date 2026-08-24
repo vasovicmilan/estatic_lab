@@ -1,5 +1,5 @@
 import { formatDateTime } from "../../utils/date.time.util.js";
-import { formatPrice } from "../../utils/price.util.js";
+import { formatPrice, formatMoney } from "../../utils/price.util.js";
 import { translateCommissionSourceType, translateCommissionStatus } from "../../utils/commission-display.util.js";
 import { getRescheduleWindow } from "../../utils/appointment-cancellation.util.js";
 
@@ -20,10 +20,13 @@ export function prepareEmployeeDashboardData({
     isCommissionBased,
     balance: balance
       ? {
-          earned: formatPrice(balance.earned),
-          paid: formatPrice(balance.paid),
-          reserved: formatPrice(balance.reserved),
-          available: formatPrice(balance.available),
+          earned: formatMoney(balance.earned),
+          paid: formatMoney(balance.paid),
+          reserved: formatMoney(balance.reserved),
+          available: formatMoney(balance.available),
+          // the withdrawal form's `max`/`placeholder` need a bare number, not a
+          // "1234 RSD" display string - see views/employee/dashboard.ejs
+          availableRaw: formatPrice(balance.available),
         }
       : null,
     recentCommissions: recentCommissions.map(mapCommissionRow),
@@ -142,9 +145,9 @@ function mapCommissionRow(entry) {
   return {
     id: entry._id?.toString?.() || entry.id,
     izvor: translateCommissionSourceType(entry.sourceType),
-    osnovnaVrednost: `${formatPrice(entry.baseValue)} RSD`,
+    osnovnaVrednost: formatMoney(entry.baseValue),
     procenat: `${entry.rate}%`,
-    iznos: `${formatPrice(entry.amount)} RSD`,
+    iznos: formatMoney(entry.amount),
     status: translateCommissionStatus(entry.status),
     datum: entry.earnedAt || entry.createdAt,
   };
@@ -152,7 +155,7 @@ function mapCommissionRow(entry) {
 
 function mapPayoutRequestRow(request) {
   return {
-    iznos: `${formatPrice(request.amount)} RSD`,
+    iznos: formatMoney(request.amount),
     status: PAYOUT_STATUS_LABELS[request.status] || request.status,
     statusRaw: request.status,
     napomena: request.adminNote || null,

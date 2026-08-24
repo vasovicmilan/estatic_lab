@@ -1,5 +1,6 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 import { decryptPhone } from "../utils/phone.util.js";
+import { formatMoney } from "../utils/price.util.js";
 
 export function translateStatus(status) {
   const map = {
@@ -64,7 +65,7 @@ export function mapAppointmentForAdminShort(appointment) {
     datum: formatDateTime(appointment.startTime),
     status: translateStatus(appointment.status),
     statusRaw: appointment.status,
-    konacnaCena: appointment.finalPrice != null ? `${appointment.finalPrice.toFixed(2)} RSD` : "0 RSD",
+    konacnaCena: appointment.finalPrice != null ? formatMoney(appointment.finalPrice) : formatMoney(0),
   };
 }
 
@@ -84,7 +85,7 @@ export function mapAppointmentForAdminDetail(appointment) {
       id: appointment.service?._id?.toString() || appointment.service?.toString() || null,
       naziv: appointment.variant?.name || appointment.service?.name,
       trajanje: appointment.variant?.duration ? `${appointment.variant.duration} min` : null,
-      cena: appointment.variant?.price != null ? `${appointment.variant.price.toFixed(2)} RSD` : null,
+      cena: appointment.variant?.price != null ? formatMoney(appointment.variant.price) : null,
     },
     termin: {
       pocetak: formatDateTime(appointment.startTime),
@@ -98,8 +99,8 @@ export function mapAppointmentForAdminDetail(appointment) {
     terapeut: appointment.employeeSnapshot?.name || (appointment.employee ? getEmployeeName(appointment.employee) : null),
     dodeljenTerapeut: appointment.assignedTo ? getEmployeeName(appointment.assignedTo) : null,
     napomena: appointment.note || null,
-    popust: appointment.discountApplied ? `${appointment.discountApplied} RSD` : null,
-    konacnaCena: appointment.finalPrice != null ? `${appointment.finalPrice.toFixed(2)} RSD` : null,
+    popust: appointment.discountApplied ? formatMoney(appointment.discountApplied) : null,
+    konacnaCena: appointment.finalPrice != null ? formatMoney(appointment.finalPrice) : null,
     kupon: appointment.coupon?.code || null,
     rucnoKreiran: !!appointment.manualBooking,
 
@@ -133,7 +134,7 @@ export function mapAppointmentForEmployeeShort(appointment) {
     usluga: appointment.variant?.name || appointment.service?.name,
     datum: formatDateTime(appointment.startTime),
     status: translateStatus(appointment.status),
-    cena: appointment.finalPrice != null ? `${appointment.finalPrice.toFixed(2)} RSD` : null,
+    cena: appointment.finalPrice != null ? formatMoney(appointment.finalPrice) : null,
   };
 }
 
@@ -148,7 +149,7 @@ export function mapAppointmentForEmployeeDetail(appointment) {
     usluga: {
       naziv: appointment.variant?.name,
       trajanje: appointment.variant?.duration ? `${appointment.variant.duration} min` : null,
-      cena: appointment.variant?.price != null ? `${appointment.variant.price.toFixed(2)} RSD` : null,
+      cena: appointment.variant?.price != null ? formatMoney(appointment.variant.price) : null,
     },
     termin: {
       pocetak: formatDateTime(appointment.startTime),
@@ -158,7 +159,7 @@ export function mapAppointmentForEmployeeDetail(appointment) {
     status: translateStatus(appointment.status),
     statusRaw: appointment.status,
     napomenaKlijenta: appointment.note || null,
-    konacnaCena: appointment.finalPrice != null ? `${appointment.finalPrice.toFixed(2)} RSD` : null,
+    konacnaCena: appointment.finalPrice != null ? formatMoney(appointment.finalPrice) : null,
     // Was backwards before: employee===assignedTo is true exactly when an
     // assignment DID happen (both fields get set together, whether by the
     // system or an admin), so comparing them landed the labels on the wrong
@@ -176,7 +177,7 @@ export function mapAppointmentForUserShort(appointment) {
     usluga: appointment.variant?.name || appointment.service?.name,
     datum: formatDateTime(appointment.startTime),
     status: translateStatus(appointment.status),
-    cena: appointment.finalPrice != null ? `${appointment.finalPrice.toFixed(2)} RSD` : null,
+    cena: appointment.finalPrice != null ? formatMoney(appointment.finalPrice) : null,
   };
 }
 
@@ -186,7 +187,7 @@ export function mapAppointmentForUserDetail(appointment) {
     usluga: {
       naziv: appointment.variant?.name,
       trajanje: appointment.variant?.duration ? `${appointment.variant.duration} min` : null,
-      cena: appointment.variant?.price != null ? `${appointment.variant.price.toFixed(2)} RSD` : null,
+      cena: appointment.variant?.price != null ? formatMoney(appointment.variant.price) : null,
     },
     termin: {
       pocetak: formatDateTime(appointment.startTime),
@@ -200,8 +201,8 @@ export function mapAppointmentForUserDetail(appointment) {
       || (appointment.assignedTo ? getEmployeeName(appointment.assignedTo) : null)
       || "Nije dodeljen",
     napomena: appointment.note || null,
-    popust: appointment.discountApplied ? `${appointment.discountApplied} RSD` : null,
-    konacnaCena: appointment.finalPrice != null ? `${appointment.finalPrice.toFixed(2)} RSD` : null,
+    popust: appointment.discountApplied ? formatMoney(appointment.discountApplied) : null,
+    konacnaCena: appointment.finalPrice != null ? formatMoney(appointment.finalPrice) : null,
     kupon: appointment.coupon?.code || null,
     createdAt: formatDateTime(appointment.createdAt),
 

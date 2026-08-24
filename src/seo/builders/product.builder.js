@@ -1,4 +1,5 @@
 import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd } from "../utils.seo.js";
+import { getCurrency } from "../../config/runtime-settings.cache.js";
 
 // One Offer per active variation, carrying each variation's own price/sku/stock -
 // this is what lets Google (and price-aware AI answer engines) show real
@@ -11,7 +12,7 @@ function buildProductOffers(product, canonical) {
     name: v.naziv,
     ...(v.sku ? { sku: v.sku } : {}),
     url: canonical,
-    priceCurrency: "RSD",
+    priceCurrency: getCurrency().code,
     price: v.cena,
     availability: v.naStanju ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
   }));

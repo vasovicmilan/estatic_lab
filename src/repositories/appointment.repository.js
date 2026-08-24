@@ -1,11 +1,16 @@
 import Appointment from "../models/appointment.model.js";
 import { buildAppointmentFilter } from "./filters/appointment.filter.js";
 import { resolveLimit, resolveSkip, buildPaginationMeta } from "../utils/pagination.util.js";
-import { BOOKING_BUFFER_MINUTES } from "../config/booking.config.js";
+import { getBookingPolicy } from "../config/runtime-settings.cache.js";
 
 // statuses that actually hold a slot busy - cancelled/rejected appointments free the slot back up
 const BLOCKING_STATUSES = ["pending", "confirmed"];
-const BUFFER_MS = BOOKING_BUFFER_MINUTES * 60000;
+// Computed fresh on every call, not once at module load - booking policy is
+// admin-editable now (see runtime-settings.cache.js), so a frozen constant
+// here would mean a policy change only took effect after a server restart.
+function bufferMs() {
+  return getBookingPolicy().bufferMinutes * 60000;
+}
 
 function applyPopulate(query, populateFields = []) {
   for (const field of populateFields) {
@@ -111,8 +116,8 @@ export async function findOverlappingAppointments(employeeId, startTime, endTime
   const filter = {
     $or: [{ employee: employeeId }, { assignedTo: employeeId }],
     status: { $in: BLOCKING_STATUSES },
-    startTime: { $lt: new Date(endTime.getTime() + BUFFER_MS) },
-    endTime: { $gt: new Date(startTime.getTime() - BUFFER_MS) },
+    startTime: { $lt: new Date(endTime.getTime() + bufferMs()) },
+    endTime: { $gt: new Date(startTime.getTime() - bufferMs()) },
   };
   if (excludeId) filter._id = { $ne: excludeId };
   return Appointment.find(filter).session(session || null).lean();
@@ -132,8 +137,8 @@ export async function countOverlappingResourceAppointments(resourceId, startTime
   const filter = {
     "resources.resource": resourceId,
     status: { $in: BLOCKING_STATUSES },
-    startTime: { $lt: new Date(endTime.getTime() + BUFFER_MS) },
-    endTime: { $gt: new Date(startTime.getTime() - BUFFER_MS) },
+    startTime: { $lt: new Date(endTime.getTime() + bufferMs()) },
+    endTime: { $gt: new Date(startTime.getTime() - bufferMs()) },
   };
   if (excludeId) filter._id = { $ne: excludeId };
   return Appointment.countDocuments(filter).session(session || null);

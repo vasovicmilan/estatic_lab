@@ -13,7 +13,7 @@ import { getAllowedStatuses } from "../models/appointment-status-transitions.js"
 import { canUserCancelAppointment, getRescheduleWindow, hasMinimumRescheduleLeadTime, isSameCalendarDay } from "../utils/appointment-cancellation.util.js";
 import { buildPhoneRecord } from "../utils/phone.util.js";
 import { isEmployeeWorkingAt } from "../utils/working-hours.util.js";
-import { USER_CANCELLATION_CUTOFF_HOURS, RESCHEDULE_CUTOFF_HOURS, RESCHEDULE_SAME_DAY_FLOOR_HOURS, RESCHEDULE_MIN_LEAD_MINUTES } from "../config/booking.config.js";
+import { getBookingPolicy } from "../config/runtime-settings.cache.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 
@@ -561,7 +561,7 @@ export async function cancelAppointment(appointmentId, reason, actorId, actorRol
     const appointment = await appointmentRepo.findAppointmentById(appointmentId);
     if (!appointment) notFound("Termin");
     if (!canUserCancelAppointment(appointment.status, appointment.startTime)) {
-      badRequest(`Termin se može otkazati najkasnije ${USER_CANCELLATION_CUTOFF_HOURS}h unapred`);
+      badRequest(`Termin se može otkazati najkasnije ${getBookingPolicy().userCancellationCutoffHours}h unapred`);
     }
   }
 
@@ -665,7 +665,7 @@ export async function rescheduleAppointment(appointmentId, newStartTime, actorId
   const newStart = newStartTime instanceof Date ? newStartTime : new Date(newStartTime);
   if (isNaN(newStart.getTime())) badRequest("Neispravno novo vreme termina");
   if (!hasMinimumRescheduleLeadTime(newStart)) {
-    badRequest(`Izabrano vreme mora biti bar ${RESCHEDULE_MIN_LEAD_MINUTES} minuta unapred`);
+    badRequest(`Izabrano vreme mora biti bar ${getBookingPolicy().rescheduleMinLeadMinutes} minuta unapred`);
   }
 
   // admin bypasses the tiered window entirely (staff override) - everyone else
@@ -674,11 +674,11 @@ export async function rescheduleAppointment(appointmentId, newStartTime, actorId
     const window = getRescheduleWindow(appointment.status, appointment.startTime);
 
     if (window === "forbidden") {
-      badRequest(`Termin se više ne može pomeriti - manje je od ${RESCHEDULE_SAME_DAY_FLOOR_HOURS}h do termina`);
+      badRequest(`Termin se više ne može pomeriti - manje je od ${getBookingPolicy().rescheduleSameDayFloorHours}h do termina`);
     }
 
     if (window === "same_day_only" && !isSameCalendarDay(newStart, appointment.startTime)) {
-      badRequest(`Kada je manje od ${RESCHEDULE_CUTOFF_HOURS}h do termina, novo vreme mora biti isti dan`);
+      badRequest(`Kada je manje od ${getBookingPolicy().rescheduleCutoffHours}h do termina, novo vreme mora biti isti dan`);
     }
   }
 

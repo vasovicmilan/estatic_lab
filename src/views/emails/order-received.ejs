@@ -7,7 +7,7 @@
     <p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0 0 20px;">Uskoro će biti obrađena - obavestićemo vas o promeni statusa.</p>
     ${infoTable(
       order.stavke.map(function(item) {
-        return infoRow(`${item.naziv} (${item.varijanta}) &times; ${item.kolicina}`, `${item.ukupno} RSD`);
+        return infoRow(`${item.naziv} (${item.varijanta}) &times; ${item.kolicina}`, `${item.ukupno} ${currencySymbol}`);
       }).join("") + infoRow("Ukupno", order.ukupnaCena)
     )}
     ${ctaButton(manageUrl, "Pregledaj moje porudžbine")}

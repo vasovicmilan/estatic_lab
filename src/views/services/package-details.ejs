@@ -39,8 +39,8 @@
           <% } %>
 
           <div class="d-flex align-items-baseline gap-2 mb-4">
-            <strong class="fs-3 text-primary-emphasis"><%= data.package.cena %> RSD</strong>
-            <% if (data.package.staraCena) { %><span class="text-muted text-decoration-line-through fs-5"><%= data.package.staraCena %> RSD</span><% } %>
+            <strong class="fs-3 text-primary-emphasis"><%= data.package.cena %> <%= currencySymbol %></strong>
+            <% if (data.package.staraCena) { %><span class="text-muted text-decoration-line-through fs-5"><%= data.package.staraCena %> <%= currencySymbol %></span><% } %>
           </div>
 
           <a href="<%= data.bookingUrl %>" class="btn btn-primary btn-lg rounded-pill px-4">Zainteresovan/a sam</a>

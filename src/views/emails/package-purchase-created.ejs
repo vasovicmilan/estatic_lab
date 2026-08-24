@@ -7,7 +7,7 @@
     <p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0 0 20px;">Termine u okviru paketa zakazujete kao i obično - samo javite terapeutu da plaćate iz paketa.</p>
     ${infoTable(
       infoRow("Paket", purchase.paket || "-") +
-      infoRow("Plaćeno", purchase.placeno != null ? purchase.placeno + " RSD" : "-") +
+      infoRow("Plaćeno", purchase.placeno != null ? purchase.placeno + " " + currencySymbol : "-") +
       (purchase.istice ? infoRow("Važi do", purchase.istice) : "")
     )}
     ${ctaButton(manageUrl, "Zakaži termin")}

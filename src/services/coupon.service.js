@@ -3,6 +3,7 @@ import { mapCouponsForAdminList, mapCouponForAdminDetail, mapCouponForEdit } fro
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
+import { formatMoney } from "../utils/price.util.js";
 
 export async function listCoupons({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
   const result = await couponRepo.findCoupons({ search, limit, page, filters });
@@ -163,7 +164,7 @@ function computeDiscount(discountType, discountValue, maxDiscountAmount, value) 
 
 function validateServiceOrPackageDiscount(coupon, { kind, targetId, value }) {
   if (coupon.minValue && value < coupon.minValue) {
-    badRequest(`Kupon važi za iznos od najmanje ${coupon.minValue} RSD`);
+    badRequest(`Kupon važi za iznos od najmanje ${formatMoney(coupon.minValue)}`);
   }
 
   if (kind === "appointment") {
@@ -185,7 +186,7 @@ function validateProductDiscount(coupon, { targetId, value }) {
   if (!productDiscount) badRequest("Kupon ne važi za proizvode");
 
   if (productDiscount.minOrderValue && value < productDiscount.minOrderValue) {
-    badRequest(`Kupon važi za porudžbine od najmanje ${productDiscount.minOrderValue} RSD`);
+    badRequest(`Kupon važi za porudžbine od najmanje ${formatMoney(productDiscount.minOrderValue)}`);
   }
 
   // targetId is an array of product ids for an order (multiple line items,

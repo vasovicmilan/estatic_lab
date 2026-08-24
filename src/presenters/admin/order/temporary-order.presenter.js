@@ -1,3 +1,4 @@
+import { formatMoney } from "../../../utils/price.util.js";
 export function prepareTempOrderListData(result, query = {}) {
   return {
     items: result.data,
@@ -56,17 +57,17 @@ export function prepareTempOrderDetailsData(order) {
         type: "table",
         rows: order.stavke.map((s) => ({
           label: `${s.naziv} - ${s.varijanta}`,
-          value: `${s.kolicina} x ${s.cena} RSD`,
+          value: `${s.kolicina} x ${formatMoney(s.cena)}`,
         })),
       },
       {
         title: "Cena",
         type: "table",
         rows: [
-          { label: "Subtotal", value: `${order.subtotal} RSD` },
-          { label: "Dostava", value: order.zahtevaProceenuDostave ? "Čeka procenu (veliki/teški artikal)" : `${order.dostava} RSD` },
+          { label: "Subtotal", value: formatMoney(order.subtotal) },
+          { label: "Dostava", value: order.zahtevaProceenuDostave ? "Čeka procenu (veliki/teški artikal)" : formatMoney(order.dostava) },
           { label: "Kupon", value: order.kupon || "-" },
-          { label: "Ukupno", value: order.zahtevaProceenuDostave ? "Zavisi od cene dostave" : `${order.ukupnaCena} RSD` },
+          { label: "Ukupno", value: order.zahtevaProceenuDostave ? "Zavisi od cene dostave" : formatMoney(order.ukupnaCena) },
         ],
       },
     ],

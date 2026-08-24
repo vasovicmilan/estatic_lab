@@ -159,8 +159,8 @@
                           </td>
                           <td><%= v.trajanje %> min</td>
                           <td>
-                            <%= v.cena %> RSD
-                            <% if (v.staraCena) { %><span class="text-muted text-decoration-line-through ms-1 small"><%= v.staraCena %> RSD</span><% } %>
+                            <%= v.cena %> <%= currencySymbol %>
+                            <% if (v.staraCena) { %><span class="text-muted text-decoration-line-through ms-1 small"><%= v.staraCena %> <%= currencySymbol %></span><% } %>
                           </td>
                           <td><%= v.najbolji ? "Da" : "Ne" %></td>
                           <td><%= v.aktivan ? "Da" : "Ne" %></td>
