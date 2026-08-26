@@ -10,6 +10,13 @@ import { runCommissionGracePeriodSweep } from "./commission-jobs.js";
 import { runPublishScheduledPosts } from "./post-jobs.js";
 import { runSredimeSync } from "./sredime-jobs.js";
 import { runAppointmentReminders } from "./appointment-reminder-jobs.js";
+import {
+  runDailyBusinessReport,
+  runWeeklyBusinessReport,
+  runMonthlyBusinessReport,
+  runQuarterlyBusinessReport,
+  runYearlyBusinessReport,
+} from "./business-report-jobs.js";
 import { logInfo } from "../utils/logger.util.js";
 
 const TIMEZONE = process.env.CRON_TIMEZONE || "Europe/Belgrade";
@@ -70,6 +77,18 @@ export function startScheduler() {
   // means the reminder goes out a few minutes later next tick, never twice
   // and never silently skipped.
   cron.schedule("*/15 * * * *", runAppointmentReminders, { timezone: TIMEZONE });
+
+  // Business reports (bookings/sales/commissions/coupons - see
+  // business-report.service.js) - a genuinely different report from the
+  // operational log reports above (see docs section 14's distinction).
+  // Offset by 5-15 minutes from their operational counterparts so both don't
+  // fire in the same minute and contend for the same DB.
+  cron.schedule("20 0 * * *", runDailyBusinessReport, { timezone: TIMEZONE });
+  cron.schedule("35 0 * * 1", runWeeklyBusinessReport, { timezone: TIMEZONE });
+  cron.schedule("50 0 1 * *", runMonthlyBusinessReport, { timezone: TIMEZONE });
+  // 1st of Jan/Apr/Jul/Oct - the four calendar-quarter boundaries
+  cron.schedule("5 1 1 1,4,7,10 *", runQuarterlyBusinessReport, { timezone: TIMEZONE });
+  cron.schedule("15 1 1 1 *", runYearlyBusinessReport, { timezone: TIMEZONE });
 
   logInfo(`[cron] Scheduler started (timezone: ${TIMEZONE})`);
 }

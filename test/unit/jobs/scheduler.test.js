@@ -27,7 +27,7 @@ describe("scheduler", () => {
 
     startScheduler();
 
-    assert.equal(scheduleMock.mock.calls.length, 9);
+    assert.equal(scheduleMock.mock.calls.length, 14);
   });
 
   it("registers every job on PM2 instance 0", async () => {
@@ -36,7 +36,7 @@ describe("scheduler", () => {
 
     startScheduler();
 
-    assert.equal(scheduleMock.mock.calls.length, 9);
+    assert.equal(scheduleMock.mock.calls.length, 14);
   });
 
   it("REGRESSION: registers NOTHING on any other PM2 cluster worker", async () => {

@@ -1,0 +1,89 @@
+<%
+  function statBlock(label, value) {
+    return `<td style="padding:16px 20px; font-size:14px; color:#2d2a26; width:50%;"><span style="display:block; font-size:12px; color:#9b9490; margin-bottom:2px;">${label}</span><strong style="font-size:16px;">${value}</strong></td>`;
+  }
+  function breakdownRows(items, emptyText, showValue) {
+    if (!items || !items.length) return `<tr><td style="padding:12px 20px; color:#aca59d; font-size:13px;">${emptyText}</td></tr>`;
+    return items.map(function(item) {
+      return `<tr>
+        <td style="padding:9px 20px; font-size:13px; color:#2d2a26; border-bottom:1px solid #ece7e2;">${item.label}</td>
+        <td style="padding:9px 20px; font-size:13px; color:#2d2a26; border-bottom:1px solid #ece7e2; text-align:right;">${item.count}</td>
+        ${showValue ? `<td style="padding:9px 20px; font-size:13px; color:#aca59d; border-bottom:1px solid #ece7e2; text-align:right;">${formatMoney(item.value)}</td>` : ""}
+      </tr>`;
+    }).join("");
+  }
+  const statusLabels = { pending: "Na čekanju", confirmed: "Potvrđeno", completed: "Završeno", cancelled: "Otkazano", rejected: "Odbijeno", no_show: "Nije se pojavio/la", processing: "U obradi", shipped: "Poslato", delivered: "Dostavljeno", returned: "Vraćeno", refunded: "Povraćaj novca" };
+  const statusSummary = function(byStatus) {
+    return (byStatus || []).map((s) => `${statusLabels[s.label] || s.label}: ${s.count}`).join(", ") || "Nema podataka";
+  };
+%>
+<%- include("_layout", {
+  title: `${periodLabel} - poslovni izveštaj`,
+  eyebrow: "Admin · Poslovni izveštaj",
+  heading: periodLabel,
+  preheader: `${periodLabel} za period ${dateRangeLabel}`,
+  body: `
+    <p style="font-size:13px; color:#9b9490; margin:0 0 20px;">Period: ${dateRangeLabel}</p>
+
+    <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Zakazivanja</h2>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf8f6; border-radius:8px; margin:0 0 12px;">
+      <tr>
+        ${statBlock("Ukupno termina", appointments.total)}
+        ${statBlock("Prihod od termina", formatMoney(appointments.revenue))}
+      </tr>
+      <tr>
+        ${statBlock("Stopa ne-pojavljivanja", `${appointments.noShowRate}%`)}
+        ${statBlock("Po statusu", statusSummary(appointments.byStatus))}
+      </tr>
+    </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px; border:1px solid #ece7e2; border-radius:8px; overflow:hidden;">
+      ${breakdownRows(appointments.byEmployee, "Nema završenih termina u ovom periodu.", true)}
+    </table>
+
+    <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Prodavnica</h2>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf8f6; border-radius:8px; margin:0 0 12px;">
+      <tr>
+        ${statBlock("Ukupno porudžbina", orders.total)}
+        ${statBlock("Prihod od porudžbina", formatMoney(orders.revenue))}
+      </tr>
+      <tr>
+        ${statBlock("Prosečna vrednost porudžbine", formatMoney(orders.avgOrderValue))}
+        ${statBlock("Po statusu", statusSummary(orders.byStatus))}
+      </tr>
+    </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px; border:1px solid #ece7e2; border-radius:8px; overflow:hidden;">
+      ${breakdownRows(orders.byProduct, "Nema završenih porudžbina u ovom periodu.", true)}
+    </table>
+
+    <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Paketi</h2>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf8f6; border-radius:8px; margin:0 0 24px;">
+      <tr>
+        ${statBlock("Prodato paketa", packages.totalPurchased)}
+        ${statBlock("Prihod od paketa", formatMoney(packages.revenue))}
+      </tr>
+    </table>
+
+    <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Provizije</h2>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf8f6; border-radius:8px; margin:0 0 24px;">
+      <tr>
+        ${statBlock("Zaposleni - zarađeno", formatMoney(commissions.employeeEarned))}
+        ${statBlock("Zaposleni - isplaćeno", formatMoney(commissions.employeePaid))}
+      </tr>
+      <tr>
+        ${statBlock("Partneri - zarađeno", formatMoney(commissions.partnerEarned))}
+        ${statBlock("Partneri - isplaćeno", formatMoney(commissions.partnerPaid))}
+      </tr>
+    </table>
+
+    <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Kuponi</h2>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf8f6; border-radius:8px; margin:0 0 12px;">
+      <tr>
+        ${statBlock("Ukupno iskorišćeno", coupons.totalRedemptions)}
+        ${statBlock("Ukupan dat popust", formatMoney(coupons.totalDiscountGiven))}
+      </tr>
+    </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px; border:1px solid #ece7e2; border-radius:8px; overflow:hidden;">
+      ${breakdownRows(coupons.byCoupon, "Nijedan kupon nije iskorišćen u ovom periodu.", true)}
+    </table>
+  `
+}) %>

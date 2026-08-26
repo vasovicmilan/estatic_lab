@@ -24,6 +24,7 @@ export const PERMISSIONS = [
   "manage_site_content",
   "view_own_commissions",
   "view_logs",
+  "view_business_reports",
   "view_dashboard",
 ];
 

@@ -25,6 +25,7 @@ const defaultRoles = [
       "manage_payouts",
       "manage_site_content",
       "view_logs",
+      "view_business_reports",
     ],
     isDefault: false,
     priority: 100,

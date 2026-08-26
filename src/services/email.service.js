@@ -8,6 +8,7 @@ import { generateOrderInvoicePdf } from "../utils/invoice-pdf.util.js";
 import { infoRow, infoTable, statusTone, badge, ctaButton, linkFallback, couponBlock } from "../utils/email-content.util.js";
 import { formatDateTime } from "../utils/date.time.util.js";
 import { getCurrency } from "../config/runtime-settings.cache.js";
+import { formatMoney } from "../utils/price.util.js";
 import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -33,6 +34,7 @@ async function renderTemplate(templateName, data) {
         SUPPORT_EMAIL,
         currentYear: new Date().getFullYear(),
         currencySymbol: getCurrency().symbol,
+        formatMoney,
         infoRow,
         infoTable,
         statusTone,
@@ -289,6 +291,17 @@ export async function sendLogReportEmail(periodLabel, dateRangeLabel, summary, a
   return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("IZVEŠTAJ", `${periodLabel} (${dateRangeLabel})`), html, attachments });
 }
 
+// Business metrics (bookings, sales, commissions...) - a genuinely different
+// report from sendLogReportEmail above, which covers operational/traffic
+// metrics only (see docs section 14's distinction between operational
+// reporting and the business side). Kept as a clearly separate function/
+// template rather than folding into the same one, since the two answer
+// different questions for a different reason to care.
+export async function sendBusinessReportEmail(periodLabel, dateRangeLabel, summary) {
+  const html = await renderTemplate("admin-business-report", { periodLabel, dateRangeLabel, ...summary });
+  return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("POSLOVNI IZVEŠTAJ", `${periodLabel} (${dateRangeLabel})`), html });
+}
+
 export default {
   sendAccountConfirmationEmail,
   sendWelcomeEmail,
@@ -318,4 +331,5 @@ export default {
   sendNewsletterWelcomeEmail,
   sendNewsletterCampaign,
   sendLogReportEmail,
+  sendBusinessReportEmail,
 };

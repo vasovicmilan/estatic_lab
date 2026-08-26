@@ -30,6 +30,7 @@ export function translatePermission(permission) {
     manage_site_content: "Upravljanje sadržajem sajta (hero slika)",
     view_own_commissions: "Pregled sopstvene provizije",
     view_logs: "Pregled logova",
+    view_business_reports: "Pregled poslovnih izveštaja",
   };
   return map[permission] || permission;
 }
