@@ -123,6 +123,7 @@ export function prepareProductDetailsData(product) {
           { label: "Aktivan", value: product.aktivan ? "Da" : "Ne (nacrt)" },
           { label: "Oznaka", value: product.oznaka || "Bez oznake" },
           { label: "Način dostave", value: product.nacinDostave },
+          { label: "Cena na upit", value: product.naUpit ? "Da" : "Ne" },
           { label: "Ukupno na stanju", value: product.stanjeUkupno },
           { label: "Broj varijanti", value: product.varijante.length },
         ],
@@ -259,6 +260,14 @@ export function prepareProductFormData(product, { categoryOptions = [], tagOptio
         { value: "freight", label: "Veliki/težak artikal (cena dostave se procenjuje ručno)" },
       ],
       help: "Za velike ili teške uređaje koji se ne mogu poslati redovnom poštom - kupac neće dobiti automatsku cenu dostave, admin je unosi ručno pre potvrde porudžbine.",
+    },
+    {
+      name: "priceOnRequest",
+      label: "Cena na upit",
+      type: "checkbox",
+      width: 6,
+      value: values.priceOnRequest,
+      help: "Za artikle čiju cenu ne možemo garantovati unapred (npr. jako promenljiv trošak transporta) - umesto cene i dugmeta 'Dodaj u korpu', sajt prikazuje 'Cena na upit' i vezu ka kontakt formi. Prodaja se onda evidentira ručno kroz Porudžbine → Ručno kreiranje, sa cenom koju uneseš u tom trenutku.",
     },
     { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive },
   ];
@@ -423,6 +432,14 @@ export function prepareProductSeoPublishStepData(product, { productOptions = [] 
         { value: "freight", label: "Veliki/težak artikal (cena dostave se procenjuje ručno)" },
       ],
       help: "Za velike ili teške uređaje koji se ne mogu poslati redovnom poštom - kupac neće dobiti automatsku cenu dostave, admin je unosi ručno pre potvrde porudžbine.",
+    },
+    {
+      name: "priceOnRequest",
+      label: "Cena na upit",
+      type: "checkbox",
+      width: 6,
+      value: false,
+      help: "Za artikle čiju cenu ne možemo garantovati unapred (npr. jako promenljiv trošak transporta) - umesto cene i dugmeta 'Dodaj u korpu', sajt prikazuje 'Cena na upit' i vezu ka kontakt formi. Prodaja se onda evidentira ručno kroz Porudžbine → Ručno kreiranje, sa cenom koju uneseš u tom trenutku.",
     },
     {
       name: "isActive",

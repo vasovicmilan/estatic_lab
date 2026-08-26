@@ -88,6 +88,20 @@ const ProductSchema = new Schema(
       default: "standard",
     },
 
+    // For products whose real cost is too volatile to quote automatically (e.g.
+    // shipping/import cost from the supplier swings too much) - the public site
+    // shows "Cena na upit" instead of a price and a "contact us" link instead of
+    // "add to cart" (see product.mapper.js / product-details.ejs), and the sale
+    // itself happens through an admin-created order with a hand-entered price
+    // (see order.service.js's createManualOrder), never through normal checkout.
+    // Product-level, not per-variation (see the design discussion this came
+    // from) - variations still carry their own `price` field as an internal
+    // reference/estimate, it's just never shown to the public while this is true.
+    priceOnRequest: {
+      type: Boolean,
+      default: false,
+    },
+
     isActive: {
       type: Boolean,
       default: false,

@@ -69,34 +69,51 @@
   <% if (data.product.varijante && data.product.varijante.length > 0) { %>
     <section class="container py-5">
       <p class="section-eyebrow">Kupovina</p>
-      <h2 class="h3 mb-4">Izaberite varijantu</h2>
-      <div class="row g-4">
-        <% data.product.varijante.forEach(function(variant) { %>
-          <div class="col-md-4">
-            <div class="card h-100 shadow-sm hover-lift">
-              <div class="card-body d-flex flex-column">
-                <h3 class="h5"><%= variant.naziv %></h3>
-                <div class="d-flex align-items-baseline gap-2 mb-3">
-                  <strong class="fs-5"><%= variant.cena %> <%= currencySymbol %></strong>
-                  <% if (variant.staraCena) { %><span class="text-muted text-decoration-line-through small"><%= variant.staraCena %> <%= currencySymbol %></span><% } %>
+      <% if (data.product.naUpit) { %>
+        <h2 class="h3 mb-2">Cena na upit</h2>
+        <p class="text-muted mb-4" style="max-width: 640px;">Cena ovog proizvoda zavisi od trenutnih uslova nabavke i transporta, pa je ne možemo prikazati unapred. Kontaktirajte nas i javićemo vam tačnu cenu u najkraćem roku.</p>
+        <div class="row g-4 mb-4">
+          <% data.product.varijante.forEach(function(variant) { %>
+            <div class="col-md-4">
+              <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                  <h3 class="h5 mb-0"><%= variant.naziv %></h3>
                 </div>
-
-                <% if (variant.naStanju) { %>
-                  <form action="/korpa/dodaj" method="POST" class="mt-auto d-flex gap-2">
-                    <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
-                    <input type="hidden" name="productId" value="<%= data.product.id %>">
-                    <input type="hidden" name="variantId" value="<%= variant.id %>">
-                    <input type="number" name="quantity" value="1" min="1" max="<%= variant.stanje %>" class="form-control form-control-sm quantity-input">
-                    <button type="submit" class="btn btn-primary rounded-pill flex-grow-1">Dodaj u korpu</button>
-                  </form>
-                <% } else { %>
-                  <button type="button" class="btn btn-outline-secondary rounded-pill mt-auto" disabled>Nema na stanju</button>
-                <% } %>
               </div>
             </div>
-          </div>
-        <% }) %>
-      </div>
+          <% }) %>
+        </div>
+        <a href="/kontakt?tema=<%= encodeURIComponent('Cena na upit: ' + data.product.naziv) %>" class="btn btn-primary rounded-pill px-4">Kontaktirajte nas za cenu</a>
+      <% } else { %>
+        <h2 class="h3 mb-4">Izaberite varijantu</h2>
+        <div class="row g-4">
+          <% data.product.varijante.forEach(function(variant) { %>
+            <div class="col-md-4">
+              <div class="card h-100 shadow-sm hover-lift">
+                <div class="card-body d-flex flex-column">
+                  <h3 class="h5"><%= variant.naziv %></h3>
+                  <div class="d-flex align-items-baseline gap-2 mb-3">
+                    <strong class="fs-5"><%= variant.cena %> <%= currencySymbol %></strong>
+                    <% if (variant.staraCena) { %><span class="text-muted text-decoration-line-through small"><%= variant.staraCena %> <%= currencySymbol %></span><% } %>
+                  </div>
+
+                  <% if (variant.naStanju) { %>
+                    <form action="/korpa/dodaj" method="POST" class="mt-auto d-flex gap-2">
+                      <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+                      <input type="hidden" name="productId" value="<%= data.product.id %>">
+                      <input type="hidden" name="variantId" value="<%= variant.id %>">
+                      <input type="number" name="quantity" value="1" min="1" max="<%= variant.stanje %>" class="form-control form-control-sm quantity-input">
+                      <button type="submit" class="btn btn-primary rounded-pill flex-grow-1">Dodaj u korpu</button>
+                    </form>
+                  <% } else { %>
+                    <button type="button" class="btn btn-outline-secondary rounded-pill mt-auto" disabled>Nema na stanju</button>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
     </section>
   <% } %>
 

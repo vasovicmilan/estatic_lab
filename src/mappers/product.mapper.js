@@ -39,6 +39,7 @@ function getTagNames(product) {
 }
 
 function getPriceRange(product) {
+  if (product.priceOnRequest) return "Cena na upit";
   const prices = (product.variations || []).filter((v) => v.isActive).map((v) => v.price);
   if (!prices.length) return null;
   const min = Math.min(...prices);
@@ -78,6 +79,7 @@ export function mapProductsForAdminList(products = []) {
         slug: product.slug,
         kategorije: getCategoryNames(product),
         cena: getPriceRange(product),
+        naUpit: !!product.priceOnRequest,
         stanje: getTotalStock(product),
         brojVarijanti: product.variations?.length || 0,
         oznaka: translateBadge(product.badge),
@@ -114,6 +116,7 @@ export function mapProductForAdminDetail(product) {
     oznakaRaw: product.badge || "none",
     nacinDostave: translateShippingClass(product.shippingClass),
     nacinDostaveRaw: product.shippingClass || "standard",
+    naUpit: !!product.priceOnRequest,
     aktivan: product.isActive,
     vreme: {
       kreiran: formatDateTime(product.createdAt),
@@ -145,6 +148,7 @@ export function mapProductForEdit(product) {
     faq: product.faq || [],
     badge: product.badge || "none",
     shippingClass: product.shippingClass || "standard",
+    priceOnRequest: !!product.priceOnRequest,
     isActive: product.isActive,
   };
 }
@@ -161,6 +165,7 @@ export function mapProductForPublicCard(product) {
     slika: formatImage(product.image),
     kategorije: getCategoryNames(product),
     cena: getPriceRange(product),
+    naUpit: !!product.priceOnRequest,
     naStanju: getTotalStock(product) > 0,
     oznaka: translateBadge(product.badge),
     oznakaRaw: product.badge || "none",
@@ -191,6 +196,7 @@ export function mapProductForPublicDetail(product) {
       .map((p) => ({ id: p._id?.toString(), naziv: p.name, slug: p.slug, slika: formatImage(p.image) })),
     faq: (product.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
     oznaka: translateBadge(product.badge),
+    naUpit: !!product.priceOnRequest,
   };
 }
 

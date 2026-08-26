@@ -37,6 +37,50 @@ describe("product.mapper", () => {
       const mapped = mapProductForPublicCard(product);
       assert.equal(mapped.cena, null);
     });
+
+    it("REGRESSION: shows 'Cena na upit' instead of a computed price range when priceOnRequest is set, regardless of the variations' own prices", () => {
+      const product = buildProduct({
+        priceOnRequest: true,
+        variations: [buildProductVariation({ price: 1000 }), buildProductVariation({ price: 2500 })],
+      });
+      const mapped = mapProductForPublicCard(product);
+      assert.equal(mapped.cena, "Cena na upit");
+      assert.equal(mapped.naUpit, true);
+    });
+
+    it("exposes naUpit: false for an ordinary product", () => {
+      const product = buildProduct({ priceOnRequest: false, variations: [buildProductVariation({ price: 1000 })] });
+      assert.equal(mapProductForPublicCard(product).naUpit, false);
+    });
+  });
+
+  describe("priceOnRequest flag across every mapper", () => {
+    it("exposes naUpit on the admin list", () => {
+      const products = mapProductsForAdminList([buildProduct({ priceOnRequest: true })]);
+      assert.equal(products[0].naUpit, true);
+    });
+
+    it("exposes naUpit on the admin detail view", () => {
+      const mapped = mapProductForAdminDetail(buildProduct({ priceOnRequest: true }));
+      assert.equal(mapped.naUpit, true);
+    });
+
+    it("exposes the raw priceOnRequest boolean on the edit form shape", () => {
+      const mapped = mapProductForEdit(buildProduct({ priceOnRequest: true }));
+      assert.equal(mapped.priceOnRequest, true);
+    });
+
+    it("exposes naUpit on the public detail page", () => {
+      const mapped = mapProductForPublicDetail(buildProduct({ priceOnRequest: true, variations: [buildProductVariation({ isActive: true })] }));
+      assert.equal(mapped.naUpit, true);
+    });
+
+    it("defaults to false (not undefined) when the field is absent on an older document", () => {
+      const product = buildProduct({});
+      delete product.priceOnRequest;
+      assert.equal(mapProductForPublicCard(product).naUpit, false);
+      assert.equal(mapProductForAdminDetail(product).naUpit, false);
+    });
   });
 
   describe("stock aggregation", () => {
