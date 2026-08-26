@@ -2,6 +2,7 @@ import Category from "../../models/category.model.js";
 import Tag from "../../models/tag.model.js";
 import Product from "../../models/product.model.js";
 import { logInfo } from "../../utils/logger.util.js";
+import { markdownStringToBlocks } from "../../utils/content-blocks.util.js";
 
 const DOMAIN = "product";
 
@@ -4174,7 +4175,11 @@ async function upsertProducts(categoriesBySlug, tagsBySlug) {
       slug: def.slug,
       sku: def.sku,
       shortDescription: def.shortDescription,
-      longDescription: def.longDescription,
+      // def.longDescription is still written as a plain markdown-ish string
+      // throughout this file's product definitions below - converted to the
+      // structured block format here, once, rather than hand-rewriting every
+      // one of them (see content-blocks.util.js's markdownStringToBlocks).
+      longDescription: markdownStringToBlocks(def.longDescription),
       categories: [category._id],
       tags,
       image: def.image,

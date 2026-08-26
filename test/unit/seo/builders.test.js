@@ -51,13 +51,13 @@ describe("seo builders", () => {
   });
 
   describe("description fallback chain", () => {
-    it("buildProductSeo prefers kratakOpis over dugiOpis", async () => {
-      const seo = await buildProductSeo({ naziv: "X", slug: "x", kratakOpis: "Kratak", dugiOpis: "Dugi" }, fakeReq());
+    it("buildProductSeo prefers kratakOpis over dugiOpisTekst", async () => {
+      const seo = await buildProductSeo({ naziv: "X", slug: "x", kratakOpis: "Kratak", dugiOpisTekst: "Dugi" }, fakeReq());
       assert.equal(seo.description, "Kratak");
     });
 
-    it("buildProductSeo falls back to dugiOpis when kratakOpis is missing", async () => {
-      const seo = await buildProductSeo({ naziv: "X", slug: "x", kratakOpis: "", dugiOpis: "Dugi opis proizvoda" }, fakeReq());
+    it("buildProductSeo falls back to dugiOpisTekst when kratakOpis is missing", async () => {
+      const seo = await buildProductSeo({ naziv: "X", slug: "x", kratakOpis: "", dugiOpisTekst: "Dugi opis proizvoda" }, fakeReq());
       assert.equal(seo.description, "Dugi opis proizvoda");
     });
 

@@ -1,3 +1,5 @@
+import { BLOG_BLOCK_TYPES } from "../../../models/schemas/content.blog.schema.js";
+
 export function prepareProductListData(result, query = {}) {
   return {
     items: result.data,
@@ -181,7 +183,7 @@ export function prepareProductFormData(product, { categoryOptions = [], tagOptio
     { name: "name", label: "Naziv", type: "text", required: true, width: 6, value: values.name },
     { name: "sku", label: "SKU (šifra proizvoda)", type: "text", required: true, width: 6, value: values.sku, help: "Jedinstvena šifra - model/kataloški broj." },
     { name: "shortDescription", label: "Kratak opis", type: "textarea", rows: 2, width: 12, value: values.shortDescription, help: "Najviše 300 karaktera." },
-    { name: "longDescription", label: "Dugi opis", type: "textarea", rows: 5, width: 12, value: values.longDescription },
+    { name: "longDescription", label: "Dugi opis", type: "content-blocks", width: 12, value: values.longDescription || [], blockTypes: BLOG_BLOCK_TYPES },
     {
       name: "categories",
       label: "Kategorije",
@@ -311,7 +313,7 @@ export function prepareProductDetailsMediaStepData(product, { categoryOptions = 
       options: tagOptions.map((t) => ({ value: t.id, label: t.naziv })),
     },
     { name: "shortDescription", label: "Kratak opis", type: "textarea", rows: 2, width: 12, value: product.shortDescription || "", help: "Najviše 300 karaktera." },
-    { name: "longDescription", label: "Dugi opis", type: "textarea", rows: 5, width: 12, value: product.longDescription || "" },
+    { name: "longDescription", label: "Dugi opis", type: "content-blocks", width: 12, value: product.longDescription || [], blockTypes: BLOG_BLOCK_TYPES },
     {
       name: "variations",
       label: "Varijante",

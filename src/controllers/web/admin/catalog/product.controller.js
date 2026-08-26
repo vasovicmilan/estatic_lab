@@ -64,7 +64,7 @@ function buildPhase2Payload(req, existing = {}) {
     categories: toIdArray(req.body.categories),
     tags: toIdArray(req.body.tags),
     shortDescription: req.body.shortDescription || "",
-    longDescription: req.body.longDescription || "",
+    longDescription: parseJsonField(req.body.longDescription, []),
     variations: parseJsonField(req.body.variations, []),
     image,
     gallery,
@@ -99,6 +99,7 @@ function buildProductPayload(req, existing = {}) {
 
   data.categories = toIdArray(req.body.categories);
   data.tags = toIdArray(req.body.tags);
+  data.longDescription = parseJsonField(req.body.longDescription, existing.longDescription || []);
   data.variations = parseJsonField(req.body.variations, existing.variations || []);
   data.faq = parseJsonField(req.body.faq, existing.faq || []);
   data.badge = ["none", "featured", "sale"].includes(req.body.badge) ? req.body.badge : existing.badge || "none";

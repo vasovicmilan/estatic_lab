@@ -1,8 +1,6 @@
 <%- include("../includes/head") %>
 <%- include("../includes/navigation") %>
 
-<% const opisPasusi = (data.product.dugiOpis || "").split(/\n+/).map(function(p) { return p.trim(); }).filter(Boolean); %>
-
 <main>
   <%- include("../includes/flash-messages") %>
 
@@ -51,15 +49,13 @@
     </div>
   </section>
 
-  <% if (opisPasusi.length > 0) { %>
+  <% if (data.product.dugiOpis && data.product.dugiOpis.length > 0) { %>
     <section class="bg-light border-top border-bottom py-5">
       <div class="container">
         <div class="row justify-content-center">
-          <div class="col-lg-8">
+          <div class="col-lg-8 article-body">
             <p class="section-eyebrow">O proizvodu</p>
-            <% opisPasusi.forEach(function(p) { %>
-              <p class="text-muted"><%= p %></p>
-            <% }) %>
+            <%- include("../includes/components/content-blocks-render", { blocks: data.product.dugiOpis }) %>
           </div>
         </div>
       </div>

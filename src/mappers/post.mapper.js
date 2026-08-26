@@ -1,4 +1,5 @@
 import { formatDateTime, formatDate, utcDateToZonedInputValue } from "../utils/date.time.util.js";
+import { renderContentBlocks } from "../utils/content-blocks.util.js";
 
 function translateStatus(status) {
   const map = {
@@ -48,30 +49,6 @@ function formatCoverImage(image) {
     url: image.img || null,
     alt: image.imgDesc || null,
   };
-}
-
-function renderContentBlocks(blocks = []) {
-  return (blocks || [])
-    .slice()
-    .sort((a, b) => (a.order || 0) - (b.order || 0))
-    .map((block) => ({
-      tip: block.type,
-      tekst: block.text || null,
-      nivo: block.level || null,
-      slika: block.image ? { url: block.image.img, alt: block.image.imgDesc } : null,
-      galerija: Array.isArray(block.gallery) ? block.gallery.map((img) => ({ url: img.img, alt: img.imgDesc })) : null,
-      video: block.video || null,
-      stavke: block.items || null,
-      uredjeno: Boolean(block.ordered),
-      izvor: block.meta || null,
-      kolone: block.table?.columns || null,
-      redovi: block.table?.rows || null,
-      kartice: block.cards || null,
-      naslovBloka: block.title || null,
-      varijanta: block.variant || "info",
-      faqStavke: block.faqItems || null,
-      dugme: block.button?.text || block.button?.url ? { tekst: block.button.text, url: block.button.url } : null,
-    }));
 }
 
 export function mapPostsForAdminList(posts = []) {

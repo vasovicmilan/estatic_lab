@@ -28,7 +28,7 @@ function buildProductJsonLd(product, canonical, imageUrl, siteName) {
     "@type": "Product",
     "@id": canonical,
     name: product.naziv,
-    description: truncate(product.kratakOpis || product.dugiOpis || "", 300),
+    description: truncate(product.kratakOpis || product.dugiOpisTekst || "", 300),
     image: imageUrl,
     ...(product.sku ? { sku: product.sku } : {}),
     brand: { "@type": "Brand", name: siteName },
@@ -42,7 +42,7 @@ export async function buildProductSeo(product, req, siteConfig = {}) {
   const siteName = siteConfig.siteName || "Estetik Lab";
   const defaultImage = siteConfig.defaultImage || "/images/site/default-og.webp";
   const title = product.naziv ? `${escape(product.naziv)} | ${siteName}` : siteName;
-  const description = truncate(product.kratakOpis || product.dugiOpis || siteConfig.defaultDescription || "");
+  const description = truncate(product.kratakOpis || product.dugiOpisTekst || siteConfig.defaultDescription || "");
   const canonical = buildCanonical(req, `/prodavnica/${product.slug}`);
   const imageUrl = product.slika?.url || defaultImage;
 

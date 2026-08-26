@@ -2,6 +2,7 @@ import { Schema, model } from "mongoose";
 import ImageSchema from "./schemas/image.schema.js";
 import VideoSchema from "./schemas/video.schema.js";
 import FAQSchema from "./schemas/faq.schema.js";
+import ContentBlogSchema from "./schemas/content.blog.schema.js";
 import ProductVariationSchema from "./schemas/product-variation.schema.js";
 import { badRequest } from "../utils/error.util.js";
 
@@ -33,8 +34,18 @@ const ProductSchema = new Schema(
       type: String,
       trim: true,
     },
+    // structured, block-based body - same schema/admin editor/rendering as
+    // Post.content (see content.blog.schema.js and utils/content-blocks.util.js).
+    // Used to be a plain string; a description authored/pasted as markdown-ish
+    // text ("**bold**", "- item") just showed those characters literally, with
+    // no real formatting. This gives the same flexible editor and rendering
+    // blog posts already have (headings, lists, images, tables, callouts...) -
+    // valuable for product pages specifically for the same reason it's
+    // valuable for blog posts: SEO benefits from real structured markup, not a
+    // wall of unstyled text.
     longDescription: {
-      type: String,
+      type: [ContentBlogSchema],
+      default: [],
     },
 
     categories: [{ type: Schema.Types.ObjectId, ref: "Category" }],

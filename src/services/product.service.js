@@ -103,7 +103,7 @@ export async function addDetailsAndMedia(productId, data) {
     categories: data.categories ?? existing.categories ?? [],
     tags: data.tags ?? existing.tags ?? [],
     shortDescription: data.shortDescription ?? existing.shortDescription ?? "",
-    longDescription: data.longDescription ?? existing.longDescription ?? "",
+    longDescription: data.longDescription ?? existing.longDescription ?? [],
     image: nextImage,
     gallery: data.gallery ?? existing.gallery ?? [],
     videos: data.videos ?? existing.videos ?? [],

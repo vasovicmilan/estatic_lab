@@ -1,5 +1,6 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 import { formatPrice, formatMoney } from "../utils/price.util.js";
+import { renderContentBlocks, contentBlocksToPlainText } from "../utils/content-blocks.util.js";
 
 const BADGE_LABELS = {
   none: null,
@@ -99,7 +100,7 @@ export function mapProductForAdminDetail(product) {
     slug: product.slug,
     sku: product.sku,
     kratakOpis: product.shortDescription || "",
-    dugiOpis: product.longDescription || "",
+    dugiOpis: renderContentBlocks(product.longDescription),
     kategorije: getCategoryNames(product),
     tagovi: getTagNames(product),
     slika: formatImage(product.image),
@@ -136,7 +137,7 @@ export function mapProductForEdit(product) {
     slug: product.slug,
     sku: product.sku,
     shortDescription: product.shortDescription || "",
-    longDescription: product.longDescription || "",
+    longDescription: product.longDescription || [],
     categories: (product.categories || []).map((c) => c._id?.toString() || c.toString()),
     tags: (product.tags || []).map((t) => t._id?.toString() || t.toString()),
     image: product.image || null,
@@ -184,7 +185,8 @@ export function mapProductForPublicDetail(product) {
     naziv: product.name,
     slug: product.slug,
     kratakOpis: product.shortDescription || "",
-    dugiOpis: product.longDescription || "",
+    dugiOpis: renderContentBlocks(product.longDescription),
+    dugiOpisTekst: contentBlocksToPlainText(product.longDescription),
     kategorije: getCategoryNames(product),
     tagovi: getTagNames(product),
     slika: formatImage(product.image),
