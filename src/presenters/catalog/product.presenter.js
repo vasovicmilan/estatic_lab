@@ -60,6 +60,8 @@ export function prepareProductListData(result, { query = {}, categories = [], ta
     // category/tag/search/badge views (and page 2+) go straight to the filtered grid
     isLandingView,
     badgeTitle,
+    search: query.search || "",
+    resultCount: result.total,
     intro: isLandingView ? SHOP_INTRO : null,
     categoryTabs: buildCategoryTabs(categories, null, totalCount),
     trust: isLandingView ? SHOP_TRUST : [],

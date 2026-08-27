@@ -29,10 +29,20 @@
             <% }) %>
           </div>
         <% } %>
+      <% } else if (data.search) { %>
+        <h1 class="h3 mb-1">Rezultati pretrage: "<%= data.search %>"</h1>
+        <p class="text-muted mb-4"><%= data.resultCount %> <%= data.resultCount === 1 ? "proizvod pronađen" : "proizvoda pronađeno" %></p>
       <% } else { %>
         <h1 class="h3 mb-2"><%= data.badgeTitle || (data.category ? data.category.naziv : (data.tag ? data.tag.naziv : "Prodavnica")) %></h1>
         <% if (data.subtitle) { %><p class="text-muted mb-4"><%= data.subtitle %></p><% } %>
       <% } %>
+
+      <form action="/prodavnica" method="GET" role="search" class="shop-search-form mb-4">
+        <div class="input-group" style="max-width: 420px;">
+          <input type="search" name="search" class="form-control" placeholder="Pretraži proizvode..." aria-label="Pretraži proizvode" value="<%= data.search || '' %>">
+          <button type="submit" class="btn btn-primary" aria-label="Pretraži"><i class="bi bi-search" aria-hidden="true"></i></button>
+        </div>
+      </form>
     </div>
   </section>
 
@@ -62,7 +72,9 @@
       </div>
       <%- include("../includes/pagination", { pagination: data.pagination }) %>
     <% } else { %>
-      <p class="text-muted text-center py-5 mb-0">Nema proizvoda u ovoj kategoriji.</p>
+      <p class="text-muted text-center py-5 mb-0">
+        <% if (data.search) { %>Nema proizvoda koji odgovaraju pretrazi "<%= data.search %>".<% } else { %>Nema proizvoda u ovoj kategoriji.<% } %>
+      </p>
     <% } %>
   </div>
 

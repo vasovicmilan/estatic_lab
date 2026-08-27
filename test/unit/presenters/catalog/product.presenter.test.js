@@ -74,6 +74,23 @@ describe("prepareProductTagData", () => {
   });
 });
 
+describe("prepareProductListData - search", () => {
+  it("exposes the search term from the query for the input's value and the results heading", () => {
+    const view = prepareProductListData({ data: [], total: 0, page: 1, totalPages: 1 }, { query: { search: "aparat" } });
+    assert.equal(view.search, "aparat");
+  });
+
+  it("exposes the total result count separately from the paginated page size", () => {
+    const view = prepareProductListData({ data: [{}, {}], total: 27, page: 1, totalPages: 3 }, { query: { search: "laser" } });
+    assert.equal(view.resultCount, 27);
+  });
+
+  it("defaults search to an empty string when there's no query at all", () => {
+    const view = prepareProductListData({ data: [], total: 0, page: 1, totalPages: 1 }, {});
+    assert.equal(view.search, "");
+  });
+});
+
 describe("prepareProductDetailData", () => {
   it("defaults relatedProducts and testimonials to empty arrays", () => {
     const view = prepareProductDetailData({ naziv: "ESMA uredjaj" });
