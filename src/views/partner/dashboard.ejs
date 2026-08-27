@@ -11,25 +11,25 @@
     <div class="col-6 col-md-3">
       <div class="card h-100"><div class="card-body">
         <p class="text-muted small mb-1">Ukupno zarađeno</p>
-        <p class="h4 mb-0"><%= data.balance.earned %></p>
+        <p class="h4 mb-0 mono"><%= data.balance.earned %></p>
       </div></div>
     </div>
     <div class="col-6 col-md-3">
       <div class="card h-100"><div class="card-body">
         <p class="text-muted small mb-1">Isplaćeno</p>
-        <p class="h4 mb-0"><%= data.balance.paid %></p>
+        <p class="h4 mb-0 mono"><%= data.balance.paid %></p>
       </div></div>
     </div>
     <div class="col-6 col-md-3">
       <div class="card h-100"><div class="card-body">
         <p class="text-muted small mb-1">Rezervisano (na čekanju)</p>
-        <p class="h4 mb-0"><%= data.balance.reserved %></p>
+        <p class="h4 mb-0 mono"><%= data.balance.reserved %></p>
       </div></div>
     </div>
     <div class="col-6 col-md-3">
       <div class="card h-100 border-primary"><div class="card-body">
         <p class="text-muted small mb-1">Raspoloživo za isplatu</p>
-        <p class="h4 mb-0 text-primary"><%= data.balance.available %></p>
+        <p class="h4 mb-0 text-primary mono"><%= data.balance.available %></p>
       </div></div>
     </div>
   </div>
@@ -88,10 +88,10 @@
         <% data.payoutRequests.forEach(function(p) { %>
           <div class="list-group-item">
             <div class="d-flex justify-content-between align-items-start">
-              <div class="fs-6 fw-bold text-primary"><%= p.iznos %></div>
+              <div class="fs-6 fw-bold text-primary price-mono"><%= p.iznos %></div>
               <span class="badge bg-secondary"><%= p.status %></span>
             </div>
-            <div class="text-muted small">Zatraženo: <%= p.zatrazeno %></div>
+            <div class="text-muted small mono">Zatraženo: <%= p.zatrazeno %></div>
             <% if (p.napomena) { %><div class="small mt-1"><%= p.napomena %></div><% } %>
           </div>
         <% }) %>
@@ -103,9 +103,9 @@
             <tbody>
               <% data.payoutRequests.forEach(function(p) { %>
                 <tr>
-                  <td><%= p.iznos %></td>
+                  <td class="price-mono"><%= p.iznos %></td>
                   <td><%= p.status %></td>
-                  <td><%= p.zatrazeno %></td>
+                  <td class="mono"><%= p.zatrazeno %></td>
                   <td><%= p.napomena || "-" %></td>
                 </tr>
               <% }) %>
@@ -131,8 +131,8 @@
               <div class="fw-semibold"><%= c.izvor %></div>
               <span class="badge bg-secondary"><%= c.status %></span>
             </div>
-            <div class="fs-6 fw-bold text-primary"><%= c.iznos %></div>
-            <div class="text-muted small"><%= c.osnovnaVrednost %> &middot; <%= c.procenat %></div>
+            <div class="fs-6 fw-bold text-primary price-mono"><%= c.iznos %></div>
+            <div class="text-muted small mono"><%= c.osnovnaVrednost %> &middot; <%= c.procenat %></div>
           </div>
         <% }) %>
       </div>
@@ -144,9 +144,9 @@
               <% data.recentCommissions.forEach(function(c) { %>
                 <tr>
                   <td><%= c.izvor %></td>
-                  <td><%= c.osnovnaVrednost %></td>
-                  <td><%= c.procenat %></td>
-                  <td><%= c.iznos %></td>
+                  <td class="mono"><%= c.osnovnaVrednost %></td>
+                  <td class="mono"><%= c.procenat %></td>
+                  <td class="price-mono"><%= c.iznos %></td>
                   <td><%= c.status %></td>
                 </tr>
               <% }) %>

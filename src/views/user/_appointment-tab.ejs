@@ -20,11 +20,11 @@
         <a href="/nalog/termini/detalji/<%= a.id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
           <div>
             <div class="fw-semibold"><%= a.usluga %></div>
-            <div class="text-muted small"><%= a.datum %></div>
+            <div class="text-muted small mono"><%= a.datum %></div>
           </div>
           <div class="text-end">
             <span class="badge bg-secondary"><%= a.status %></span>
-            <div class="small"><%= a.cena %></div>
+            <div class="small price-mono"><%= a.cena %></div>
           </div>
         </a>
       <% }) %>
