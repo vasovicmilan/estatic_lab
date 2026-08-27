@@ -36,20 +36,13 @@
         <h1 class="h3 mb-2"><%= data.badgeTitle || (data.category ? data.category.naziv : (data.tag ? data.tag.naziv : "Prodavnica")) %></h1>
         <% if (data.subtitle) { %><p class="text-muted mb-4"><%= data.subtitle %></p><% } %>
       <% } %>
-
-      <form action="/prodavnica" method="GET" role="search" class="shop-search-form mb-4">
-        <div class="input-group" style="max-width: 420px;">
-          <input type="search" name="search" class="form-control" placeholder="Pretraži proizvode..." aria-label="Pretraži proizvode" value="<%= data.search || '' %>">
-          <button type="submit" class="btn btn-primary" aria-label="Pretraži"><i class="bi bi-search" aria-hidden="true"></i></button>
-        </div>
-      </form>
     </div>
   </section>
 
   <% if (data.categoryTabs && data.categoryTabs.length > 0) { %>
     <nav class="service-filter-bar" aria-label="Filter po kategoriji">
-      <div class="container">
-        <div class="service-filter-scroll py-3">
+      <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3 py-3">
+        <div class="service-filter-scroll flex-grow-1">
           <% data.categoryTabs.forEach(function(tab) { %>
             <a href="<%= tab.href %>" class="filter-pill <%= tab.active ? 'active' : '' %>">
               <%= tab.label %>
@@ -57,6 +50,12 @@
             </a>
           <% }) %>
         </div>
+        <form action="/prodavnica" method="GET" role="search" class="shop-search-form">
+          <div class="input-group">
+            <input type="search" name="search" class="form-control" placeholder="Pretraži proizvode..." aria-label="Pretraži proizvode" value="<%= data.search || '' %>">
+            <button type="submit" class="btn btn-primary" aria-label="Pretraži"><i class="bi bi-search" aria-hidden="true"></i></button>
+          </div>
+        </form>
       </div>
     </nav>
   <% } %>
