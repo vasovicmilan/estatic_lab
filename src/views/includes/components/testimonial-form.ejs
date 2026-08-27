@@ -38,15 +38,21 @@
       <% } %>
 
       <div class="mb-3">
-        <label class="form-label" for="testimonial-rating">Ocena</label>
-        <select id="testimonial-rating" name="rating" class="form-select" required>
-          <option value="" selected disabled>Izaberite ocenu</option>
-          <option value="5">5 - Odlično</option>
-          <option value="4">4 - Vrlo dobro</option>
-          <option value="3">3 - Dobro</option>
-          <option value="2">2 - Osrednje</option>
-          <option value="1">1 - Loše</option>
-        </select>
+        <fieldset class="border-0 p-0 m-0">
+          <legend class="form-label h6 fs-6 fw-normal mb-2">Ocena</legend>
+          <div class="star-rating-input" role="radiogroup" aria-label="Ocena, 1 do 5 zvezdica">
+            <input type="radio" id="testimonial-rating-5" name="rating" value="5" required aria-label="5 zvezdica - Odlično">
+            <label for="testimonial-rating-5">★</label>
+            <input type="radio" id="testimonial-rating-4" name="rating" value="4" aria-label="4 zvezdice - Vrlo dobro">
+            <label for="testimonial-rating-4">★</label>
+            <input type="radio" id="testimonial-rating-3" name="rating" value="3" aria-label="3 zvezdice - Dobro">
+            <label for="testimonial-rating-3">★</label>
+            <input type="radio" id="testimonial-rating-2" name="rating" value="2" aria-label="2 zvezdice - Osrednje">
+            <label for="testimonial-rating-2">★</label>
+            <input type="radio" id="testimonial-rating-1" name="rating" value="1" aria-label="1 zvezdica - Loše">
+            <label for="testimonial-rating-1">★</label>
+          </div>
+        </fieldset>
       </div>
 
       <div class="mb-3">

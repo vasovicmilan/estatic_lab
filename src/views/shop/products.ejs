@@ -77,6 +77,31 @@
         <% if (data.search) { %>Nema proizvoda koji odgovaraju pretrazi "<%= data.search %>".<% } else { %>Nema proizvoda u ovoj kategoriji.<% } %>
       </p>
     <% } %>
+
+    <% if (data.tagChips && data.tagChips.length > 0) { %>
+      <% const visibleChips = data.tagChips.slice(0, 14); %>
+      <% const restChips = data.tagChips.slice(14); %>
+      <div class="card mt-5">
+        <div class="card-body p-4">
+          <h2 class="h6 mb-3">Pretražite po temi</h2>
+          <div class="d-flex flex-wrap gap-2">
+            <% visibleChips.forEach(function(chip) { %>
+              <a href="<%= chip.href %>" class="tag-chip <%= chip.active ? 'active' : '' %>"><%= chip.label %></a>
+            <% }) %>
+          </div>
+          <% if (restChips.length > 0) { %>
+            <details class="tag-chips-more">
+              <summary>Prikaži sve teme (<%= data.tagChips.length %>)</summary>
+              <div class="d-flex flex-wrap gap-2 mt-3">
+                <% restChips.forEach(function(chip) { %>
+                  <a href="<%= chip.href %>" class="tag-chip <%= chip.active ? 'active' : '' %>"><%= chip.label %></a>
+                <% }) %>
+              </div>
+            </details>
+          <% } %>
+        </div>
+      </div>
+    <% } %>
   </div>
 
   <% if (data.isLandingView && data.faq && data.faq.length > 0) { %>

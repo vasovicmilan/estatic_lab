@@ -10,6 +10,14 @@ describe("prepareExpertListData", () => {
     assert.equal(view.experts, experts);
     assert.equal(view.breadcrumbs.length, 1);
   });
+
+  it("includes the real intro copy shown on the landing page", () => {
+    const view = prepareExpertListData([]);
+
+    assert.ok(view.intro);
+    assert.ok(view.intro.title);
+    assert.ok(view.intro.highlights.length > 0);
+  });
 });
 
 describe("prepareExpertDetailData", () => {

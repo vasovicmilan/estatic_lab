@@ -1229,6 +1229,55 @@ h1, h2, h3, h4, h5, h6,
   }
 }
 
+/* ---- Star rating input (testimonial-form.ejs) ----
+   Replaces the old plain <select> with a click-to-rate star widget matching
+   the star display used everywhere ratings are shown (card-testimonial.ejs).
+   Pure CSS, no JS: five real radio inputs under the hood (name="rating",
+   values 1-5, identical to what the old <select> submitted), visually
+   hidden but still focusable/keyboard-operable - the classic reversed-order
+   + general-sibling-combinator trick, not display:none, so screen readers
+   and keyboard users get the same control sighted mouse users do. Each
+   radio's aria-label carries the "Odlično/Vrlo dobro/..." wording the old
+   <option> text used to provide. */
+.star-rating-input {
+  display: inline-flex;
+  flex-direction: row-reverse;
+  gap: 0.125rem;
+}
+
+.star-rating-input input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.star-rating-input label {
+  font-size: 1.875rem;
+  line-height: 1;
+  padding: 0.125rem;
+  color: var(--bs-border-color);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.star-rating-input label:hover,
+.star-rating-input label:hover ~ label,
+.star-rating-input input:checked ~ label {
+  color: var(--bs-warning);
+}
+
+.star-rating-input input:focus-visible + label {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+  border-radius: var(--bs-border-radius-sm);
+}
+
 /* ---- FAQ accordion (includes/components/faq.ejs) - only consumer of the
    generic Bootstrap .accordion component (grep-verified), so this can be a
    direct override rather than a new class. Hairline dividers between

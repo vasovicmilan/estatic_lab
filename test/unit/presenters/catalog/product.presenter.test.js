@@ -72,6 +72,41 @@ describe("prepareProductTagData", () => {
 
     assert.ok(!view.categoryTabs.some((t) => t.active && t.label !== "Svi proizvodi"));
   });
+
+  it("marks the current tag's chip as active, without touching the other chips", () => {
+    const tags = [
+      { naziv: "lavanda", slug: "lavanda" },
+      { naziv: "esma", slug: "esma" },
+    ];
+    const view = prepareProductTagData({ naziv: "Lavanda", slug: "lavanda" }, { data: [], page: 1, totalPages: 1 }, {}, { tags });
+
+    assert.equal(view.tagChips.find((t) => t.label === "lavanda").active, true);
+    assert.equal(view.tagChips.find((t) => t.label === "esma").active, false);
+  });
+});
+
+describe("prepareProductListData / prepareProductCategoryData - tagChips", () => {
+  it("exposes tagChips on the landing view, with none marked active", () => {
+    const tags = [{ naziv: "lavanda", slug: "lavanda" }];
+    const view = prepareProductListData({ data: [], page: 1, totalPages: 1 }, { tags });
+
+    assert.equal(view.tagChips.length, 1);
+    assert.equal(view.tagChips[0].href, "/prodavnica/tag/lavanda");
+    assert.equal(view.tagChips[0].active, false);
+  });
+
+  it("defaults tagChips to an empty array when no tags are passed", () => {
+    const view = prepareProductListData({ data: [], page: 1, totalPages: 1 }, {});
+    assert.deepEqual(view.tagChips, []);
+  });
+
+  it("exposes tagChips on a category-filtered view too", () => {
+    const tags = [{ naziv: "esma", slug: "esma" }];
+    const view = prepareProductCategoryData({ naziv: "Delovi", slug: "delovi" }, { data: [], page: 1, totalPages: 1 }, {}, { tags });
+
+    assert.equal(view.tagChips.length, 1);
+    assert.equal(view.tagChips[0].label, "esma");
+  });
 });
 
 describe("prepareProductListData - search", () => {

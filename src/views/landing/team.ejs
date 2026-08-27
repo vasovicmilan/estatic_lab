@@ -1,23 +1,63 @@
 <%- include("../includes/head") %>
 <%- include("../includes/navigation") %>
 
-<main class="container py-5">
-  <%- include("../includes/breadcrumbs") %>
+<main>
   <%- include("../includes/flash-messages") %>
 
-  <h1 class="h3 mb-4 text-center">Naš tim</h1>
+  <section class="bg-white pt-5 pb-4">
+    <div class="container">
+      <%- include("../includes/breadcrumbs") %>
 
-  <% if (data.experts && data.experts.length > 0) { %>
-    <div class="row g-4">
-      <% data.experts.forEach(function(expert) { %>
-        <div class="col-md-3">
-          <%- include("../includes/components/card-expert", { expert: expert }) %>
+      <div class="row g-5 align-items-end">
+        <div class="col-lg-7">
+          <p class="section-eyebrow"><%= data.intro.eyebrow %></p>
+          <h1 class="h2 mb-4"><%= data.intro.title %></h1>
+          <p class="lead text-muted mb-0"><%= data.intro.lead %></p>
         </div>
-      <% }) %>
+        <div class="col-lg-5">
+          <div class="row g-4">
+            <% data.intro.highlights.forEach(function(item) { %>
+              <div class="col-12">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary-emphasis rounded-circle icon-circle-lg flex-shrink-0">
+                    <i class="bi <%= item.icon %> fs-5"></i>
+                  </div>
+                  <div>
+                    <h2 class="h6 mb-1"><%= item.title %></h2>
+                    <p class="text-muted small mb-0"><%= item.text %></p>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      </div>
     </div>
-  <% } else { %>
-    <p class="text-center text-muted">Uskoro više informacija o našem timu.</p>
-  <% } %>
+  </section>
+
+  <%- include("../includes/components/ritual-divider") %>
+
+  <div class="container py-5">
+    <% if (data.experts && data.experts.length > 0) { %>
+      <div class="row g-4">
+        <% data.experts.forEach(function(expert) { %>
+          <div class="col-6 col-md-3">
+            <%- include("../includes/components/card-expert", { expert: expert }) %>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <p class="text-center text-muted py-5 mb-0">Uskoro više informacija o našem timu.</p>
+    <% } %>
+  </div>
+
+  <section class="cta-section py-5 text-white text-center">
+    <div class="container">
+      <h2 class="h4 fw-bold mb-3">Spremni da zakažete termin?</h2>
+      <p class="mb-4">Izaberite uslugu i, ako želite, terapeuta koji vam odgovara.</p>
+      <a href="/usluge" class="btn btn-light rounded-pill px-4 fw-semibold">Pogledajte usluge</a>
+    </div>
+  </section>
 </main>
 
 <%- include("../includes/footer") %>

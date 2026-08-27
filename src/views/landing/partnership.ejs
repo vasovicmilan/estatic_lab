@@ -14,6 +14,8 @@
   </div>
 </header>
 
+<%- include("../includes/components/ritual-divider") %>
+
 <main>
   <%- include("../includes/flash-messages") %>
 
@@ -35,7 +37,7 @@
             <!-- Placeholder image slot - swap the icon-circle below for an
                  <img> once real photos are ready -->
             <div class="card-body p-4">
-              <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary-emphasis rounded-circle icon-circle-lg mb-3 fw-bold fs-4">
+              <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary-emphasis rounded-circle icon-circle-lg mb-3 fw-bold fs-4 mono">
                 <%= step.number %>
               </div>
               <h3 class="h5 fw-bold mb-2"><%= step.title %></h3>

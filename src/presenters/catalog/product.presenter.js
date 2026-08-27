@@ -52,6 +52,18 @@ function buildCategoryTabs(categories = [], activeCategorySlug = null, totalCoun
   ];
 }
 
+// Builds the "search by topic" tag chips shown below the grid, with the
+// current tag (if any) marked active - same pattern as /blog. The controller
+// already fetched `tags` via tagService.getPublicTags("product") and passed
+// it in; this was the missing piece turning that into chips the view renders.
+function buildTagChips(tags = [], activeTagSlug = null) {
+  return tags.map((tag) => ({
+    label: tag.naziv,
+    href: `/prodavnica/tag/${tag.slug}`,
+    active: tag.slug === activeTagSlug,
+  }));
+}
+
 export function prepareProductListData(result, { query = {}, categories = [], tags = [], totalCount = 0, latestPosts = [], isLandingView = false, badgeTitle = null } = {}) {
   return {
     products: result.data,
@@ -64,6 +76,7 @@ export function prepareProductListData(result, { query = {}, categories = [], ta
     resultCount: result.total,
     intro: isLandingView ? SHOP_INTRO : null,
     categoryTabs: buildCategoryTabs(categories, null, totalCount),
+    tagChips: buildTagChips(tags, null),
     trust: isLandingView ? SHOP_TRUST : [],
     faq: isLandingView ? SHOP_FAQ : [],
     latestPosts,
@@ -83,6 +96,7 @@ export function prepareProductCategoryData(category, result, query = {}, { categ
     products: result.data,
     subtitle: `Proizvodi iz kategorije „${category.naziv}”.`,
     categoryTabs: buildCategoryTabs(categories, category.slug, totalCount),
+    tagChips: buildTagChips(tags, null),
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
@@ -102,6 +116,7 @@ export function prepareProductTagData(tag, result, query = {}, { categories = []
     products: result.data,
     subtitle: `Proizvodi označeni sa „${tag.naziv}”.`,
     categoryTabs: buildCategoryTabs(categories, null, totalCount),
+    tagChips: buildTagChips(tags, tag.slug),
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
