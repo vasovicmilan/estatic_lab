@@ -1,7 +1,10 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
   <% const currentPath = typeof locals.currentPath !== "undefined" ? locals.currentPath : ""; %>
   <div class="container-fluid">
-    <a class="navbar-brand fw-bold fst-italic" href="/">Estetik Lab</a>
+    <a class="navbar-brand fst-italic d-flex align-items-center gap-2" href="/">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 1C10 6 15 8 19 8C15 8 10 10 10 19C10 10 5 8 1 8C5 8 10 6 10 1Z" fill="var(--bs-primary)"/></svg>
+      Estetik Lab
+    </a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Uključi/isključi navigaciju">
       <span class="navbar-toggler-icon"></span>

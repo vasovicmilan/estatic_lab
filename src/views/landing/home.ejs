@@ -21,6 +21,8 @@
   </div>
 </header>
 
+<%- include("../includes/components/ritual-divider", { ticks: ["Priprema", "Tretman", "Opuštanje"] }) %>
+
 <main>
   <%- include("../includes/flash-messages") %>
 
@@ -134,6 +136,8 @@
       </div>
     </section>
   <% } %>
+
+  <%- include("../includes/components/ritual-divider") %>
 
   <!-- Social proof: testimonials + leave-a-review form -->
   <section class="container py-5">

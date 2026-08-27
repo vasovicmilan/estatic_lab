@@ -3,7 +3,7 @@
     <img src="<%= post.slika.url %>" class="card-img-top post-card-img" alt="<%= post.slika.alt || post.naslov %>" loading="lazy" decoding="async">
   <% } %>
   <div class="card-body d-flex flex-column">
-    <div class="small text-muted mb-1"><%= post.datumObjave %> &middot; <%= post.vremeCitanja %></div>
+    <div class="small text-muted mono mb-1"><%= post.datumObjave %> &middot; <%= post.vremeCitanja %></div>
     <h3 class="h6"><%= post.naslov %></h3>
     <p class="text-muted small flex-grow-1"><%= post.kratakOpis %></p>
     <span class="small text-primary-emphasis fw-semibold">Pročitajte više &rarr;</span>

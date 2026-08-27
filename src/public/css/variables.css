@@ -1,99 +1,124 @@
 /*
-  Estetik Lab - design tokens.
-  Wellness / beauty / massage palette: warm terracotta as the primary accent, warm
-  taupe/brown as secondary, muted sage/gold/brick for the semantic colors, warm
-  cream/near-black neutrals instead of Bootstrap's stark gray scale.
+  Estetik Lab - design tokens (v2 "Ritual" identity, 2026).
+
+  Rebrand direction: away from the terracotta-on-cream palette (too close to
+  the generic AI-wellness default) toward a deeper botanical ink/forest base
+  with a rotated, more muted clay accent, warm stone paper instead of cream,
+  and a brass/gold reserved for "best value" signals. Fraunces replaces
+  Playfair Display for headings; IBM Plex Mono is new (--font-mono) for
+  prices, durations, dates and eyebrows - see styles.css's .mono utility and
+  the new .ritual-divider component for where it's used.
 
   Everything here overrides Bootstrap 5.3's own CSS custom properties - no new
-  classes are introduced anywhere. Bootstrap 5.3 derives most utilities (text-*,
-  bg-*, border-*, alert-*, text-bg-*) directly from these variables at runtime, so
-  overriding them here re-themes those utilities automatically. The exceptions are
-  buttons, which Bootstrap bakes hover/active shades into at build time - those get
-  a small, explicit override in styles.css.
+  *Bootstrap* classes are introduced anywhere. Bootstrap 5.3 derives most
+  utilities (text-*, bg-*, border-*, alert-*, text-bg-*) directly from these
+  variables at runtime, so overriding them here re-themes those utilities
+  automatically. The exceptions are buttons, which Bootstrap bakes hover/active
+  shades into at build time - those get a small, explicit override in
+  styles.css, same as before.
+
+  Every text/background pairing below was checked against WCAG AA's 4.5:1
+  threshold with a small contrast script (relative-luminance formula) before
+  being committed - see the ratios noted inline. .btn-primary's background is
+  deliberately a shade darker (#a85a41, 5.00:1 with white text) than the
+  --bs-primary token itself (#bf6a4d, used for accents/links/badges where it
+  sits next to dark text, not white) - #bf6a4d only reaches 3.90:1 with white
+  text, which fails AA for normal-weight button labels.
 */
 
 :root {
   /* ---- Core theme colors ---- */
-  --bs-primary: #a8735c;
-  --bs-primary-rgb: 168, 115, 92;
-  --bs-secondary: #6b5b4d;
-  --bs-secondary-rgb: 107, 91, 77;
-  --bs-success: #7a8b6f;
-  --bs-success-rgb: 122, 139, 111;
-  --bs-info: #7c93a0;
-  --bs-info-rgb: 124, 147, 160;
-  --bs-warning: #d9a441;
-  --bs-warning-rgb: 217, 164, 65;
-  --bs-danger: #b24c43;
-  --bs-danger-rgb: 178, 76, 67;
-  --bs-light: #fbf6f1;
-  --bs-light-rgb: 251, 246, 241;
-  --bs-dark: #2e2a24;
-  --bs-dark-rgb: 46, 42, 36;
+  --bs-primary: #bf6a4d;
+  --bs-primary-rgb: 191, 106, 77;
+  --bs-secondary: #6b6248;
+  --bs-secondary-rgb: 107, 98, 72;
+  --bs-success: #6f8258;
+  --bs-success-rgb: 111, 130, 88;
+  --bs-info: #5c7a82;
+  --bs-info-rgb: 92, 122, 130;
+  --bs-warning: #b3924f;
+  --bs-warning-rgb: 179, 146, 79;
+  --bs-danger: #a8503f;
+  --bs-danger-rgb: 168, 80, 63;
+  --bs-light: #efe8d8;
+  --bs-light-rgb: 239, 232, 216;
+  --bs-dark: #232c20;
+  --bs-dark-rgb: 35, 44, 32;
 
-  /* ---- Subtle / emphasis tokens (drive alert-*, text-bg-*-subtle, etc.) ---- */
-  --bs-primary-text-emphasis: #5c3d2e;
-  --bs-primary-bg-subtle: #f3e6e0;
-  --bs-primary-border-subtle: #e4c9bc;
+  /* ---- Subtle / emphasis tokens (drive alert-*, text-bg-*-subtle, etc.) ----
+     text-emphasis values checked at 4.5:1+ against white AND against
+     body-bg/light - see contrast notes per role below. */
+  --bs-primary-text-emphasis: #6e3a29;   /* 8.53:1 on body-bg, 9.13:1 on white */
+  --bs-primary-bg-subtle: #f5e5dc;
+  --bs-primary-border-subtle: #e3c3b3;
 
-  --bs-secondary-text-emphasis: #3a312a;
-  --bs-secondary-bg-subtle: #eae5df;
-  --bs-secondary-border-subtle: #d8d0c6;
+  --bs-secondary-text-emphasis: #3a3527; /* 12.22:1 on white */
+  --bs-secondary-bg-subtle: #eae6d8;
+  --bs-secondary-border-subtle: #d5cdb5;
 
-  --bs-success-text-emphasis: #3d4636;
-  --bs-success-bg-subtle: #e7ece3;
-  --bs-success-border-subtle: #cbd6c3;
+  --bs-success-text-emphasis: #3a4630;   /* 10.01:1 on white */
+  --bs-success-bg-subtle: #e6ebdf;
+  --bs-success-border-subtle: #cad6bc;
 
-  --bs-info-text-emphasis: #38434a;
-  --bs-info-bg-subtle: #e6ecef;
-  --bs-info-border-subtle: #c7d3d9;
+  --bs-info-text-emphasis: #33454a;      /* 10.04:1 on white */
+  --bs-info-bg-subtle: #e2eaec;
+  --bs-info-border-subtle: #bdd0d4;
 
-  --bs-warning-text-emphasis: #5c4419;
-  --bs-warning-bg-subtle: #faf0dc;
-  --bs-warning-border-subtle: #f0dbac;
+  --bs-warning-text-emphasis: #5c4a26;   /* 7.45:1 on warning-bg-subtle */
+  --bs-warning-bg-subtle: #f7efdc;
+  --bs-warning-border-subtle: #e5d3a8;
 
-  --bs-danger-text-emphasis: #4a201c;
-  --bs-danger-bg-subtle: #f5e1df;
-  --bs-danger-border-subtle: #e7bab5;
+  --bs-danger-text-emphasis: #562923;    /* 12.09:1 on white */
+  --bs-danger-bg-subtle: #f3e0dc;
+  --bs-danger-border-subtle: #e2b7ac;
 
   /* ---- Body / typography ---- */
-  --bs-body-bg: #fffdfb;
-  --bs-body-color: #2e2a24;
+  --bs-body-bg: #faf7f0;
+  --bs-body-color: #232c20;
   --bs-body-font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --bs-emphasis-color: #2e2a24;
-  /* Alpha values chosen to clear WCAG AA's 4.5:1 text contrast threshold against
+  --bs-emphasis-color: #232c20;
+  /* rgba alpha chosen the same way the previous palette's was: measured against
      every light background used site-wide (white, --bs-light, --bs-secondary-bg,
-     --bs-tertiary-bg) - the previous values (0.65 / 0.45) measured 4.48:1 and
-     2.63:1 respectively against some of those backgrounds, both real failures. */
-  --bs-secondary-color: rgba(46, 42, 36, 0.75);
-  --bs-secondary-bg: #f1eae3;
-  --bs-tertiary-color: rgba(46, 42, 36, 0.70);
-  --bs-tertiary-bg: #f6f1eb;
+     --bs-tertiary-bg) to clear 4.5:1 - see contrast script note above. */
+  --bs-secondary-color: rgba(35, 44, 32, 0.78);
+  --bs-secondary-bg: #ece4d2;
+  --bs-tertiary-color: rgba(35, 44, 32, 0.72);
+  --bs-tertiary-bg: #f2ecdf;
 
   /* heading font - applied via element selectors in styles.css, not a new class */
-  --font-heading: "Playfair Display", Georgia, serif;
+  --font-heading: "Fraunces", Georgia, serif;
+  /* NEW - utility face for prices, durations, dates, eyebrows: see .mono in
+     styles.css. Deliberate counterpoint to the organic heading serif - reads
+     as "precision" (fits the ESMA/clinical side of the business) next to
+     Fraunces' warmth (fits the massage/ritual side). */
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   /* ---- Links ---- */
   --bs-link-color: var(--bs-primary-text-emphasis);
-  --bs-link-color-rgb: 92, 61, 46;
-  --bs-link-hover-color: #875740;
-  --bs-link-hover-color-rgb: 135, 87, 64;
+  --bs-link-color-rgb: 110, 58, 41;
+  --bs-link-hover-color: #a85a41;
+  --bs-link-hover-color-rgb: 168, 90, 65;
 
-  /* ---- Shape ---- */
-  --bs-border-radius: 0.6rem;
-  --bs-border-radius-sm: 0.4rem;
-  --bs-border-radius-lg: 0.9rem;
-  --bs-border-radius-xl: 1.25rem;
-  --bs-border-radius-2xl: 1.75rem;
+  /* ---- Shape ----
+     Pulled in sharply from the old 0.6-1.75rem scale toward a near-flat,
+     editorial look - the signature visual shift away from the generic
+     rounded-card Bootstrap default. rounded-pill (buttons) isn't
+     variable-driven in Bootstrap; that gets a scoped override in styles.css. */
+  --bs-border-radius: 0.2rem;
+  --bs-border-radius-sm: 0.15rem;
+  --bs-border-radius-lg: 0.3rem;
+  --bs-border-radius-xl: 0.4rem;
+  --bs-border-radius-2xl: 0.6rem;
   --bs-border-radius-pill: 50rem;
-  --bs-border-color: #e7ddd3;
-  --bs-border-color-translucent: rgba(46, 42, 36, 0.1);
+  --bs-border-color: #ddd2bc;
+  --bs-border-color-translucent: rgba(35, 44, 32, 0.1);
 
-  /* ---- Shadows (referenced directly by .shadow / .shadow-sm / .shadow-lg) ---- */
-  --bs-box-shadow: 0 0.75rem 2rem rgba(46, 42, 36, 0.1);
-  --bs-box-shadow-sm: 0 0.25rem 0.75rem rgba(46, 42, 36, 0.08);
-  --bs-box-shadow-lg: 0 1.5rem 3rem rgba(46, 42, 36, 0.14);
+  /* ---- Shadows - much quieter than before; the new look leans on hairline
+     borders instead of elevation, see .card override in styles.css ---- */
+  --bs-box-shadow: 0 0.5rem 1.25rem rgba(35, 44, 32, 0.08);
+  --bs-box-shadow-sm: 0 0.15rem 0.4rem rgba(35, 44, 32, 0.06);
+  --bs-box-shadow-lg: 0 1rem 2rem rgba(35, 44, 32, 0.12);
 
   /* ---- Focus ring ---- */
-  --bs-focus-ring-color: rgba(168, 115, 92, 0.25);
+  --bs-focus-ring-color: rgba(191, 106, 77, 0.25);
 }

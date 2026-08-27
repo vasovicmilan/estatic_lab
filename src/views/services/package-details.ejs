@@ -32,15 +32,15 @@
           <p class="lead text-muted"><%= data.package.kratakOpis %></p>
 
           <% if (data.package.ukupnoTrajanje) { %>
-            <div class="d-flex align-items-center gap-2 text-muted small mb-3">
+            <div class="d-flex align-items-center gap-2 text-muted small mono mb-3">
               <i class="bi bi-clock"></i>
               <span>Ukupno trajanje: <%= data.package.ukupnoTrajanje %></span>
             </div>
           <% } %>
 
           <div class="d-flex align-items-baseline gap-2 mb-4">
-            <strong class="fs-3 text-primary-emphasis"><%= data.package.cena %> <%= currencySymbol %></strong>
-            <% if (data.package.staraCena) { %><span class="text-muted text-decoration-line-through fs-5"><%= data.package.staraCena %> <%= currencySymbol %></span><% } %>
+            <strong class="fs-3 text-primary-emphasis price-mono"><%= data.package.cena %> <%= currencySymbol %></strong>
+            <% if (data.package.staraCena) { %><span class="text-muted text-decoration-line-through fs-5 price-mono"><%= data.package.staraCena %> <%= currencySymbol %></span><% } %>
           </div>
 
           <a href="<%= data.bookingUrl %>" class="btn btn-primary btn-lg rounded-pill px-4">Zainteresovan/a sam</a>

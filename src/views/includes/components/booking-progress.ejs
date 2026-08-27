@@ -1,0 +1,45 @@
+<%
+  const currentStep = Number(step) || 1;
+
+  const steps = [
+    { number: 1, label: "Usluga" },
+    { number: 2, label: "Termin" },
+    { number: 3, label: "Podaci" },
+    { number: 4, label: "Potvrda" }
+  ];
+%>
+
+<nav
+  class="ritual-progress mb-4"
+  aria-label="Napredak zakazivanja"
+>
+  <% steps.forEach(function(item) { %>
+    <%
+      const isDone = item.number < currentStep;
+      const isCurrent = item.number === currentStep;
+
+      let stepClass = "ritual-progress-step";
+
+      if (isDone) {
+        stepClass += " is-done";
+      }
+
+      if (isCurrent) {
+        stepClass += " is-current";
+      }
+    %>
+
+    <div
+      class="<%= stepClass %>"
+      aria-current="<%= isCurrent ? 'step' : 'false' %>"
+    >
+      <div class="ritual-progress-dot">
+        <%= item.number %>
+      </div>
+
+      <div class="ritual-progress-label">
+        <%= item.label %>
+      </div>
+    </div>
+  <% }); %>
+</nav>

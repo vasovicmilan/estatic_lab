@@ -16,101 +16,104 @@ h1, h2, h3, h4, h5, h6,
   font-weight: 700;
 }
 
-/* ---- Buttons - hover/active shades re-declared per variant to follow the palette ---- */
+/* ---- Buttons - hover/active shades re-declared per variant to follow the palette.
+   .btn-primary's base bg (#a85a41) is deliberately a shade darker than the
+   --bs-primary token (#bf6a4d) itself - see the contrast note in variables.css;
+   white button text only clears WCAG AA against the darker shade. ---- */
 .btn-primary {
   --bs-btn-color: #fff;
-  --bs-btn-bg: #a8735c;
-  --bs-btn-border-color: #a8735c;
+  --bs-btn-bg: #a85a41;
+  --bs-btn-border-color: #a85a41;
   --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #96634e;
-  --bs-btn-hover-border-color: #875740;
+  --bs-btn-hover-bg: #954e38;
+  --bs-btn-hover-border-color: #84452f;
   --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #875740;
-  --bs-btn-active-border-color: #7a4e39;
-  --bs-btn-disabled-bg: #a8735c;
-  --bs-btn-disabled-border-color: #a8735c;
-  --bs-btn-focus-shadow-rgb: 168, 115, 92;
+  --bs-btn-active-bg: #84452f;
+  --bs-btn-active-border-color: #743c29;
+  --bs-btn-disabled-bg: #a85a41;
+  --bs-btn-disabled-border-color: #a85a41;
+  --bs-btn-focus-shadow-rgb: 168, 90, 65;
 }
 
 .btn-outline-primary {
-  --bs-btn-color: #a8735c;
-  --bs-btn-border-color: #a8735c;
+  --bs-btn-color: #a85a41;
+  --bs-btn-border-color: #a85a41;
   --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #a8735c;
-  --bs-btn-hover-border-color: #a8735c;
+  --bs-btn-hover-bg: #a85a41;
+  --bs-btn-hover-border-color: #a85a41;
   --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #96634e;
-  --bs-btn-active-border-color: #96634e;
-  --bs-btn-focus-shadow-rgb: 168, 115, 92;
+  --bs-btn-active-bg: #954e38;
+  --bs-btn-active-border-color: #954e38;
+  --bs-btn-focus-shadow-rgb: 168, 90, 65;
 }
 
 .btn-secondary {
   --bs-btn-color: #fff;
-  --bs-btn-bg: #6b5b4d;
-  --bs-btn-border-color: #6b5b4d;
+  --bs-btn-bg: #6b6248;
+  --bs-btn-border-color: #6b6248;
   --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #5e4f43;
-  --bs-btn-hover-border-color: #54473c;
+  --bs-btn-hover-bg: #5c543e;
+  --bs-btn-hover-border-color: #524a37;
   --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #54473c;
-  --bs-btn-active-border-color: #4a3e35;
-  --bs-btn-disabled-bg: #6b5b4d;
-  --bs-btn-disabled-border-color: #6b5b4d;
-  --bs-btn-focus-shadow-rgb: 107, 91, 77;
+  --bs-btn-active-bg: #524a37;
+  --bs-btn-active-border-color: #494230;
+  --bs-btn-disabled-bg: #6b6248;
+  --bs-btn-disabled-border-color: #6b6248;
+  --bs-btn-focus-shadow-rgb: 107, 98, 72;
 }
 
 .btn-outline-secondary {
-  --bs-btn-color: #6b5b4d;
-  --bs-btn-border-color: #6b5b4d;
+  --bs-btn-color: #6b6248;
+  --bs-btn-border-color: #6b6248;
   --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #6b5b4d;
-  --bs-btn-hover-border-color: #6b5b4d;
+  --bs-btn-hover-bg: #6b6248;
+  --bs-btn-hover-border-color: #6b6248;
   --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #5e4f43;
-  --bs-btn-active-border-color: #5e4f43;
-  --bs-btn-focus-shadow-rgb: 107, 91, 77;
+  --bs-btn-active-bg: #5c543e;
+  --bs-btn-active-border-color: #5c543e;
+  --bs-btn-focus-shadow-rgb: 107, 98, 72;
 }
 
 .btn-success {
   --bs-btn-color: #fff;
-  --bs-btn-bg: #7a8b6f;
-  --bs-btn-border-color: #7a8b6f;
+  --bs-btn-bg: #6f8258;
+  --bs-btn-border-color: #6f8258;
   --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #6e7e64;
-  --bs-btn-hover-border-color: #63715a;
+  --bs-btn-hover-bg: #63744e;
+  --bs-btn-hover-border-color: #586744;
   --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #63715a;
-  --bs-btn-active-border-color: #586452;
-  --bs-btn-disabled-bg: #7a8b6f;
-  --bs-btn-disabled-border-color: #7a8b6f;
-  --bs-btn-focus-shadow-rgb: 122, 139, 111;
+  --bs-btn-active-bg: #586744;
+  --bs-btn-active-border-color: #4e5b3c;
+  --bs-btn-disabled-bg: #6f8258;
+  --bs-btn-disabled-border-color: #6f8258;
+  --bs-btn-focus-shadow-rgb: 111, 130, 88;
 }
 
 .btn-outline-success {
-  --bs-btn-color: #7a8b6f;
-  --bs-btn-border-color: #7a8b6f;
+  --bs-btn-color: #6f8258;
+  --bs-btn-border-color: #6f8258;
   --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #7a8b6f;
-  --bs-btn-hover-border-color: #7a8b6f;
+  --bs-btn-hover-bg: #6f8258;
+  --bs-btn-hover-border-color: #6f8258;
   --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #6e7e64;
-  --bs-btn-active-border-color: #6e7e64;
-  --bs-btn-focus-shadow-rgb: 122, 139, 111;
+  --bs-btn-active-bg: #63744e;
+  --bs-btn-active-border-color: #63744e;
+  --bs-btn-focus-shadow-rgb: 111, 130, 88;
 }
 
 .btn-warning {
-  --bs-btn-color: #2e2a24;
-  --bs-btn-bg: #d9a441;
-  --bs-btn-border-color: #d9a441;
-  --bs-btn-hover-color: #2e2a24;
-  --bs-btn-hover-bg: #c6933a;
-  --bs-btn-hover-border-color: #b98a36;
-  --bs-btn-active-color: #2e2a24;
-  --bs-btn-active-bg: #b98a36;
-  --bs-btn-active-border-color: #ad8132;
-  --bs-btn-disabled-bg: #d9a441;
-  --bs-btn-disabled-border-color: #d9a441;
-  --bs-btn-focus-shadow-rgb: 217, 164, 65;
+  --bs-btn-color: #232c20;
+  --bs-btn-bg: #b3924f;
+  --bs-btn-border-color: #b3924f;
+  --bs-btn-hover-color: #232c20;
+  --bs-btn-hover-bg: #a08346;
+  --bs-btn-hover-border-color: #957a41;
+  --bs-btn-active-color: #232c20;
+  --bs-btn-active-bg: #957a41;
+  --bs-btn-active-border-color: #8a713c;
+  --bs-btn-disabled-bg: #b3924f;
+  --bs-btn-disabled-border-color: #b3924f;
+  --bs-btn-focus-shadow-rgb: 179, 146, 79;
 }
 
 /* .text-bg-warning's text color is baked in by Sass color-contrast() at Bootstrap's
@@ -119,46 +122,55 @@ h1, h2, h3, h4, h5, h6,
    and are already re-themed above. Explicit override guarantees readable (dark)
    text on this specific warning color regardless of what Bootstrap baked in. */
 .text-bg-warning {
-  color: #2e2a24 !important;
+  color: #232c20 !important;
 }
 
 .btn-outline-warning {
-  --bs-btn-color: #ad7c1f;
-  --bs-btn-border-color: #d9a441;
-  --bs-btn-hover-color: #2e2a24;
-  --bs-btn-hover-bg: #d9a441;
-  --bs-btn-hover-border-color: #d9a441;
-  --bs-btn-active-color: #2e2a24;
-  --bs-btn-active-bg: #d9a441;
-  --bs-btn-active-border-color: #d9a441;
-  --bs-btn-focus-shadow-rgb: 217, 164, 65;
+  --bs-btn-color: #8a713c;
+  --bs-btn-border-color: #b3924f;
+  --bs-btn-hover-color: #232c20;
+  --bs-btn-hover-bg: #b3924f;
+  --bs-btn-hover-border-color: #b3924f;
+  --bs-btn-active-color: #232c20;
+  --bs-btn-active-bg: #b3924f;
+  --bs-btn-active-border-color: #b3924f;
+  --bs-btn-focus-shadow-rgb: 179, 146, 79;
 }
 
 .btn-danger {
   --bs-btn-color: #fff;
-  --bs-btn-bg: #b24c43;
-  --bs-btn-border-color: #b24c43;
+  --bs-btn-bg: #a8503f;
+  --bs-btn-border-color: #a8503f;
   --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #9f433b;
-  --bs-btn-hover-border-color: #953f37;
+  --bs-btn-hover-bg: #954738;
+  --bs-btn-hover-border-color: #863f31;
   --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #953f37;
-  --bs-btn-active-border-color: #8a3a33;
-  --bs-btn-disabled-bg: #b24c43;
-  --bs-btn-disabled-border-color: #b24c43;
-  --bs-btn-focus-shadow-rgb: 178, 76, 67;
+  --bs-btn-active-bg: #863f31;
+  --bs-btn-active-border-color: #78392b;
+  --bs-btn-disabled-bg: #a8503f;
+  --bs-btn-disabled-border-color: #a8503f;
+  --bs-btn-focus-shadow-rgb: 168, 80, 63;
 }
 
 .btn-outline-danger {
-  --bs-btn-color: #b24c43;
-  --bs-btn-border-color: #b24c43;
+  --bs-btn-color: #a8503f;
+  --bs-btn-border-color: #a8503f;
   --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #b24c43;
-  --bs-btn-hover-border-color: #b24c43;
+  --bs-btn-hover-bg: #a8503f;
+  --bs-btn-hover-border-color: #a8503f;
   --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #9f433b;
-  --bs-btn-active-border-color: #9f433b;
-  --bs-btn-focus-shadow-rgb: 178, 76, 67;
+  --bs-btn-active-bg: #954738;
+  --bs-btn-active-border-color: #954738;
+  --bs-btn-focus-shadow-rgb: 168, 80, 63;
+}
+
+/* rounded-pill isn't derived from --bs-border-radius in Bootstrap (it's a fixed
+   50rem utility), so the flatter, more editorial button shape needs a scoped
+   override here. Checked: rounded-pill is only ever used on <button>/<a class="btn">
+   elements across the templates (grep confirmed), never on badges or the
+   filter-pill/tag-chip components, so this can't clip anything else. */
+.btn.rounded-pill {
+  border-radius: var(--bs-border-radius) !important;
 }
 
 .btn-outline-light {
@@ -175,14 +187,45 @@ h1, h2, h3, h4, h5, h6,
 /* ---- Navbar ---- */
 .navbar-brand {
   font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 1.4rem;
-  color: var(--bs-primary) !important;
+  font-weight: 500;
+  font-size: 1.35rem;
+  color: var(--bs-emphasis-color) !important;
+}
+
+/* the wordmark's leaf glyph (see navigation.ejs) - small, quiet brand mark
+   reused nowhere else so it stays a genuine signature rather than decoration */
+.navbar-brand svg {
+  flex-shrink: 0;
+}
+
+.navbar-light .navbar-nav .nav-link {
+  position: relative;
+  padding-bottom: 2px;
 }
 
 .navbar-light .navbar-nav .nav-link.active,
 .navbar-light .navbar-nav .nav-link:hover {
-  color: var(--bs-primary) !important;
+  color: var(--bs-emphasis-color) !important;
+}
+
+/* underline-on-hover instead of a color-only active state - quieter than
+   Bootstrap's default and matches the hairline-driven look used elsewhere */
+@media (min-width: 992px) {
+  .navbar-light .navbar-nav .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 0;
+    height: 1px;
+    background: var(--bs-primary);
+    transition: width 0.2s ease;
+  }
+
+  .navbar-light .navbar-nav .nav-link.active::after,
+  .navbar-light .navbar-nav .nav-link:hover::after {
+    width: 100%;
+  }
 }
 
 /* the mobile menu (below the lg breakpoint, matching navbar-expand-lg) can be
@@ -229,9 +272,17 @@ h1, h2, h3, h4, h5, h6,
   box-shadow: 0 0 0 0.25rem var(--bs-focus-ring-color);
 }
 
-/* ---- Cards ---- */
+/* ---- Cards ----
+   Flat/hairline look instead of Bootstrap's default elevation - the new
+   identity leans on borders, not shadows. .shadow-sm is only ever applied to
+   .card elements across the templates (grep-verified), so this scoped
+   selector can't affect buttons/dropdowns/modals that also use shadow-sm. */
 .card {
   border-color: var(--bs-border-color);
+}
+
+.card.shadow-sm {
+  box-shadow: none !important;
 }
 
 /* ---- Active state (list-group, nav-pills, dropdown-item) - these default to
@@ -274,7 +325,7 @@ h1, h2, h3, h4, h5, h6,
    a layered background-image gradient. */
 .hero-section {
   background-color: var(--bs-dark);
-  background-image: linear-gradient(135deg, var(--bs-primary), var(--bs-dark));
+  background-image: linear-gradient(135deg, #4a3226, var(--bs-dark) 65%);
   overflow: hidden;
 }
 
@@ -329,9 +380,10 @@ h1, h2, h3, h4, h5, h6,
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-family: var(--font-mono);
+  font-size: 0.71875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--bs-primary-text-emphasis);
   margin-bottom: 1rem;
@@ -354,14 +406,16 @@ h1, h2, h3, h4, h5, h6,
   background: rgba(255, 253, 251, 0.8);
 }
 
-/* ---- Generic hover-lift used on service/blog/team cards ---- */
+/* ---- Generic hover-lift used on service/blog/team cards - a border-color
+   shift + small translate instead of a shadow, to match the flat/hairline
+   card look above. ---- */
 .hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .hover-lift:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--bs-box-shadow-lg);
+  transform: translateY(-3px);
+  border-color: var(--bs-emphasis-color);
 }
 
 /* ---- Fixed-size, cropped images for card partials (replaces inline
@@ -992,4 +1046,236 @@ h1, h2, h3, h4, h5, h6,
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.06em;
+}
+
+/* ================================================================
+   "Ritual" identity (v2, 2026) - new components on top of the retheme above.
+   ================================================================ */
+
+/* Generic mono utility - prices, durations, dates, badges of data rather
+   than words. Not a Bootstrap override, a genuinely new small class, used
+   deliberately and sparingly (see design rationale shared with the client). */
+.mono {
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+/* Price + duration pairing on service/package/product cards - e.g.
+   <span class="price-mono">4.500 RSD <span class="text-secondary-color">&middot; 60 min</span></span> */
+.price-mono {
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  letter-spacing: 0.01em;
+}
+
+/* Star rating + numeric average pairing (card-testimonial.ejs). Stars stay
+   Bootstrap's .text-warning (now the brass/gold token) - gold-for-rating is
+   a strong enough convention on its own to keep, rather than a templated
+   default worth overriding. The numeric value next to it is new. */
+.star-rating {
+  letter-spacing: 2px;
+}
+
+.star-rating-count {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--bs-secondary-color);
+  letter-spacing: 0;
+}
+
+/* ---- Ritual divider - the identity's signature element ----
+   A hairline rule with a few labeled ticks, used as a section transition in
+   place of the old alternating bg-white/bg-light/section-dark bands reading
+   as one undifferentiated stack. The tick labels aren't decorative filler:
+   on the homepage they name the actual phases of a treatment session
+   (Priprema / Tretman / Opuštanje), which is the one place a sequence
+   marker is earned rather than templated. Elsewhere it renders with no
+   labels, as a plain divider - see includes/components/ritual-divider.ejs. */
+.ritual-divider {
+  position: relative;
+  height: 1px;
+  background: var(--bs-border-color);
+}
+
+.ritual-divider.on-dark {
+  background: rgba(250, 247, 240, 0.2);
+}
+
+.ritual-divider .ritual-divider-ticks {
+  position: relative;
+  top: -1px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.ritual-divider-tick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bs-body-bg);
+  padding: 0 0.875rem;
+}
+
+.ritual-divider.on-dark .ritual-divider-tick {
+  background: var(--bs-dark);
+}
+
+.ritual-divider-tick .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--bs-primary);
+  flex-shrink: 0;
+}
+
+.ritual-divider-tick span {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bs-secondary-color);
+}
+
+.ritual-divider.on-dark .ritual-divider-tick span {
+  color: rgba(250, 247, 240, 0.75);
+}
+
+@media (max-width: 575.98px) {
+  .ritual-divider-tick span {
+    display: none;
+  }
+}
+
+/* ---- Ritual progress - the booking flow's step tracker (service-step,
+   slots-step, contact-step) ----
+   This IS a genuine sequence (a real 4-step booking process), so a numbered
+   indicator is earned here, unlike a numbered marker used as decoration.
+   Replaces the generic Bootstrap .progress bar + "Korak X od 4" text with a
+   tracker in the same visual language as .ritual-divider, so the booking
+   flow reads as a continuation of the marketing site's identity rather than
+   a different product bolted on. */
+.ritual-progress {
+  display: flex;
+  align-items: flex-start;
+}
+
+.ritual-progress-step {
+  flex: 1;
+  position: relative;
+  text-align: center;
+}
+
+.ritual-progress-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  width: 100%;
+  height: 1px;
+  background: var(--bs-border-color);
+  z-index: 0;
+}
+
+.ritual-progress-step.is-done:not(:last-child)::after {
+  background: var(--bs-primary);
+}
+
+.ritual-progress-dot {
+  position: relative;
+  z-index: 1;
+  width: 19px;
+  height: 19px;
+  margin: 0 auto 0.5rem;
+  border-radius: 50%;
+  border: 1px solid var(--bs-border-color);
+  background: var(--bs-body-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--bs-secondary-color);
+}
+
+.ritual-progress-step.is-done .ritual-progress-dot {
+  background: var(--bs-primary);
+  border-color: var(--bs-primary);
+  color: #fff;
+}
+
+.ritual-progress-step.is-current .ritual-progress-dot {
+  border-color: var(--bs-primary);
+  color: var(--bs-primary-text-emphasis);
+  font-weight: 700;
+}
+
+.ritual-progress-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--bs-secondary-color);
+}
+
+.ritual-progress-step.is-current .ritual-progress-label {
+  color: var(--bs-emphasis-color);
+  font-weight: 500;
+}
+
+@media (max-width: 575.98px) {
+  .ritual-progress-label {
+    font-size: 0.5625rem;
+    letter-spacing: 0.01em;
+  }
+}
+
+/* ---- FAQ accordion (includes/components/faq.ejs) - only consumer of the
+   generic Bootstrap .accordion component (grep-verified), so this can be a
+   direct override rather than a new class. Hairline dividers between
+   questions instead of separate bordered/shadowed boxes, to match the rest
+   of the flat "Ritual" identity. ---- */
+.accordion-item {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.accordion-item:first-of-type,
+.accordion-item:last-of-type {
+  border-radius: 0;
+}
+
+.accordion-button {
+  background: transparent;
+  padding: 1.125rem 0.25rem;
+  font-weight: 600;
+  box-shadow: none !important;
+}
+
+.accordion-button:not(.collapsed) {
+  background: transparent;
+  color: var(--bs-emphasis-color);
+}
+
+.accordion-button::after {
+  /* Bootstrap's chevron SVG is baked in with a hardcoded stroke color that
+     doesn't follow --bs-primary at runtime, unlike the rest of this file -
+     a plain +/- via content is simpler and stays in the same mono-adjacent,
+     unfussy register as the rest of the identity. */
+  content: "+";
+  background-image: none !important;
+  font-family: var(--font-mono);
+  font-size: 1.125rem;
+  color: var(--bs-primary-text-emphasis);
+  transition: none;
+}
+
+.accordion-button:not(.collapsed)::after {
+  content: "\2013";
+  transform: none;
+}
+
+.accordion-body {
+  padding: 0 0.25rem 1.25rem;
+  color: var(--bs-secondary-color);
 }

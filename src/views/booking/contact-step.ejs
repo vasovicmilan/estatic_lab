@@ -5,12 +5,7 @@
   <%- include("../includes/breadcrumbs") %>
   <%- include("../includes/flash-messages") %>
 
-  <div class="mb-4">
-    <div class="progress" style="height: 6px;">
-      <div class="progress-bar" style="width: 75%"></div>
-    </div>
-    <p class="text-muted small mt-1">Korak 3 od 4 - Vasi podaci</p>
-  </div>
+  <%- include("../includes/components/booking-progress", { step: 3 }) %>
 
   <div class="row">
     <div class="col-md-7">
@@ -108,10 +103,10 @@
           <dl class="row small mb-0">
             <dt class="col-6 text-muted">Usluga</dt><dd class="col-6"><%= data.service.naziv %></dd>
             <dt class="col-6 text-muted">Varijanta</dt><dd class="col-6"><%= data.variant.naziv %></dd>
-            <dt class="col-6 text-muted">Trajanje</dt><dd class="col-6"><%= data.variant.trajanje %> min</dd>
-            <dt class="col-6 text-muted">Termin</dt><dd class="col-6"><%= data.slot.formatirano %></dd>
+            <dt class="col-6 text-muted">Trajanje</dt><dd class="col-6 mono"><%= data.variant.trajanje %> min</dd>
+            <dt class="col-6 text-muted">Termin</dt><dd class="col-6 mono"><%= data.slot.formatirano %></dd>
             <dt class="col-6 text-muted">Cena</dt>
-            <dd class="col-6">
+            <dd class="col-6 price-mono">
               <% if (data.usablePackagePurchase) { %>
                 <span id="priceDisplay"><%= data.variant.cena %> <span class="text-muted small">(0 <%= currencySymbol %> ako plaćate iz paketa)</span></span>
               <% } else { %>

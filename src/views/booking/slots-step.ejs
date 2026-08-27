@@ -5,12 +5,7 @@
       <%- include("../includes/breadcrumbs") %>
         <%- include("../includes/flash-messages") %>
 
-          <div class="mb-4">
-            <div class="progress" style="height: 6px;">
-              <div class="progress-bar" style="width: 50%"></div>
-            </div>
-            <p class="text-muted small mt-1">Korak 2 od 4 - Izbor termina</p>
-          </div>
+          <%- include("../includes/components/booking-progress", { step: 2 }) %>
 
           <h1 class="h3 mb-4">
             <%= data.service.naziv %> - <%= data.variant.naziv %>
@@ -47,7 +42,7 @@
                     data.variant.id, startTime: start.toISOString(), employeeId: slot.terapeutId || '' , }); %>
                     <div class="col-auto">
                       <a href="/zakazivanje/<%= data.service.slug %>/podaci?<%= params.toString() %>"
-                        class="btn btn-outline-primary">
+                        class="btn btn-outline-primary mono">
                         <%= slot.vreme %>
                       </a>
                     </div>

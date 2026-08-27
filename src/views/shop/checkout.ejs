@@ -123,14 +123,14 @@
           <% data.cart.stavke.forEach(function(item) { %>
             <li class="list-group-item d-flex justify-content-between">
               <span><%= item.naziv %> (<%= item.varijanta %>) &times; <%= item.kolicina %></span>
-              <strong><%= item.ukupno %> <%= currencySymbol %></strong>
+              <strong class="price-mono"><%= item.ukupno %> <%= currencySymbol %></strong>
             </li>
           <% }) %>
         </ul>
         <div class="card-body">
           <div class="d-flex justify-content-between">
             <span class="text-muted">Ukupno</span>
-            <strong><%= data.cart.ukupnaCena %> <%= currencySymbol %></strong>
+            <strong class="price-mono"><%= data.cart.ukupnaCena %> <%= currencySymbol %></strong>
           </div>
         </div>
       </div>

@@ -92,11 +92,11 @@
                   <span class="badge <%= variant.najbolji ? 'text-bg-warning' : 'text-bg-secondary' %> mb-2 align-self-start"><%= variant.oznaka || "Najbolja vrednost" %></span>
                 <% } %>
                 <h3 class="h5"><%= variant.naziv %></h3>
-                <p class="text-muted small"><%= variant.trajanje %> &middot; <%= variant.brojSeansi %> seansi</p>
+                <p class="text-muted small mono"><%= variant.trajanje %> &middot; <%= variant.brojSeansi %> seansi</p>
                 <div class="mt-auto pt-2 border-top">
                   <div class="d-flex align-items-baseline gap-2 mb-3">
-                    <strong class="fs-5"><%= variant.cena %></strong>
-                    <% if (variant.staraCena) { %><span class="text-muted text-decoration-line-through small"><%= variant.staraCena %></span><% } %>
+                    <strong class="fs-5 price-mono"><%= variant.cena %></strong>
+                    <% if (variant.staraCena) { %><span class="text-muted text-decoration-line-through small price-mono"><%= variant.staraCena %></span><% } %>
                   </div>
                   <a href="/zakazivanje/<%= data.service.slug %>/termin?servicePackageId=<%= variant.id %>" class="btn btn-primary rounded-pill w-100">Zakaži</a>
                 </div>

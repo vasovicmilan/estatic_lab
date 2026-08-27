@@ -1,0 +1,22 @@
+<%
+  // Ritual divider - the identity's signature element (see styles.css for the
+  // design rationale). Pass { ticks: [...] } to render labeled phase markers -
+  // only where the labels genuinely mean something (currently just the
+  // homepage hero, since what follows is organized the same way a treatment
+  // session is: prep, the treatment itself, winding down). Pass { onDark: true }
+  // when the divider sits on a dark section background. Both are optional -
+  // called with no locals it's a plain hairline divider.
+  const dividerTicks = typeof ticks !== "undefined" && Array.isArray(ticks) ? ticks : [];
+  const dividerOnDark = typeof onDark !== "undefined" && onDark;
+%>
+<div class="ritual-divider <%= dividerOnDark ? 'on-dark' : '' %>">
+  <% if (dividerTicks.length > 0) { %>
+    <div class="container">
+      <div class="ritual-divider-ticks">
+        <% dividerTicks.forEach(function(tick) { %>
+          <div class="ritual-divider-tick"><span class="dot"></span><span><%= tick %></span></div>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+</div>
