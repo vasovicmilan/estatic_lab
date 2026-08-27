@@ -69,4 +69,43 @@ describe("scheduler", () => {
       assert.equal(options.timezone, "Europe/Belgrade");
     }
   });
+
+  it("REGRESSION: every date-sensitive job is registered as a wrapping closure, not passed directly - so node-cron's TaskContext argument can never reach the job's own `now` parameter", async () => {
+    // node-cron v4's TaskFn is always invoked with a TaskContext object, never
+    // with zero arguments/undefined (see node_modules/node-cron/dist/
+    // node-cron.d.ts). Every job below has a `now = new Date()` default
+    // parameter meant to only apply when called with no argument at all -
+    // registering `runDailyBusinessReport` directly (instead of
+    // `() => runDailyBusinessReport()`) would silently bind `now` to
+    // node-cron's TaskContext object instead, and downstream date arithmetic
+    // on that non-Date value is what produced "RangeError: Invalid time
+    // value" in production. Verified here structurally (is the registered
+    // function referentially distinct from the imported job function, i.e.
+    // actually wrapped) rather than by invoking the real jobs, since their
+    // runJob() wrapper swallows all internal errors - calling them for real
+    // would pass this assertion either way and prove nothing.
+    process.env.NODE_APP_INSTANCE = "0";
+    const startScheduler = await importFreshScheduler();
+    const reportJobsMod = await import("../../../src/jobs/report-jobs.js");
+    const businessReportJobsMod = await import("../../../src/jobs/business-report-jobs.js");
+
+    const dateSensitiveJobs = [
+      reportJobsMod.runDailyLogReport,
+      reportJobsMod.runWeeklyLogReport,
+      reportJobsMod.runMonthlyLogReport,
+      reportJobsMod.runYearlyLogReport,
+      businessReportJobsMod.runDailyBusinessReport,
+      businessReportJobsMod.runWeeklyBusinessReport,
+      businessReportJobsMod.runMonthlyBusinessReport,
+      businessReportJobsMod.runQuarterlyBusinessReport,
+      businessReportJobsMod.runYearlyBusinessReport,
+    ];
+
+    startScheduler();
+
+    const registeredFns = scheduleMock.mock.calls.map((call) => call.arguments[1]);
+    for (const jobFn of dateSensitiveJobs) {
+      assert.ok(registeredFns.includes(jobFn) === false, `${jobFn.name} must be registered as () => ${jobFn.name}(), not passed directly`);
+    }
+  });
 });
