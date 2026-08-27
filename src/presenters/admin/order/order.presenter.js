@@ -23,6 +23,8 @@ export function prepareOrderListData(result, query = {}) {
       { label: "Porudžbine", url: null },
     ],
     topbar: {
+      createUrl: "/admin/porudzbine/rucno-kreiranje",
+      createLabel: "Nova porudžbina (ručno)",
       searchUrl: "/admin/porudzbine/pretraga",
       search: query.search || "",
       filters: [

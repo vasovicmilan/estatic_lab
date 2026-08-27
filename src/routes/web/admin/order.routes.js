@@ -1,9 +1,11 @@
 import { Router } from "express";
 import * as OrderController from "../../../controllers/web/admin/order/order.controller.js";
+import * as ManualOrderController from "../../../controllers/web/admin/order/manual-order.controller.js";
 import {
   validateOrderCancel,
   validateOrderReturn,
   validateOrderContactUpdate,
+  validateManualOrderCreate,
   validateOrderId,
 } from "../../../middlewares/validators/order.validator.js";
 import { validateSearch } from "../../../middlewares/validators/search.validator.js";
@@ -11,6 +13,8 @@ import { validateSearch } from "../../../middlewares/validators/search.validator
 const router = Router();
 
 router.get("/", validateSearch, OrderController.listOrders);
+router.get("/rucno-kreiranje", ManualOrderController.newManualOrderForm);
+router.post("/rucno-kreiranje", validateManualOrderCreate, ManualOrderController.createManualOrder);
 router.get("/detalji/:orderId", validateOrderId, OrderController.orderDetails);
 
 router.put("/:orderId/obradi", validateOrderId, OrderController.markProcessing);

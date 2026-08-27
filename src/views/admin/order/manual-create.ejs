@@ -1,0 +1,147 @@
+<%- include("../../includes/head") %>
+<%- include("../../includes/navigation") %>
+
+<main class="container-fluid py-4">
+  <%- include("../../includes/breadcrumbs") %>
+  <%- include("../../includes/flash-messages") %>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-body">
+          <p class="text-muted small mb-3">
+            Za telefonske porudžbine, poklone, ili artikle sa "cenom na upit" nakon dogovora sa kupcem. Cena se po potrebi može ručno podesiti, nezavisno od kataloške cene proizvoda.
+          </p>
+
+          <form method="POST" action="<%= data.formAction %>" novalidate data-manual-order-form>
+            <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+
+            <% if (typeof data.errors !== 'undefined' && data.errors.general) { %>
+              <div class="alert alert-danger" role="alert"><%= data.errors.general %></div>
+            <% } %>
+
+            <div class="row g-3">
+              <div class="col-md-6 mb-3">
+                <label for="productId" class="form-label">Proizvod</label>
+                <select class="form-select" id="productId" name="productId" required data-manual-product-select>
+                  <option value="">Izaberite...</option>
+                  <% data.products.forEach(function(p) { %>
+                    <option value="<%= p.id %>"<% if (p.priceOnRequest) { %> data-price-on-request="1"<% } %>><%= p.name %><%= p.priceOnRequest ? " (cena na upit)" : "" %></option>
+                  <% }) %>
+                </select>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="variantId" class="form-label">Varijanta</label>
+                <select class="form-select" id="variantId" name="variantId" required data-manual-variant-select disabled>
+                  <option value="">Prvo izaberite proizvod</option>
+                </select>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="quantity" class="form-label">Količina</label>
+                <input type="number" class="form-control" id="quantity" name="quantity" min="1" value="1" required>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="shipping" class="form-label">Cena dostave (<%= currencySymbol %>, opciono)</label>
+                <input type="number" class="form-control" id="shipping" name="shipping" min="0" step="0.01" placeholder="0">
+              </div>
+
+              <div class="col-12">
+                <hr>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" id="useExistingUser" data-manual-existing-user-toggle>
+                  <label class="form-check-label" for="useExistingUser">Postojeći registrovani korisnik</label>
+                </div>
+              </div>
+
+              <div class="col-md-8 mb-3" data-manual-existing-user-field style="display:none;">
+                <label for="existingUserId" class="form-label">Korisnik</label>
+                <select class="form-select" id="existingUserId" name="existingUserId">
+                  <option value="">Izaberite...</option>
+                  <% data.userOptions.forEach(function(u) { %>
+                    <option value="<%= u.value %>"><%= u.label %></option>
+                  <% }) %>
+                </select>
+                <div class="form-text">Ime i email preuzimaju se iz naloga korisnika, osim ako ih dole izričito unesete.</div>
+              </div>
+
+              <div class="col-md-6 mb-3" data-manual-contact-field>
+                <label for="firstName" class="form-label">Ime</label>
+                <input type="text" class="form-control" id="firstName" name="firstName" required data-manual-contact-required>
+              </div>
+              <div class="col-md-6 mb-3" data-manual-contact-field>
+                <label for="lastName" class="form-label">Prezime</label>
+                <input type="text" class="form-control" id="lastName" name="lastName">
+              </div>
+              <div class="col-md-6 mb-3" data-manual-contact-field>
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" required data-manual-contact-required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="phone" class="form-label">Telefon</label>
+                <input type="text" class="form-control" id="phone" name="phone" required>
+              </div>
+
+              <div class="col-12">
+                <hr>
+                <h2 class="h6">Adresa za dostavu</h2>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="addressCity" class="form-label">Grad</label>
+                <input type="text" class="form-control" id="addressCity" name="address[city]" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="addressPostalCode" class="form-label">Poštanski broj</label>
+                <input type="text" class="form-control" id="addressPostalCode" name="address[postalCode]" required>
+              </div>
+              <div class="col-md-8 mb-3">
+                <label for="addressStreet" class="form-label">Ulica</label>
+                <input type="text" class="form-control" id="addressStreet" name="address[street]" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="addressNumber" class="form-label">Broj</label>
+                <input type="text" class="form-control" id="addressNumber" name="address[number]" required>
+              </div>
+
+              <div class="col-12">
+                <hr>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" id="overridePrice" name="overridePrice" value="1" data-manual-override-toggle>
+                  <label class="form-check-label" for="overridePrice">Ručno podesi cenu artikla</label>
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3" data-manual-override-field style="display:none;">
+                <label for="priceOverride" class="form-label">Cena po komadu (<%= currencySymbol %>)</label>
+                <input type="number" class="form-control" id="priceOverride" name="priceOverride" min="0" step="0.01">
+                <div class="form-text">Ova cena u potpunosti zamenjuje kataloušku cenu varijante - koristi se za "cena na upit" artikle nakon dogovora sa kupcem.</div>
+              </div>
+
+              <div class="col-12 mb-3">
+                <label for="note" class="form-label">Napomena (opciono)</label>
+                <textarea class="form-control" id="note" name="note" rows="2" placeholder="npr. „dogovorena cena telefonom, pošiljka br. ...”"></textarea>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+              <button type="submit" class="btn btn-primary">Kreiraj porudžbinu</button>
+              <a href="<%= data.cancelUrl %>" class="btn btn-outline-secondary">Otkaži</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  window.__manualOrderData = {
+    products: <%- JSON.stringify(data.products) %>,
+  };
+</script>
+<script src="/js/admin-manual-order.js"></script>
+
+<%- include("../../includes/footer") %>
