@@ -141,11 +141,20 @@ export async function aggregateCoupons(periodStart, periodEnd) {
 }
 
 export async function upsertSummary(periodType, periodKey, data) {
+  // .lean() is required here, not optional: the only consumer of this
+  // function's return value (email.service.js's sendBusinessReportEmail)
+  // does `{ periodLabel, dateRangeLabel, ...summary }` to build the EJS
+  // template locals. Spreading a hydrated Mongoose Document only copies its
+  // own enumerable properties ($__, _doc) - schema fields like `appointments`
+  // live inside _doc and vanish from the spread, not merely as `undefined`
+  // but as an absent key, which is why the template failed with "appointments
+  // is not defined" rather than a "cannot read property of undefined" error.
+  // findSummary/listSummaries below already use .lean() for the same reason.
   return BusinessReportSummary.findOneAndUpdate({ periodType, periodKey }, data, {
     upsert: true,
     returnDocument: "after",
     setDefaultsOnInsert: true,
-  });
+  }).lean();
 }
 
 export async function findSummary(periodType, periodKey) {

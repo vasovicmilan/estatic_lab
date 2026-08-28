@@ -4,10 +4,18 @@ import {
   prepareBusinessReportHistoryData,
   prepareBusinessReportDetailData,
 } from "../../../../presenters/admin/reports/business-report.presenter.js";
+import { generateBusinessReportPdf } from "../../../../utils/business-report-pdf.util.js";
 import { logError } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 
 const PERIOD_TYPES = ["daily", "weekly", "monthly", "quarterly", "yearly"];
+const PERIOD_LABELS = {
+  daily: "Dnevni poslovni izveštaj",
+  weekly: "Nedeljni poslovni izveštaj",
+  monthly: "Mesečni poslovni izveštaj",
+  quarterly: "Kvartalni poslovni izveštaj",
+  yearly: "Godišnji poslovni izveštaj",
+};
 
 export async function businessReportDashboard(req, res, next) {
   try {
@@ -73,4 +81,33 @@ export async function businessReportDetail(req, res, next) {
   }
 }
 
-export default { businessReportDashboard, businessReportHistoryList, businessReportDetail };
+export async function businessReportDownloadPdf(req, res, next) {
+  try {
+    const { periodType, periodKey } = req.params;
+    if (!PERIOD_TYPES.includes(periodType)) {
+      return flashAndRedirect(req, res, "error", "Nepoznat tip perioda", "/admin/poslovni-izvestaji");
+    }
+
+    // Deliberately the RAW summary (businessReportService.getSummary, not run
+    // through prepareBusinessReportDetailData) - the presenter above already
+    // formats every number through formatMoney() for HTML display, and
+    // generateBusinessReportPdf does that formatting itself. Feeding it the
+    // presenter's already-formatted strings would double-format them.
+    const summary = await businessReportService.getSummary(periodType, periodKey);
+    if (!summary) {
+      return flashAndRedirect(req, res, "error", `Nema sačuvanog izveštaja za ${periodKey}`, `/admin/poslovni-izvestaji/istorija/${periodType}`);
+    }
+
+    const rangeLabel = `${new Date(summary.periodStart).toLocaleDateString("sr-RS")} - ${new Date(summary.periodEnd.getTime() - 1).toLocaleDateString("sr-RS")}`;
+    const pdfBuffer = await generateBusinessReportPdf(PERIOD_LABELS[periodType], rangeLabel, summary);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="poslovni-izvestaj-${periodKey}.pdf"`);
+    return res.send(pdfBuffer);
+  } catch (error) {
+    logError("[businessReportDownloadPdf] Greška pri generisanju PDF izveštaja", error, { ...req.params, userId: req.session?.user?.id });
+    next(error);
+  }
+}
+
+export default { businessReportDashboard, businessReportHistoryList, businessReportDetail, businessReportDownloadPdf };

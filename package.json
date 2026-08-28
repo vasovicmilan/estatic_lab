@@ -15,7 +15,12 @@
     "report:daily": "NODE_ENV=production node scripts/daily-log-report.js",
     "report:weekly": "NODE_ENV=production node scripts/weekly-log-report.js",
     "report:monthly": "NODE_ENV=production node scripts/monthly-log-report.js",
-    "report:yearly": "NODE_ENV=production node scripts/yearly-log-report.js"
+    "report:yearly": "NODE_ENV=production node scripts/yearly-log-report.js",
+    "report:business-daily": "NODE_ENV=production node scripts/daily-business-report.js",
+    "report:business-weekly": "NODE_ENV=production node scripts/weekly-business-report.js",
+    "report:business-monthly": "NODE_ENV=production node scripts/monthly-business-report.js",
+    "report:business-quarterly": "NODE_ENV=production node scripts/quarterly-business-report.js",
+    "report:business-yearly": "NODE_ENV=production node scripts/yearly-business-report.js"
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",

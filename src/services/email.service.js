@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import { sendEmail } from "../integrations/email/email.provider.js";
 import { logError } from "../utils/logger.util.js";
 import { generateOrderInvoicePdf } from "../utils/invoice-pdf.util.js";
+import { generateBusinessReportPdf } from "../utils/business-report-pdf.util.js";
 import { infoRow, infoTable, statusTone, badge, ctaButton, linkFallback, couponBlock } from "../utils/email-content.util.js";
 import { formatDateTime } from "../utils/date.time.util.js";
 import { getCurrency } from "../config/runtime-settings.cache.js";
@@ -299,7 +300,19 @@ export async function sendLogReportEmail(periodLabel, dateRangeLabel, summary, a
 // different questions for a different reason to care.
 export async function sendBusinessReportEmail(periodLabel, dateRangeLabel, summary) {
   const html = await renderTemplate("admin-business-report", { periodLabel, dateRangeLabel, ...summary });
-  return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("POSLOVNI IZVEŠTAJ", `${periodLabel} (${dateRangeLabel})`), html });
+
+  // Same "never let a PDF failure block the email itself" pattern as
+  // sendOrderReceivedEmail's invoice attachment above - the HTML report is
+  // the essential part, the PDF is a nice-to-have printable/archivable copy.
+  let attachments = [];
+  try {
+    const pdfBuffer = await generateBusinessReportPdf(periodLabel, dateRangeLabel, summary);
+    attachments = [{ filename: `poslovni-izvestaj-${summary.periodKey}.pdf`, content: pdfBuffer, contentType: "application/pdf" }];
+  } catch (error) {
+    logError("[EMAIL] Failed to generate business report PDF - sending report without it", error, { periodLabel, periodKey: summary.periodKey });
+  }
+
+  return sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("POSLOVNI IZVEŠTAJ", `${periodLabel} (${dateRangeLabel})`), html, attachments });
 }
 
 export default {

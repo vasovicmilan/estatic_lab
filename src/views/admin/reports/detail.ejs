@@ -7,7 +7,12 @@
 
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0"><%= data.summary.periodLabel %> izveštaj - <%= data.summary.periodKey %></h1>
-    <a href="<%= data.backUrl %>" class="btn btn-outline-secondary btn-sm">&larr; Nazad na istoriju</a>
+    <div class="d-flex gap-2">
+      <a href="/admin/poslovni-izvestaji/istorija/<%= data.summary.periodType %>/<%= data.summary.periodKey %>/pdf" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-file-earmark-pdf"></i> Preuzmi PDF
+      </a>
+      <a href="<%= data.backUrl %>" class="btn btn-outline-secondary btn-sm">&larr; Nazad na istoriju</a>
+    </div>
   </div>
 
   <% if (!data.summary) { %>
