@@ -1,5 +1,6 @@
 import PDFDocument from "pdfkit";
 import { formatMoney } from "./price.util.js";
+import { registerReportFonts } from "./pdf-fonts.util.js";
 
 const COMPANY = {
   name: "Estetik Lab wellness centar",
@@ -48,6 +49,9 @@ export function generateBusinessReportPdf(periodLabel, dateRangeLabel, summary) 
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
+    registerReportFonts(doc);
+    doc.font("Body");
+
     function ensureSpace(neededHeight) {
       if (doc.y + neededHeight > doc.page.height - MIN_BOTTOM_MARGIN) {
         doc.addPage();
@@ -57,9 +61,9 @@ export function generateBusinessReportPdf(periodLabel, dateRangeLabel, summary) 
     function sectionHeading(text) {
       ensureSpace(40);
       doc.moveDown(0.8);
-      doc.fontSize(13).fillColor("#000").font("Helvetica-Bold").text(text);
+      doc.fontSize(13).fillColor("#000").font("Body-Bold").text(text);
       doc.moveDown(0.3);
-      doc.font("Helvetica");
+      doc.font("Body");
     }
 
     // A simple two-column label/value line - the PDF equivalent of the email
@@ -68,22 +72,23 @@ export function generateBusinessReportPdf(periodLabel, dateRangeLabel, summary) 
     // any number of stats without needing fixed column math).
     function statLine(label, value) {
       ensureSpace(18);
-      doc.fontSize(9).fillColor("#666").text(label, PAGE.left, doc.y, { continued: false });
-      doc.fontSize(11).fillColor("#000").text(String(value), PAGE.left, doc.y);
+      doc.font("Body").fontSize(9).fillColor("#666").text(label, PAGE.left, doc.y, { continued: false });
+      doc.font("Mono").fontSize(11).fillColor("#000").text(String(value), PAGE.left, doc.y);
+      doc.font("Body");
       doc.moveDown(0.4);
     }
 
     function breakdownTable(items, emptyText, showValue) {
       ensureSpace(30);
       if (!items || items.length === 0) {
-        doc.fontSize(9).fillColor("#999").text(emptyText);
+        doc.font("Body").fontSize(9).fillColor("#999").text(emptyText);
         doc.moveDown(0.5);
         return;
       }
 
       const col = { label: PAGE.left, count: 380, value: 460 };
       ensureSpace(16);
-      doc.fontSize(8).fillColor("#666");
+      doc.font("Body").fontSize(8).fillColor("#666");
       doc.text("Stavka", col.label, doc.y, { continued: true, width: col.count - col.label });
       doc.text("Broj", col.count, doc.y, { continued: true, width: col.value - col.count });
       if (showValue) doc.text("Vrednost", col.value, doc.y);
@@ -91,11 +96,12 @@ export function generateBusinessReportPdf(periodLabel, dateRangeLabel, summary) 
       doc.moveTo(PAGE.left, doc.y + 2).lineTo(PAGE.right, doc.y + 2).strokeColor("#ccc").stroke();
       doc.moveDown(0.4);
 
-      doc.fontSize(9).fillColor("#000");
       items.forEach((item) => {
         ensureSpace(16);
         const rowY = doc.y;
+        doc.font("Body").fontSize(9).fillColor("#000");
         doc.text(item.label, col.label, rowY, { width: col.count - col.label - 10 });
+        doc.font("Mono").fontSize(9).fillColor("#000");
         doc.text(String(item.count), col.count, rowY, { width: col.value - col.count - 10 });
         if (showValue) doc.text(formatMoney(item.value), col.value, rowY, { width: PAGE.right - col.value });
         doc.moveDown(0.35);
@@ -104,12 +110,12 @@ export function generateBusinessReportPdf(periodLabel, dateRangeLabel, summary) 
     }
 
     // ---- Header ----
-    doc.fontSize(18).fillColor("#000").font("Helvetica-Bold").text(COMPANY.name);
-    doc.font("Helvetica").fontSize(9).fillColor("#666").text(COMPANY.address).text(COMPANY.email);
+    doc.fontSize(18).fillColor("#000").font("Body-Bold").text(COMPANY.name);
+    doc.font("Body").fontSize(9).fillColor("#666").text(COMPANY.address).text(COMPANY.email);
     doc.moveDown(1.2);
 
-    doc.fillColor("#000").fontSize(15).font("Helvetica-Bold").text(periodLabel);
-    doc.font("Helvetica").fontSize(9).fillColor("#666").text(`Period: ${dateRangeLabel}`);
+    doc.fillColor("#000").fontSize(15).font("Body-Bold").text(periodLabel);
+    doc.font("Body").fontSize(9).fillColor("#666").text(`Period: ${dateRangeLabel}`);
     doc.moveDown(0.5);
 
     const { appointments, orders, packages, commissions, coupons } = summary;
@@ -120,8 +126,8 @@ export function generateBusinessReportPdf(periodLabel, dateRangeLabel, summary) 
     statLine("Prihod od termina", formatMoney(appointments.revenue));
     statLine("Stopa ne-pojavljivanja", `${appointments.noShowRate}%`);
     statLine("Po statusu", statusSummary(appointments.byStatus));
-    doc.fontSize(10).font("Helvetica-Bold").fillColor("#000").text("Po zaposlenom");
-    doc.font("Helvetica");
+    doc.fontSize(10).font("Body-Bold").fillColor("#000").text("Po zaposlenom");
+    doc.font("Body");
     breakdownTable(appointments.byEmployee, "Nema završenih termina u ovom periodu.", true);
 
     // ---- Prodavnica ----
@@ -130,8 +136,8 @@ export function generateBusinessReportPdf(periodLabel, dateRangeLabel, summary) 
     statLine("Prihod od porudžbina", formatMoney(orders.revenue));
     statLine("Prosečna vrednost porudžbine", formatMoney(orders.avgOrderValue));
     statLine("Po statusu", statusSummary(orders.byStatus));
-    doc.fontSize(10).font("Helvetica-Bold").fillColor("#000").text("Po proizvodu");
-    doc.font("Helvetica");
+    doc.fontSize(10).font("Body-Bold").fillColor("#000").text("Po proizvodu");
+    doc.font("Body");
     breakdownTable(orders.byProduct, "Nema završenih porudžbina u ovom periodu.", true);
 
     // ---- Paketi ----
@@ -154,7 +160,7 @@ export function generateBusinessReportPdf(periodLabel, dateRangeLabel, summary) 
 
     doc.moveDown(1.5);
     ensureSpace(24);
-    doc.fontSize(8).fillColor("#999").text(
+    doc.font("Body").fontSize(8).fillColor("#999").text(
       `Automatski generisan izveštaj - ${new Date().toLocaleString("sr-RS")}.`,
       PAGE.left,
       doc.y,

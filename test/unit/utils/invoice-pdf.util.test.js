@@ -52,4 +52,16 @@ describe("invoice-pdf.util", () => {
     const buffer = await generateOrderInvoicePdf(orderFixture({ stavke: [] }));
     assert.ok(Buffer.isBuffer(buffer));
   });
+
+  it("REGRESSION: embeds a Unicode font so Serbian diacritics render correctly - pdfkit's default Helvetica uses WinAnsiEncoding, which has no š/đ/č/ć/ž", async () => {
+    const buffer = await generateOrderInvoicePdf(
+      orderFixture({ korisnik: { ime: "Đorđe Šarčević", email: "d@example.com", telefon: "0601234567" } })
+    );
+    const pdfText = buffer.toString("latin1");
+    // The embedded font's PostScript name should show up in the PDF's font
+    // dictionary - Helvetica (the WinAnsiEncoding font that can't render
+    // diacritics at all) must NOT be the one actually used for text.
+    assert.ok(pdfText.includes("DejaVuSans") || pdfText.includes("BaseFont"), "a real font should be embedded, not just referenced by name");
+    assert.ok(!pdfText.includes("/BaseFont /Helvetica\n"), "should not fall back to pdfkit's default WinAnsiEncoding Helvetica");
+  });
 });

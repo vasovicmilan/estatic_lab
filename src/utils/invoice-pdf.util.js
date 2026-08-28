@@ -1,4 +1,5 @@
 import PDFDocument from "pdfkit";
+import { registerReportFonts } from "./pdf-fonts.util.js";
 
 const COMPANY = {
   name: "Estetik Lab wellness centar",
@@ -19,6 +20,14 @@ export function generateOrderInvoicePdf(order) {
     doc.on("data", (chunk) => chunks.push(chunk));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
+
+    // This file never called .font() before, so it silently rode on pdfkit's
+    // default (Helvetica, WinAnsiEncoding) - which doesn't have š/đ/č/ć/ž,
+    // present right in this file's own "Ovo je automatski generisana potvrda
+    // porudžbine i ne predstavlja fiskalni račun." footer line below. See
+    // pdf-fonts.util.js for the full explanation.
+    registerReportFonts(doc);
+    doc.font("Body");
 
     doc.fontSize(18).text(COMPANY.name, { align: "left" });
     doc.fontSize(9).fillColor("#666").text(COMPANY.address).text(COMPANY.email);

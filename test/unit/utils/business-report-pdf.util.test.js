@@ -69,4 +69,13 @@ describe("business-report-pdf.util", () => {
     const buffer = await generateBusinessReportPdf("x", "y", summaryFixture({ coupons: { totalRedemptions: 0, totalDiscountGiven: 0, byCoupon: [] } }));
     assert.ok(Buffer.isBuffer(buffer));
   });
+
+  it("REGRESSION: embeds a Unicode font so Serbian diacritics render correctly - pdfkit's default Helvetica uses WinAnsiEncoding, which has no š/đ/č/ć/ž (present throughout this report's own labels: 'Prosečna vrednost', 'Povraćaj novca', 'Ukupno iskorišćeno')", async () => {
+    const buffer = await generateBusinessReportPdf("Dnevni poslovni izveštaj", "27.08.2026 - 27.08.2026", summaryFixture({
+      appointments: { ...summaryFixture().appointments, byEmployee: [{ label: "Nikolina Đukić", count: 1, value: 1000 }] },
+    }));
+    const pdfText = buffer.toString("latin1");
+    assert.ok(pdfText.includes("DejaVuSans"), "a real Unicode font should be embedded");
+    assert.ok(!pdfText.includes("/BaseFont /Helvetica\n"), "should not fall back to pdfkit's default WinAnsiEncoding Helvetica");
+  });
 });
