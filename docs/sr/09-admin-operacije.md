@@ -44,4 +44,4 @@ Ovo je namerno odvojeno od `business.config.js`, koji ostaje statičan, kod-defi
 
 ## Nadzor i izveštavanje
 
-Administratori imaju pristup operativnom izveštavanju i tragu odgovornosti koji pokriva akcije preduzete na platformi — u potpunosti pokriveno u `10-logovi-i-revizija.md`.
+Administratori imaju pristup operativnom izveštavanju i tragu odgovornosti koji pokriva akcije preduzete na platformi — u potpunosti pokriveno u `10-logovi-i-revizija.md`. Odvojeno od toga, administratori vide i poslovne brojke — zakazivanja, prodaju, provizije, kupone — pokriveno u `13-poslovni-izvestaji.md`.

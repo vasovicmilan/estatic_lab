@@ -98,6 +98,11 @@ export function prepareProductDetailsData(product) {
           ]
         : []),
       {
+        title: "Duži opis",
+        type: "blocks",
+        blocks: product.dugiOpis,
+      },
+      {
         title: "Varijante",
         type: "variants",
         variants: product.varijante,

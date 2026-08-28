@@ -44,4 +44,4 @@ This is deliberately separate from `business.config.js`, which stays a static, c
 
 ## Oversight and reporting
 
-Administrators have access to operational reporting and an accountability trail covering actions taken across the platform — covered in full in `10-logs-and-audit-trail.md`.
+Administrators have access to operational reporting and an accountability trail covering actions taken across the platform — covered in full in `10-logs-and-audit-trail.md`. Separately, administrators also see the business numbers — bookings, sales, commissions, coupons — covered in `13-business-reports.md`.

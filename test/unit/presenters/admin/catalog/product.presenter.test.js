@@ -119,6 +119,19 @@ describe("prepareProductDetailsData", () => {
     assert.equal(faqSection.rows[0].label, "Da li radi na struju?");
     assert.equal(faqSection.rows[0].value, "Da.");
   });
+
+  it("REGRESSION: includes a 'Duži opis' blocks section using the mapper's already-rendered dugiOpis field - this section was entirely missing, so the migrated content-blocks long description never showed up in the admin detail view at all", () => {
+    const dugiOpis = [
+      { tip: "heading", tekst: "O proizvodu", nivo: 2 },
+      { tip: "paragraph", tekst: "Opis proizvoda." },
+    ];
+    const view = prepareProductDetailsData(buildMappedProduct({ dugiOpis }));
+    const section = view.sections.find((s) => s.title === "Duži opis");
+
+    assert.ok(section, "a 'Duži opis' section must exist");
+    assert.equal(section.type, "blocks");
+    assert.equal(section.blocks, dugiOpis);
+  });
 });
 
 describe("prepareProductCreateStep1Data", () => {

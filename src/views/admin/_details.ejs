@@ -42,6 +42,9 @@
                 </ul>
               <% } %>
             <% } else if (section.type === 'blocks') { %>
+              <% if (!section.blocks || section.blocks.length === 0) { %>
+                <p class="text-muted mb-0">Nema sadržaja.</p>
+              <% } %>
               <% (section.blocks || []).forEach(function(block) { %>
                 <% if (block.tip === 'heading') { %>
                   <h4><%= block.tekst %></h4>
