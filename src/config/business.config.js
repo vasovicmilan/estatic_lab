@@ -22,8 +22,8 @@ export const BUSINESS = {
   // there's a real PIB/matični broj to show instead of displaying a blank
   // or a fake-looking value. Fill in once the registration is done - no
   // other file needs to change.
-  taxId: null, // PIB
-  registrationNumber: null, // Matični broj
+  taxId: "100154658", // PIB
+  registrationNumber: "07566905", // Matični broj
 
   address: {
     streetAddress: "Maksima Gorkog 6b",
