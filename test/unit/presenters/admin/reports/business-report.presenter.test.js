@@ -46,6 +46,18 @@ describe("business-report.presenter (admin)", () => {
       const monthly = view.periods.find((p) => p.periodType === "monthly");
       assert.equal(monthly.summary.appointments.revenue, "3000 RSD");
     });
+
+    it("REGRESSION: marks a live (not-yet-persisted) current-period summary as isLive, so the dashboard can badge it", () => {
+      const view = prepareBusinessReportDashboardData({
+        daily: fakeSummary({ isLive: true }),
+        weekly: null,
+        monthly: null,
+        quarterly: null,
+        yearly: null,
+      });
+
+      assert.equal(view.periods.find((p) => p.periodType === "daily").summary.isLive, true);
+    });
   });
 
   describe("prepareBusinessReportHistoryData", () => {

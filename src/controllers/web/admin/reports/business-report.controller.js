@@ -19,7 +19,7 @@ const PERIOD_LABELS = {
 
 export async function businessReportDashboard(req, res, next) {
   try {
-    const entries = await Promise.all(PERIOD_TYPES.map(async (periodType) => [periodType, await businessReportService.getCurrentSummary(periodType)]));
+    const entries = await Promise.all(PERIOD_TYPES.map(async (periodType) => [periodType, await businessReportService.getCurrentPeriodSummaryLive(periodType)]));
     const summariesByType = Object.fromEntries(entries);
     const viewData = prepareBusinessReportDashboardData(summariesByType);
 

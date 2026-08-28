@@ -6,7 +6,7 @@
   <%- include("../../includes/flash-messages") %>
 
   <h1 class="h3 mb-1">Poslovni izveštaji</h1>
-  <p class="text-muted small mb-4">Trenutni (tekući, još nezavršen) period za svaki tip izveštaja. Za prethodne, kompletirane periode pogledaj istoriju.</p>
+  <p class="text-muted small mb-4">Trenutni (tekući, još nezavršen) period za svaki tip izveštaja - uživo, izračunato u trenutku učitavanja stranice. Za prethodne, kompletirane periode pogledaj istoriju.</p>
 
   <div class="row g-4">
     <% data.periods.forEach(function(period) { %>
@@ -20,23 +20,26 @@
             <% if (!period.summary) { %>
               <p class="text-muted small mb-0">Još nije generisan izveštaj za tekući period.</p>
             <% } else { %>
-              <p class="text-muted small mb-2"><%= period.summary.periodKey %></p>
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <p class="text-muted small mono mb-0"><%= period.summary.periodKey %></p>
+                <% if (period.summary.isLive) { %><span class="badge bg-success-subtle text-success-emphasis">Uživo</span><% } %>
+              </div>
               <div class="row g-2 small">
                 <div class="col-6">
                   <span class="text-muted d-block">Termina</span>
-                  <strong><%= period.summary.appointments.total %></strong>
+                  <strong class="mono"><%= period.summary.appointments.total %></strong>
                 </div>
                 <div class="col-6">
                   <span class="text-muted d-block">Prihod termina</span>
-                  <strong><%= period.summary.appointments.revenue %></strong>
+                  <strong class="price-mono"><%= period.summary.appointments.revenue %></strong>
                 </div>
                 <div class="col-6">
                   <span class="text-muted d-block">Porudžbina</span>
-                  <strong><%= period.summary.orders.total %></strong>
+                  <strong class="mono"><%= period.summary.orders.total %></strong>
                 </div>
                 <div class="col-6">
                   <span class="text-muted d-block">Prihod prodavnice</span>
-                  <strong><%= period.summary.orders.revenue %></strong>
+                  <strong class="price-mono"><%= period.summary.orders.revenue %></strong>
                 </div>
               </div>
             <% } %>

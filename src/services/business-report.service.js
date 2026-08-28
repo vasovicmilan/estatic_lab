@@ -77,12 +77,7 @@ const PERIOD_GETTERS = {
   yearly: getYearlyPeriod,
 };
 
-export async function generateSummary(periodType, now = new Date()) {
-  const getPeriod = PERIOD_GETTERS[periodType];
-  if (!getPeriod) throw new Error(`Nepoznat tip perioda: ${periodType}`);
-
-  const { periodKey, periodStart, periodEnd } = getPeriod(now);
-
+async function computeAggregates(periodStart, periodEnd) {
   const [appointments, orders, packages, commissions, coupons] = await Promise.all([
     businessReportRepo.aggregateAppointments(periodStart, periodEnd),
     businessReportRepo.aggregateOrders(periodStart, periodEnd),
@@ -90,15 +85,20 @@ export async function generateSummary(periodType, now = new Date()) {
     businessReportRepo.aggregateCommissions(periodStart, periodEnd),
     businessReportRepo.aggregateCoupons(periodStart, periodEnd),
   ]);
+  return { appointments, orders, packages, commissions, coupons };
+}
+
+export async function generateSummary(periodType, now = new Date()) {
+  const getPeriod = PERIOD_GETTERS[periodType];
+  if (!getPeriod) throw new Error(`Nepoznat tip perioda: ${periodType}`);
+
+  const { periodKey, periodStart, periodEnd } = getPeriod(now);
+  const aggregates = await computeAggregates(periodStart, periodEnd);
 
   const summary = await businessReportRepo.upsertSummary(periodType, periodKey, {
     periodStart,
     periodEnd,
-    appointments,
-    orders,
-    packages,
-    commissions,
-    coupons,
+    ...aggregates,
     generatedAt: new Date(),
   });
 
@@ -124,11 +124,25 @@ export async function listSummaries(periodType, options) {
   return businessReportRepo.listSummaries(periodType, options);
 }
 
-export async function getCurrentSummary(periodType) {
+/**
+ * Live, on-demand aggregation of the CURRENT (still in-progress) period - the
+ * exact business-report counterpart to log-report.service.js's
+ * getTodaySummary(). Cron (and the manual report:business-* scripts) only
+ * ever persist a summary for the PREVIOUS, completed period - see
+ * generatePreviousPeriodSummary above - so a stored summary keyed to today's
+ * periodKey never exists while today is still running. This is what the
+ * admin dashboard's "trenutni period" cards actually need instead: never
+ * persisted, recomputed fresh on every call, since the numbers will keep
+ * changing until the period actually ends.
+ */
+export async function getCurrentPeriodSummaryLive(periodType, now = new Date()) {
   const getPeriod = PERIOD_GETTERS[periodType];
   if (!getPeriod) throw new Error(`Nepoznat tip perioda: ${periodType}`);
-  const { periodKey } = getPeriod(new Date());
-  return businessReportRepo.findSummary(periodType, periodKey);
+
+  const { periodKey, periodStart, periodEnd } = getPeriod(now);
+  const aggregates = await computeAggregates(periodStart, periodEnd);
+
+  return { periodType, periodKey, periodStart, periodEnd, isLive: true, generatedAt: new Date(), ...aggregates };
 }
 
 export default {
@@ -141,5 +155,5 @@ export default {
   generatePreviousPeriodSummary,
   getSummary,
   listSummaries,
-  getCurrentSummary,
+  getCurrentPeriodSummaryLive,
 };

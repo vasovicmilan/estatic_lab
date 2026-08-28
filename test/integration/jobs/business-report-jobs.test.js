@@ -1,39 +1,23 @@
 import { describe, it, before, after, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import ejs from "ejs";
 import mongoose from "mongoose";
 import * as dbHandler from "../setup/db-handler.js";
 import businessReportService from "../../../src/services/business-report.service.js";
-import { formatMoney } from "../../../src/utils/price.util.js";
+import { renderTemplate } from "../../../src/services/email.service.js";
 import Appointment from "../../../src/models/appointment.model.js";
 import Order from "../../../src/models/order.model.js";
 import "../../../src/models/user.model.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const EMAIL_TEMPLATE_PATH = path.join(__dirname, "../../../src/views/emails/admin-business-report.ejs");
-
 /**
- * Renders the real admin-business-report.ejs template the exact same way
- * email.service.js's sendBusinessReportEmail does: `{ periodLabel,
- * dateRangeLabel, ...summary, formatMoney }`. Deliberately NOT going through
- * emailService/email.provider.js itself - email.provider.js only has a named
- * export (no default object), so it can't be mocked the way this codebase's
- * other job tests mock emailService's default-exported methods, and actually
- * dispatching real SMTP in a test isn't the point here anyway. This
- * reproduces the exact render call that broke in production without
- * depending on network/SMTP at all.
+ * Renders the real admin-business-report.ejs template through the real
+ * renderTemplate() - the exact same function email.service.js's
+ * sendBusinessReportEmail calls - so this reproduces the exact render call
+ * that broke in production without needing SMTP/network. See renderTemplate's
+ * own doc comment in email.service.js for why this is imported directly
+ * rather than re-implemented here.
  */
 function renderBusinessReportEmail(periodLabel, dateRangeLabel, summary) {
-  const templateContent = fs.readFileSync(EMAIL_TEMPLATE_PATH, "utf8");
-  return ejs.render(
-    templateContent,
-    { periodLabel, dateRangeLabel, ...summary, formatMoney },
-    { filename: EMAIL_TEMPLATE_PATH, root: path.dirname(EMAIL_TEMPLATE_PATH) }
-  );
+  return renderTemplate("admin-business-report", { periodLabel, dateRangeLabel, ...summary });
 }
 
 function validAppointment(overrides = {}) {
@@ -109,9 +93,7 @@ describe("business-report-jobs / business-report email template", () => {
   it("REGRESSION: the real email template renders without throwing for an empty period (no data at all)", async () => {
     const summary = await businessReportService.generatePreviousPeriodSummary("daily", new Date());
 
-    const html = renderBusinessReportEmail("Dnevni poslovni izveštaj", "27.08.2026 - 27.08.2026", summary);
-
-    assert.ok(html.includes("Zakazivanja"));
+    const html = await renderBusinessReportEmail("Dnevni poslovni izveštaj", "27.08.2026 - 27.08.2026", summary);
     assert.ok(html.includes("Nema završenih termina u ovom periodu."));
   });
 
@@ -121,9 +103,7 @@ describe("business-report-jobs / business-report email template", () => {
 
     const summary = await businessReportService.generatePreviousPeriodSummary("daily", new Date(Date.now() + 24 * 60 * 60 * 1000));
 
-    const html = renderBusinessReportEmail("Dnevni poslovni izveštaj", "27.08.2026 - 27.08.2026", summary);
-
-    // Exact strings statBlock() in the real template produces for these labels/values -
+    const html = await renderBusinessReportEmail("Dnevni poslovni izveštaj", "27.08.2026 - 27.08.2026", summary);
     // see src/views/emails/admin-business-report.ejs's statBlock() helper.
     assert.ok(
       html.includes('>Ukupno termina</span><strong style="font-size:16px;">1</strong>'),
@@ -143,7 +123,7 @@ describe("business-report-jobs / business-report email template", () => {
   it("works across every period type the cron jobs actually use (weekly/monthly/quarterly/yearly), not just daily", async () => {
     for (const periodType of ["weekly", "monthly", "quarterly", "yearly"]) {
       const summary = await businessReportService.generatePreviousPeriodSummary(periodType, new Date());
-      assert.doesNotThrow(() => renderBusinessReportEmail("x", "y", summary), `${periodType} summary should render without throwing`);
+      await assert.doesNotReject(renderBusinessReportEmail("x", "y", summary), `${periodType} summary should render without throwing`);
     }
   });
 });

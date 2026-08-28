@@ -17,6 +17,7 @@ function formatSummaryForDisplay(summary) {
     periodKey: summary.periodKey,
     periodLabel: PERIOD_LABELS[summary.periodType] || summary.periodType,
     generatedAt: summary.generatedAt,
+    isLive: !!summary.isLive,
     appointments: {
       ...summary.appointments,
       revenue: formatMoney(summary.appointments.revenue),
@@ -49,10 +50,11 @@ function formatSummaryForDisplay(summary) {
 
 /**
  * The main dashboard shows the CURRENT (in-progress) period for all 5 types
- * side by side - `summariesByType` is an object keyed by periodType, any of
- * which may be null if that period hasn't been generated yet (e.g. a brand
- * new deployment before the first cron tick, or a period type whose cron
- * hasn't fired yet this cycle).
+ * side by side - `summariesByType` is an object keyed by periodType, each
+ * value coming from businessReportService.getCurrentPeriodSummaryLive(), so
+ * unlike a persisted summary lookup, these are never null: they're computed
+ * fresh on every dashboard load (see that function's own doc comment for
+ * why), same as the log dashboard's "today, live" card.
  */
 export function prepareBusinessReportDashboardData(summariesByType) {
   return {

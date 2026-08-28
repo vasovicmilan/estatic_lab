@@ -21,7 +21,14 @@ const SITE_NAME = process.env.SITE_NAME || "Estetik Lab";
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "estetik.lab.ns@gmail.com";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || SUPPORT_EMAIL;
 
-async function renderTemplate(templateName, data) {
+// Exported (unlike this file's other internal helpers) specifically so tests
+// can render a real template through the exact same locals every actual
+// email goes through - SITE_NAME, formatMoney, infoRow, etc. - rather than
+// hand-rolling a duplicate list that silently drifts out of sync whenever
+// this list changes. (Which is exactly what broke
+// test/integration/jobs/business-report-jobs.test.js: its own local
+// ejs.render() call didn't know about SITE_NAME.)
+export async function renderTemplate(templateName, data) {
   try {
     const templatePath = path.join(TEMPLATES_PATH, `${templateName}.ejs`);
     const templateContent = fs.readFileSync(templatePath, "utf8");
@@ -345,4 +352,5 @@ export default {
   sendNewsletterCampaign,
   sendLogReportEmail,
   sendBusinessReportEmail,
+  renderTemplate,
 };
