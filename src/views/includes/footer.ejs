@@ -40,6 +40,13 @@
       </div>
     </div>
     <hr class="border-secondary">
+    <% if (typeof business !== "undefined" && business) { %>
+      <p class="text-white text-opacity-75 small mb-1">
+        <%= business.legalName %><% if (business.address && business.address.full) { %>, <%= business.address.full %><% } %>
+        <% if (business.taxId) { %> · PIB: <%= business.taxId %><% } %>
+        <% if (business.registrationNumber) { %> · MB: <%= business.registrationNumber %><% } %>
+      </p>
+    <% } %>
     <p class="text-white text-opacity-75 small mb-1">&copy; <%= new Date().getFullYear() %> Estetik Lab. Sva prava zadržana.</p>
     <p class="text-white text-opacity-75 small mb-0">Napravio Arius Systems</p>
   </div>

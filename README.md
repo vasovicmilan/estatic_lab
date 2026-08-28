@@ -27,6 +27,7 @@ Each set covers:
 | 10 | Logs & Audit Trail |
 | 11 | External Integrations, Google Calendar & SrediMe |
 | 12 | Testing |
+| 13 | Business Reports |
 
 For a higher-level walkthrough of *why* each part of the system is built the way it is (business challenge, approach, solution, across every domain), see [`BUSINESS-LOGIC.md`](BUSINESS-LOGIC.md) (English) or [`POSLOVNA-LOGIKA.md`](POSLOVNA-LOGIKA.md) (Serbian).
 

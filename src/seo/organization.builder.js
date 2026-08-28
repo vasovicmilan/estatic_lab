@@ -23,6 +23,24 @@ export async function buildOrganizationJsonLd(req) {
     url: base,
     email: BUSINESS.email,
     telephone: BUSINESS.phone,
+    // PIB / matični broj aren't assigned yet (business registration pending),
+    // so these are omitted entirely rather than emitted as null/empty -
+    // schema.org validators flag empty required-looking fields, and an
+    // absent property is the correct way to say "not applicable yet".
+    // taxID is schema.org's dedicated field for PIB. Matični broj has no
+    // dedicated schema.org property (it isn't a VAT number, so vatID would
+    // be a misuse), so it goes through the generic identifier/PropertyValue
+    // pattern instead, tagged so it's unambiguous in the JSON-LD output.
+    ...(BUSINESS.taxId ? { taxID: BUSINESS.taxId } : {}),
+    ...(BUSINESS.registrationNumber
+      ? {
+          identifier: {
+            "@type": "PropertyValue",
+            propertyID: "MB",
+            value: BUSINESS.registrationNumber,
+          },
+        }
+      : {}),
     image: `${base}${BUSINESS.logo}`,
     logo: `${base}${BUSINESS.logo}`,
     address: {

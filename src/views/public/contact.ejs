@@ -78,10 +78,20 @@
                   <i class="bi bi-envelope text-primary-emphasis flex-shrink-0"></i>
                   <a href="mailto:<%= data.contact.email %>" class="text-decoration-none text-white-50"><%= data.contact.email %></a>
                 </li>
-                <li class="d-flex align-items-start gap-2">
+                <li class="<%= (data.contact.taxId || data.contact.registrationNumber) ? 'mb-3' : '' %> d-flex align-items-start gap-2">
                   <i class="bi bi-telephone text-primary-emphasis flex-shrink-0"></i>
                   <a href="tel:<%= data.contact.phoneHref %>" class="text-decoration-none text-white-50"><%= data.contact.phone %></a>
                 </li>
+                <% if (data.contact.taxId || data.contact.registrationNumber) { %>
+                  <li class="d-flex align-items-start gap-2">
+                    <i class="bi bi-file-earmark-text text-primary-emphasis flex-shrink-0"></i>
+                    <span class="text-white-50">
+                      <% if (data.contact.taxId) { %>PIB: <%= data.contact.taxId %><% } %>
+                      <% if (data.contact.taxId && data.contact.registrationNumber) { %> · <% } %>
+                      <% if (data.contact.registrationNumber) { %>MB: <%= data.contact.registrationNumber %><% } %>
+                    </span>
+                  </li>
+                <% } %>
               </ul>
             </div>
           </div>

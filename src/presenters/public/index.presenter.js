@@ -29,6 +29,10 @@ const LEGAL_CONTACT = {
   email: BUSINESS.email,
   phone: BUSINESS.phone,
   phoneHref: BUSINESS.phoneHref,
+  // null until the business registration is done - views check for these
+  // before rendering rather than assuming they're always present.
+  taxId: BUSINESS.taxId,
+  registrationNumber: BUSINESS.registrationNumber,
 };
 
 // Shared with prepareHomeData below (home.ejs) and prepareContactPageData

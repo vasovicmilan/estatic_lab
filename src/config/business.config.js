@@ -15,6 +15,16 @@ export const BUSINESS = {
   phone: "+381 65 977 4000",
   phoneHref: "+38165977400",
 
+  // Not yet registered as a legal entity (paušalac registration pending -
+  // see internal notes). Left null on purpose rather than a placeholder
+  // string, so every consumer (footer.ejs, organization.builder.js,
+  // index.presenter.js LEGAL_CONTACT) can cleanly omit these fields until
+  // there's a real PIB/matični broj to show instead of displaying a blank
+  // or a fake-looking value. Fill in once the registration is done - no
+  // other file needs to change.
+  taxId: null, // PIB
+  registrationNumber: null, // Matični broj
+
   address: {
     streetAddress: "Maksima Gorkog 6b",
     addressLocality: "Novi Sad",

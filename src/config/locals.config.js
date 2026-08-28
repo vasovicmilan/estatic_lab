@@ -2,6 +2,7 @@ import userService from "../services/user.service.js";
 import { buildOrganizationJsonLd } from "../seo/organization.builder.js";
 import { getCurrency } from "./runtime-settings.cache.js";
 import { logError } from "../utils/logger.util.js";
+import BUSINESS from "./business.config.js";
 
 const ASSET_VERSION = Date.now();
 
@@ -11,6 +12,12 @@ export async function localsMiddleware(req, res, next) {
   res.locals.user = req.session?.user || null;
   res.locals.assetVersion = ASSET_VERSION;
   res.locals.orgJsonLd = await buildOrganizationJsonLd(req);
+  // Exposed globally (not just via specific presenters) so shared includes
+  // like footer.ejs, which render on every page regardless of which
+  // controller/presenter built the page, can read address/PIB/matični broj
+  // straight from the single source of truth without every presenter having
+  // to thread it through.
+  res.locals.business = BUSINESS;
   // Admin-editable (see /admin/sajt) - synchronous cache read, not a DB call
   // (runtime-settings.cache.js). For templates that decorate a raw number with
   // a hardcoded currency label directly (rather than going through a mapper's
