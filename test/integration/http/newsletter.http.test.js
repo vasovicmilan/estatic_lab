@@ -36,11 +36,12 @@ describe("public newsletter flow (HTTP)", () => {
             const res = await agent
                 .post("/newsletter/prijava")
                 .type("form")
-                .send({ email: "novi@example.com", CSRFToken: csrfToken });
+                .send({ email: "novi@example.com", consent: "true", CSRFToken: csrfToken });
 
             assert.equal(res.status, 302);
             const subscriber = await newsLetterRepo.findSubscriberByEmail("novi@example.com");
             assert.ok(subscriber, "a subscriber document should have been created");
+            assert.ok(subscriber.consentedAt, "consentedAt should be recorded when the box was checked");
         });
 
         it("rejects an invalid email and redirects back without creating a subscriber", async () => {
@@ -50,11 +51,25 @@ describe("public newsletter flow (HTTP)", () => {
             const res = await agent
                 .post("/newsletter/prijava")
                 .type("form")
-                .send({ email: "not-an-email", CSRFToken: csrfToken });
+                .send({ email: "not-an-email", consent: "true", CSRFToken: csrfToken });
 
             assert.equal(res.status, 302);
             const subscriber = await newsLetterRepo.findSubscriberByEmail("not-an-email");
             assert.equal(subscriber, null);
+        });
+
+        it("rejects a valid email submitted without checking the consent box", async () => {
+            const agent = request.agent(app);
+            const { token: csrfToken } = await getCsrfToken(agent, "/");
+
+            const res = await agent
+                .post("/newsletter/prijava")
+                .type("form")
+                .send({ email: "bez-saglasnosti@example.com", CSRFToken: csrfToken });
+
+            assert.equal(res.status, 302);
+            const subscriber = await newsLetterRepo.findSubscriberByEmail("bez-saglasnosti@example.com");
+            assert.equal(subscriber, null, "no subscriber should be created without explicit consent");
         });
     });
 

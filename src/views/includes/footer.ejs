@@ -25,11 +25,19 @@
       </div>
       <div class="col-md-4">
         <h6>Prijavite se na newsletter</h6>
-        <form action="/newsletter/prijava" method="POST" class="d-flex gap-2">
+        <form action="/newsletter/prijava" method="POST">
           <input type="text" name="nickname" class="d-none" tabindex="-1" autocomplete="off">
-          <input type="email" name="email" class="form-control form-control-sm" placeholder="vas@email.com" aria-label="Email adresa za newsletter" required>
-          <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
-          <button type="submit" class="btn btn-primary btn-sm text-nowrap">Prijavi se</button>
+          <div class="d-flex gap-2">
+            <input type="email" name="email" class="form-control form-control-sm" placeholder="vas@email.com" aria-label="Email adresa za newsletter" required>
+            <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+            <button type="submit" class="btn btn-primary btn-sm text-nowrap">Prijavi se</button>
+          </div>
+          <div class="form-check mt-2">
+            <input type="checkbox" name="consent" value="true" class="form-check-input" id="newsletterConsent" required>
+            <label class="form-check-label text-white text-opacity-75 small" for="newsletterConsent">
+              Slažem se sa primanjem newsletter-a i <a href="/politika-privatnosti" class="text-white text-decoration-underline">politikom privatnosti</a>.
+            </label>
+          </div>
         </form>
         <!-- d-flex + gap-3 gives the two links real separation instead of a bare
              middot with a couple of px of whitespace on either side. -->

@@ -22,9 +22,16 @@ describe("newsletter.validator", () => {
 
     it("accepts a valid email", async () => {
       const agent = buildValidatorHarness(validateNewsletterSubscribe);
-      const res = await agent.post("/test").send({ email: "test@example.com" });
+      const res = await agent.post("/test").send({ email: "test@example.com", consent: "true" });
       assert.equal(res.status, 200);
       assert.equal(res.body.errors, null);
+    });
+
+    it("rejects a valid email without explicit consent", async () => {
+      const agent = buildValidatorHarness(validateNewsletterSubscribe);
+      const res = await agent.post("/test").send({ email: "test@example.com" });
+      assert.equal(res.status, 400);
+      assert.ok(res.body.errors.consent);
     });
   });
 

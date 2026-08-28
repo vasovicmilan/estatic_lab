@@ -31,7 +31,11 @@ export async function subscribe(email) {
   }
 
   const unsubscribeToken = generateRandomToken();
-  const created = await newsLetterRepo.createSubscriber({ email: email.toLowerCase().trim(), unsubscribeToken });
+  const created = await newsLetterRepo.createSubscriber({
+    email: email.toLowerCase().trim(),
+    unsubscribeToken,
+    consentedAt: new Date(),
+  });
 
   logInfo("Newsletter subscribed", { email: created.email });
   eventEmitter.emit("newsletter:subscribed", { email: created.email, unsubscribeToken });
