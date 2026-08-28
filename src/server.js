@@ -13,9 +13,27 @@ import { logInfo, logError } from "./utils/logger.util.js";
 
 const PORT = process.env.PORT || 3000;
 
+// In PM2 cluster mode, every worker imports and runs this same file - without
+// this guard, N workers means N independent cron schedulers and N Telegram
+// bot pollers fighting over the same bot token (Telegram's API rejects
+// concurrent getUpdates from the same token with a 409). In fork mode
+// (single instance), NODE_APP_INSTANCE is unset, so this still evaluates to
+// true and behaves exactly as before - no change for non-cluster deployments.
+const isSingletonWorker = (process.env.NODE_APP_INSTANCE || "0") === "0";
+
 async function start() {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    // maxPoolSize is opt-in via env, not hardcoded here - each PM2 cluster
+    // worker gets its own independent connection pool (Mongoose default is
+    // 100 per pool if unset), so N workers x default pool can quietly exceed
+    // a shared MongoDB tier's total connection limit under concurrent load.
+    // Left unset in normal single-instance deployments (keeps existing
+    // behavior); set MONGO_MAX_POOL_SIZE explicitly when running clustered
+    // against a connection-limited tier (e.g. Atlas M0) - see load testing notes.
+    const mongoOptions = process.env.MONGO_MAX_POOL_SIZE
+      ? { maxPoolSize: Number(process.env.MONGO_MAX_POOL_SIZE) }
+      : undefined;
+    await mongoose.connect(process.env.MONGO_URI, mongoOptions);
     logInfo("MongoDB connected");
 
     // Populates the in-memory booking-policy/currency cache from SiteSettings
@@ -24,9 +42,11 @@ async function start() {
     // already see the real configured values, not the fallback defaults.
     await loadRuntimeSettings();
 
-    initTelegramBot();
+    if (isSingletonWorker) {
+      initTelegramBot();
+      startScheduler();
+    }
     initGoogleCalendarClient();
-    startScheduler();
 
     const server = app.listen(PORT, "0.0.0.0", () => {
       logInfo(`Server running on port ${PORT}`);
