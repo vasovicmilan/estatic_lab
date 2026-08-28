@@ -3,7 +3,7 @@
 %>
 <% if (p && p.totalPages > 1) { %>
 <nav aria-label="Paginacija" class="d-flex justify-content-center mt-4">
-  <ul class="pagination">
+  <ul class="pagination flex-wrap justify-content-center">
     <%
       const qs = { ...(p.query || {}) };
       const pageParam = p.pageParam || "page";
@@ -11,15 +11,37 @@
         const params = new URLSearchParams({ ...qs, [pageParam]: page });
         return `${p.basePath}?${params.toString()}`;
       }
+
+      // Windowed page list instead of 1..totalPages rendered in full - with
+      // any real amount of data (logs, orders, appointments easily reach
+      // 20-40+ pages) that was a non-wrapping row of that many buttons,
+      // which is exactly what was overflowing the screen on phone. Shows
+      // first, last, and a small window around the current page, with "..."
+      // standing in for whatever's skipped - same page links either way,
+      // just not all of them rendered as separate buttons at once.
+      const windowSize = 1;
+      const pageNumbers = [];
+      for (let i = 1; i <= p.totalPages; i++) {
+        const isEdge = i === 1 || i === p.totalPages;
+        const isNearCurrent = Math.abs(i - p.currentPage) <= windowSize;
+        if (isEdge || isNearCurrent) pageNumbers.push(i);
+      }
     %>
     <li class="page-item <%= p.currentPage <= 1 ? 'disabled' : '' %>">
       <a class="page-link" href="<%= pageUrl(Math.max(1, p.currentPage - 1)) %>">Prethodna</a>
     </li>
-    <% for (let i = 1; i <= p.totalPages; i++) { %>
+    <%
+      let previousPage = 0;
+      pageNumbers.forEach(function(i) {
+        if (i - previousPage > 1) { %>
+          <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+        <% }
+        previousPage = i;
+    %>
       <li class="page-item <%= i === p.currentPage ? 'active' : '' %>">
         <a class="page-link" href="<%= pageUrl(i) %>"><%= i %></a>
       </li>
-    <% } %>
+    <% }) %>
     <li class="page-item <%= p.currentPage >= p.totalPages ? 'disabled' : '' %>">
       <a class="page-link" href="<%= pageUrl(Math.min(p.totalPages, p.currentPage + 1)) %>">Sledeća</a>
     </li>

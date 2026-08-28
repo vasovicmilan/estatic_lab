@@ -5,7 +5,7 @@
   <%- include("../../includes/breadcrumbs") %>
   <%- include("../../includes/flash-messages") %>
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-4">
     <h1 class="h3 mb-0"><%= data.periodLabel %> izveštaji - istorija</h1>
     <a href="<%= data.dashboardUrl %>" class="btn btn-outline-secondary btn-sm">&larr; Nazad na pregled</a>
   </div>
@@ -15,6 +15,7 @@
       <% if (data.items.length === 0) { %>
         <p class="text-muted p-3 mb-0">Nema sačuvanih izveštaja za ovaj tip perioda još uvek.</p>
       <% } else { %>
+        <div class="table-responsive">
         <table class="table mb-0">
           <thead>
             <tr>
@@ -39,6 +40,7 @@
             <% }) %>
           </tbody>
         </table>
+        </div>
       <% } %>
     </div>
   </div>

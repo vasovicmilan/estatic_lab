@@ -5,9 +5,9 @@
   <%- include("../../includes/breadcrumbs") %>
   <%- include("../../includes/flash-messages") %>
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-4">
     <h1 class="h3 mb-0"><%= data.summary.periodLabel %> izveštaj - <%= data.summary.periodKey %></h1>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
       <a href="/admin/poslovni-izvestaji/istorija/<%= data.summary.periodType %>/<%= data.summary.periodKey %>/pdf" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-file-earmark-pdf"></i> Preuzmi PDF
       </a>
@@ -56,6 +56,7 @@
         <div class="card h-100">
           <div class="card-header">Po usluzi</div>
           <div class="card-body p-0">
+            <div class="table-responsive">
             <table class="table table-sm mb-0">
               <thead><tr><th>Usluga</th><th class="text-end">Termina</th><th class="text-end">Prihod</th></tr></thead>
               <tbody>
@@ -67,6 +68,7 @@
                 <% }) %>
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       </div>
@@ -74,6 +76,7 @@
         <div class="card h-100">
           <div class="card-header">Po terapeutu</div>
           <div class="card-body p-0">
+            <div class="table-responsive">
             <table class="table table-sm mb-0">
               <thead><tr><th>Terapeut</th><th class="text-end">Termina</th><th class="text-end">Prihod</th></tr></thead>
               <tbody>
@@ -85,6 +88,7 @@
                 <% }) %>
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       </div>
@@ -114,6 +118,7 @@
     <div class="card mb-4">
       <div class="card-header">Najprodavaniji proizvodi</div>
       <div class="card-body p-0">
+        <div class="table-responsive">
         <table class="table table-sm mb-0">
           <thead><tr><th>Proizvod</th><th class="text-end">Komada</th><th class="text-end">Prihod</th></tr></thead>
           <tbody>
@@ -125,6 +130,7 @@
             <% }) %>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
 
@@ -190,6 +196,7 @@
     <div class="card mb-4">
       <div class="card-header">Po kuponu</div>
       <div class="card-body p-0">
+        <div class="table-responsive">
         <table class="table table-sm mb-0">
           <thead><tr><th>Kod</th><th class="text-end">Iskorišćeno</th><th class="text-end">Dat popust</th></tr></thead>
           <tbody>
@@ -201,6 +208,7 @@
             <% }) %>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
 

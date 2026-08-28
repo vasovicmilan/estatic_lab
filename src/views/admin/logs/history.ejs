@@ -11,6 +11,7 @@
       <% if (data.items.length === 0) { %>
         <p class="text-muted p-3 mb-0">Nema sačuvanih dnevnih izveštaja još uvek.</p>
       <% } else { %>
+        <div class="table-responsive">
         <table class="table mb-0">
           <thead><tr><th>Datum</th><th>Ukupno zahteva</th><th>Greške</th><th>Prosečno vreme</th><th></th></tr></thead>
           <tbody>
@@ -25,6 +26,7 @@
             <% }) %>
           </tbody>
         </table>
+        </div>
       <% } %>
     </div>
   </div>

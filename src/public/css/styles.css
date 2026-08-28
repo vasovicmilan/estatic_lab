@@ -1330,3 +1330,58 @@ h1, h2, h3, h4, h5, h6,
   padding: 0 0.25rem 1.25rem;
   color: var(--bs-secondary-color);
 }
+
+/* ================================================================
+   Admin mobile overflow fixes
+   ================================================================ */
+
+/* includes/components/search.ejs (admin list topbar) - a <form class="d-flex">
+   wrapping a .form-control (width: 100% by default). Flex items default to
+   min-width: auto, not 0, so a width:100% input inside a d-flex form fights
+   its parent flex row instead of shrinking on a narrow screen - the classic
+   flexbox input-overflow bug. min-width: 0 lets it actually shrink; the
+   max-width keeps it from stretching unbounded on wide screens either.
+   Scoped to .admin-list-search specifically - NOT a blanket form[role=search]
+   rule, since the public blog/shop search forms also use role="search" but
+   already use Bootstrap's .input-group (which handles this correctly on its
+   own) and shouldn't be affected by an admin-specific width cap. */
+.admin-list-search {
+  min-width: 0;
+  flex: 1 1 160px;
+  max-width: 260px;
+}
+
+.admin-list-search .form-control {
+  min-width: 0;
+}
+
+/* Admin KPI/stat numbers (business report + log report detail pages) can be
+   long formatted currency strings ("1.234.567 RSD") sitting in a narrow
+   col-md-3/col-md-4 card that becomes full-width on phone - wrap instead of
+   forcing the card wider than the viewport. */
+.card-body .h4,
+.card-body .h5 {
+  overflow-wrap: break-word;
+}
+
+/* Route/URL/error-message table cells (logs) - already had .text-break in
+   the markup for the label column; this is a blanket safety net for any
+   admin table cell holding long unbroken strings (slugs, emails, tokens)
+   that don't have that class applied explicitly. */
+@media (max-width: 767.98px) {
+  .table td,
+  .table th {
+    overflow-wrap: break-word;
+  }
+}
+
+/* admin-comparison-table.js's per-column value inputs - was a hardcoded
+   inline style.width="140px" set from JS; a flex-basis lets each input
+   shrink below 140px on a narrow phone (the parent already has flex-wrap,
+   so this is about individual inputs staying comfortably tappable rather
+   than rigidly demanding 140px each) instead of just wrapping as a block. */
+.comparison-value-input {
+  flex: 1 1 140px;
+  min-width: 100px;
+  max-width: 200px;
+}

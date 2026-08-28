@@ -5,9 +5,9 @@
   <%- include("../../includes/breadcrumbs") %>
   <%- include("../../includes/flash-messages") %>
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-4">
     <h1 class="h3 mb-0">Logovi</h1>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
       <a href="/admin/logovi/audit" class="btn btn-outline-secondary btn-sm">Audit log &rarr;</a>
       <a href="/admin/logovi/istorija" class="btn btn-outline-secondary btn-sm">Istorija dnevnih izveštaja &rarr;</a>
     </div>
@@ -78,11 +78,13 @@
             <% if (data.today.topErrors.length === 0) { %>
               <p class="text-muted p-3 mb-0">Nema grešaka danas.</p>
             <% } else { %>
+              <div class="table-responsive">
               <table class="table table-sm mb-0"><tbody>
                 <% data.today.topErrors.forEach(function(e) { %>
                   <tr><td class="text-break"><%= e.label %></td><td class="text-end"><%= e.count %></td></tr>
                 <% }) %>
               </tbody></table>
+              </div>
             <% } %>
           </div>
         </div>
@@ -94,11 +96,13 @@
             <% if (data.today.topUrls.length === 0) { %>
               <p class="text-muted p-3 mb-0">Nema podataka.</p>
             <% } else { %>
+              <div class="table-responsive">
               <table class="table table-sm mb-0"><tbody>
                 <% data.today.topUrls.forEach(function(u) { %>
                   <tr><td class="text-break"><%= u.label %></td><td class="text-end"><%= u.count %></td></tr>
                 <% }) %>
               </tbody></table>
+              </div>
             <% } %>
           </div>
         </div>
@@ -110,11 +114,13 @@
             <% if (data.today.topErrorUrls.length === 0) { %>
               <p class="text-muted p-3 mb-0">Nema neuspešnih zahteva.</p>
             <% } else { %>
+              <div class="table-responsive">
               <table class="table table-sm mb-0"><tbody>
                 <% data.today.topErrorUrls.forEach(function(u) { %>
                   <tr><td class="text-break"><%= u.label %></td><td class="text-end"><%= u.count %></td></tr>
                 <% }) %>
               </tbody></table>
+              </div>
             <% } %>
           </div>
         </div>
