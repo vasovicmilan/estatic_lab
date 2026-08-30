@@ -1,0 +1,116 @@
+{
+  "title": {
+    "sr": "Isplata zaposlenom",
+    "en": "Employee payout"
+  },
+  "intro": {
+    "sr": "Zaposleni traži isplatu svoje zarađene provizije, administrator je odobrava i označava kao isplaćenu. Ista mehanika radi identično i za partnere, preko njihovog odvojenog naloga.",
+    "en": "An employee requests a payout of their earned commission, an admin approves it and marks it paid. The same mechanism works identically for partners, through their own separate account."
+  },
+  "steps": {
+    "prijava-zaposlenog": {
+      "heading": {
+        "sr": "Prijava zaposlenog",
+        "en": "Employee logs in"
+      },
+      "sr": "Zaposleni se prijavljuje na svoj nalog.",
+      "en": "The employee logs into their account."
+    },
+    "pregled-stanja": {
+      "heading": {
+        "sr": "Pregled zarađenog stanja",
+        "en": "View earned balance"
+      },
+      "sr": "Na svom nalogu zaposleni vidi koliko je do sada zaradio.",
+      "en": "On their account, the employee sees how much they've earned so far."
+    },
+    "zahtev-za-isplatu": {
+      "heading": {
+        "sr": "Zahtev za isplatu",
+        "en": "Request a payout"
+      },
+      "sr": "Zaposleni unosi željeni iznos i šalje zahtev za isplatu.",
+      "en": "The employee enters the desired amount and submits a payout request."
+    },
+    "preostalo-stanje": {
+      "heading": {
+        "sr": "Preostalo stanje",
+        "en": "Remaining balance"
+      },
+      "sr": "Nakon zahteva, forma sama pokazuje koliko je još preostalo za eventualni novi zahtev - već rezervisan iznos se ne može tražiti dvaput.",
+      "en": "After the request, the form itself shows how much is left for a further request - an already-reserved amount can't be requested twice."
+    },
+    "admin-prijava": {
+      "heading": {
+        "sr": "Prijava administratora",
+        "en": "Admin logs in"
+      },
+      "sr": "Administrator se prijavljuje da bi obradio zahtev za isplatu.",
+      "en": "The admin logs in to process the payout request."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": {
+        "sr": "Otvaranje menija naloga",
+        "en": "Open the account menu"
+      },
+      "sr": "Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.",
+      "en": "The admin clicks the dropdown showing their name in the top-right corner."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": {
+        "sr": "Ulazak u admin panel",
+        "en": "Enter the admin panel"
+      },
+      "sr": "Administrator bira „Admin panel” iz menija, čime se otvara admin deo sajta.",
+      "en": "The admin picks \"Admin panel\" from the menu, opening the site's admin area."
+    },
+    "admin-isplate-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija „Partnerski program”",
+        "en": "Open the \"Partner program\" menu"
+      },
+      "sr": "Administrator klikne na grupu „Partnerski program” u admin meniju.",
+      "en": "The admin clicks the \"Partner program\" group in the admin menu."
+    },
+    "admin-isplate-bira-stavku": {
+      "heading": {
+        "sr": "Otvaranje isplata",
+        "en": "Open payouts"
+      },
+      "sr": "Administrator bira „Isplate” iz menija.",
+      "en": "The admin picks \"Payouts\" from the menu."
+    },
+    "admin-otvara-zahtev": {
+      "heading": {
+        "sr": "Otvaranje zahteva",
+        "en": "Open the request"
+      },
+      "sr": "Administrator otvara detalje zahteva za isplatu.",
+      "en": "The admin opens the payout request's details."
+    },
+    "admin-odobrava": {
+      "heading": {
+        "sr": "Odobravanje zahteva",
+        "en": "Approve the request"
+      },
+      "sr": "Administrator odobrava zahtev.",
+      "en": "The admin approves the request."
+    },
+    "admin-oznacava-isplaceno": {
+      "heading": {
+        "sr": "Označavanje kao isplaćeno",
+        "en": "Mark as paid"
+      },
+      "sr": "Nakon što je novac stvarno prebačen (van sistema, npr. bankovnim transferom), administrator označava zahtev kao isplaćen.",
+      "en": "Once the money has actually been transferred (outside the system, e.g. via bank transfer), the admin marks the request as paid."
+    },
+    "istorija-isplata": {
+      "heading": {
+        "sr": "Istorija isplata",
+        "en": "Payout history"
+      },
+      "sr": "Zaposleni u svom nalogu odmah vidi da je isplata izvršena.",
+      "en": "The employee immediately sees in their account that the payout was completed."
+    }
+  }
+}

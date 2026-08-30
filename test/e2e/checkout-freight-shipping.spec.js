@@ -63,17 +63,24 @@ test.describe("Checkout - freight (large/heavy) product shipping quote flow", ()
     await fillCheckoutContactAndAddress(page);
     await page.getByRole("button", { name: "Potvrdi porudžbinu" }).click();
 
-    // no automatic shipping price could be computed - the real flow is "we'll email
-    // you", not an immediate order confirmation
+    // no automatic shipping price could be computed - the real flow is "we'll
+    // calculate it and email you once it's ready", not an immediate order
+    // confirmation. Unlike a standard order, NO confirm-link email goes out yet
+    // here either (see temporary-order.service.js's createTemporaryOrder) - only
+    // an informational notice - so this page shows "order received", not
+    // "confirm your order" (there's nothing to confirm yet).
     await expect(page).toHaveURL(/\/korpa\/potvrdite-porudzbinu/);
-    await expect(page.getByRole("heading", { name: "Potvrdite porudžbinu" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Porudžbina primljena" })).toBeVisible();
 
     let tempOrder = await findTemporaryOrderByEmail(customerEmail);
     expect(tempOrder.requiresShippingQuote).toBe(true);
     expect(tempOrder.shipping).toBe(0);
 
-    // the customer's own confirmation link must refuse to finalize the order while
-    // the price is still unresolved - see order.service.js's confirmOrder
+    // the customer has no real confirm link at this point (none was emailed) -
+    // this reads the token straight out of the DB to exercise the backend guard
+    // directly, standing in for "customer somehow has/guesses a link before the
+    // quote is ready" (e.g. a saved/bookmarked URL) - order.service.js's
+    // confirmOrder must still refuse it regardless of how the customer got there
     const prematureConfirmUrl = await getOrderConfirmationUrl(customerEmail);
     await page.goto(prematureConfirmUrl);
     await expect(page.locator(".alert-danger")).toContainText(/procen/i);
@@ -102,7 +109,9 @@ test.describe("Checkout - freight (large/heavy) product shipping quote flow", ()
     expect(tempOrder.requiresShippingQuote).toBe(false);
     expect(tempOrder.shipping).toBe(8000);
 
-    // --- customer: same confirmation link now works ---
+    // --- customer: the REAL confirm link (freshly issued when the price was set,
+    // not the placeholder token from checkout - see updateTemporaryOrderShipping)
+    // now works ---
     const finalConfirmUrl = await getOrderConfirmationUrl(customerEmail);
     await page.goto(finalConfirmUrl);
     await expect(page.getByRole("heading", { name: "Porudžbina je potvrđena" })).toBeVisible();

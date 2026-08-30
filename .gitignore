@@ -1,11 +1,39 @@
 .env
+
 node_modules
+
 /logs/
+
 src/public/images
+
 src/public/videos
+
 src/public/icons
+
 site.webmanifest
+
 favicon.ico
+
 /test-results/
+
 /playwright-report/
+
 /blob-report/
+
+# e2e-tutorials: manifest.json + screenshots are regenerated on every scenario
+# run (see e2e-tutorials/README.md) - only scenario.spec.js, narration.json, and
+# generated/*.md are source of truth and get committed.
+/e2e-tutorials/scenarios/*/manifest.json
+/e2e-tutorials/screenshots/
+/e2e-tutorials/.video-tmp/
+/e2e-tutorials/videos/
+
+# Dodato:
+e2e.test.output.log
+test.output.log
+izlaz.txt
+src/public/favicon.ico
+src/public/site.webmanifest
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,10 @@
+<%- include("_layout", {
+  title: "Porudžbina primljena",
+  eyebrow: "Porudžbina",
+  heading: `Porudžbina primljena${typeof firstName !== 'undefined' && firstName ? ', ' + firstName : ''}!`,
+  preheader: "Izračunavamo cenu dostave za vašu porudžbinu",
+  body: `
+    <p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0 0 8px;">Hvala na porudžbini! Pošto sadrži veći ili teži artikal, cenu dostave za nju izračunavamo ručno - to nam ponekad zna potrajati, jer proveravamo kod prevoznika.</p>
+    <p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0;">Čim odredimo tačnu cenu, poslaćemo vam poseban email sa konačnim iznosom i linkom da potvrdite porudžbinu. Ništa ne morate da radite do tada.</p>
+  `
+}) %>

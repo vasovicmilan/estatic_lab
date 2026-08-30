@@ -107,12 +107,43 @@ document.addEventListener("DOMContentLoaded", () => {
       appliedBadge.classList.remove("d-none");
       inputGroup.classList.add("d-none");
       errorEl.classList.add("d-none");
+      updateOrderSummary(code, discountAmount);
     }
 
     function showRemoved() {
       appliedBadge.classList.add("d-none");
       inputGroup.classList.remove("d-none");
       input.value = "";
+      updateOrderSummary(null, 0);
+    }
+
+    // Reflects a coupon's discount in the "Vaša porudžbina" summary card on
+    // checkout.ejs (shop/checkout.ejs) - the coupon widget itself only ever
+    // showed its own small "primenjen" badge with the discount amount, never
+    // touched the actual order total the customer is looking at as "what will I
+    // pay". Not present on the booking-context version of this widget (no
+    // matching card there), so every lookup here is optional-chained/guarded -
+    // this simply does nothing on pages that don't have that card at all.
+    function updateOrderSummary(code, discountAmount) {
+      const discountRow = document.querySelector("[data-order-discount-row]");
+      const discountCodeEl = document.querySelector("[data-order-discount-code]");
+      const discountValueEl = document.querySelector("[data-order-discount-value]");
+      const subtotalEl = document.querySelector("[data-order-subtotal-value]");
+      const shippingEl = document.querySelector("[data-order-shipping-value]");
+      const totalEl = document.querySelector("[data-order-total]");
+      if (!totalEl || !subtotalEl) return;
+
+      const subtotal = Number(subtotalEl.dataset.orderSubtotalValue) || 0;
+      const shipping = shippingEl ? Number(shippingEl.dataset.orderShippingValue) || 0 : 0;
+      const discount = Number(discountAmount) || 0;
+
+      if (discountRow) discountRow.classList.toggle("d-none", discount <= 0);
+      if (discountCodeEl) discountCodeEl.textContent = code || "";
+      if (discountValueEl) {
+        discountValueEl.dataset.orderDiscountValue = String(discount);
+        discountValueEl.textContent = `-${discount} ${discountValueEl.dataset.currencySymbol || ""}`.trim();
+      }
+      totalEl.textContent = `${subtotal - discount + shipping} ${totalEl.dataset.currencySymbol || ""}`.trim();
     }
 
     function showError(message) {

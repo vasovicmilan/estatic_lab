@@ -1,0 +1,67 @@
+{
+  "title": {
+    "sr": "Kreiranje paketa",
+    "en": "Creating a package"
+  },
+  "intro": {
+    "sr": "Administrator kreira novi paket sesija - bira postojeću uslugu, unosi cenu i obavezno postavlja sliku, sve pre nego što paket bude spreman za dodelu klijentima.",
+    "en": "The admin creates a new session package - selecting an existing service, entering a price, and setting a required image, all before the package is ready to be assigned to customers."
+  },
+  "steps": {
+    "admin-prijava": {
+      "heading": { "sr": "Prijava administratora", "en": "Admin logs in" },
+      "sr": "Administrator se prijavljuje na svoj nalog.",
+      "en": "The admin logs into their account."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": { "sr": "Otvaranje menija naloga", "en": "Open the account menu" },
+      "sr": "Administrator klikne na dropdown sa svojim imenom.",
+      "en": "The admin clicks the dropdown showing their name."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": { "sr": "Ulazak u admin panel", "en": "Enter the admin panel" },
+      "sr": "Administrator bira „Admin panel”.",
+      "en": "The admin picks \"Admin panel\"."
+    },
+    "admin-paketi-otvara-meni": {
+      "heading": { "sr": "Otvaranje menija „Katalog”", "en": "Open the \"Catalog\" menu" },
+      "sr": "Administrator klikne na grupu „Katalog”.",
+      "en": "The admin clicks the \"Catalog\" group."
+    },
+    "admin-paketi-bira-stavku": {
+      "heading": { "sr": "Otvaranje paketa", "en": "Open packages" },
+      "sr": "Administrator bira „Paketi” iz menija.",
+      "en": "The admin picks \"Packages\" from the menu."
+    },
+    "admin-paketi-klik-na-dodaj": {
+      "heading": { "sr": "Novi paket", "en": "New package" },
+      "sr": "Administrator klikne „Novi paket”.",
+      "en": "The admin clicks \"New package\"."
+    },
+    "unos-osnovnih-podataka": {
+      "heading": { "sr": "Unos osnovnih podataka", "en": "Enter basic details" },
+      "sr": "Administrator unosi naziv i opis paketa.",
+      "en": "The admin enters the package's name and description."
+    },
+    "dodavanje-usluge-u-paket": {
+      "heading": { "sr": "Dodavanje usluge u paket", "en": "Add a service to the package" },
+      "sr": "Administrator dodaje red, bira tačno određenu uslugu i varijantu, i unosi broj seansi koje paket sadrži.",
+      "en": "The admin adds a row, picks the exact service and variant, and enters how many sessions the package includes."
+    },
+    "unos-cene": {
+      "heading": { "sr": "Unos cene", "en": "Enter the price" },
+      "sr": "Administrator unosi cenu celog paketa - obično nižu od zbira pojedinačnih seansi.",
+      "en": "The admin enters the package's total price - usually lower than the sum of individual sessions."
+    },
+    "otpremanje-slike": {
+      "heading": { "sr": "Otpremanje slike", "en": "Upload an image" },
+      "sr": "Slika je obavezna za paket - administrator je otprema i unosi alt tekst.",
+      "en": "An image is required for a package - the admin uploads one and enters alt text."
+    },
+    "cuvanje-paketa": {
+      "heading": { "sr": "Čuvanje paketa", "en": "Save the package" },
+      "sr": "Administrator čuva paket - sada je spreman da se dodeli klijentima.",
+      "en": "The admin saves the package - it's now ready to be assigned to customers."
+    }
+  }
+}

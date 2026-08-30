@@ -206,7 +206,7 @@ export async function submitCheckout(req, res, next) {
     logInfo(`[submitCheckout] Privremena porudžbina kreirana za "${email}"`, { temporaryOrderId: result.id, accountJustCreated: result.accountJustCreated });
 
     if (!isLoggedIn) req.session.cart = [];
-    req.session.pendingCheckoutConfirmation = { orderId: result.id, email, tokenExpiration: result.tokenExpiration };
+    req.session.pendingCheckoutConfirmation = { orderId: result.id, email, tokenExpiration: result.tokenExpiration, requiresShippingQuote: result.requiresShippingQuote };
 
     return res.redirect("/korpa/potvrdite-porudzbinu");
   } catch (error) {

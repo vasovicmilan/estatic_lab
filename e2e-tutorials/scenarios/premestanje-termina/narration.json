@@ -1,0 +1,116 @@
+{
+  "title": {
+    "sr": "Premeštanje termina",
+    "en": "Reassigning an appointment"
+  },
+  "intro": {
+    "sr": "Administrator može da premesti termin na drugog zaposlenog. Sistem sam filtrira listu - zaposleni koji je već zauzet u tom terminu se uopšte ne pojavljuje kao opcija, umesto da se ponudi pa odbije.",
+    "en": "An admin can move an appointment to a different employee. The system filters the list itself - an employee already busy at that time simply doesn't appear as an option, instead of being offered and then rejected."
+  },
+  "steps": {
+    "admin-prijava": {
+      "heading": {
+        "sr": "Prijava administratora",
+        "en": "Admin logs in"
+      },
+      "sr": "Administrator se prijavljuje na svoj nalog.",
+      "en": "The admin logs into their account."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": {
+        "sr": "Otvaranje menija naloga",
+        "en": "Open the account menu"
+      },
+      "sr": "Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.",
+      "en": "The admin clicks the dropdown showing their name in the top-right corner."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": {
+        "sr": "Ulazak u admin panel",
+        "en": "Enter the admin panel"
+      },
+      "sr": "Administrator bira „Admin panel” iz menija, čime se otvara admin deo sajta.",
+      "en": "The admin picks \"Admin panel\" from the menu, opening the site's admin area."
+    },
+    "admin-termini-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija „Zakazivanje”",
+        "en": "Open the \"Scheduling\" menu"
+      },
+      "sr": "Administrator klikne na grupu „Zakazivanje” u admin meniju.",
+      "en": "The admin clicks the \"Scheduling\" group in the admin menu."
+    },
+    "admin-termini-bira-stavku": {
+      "heading": {
+        "sr": "Otvaranje liste termina",
+        "en": "Open the appointments list"
+      },
+      "sr": "Administrator bira „Termini” iz menija.",
+      "en": "The admin picks \"Appointments\" from the menu."
+    },
+    "admin-termini-pretraga": {
+      "heading": {
+        "sr": "Pretraga termina",
+        "en": "Search for the appointment"
+      },
+      "sr": "Administrator pretražuje listu po email adresi klijenta da bi pronašao termin koji treba premestiti.",
+      "en": "The admin searches the list by the customer's email to find the appointment that needs to move."
+    },
+    "admin-termini-otvaranje-rezultata": {
+      "heading": {
+        "sr": "Otvaranje termina",
+        "en": "Open the appointment"
+      },
+      "sr": "Administrator otvara detalje termina.",
+      "en": "The admin opens the appointment's details."
+    },
+    "premestanje-na-slobodnog": {
+      "heading": {
+        "sr": "Premeštanje na slobodnog zaposlenog",
+        "en": "Reassign to a free employee"
+      },
+      "sr": "Administrator bira slobodnog zaposlenog iz padajuće liste i potvrđuje promenu.",
+      "en": "The admin picks a free employee from the dropdown and confirms the change."
+    },
+    "admin-ponovo-otvara-meni": {
+      "heading": {
+        "sr": "Ponovno otvaranje menija",
+        "en": "Reopen the menu"
+      },
+      "sr": "Administrator se vraća u meni da još jednom proveri termin.",
+      "en": "The admin returns to the menu to check the appointment once more."
+    },
+    "admin-ponovo-bira-stavku": {
+      "heading": {
+        "sr": "Ponovno otvaranje liste termina",
+        "en": "Reopen the appointments list"
+      },
+      "sr": "Administrator ponovo otvara listu termina.",
+      "en": "The admin opens the appointments list again."
+    },
+    "admin-ponovo-pretraga": {
+      "heading": {
+        "sr": "Ponovna pretraga",
+        "en": "Search again"
+      },
+      "sr": "Administrator ponovo pretražuje po istom klijentu.",
+      "en": "The admin searches for the same customer again."
+    },
+    "admin-ponovo-otvaranje-rezultata": {
+      "heading": {
+        "sr": "Ponovno otvaranje termina",
+        "en": "Reopen the appointment"
+      },
+      "sr": "Administrator ponovo otvara isti termin, sada da proveri padajuću listu za dodelu.",
+      "en": "The admin reopens the same appointment, this time to check the assignment dropdown."
+    },
+    "zauzet-zaposleni-nije-ponudjen": {
+      "heading": {
+        "sr": "Zauzet zaposleni se ne nudi",
+        "en": "A busy employee isn't offered"
+      },
+      "sr": "U padajućoj listi, zaposleni koji je u tom terminu već zauzet negde drugde se uopšte ne pojavljuje - sistem ga je unapred izbacio iz opcija.",
+      "en": "In the dropdown, an employee already booked elsewhere at that exact time simply isn't listed - the system filtered them out in advance."
+    }
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "title": {
+    "sr": "Provizija partnera za rezervaciju termina",
+    "en": "Partner commission on a booked appointment"
+  },
+  "intro": {
+    "sr": "Partner ima dve odvojene stope provizije - jednu za usluge, drugu za proizvode. Kad klijent zakaže termin preko partnerovog koda za preporuku, provizija se obračunava po stopi za usluge, nikad po stopi za proizvode, čak i kad su podešene na potpuno različite vrednosti.",
+    "en": "A partner has two separate commission rates - one for services, one for products. When a customer books an appointment through a partner's referral code, commission is calculated using the services rate, never the products rate, even when they're set to very different values."
+  },
+  "steps": {
+    "registracija": {
+      "heading": { "sr": "Registracija", "en": "Register" },
+      "sr": "Klijent se registruje.",
+      "en": "The customer registers."
+    },
+    "prijava": {
+      "heading": { "sr": "Prijava", "en": "Log in" },
+      "sr": "Klijent se prijavljuje na svoj nalog.",
+      "en": "The customer logs into their account."
+    },
+    "otvaranje-stranice-usluge": {
+      "heading": { "sr": "Otvaranje stranice usluge", "en": "Open the service page" },
+      "sr": "Klijent otvara stranicu usluge i bira varijantu.",
+      "en": "The customer opens the service page and selects a variant."
+    },
+    "izbor-datuma-i-termina": {
+      "heading": { "sr": "Izbor termina", "en": "Pick a time slot" },
+      "sr": "Klijent bira datum i slobodan termin.",
+      "en": "The customer picks a date and an available slot."
+    },
+    "unos-podataka-i-kupona": {
+      "heading": { "sr": "Unos podataka i kupona partnera", "en": "Enter details and the partner's coupon" },
+      "sr": "Klijent unosi telefon i primenjuje partnerov kod za preporuku.",
+      "en": "The customer enters their phone number and applies the partner's referral code."
+    },
+    "potvrda-zakazivanja": {
+      "heading": { "sr": "Potvrda zakazivanja", "en": "Confirm the booking" },
+      "sr": "Klijent potvrđuje termin.",
+      "en": "The customer confirms the appointment."
+    },
+    "admin-prijava": {
+      "heading": { "sr": "Prijava administratora", "en": "Admin logs in" },
+      "sr": "Administrator se prijavljuje da bi obradio termin.",
+      "en": "The admin logs in to process the appointment."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": { "sr": "Otvaranje menija naloga", "en": "Open the account menu" },
+      "sr": "Administrator klikne na dropdown sa svojim imenom.",
+      "en": "The admin clicks the dropdown showing their name."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": { "sr": "Ulazak u admin panel", "en": "Enter the admin panel" },
+      "sr": "Administrator bira „Admin panel”.",
+      "en": "The admin picks \"Admin panel\"."
+    },
+    "admin-termini-otvara-meni": {
+      "heading": { "sr": "Otvaranje menija „Zakazivanje”", "en": "Open the \"Scheduling\" menu" },
+      "sr": "Administrator klikne na grupu „Zakazivanje”.",
+      "en": "The admin clicks the \"Scheduling\" group."
+    },
+    "admin-termini-bira-stavku": {
+      "heading": { "sr": "Otvaranje liste termina", "en": "Open the appointments list" },
+      "sr": "Administrator bira „Termini” iz menija.",
+      "en": "The admin picks \"Appointments\" from the menu."
+    },
+    "admin-termini-pretraga": {
+      "heading": { "sr": "Pretraga termina", "en": "Search for the appointment" },
+      "sr": "Administrator pretražuje po email adresi klijenta.",
+      "en": "The admin searches by the customer's email."
+    },
+    "admin-termini-otvaranje-rezultata": {
+      "heading": { "sr": "Otvaranje termina", "en": "Open the appointment" },
+      "sr": "Administrator otvara termin zakazan preko partnera.",
+      "en": "The admin opens the appointment booked through the partner."
+    },
+    "admin-zavrsava-termin": {
+      "heading": { "sr": "Potvrda i završetak termina", "en": "Confirm and complete the appointment" },
+      "sr": "Administrator potvrđuje pa završava termin - ovo obračunava proviziju i zaposlenog i partnera, partnerovu po stopi za usluge.",
+      "en": "The admin confirms then completes the appointment - this calculates both the employee's and the partner's commission, the partner's using the services rate."
+    }
+  }
+}

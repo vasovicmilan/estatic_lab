@@ -43,12 +43,17 @@ export function prepareCheckoutStepData(cart, { isLoggedIn = false, user = null,
 
 // Shown right after the temp order is created - there's no real Order yet, so this
 // only shows the confirmation-email prompt and the token's expiry, not order details.
-export function prepareCheckoutPendingData({ email, tokenExpiration } = {}) {
+// requiresShippingQuote branches the copy the view shows (see shop/order-pending.ejs):
+// a freight order got only an informational "we'll email you a quote" notice, not an
+// actionable confirm link, so there's no meaningful "link expires at" to show here -
+// see temporary-order.service.js's createTemporaryOrder for why.
+export function prepareCheckoutPendingData({ email, tokenExpiration, requiresShippingQuote = false } = {}) {
   return {
     email,
     // Pre-formatted here, not left for the view's own new Date().toLocaleString()
     // (that read the SERVER PROCESS's own timezone - UTC - not Belgrade).
     tokenExpiration: formatDateTime(tokenExpiration),
+    requiresShippingQuote,
     breadcrumbs: [{ label: "Potvrdite porudžbinu", url: null }],
   };
 }

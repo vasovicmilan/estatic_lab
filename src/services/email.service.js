@@ -192,6 +192,30 @@ export async function sendOrderConfirmationRequestEmail({ email, firstName }, { 
   return sendEmail({ to: email, subject: `Potvrdite porudžbinu - ${SITE_NAME}`, html });
 }
 
+// Sent instead of sendOrderConfirmationRequestEmail above when the order needs a
+// shipping quote (temporary-order.service.js's createTemporaryOrder) - purely
+// informational, no confirm link/token involved yet. See
+// sendShippingQuoteReadyEmail below for the actual actionable follow-up.
+export async function sendOrderPendingQuoteEmail({ email, firstName }) {
+  const html = await renderTemplate("order-pending-shipping-quote", { firstName });
+  return sendEmail({ to: email, subject: `Vaša porudžbina je primljena - ${SITE_NAME}`, html });
+}
+
+// The real, actionable confirm-request email for a freight order - sent once an
+// admin has set the real shipping price (temporary-order.service.js's
+// updateTemporaryOrderShipping), with a freshly generated token so the link is
+// guaranteed valid for the full window from THIS moment, not from checkout time.
+export async function sendShippingQuoteReadyEmail({ email, firstName }, { temporaryOrderId, verificationToken, tokenExpiration, shippingAmount, totalPrice }) {
+  const html = await renderTemplate("order-shipping-quote-ready", {
+    firstName,
+    confirmUrl: `${BASE_URL}/korpa/potvrda/${temporaryOrderId}/${verificationToken}`,
+    tokenExpiration: formatDateTime(tokenExpiration),
+    shippingAmount: formatMoney(shippingAmount),
+    totalPrice: formatMoney(totalPrice),
+  });
+  return sendEmail({ to: email, subject: `Cena dostave je spremna - ${SITE_NAME}`, html });
+}
+
 export async function sendOrderReceivedEmail({ email, firstName }, order) {
   const html = await renderTemplate("order-received", { firstName, order, manageUrl: `${BASE_URL}/nalog/porudzbine` });
 
@@ -339,6 +363,8 @@ export default {
   notifyAdminNewAppointment,
   notifyAdminAppointmentCancelled,
   sendOrderConfirmationRequestEmail,
+  sendOrderPendingQuoteEmail,
+  sendShippingQuoteReadyEmail,
   sendOrderReceivedEmail,
   sendOrderStatusUpdateEmail,
   notifyAdminNewOrder,

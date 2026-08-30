@@ -1,0 +1,82 @@
+{
+  "title": {
+    "sr": "Kreiranje proizvoda",
+    "en": "Creating a product"
+  },
+  "intro": {
+    "sr": "Dodavanje proizvoda ide kroz tri odvojene faze - osnovni podaci, pa varijante i slike, pa dostava i objava. Svaka faza je svoja stranica i svoje čuvanje, ne jedna duga forma.",
+    "en": "Adding a product goes through three separate phases - basic details, then variations and images, then shipping and publishing. Each phase is its own page and its own save, not one long form."
+  },
+  "steps": {
+    "admin-prijava": {
+      "heading": { "sr": "Prijava administratora", "en": "Admin logs in" },
+      "sr": "Administrator se prijavljuje na svoj nalog.",
+      "en": "The admin logs into their account."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": { "sr": "Otvaranje menija naloga", "en": "Open the account menu" },
+      "sr": "Administrator klikne na dropdown sa svojim imenom.",
+      "en": "The admin clicks the dropdown showing their name."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": { "sr": "Ulazak u admin panel", "en": "Enter the admin panel" },
+      "sr": "Administrator bira „Admin panel”.",
+      "en": "The admin picks \"Admin panel\"."
+    },
+    "admin-proizvodi-otvara-meni": {
+      "heading": { "sr": "Otvaranje menija „Prodavnica”", "en": "Open the \"Store\" menu" },
+      "sr": "Administrator klikne na grupu „Prodavnica”.",
+      "en": "The admin clicks the \"Store\" group."
+    },
+    "admin-proizvodi-bira-stavku": {
+      "heading": { "sr": "Otvaranje proizvoda", "en": "Open products" },
+      "sr": "Administrator bira „Proizvodi” iz menija.",
+      "en": "The admin picks \"Products\" from the menu."
+    },
+    "admin-proizvodi-klik-na-dodaj": {
+      "heading": { "sr": "Novi proizvod", "en": "New product" },
+      "sr": "Administrator klikne „Novi proizvod” - počinje čarobnjak od tri faze.",
+      "en": "The admin clicks \"New product\" - starting the three-phase wizard."
+    },
+    "faza1-naziv-i-sku": {
+      "heading": { "sr": "Faza 1: naziv i šifra", "en": "Phase 1: name and SKU" },
+      "sr": "Prva faza traži samo ono minimalno da bi proizvod uopšte postojao - naziv i jedinstvenu šifru.",
+      "en": "The first phase asks for only the bare minimum for the product to exist at all - a name and a unique SKU."
+    },
+    "faza1-nastavak": {
+      "heading": { "sr": "Prelazak u fazu 2", "en": "Move to phase 2" },
+      "sr": "Administrator čuva i nastavlja - proizvod je kreiran kao nacrt, sada slede varijante i slika.",
+      "en": "The admin saves and continues - the product is created as a draft, next come variations and an image."
+    },
+    "faza2-kratak-opis": {
+      "heading": { "sr": "Faza 2: kratak opis", "en": "Phase 2: short description" },
+      "sr": "Administrator unosi kratak opis koji se prikazuje na kartici proizvoda.",
+      "en": "The admin enters a short description shown on the product card."
+    },
+    "faza2-dodavanje-varijante": {
+      "heading": { "sr": "Dodavanje varijante", "en": "Add a variation" },
+      "sr": "Proizvod mora imati bar jednu varijantu da bi mogao biti objavljen - administrator unosi naziv, cenu i zalihe.",
+      "en": "A product needs at least one variation to be publishable - the admin enters a name, price, and stock."
+    },
+    "faza2-otpremanje-slike": {
+      "heading": { "sr": "Otpremanje glavne slike", "en": "Upload the main image" },
+      "sr": "Slika je obavezna da bi proizvod mogao biti objavljen u trećoj fazi.",
+      "en": "An image is required for the product to be publishable in the third phase."
+    },
+    "faza2-nastavak": {
+      "heading": { "sr": "Prelazak u fazu 3", "en": "Move to phase 3" },
+      "sr": "Administrator čuva i nastavlja na poslednju fazu.",
+      "en": "The admin saves and continues to the final phase."
+    },
+    "faza3-nacin-dostave": {
+      "heading": { "sr": "Faza 3: način dostave", "en": "Phase 3: shipping method" },
+      "sr": "Administrator bira način dostave - „redovna pošta” za većinu artikala, ili opcija za velike/teške uređaje kod kojih se cena dostave procenjuje ručno.",
+      "en": "The admin picks a shipping method - \"regular post\" for most items, or the option for large/heavy devices where shipping is priced manually."
+    },
+    "faza3-objavljivanje": {
+      "heading": { "sr": "Objavljivanje", "en": "Publish" },
+      "sr": "Administrator čuva poslednju fazu - proizvod je odmah objavljen i vidljiv u prodavnici.",
+      "en": "The admin saves the final phase - the product is immediately published and visible in the store."
+    }
+  }
+}

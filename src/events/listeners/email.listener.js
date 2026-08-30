@@ -152,6 +152,29 @@ eventEmitter.on(
   })
 );
 
+// Freight-quote orders (see product.model.js's shippingClass) get this instead of
+// the confirm-request email above at checkout time - no actionable link yet,
+// nothing for the customer to do but wait. See temporary-order.service.js's
+// createTemporaryOrder for why sending a real (expiring) confirm link this early
+// was the actual bug being fixed here.
+eventEmitter.on(
+  "temporary-order:pending-quote",
+  safe("temporary-order:pending-quote", async ({ email, firstName }) => {
+    await emailService.sendOrderPendingQuoteEmail({ email, firstName });
+  })
+);
+
+// The real confirm-request email for a freight order - sent once an admin has
+// actually set the shipping price (temporary-order.service.js's
+// updateTemporaryOrderShipping), with a FRESH token/expiration so the link is
+// guaranteed valid regardless of how long pricing took.
+eventEmitter.on(
+  "temporary-order:shipping-quoted",
+  safe("temporary-order:shipping-quoted", async ({ temporaryOrderId, email, firstName, verificationToken, tokenExpiration, shippingAmount, totalPrice }) => {
+    await emailService.sendShippingQuoteReadyEmail({ email, firstName }, { temporaryOrderId, verificationToken, tokenExpiration, shippingAmount, totalPrice });
+  })
+);
+
 eventEmitter.on(
   "order:confirmed",
   safe("order:confirmed", async ({ orderId, email, firstName }) => {

@@ -397,7 +397,7 @@ export async function deleteUser(userId) {
 // mapUserCart) tells the UI when a line now exceeds available stock, but nothing
 // here blocks it - the authoritative check happens once, at checkout.
 
-const CART_PRODUCT_POPULATE = [{ path: "cart.product", select: "name slug sku image isActive variations" }];
+const CART_PRODUCT_POPULATE = [{ path: "cart.product", select: "name slug sku image isActive variations shippingClass" }];
 
 export async function getCart(userId) {
   if (!userId) validationError("userId");

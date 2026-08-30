@@ -1,0 +1,62 @@
+{
+  "title": {
+    "sr": "Otkazivanje porudžbine",
+    "en": "Cancelling an order"
+  },
+  "intro": {
+    "sr": "Za razliku od ostalih akcija u admin panelu (obično prosto „da li ste sigurni?”), otkazivanje porudžbine traži pisani razlog - i u pozadini automatski vraća zalihu proizvoda na stanje.",
+    "en": "Unlike most other admin actions (usually a plain \"are you sure?\"), cancelling an order asks for a written reason - and automatically restores the product's stock behind the scenes."
+  },
+  "steps": {
+    "admin-prijava": {
+      "heading": { "sr": "Prijava administratora", "en": "Admin logs in" },
+      "sr": "Administrator se prijavljuje na svoj nalog.",
+      "en": "The admin logs into their account."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": { "sr": "Otvaranje menija naloga", "en": "Open the account menu" },
+      "sr": "Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.",
+      "en": "The admin clicks the dropdown showing their name in the top-right corner."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": { "sr": "Ulazak u admin panel", "en": "Enter the admin panel" },
+      "sr": "Administrator bira „Admin panel” iz menija.",
+      "en": "The admin picks \"Admin panel\" from the menu."
+    },
+    "admin-porudzbine-otvara-meni": {
+      "heading": { "sr": "Otvaranje menija „Prodavnica”", "en": "Open the \"Store\" menu" },
+      "sr": "Administrator klikne na grupu „Prodavnica” u admin meniju.",
+      "en": "The admin clicks the \"Store\" group in the admin menu."
+    },
+    "admin-porudzbine-bira-stavku": {
+      "heading": { "sr": "Otvaranje liste porudžbina", "en": "Open the orders list" },
+      "sr": "Administrator bira „Porudžbine” iz menija.",
+      "en": "The admin picks \"Orders\" from the menu."
+    },
+    "admin-porudzbine-pretraga": {
+      "heading": { "sr": "Pretraga porudžbine", "en": "Search for the order" },
+      "sr": "Administrator pretražuje po email adresi klijenta.",
+      "en": "The admin searches by the customer's email."
+    },
+    "admin-porudzbine-otvaranje-rezultata": {
+      "heading": { "sr": "Otvaranje porudžbine", "en": "Open the order" },
+      "sr": "Administrator otvara porudžbinu koju treba otkazati.",
+      "en": "The admin opens the order that needs to be cancelled."
+    },
+    "otvaranje-modala-za-otkazivanje": {
+      "heading": { "sr": "Otvaranje prozora za otkazivanje", "en": "Open the cancellation dialog" },
+      "sr": "Administrator klikne „Otkaži porudžbinu” - za razliku od ostalih akcija, ovde se otvara forma sa poljem za razlog, ne obično potvrdno pitanje.",
+      "en": "The admin clicks \"Cancel order\" - unlike other actions, this opens a form with a reason field, not a plain yes/no confirmation."
+    },
+    "unos-razloga": {
+      "heading": { "sr": "Unos razloga", "en": "Enter a reason" },
+      "sr": "Administrator unosi razlog otkazivanja (polje je opciono, ali korisno za evidenciju).",
+      "en": "The admin enters a reason for the cancellation (the field is optional, but useful for record-keeping)."
+    },
+    "potvrda-otkazivanja": {
+      "heading": { "sr": "Potvrda otkazivanja", "en": "Confirm the cancellation" },
+      "sr": "Administrator potvrđuje - porudžbina je otkazana, a zaliha proizvoda se automatski vraća na stanje.",
+      "en": "The admin confirms - the order is cancelled, and the product's stock is automatically restored."
+    }
+  }
+}

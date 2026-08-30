@@ -1,0 +1,100 @@
+{
+  "title": {
+    "sr": "Provizija se obračunava tek pri završetku porudžbine",
+    "en": "Commission only becomes earned when an order completes"
+  },
+  "intro": {
+    "sr": "Partnerova provizija za porudžbinu ostaje „na čekanju” kroz sve međukorake statusa i postaje „zarađena” (spremna za isplatu) tek kada admin porudžbinu označi kao potpuno završenu - ne kad je samo dostavljena.",
+    "en": "A partner's commission on an order stays \"pending\" through every intermediate status and only becomes \"earned\" (payout-eligible) once the admin marks the order fully completed - not merely delivered."
+  },
+  "steps": {
+    "admin-prijava": {
+      "heading": {
+        "sr": "Prijava administratora",
+        "en": "Admin logs in"
+      },
+      "sr": "Administrator se prijavljuje na svoj nalog.",
+      "en": "The admin logs into their account."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": {
+        "sr": "Otvaranje menija naloga",
+        "en": "Open the account menu"
+      },
+      "sr": "Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.",
+      "en": "The admin clicks the dropdown showing their name in the top-right corner."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": {
+        "sr": "Ulazak u admin panel",
+        "en": "Enter the admin panel"
+      },
+      "sr": "Administrator bira „Admin panel” iz menija, čime se otvara admin deo sajta.",
+      "en": "The admin picks \"Admin panel\" from the menu, opening the site's admin area."
+    },
+    "admin-porudzbine-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija „Prodavnica”",
+        "en": "Open the \"Store\" menu"
+      },
+      "sr": "Administrator klikne na grupu „Prodavnica” u admin meniju.",
+      "en": "The admin clicks the \"Store\" group in the admin menu."
+    },
+    "admin-porudzbine-bira-stavku": {
+      "heading": {
+        "sr": "Otvaranje liste porudžbina",
+        "en": "Open the orders list"
+      },
+      "sr": "Administrator bira „Porudžbine” iz menija.",
+      "en": "The admin picks \"Orders\" from the menu."
+    },
+    "admin-porudzbine-pretraga": {
+      "heading": {
+        "sr": "Pretraga porudžbine",
+        "en": "Search for the order"
+      },
+      "sr": "Administrator pretražuje po email adresi klijenta.",
+      "en": "The admin searches by the customer's email."
+    },
+    "admin-porudzbine-otvaranje-rezultata": {
+      "heading": {
+        "sr": "Otvaranje porudžbine",
+        "en": "Open the order"
+      },
+      "sr": "Administrator otvara porudžbinu koja ima partnerovu proviziju na čekanju.",
+      "en": "The admin opens the order that has a partner commission pending on it."
+    },
+    "oznacavanje-u-obradi": {
+      "heading": {
+        "sr": "Označavanje kao „u obradi”",
+        "en": "Mark as processing"
+      },
+      "sr": "Prvi korak statusa - provizija ostaje na čekanju.",
+      "en": "The first status step - the commission stays pending."
+    },
+    "oznacavanje-poslato": {
+      "heading": {
+        "sr": "Označavanje kao „poslato”",
+        "en": "Mark as shipped"
+      },
+      "sr": "Drugi korak - provizija i dalje na čekanju.",
+      "en": "The second step - the commission is still pending."
+    },
+    "oznacavanje-dostavljeno": {
+      "heading": {
+        "sr": "Označavanje kao „dostavljeno”",
+        "en": "Mark as delivered"
+      },
+      "sr": "Iako zvuči kao kraj, „dostavljeno” NIJE trenutak kad se provizija obračunava - i dalje je na čekanju.",
+      "en": "Even though it sounds final, \"delivered\" is NOT when the commission gets calculated - it's still pending."
+    },
+    "oznacavanje-zavrseno": {
+      "heading": {
+        "sr": "Označavanje kao „završeno”",
+        "en": "Mark as completed"
+      },
+      "sr": "Tek ovaj, poslednji status pokreće unapređenje provizije sa „na čekanju” na „zarađena” - sad je spremna za isplatu partneru.",
+      "en": "Only this final status triggers the commission's promotion from \"pending\" to \"earned\" - now it's ready to be paid out to the partner."
+    }
+  }
+}

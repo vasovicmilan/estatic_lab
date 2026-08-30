@@ -1,0 +1,67 @@
+{
+  "title": {
+    "sr": "Kreiranje blog posta",
+    "en": "Creating a blog post"
+  },
+  "intro": {
+    "sr": "Administrator piše i objavljuje novi blog post - naslov, kratak opis, telo teksta kroz editor sastavljen od blokova, i obavezna naslovna slika.",
+    "en": "The admin writes and publishes a new blog post - a title, a short excerpt, body text through a block-based editor, and a required cover image."
+  },
+  "steps": {
+    "admin-prijava": {
+      "heading": { "sr": "Prijava administratora", "en": "Admin logs in" },
+      "sr": "Administrator se prijavljuje na svoj nalog.",
+      "en": "The admin logs into their account."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": { "sr": "Otvaranje menija naloga", "en": "Open the account menu" },
+      "sr": "Administrator klikne na dropdown sa svojim imenom.",
+      "en": "The admin clicks the dropdown showing their name."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": { "sr": "Ulazak u admin panel", "en": "Enter the admin panel" },
+      "sr": "Administrator bira „Admin panel”.",
+      "en": "The admin picks \"Admin panel\"."
+    },
+    "admin-blog-otvara-meni": {
+      "heading": { "sr": "Otvaranje menija „Sadržaj i marketing”", "en": "Open the \"Content and marketing\" menu" },
+      "sr": "Administrator klikne na grupu „Sadržaj i marketing”.",
+      "en": "The admin clicks the \"Content and marketing\" group."
+    },
+    "admin-blog-bira-stavku": {
+      "heading": { "sr": "Otvaranje bloga", "en": "Open the blog" },
+      "sr": "Administrator bira „Blog” iz menija.",
+      "en": "The admin picks \"Blog\" from the menu."
+    },
+    "admin-blog-klik-na-dodaj": {
+      "heading": { "sr": "Novi post", "en": "New post" },
+      "sr": "Administrator klikne „Novi post”.",
+      "en": "The admin clicks \"New post\"."
+    },
+    "unos-naslova-i-opisa": {
+      "heading": { "sr": "Unos naslova i kratkog opisa", "en": "Enter the title and excerpt" },
+      "sr": "Administrator unosi naslov i kratak opis koji se prikazuje u pregledu.",
+      "en": "The admin enters the title and a short excerpt shown in previews."
+    },
+    "dodavanje-pasusa": {
+      "heading": { "sr": "Dodavanje pasusa", "en": "Add a paragraph" },
+      "sr": "Administrator dodaje blok teksta - editor je sastavljen od blokova, svaki tip ima svoja polja.",
+      "en": "The admin adds a text block - the editor is block-based, each type has its own fields."
+    },
+    "izbor-statusa": {
+      "heading": { "sr": "Izbor statusa", "en": "Choose the status" },
+      "sr": "Administrator bira „Objavljeno” - post odmah postaje javno vidljiv.",
+      "en": "The admin selects \"Published\" - the post becomes publicly visible immediately."
+    },
+    "otpremanje-naslovne-slike": {
+      "heading": { "sr": "Otpremanje naslovne slike", "en": "Upload a cover image" },
+      "sr": "Naslovna slika je obavezna - administrator je otprema i unosi alt tekst.",
+      "en": "A cover image is required - the admin uploads one and enters alt text."
+    },
+    "cuvanje-posta": {
+      "heading": { "sr": "Čuvanje posta", "en": "Save the post" },
+      "sr": "Administrator čuva post - odmah je dostupan na javnom blogu.",
+      "en": "The admin saves the post - it's immediately available on the public blog."
+    }
+  }
+}

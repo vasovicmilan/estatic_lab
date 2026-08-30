@@ -1,0 +1,18 @@
+<%- include("_layout", {
+  title: "Cena dostave je spremna",
+  eyebrow: "Porudžbina",
+  heading: `Cena dostave je spremna${typeof firstName !== 'undefined' && firstName ? ', ' + firstName : ''}`,
+  preheader: "Potvrdite porudžbinu sa konačnom cenom dostave",
+  body: `
+    <p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0 0 20px;">Izračunali smo cenu dostave za vašu porudžbinu. Proverite konačan iznos ispod i potvrdite porudžbinu klikom na dugme.</p>
+    ${infoTable(
+      infoRow("Cena dostave", shippingAmount) +
+      infoRow("Ukupno za naplatu", totalPrice)
+    )}
+    ${ctaButton(confirmUrl, "Potvrdi porudžbinu")}
+    <p style="font-size:12px; color:#aca59d; line-height:1.6; margin:20px 0 0; text-align:center;">
+      Link važi do: ${tokenExpiration}. Ako ne stignete da potvrdite, rezervisane zalihe se oslobađaju - javite nam se i pomoći ćemo da ipak završimo porudžbinu.
+    </p>
+    ${linkFallback(confirmUrl)}
+  `
+}) %>

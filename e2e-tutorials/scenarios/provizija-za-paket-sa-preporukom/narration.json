@@ -1,0 +1,132 @@
+{
+  "title": {
+    "sr": "Provizija za paket sa preporukom partnera",
+    "en": "Commission on a package bought via a partner referral"
+  },
+  "intro": {
+    "sr": "Kad se paket kupi preko partnerovog koda za preporuku, dva popusta se kombinuju: kupon partnera i ugrađen popust samog paketa. Sistem mora ispravno da izračuna proviziju i partnera (na osnovu stvarno naplaćenog) i zaposlenog (proporcionalno prema pravoj, nepopustovanoj vrednosti usluge) - ovo je stvarna poslovna pravila iz interne dokumentacije, ne izmišljen primer.",
+    "en": "When a package is bought through a partner's referral code, two discounts combine: the partner's coupon and the package's own built-in discount. The system has to correctly calculate commission for both the partner (based on what was actually paid) and the employee (proportional to the service's true, undiscounted value) - this is a real business rule from the internal docs, not a made-up example."
+  },
+  "steps": {
+    "registracija": {
+      "heading": {
+        "sr": "Registracija",
+        "en": "Register"
+      },
+      "sr": "Klijent se registruje.",
+      "en": "The customer registers."
+    },
+    "prijava": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Log in"
+      },
+      "sr": "Klijent se prijavljuje na svoj nalog.",
+      "en": "The customer logs into their account."
+    },
+    "admin-prijava": {
+      "heading": {
+        "sr": "Prijava administratora",
+        "en": "Admin logs in"
+      },
+      "sr": "Administrator se prijavljuje da bi dodelio paket.",
+      "en": "The admin logs in to assign the package."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": {
+        "sr": "Otvaranje menija naloga",
+        "en": "Open the account menu"
+      },
+      "sr": "Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.",
+      "en": "The admin clicks the dropdown showing their name in the top-right corner."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": {
+        "sr": "Ulazak u admin panel",
+        "en": "Enter the admin panel"
+      },
+      "sr": "Administrator bira „Admin panel” iz menija, čime se otvara admin deo sajta.",
+      "en": "The admin picks \"Admin panel\" from the menu, opening the site's admin area."
+    },
+    "admin-paketi-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija „Katalog”",
+        "en": "Open the \"Catalog\" menu"
+      },
+      "sr": "Administrator klikne na grupu „Katalog” u admin meniju.",
+      "en": "The admin clicks the \"Catalog\" group in the admin menu."
+    },
+    "admin-paketi-bira-stavku": {
+      "heading": {
+        "sr": "Otvaranje kupljenih paketa",
+        "en": "Open purchased packages"
+      },
+      "sr": "Administrator bira „Kupljeni paketi” iz menija.",
+      "en": "The admin picks \"Purchased packages\" from the menu."
+    },
+    "admin-paketi-klik-na-dodaj": {
+      "heading": {
+        "sr": "Dodela novog paketa",
+        "en": "Assign a new package"
+      },
+      "sr": "Administrator klikne „Dodeli paket”.",
+      "en": "The admin clicks \"Assign package\"."
+    },
+    "admin-dodeljuje-paket-sa-kuponom": {
+      "heading": {
+        "sr": "Dodela paketa uz partnerov kupon",
+        "en": "Assign the package with a partner coupon"
+      },
+      "sr": "Administrator bira klijenta i paket, unosi kod partnerovog kupona - popust se primenjuje odmah na kupovinu paketa.",
+      "en": "The admin picks the customer and package, enters the partner's coupon code - the discount applies immediately to the package purchase."
+    },
+    "klijent-rezervise-seansu": {
+      "heading": {
+        "sr": "Rezervacija seanse iz paketa",
+        "en": "Book a session from the package"
+      },
+      "sr": "Klijent zakazuje termin, plaćajući iz već kupljenog paketa - bez dodatne naplate.",
+      "en": "The customer books an appointment, paying from the already-purchased package - no additional charge."
+    },
+    "admin-termini-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija „Zakazivanje”",
+        "en": "Open the \"Scheduling\" menu"
+      },
+      "sr": "Administrator klikne na grupu „Zakazivanje” u admin meniju.",
+      "en": "The admin clicks the \"Scheduling\" group in the admin menu."
+    },
+    "admin-termini-bira-stavku": {
+      "heading": {
+        "sr": "Otvaranje liste termina",
+        "en": "Open the appointments list"
+      },
+      "sr": "Administrator bira „Termini” iz menija.",
+      "en": "The admin picks \"Appointments\" from the menu."
+    },
+    "admin-termini-pretraga": {
+      "heading": {
+        "sr": "Pretraga termina",
+        "en": "Search for the appointment"
+      },
+      "sr": "Administrator pretražuje listu po email adresi klijenta.",
+      "en": "The admin searches the list by the customer's email."
+    },
+    "admin-termini-otvaranje-rezultata": {
+      "heading": {
+        "sr": "Otvaranje termina",
+        "en": "Open the appointment"
+      },
+      "sr": "Administrator otvara termin koji klijent zakazao iz paketa.",
+      "en": "The admin opens the appointment the customer booked from the package."
+    },
+    "admin-zavrsava-termin": {
+      "heading": {
+        "sr": "Admin završava termin",
+        "en": "Admin completes the appointment"
+      },
+      "sr": "Administrator potvrđuje pa završava termin - ovo je trenutak kad se obračunava provizija zaposlenog, ispravno proporcionalna kombinovanom popustu.",
+      "en": "The admin confirms then completes the appointment - this is when the employee's commission is calculated, correctly proportional to the combined discount."
+    }
+  }
+}

@@ -3,6 +3,7 @@ import userService from "./user.service.js";
 import tempOrderService from "./temporary-order.service.js";
 import orderService from "./order.service.js";
 import { validationError, badRequest } from "../utils/error.util.js";
+import { DEFAULT_SHIPPING_PRICE } from "../config/shop.config.js";
 
 // ==================== CART ====================
 // Two cart representations exist: a logged-in user's persisted `User.cart` (see
@@ -17,11 +18,13 @@ import { validationError, badRequest } from "../utils/error.util.js";
 // different input shapes through one shared function.
 async function resolveGuestCart(guestCart = []) {
   const lines = [];
+  let hasFreightItem = false;
 
   for (const line of guestCart) {
     try {
       const { product, variation } = await productService.getVariationRaw(line.productId, line.variantId);
       const image = variation.image || product.image;
+      if (product.shippingClass === "freight") hasFreightItem = true;
       lines.push({
         productId: line.productId,
         productSlug: product.slug,
@@ -47,6 +50,9 @@ async function resolveGuestCart(guestCart = []) {
     stavke: lines,
     brojStavki: lines.reduce((sum, l) => sum + l.kolicina, 0),
     ukupnaCena: lines.reduce((sum, l) => sum + l.ukupno, 0),
+    // mirrors mapUserCart's identical computation (see that function's comment)
+    zahtevaProceenuDostave: hasFreightItem,
+    postarina: hasFreightItem ? null : DEFAULT_SHIPPING_PRICE,
   };
 }
 

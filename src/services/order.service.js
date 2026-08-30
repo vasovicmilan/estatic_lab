@@ -4,6 +4,7 @@ import orderRepo from "../repositories/order.repository.js";
 import tempOrderService from "./temporary-order.service.js";
 import productService from "./product.service.js";
 import couponService from "./coupon.service.js";
+import userService from "./user.service.js";
 import { generateRandomToken } from "./crypto.service.js";
 import { mapOrder, mapOrdersForAdminList } from "../mappers/order.mapper.js";
 import { getAllowedStatuses, canUserCancelOrder, canEditContactInfo } from "../models/order-status-transitions.js";
@@ -83,6 +84,135 @@ async function createOrderFromTemporaryOrder(tempOrder) {
   });
 
   return created;
+}
+
+// ==================== MANUAL ORDER (admin-created, no checkout at all) ====================
+
+/**
+ * Creates a real Order directly, bypassing checkout/TemporaryOrder/confirmation
+ * entirely - for phone orders, gifts, and specifically "cena na upit" products
+ * (product.model.js's priceOnRequest: no automatic price exists to check out
+ * with in the first place, so the sale has to happen this way). Mirrors
+ * createOrderFromTemporaryOrder's shape (same session/transaction/cancelToken
+ * pattern) since the result needs to look and behave like any other Order from
+ * here on - same status transitions, same commission/payout eligibility once
+ * completed - even though it never passed through a TemporaryOrder.
+ *
+ * `existingUserId` XOR `contact` - manual-order.controller.js's
+ * admin-manual-order.js toggles which half of the form is visible/required
+ * client-side; contactSnapshot is built from whichever one was actually used
+ * (an existing user's own profile, or the freshly-typed contact fields).
+ */
+export async function createManualOrder(input, { actorId, actorRole } = {}) {
+  const { items = [], existingUserId = null, contact = {}, phone, address, shipping = 0, note = "" } = input;
+
+  if (!items.length) validationError("items");
+  const { productId, variantId, quantity, priceOverride } = items[0];
+  if (!productId) validationError("productId");
+  if (!variantId) validationError("variantId");
+  if (!quantity || quantity < 1) validationError("quantity");
+  if (!phone) validationError("phone");
+  if (!address?.city || !address?.street || !address?.number || !address?.postalCode) validationError("address");
+
+  let buyerId = null;
+  let contactSnapshot;
+
+  if (existingUserId) {
+    const existing = await userService.findUserById(existingUserId);
+    if (!existing) notFound("Korisnik");
+    buyerId = existing._id;
+    contactSnapshot = { firstName: existing.firstName, lastName: existing.lastName || "", email: existing.email };
+  } else {
+    if (!contact.email) validationError("email");
+    if (!contact.firstName) validationError("firstName");
+    // same "reuse if this email already has an account" lookup checkout itself
+    // does (temporary-order.service.js) - an admin typing a returning
+    // customer's email by hand shouldn't spawn a second duplicate account for them
+    const existingByEmail = await userService.findUserByEmail(contact.email);
+    if (existingByEmail) buyerId = existingByEmail._id;
+    contactSnapshot = { firstName: contact.firstName, lastName: contact.lastName || "", email: contact.email };
+  }
+
+  const session = await mongoose.startSession();
+  let created;
+  const cancelToken = generateRandomToken(24);
+
+  try {
+    await session.withTransaction(async () => {
+      if (!buyerId) {
+        const guestUser = await userService.createGuestUser(
+          { firstName: contactSnapshot.firstName, lastName: contactSnapshot.lastName, email: contactSnapshot.email, phone },
+          { session }
+        );
+        buyerId = guestUser._id;
+      }
+
+      const product = await productService.decreaseVariationStock(productId, variantId, quantity, { session });
+      const variation = product.variations.id(variantId);
+
+      // a priceOnRequest product's own `price` is an internal reference value
+      // never shown to the public (see product.model.js) - silently falling
+      // back to it here if the admin forgot to check "override cena" would
+      // create a real order at a price nobody actually agreed to, so this is
+      // the one case where a missing override is a hard error, not a fallback.
+      if (product.priceOnRequest && priceOverride == null) {
+        badRequest(`"${product.name}" je označen kao "cena na upit" - cena mora biti ručno uneta`);
+      }
+
+      const unitPrice = priceOverride != null ? priceOverride : variation.price;
+      const lineTotal = unitPrice * quantity;
+
+      created = await orderRepo.createOrder(
+        {
+          user: buyerId,
+          contactSnapshot,
+          phone: buildPhoneRecord(phone),
+          address: buildAddressRecord(address),
+          items: [
+            {
+              product: product._id,
+              variant: variation._id,
+              title: product.name,
+              variantLabel: variation.label,
+              sku: variation.sku || product.sku,
+              price: lineTotal,
+              quantity,
+              image: product.image || null,
+            },
+          ],
+          subtotal: lineTotal,
+          shipping,
+          note,
+          status: "pending",
+          cancelToken,
+        },
+        { session }
+      );
+    });
+  } catch (error) {
+    logError("Manual order creation transaction failed", error, { actorId, actorRole });
+    throw error;
+  } finally {
+    await session.endSession();
+  }
+
+  logInfo("Manual order created", { orderId: created._id, actorId, actorRole });
+
+  // same event a normal checkout confirmation fires - the customer gets the
+  // usual "order received" email + PDF (email.listener.js), and admin gets the
+  // usual new-order notification, even though this order skipped checkout entirely
+  eventEmitter.emit("order:confirmed", {
+    orderId: created._id.toString(),
+    email: contactSnapshot.email,
+    firstName: contactSnapshot.firstName,
+  });
+
+  // populated, not the raw `created` doc straight from .create() - same reasoning
+  // confirmOrderByAdmin's own populated fetch has: the admin detail mapper expects
+  // order.user to be a populated document (firstName/email/...), not a bare
+  // ObjectId reference.
+  const populated = await orderRepo.findOrderById(created._id);
+  return mapOrder(populated, "admin", "detail");
 }
 
 export async function confirmOrder(orderId, token, { ignoreExpiration = false } = {}) {
@@ -284,6 +414,7 @@ export async function updateOrderContactInfo(orderId, { phone, address } = {}) {
 export default {
   confirmOrder,
   confirmOrderByAdmin,
+  createManualOrder,
   findOrders,
   getOrderById,
   getOrderForCommission,

@@ -1,0 +1,172 @@
+{
+  "title": {
+    "sr": "Kupovina paketa",
+    "en": "Buying a session package"
+  },
+  "intro": {
+    "sr": "Paketi nemaju samostalnu naplatu na sajtu - administrator ručno dodeljuje paket klijentu, a klijent zatim iz njega troši seanse kroz običan tok zakazivanja, bez ikakve doplate.",
+    "en": "Packages have no self-checkout - an admin manually assigns one to a customer, who then spends sessions from it through the ordinary booking flow, at no extra charge."
+  },
+  "steps": {
+    "registracija": {
+      "heading": {
+        "sr": "Registracija",
+        "en": "Register"
+      },
+      "sr": "Klijent se prvo registruje - nalog mora da postoji da bi administrator mogao da mu dodeli paket.",
+      "en": "The customer registers first - an account has to exist before an admin can assign them a package."
+    },
+    "prijava": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Log in"
+      },
+      "sr": "Klijent se prijavljuje na svoj novi nalog.",
+      "en": "The customer logs into their new account."
+    },
+    "admin-prijava": {
+      "heading": {
+        "sr": "Prijava administratora",
+        "en": "Admin logs in"
+      },
+      "sr": "Administrator se prijavljuje da bi dodelio paket klijentu.",
+      "en": "The admin logs in to assign a package to the customer."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": {
+        "sr": "Otvaranje menija naloga",
+        "en": "Open the account menu"
+      },
+      "sr": "Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.",
+      "en": "The admin clicks the dropdown showing their name in the top-right corner."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": {
+        "sr": "Ulazak u admin panel",
+        "en": "Enter the admin panel"
+      },
+      "sr": "Administrator bira „Admin panel” iz menija, čime se otvara admin deo sajta.",
+      "en": "The admin picks \"Admin panel\" from the menu, opening the site's admin area."
+    },
+    "admin-paketi-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija „Katalog”",
+        "en": "Open the \"Catalog\" menu"
+      },
+      "sr": "Administrator klikne na grupu „Katalog” u admin meniju.",
+      "en": "The admin clicks the \"Catalog\" group in the admin menu."
+    },
+    "admin-paketi-bira-stavku": {
+      "heading": {
+        "sr": "Otvaranje kupljenih paketa",
+        "en": "Open purchased packages"
+      },
+      "sr": "Administrator bira „Kupljeni paketi” iz menija.",
+      "en": "The admin picks \"Purchased packages\" from the menu."
+    },
+    "admin-paketi-klik-na-dodaj": {
+      "heading": {
+        "sr": "Dodela novog paketa",
+        "en": "Assign a new package"
+      },
+      "sr": "Administrator klikne „Dodeli paket”, čime se otvara forma za dodelu.",
+      "en": "The admin clicks \"Assign package\", opening the assignment form."
+    },
+    "admin-dodeljuje-paket": {
+      "heading": {
+        "sr": "Dodela paketa",
+        "en": "Assign the package"
+      },
+      "sr": "Administrator potvrđuje dodelu - paket od 3 seanse je sada na klijentovom nalogu, spreman za korišćenje.",
+      "en": "The admin confirms the assignment - a 3-session package is now on the customer's account, ready to use."
+    },
+    "otvaranje-stranice-usluge": {
+      "heading": {
+        "sr": "Zakazivanje usluge",
+        "en": "Book the service"
+      },
+      "sr": "Klijent otvara stranicu usluge za koju ima paket i bira varijantu.",
+      "en": "The customer opens the page for the service their package covers and selects a variant."
+    },
+    "izbor-datuma-i-termina": {
+      "heading": {
+        "sr": "Izbor termina",
+        "en": "Pick a time slot"
+      },
+      "sr": "Klijent bira datum i slobodan termin, isto kao kod obične kupovine.",
+      "en": "The customer picks a date and an available slot, same as an ordinary booking."
+    },
+    "placanje-iz-paketa": {
+      "heading": {
+        "sr": "Plaćanje iz paketa",
+        "en": "Paying from the package"
+      },
+      "sr": "Sistem prepoznaje da klijent ima upotrebljiv paket za baš ovu uslugu - opcija „plati iz paketa” je automatski čekirana, sa brojem preostalih seansi.",
+      "en": "The system recognizes the customer has a usable package for this exact service - the \"pay from package\" option is checked automatically, showing how many sessions remain."
+    },
+    "unos-kontakt-podataka": {
+      "heading": {
+        "sr": "Unos kontakt podataka",
+        "en": "Enter contact details"
+      },
+      "sr": "Klijent unosi broj telefona pre potvrde.",
+      "en": "The customer enters a phone number before confirming."
+    },
+    "potvrda-zakazivanja": {
+      "heading": {
+        "sr": "Potvrda zakazivanja",
+        "en": "Confirm the booking"
+      },
+      "sr": "Termin je zakazan bez ikakve naplate - cena je pokrivena paketom.",
+      "en": "The appointment is booked with no charge at all - the price is covered by the package."
+    },
+    "admin-termini-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija „Zakazivanje”",
+        "en": "Open the \"Scheduling\" menu"
+      },
+      "sr": "Administrator klikne na grupu „Zakazivanje” u admin meniju.",
+      "en": "The admin clicks the \"Scheduling\" group in the admin menu."
+    },
+    "admin-termini-bira-stavku": {
+      "heading": {
+        "sr": "Otvaranje liste termina",
+        "en": "Open the appointments list"
+      },
+      "sr": "Administrator bira „Termini” iz menija.",
+      "en": "The admin picks \"Appointments\" from the menu."
+    },
+    "admin-termini-pretraga": {
+      "heading": {
+        "sr": "Pretraga termina",
+        "en": "Search for the appointment"
+      },
+      "sr": "Administrator pretražuje listu po email adresi klijenta.",
+      "en": "The admin searches the list by the customer's email."
+    },
+    "admin-termini-otvaranje-rezultata": {
+      "heading": {
+        "sr": "Otvaranje termina",
+        "en": "Open the appointment"
+      },
+      "sr": "Administrator otvara novi termin iz rezultata pretrage.",
+      "en": "The admin opens the new appointment from the search results."
+    },
+    "admin-potvrdjuje-termin": {
+      "heading": {
+        "sr": "Admin potvrđuje termin",
+        "en": "Admin confirms the appointment"
+      },
+      "sr": "Administrator potvrđuje termin - seansa je sada rezervisana iz paketa, ali još nije potrošena.",
+      "en": "The admin confirms the appointment - the session is now reserved from the package, but not yet spent."
+    },
+    "admin-zavrsava-termin": {
+      "heading": {
+        "sr": "Admin završava termin",
+        "en": "Admin completes the appointment"
+      },
+      "sr": "Kada je usluga zaista pružena, administrator označava termin kao završen - tek sada se seansa iz paketa stvarno troši.",
+      "en": "Once the service has actually been delivered, the admin marks it completed - only now is the session from the package actually spent."
+    }
+  }
+}

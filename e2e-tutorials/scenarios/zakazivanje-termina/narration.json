@@ -1,0 +1,140 @@
+{
+  "title": {
+    "sr": "Zakazivanje termina",
+    "en": "Booking an appointment"
+  },
+  "intro": {
+    "sr": "Kompletan tok zakazivanja: klijent bira uslugu, termin i potvrđuje zakazivanje, a zatim administrator potvrđuje i završava termin.",
+    "en": "The full booking flow: a customer picks a service and time slot and confirms the booking, then an admin confirms and completes the appointment."
+  },
+  "steps": {
+    "registracija": {
+      "heading": {
+        "sr": "Registracija",
+        "en": "Register"
+      },
+      "sr": "Klijent se registruje popunjavanjem forme sa imenom, prezimenom, email adresom i lozinkom.",
+      "en": "The customer registers by filling in a form with their name, email, and password."
+    },
+    "prijava": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Log in"
+      },
+      "sr": "Nakon registracije, klijent se prijavljuje na svoj novi nalog.",
+      "en": "After registering, the customer logs into their new account."
+    },
+    "otvaranje-stranice-usluge": {
+      "heading": {
+        "sr": "Otvaranje stranice usluge",
+        "en": "Open the service page"
+      },
+      "sr": "Klijent otvara stranicu izabrane usluge, gde vidi opis i dostupne varijante (npr. trajanje i cenu).",
+      "en": "The customer opens the page for the chosen service, where they see the description and available variants (e.g. duration and price)."
+    },
+    "izbor-varijante-usluge": {
+      "heading": {
+        "sr": "Izbor varijante usluge",
+        "en": "Choose a service variant"
+      },
+      "sr": "Klikom na „Izaberi” klijent bira konkretnu varijantu usluge i prelazi na izbor termina.",
+      "en": "Clicking \"Select\" chooses the specific service variant and moves on to picking a time slot."
+    },
+    "izbor-datuma-i-termina": {
+      "heading": {
+        "sr": "Izbor datuma i termina",
+        "en": "Pick a date and time slot"
+      },
+      "sr": "Klijent bira datum, sistem prikazuje slobodne termine za taj dan na osnovu radnog vremena zaposlenih, a klijent klikne na željeni slot.",
+      "en": "The customer picks a date; the system shows the free slots for that day based on employee working hours, and the customer clicks the desired slot."
+    },
+    "unos-kontakt-podataka": {
+      "heading": {
+        "sr": "Unos kontakt podataka",
+        "en": "Enter contact details"
+      },
+      "sr": "Klijent unosi broj telefona za kontakt pre nego što potvrdi zakazivanje.",
+      "en": "The customer enters a contact phone number before confirming the booking."
+    },
+    "potvrda-zakazivanja": {
+      "heading": {
+        "sr": "Potvrda zakazivanja",
+        "en": "Confirm the booking"
+      },
+      "sr": "Klijent potvrđuje zakazivanje. Termin se kreira u statusu „na čekanju”, dok ga administrator ne potvrdi.",
+      "en": "The customer confirms the booking. The appointment is created with status \"pending\" until an admin confirms it."
+    },
+    "admin-prijava": {
+      "heading": {
+        "sr": "Prijava administratora",
+        "en": "Admin logs in"
+      },
+      "sr": "Administrator se prijavljuje na svoj nalog kako bi obradio novi termin.",
+      "en": "The admin logs into their account to process the new appointment."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": {
+        "sr": "Otvaranje menija naloga",
+        "en": "Open the account menu"
+      },
+      "sr": "Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.",
+      "en": "The admin clicks the dropdown showing their name in the top-right corner."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": {
+        "sr": "Ulazak u admin panel",
+        "en": "Enter the admin panel"
+      },
+      "sr": "Administrator bira „Admin panel” iz menija, čime se otvara admin deo sajta.",
+      "en": "The admin picks \"Admin panel\" from the menu, opening the site's admin area."
+    },
+    "admin-termini-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija „Zakazivanje”",
+        "en": "Open the \"Scheduling\" menu"
+      },
+      "sr": "Administrator klikne na grupu „Zakazivanje” u admin meniju, gde vidi dostupne stavke.",
+      "en": "The admin clicks the \"Scheduling\" group in the admin menu, seeing the available items."
+    },
+    "admin-termini-bira-stavku": {
+      "heading": {
+        "sr": "Otvaranje liste termina",
+        "en": "Open the appointments list"
+      },
+      "sr": "Administrator bira „Termini” iz menija, čime se otvara lista svih termina.",
+      "en": "The admin picks \"Appointments\" from the menu, opening the list of all appointments."
+    },
+    "admin-termini-pretraga": {
+      "heading": {
+        "sr": "Pretraga termina",
+        "en": "Search for the appointment"
+      },
+      "sr": "Administrator pretražuje listu po email adresi klijenta da bi brzo pronašao novi termin.",
+      "en": "The admin searches the list by the customer's email to quickly find the new appointment."
+    },
+    "admin-termini-otvaranje-rezultata": {
+      "heading": {
+        "sr": "Otvaranje termina iz rezultata",
+        "en": "Open the appointment from the results"
+      },
+      "sr": "Administrator otvara detalje termina klikom na ikonicu u redu tabele.",
+      "en": "The admin opens the appointment's details by clicking the icon in the table row."
+    },
+    "admin-potvrdjuje-termin": {
+      "heading": {
+        "sr": "Admin potvrđuje termin",
+        "en": "Admin confirms the appointment"
+      },
+      "sr": "Administrator potvrđuje termin. Klijent tek sada ima siguran, potvrđen termin u kalendaru.",
+      "en": "The admin confirms the appointment. Only now does the customer have a firm, confirmed slot on the calendar."
+    },
+    "admin-zavrsava-termin": {
+      "heading": {
+        "sr": "Admin završava termin",
+        "en": "Admin completes the appointment"
+      },
+      "sr": "Nakon što je usluga zaista pružena, administrator označava termin kao završen. Ovo je i trenutak kada se, ako je uključen partner/zaposleni sa provizijom, ona obračunava.",
+      "en": "Once the service has actually been delivered, the admin marks the appointment as completed. This is also the point where employee/partner commission, if applicable, gets recorded."
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "title": {
+    "sr": "Otkazivanje termina",
+    "en": "Cancelling an appointment"
+  },
+  "intro": {
+    "sr": "Klijent može sam da pregleda i otkaže sopstveni budući termin iz svog naloga, bez potrebe da zove ili piše salonu.",
+    "en": "A customer can view and cancel their own upcoming appointment from their account, without having to call or message the salon."
+  },
+  "steps": {
+    "registracija": {
+      "heading": { "sr": "Registracija", "en": "Register" },
+      "sr": "Klijent se registruje.",
+      "en": "The customer registers."
+    },
+    "prijava": {
+      "heading": { "sr": "Prijava", "en": "Log in" },
+      "sr": "Klijent se prijavljuje na svoj nalog.",
+      "en": "The customer logs into their account."
+    },
+    "pregled-termina": {
+      "heading": { "sr": "Pregled termina", "en": "View appointments" },
+      "sr": "U delu „Moji termini” klijent vidi listu svojih zakazanih termina.",
+      "en": "In the \"My appointments\" section, the customer sees a list of their booked appointments."
+    },
+    "otvaranje-detalja-termina": {
+      "heading": { "sr": "Detalji termina", "en": "Appointment details" },
+      "sr": "Klikom na termin, klijent otvara njegove detalje - dugme za otkazivanje je vidljivo jer je termin dovoljno daleko u budućnosti.",
+      "en": "Clicking the appointment opens its details - the cancel button is visible because the appointment is far enough in the future."
+    },
+    "otkazivanje-termina": {
+      "heading": { "sr": "Otkazivanje", "en": "Cancel" },
+      "sr": "Klijent klikne „Otkaži termin”, potvrdi u dijalogu, i termin je otkazan.",
+      "en": "The customer clicks \"Cancel appointment\", confirms in the dialog, and the appointment is cancelled."
+    }
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "title": {
+    "sr": "Kreiranje partnera i kupona za njega",
+    "en": "Creating a partner and their referral coupon"
+  },
+  "intro": {
+    "sr": "Administrator promoviše postojećeg korisnika u partnera, podešava mu stope provizije, i kreira referalni kupon koji je direktno vezan za njega - svaka kupovina preko tog kupona sada generiše proviziju.",
+    "en": "The admin promotes an existing customer to a partner, sets their commission rates, and creates a referral coupon directly linked to them - every purchase through that coupon now generates commission."
+  },
+  "steps": {
+    "admin-prijava": {
+      "heading": { "sr": "Prijava administratora", "en": "Admin logs in" },
+      "sr": "Administrator se prijavljuje na svoj nalog.",
+      "en": "The admin logs into their account."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": { "sr": "Otvaranje menija naloga", "en": "Open the account menu" },
+      "sr": "Administrator klikne na dropdown sa svojim imenom.",
+      "en": "The admin clicks the dropdown showing their name."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": { "sr": "Ulazak u admin panel", "en": "Enter the admin panel" },
+      "sr": "Administrator bira „Admin panel”.",
+      "en": "The admin picks \"Admin panel\"."
+    },
+    "admin-partneri-otvara-meni": {
+      "heading": { "sr": "Otvaranje menija „Partnerski program”", "en": "Open the \"Partner program\" menu" },
+      "sr": "Administrator klikne na grupu „Partnerski program”.",
+      "en": "The admin clicks the \"Partner program\" group."
+    },
+    "admin-partneri-bira-stavku": {
+      "heading": { "sr": "Otvaranje liste partnera", "en": "Open the partners list" },
+      "sr": "Administrator bira „Partneri” iz menija.",
+      "en": "The admin picks \"Partners\" from the menu."
+    },
+    "admin-partneri-klik-na-dodaj": {
+      "heading": { "sr": "Novi partner", "en": "New partner" },
+      "sr": "Administrator klikne „Novi partner”.",
+      "en": "The admin clicks \"New partner\"."
+    },
+    "izbor-korisnika": {
+      "heading": { "sr": "Izbor korisnika", "en": "Select the user" },
+      "sr": "Partner se uvek pravi od postojećeg korisničkog naloga - administrator bira kog klijenta promoviše u partnera.",
+      "en": "A partner is always made from an existing user account - the admin picks which customer to promote."
+    },
+    "unos-provizija": {
+      "heading": { "sr": "Unos stopa provizije", "en": "Enter commission rates" },
+      "sr": "Administrator unosi dve odvojene stope - za usluge/pakete i za artikle iz prodavnice, pošto retko ima smisla da budu iste.",
+      "en": "The admin enters two separate rates - for services/packages and for store products, since they rarely make sense to be the same."
+    },
+    "cuvanje-partnera": {
+      "heading": { "sr": "Čuvanje partnera", "en": "Save the partner" },
+      "sr": "Administrator čuva novog partnera.",
+      "en": "The admin saves the new partner."
+    },
+    "admin-kuponi-otvara-meni": {
+      "heading": { "sr": "Otvaranje menija „Prodavnica”", "en": "Open the \"Store\" menu" },
+      "sr": "Administrator klikne na grupu „Prodavnica”.",
+      "en": "The admin clicks the \"Store\" group."
+    },
+    "admin-kuponi-bira-stavku": {
+      "heading": { "sr": "Otvaranje kupona", "en": "Open coupons" },
+      "sr": "Administrator bira „Kuponi” iz menija.",
+      "en": "The admin picks \"Coupons\" from the menu."
+    },
+    "admin-kuponi-klik-na-dodaj": {
+      "heading": { "sr": "Novi kupon", "en": "New coupon" },
+      "sr": "Administrator klikne „Novi kupon”.",
+      "en": "The admin clicks \"New coupon\"."
+    },
+    "unos-koda-kupona": {
+      "heading": { "sr": "Unos koda kupona", "en": "Enter the coupon code" },
+      "sr": "Administrator unosi jedinstven kod kupona.",
+      "en": "The admin enters a unique coupon code."
+    },
+    "unos-popusta": {
+      "heading": { "sr": "Podešavanje popusta", "en": "Set the discount" },
+      "sr": "Administrator bira tip popusta (procenat) i unosi vrednost.",
+      "en": "The admin picks a discount type (percentage) and enters the value."
+    },
+    "vezivanje-za-partnera": {
+      "heading": { "sr": "Vezivanje za partnera", "en": "Link to the partner" },
+      "sr": "Ovo je ono što kupon čini referalnim - svako korišćenje sada generiše proviziju baš za ovog partnera.",
+      "en": "This is what makes the coupon a referral coupon - every use now generates commission for this specific partner."
+    },
+    "cuvanje-kupona": {
+      "heading": { "sr": "Čuvanje kupona", "en": "Save the coupon" },
+      "sr": "Administrator čuva kupon - partner sad ima svoj referalni kod spreman za deljenje.",
+      "en": "The admin saves the coupon - the partner now has their own referral code ready to share."
+    }
+  }
+}

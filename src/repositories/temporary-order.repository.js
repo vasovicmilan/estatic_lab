@@ -46,11 +46,21 @@ export async function deleteTemporaryOrderById(id, { session } = {}) {
 // through .save() (not findByIdAndUpdate) so the model's pre("save") hook recomputes
 // totalPrice from the new shipping value - findByIdAndUpdate would silently skip that
 // and leave totalPrice stale.
-export async function updateShippingById(id, shippingAmount, { session } = {}) {
+//
+// Also regenerates verificationToken/tokenExpiration when provided - the ORIGINAL
+// token (from checkout) is never emailed to the customer for a freight order (see
+// temporary-order.service.js's createTemporaryOrder), so there's nothing to
+// preserve; a fresh token/expiration here is what actually goes out in the
+// "your shipping quote is ready" email (see updateTemporaryOrderShipping),
+// guaranteeing it's valid for a full TEMP_ORDER_TOKEN_TTL_MINUTES from the moment
+// the customer can actually act on it, regardless of how long the quote itself took.
+export async function updateShippingById(id, shippingAmount, { verificationToken, tokenExpiration, session } = {}) {
   const order = await TemporaryOrder.findById(id).session(session || null);
   if (!order) return null;
   order.shipping = shippingAmount;
   order.requiresShippingQuote = false;
+  if (verificationToken) order.verificationToken = verificationToken;
+  if (tokenExpiration) order.tokenExpiration = tokenExpiration;
   await order.save({ session });
   return order.toObject();
 }

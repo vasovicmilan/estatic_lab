@@ -1,0 +1,77 @@
+{
+  "title": {
+    "sr": "Cena na upit",
+    "en": "Price on request"
+  },
+  "intro": {
+    "sr": "Za proizvode čija je cena previše promenljiva da bi se automatski prikazala, klijent ne može da kupi direktno - šalje upit, a administrator ručno kreira porudžbinu sa dogovorenom cenom.",
+    "en": "For products whose price is too volatile to show automatically, the customer can't buy directly - they send an inquiry, and the admin manually creates the order with the agreed price."
+  },
+  "steps": {
+    "otvaranje-proizvoda-na-upit": {
+      "heading": { "sr": "Proizvod bez cene", "en": "A product with no price" },
+      "sr": "Klijent otvara proizvod i vidi „Cena na upit” umesto cene - nema dugmeta za dodavanje u korpu.",
+      "en": "The customer opens the product and sees \"Price on request\" instead of a price - there's no add-to-cart button."
+    },
+    "prelazak-na-kontakt-formu": {
+      "heading": { "sr": "Prelazak na kontakt formu", "en": "Go to the contact form" },
+      "sr": "Klikom na „Kontaktirajte nas za cenu”, klijent stiže na kontakt formu, već predpopunjenu imenom proizvoda.",
+      "en": "Clicking \"Contact us for a price\" takes the customer to the contact form, already pre-filled with the product name."
+    },
+    "popunjavanje-upita": {
+      "heading": { "sr": "Popunjavanje upita", "en": "Fill in the inquiry" },
+      "sr": "Klijent unosi svoje podatke i poruku.",
+      "en": "The customer enters their details and a message."
+    },
+    "slanje-upita": {
+      "heading": { "sr": "Slanje upita", "en": "Send the inquiry" },
+      "sr": "Klijent šalje upit - ovim se ne pravi nikakva porudžbina, samo poruka za admina.",
+      "en": "The customer sends the inquiry - this doesn't create any order yet, just a message for the admin."
+    },
+    "admin-prijava": {
+      "heading": { "sr": "Prijava administratora", "en": "Admin logs in" },
+      "sr": "Administrator se prijavljuje da bi obradio upit.",
+      "en": "The admin logs in to handle the inquiry."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": { "sr": "Otvaranje menija naloga", "en": "Open the account menu" },
+      "sr": "Administrator klikne na dropdown sa svojim imenom.",
+      "en": "The admin clicks the dropdown showing their name."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": { "sr": "Ulazak u admin panel", "en": "Enter the admin panel" },
+      "sr": "Administrator bira „Admin panel”.",
+      "en": "The admin picks \"Admin panel\"."
+    },
+    "admin-porudzbine-otvara-meni": {
+      "heading": { "sr": "Otvaranje menija „Prodavnica”", "en": "Open the \"Store\" menu" },
+      "sr": "Administrator klikne na grupu „Prodavnica”.",
+      "en": "The admin clicks the \"Store\" group."
+    },
+    "admin-porudzbine-bira-stavku": {
+      "heading": { "sr": "Otvaranje porudžbina", "en": "Open orders" },
+      "sr": "Administrator bira „Porudžbine” iz menija.",
+      "en": "The admin picks \"Orders\" from the menu."
+    },
+    "admin-porudzbine-klik-na-dodaj": {
+      "heading": { "sr": "Nova ručna porudžbina", "en": "New manual order" },
+      "sr": "Administrator klikne „Nova porudžbina (ručno)” - forma van normalnog checkout-a, baš za ovakve slučajeve.",
+      "en": "The admin clicks \"New order (manual)\" - a form outside the normal checkout, made for exactly this case."
+    },
+    "admin-bira-proizvod": {
+      "heading": { "sr": "Izbor proizvoda", "en": "Select the product" },
+      "sr": "Administrator bira proizvod i njegovu varijantu - lista jasno pokazuje da je cena „na upit”.",
+      "en": "The admin selects the product and its variant - the list clearly shows the price is \"on request\"."
+    },
+    "admin-unosi-kontakt-i-cenu": {
+      "heading": { "sr": "Unos kontakta i cene", "en": "Enter contact details and price" },
+      "sr": "Administrator unosi podatke klijenta i, ključno, ručno unetu cenu - bez ovoga porudžbina ne bi mogla da se napravi za ovaj proizvod.",
+      "en": "The admin enters the customer's details and, critically, a hand-entered price - without this, an order for this product couldn't be created at all."
+    },
+    "admin-kreira-porudzbinu": {
+      "heading": { "sr": "Kreiranje porudžbine", "en": "Create the order" },
+      "sr": "Administrator kreira porudžbinu - ovo odmah pravi pravu porudžbinu, bez ikakvog dodatnog koraka potvrde od strane klijenta.",
+      "en": "The admin creates the order - this immediately creates a real order, with no further confirmation step from the customer."
+    }
+  }
+}

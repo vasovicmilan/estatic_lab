@@ -148,7 +148,10 @@ describe("user.mapper", () => {
 
     it("returns a valid empty-cart shape (not null/undefined) when the cart is empty", () => {
       const mapped = mapUserCart(buildUser({ cart: [] }));
-      assert.deepEqual(mapped, { stavke: [], brojStavki: 0, ukupnaCena: 0 });
+      // zahtevaProceenuDostave/postarina reflect "no freight items" - an empty
+      // cart trivially has none, so this is the flat default shipping price, same
+      // as any all-standard cart would show
+      assert.deepEqual(mapped, { stavke: [], brojStavki: 0, ukupnaCena: 0, zahtevaProceenuDostave: false, postarina: 350 });
     });
   });
 

@@ -161,13 +161,31 @@ export async function createTemporaryOrder(input) {
 
   logInfo("Temporary order created", { temporaryOrderId: created._id, userId: String(buyerId), accountJustCreated });
 
-  eventEmitter.emit("temporary-order:created", {
-    temporaryOrderId: created._id.toString(),
-    email: contact.email,
-    firstName: contact.firstName,
-    verificationToken: created.verificationToken,
-    tokenExpiration: created.tokenExpiration,
-  });
+  // Freight orders (see the shipping calc above) do NOT get the actionable
+  // "click to confirm" email here - only a heads-up notification. Emailing a
+  // confirm link now, whose token expires in TEMP_ORDER_TOKEN_TTL_MINUTES
+  // (default 60), made no sense for an order that can't actually BE confirmed
+  // until an admin manually prices it - freight quotes routinely take longer
+  // than that, so the customer's only link would frequently expire before the
+  // admin even got to it, with no automatic recovery (see git history / the
+  // conversation that led to this change). The real actionable email - with the
+  // real price and a fresh, non-expired token - now goes out from
+  // updateTemporaryOrderShipping below, once the price is actually known.
+  if (created.requiresShippingQuote) {
+    eventEmitter.emit("temporary-order:pending-quote", {
+      temporaryOrderId: created._id.toString(),
+      email: contact.email,
+      firstName: contact.firstName,
+    });
+  } else {
+    eventEmitter.emit("temporary-order:created", {
+      temporaryOrderId: created._id.toString(),
+      email: contact.email,
+      firstName: contact.firstName,
+      verificationToken: created.verificationToken,
+      tokenExpiration: created.tokenExpiration,
+    });
+  }
 
   if (accountJustCreated) {
     const guestUser = await userService.findUserById(buyerId);
@@ -184,6 +202,7 @@ export async function createTemporaryOrder(input) {
     verificationToken: created.verificationToken,
     tokenExpiration: created.tokenExpiration,
     totalPrice: created.totalPrice,
+    requiresShippingQuote: created.requiresShippingQuote || false,
     accountJustCreated,
   };
 }
@@ -238,12 +257,34 @@ export async function getTemporaryOrderRawById(orderId) {
 // product.model.js's shippingClass and this file's createTemporaryOrder) - clears
 // requiresShippingQuote so the customer's confirmation link (order.service.js's
 // confirmOrder) stops being blocked.
+//
+// Also regenerates verificationToken/tokenExpiration (see repository's
+// updateShippingById comment for why) and emits "temporary-order:shipping-quoted" -
+// THIS is what actually sends the customer their first real, actionable
+// confirmation link, with the real price. createTemporaryOrder deliberately does
+// NOT email a confirm link for a freight order at checkout time (see that
+// function's comment) - only this moment does.
 export async function updateTemporaryOrderShipping(orderId, shippingAmount, adminId) {
   if (!orderId) validationError("orderId");
   if (shippingAmount == null || shippingAmount < 0) validationError("shippingAmount");
-  const updated = await tempOrderRepo.updateShippingById(orderId, shippingAmount);
+
+  const verificationToken = generateRandomToken(32);
+  const tokenExpiration = new Date(Date.now() + TEMP_ORDER_TOKEN_TTL_MINUTES * 60000);
+
+  const updated = await tempOrderRepo.updateShippingById(orderId, shippingAmount, { verificationToken, tokenExpiration });
   if (!updated) notFound("Privremena porudžbina");
   logInfo("Temporary order shipping cost set", { temporaryOrderId: orderId, shippingAmount, adminId });
+
+  eventEmitter.emit("temporary-order:shipping-quoted", {
+    temporaryOrderId: updated._id.toString(),
+    email: updated.contactSnapshot.email,
+    firstName: updated.contactSnapshot.firstName,
+    verificationToken,
+    tokenExpiration,
+    shippingAmount,
+    totalPrice: updated.totalPrice,
+  });
+
   return mapTemporaryOrderForAdminDetail(updated);
 }
 

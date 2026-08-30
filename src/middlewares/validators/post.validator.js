@@ -35,7 +35,7 @@ export const validatePostCreate = [
     .custom(isArrayOrString).withMessage("Neispravni tagovi"),
 
   body("author")
-    .optional()
+    .optional({ values: "falsy" })
     .isMongoId().withMessage("Neispravan autor"),
 
   body("status")

@@ -1,0 +1,87 @@
+{
+  "title": {
+    "sr": "Kupovina sa nalogom",
+    "en": "Checkout with an account"
+  },
+  "intro": {
+    "sr": "Registrovan klijent unosi telefon već pri registraciji, čuva adresu na svom nalogu, a zatim je pri kupovini ili ponovo koristi ili unosi drugu.",
+    "en": "A registered customer enters their phone at registration, saves an address to their account, then at checkout either reuses it or enters a different one."
+  },
+  "steps": {
+    "registracija-sa-telefonom": {
+      "heading": { "sr": "Registracija sa telefonom", "en": "Register with a phone number" },
+      "sr": "Klijent se registruje i, za razliku od ostalih tokova, ovde unosi i broj telefona - polje postoji na formi, samo nije obavezno.",
+      "en": "The customer registers and, unlike other flows, enters a phone number too - the field exists on the form, it's just not required."
+    },
+    "prijava": {
+      "heading": { "sr": "Prijava", "en": "Log in" },
+      "sr": "Klijent se prijavljuje na svoj nalog.",
+      "en": "The customer logs into their account."
+    },
+    "otvaranje-adresa": {
+      "heading": { "sr": "Otvaranje sačuvanih adresa", "en": "Open saved addresses" },
+      "sr": "U delu naloga za adrese, klijent vidi formu za dodavanje nove adrese.",
+      "en": "In the account's addresses section, the customer sees a form to add a new address."
+    },
+    "cuvanje-adrese": {
+      "heading": { "sr": "Čuvanje adrese", "en": "Save an address" },
+      "sr": "Klijent unosi i čuva adresu - ovo NIJE automatsko posle porudžbine, adresa se čuva samo ako je klijent sam doda ovde.",
+      "en": "The customer enters and saves an address - this does NOT happen automatically after an order, an address is only saved if the customer adds it here themselves."
+    },
+    "otvaranje-prvog-proizvoda": {
+      "heading": { "sr": "Otvaranje prvog proizvoda", "en": "Open the first product" },
+      "sr": "Klijent bira proizvod i dodaje ga u korpu.",
+      "en": "The customer picks a product and adds it to the cart."
+    },
+    "prelazak-na-naplatu-1": {
+      "heading": { "sr": "Prelazak na naplatu", "en": "Proceed to checkout" },
+      "sr": "Pošto je klijent prijavljen, email je već popunjen (i zaključan za izmenu).",
+      "en": "Since the customer is logged in, the email is already filled in (and locked from editing)."
+    },
+    "izbor-sacuvane-adrese": {
+      "heading": { "sr": "Izbor sačuvane adrese", "en": "Select the saved address" },
+      "sr": "Padajuća lista nudi ranije sačuvanu adresu - klijent je bira i polja se sama popune.",
+      "en": "The dropdown offers the previously saved address - the customer selects it and the fields fill in automatically."
+    },
+    "potvrda-porudzbine-1": {
+      "heading": { "sr": "Potvrda porudžbine", "en": "Confirm the order" },
+      "sr": "Klijent potvrđuje prvu porudžbinu, bez kupona.",
+      "en": "The customer confirms the first order, with no coupon."
+    },
+    "email-potvrde-1": {
+      "heading": { "sr": "Email potvrde", "en": "Confirmation email" },
+      "sr": "Klijent finalizuje porudžbinu klikom na link iz emaila.",
+      "en": "The customer finalizes the order by clicking the link from the email."
+    },
+    "otvaranje-drugog-proizvoda": {
+      "heading": { "sr": "Otvaranje drugog proizvoda", "en": "Open the second product" },
+      "sr": "Isti klijent kupuje još nešto.",
+      "en": "The same customer buys something else."
+    },
+    "prelazak-na-naplatu-2": {
+      "heading": { "sr": "Prelazak na naplatu", "en": "Proceed to checkout" },
+      "sr": "Klijent ponovo stiže na naplatu za drugu porudžbinu.",
+      "en": "The customer reaches checkout again for the second order."
+    },
+    "unos-nove-adrese": {
+      "heading": { "sr": "Unos nove adrese", "en": "Enter a new address" },
+      "sr": "Ovog puta klijent bira „Unesite novu adresu” iz padajuće liste umesto sačuvane, i unosi drugu adresu ručno.",
+      "en": "This time the customer picks \"Enter a new address\" from the dropdown instead of the saved one, and types a different address by hand."
+    },
+    "primena-kupona-2": {
+      "heading": { "sr": "Primena kupona", "en": "Apply the coupon" },
+      "sr": "Za drugu porudžbinu, klijent primenjuje kod kupona.",
+      "en": "For the second order, the customer applies a coupon code."
+    },
+    "potvrda-porudzbine-2": {
+      "heading": { "sr": "Potvrda porudžbine", "en": "Confirm the order" },
+      "sr": "Klijent potvrđuje drugu porudžbinu, sa popustom.",
+      "en": "The customer confirms the second order, with the discount applied."
+    },
+    "email-potvrde-2": {
+      "heading": { "sr": "Email potvrde", "en": "Confirmation email" },
+      "sr": "I druga porudžbina se finalizuje na isti način.",
+      "en": "The second order is finalized the same way."
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "title": {
+    "sr": "Radno vreme zaposlenog",
+    "en": "Employee working hours"
+  },
+  "intro": {
+    "sr": "Kako zaposleni podešava svoje radno vreme, i kako se to odmah odražava na dostupne termine za zakazivanje.",
+    "en": "How an employee sets their own working hours, and how that immediately affects which appointment slots are available for booking."
+  },
+  "steps": {
+    "bez-radnog-vremena-nema-termina": {
+      "heading": { "sr": "Bez radnog vremena, nema termina", "en": "No working hours, no slots" },
+      "sr": "Dok zaposleni nema podešeno radno vreme za dati dan, klijent na stranici za zakazivanje ne vidi nijedan slobodan termin.",
+      "en": "While the employee has no working hours set for a given day, the customer sees no available slots on the booking page."
+    },
+    "prijava-zaposlenog": {
+      "heading": { "sr": "Prijava zaposlenog", "en": "Employee logs in" },
+      "sr": "Zaposleni se prijavljuje na svoj nalog da bi podesio radno vreme.",
+      "en": "The employee logs into their own account to set up working hours."
+    },
+    "otvaranje-profila": {
+      "heading": { "sr": "Otvaranje profila", "en": "Open the profile page" },
+      "sr": "Na strani profila zaposleni vidi nedeljni raspored, dan po dan.",
+      "en": "On the profile page, the employee sees a weekly schedule, day by day."
+    },
+    "dodavanje-radnog-vremena": {
+      "heading": { "sr": "Dodavanje radnog vremena", "en": "Add a working window" },
+      "sr": "Zaposleni dodaje vremenski okvir za dan (npr. 09:00-17:00) preko interaktivnog rasporeda.",
+      "en": "The employee adds a time window for the day (e.g. 09:00-17:00) via the interactive schedule widget."
+    },
+    "cuvanje-radnog-vremena": {
+      "heading": { "sr": "Čuvanje radnog vremena", "en": "Save working hours" },
+      "sr": "Klikom na „Sačuvaj radno vreme” izmena se snima.",
+      "en": "Clicking \"Save working hours\" saves the change."
+    },
+    "termini-sada-dostupni": {
+      "heading": { "sr": "Termini su sada dostupni", "en": "Slots are now available" },
+      "sr": "Ista stranica za zakazivanje, bez ikakve dodatne izmene od strane klijenta, sada prikazuje slobodne termine unutar novog radnog vremena.",
+      "en": "The same booking page, with no further change from the customer's side, now shows available slots within the new working hours."
+    }
+  }
+}

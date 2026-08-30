@@ -20,7 +20,13 @@
     "report:business-weekly": "NODE_ENV=production node scripts/weekly-business-report.js",
     "report:business-monthly": "NODE_ENV=production node scripts/monthly-business-report.js",
     "report:business-quarterly": "NODE_ENV=production node scripts/quarterly-business-report.js",
-    "report:business-yearly": "NODE_ENV=production node scripts/yearly-business-report.js"
+    "report:business-yearly": "NODE_ENV=production node scripts/yearly-business-report.js",
+    "tutorials:run": "playwright test --config=playwright.tutorials.config.js",
+    "tutorials:subtitles": "node e2e-tutorials/scripts/build-subtitles.mjs",
+    "tutorials:merge": "node e2e-tutorials/scripts/merge-video.mjs",
+    "tutorials:burn": "node e2e-tutorials/scripts/burn-subtitles.mjs",
+    "tutorials:build": "node e2e-tutorials/scripts/build-docs.mjs",
+    "tutorials": "npm run tutorials:run && npm run tutorials:subtitles && npm run tutorials:build"
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",

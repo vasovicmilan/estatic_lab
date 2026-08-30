@@ -1,0 +1,42 @@
+{
+  "title": {
+    "sr": "Zaposleni upravlja svojim terminima",
+    "en": "Employee managing their own appointments"
+  },
+  "intro": {
+    "sr": "Zaposleni ima svoj poseban deo naloga za rad sa sopstvenim terminima - potvrđivanje, završavanje i pregled zarađene provizije - potpuno odvojeno od admin panela.",
+    "en": "An employee has their own dedicated account area for their appointments - confirming, completing, and reviewing earned commission - entirely separate from the admin panel."
+  },
+  "steps": {
+    "prijava-zaposlenog": {
+      "heading": { "sr": "Prijava zaposlenog", "en": "Employee logs in" },
+      "sr": "Zaposleni se prijavljuje na svoj nalog.",
+      "en": "The employee logs into their account."
+    },
+    "pregled-mojih-termina": {
+      "heading": { "sr": "Pregled mojih termina", "en": "View my appointments" },
+      "sr": "U delu „Moji termini” zaposleni vidi samo termine koji su njemu dodeljeni.",
+      "en": "In the \"My appointments\" section, the employee sees only appointments assigned to them."
+    },
+    "otvaranje-detalja-termina": {
+      "heading": { "sr": "Detalji termina", "en": "Appointment details" },
+      "sr": "Klikom na termin otvaraju se detalji, sa opcijama za potvrdu i završavanje.",
+      "en": "Clicking the appointment opens its details, with options to confirm and complete it."
+    },
+    "potvrda-termina": {
+      "heading": { "sr": "Potvrda termina", "en": "Confirm the appointment" },
+      "sr": "Zaposleni potvrđuje termin - klijent sada ima siguran, potvrđen termin.",
+      "en": "The employee confirms the appointment - the customer now has a firm, confirmed slot."
+    },
+    "zavrsavanje-termina": {
+      "heading": { "sr": "Završavanje termina", "en": "Complete the appointment" },
+      "sr": "Nakon što je usluga pružena, zaposleni ga označava kao završen - ovo je i trenutak kada se obračunava njegova provizija.",
+      "en": "Once the service has been delivered, the employee marks it completed - this is also when their commission gets recorded."
+    },
+    "pregled-provizije": {
+      "heading": { "sr": "Pregled provizije", "en": "View commission" },
+      "sr": "U delu „Provizije” zaposleni odmah vidi zarađeni procenat za ovaj termin.",
+      "en": "In the \"Commissions\" section, the employee immediately sees the earned percentage for this appointment."
+    }
+  }
+}

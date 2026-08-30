@@ -6,14 +6,23 @@
 
   <div class="row justify-content-center text-center">
     <div class="col-md-7">
-      <i class="bi bi-envelope-check display-3 text-primary mb-3"></i>
-      <h1 class="h3 mb-3">Potvrdite porudžbinu</h1>
-      <p class="text-muted">
-        Poslali smo email na <strong><%= data.email %></strong> sa linkom za potvrdu porudžbine.
-        Kliknite na link u emailu da biste je finalizovali.
-      </p>
-      <% if (data.tokenExpiration) { %>
-        <p class="text-muted small">Link važi do: <%= data.tokenExpiration %></p>
+      <% if (data.requiresShippingQuote) { %>
+        <i class="bi bi-truck display-3 text-primary mb-3"></i>
+        <h1 class="h3 mb-3">Porudžbina primljena</h1>
+        <p class="text-muted">
+          Vaša porudžbina sadrži veći ili teži artikal za koji je potrebna procena cene dostave.
+          Poslaćemo vam email sa konačnom cenom i linkom za potvrdu čim to izračunamo - ništa ne morate da radite do tada.
+        </p>
+      <% } else { %>
+        <i class="bi bi-envelope-check display-3 text-primary mb-3"></i>
+        <h1 class="h3 mb-3">Potvrdite porudžbinu</h1>
+        <p class="text-muted">
+          Poslali smo email na <strong><%= data.email %></strong> sa linkom za potvrdu porudžbine.
+          Kliknite na link u emailu da biste je finalizovali.
+        </p>
+        <% if (data.tokenExpiration) { %>
+          <p class="text-muted small">Link važi do: <%= data.tokenExpiration %></p>
+        <% } %>
       <% } %>
       <a href="/" class="btn btn-outline-primary mt-3">Nazad na početnu</a>
     </div>

@@ -1,0 +1,77 @@
+{
+  "title": {
+    "sr": "Kupovina bez naloga (gost)",
+    "en": "Checkout without an account (guest)"
+  },
+  "intro": {
+    "sr": "Klijent ne mora nikad da se registruje - dovoljno je da popuni podatke pri naplati, a nalog se automatski pravi u pozadini. Ovde se to pokazuje dva puta: jednom bez kupona, jednom sa kuponom, sa dva različita klijenta.",
+    "en": "A customer never has to register - filling in checkout details is enough, and an account gets created automatically behind the scenes. Shown here twice: once without a coupon, once with one, with two different customers."
+  },
+  "steps": {
+    "otvaranje-prvog-proizvoda": {
+      "heading": { "sr": "Otvaranje prvog proizvoda", "en": "Open the first product" },
+      "sr": "Klijent (nije prijavljen) otvara proizvod i dodaje ga u korpu.",
+      "en": "The customer (not logged in) opens a product and adds it to the cart."
+    },
+    "prelazak-na-naplatu-1": {
+      "heading": { "sr": "Prelazak na naplatu", "en": "Proceed to checkout" },
+      "sr": "Na stranici za naplatu, sistem jasno objašnjava da će nalog biti automatski kreiran ako ga klijent nema.",
+      "en": "On the checkout page, the system clearly explains an account will be created automatically if the customer doesn't have one."
+    },
+    "unos-podataka-kao-gost-1": {
+      "heading": { "sr": "Unos podataka kao gost", "en": "Enter details as a guest" },
+      "sr": "Klijent unosi sve podatke od nule - ime, email, telefon, adresu - ništa nije unapred popunjeno.",
+      "en": "The customer enters everything from scratch - name, email, phone, address - nothing is pre-filled."
+    },
+    "potvrda-porudzbine-1": {
+      "heading": { "sr": "Potvrda porudžbine", "en": "Confirm the order" },
+      "sr": "Klijent potvrđuje porudžbinu bez ikakvog kupona.",
+      "en": "The customer confirms the order with no coupon at all."
+    },
+    "nalog-automatski-kreiran-1": {
+      "heading": { "sr": "Nalog je automatski kreiran", "en": "The account was created automatically" },
+      "sr": "U pozadini je upravo napravljen pravi nalog za ovaj email - klijent to nije morao ni da traži.",
+      "en": "A real account was just created behind the scenes for this email - the customer never had to ask for it."
+    },
+    "email-potvrde-1": {
+      "heading": { "sr": "Email potvrde", "en": "Confirmation email" },
+      "sr": "Klijent klikom na link iz emaila finalizuje prvu porudžbinu.",
+      "en": "The customer finalizes the first order by clicking the link from the email."
+    },
+    "otvaranje-drugog-proizvoda": {
+      "heading": { "sr": "Otvaranje drugog proizvoda", "en": "Open the second product" },
+      "sr": "Novi, potpuno drugi klijent otvara drugi proizvod - opet bez prijave.",
+      "en": "A new, completely different customer opens a second product - again without logging in."
+    },
+    "prelazak-na-naplatu-2": {
+      "heading": { "sr": "Prelazak na naplatu", "en": "Proceed to checkout" },
+      "sr": "Ista poruka o automatskom nalogu se ponovo pojavljuje - ovo je zaista nov, prvi put viđen klijent.",
+      "en": "The same automatic-account message appears again - this really is a new, first-time customer."
+    },
+    "unos-podataka-kao-gost-2": {
+      "heading": { "sr": "Unos podataka kao gost", "en": "Enter details as a guest" },
+      "sr": "Klijent ponovo unosi sve podatke od nule.",
+      "en": "The customer enters everything from scratch again."
+    },
+    "primena-kupona-2": {
+      "heading": { "sr": "Primena kupona", "en": "Apply the coupon" },
+      "sr": "Za razliku od prve kupovine, ovaj klijent ima kod kupona i primenjuje ga.",
+      "en": "Unlike the first purchase, this customer has a coupon code and applies it."
+    },
+    "potvrda-porudzbine-2": {
+      "heading": { "sr": "Potvrda porudžbine", "en": "Confirm the order" },
+      "sr": "Klijent potvrđuje porudžbinu sa popustom iz kupona.",
+      "en": "The customer confirms the order with the coupon discount applied."
+    },
+    "nalog-automatski-kreiran-2": {
+      "heading": { "sr": "Nalog je automatski kreiran", "en": "The account was created automatically" },
+      "sr": "Isto se dešava i za ovog klijenta - potpuno nezavisno od prvog.",
+      "en": "The same thing happens for this customer too - completely independent of the first one."
+    },
+    "email-potvrde-2": {
+      "heading": { "sr": "Email potvrde", "en": "Confirmation email" },
+      "sr": "I druga porudžbina se finalizuje istim putem.",
+      "en": "The second order is finalized the same way."
+    }
+  }
+}

@@ -129,9 +129,31 @@
         </ul>
         <div class="card-body">
           <div class="d-flex justify-content-between">
-            <span class="text-muted">Ukupno</span>
-            <strong class="price-mono"><%= data.cart.ukupnaCena %> <%= currencySymbol %></strong>
+            <span class="text-muted">Međuzbir</span>
+            <strong class="price-mono" data-order-subtotal-value="<%= data.cart.ukupnaCena %>"><%= data.cart.ukupnaCena %> <%= currencySymbol %></strong>
           </div>
+          <div class="d-flex justify-content-between text-success <%= data.activeCoupon ? '' : 'd-none' %>" data-order-discount-row>
+            <span class="text-muted">Popust (<span data-order-discount-code><%= data.activeCoupon ? data.activeCoupon.code : '' %></span>)</span>
+            <strong class="price-mono" data-order-discount-value="<%= data.activeCoupon ? data.activeCoupon.discountAmount : 0 %>" data-currency-symbol="<%= currencySymbol %>">-<%= data.activeCoupon ? data.activeCoupon.discountAmount : 0 %> <%= currencySymbol %></strong>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Poštarina</span>
+            <% if (data.cart.zahtevaProceenuDostave) { %>
+              <span class="text-muted small fst-italic">procenjuje se naknadno</span>
+            <% } else { %>
+              <strong class="price-mono" data-order-shipping-value="<%= data.cart.postarina %>"><%= data.cart.postarina %> <%= currencySymbol %></strong>
+            <% } %>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted fw-semibold">Ukupno</span>
+            <strong class="price-mono fs-5" data-order-total data-currency-symbol="<%= currencySymbol %>">
+              <%= data.cart.ukupnaCena - (data.activeCoupon ? data.activeCoupon.discountAmount : 0) + (data.cart.postarina || 0) %> <%= currencySymbol %>
+            </strong>
+          </div>
+          <% if (data.cart.zahtevaProceenuDostave) { %>
+            <p class="text-muted small mt-2 mb-0">Konačna cena dostave zavisi od veličine/težine artikla - dobićete je posebnim emailom pre nego što porudžbina bude potvrđena.</p>
+          <% } %>
         </div>
       </div>
     </div>

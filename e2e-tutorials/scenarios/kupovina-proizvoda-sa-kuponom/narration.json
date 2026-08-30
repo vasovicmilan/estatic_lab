@@ -1,0 +1,62 @@
+{
+  "title": {
+    "sr": "Kupovina proizvoda sa kuponom",
+    "en": "Buying a product with a coupon"
+  },
+  "intro": {
+    "sr": "Standardan tok kupovine: klijent bira proizvod, dodaje ga u korpu, primenjuje popust kuponom na naplati i potvrđuje porudžbinu.",
+    "en": "The standard purchase flow: a customer picks a product, adds it to the cart, applies a coupon discount at checkout, and confirms the order."
+  },
+  "steps": {
+    "registracija": {
+      "heading": { "sr": "Registracija", "en": "Register" },
+      "sr": "Klijent se registruje popunjavanjem forme sa imenom, prezimenom, email adresom i lozinkom.",
+      "en": "The customer registers by filling in a form with their name, email, and password."
+    },
+    "prijava": {
+      "heading": { "sr": "Prijava", "en": "Log in" },
+      "sr": "Nakon registracije, klijent se prijavljuje na svoj novi nalog.",
+      "en": "After registering, the customer logs into their new account."
+    },
+    "otvaranje-stranice-proizvoda": {
+      "heading": { "sr": "Otvaranje stranice proizvoda", "en": "Open the product page" },
+      "sr": "Klijent otvara stranicu proizvoda i vidi opis, cenu i dostupne varijante.",
+      "en": "The customer opens the product page and sees the description, price, and available variants."
+    },
+    "dodavanje-u-korpu": {
+      "heading": { "sr": "Dodavanje u korpu", "en": "Add to cart" },
+      "sr": "Klikom na „Dodaj u korpu” proizvod se dodaje u korpu klijenta.",
+      "en": "Clicking \"Add to cart\" adds the product to the customer's cart."
+    },
+    "otvaranje-korpe": {
+      "heading": { "sr": "Pregled korpe", "en": "Review the cart" },
+      "sr": "Klijent otvara korpu i vidi šta je do sada dodao pre nego što nastavi na naplatu.",
+      "en": "The customer opens the cart and reviews what's been added before proceeding to checkout."
+    },
+    "prelazak-na-naplatu": {
+      "heading": { "sr": "Prelazak na naplatu", "en": "Proceed to checkout" },
+      "sr": "Klijent prelazi na stranicu za naplatu, gde unosi podatke za dostavu.",
+      "en": "The customer moves to the checkout page, where they enter delivery details."
+    },
+    "unos-podataka-za-dostavu": {
+      "heading": { "sr": "Unos podataka za dostavu", "en": "Enter delivery details" },
+      "sr": "Klijent unosi telefon i adresu dostave, potrebne za obradu porudžbine.",
+      "en": "The customer enters a phone number and delivery address, required to process the order."
+    },
+    "primena-kupona": {
+      "heading": { "sr": "Primena kupona", "en": "Apply the coupon" },
+      "sr": "Klijent unosi kod kupona i primenjuje popust - sistem odmah prikazuje umanjen iznos.",
+      "en": "The customer enters a coupon code and applies the discount - the system immediately shows the reduced amount."
+    },
+    "potvrda-porudzbine": {
+      "heading": { "sr": "Potvrda porudžbine", "en": "Confirm the order" },
+      "sr": "Klijent potvrđuje porudžbinu. Za standardnu dostavu, cena se odmah izračunava - nema koraka čekanja procene kao kod velikih/teških artikala.",
+      "en": "The customer confirms the order. For standard shipping, the price is calculated immediately - there's no shipping-quote waiting step like there is for large/heavy items."
+    },
+    "potvrda-preko-linka": {
+      "heading": { "sr": "Potvrda putem linka", "en": "Confirm via the link" },
+      "sr": "Klijent klikom na link iz email potvrde (ovde simulirano direktnim otvaranjem linka) finalizuje porudžbinu.",
+      "en": "The customer finalizes the order by clicking the link from the confirmation email (simulated here by opening the link directly)."
+    }
+  }
+}

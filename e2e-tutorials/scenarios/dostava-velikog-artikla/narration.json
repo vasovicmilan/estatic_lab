@@ -1,0 +1,140 @@
+{
+  "title": {
+    "sr": "Dostava velikog/teškog artikla",
+    "en": "Shipping a large/heavy item"
+  },
+  "intro": {
+    "sr": "Za velike ili teške artikle sistem ne može automatski da izračuna cenu dostave. Klijent odmah dobija samo informativni email da porudžbina čeka procenu - pravi email sa cenom i linkom za potvrdu stiže tek kad administrator unese stvarnu cenu dostave.",
+    "en": "For large or heavy items the system can't calculate shipping automatically. The customer immediately gets only an informational email that the order is pending a quote - the real email with the price and a confirm link only arrives once an admin enters the actual shipping cost."
+  },
+  "steps": {
+    "registracija": {
+      "heading": {
+        "sr": "Registracija",
+        "en": "Register"
+      },
+      "sr": "Klijent se registruje pre kupovine.",
+      "en": "The customer registers before purchasing."
+    },
+    "prijava": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Log in"
+      },
+      "sr": "Klijent se prijavljuje na svoj nalog.",
+      "en": "The customer logs into their account."
+    },
+    "otvaranje-stranice-proizvoda": {
+      "heading": {
+        "sr": "Otvaranje stranice proizvoda",
+        "en": "Open the product page"
+      },
+      "sr": "Klijent otvara stranicu velikog/teškog artikla.",
+      "en": "The customer opens the page for a large/heavy item."
+    },
+    "dodavanje-u-korpu": {
+      "heading": {
+        "sr": "Dodavanje u korpu",
+        "en": "Add to cart"
+      },
+      "sr": "Proizvod se dodaje u korpu na uobičajen način.",
+      "en": "The product is added to the cart the usual way."
+    },
+    "prelazak-na-naplatu": {
+      "heading": {
+        "sr": "Prelazak na naplatu",
+        "en": "Proceed to checkout"
+      },
+      "sr": "Klijent prelazi na naplatu.",
+      "en": "The customer proceeds to checkout."
+    },
+    "unos-podataka-za-dostavu": {
+      "heading": {
+        "sr": "Unos podataka za dostavu",
+        "en": "Enter delivery details"
+      },
+      "sr": "Klijent unosi telefon i adresu, kao i kod obične porudžbine.",
+      "en": "The customer enters a phone number and address, same as an ordinary order."
+    },
+    "porudzbina-primljena": {
+      "heading": {
+        "sr": "Porudžbina primljena",
+        "en": "Order received"
+      },
+      "sr": "Za razliku od standardne dostave, klijent ovde ne dobija link za potvrdu - samo obaveštenje da se cena dostave ručno izračunava i da će uskoro stići pravi email.",
+      "en": "Unlike standard shipping, the customer doesn't get a confirm link here - just a notice that the shipping price is being calculated manually and a real email is coming soon."
+    },
+    "admin-prijava": {
+      "heading": {
+        "sr": "Prijava administratora",
+        "en": "Admin logs in"
+      },
+      "sr": "Administrator se prijavljuje da bi obradio porudžbinu koja čeka procenu.",
+      "en": "The admin logs in to process the order waiting on a quote."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": {
+        "sr": "Otvaranje menija naloga",
+        "en": "Open the account menu"
+      },
+      "sr": "Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.",
+      "en": "The admin clicks the dropdown showing their name in the top-right corner."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": {
+        "sr": "Ulazak u admin panel",
+        "en": "Enter the admin panel"
+      },
+      "sr": "Administrator bira „Admin panel” iz menija, čime se otvara admin deo sajta.",
+      "en": "The admin picks \"Admin panel\" from the menu, opening the site's admin area."
+    },
+    "admin-privremene-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija „Prodavnica”",
+        "en": "Open the \"Store\" menu"
+      },
+      "sr": "Administrator klikne na grupu „Prodavnica” u admin meniju.",
+      "en": "The admin clicks the \"Store\" group in the admin menu."
+    },
+    "admin-privremene-bira-stavku": {
+      "heading": {
+        "sr": "Otvaranje privremenih porudžbina",
+        "en": "Open pending orders"
+      },
+      "sr": "Administrator bira „Privremene porudžbine” - listu porudžbina koje još nisu potvrđene.",
+      "en": "The admin picks \"Pending orders\" - the list of orders not yet confirmed."
+    },
+    "admin-privremene-pretraga": {
+      "heading": {
+        "sr": "Pretraga porudžbine",
+        "en": "Search for the order"
+      },
+      "sr": "Administrator pretražuje po email adresi klijenta.",
+      "en": "The admin searches by the customer's email."
+    },
+    "admin-privremene-otvaranje-rezultata": {
+      "heading": {
+        "sr": "Otvaranje porudžbine",
+        "en": "Open the order"
+      },
+      "sr": "Administrator otvara porudžbinu i vidi da čeka procenu cene dostave.",
+      "en": "The admin opens the order and sees it's waiting on a shipping quote."
+    },
+    "admin-unosi-cenu-dostave": {
+      "heading": {
+        "sr": "Unos cene dostave",
+        "en": "Enter the shipping price"
+      },
+      "sr": "Administrator unosi stvarnu cenu dostave (npr. na osnovu ponude prevoznika) i čuva je. Tek sada se klijentu šalje email sa konačnom cenom i radnim linkom za potvrdu.",
+      "en": "The admin enters the real shipping price (e.g. based on a carrier's quote) and saves it. Only now does the customer get an email with the final price and a working confirm link."
+    },
+    "email-potvrde-sa-cenom": {
+      "heading": {
+        "sr": "Email potvrde sa cenom",
+        "en": "Confirmation email with the price"
+      },
+      "sr": "Klijent klikom na link iz novog emaila (ovde simulirano direktnim otvaranjem linka) vidi konačnu cenu i potvrđuje porudžbinu.",
+      "en": "The customer clicks the link from the new email (simulated here by opening the link directly), sees the final price, and confirms the order."
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import { formatDateTime, formatDate } from "../utils/date.time.util.js";
 import { decryptPhone } from "../utils/phone.util.js";
 import { decryptAddress } from "../utils/address.util.js";
+import { DEFAULT_SHIPPING_PRICE } from "../config/shop.config.js";
 
 function getFullName(user) {
   return `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Nepoznato";
@@ -161,6 +162,8 @@ function formatImage(image) {
 // variant is a bare ObjectId (not a ref, just a subdocument id), so it's resolved
 // against the populated product's own variations array here
 export function mapUserCart(user) {
+  let hasFreightItem = false;
+
   const lines = (user.cart || [])
     .map((line) => {
       const product = line.product;
@@ -168,6 +171,8 @@ export function mapUserCart(user) {
 
       const variation = (product.variations || []).find((v) => String(v._id) === String(line.variant));
       if (!variation) return null;
+
+      if (product.shippingClass === "freight") hasFreightItem = true;
 
       return {
         id: line._id.toString(),
@@ -192,6 +197,13 @@ export function mapUserCart(user) {
     stavke: lines,
     brojStavki: lines.reduce((sum, l) => sum + l.kolicina, 0),
     ukupnaCena: lines.reduce((sum, l) => sum + l.ukupno, 0),
+    // mirrors temporary-order.service.js's own hasFreightItem -> shipping logic
+    // (0/quote-needed if ANY line is freight, flat DEFAULT_SHIPPING_PRICE
+    // otherwise) - computed here too so checkout.ejs's order-summary card can
+    // show the real shipping cost/status BEFORE the customer ever submits,
+    // instead of only finding out afterward (see order-pending.ejs).
+    zahtevaProceenuDostave: hasFreightItem,
+    postarina: hasFreightItem ? null : DEFAULT_SHIPPING_PRICE,
   };
 }
 
