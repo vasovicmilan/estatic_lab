@@ -54,6 +54,16 @@ export async function getPublicCategories(domain) {
   return mapCategoriesForPublic(categories);
 }
 
+// Used wherever "products in category X" needs to include products tagged with
+// any of X's descendant categories, not just X itself directly - a parent like
+// "Aparati i oprema" has 0 products assigned to it directly (everything lives
+// on its 14 child categories), so a naive direct-match filter/count would
+// always show 0 despite dozens of matching products underneath.
+export async function getCategoryAndDescendantIds(categoryId, domain) {
+  ensureValidDomain(domain);
+  return categoryRepo.findCategoryAndDescendantIds(categoryId, domain);
+}
+
 export async function getCategoriesForSelect(domain) {
   ensureValidDomain(domain);
   const categories = await categoryRepo.findAllCategoriesByDomain(domain, { onlyActive: false });
@@ -132,6 +142,7 @@ export default {
   getCategoryForEdit,
   getCategoryBySlugAndDomain,
   getPublicCategories,
+  getCategoryAndDescendantIds,
   getCategoriesForSelect,
   createCategory,
   updateCategoryById,

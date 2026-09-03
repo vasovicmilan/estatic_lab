@@ -24,7 +24,7 @@ export function buildProductFilter({
   }
 
   if (sku) filter.sku = sku.toLowerCase().trim();
-  if (category) filter.categories = category;
+  if (category) filter.categories = Array.isArray(category) ? { $in: category } : category;
   if (tag) filter.tags = tag;
   if (isActive !== null && isActive !== undefined) filter.isActive = isActive;
   if (badge) filter.badge = badge;

@@ -35,6 +35,14 @@ export const validateTestimonialSubmit = [
     .notEmpty().withMessage("Komentar je obavezan")
     .isLength({ min: 10, max: 1000 }).withMessage("Komentar mora imati između 10 i 1000 karaktera"),
 
+  // GDPR: must be explicitly checked - "on" is what an HTML checkbox sends when
+  // checked, nothing is sent at all when unchecked, so booleanishField's allowCheckbox
+  // mode plus a separate notEmpty-style check below is what actually enforces this
+  // rather than silently defaulting to false.
+  body("consentGiven")
+    .custom((value) => value === "on" || value === true || value === "true")
+    .withMessage("Saglasnost za javno objavljivanje utiska je obavezna"),
+
   collectValidationErrors,
 ];
 

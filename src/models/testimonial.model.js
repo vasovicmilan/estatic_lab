@@ -79,6 +79,25 @@ const TestimonialSchema = new Schema(
       type: Number,
       default: 0,
     },
+
+    // GDPR: explicit, unchecked-by-default consent to publicly display this
+    // testimonial (name/image/text). Required at submission - see
+    // testimonial.service.js's submitTestimonial(), which rejects the request
+    // outright if this isn't true. Kept separate from `status` because consent
+    // is about the person's permission, not our internal moderation decision.
+    consentGiven: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    consent: {
+      givenAt: { type: Date, default: null },
+      ipAddress: { type: String, default: null },
+      // free-text snapshot of the consent copy shown on the form at submit
+      // time, so we can prove exactly what the person agreed to even if the
+      // wording on the form changes later.
+      textVersion: { type: String, default: null },
+    },
   },
   { timestamps: true }
 );

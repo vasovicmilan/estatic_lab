@@ -189,6 +189,7 @@ export async function submitTestimonial(req, res, next) {
 
     const data = { ...req.body };
     if (req.session?.isLoggedIn) data.userId = req.session.user.id;
+    data.consentIpAddress = req.ip;
 
     const result = await indexService.submitTestimonialForm(data);
     logInfo("[submitTestimonial] Testimonijal poslat", { name: req.body.name });

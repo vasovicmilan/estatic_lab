@@ -11,6 +11,11 @@ import {
 import { validationError, notFound, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 
+// Snapshot of the consent copy shown on testimonial-form.ejs at submit time -
+// bump this if the wording of the consent checkbox label materially changes,
+// so existing consent records still tell you what someone actually agreed to.
+const CONSENT_TEXT_VERSION = "v1-2026-09";
+
 export async function listTestimonials({ filters = {}, limit = 10, page = 1 } = {}) {
   const result = await testimonialRepo.findTestimonials({ limit, page, filters });
   return { data: mapTestimonialsForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
@@ -30,6 +35,9 @@ export async function submitTestimonial(data) {
   if (!data.message) validationError("message");
   if (data.rating < 1 || data.rating > 5) badRequest("Ocena mora biti između 1 i 5");
 
+  const consentGiven = data.consentGiven === "on" || data.consentGiven === true || data.consentGiven === "true";
+  if (!consentGiven) badRequest("Saglasnost za objavljivanje je obavezna");
+
   const created = await testimonialRepo.createTestimonial({
     name: data.name,
     email: data.email || "",
@@ -41,6 +49,12 @@ export async function submitTestimonial(data) {
     message: data.message,
     image: data.image || null,
     status: "pending",
+    consentGiven: true,
+    consent: {
+      givenAt: new Date(),
+      ipAddress: data.consentIpAddress || null,
+      textVersion: CONSENT_TEXT_VERSION,
+    },
   });
 
   logInfo("Testimonial submitted", { testimonialId: created._id, name: created.name });

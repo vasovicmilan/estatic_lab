@@ -15,6 +15,7 @@ export function buildPostFilter({
     filter.$or = [
       { title: { $regex: search, $options: "i" } },
       { excerpt: { $regex: search, $options: "i" } },
+      { slug: { $regex: search, $options: "i" } },
     ];
   }
 

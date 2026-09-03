@@ -5,6 +5,7 @@ import userRepo from "../repositories/user.repository.js";
 import temporaryOrderRepo from "../repositories/temporary-order.repository.js";
 import couponRepo from "../repositories/coupon.repository.js";
 import serviceRepo from "../repositories/service.repository.js";
+import categoryService from "./category.service.js";
 import { generateSlug, generateUniqueSlug } from "../utils/slug.util.js";
 import {
   mapProductsForAdminList,
@@ -288,7 +289,12 @@ export async function countAllActiveProducts() {
 // Decorates each public category with how many active products it currently
 // has, so the /prodavnica filter tabs can show real counts, same as /usluge.
 export async function attachProductCountsToCategories(categories = []) {
-  const counts = await Promise.all(categories.map((cat) => productRepo.countProducts({ category: cat.id, isActive: true })));
+  const counts = await Promise.all(
+    categories.map(async (cat) => {
+      const ids = await categoryService.getCategoryAndDescendantIds(cat.id, "product");
+      return productRepo.countProducts({ category: ids, isActive: true });
+    })
+  );
   return categories.map((cat, index) => ({ ...cat, count: counts[index] }));
 }
 

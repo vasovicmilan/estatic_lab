@@ -16,6 +16,26 @@ export async function findCategoryBySlug(slug, domain, { session } = {}) {
   return Category.findOne({ slug, domain }).session(session || null).lean();
 }
 
+// Returns [categoryId, ...allDescendantIds] as strings - BFS over the parent
+// pointer, not just direct children, so a 3+ level hierarchy (e.g.
+// hl-skin-nega-koze -> hl-skin-nega-lica) still resolves correctly from the
+// top-level category. Category counts are small (dozens, not thousands), so
+// doing this as a handful of small queries instead of one aggregation is fine.
+export async function findCategoryAndDescendantIds(categoryId, domain, { session } = {}) {
+  const ids = [categoryId.toString()];
+  let frontier = [categoryId];
+  while (frontier.length) {
+    const children = await Category.find({ parent: { $in: frontier }, domain })
+      .select("_id")
+      .session(session || null)
+      .lean();
+    if (!children.length) break;
+    frontier = children.map((c) => c._id);
+    ids.push(...frontier.map((id) => id.toString()));
+  }
+  return ids;
+}
+
 export async function findCategories({
   search = "",
   limit = 20,
@@ -63,7 +83,7 @@ export default {
   createCategory,
   findCategoryById,
   findCategoryBySlug,
-  findCategories,
+  findCategoryAndDescendantIds,
   findCategories,
   findAllCategoriesByDomain,
   updateCategoryById,

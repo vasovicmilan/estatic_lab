@@ -72,7 +72,8 @@ export async function productCategory(req, res, next) {
       productService.countAllActiveProducts(),
     ]);
     const categories = await productService.attachProductCountsToCategories(categoriesRaw);
-    const result = await productService.listPublicProducts({ page: parseInt(page, 10) || 1, filters: { category: category._id } });
+    const categoryIds = await categoryService.getCategoryAndDescendantIds(category._id, "product");
+    const result = await productService.listPublicProducts({ page: parseInt(page, 10) || 1, filters: { category: categoryIds } });
 
     const viewData = prepareProductCategoryData(
       { id: category._id.toString(), naziv: category.name, slug: category.slug },
