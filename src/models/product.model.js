@@ -71,6 +71,15 @@ const ProductSchema = new Schema(
     // needs more structure than the others.
     relatedProducts: [{ type: Schema.Types.ObjectId, ref: "Product" }],
 
+    // services this product is used in / recommended alongside - e.g. a serum used
+    // during a facial treatment, or an aftercare cream suggested post-treatment.
+    // The inverse of Service.relatedProducts (see service.model.js) - deliberately
+    // two independent arrays rather than one shared join collection, same reasoning
+    // as every other many-to-many relation in this codebase (e.g. Product.
+    // relatedProducts itself): simple to populate/display from either side, and an
+    // admin edits it from whichever record they happen to be on.
+    relatedServices: [{ type: Schema.Types.ObjectId, ref: "Service" }],
+
     faq: [FAQSchema],
 
     // Independent of isActive (published/draft) - this is purely a merchandising

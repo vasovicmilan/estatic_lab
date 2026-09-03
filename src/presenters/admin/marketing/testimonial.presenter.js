@@ -8,6 +8,7 @@ export function prepareTestimonialListData(result, query = {}) {
       { key: "ocena", label: "Ocena" },
       { key: "usluga", label: "Usluga" },
       { key: "status", label: "Status" },
+      { key: "saglasnost", label: "Saglasnost" },
       { key: "istaknut", label: "Istaknut" },
       { key: "kreiran", label: "Kreiran" },
     ],
@@ -80,6 +81,15 @@ export function prepareTestimonialDetailsData(testimonial) {
         content: testimonial.osnovno.slika
           ? `<img src="${testimonial.osnovno.slika.url}" alt="${testimonial.osnovno.slika.alt || ""}" width="120" class="img-fluid rounded-circle">`
           : "Nema slike",
+      },
+      {
+        title: "GDPR saglasnost",
+        type: "table",
+        rows: [
+          { label: "Saglasnost data", value: testimonial.saglasnost.data ? "Da" : "NE - ne prikazivati javno" },
+          { label: "Kada", value: testimonial.saglasnost.kada || "-" },
+          { label: "IP adresa", value: testimonial.saglasnost.ip || "-" },
+        ],
       },
     ],
     sidebar: [

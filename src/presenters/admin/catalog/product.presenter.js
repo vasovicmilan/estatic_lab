@@ -116,6 +116,15 @@ export function prepareProductDetailsData(product) {
             },
           ]
         : []),
+      ...(product.povezaneUsluge?.length
+        ? [
+            {
+              title: "Koristi se u terapijama",
+              type: "list",
+              items: product.povezaneUsluge.map((s) => s.naziv),
+            },
+          ]
+        : []),
       {
         title: "FAQ",
         type: "table",
@@ -181,7 +190,7 @@ export function prepareProductCreateStep1Data() {
 // the phased creation flow. Kept separate from phase 1 above since their shape
 // diverged once phase 1 got trimmed down.
 // ---------------------------------------------------------------------------
-export function prepareProductFormData(product, { categoryOptions = [], tagOptions = [] } = {}) {
+export function prepareProductFormData(product, { categoryOptions = [], tagOptions = [], productOptions = [], serviceOptions = [] } = {}) {
   const values = product;
 
   const fields = [
@@ -232,6 +241,23 @@ export function prepareProductFormData(product, { categoryOptions = [], tagOptio
         { name: "question", label: "Pitanje", type: "text", required: true },
         { name: "answer", label: "Odgovor", type: "textarea", required: true },
       ],
+    },
+    {
+      name: "relatedProducts",
+      label: "Povezani proizvodi",
+      type: "multiselect",
+      width: 6,
+      value: (values.relatedProducts || []).map((p) => (typeof p === "object" ? p.id ?? p._id?.toString() : p)),
+      options: productOptions.map((p) => ({ value: p.id, label: p.naziv })),
+    },
+    {
+      name: "relatedServices",
+      label: "Koristi se u terapijama",
+      type: "multiselect",
+      width: 6,
+      value: (values.relatedServices || []).map((s) => (typeof s === "object" ? s.id ?? s._id?.toString() : s)),
+      options: serviceOptions.map((s) => ({ value: s.id, label: s.naziv })),
+      help: "Terapije u kojima se ovaj proizvod koristi ili preporučuje - prikazuje se na stranici proizvoda i na stranici svake izabrane terapije.",
     },
     {
       name: "productImage",
@@ -386,7 +412,7 @@ export function prepareProductDetailsMediaStepData(product, { categoryOptions = 
 // ---------------------------------------------------------------------------
 // Phase 3: SEO + remaining optional bits + publish
 // ---------------------------------------------------------------------------
-export function prepareProductSeoPublishStepData(product, { productOptions = [] } = {}) {
+export function prepareProductSeoPublishStepData(product, { productOptions = [], serviceOptions = [] } = {}) {
   const fields = [
     {
       name: "seoKeywordsCsv",
@@ -399,9 +425,18 @@ export function prepareProductSeoPublishStepData(product, { productOptions = [] 
       name: "relatedProducts",
       label: "Povezani proizvodi",
       type: "multiselect",
-      width: 12,
+      width: 6,
       value: (product.relatedProducts || []).map((p) => (typeof p === "object" ? p.id ?? p._id?.toString() : p)),
       options: productOptions.map((p) => ({ value: p.id, label: p.naziv })),
+    },
+    {
+      name: "relatedServices",
+      label: "Koristi se u terapijama",
+      type: "multiselect",
+      width: 6,
+      value: (product.relatedServices || []).map((s) => (typeof s === "object" ? s.id ?? s._id?.toString() : s)),
+      options: serviceOptions.map((s) => ({ value: s.id, label: s.naziv })),
+      help: "Terapije u kojima se ovaj proizvod koristi ili preporučuje - prikazuje se na stranici proizvoda i na stranici svake izabrane terapije.",
     },
     {
       name: "faq",

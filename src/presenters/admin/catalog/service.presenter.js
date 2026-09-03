@@ -94,6 +94,15 @@ export function prepareServiceDetailsData(service, { employeeCount = 0 } = {}) {
         type: "list",
         items: service.karakteristike.map((f) => f.naziv),
       },
+      ...(service.povezaniProizvodi?.length
+        ? [
+            {
+              title: "Preporučeni preparati",
+              type: "list",
+              items: service.povezaniProizvodi.map((p) => p.naziv),
+            },
+          ]
+        : []),
       {
         title: "FAQ",
         type: "table",
@@ -132,7 +141,7 @@ export function prepareServiceDetailsData(service, { employeeCount = 0 } = {}) {
 // ---------------------------------------------------------------------------
 // Phase 1: core info + image
 // ---------------------------------------------------------------------------
-export function prepareServiceFormData(service = null, { categoryOptions = [], tagOptions = [], resourceOptions = [] } = {}) {
+export function prepareServiceFormData(service = null, { categoryOptions = [], tagOptions = [], resourceOptions = [], productOptions = [] } = {}) {
   const isEdit = !!service;
   const values = isEdit
     ? service
@@ -236,6 +245,15 @@ export function prepareServiceFormData(service = null, { categoryOptions = [], t
           { name: "question", label: "Pitanje", type: "text", required: true },
           { name: "answer", label: "Odgovor", type: "textarea", required: true },
         ],
+      },
+      {
+        name: "relatedProducts",
+        label: "Preporučeni preparati",
+        type: "multiselect",
+        width: 12,
+        value: (values.relatedProducts || []).map((p) => (typeof p === "object" ? p.id ?? p._id?.toString() : p)),
+        options: productOptions.map((p) => ({ value: p.id, label: p.naziv })),
+        help: "Proizvodi koji se koriste u ovoj terapiji ili se preporučuju uz nju - prikazuje se na stranici usluge i na stranici svakog izabranog proizvoda.",
       }
     );
   }
@@ -315,7 +333,7 @@ export function prepareServicePackagesStepData(service) {
 // ---------------------------------------------------------------------------
 // Phase 3: optional extras + publish
 // ---------------------------------------------------------------------------
-export function prepareServiceExtrasStepData(service) {
+export function prepareServiceExtrasStepData(service, { productOptions = [] } = {}) {
   const fields = [
     {
       name: "features",
@@ -349,6 +367,15 @@ export function prepareServiceExtrasStepData(service) {
         { name: "question", label: "Pitanje", type: "text", required: true },
         { name: "answer", label: "Odgovor", type: "textarea", required: true },
       ],
+    },
+    {
+      name: "relatedProducts",
+      label: "Preporučeni preparati",
+      type: "multiselect",
+      width: 12,
+      value: (service.relatedProducts || []).map((p) => (typeof p === "object" ? p.id ?? p._id?.toString() : p)),
+      options: productOptions.map((p) => ({ value: p.id, label: p.naziv })),
+      help: "Proizvodi koji se koriste u ovoj terapiji ili se preporučuju uz nju - prikazuje se na stranici usluge i na stranici svakog izabranog proizvoda.",
     },
     { name: "highlight", label: "Istakni ovu uslugu", type: "checkbox", width: 6, value: service.highlight },
     {

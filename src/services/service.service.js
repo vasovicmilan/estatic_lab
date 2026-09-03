@@ -5,12 +5,14 @@ import packagePurchaseRepo from "../repositories/package-purchase.repository.js"
 import packageRepo from "../repositories/package.repository.js";
 import employeeRepo from "../repositories/employee.repository.js";
 import couponRepo from "../repositories/coupon.repository.js";
+import productRepo from "../repositories/product.repository.js";
 import {
   mapServicesForAdminList,
   mapServiceForAdminDetail,
   mapServiceForEdit,
   mapServicesForPublic,
   mapServiceForPublicDetail,
+  mapServicesForSelect,
 } from "../mappers/service.mapper.js";
 import categoryService from "./category.service.js";
 import { generateSlug, generateUniqueSlug } from "../utils/slug.util.js";
@@ -21,6 +23,7 @@ const adminPopulate = [
   { path: "categories", select: "name slug" },
   { path: "tags", select: "name slug" },
   { path: "resources", select: "name capacity isActive" },
+  { path: "relatedProducts", select: "name slug image" },
 ];
 
 function validatePackages(packages = []) {
@@ -96,6 +99,14 @@ export async function getServiceForEdit(serviceId) {
   const service = await serviceRepo.findServiceById(serviceId, { populateFields: adminPopulate });
   if (!service) notFound("Usluga");
   return mapServiceForEdit(service);
+}
+
+// Same convention as categoryService.getCategoriesForSelect/resourceService.
+// getResourcesForSelect - a lean {id, naziv} list for populating a <select>/
+// multiselect. Used by product.controller.js's relatedServices field.
+export async function getServicesForSelect() {
+  const { data } = await serviceRepo.findServices({ limit: 100, populateFields: [] });
+  return mapServicesForSelect(data);
 }
 
 export async function getServiceBySlug(slug) {
@@ -181,6 +192,7 @@ export async function addExtrasAndPublish(serviceId, data) {
     features: data.features ?? existing.features ?? [],
     comparisonColumns: data.comparisonColumns ?? existing.comparisonColumns ?? [],
     comparisonTable: data.comparisonTable ?? existing.comparisonTable ?? [],
+    relatedProducts: data.relatedProducts ?? existing.relatedProducts ?? [],
     faq: data.faq ?? existing.faq ?? [],
     highlight: data.highlight ?? existing.highlight ?? false,
     isActive: data.isActive ?? true,
@@ -265,16 +277,18 @@ export async function deleteServiceById(serviceId) {
     badRequest(`Usluga se koristi u paketu (${names}) - prvo je uklonite iz paketa i ažurirajte cenu paketa`);
   }
 
-  // Tier 3 - current configuration, not a promise to anyone. Employee.services[] and
-  // Coupon.applicableServices[] just mean "currently assigned/targeted" - safe to
-  // clean up automatically, atomically with the delete itself. Service.resources is
-  // the same tier (just current config), but there's nothing to pull - the whole
-  // Service document is going away with it.
+  // Tier 3 - current configuration, not a promise to anyone. Employee.services[],
+  // Coupon.applicableServices[], and any product's relatedServices[] just mean
+  // "currently assigned/targeted" - safe to clean up automatically, atomically
+  // with the delete itself. Service.resources is the same tier (just current
+  // config), but there's nothing to pull - the whole Service document is going
+  // away with it.
   const session = await mongoose.startSession();
   try {
     await session.withTransaction(async () => {
       await employeeRepo.pullServiceFromAllEmployees(serviceId, { session });
       await couponRepo.pullServiceFromAllCoupons(serviceId, { session });
+      await productRepo.pullServiceFromAllProducts(serviceId, { session });
       await serviceRepo.deleteServiceById(serviceId, { session });
     });
   } finally {
@@ -307,6 +321,7 @@ export default {
   getServiceByIdRaw,
   getServiceForEdit,
   getServiceBySlug,
+  getServicesForSelect,
   findActiveServices,
   findHighlightedServices,
   findServicesByCategorySlug,

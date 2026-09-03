@@ -3,6 +3,7 @@ import * as categoryService from "../../../../services/category.service.js";
 import * as tagService from "../../../../services/tag.service.js";
 import * as employeeService from "../../../../services/employee.service.js";
 import * as resourceService from "../../../../services/resource.service.js";
+import * as productService from "../../../../services/product.service.js";
 import {
   prepareServiceListData,
   prepareServiceDetailsData,
@@ -17,6 +18,7 @@ import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
+import { toIdArray } from "../../../../utils/form-array.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 
 // complex nested arrays (packages, features, comparisonTable, faq) are submitted as
@@ -35,16 +37,18 @@ function parseJsonField(value, fallback = []) {
 // which employees can perform a service now lives only on Employee.services, assigned
 // from the employee's own edit form, not here (see service.model.js)
 async function loadFormOptions() {
-  const [categories, tags, resources] = await Promise.all([
+  const [categories, tags, resources, products] = await Promise.all([
     categoryService.getCategoriesForSelect("service"),
     tagService.getTagsForSelect("service"),
     resourceService.getResourcesForSelect(),
+    productService.getProductsForSelect(),
   ]);
 
   return {
     categoryOptions: categories,
     tagOptions: tags,
     resourceOptions: resources,
+    productOptions: products,
   };
 }
 
@@ -59,9 +63,9 @@ function buildStep1Payload(req) {
     ? req.uploadedFiles.gallery.map((f) => ({ img: f.img, imgDesc: f.imgDesc || "" }))
     : [];
 
-  data.categories = Array.isArray(req.body.categories) ? req.body.categories.filter(Boolean) : req.body.categories ? [req.body.categories] : [];
-  data.tags = Array.isArray(req.body.tags) ? req.body.tags.filter(Boolean) : req.body.tags ? [req.body.tags] : [];
-  data.resources = Array.isArray(req.body.resources) ? req.body.resources.filter(Boolean) : req.body.resources ? [req.body.resources] : [];
+  data.categories = toIdArray(req.body.categories);
+  data.tags = toIdArray(req.body.tags);
+  data.resources = toIdArray(req.body.resources);
 
   return data;
 }
@@ -75,6 +79,7 @@ function buildStep3Payload(req) {
     : undefined;
   data.comparisonTable = parseJsonField(req.body.comparisonTable);
   data.faq = parseJsonField(req.body.faq);
+  data.relatedProducts = toIdArray(req.body.relatedProducts);
   data.highlight = parseCheckbox(req.body.highlight, false);
   data.isActive = parseCheckbox(req.body.isActive);
 
@@ -93,9 +98,10 @@ function buildServicePayload(req, existing = {}) {
     ? req.uploadedFiles.gallery.map((f) => ({ img: f.img, imgDesc: f.imgDesc || "" }))
     : existing.gallery || [];
 
-  data.categories = Array.isArray(req.body.categories) ? req.body.categories.filter(Boolean) : req.body.categories ? [req.body.categories] : [];
-  data.tags = Array.isArray(req.body.tags) ? req.body.tags.filter(Boolean) : req.body.tags ? [req.body.tags] : [];
-  data.resources = Array.isArray(req.body.resources) ? req.body.resources.filter(Boolean) : req.body.resources ? [req.body.resources] : [];
+  data.categories = toIdArray(req.body.categories);
+  data.tags = toIdArray(req.body.tags);
+  data.resources = toIdArray(req.body.resources);
+  data.relatedProducts = toIdArray(req.body.relatedProducts);
 
   data.features = parseJsonField(req.body.features, existing.features || []);
   data.packages = parseJsonField(req.body.packages, existing.packages || []);
@@ -275,7 +281,8 @@ export async function newServiceExtrasForm(req, res, next) {
   try {
     const { serviceId } = req.params;
     const service = await serviceService.getServiceForEdit(serviceId);
-    const formData = prepareServiceExtrasStepData(service);
+    const { productOptions } = await loadFormOptions();
+    const formData = prepareServiceExtrasStepData(service, { productOptions });
     return res.render("admin/_form", {
       pageTitle: `${service.name} - detalji i objava`,
       pageDescription: "Dodatni detalji i objava - korak 3 od 3",
@@ -294,7 +301,8 @@ export async function publishServiceStep(req, res, next) {
     if (req.validationErrors) {
       logWarn(`[publishServiceStep] Validacione greške u fazi 3 za serviceId=${serviceId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
       const service = await serviceService.getServiceForEdit(serviceId);
-      const formData = prepareServiceExtrasStepData(service);
+      const { productOptions } = await loadFormOptions();
+      const formData = prepareServiceExtrasStepData(service, { productOptions });
       return res.status(400).render("admin/_form", {
         pageTitle: `${service.name} - detalji i objava`,
         pageDescription: "Dodatni detalji i objava - korak 3 od 3",
@@ -322,7 +330,8 @@ export async function publishServiceStep(req, res, next) {
     if (statusCode === 400 || statusCode === 404) {
       const service = await serviceService.getServiceForEdit(req.params.serviceId).catch(() => null);
       if (service) {
-        const formData = prepareServiceExtrasStepData(service);
+        const { productOptions } = await loadFormOptions();
+        const formData = prepareServiceExtrasStepData(service, { productOptions });
         return res.status(statusCode).render("admin/_form", {
           pageTitle: `${service.name} - detalji i objava`,
           pageDescription: "Dodatni detalji i objava - korak 3 od 3",

@@ -31,8 +31,10 @@ export async function findProductDocById(id, { session } = {}) {
   return Product.findById(id).session(session || null);
 }
 
-export async function findProductBySlug(slug, { session } = {}) {
-  return Product.findOne({ slug }).session(session || null).lean();
+export async function findProductBySlug(slug, { populateFields = [], session } = {}) {
+  let query = Product.findOne({ slug }).session(session || null);
+  query = applyPopulate(query, populateFields);
+  return query.lean();
 }
 
 export async function findProductBySku(sku, { session } = {}) {
@@ -103,6 +105,13 @@ export async function pullFromAllRelatedProducts(productId, { session } = {}) {
   return Product.updateMany({ relatedProducts: productId }, { $pull: { relatedProducts: productId } }, { session });
 }
 
+// Called when a Service is deleted - Product.relatedServices[] is current
+// merchandising config on this product ("used in this treatment"), not a promise
+// to anyone, safe to auto-clean the same way pullFromAllRelatedProducts is.
+export async function pullServiceFromAllProducts(serviceId, { session } = {}) {
+  return Product.updateMany({ relatedServices: serviceId }, { $pull: { relatedServices: serviceId } }, { session });
+}
+
 export async function findActiveSlugsForSitemap() {
   return Product.find({ isActive: true }, { slug: 1, updatedAt: 1 }).lean();
 }
@@ -121,5 +130,6 @@ export default {
   pullCategoryFromAllProducts,
   pullTagFromAllProducts,
   pullFromAllRelatedProducts,
+  pullServiceFromAllProducts,
   findActiveSlugsForSitemap,
 };

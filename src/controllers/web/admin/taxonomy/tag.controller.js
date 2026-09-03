@@ -90,7 +90,7 @@ export async function createTag(req, res, next) {
       });
     }
 
-    const data = { ...req.body, isActive: parseCheckbox(req.body.isActive, true) };
+    const data = { ...req.body, isActive: parseCheckbox(req.body.isActive, true), isIndexable: parseCheckbox(req.body.isIndexable, true) };
     const tag = await tagService.createTag(data);
     logInfo(`[createTag] Tag kreiran: "${tag.naziv}"`, { tagId: tag.id, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
@@ -133,7 +133,7 @@ export async function updateTag(req, res, next) {
     }
 
     const existing = await tagService.getTagForEdit(tagId);
-    const data = { ...req.body, isActive: parseCheckbox(req.body.isActive, existing.isActive) };
+    const data = { ...req.body, isActive: parseCheckbox(req.body.isActive, existing.isActive), isIndexable: parseCheckbox(req.body.isIndexable, existing.isIndexable ?? true) };
     const updated = await tagService.updateTagById(tagId, data);
     logInfo(`[updateTag] Tag #${tagId} ažuriran`, { tagId, adminId: req.session?.user?.id });
     // updateTagById vraca istu mapiranu formu kao getTagById (naziv/...), ne getTagForEdit

@@ -67,6 +67,10 @@ export const validateServiceExtrasStep = [
     .optional()
     .custom(isArrayOrString).withMessage("Neispravni zaposleni"),
 
+  body("relatedProducts")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravni povezani proizvodi"),
+
   booleanishField("highlight", true),
 
   // default true when the field is present-but-empty-ish is handled in the controller
@@ -105,6 +109,10 @@ export const validateServiceUpdate = [
   body("faq")
     .optional()
     .custom(isJsonArrayOrArray).withMessage("FAQ nije u ispravnom formatu"),
+
+  body("relatedProducts")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravni povezani proizvodi"),
 
   booleanishField("highlight", true),
 

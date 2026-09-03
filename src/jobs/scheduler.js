@@ -8,6 +8,7 @@ import {
 } from "./report-jobs.js";
 import { runCommissionGracePeriodSweep } from "./commission-jobs.js";
 import { runPublishScheduledPosts } from "./post-jobs.js";
+import { runSendScheduledCampaigns } from "./campaign-jobs.js";
 import { runSredimeSync } from "./sredime-jobs.js";
 import { runAppointmentReminders } from "./appointment-reminder-jobs.js";
 import {
@@ -62,6 +63,11 @@ export function startScheduler() {
   // scheduled for e.g. 09:00 actually goes live close to 09:00 rather than sitting
   // "scheduled" for up to an hour, without being so frequent it's pointless load.
   cron.schedule("*/5 * * * *", () => runPublishScheduledPosts(), { timezone: TIMEZONE });
+
+  // Scheduled newsletter campaign sender - every 5 minutes, same cadence and
+  // same reasoning as the scheduled blog post publisher just above: a
+  // campaign scheduled for e.g. 09:00 should actually go out close to 09:00.
+  cron.schedule("*/5 * * * *", () => runSendScheduledCampaigns(), { timezone: TIMEZONE });
 
   // SrediMe ICS sync - every 15 minutes. Keeps cached external busy intervals
   // (see external-busy-interval.model.js) fresh enough that a booking made

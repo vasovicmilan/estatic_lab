@@ -47,6 +47,12 @@
       { name: "button.text", label: "Tekst linka", type: "text" },
       { name: "button.url", label: "Link ka usluzi", type: "text" },
     ],
+    productReference: [
+      { name: "title", label: "Naslov", type: "text" },
+      { name: "text", label: "Kratak opis", type: "textarea" },
+      { name: "button.text", label: "Tekst linka", type: "text" },
+      { name: "button.url", label: "Link ka proizvodu (npr. /prodavnica/naziv-proizvoda)", type: "text" },
+    ],
     divider: [],
     // table, cards, gallery, and faq are handled separately below (buildTableBuilder/
     // buildCardsBuilder/buildGalleryBuilder/buildFaqBuilder) - they need their own
@@ -76,6 +82,7 @@
     cta: "Poziv na akciju (CTA)",
     divider: "Razdvajač",
     serviceReference: "Link ka usluzi",
+    productReference: "Link ka proizvodu",
   };
 
   function getNested(obj, dottedName) {

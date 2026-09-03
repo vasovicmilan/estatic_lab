@@ -59,6 +59,10 @@ export const validateProductSeoPublishStep = [
     .optional()
     .custom(isArrayOrString).withMessage("Neispravni povezani proizvodi"),
 
+  body("relatedServices")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravne povezane usluge"),
+
   body("faq")
     .optional()
     .custom(isJsonArrayOrArray).withMessage("FAQ nije u ispravnom formatu"),
@@ -93,6 +97,14 @@ export const validateProductUpdate = [
   body("tags")
     .optional()
     .custom(isArrayOrString).withMessage("Neispravni tagovi"),
+
+  body("relatedProducts")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravni povezani proizvodi"),
+
+  body("relatedServices")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravne povezane usluge"),
 
   body("faq")
     .optional()

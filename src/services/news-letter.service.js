@@ -17,15 +17,25 @@ export async function getSubscriberById(subscriberId) {
   return mapSubscriberForAdminDetail(subscriber);
 }
 
-export async function subscribe(email) {
+export async function subscribe(email, interests = ["general"]) {
   if (!email) validationError("email");
+  const cleanInterests = interests.length ? interests : ["general"];
 
   const existing = await newsLetterRepo.findSubscriberByEmail(email);
   if (existing) {
+    // merge, don't overwrite - re-subscribing to add "products" shouldn't
+    // silently drop an existing "partnership" opt-in
+    const mergedInterests = Array.from(new Set([...(existing.interests || []), ...cleanInterests]));
     if (existing.status === "subscribed") {
+      await newsLetterRepo.updateSubscriberById(existing._id, { interests: mergedInterests });
       return { message: "Već ste prijavljeni na naš newsletter" };
     }
-    await newsLetterRepo.updateSubscriberById(existing._id, { status: "subscribed", unsubscribedAt: null, subscribedAt: new Date() });
+    await newsLetterRepo.updateSubscriberById(existing._id, {
+      status: "subscribed",
+      unsubscribedAt: null,
+      subscribedAt: new Date(),
+      interests: mergedInterests,
+    });
     logInfo("Newsletter re-subscribed", { email });
     return { message: "Uspešno ste se ponovo prijavili na newsletter" };
   }
@@ -34,10 +44,11 @@ export async function subscribe(email) {
   const created = await newsLetterRepo.createSubscriber({
     email: email.toLowerCase().trim(),
     unsubscribeToken,
+    interests: cleanInterests,
     consentedAt: new Date(),
   });
 
-  logInfo("Newsletter subscribed", { email: created.email });
+  logInfo("Newsletter subscribed", { email: created.email, interests: cleanInterests });
   eventEmitter.emit("newsletter:subscribed", { email: created.email, unsubscribeToken });
 
   return { message: "Uspešno ste se prijavili na newsletter" };

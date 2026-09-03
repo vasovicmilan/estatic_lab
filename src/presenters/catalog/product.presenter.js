@@ -130,10 +130,11 @@ export function prepareProductTagData(tag, result, query = {}, { categories = []
   };
 }
 
-export function prepareProductDetailData(product, { relatedProducts = [], testimonials = [] } = {}) {
+export function prepareProductDetailData(product, { relatedProducts = [], relatedServices = [], testimonials = [] } = {}) {
   return {
     product,
     relatedProducts,
+    relatedServices,
     testimonials,
     breadcrumbs: [
       { label: "Prodavnica", url: "/prodavnica" },

@@ -100,6 +100,13 @@ const ServiceSchema = new Schema(
 
     faq: [FAQSchema],
 
+    // products used during/recommended alongside this service - e.g. the specific
+    // cosmetic preparation a therapy actually applies, or a retail product to
+    // suggest as aftercare. The inverse of Product.relatedServices (see
+    // product.model.js) - see that field's comment for why this is two independent
+    // arrays rather than a shared join collection.
+    relatedProducts: [{ type: Schema.Types.ObjectId, ref: "Product" }],
+
     isActive: {
       type: Boolean,
       default: false,

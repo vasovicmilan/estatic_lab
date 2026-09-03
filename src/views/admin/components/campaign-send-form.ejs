@@ -1,0 +1,14 @@
+<% const d = data; %>
+<% if (d.status === "sent") { %>
+  <p class="text-muted small mb-0">Ova kampanja je već poslata (<%= d.poslatoZa %>) - <%= d.poslato %> uspešno, <%= d.neuspesno %> neuspešno.</p>
+<% } else { %>
+  <form action="<%= d.sendUrl %>" method="POST" onsubmit="return confirm('Kampanja će odmah biti poslata svim pretplatnicima u izabranom segmentu. Ova akcija se ne može poništiti. Nastaviti?');">
+    <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+    <button type="submit" class="btn btn-success btn-sm w-100">
+      <i class="bi bi-send"></i> Pošalji odmah
+    </button>
+  </form>
+  <% if (d.status === "scheduled") { %>
+    <p class="text-muted small mt-2 mb-0">Automatski se šalje <%= d.zakazanoZa %>, ili odmah pritiskom na dugme iznad.</p>
+  <% } %>
+<% } %>

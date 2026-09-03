@@ -8,6 +8,20 @@ function translateStatus(status) {
   return map[status] || status;
 }
 
+const INTEREST_LABELS = {
+  general: "Opšte",
+  products: "Proizvodi",
+  partnership: "Partnerski program",
+};
+
+// Canonical label lookup for NEWSLETTER_INTERESTS (see news-letter.model.js) -
+// campaign.mapper.js imports this too, rather than keeping its own copy, since
+// a campaign's targetInterests and a subscriber's interests are the exact same
+// enum and should always read the same in Serbian.
+export function translateInterest(interest) {
+  return INTEREST_LABELS[interest] || interest;
+}
+
 export function mapSubscribersForAdminList(subscribers = []) {
   return subscribers
     .map((subscriber) => {
@@ -17,6 +31,7 @@ export function mapSubscribersForAdminList(subscribers = []) {
         email: subscriber.email,
         status: translateStatus(subscriber.status),
         statusRaw: subscriber.status,
+        interesovanja: (subscriber.interests || []).map(translateInterest),
         prijavljen: formatDate(subscriber.subscribedAt),
       };
     })
@@ -32,6 +47,7 @@ export function mapSubscriberForAdminDetail(subscriber) {
       email: subscriber.email,
       status: translateStatus(subscriber.status),
       statusRaw: subscriber.status,
+      interesovanja: (subscriber.interests || []).map(translateInterest),
     },
     vreme: {
       prijavljen: formatDateTime(subscriber.subscribedAt),
@@ -50,4 +66,5 @@ export default {
   mapSubscribersForAdminList,
   mapSubscriberForAdminDetail,
   mapSubscriberRaw,
+  translateInterest,
 };

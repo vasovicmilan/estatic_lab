@@ -1,0 +1,37 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main>
+  <%- include("../includes/flash-messages") %>
+
+  <section class="bg-white py-5">
+    <div class="container">
+      <%- include("../includes/breadcrumbs") %>
+
+      <p class="section-eyebrow">Saradnja</p>
+      <h1 class="h2 mb-4">Naši saradnici</h1>
+
+      <% if (!data.partners || data.partners.length === 0) { %>
+        <p class="text-muted">Trenutno nemamo aktivnih saradnika za prikaz.</p>
+      <% } else { %>
+        <div class="row g-4">
+          <% data.partners.forEach(function(partner) { %>
+            <div class="col-md-4">
+              <a href="/saradnici/<%= partner.slug %>" class="card h-100 shadow-sm hover-lift text-decoration-none text-dark">
+                <% if (partner.slika && partner.slika.url) { %>
+                  <img src="<%= partner.slika.url %>" class="card-img-top" style="height:200px; object-fit:cover;" alt="<%= partner.slika.alt || partner.naziv %>">
+                <% } %>
+                <div class="card-body">
+                  <h2 class="h5"><%= partner.naziv %></h2>
+                  <p class="text-muted small mb-0"><%= partner.kratakOpis %></p>
+                </div>
+              </a>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  </section>
+</main>
+
+<%- include("../includes/footer") %>

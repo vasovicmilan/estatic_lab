@@ -11,6 +11,7 @@ import { buildWebsiteJsonLd } from "../../seo/utils.seo.js";
 import { logError, logWarn, logInfo } from "../../utils/logger.util.js";
 import { flashAndRedirect } from "../../utils/flash.util.js";
 import { getCapturedReferralCode } from "../../middlewares/coupon-capture.middleware.js";
+import { toIdArray } from "../../utils/form-array.util.js";
 
 export async function homePage(req, res, next) {
   try {
@@ -208,8 +209,8 @@ export async function submitNewsletter(req, res, next) {
       return flashAndRedirect(req, res, "error", "Unesite ispravnu email adresu", req.get("Referrer") || "/");
     }
 
-    const result = await indexService.submitNewsletterForm(req.body.email);
-    logInfo("[submitNewsletter] Prijava na newsletter", { email: req.body.email });
+    const result = await indexService.submitNewsletterForm(req.body.email, toIdArray(req.body.interests));
+    logInfo("[submitNewsletter] Prijava na newsletter", { email: req.body.email, interests: req.body.interests });
 
     return flashAndRedirect(req, res, "success", result.message, req.get("Referrer") || "/");
   } catch (error) {

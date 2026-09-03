@@ -120,10 +120,11 @@ export function prepareServiceTagData(tag, result, query = {}, { categories = []
   };
 }
 
-export function prepareServiceDetailData(service, { relatedServices = [], testimonials = [] } = {}) {
+export function prepareServiceDetailData(service, { relatedServices = [], relatedProducts = [], testimonials = [] } = {}) {
   return {
     service,
     relatedServices,
+    relatedProducts,
     testimonials,
     bookingUrl: `/zakazivanje/${service.slug}`,
     breadcrumbs: [

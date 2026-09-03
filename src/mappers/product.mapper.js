@@ -109,8 +109,11 @@ export function mapProductForAdminDetail(product) {
     varijante: mapVariations(product.variations),
     stanjeUkupno: getTotalStock(product),
     povezaniProizvodi: (product.relatedProducts || [])
-      .filter((p) => p && typeof p === "object")
+      .filter((p) => p && typeof p === "object" && p.name)
       .map((p) => ({ id: p._id?.toString(), naziv: p.name, slug: p.slug })),
+    povezaneUsluge: (product.relatedServices || [])
+      .filter((s) => s && typeof s === "object" && s.name)
+      .map((s) => ({ id: s._id?.toString(), naziv: s.name, slug: s.slug })),
     faq: (product.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
     seoKljucneReci: product.seoKeywords || [],
     oznaka: translateBadge(product.badge),
@@ -146,6 +149,7 @@ export function mapProductForEdit(product) {
     seoKeywords: product.seoKeywords || [],
     variations: product.variations || [],
     relatedProducts: (product.relatedProducts || []).map((p) => p._id?.toString() || p.toString()),
+    relatedServices: (product.relatedServices || []).map((s) => s._id?.toString() || s.toString()),
     faq: product.faq || [],
     badge: product.badge || "none",
     shippingClass: product.shippingClass || "standard",
@@ -194,8 +198,11 @@ export function mapProductForPublicDetail(product) {
     videi: product.videos || [],
     varijante: mapVariations((product.variations || []).filter((v) => v.isActive)),
     povezaniProizvodi: (product.relatedProducts || [])
-      .filter((p) => p && typeof p === "object")
+      .filter((p) => p && typeof p === "object" && p.name)
       .map((p) => ({ id: p._id?.toString(), naziv: p.name, slug: p.slug, slika: formatImage(p.image) })),
+    povezaneUsluge: (product.relatedServices || [])
+      .filter((s) => s && typeof s === "object" && s.name)
+      .map((s) => ({ id: s._id?.toString(), naziv: s.name, slug: s.slug, slika: formatImage(s.image) })),
     faq: (product.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
     oznaka: translateBadge(product.badge),
     naUpit: !!product.priceOnRequest,
@@ -206,6 +213,22 @@ export function mapProductRaw(product) {
   return product;
 }
 
+// Same convention as mapCategoryForSelect/mapResourceForSelect (see category.mapper.js/
+// resource.mapper.js) - a minimal {id, naziv} shape for populating a <select>/
+// multiselect, used by both product.controller.js (relatedProducts on the product's
+// own form) and service.controller.js (relatedProducts on the service form).
+export function mapProductForSelect(product) {
+  if (!product) return null;
+  return {
+    id: product._id.toString(),
+    naziv: product.name,
+  };
+}
+
+export function mapProductsForSelect(products = []) {
+  return products.map(mapProductForSelect).filter(Boolean);
+}
+
 export default {
   mapProductsForAdminList,
   mapProductForAdminDetail,
@@ -214,4 +237,6 @@ export default {
   mapProductsForPublic,
   mapProductForPublicDetail,
   mapProductRaw,
+  mapProductForSelect,
+  mapProductsForSelect,
 };

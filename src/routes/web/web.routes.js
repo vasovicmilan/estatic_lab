@@ -4,6 +4,7 @@ import * as IndexController from "../../controllers/web/index.controller.js";
 import * as SeoController from "../../controllers/web/seo.controller.js";
 import { contactLimiter, newsletterLimiter, testimonialLimiter, couponLimiter } from "../../middlewares/rate-limiter.middleware.js";
 import * as CouponController from "../../controllers/web/public/coupon.controller.js";
+import * as BusinessPartnerController from "../../controllers/web/public/business-partner.controller.js";
 import { validateContactCreate } from "../../middlewares/validators/contact.validator.js";
 import { validateNewsletterSubscribe } from "../../middlewares/validators/newsletter.validator.js";
 import { validateTestimonialSubmit } from "../../middlewares/validators/testimonial.validator.js";
@@ -39,6 +40,9 @@ router.get("/politika-privatnosti", IndexController.privacyPage);
 router.get("/uslovi-koriscenja", IndexController.termsPage);
 router.get("/faq", IndexController.faqPage);
 router.get("/kontakt", IndexController.contactPage);
+
+router.get("/saradnici", BusinessPartnerController.businessPartnerList);
+router.get("/saradnici/:slug", BusinessPartnerController.businessPartnerDetails);
 
 router.post(
   "/kontakt",

@@ -1,6 +1,7 @@
 import * as productService from "../../../../services/product.service.js";
 import * as categoryService from "../../../../services/category.service.js";
 import * as tagService from "../../../../services/tag.service.js";
+import * as serviceService from "../../../../services/service.service.js";
 import {
   prepareProductListData,
   prepareProductDetailsData,
@@ -17,6 +18,7 @@ import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
+import { toIdArray } from "../../../../utils/form-array.util.js";
 
 // complex nested arrays (variations, faq, relatedProducts) are submitted as JSON
 // from the dynamic form-builder widgets rather than flat form fields
@@ -30,10 +32,6 @@ function parseJsonField(value, fallback = []) {
   }
 }
 
-function toIdArray(value) {
-  return Array.isArray(value) ? value.filter(Boolean) : value ? [value] : [];
-}
-
 async function loadFormOptions() {
   const [categories, tags] = await Promise.all([
     categoryService.getCategoriesForSelect("product"),
@@ -42,9 +40,17 @@ async function loadFormOptions() {
   return { categoryOptions: categories, tagOptions: tags };
 }
 
-async function loadProductOptions(excludeId = null) {
-  const result = await productService.listProducts({ limit: 100 });
-  return result.data.filter((p) => p.id !== excludeId).map((p) => ({ id: p.id, naziv: p.naziv }));
+// Used only by the single-shot edit form (editProductForm/updateProduct), which
+// also exposes relatedProducts/relatedServices - unlike loadFormOptions above,
+// which phase 2's create flow uses and doesn't need those two extra queries for.
+async function loadFullFormOptions(productId) {
+  const [categories, tags, products, services] = await Promise.all([
+    categoryService.getCategoriesForSelect("product"),
+    tagService.getTagsForSelect("product"),
+    productService.getProductsForSelect(productId),
+    serviceService.getServicesForSelect(),
+  ]);
+  return { categoryOptions: categories, tagOptions: tags, productOptions: products, serviceOptions: services };
 }
 
 function buildPhase2Payload(req, existing = {}) {
@@ -81,6 +87,7 @@ function buildPhase3Payload(req) {
   return {
     seoKeywords,
     relatedProducts: toIdArray(req.body.relatedProducts),
+    relatedServices: toIdArray(req.body.relatedServices),
     faq: parseJsonField(req.body.faq),
     badge: ["none", "featured", "sale"].includes(req.body.badge) ? req.body.badge : "none",
     shippingClass: ["standard", "freight"].includes(req.body.shippingClass) ? req.body.shippingClass : "standard",
@@ -99,6 +106,8 @@ function buildProductPayload(req, existing = {}) {
 
   data.categories = toIdArray(req.body.categories);
   data.tags = toIdArray(req.body.tags);
+  data.relatedProducts = toIdArray(req.body.relatedProducts);
+  data.relatedServices = toIdArray(req.body.relatedServices);
   data.longDescription = parseJsonField(req.body.longDescription, existing.longDescription || []);
   data.variations = parseJsonField(req.body.variations, existing.variations || []);
   data.faq = parseJsonField(req.body.faq, existing.faq || []);
@@ -272,8 +281,9 @@ export async function newProductSeoPublishForm(req, res, next) {
   try {
     const { productId } = req.params;
     const product = await productService.getProductForEdit(productId);
-    const productOptions = await loadProductOptions(productId);
-    const formData = prepareProductSeoPublishStepData(product, { productOptions });
+    const productOptions = await productService.getProductsForSelect(productId);
+    const serviceOptions = await serviceService.getServicesForSelect();
+    const formData = prepareProductSeoPublishStepData(product, { productOptions, serviceOptions });
     return res.render("admin/_form", {
       pageTitle: `${product.name} - SEO i objava`,
       pageDescription: "SEO, dodatni detalji i objava - korak 3 od 3",
@@ -292,8 +302,9 @@ export async function publishProductStep(req, res, next) {
     if (req.validationErrors) {
       logWarn(`[publishProductStep] Validacione greške u fazi 3 za productId=${productId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
       const product = await productService.getProductForEdit(productId);
-      const productOptions = await loadProductOptions(productId);
-      const formData = prepareProductSeoPublishStepData(product, { productOptions });
+      const productOptions = await productService.getProductsForSelect(productId);
+      const serviceOptions = await serviceService.getServicesForSelect();
+      const formData = prepareProductSeoPublishStepData(product, { productOptions, serviceOptions });
       return res.status(400).render("admin/_form", {
         pageTitle: `${product.name} - SEO i objava`,
         pageDescription: "SEO, dodatni detalji i objava - korak 3 od 3",
@@ -321,8 +332,9 @@ export async function publishProductStep(req, res, next) {
     if (statusCode === 400 || statusCode === 404) {
       const product = await productService.getProductForEdit(req.params.productId).catch(() => null);
       if (product) {
-        const productOptions = await loadProductOptions(req.params.productId);
-        const formData = prepareProductSeoPublishStepData(product, { productOptions });
+        const productOptions = await productService.getProductsForSelect(req.params.productId);
+        const serviceOptions = await serviceService.getServicesForSelect();
+        const formData = prepareProductSeoPublishStepData(product, { productOptions, serviceOptions });
         return res.status(statusCode).render("admin/_form", {
           pageTitle: `${product.name} - SEO i objava`,
           pageDescription: "SEO, dodatni detalji i objava - korak 3 od 3",
@@ -338,7 +350,7 @@ export async function editProductForm(req, res, next) {
   try {
     const { productId } = req.params;
     const product = await productService.getProductForEdit(productId);
-    const options = await loadFormOptions();
+    const options = await loadFullFormOptions(productId);
     const formData = prepareProductFormData(product, options);
 
     return res.render("admin/_form", {
@@ -359,7 +371,7 @@ export async function updateProduct(req, res, next) {
     if (req.validationErrors) {
       logWarn(`[updateProduct] Validacione greške za productId=${productId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
       const product = await productService.getProductForEdit(productId);
-      const options = await loadFormOptions();
+      const options = await loadFullFormOptions(productId);
       const formData = prepareProductFormData(product, options);
       return res.status(400).render("admin/_form", {
         pageTitle: `Izmena - ${product.name}`,
@@ -395,7 +407,7 @@ export async function updateProduct(req, res, next) {
     const { statusCode, message } = normalizeError(error);
     if (statusCode === 400 || statusCode === 404 || statusCode === 409) {
       const product = await productService.getProductForEdit(req.params.productId).catch(() => null);
-      const options = await loadFormOptions();
+      const options = await loadFullFormOptions(req.params.productId);
       const formData = prepareProductFormData(product, options);
       return res.status(statusCode).render("admin/_form", {
         pageTitle: product ? `Izmena - ${product.name}` : "Izmena proizvoda",

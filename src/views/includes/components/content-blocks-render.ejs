@@ -118,6 +118,15 @@
       <i class="bi bi-arrow-right text-primary flex-shrink-0"></i>
     </a>
 
+  <% } else if (block.tip === "productReference" && block.dugme && block.dugme.url) { %>
+    <a href="<%= block.dugme.url %>" class="link-card">
+      <div>
+        <% if (block.naslovBloka) { %><div class="fw-semibold mb-1"><%= block.naslovBloka %></div><% } %>
+        <% if (block.tekst) { %><div class="text-muted small"><%= block.tekst %></div><% } %>
+      </div>
+      <i class="bi bi-bag text-primary flex-shrink-0"></i>
+    </a>
+
   <% } else if (block.tip === "divider") { %>
     <hr class="my-5">
   <% } %>

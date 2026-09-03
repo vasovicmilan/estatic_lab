@@ -51,6 +51,8 @@ export function mapTagForEdit(tag) {
     slug: tag.slug,
     domain: tag.domain,
     isActive: tag.isActive,
+    isIndexable: tag.isIndexable,
+    description: tag.description,
   };
 }
 

@@ -19,18 +19,32 @@
           <li class="mb-2"><a href="/blog" class="text-white text-opacity-75 text-decoration-none">Blog</a></li>
           <li class="mb-2"><a href="/nas-tim" class="text-white text-opacity-75 text-decoration-none">Naš tim</a></li>
           <li class="mb-2"><a href="/partnerski-program" class="text-white text-opacity-75 text-decoration-none">Partnerski program</a></li>
+          <li class="mb-2"><a href="/saradnici" class="text-white text-opacity-75 text-decoration-none">Naši saradnici</a></li>
           <li class="mb-2"><a href="/kontakt" class="text-white text-opacity-75 text-decoration-none">Kontakt</a></li>
           <li><a href="/o-nama" class="text-white text-opacity-75 text-decoration-none">O nama</a></li>
         </ul>
       </div>
       <div class="col-md-4">
         <h6>Prijavite se na newsletter</h6>
+        <p class="text-white text-opacity-75 small mb-2">Novosti o uslugama, akcijama i terminima - povremeno, bez spama.</p>
         <form action="/newsletter/prijava" method="POST">
           <input type="text" name="nickname" class="d-none" tabindex="-1" autocomplete="off">
           <div class="d-flex gap-2">
             <input type="email" name="email" class="form-control form-control-sm" placeholder="vas@email.com" aria-label="Email adresa za newsletter" required>
             <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
             <button type="submit" class="btn btn-primary btn-sm text-nowrap">Prijavi se</button>
+          </div>
+          <div class="form-check mt-2">
+            <input type="checkbox" name="interests" value="products" class="form-check-input" id="newsletterInterestProducts">
+            <label class="form-check-label text-white text-opacity-75 small" for="newsletterInterestProducts">
+              Novi proizvodi i oprema u ponudi
+            </label>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" name="interests" value="partnership" class="form-check-input" id="newsletterInterestPartnership">
+            <label class="form-check-label text-white text-opacity-75 small" for="newsletterInterestPartnership">
+              Informacije o partnerskom programu
+            </label>
           </div>
           <div class="form-check mt-2">
             <input type="checkbox" name="consent" value="true" class="form-check-input" id="newsletterConsent" required>

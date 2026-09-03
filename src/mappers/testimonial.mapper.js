@@ -98,6 +98,7 @@ export function mapTestimonialsForAdminList(testimonials = []) {
         usluga: getServiceInfo(t)?.naziv || getPackageInfo(t)?.naziv || getProductInfo(t)?.naziv || "",
         status: translateStatus(t.status),
         statusRaw: t.status,
+        saglasnost: t.consentGiven ? "Da" : "NE",
         istaknut: t.isFeatured ? "Da" : "Ne",
         kreiran: formatDate(t.createdAt),
       };
@@ -135,6 +136,11 @@ export function mapTestimonialForAdminDetail(testimonial) {
       vrednostRaw: testimonial.status,
       istaknut: testimonial.isFeatured,
       redosled: testimonial.order || 0,
+    },
+    saglasnost: {
+      data: testimonial.consentGiven || false,
+      kada: testimonial.consent?.givenAt ? formatDateTime(testimonial.consent.givenAt) : null,
+      ip: testimonial.consent?.ipAddress || null,
     },
     vreme: {
       kreirano: formatDateTime(testimonial.createdAt),

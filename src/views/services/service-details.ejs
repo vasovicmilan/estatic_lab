@@ -194,6 +194,27 @@
     </div>
   </section>
 
+  <% if (data.relatedProducts && data.relatedProducts.length > 0) { %>
+    <section class="bg-light border-top py-5">
+      <div class="container">
+        <p class="section-eyebrow">Za bolji rezultat</p>
+        <h2 class="h3 mb-4">Preporučeni preparati</h2>
+        <div class="row g-4">
+          <% data.relatedProducts.forEach(function(p) { %>
+            <div class="col-md-3">
+              <a href="/prodavnica/<%= p.slug %>" class="card h-100 shadow-sm hover-lift text-decoration-none text-dark">
+                <% if (p.slika && p.slika.url) { %><img src="<%= p.slika.url %>" class="card-img-top product-card-img" alt="<%= p.slika.alt || p.naziv %>"><% } %>
+                <div class="card-body">
+                  <span class="h6"><%= p.naziv %></span>
+                </div>
+              </a>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+  <% } %>
+
   <% if (data.relatedServices && data.relatedServices.length > 0) { %>
     <section class="bg-white border-top py-5">
       <div class="container">

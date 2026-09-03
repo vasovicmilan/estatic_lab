@@ -93,6 +93,13 @@ export async function findActiveSlugsForSitemap() {
   return Service.find({ isActive: true }, { slug: 1, updatedAt: 1 }).lean();
 }
 
+// Called when a Product is deleted - Service.relatedProducts[] is current
+// merchandising config on this service ("preparation used in this treatment"), not
+// a promise to anyone, safe to auto-clean the same way the other pull* helpers are.
+export async function pullProductFromAllServices(productId, { session } = {}) {
+  return Service.updateMany({ relatedProducts: productId }, { $pull: { relatedProducts: productId } }, { session });
+}
+
 export default {
   createService,
   findServiceById,
@@ -104,5 +111,6 @@ export default {
   countServices,
   pullCategoryFromAllServices,
   pullTagFromAllServices,
+  pullProductFromAllServices,
   findActiveSlugsForSitemap,
 }

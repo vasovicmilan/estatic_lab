@@ -42,6 +42,15 @@ export async function findAllActiveSubscribers({ session } = {}) {
   return NewsLetter.find({ status: "subscribed" }).session(session || null).lean();
 }
 
+// Same as findAllActiveSubscribers, but scoped to subscribers who opted into at
+// least one of the given interests - an empty `interests` array is treated as
+// "everyone" (see campaign.service.js's sendCampaignNow), not "nobody", so
+// callers should branch to findAllActiveSubscribers themselves for that case
+// rather than passing [] in here.
+export async function findActiveSubscribersByInterests(interests, { session } = {}) {
+  return NewsLetter.find({ status: "subscribed", interests: { $in: interests } }).session(session || null).lean();
+}
+
 export async function updateSubscriberById(id, updateData, { session } = {}) {
   return NewsLetter.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
@@ -61,6 +70,7 @@ export default {
   findSubscriberByUnsubscribeToken,
   findSubscribers,
   findAllActiveSubscribers,
+  findActiveSubscribersByInterests,
   updateSubscriberById,
   deleteSubscriberById,
   countSubscribers,

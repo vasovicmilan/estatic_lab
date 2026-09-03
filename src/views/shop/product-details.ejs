@@ -117,6 +117,27 @@
     <%- include("../includes/components/gallery-video", { galerija: data.product.galerija, videi: data.product.videi }) %>
   </div>
 
+  <% if (data.relatedServices && data.relatedServices.length > 0) { %>
+    <section class="border-top border-bottom py-5">
+      <div class="container">
+        <p class="section-eyebrow">Koristimo u praksi</p>
+        <h2 class="h3 mb-4">Koristi se u ovim tretmanima</h2>
+        <div class="row g-4">
+          <% data.relatedServices.forEach(function(s) { %>
+            <div class="col-md-3">
+              <a href="/usluge/<%= s.slug %>" class="card h-100 shadow-sm hover-lift text-decoration-none text-dark">
+                <% if (s.slika && s.slika.url) { %><img src="<%= s.slika.url %>" class="card-img-top product-card-img" alt="<%= s.slika.alt || s.naziv %>"><% } %>
+                <div class="card-body">
+                  <span class="h6"><%= s.naziv %></span>
+                </div>
+              </a>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+  <% } %>
+
   <% if (data.relatedProducts && data.relatedProducts.length > 0) { %>
     <section class="bg-light border-top border-bottom py-5">
       <div class="container">

@@ -16,6 +16,14 @@ export const validateNewsletterSubscribe = [
   body("consent")
     .equals("true").withMessage("Morate se složiti sa primanjem newsletter-a"),
 
+  body("interests")
+    .optional()
+    .custom((value) => Array.isArray(value) || typeof value === "string").withMessage("Neispravna interesovanja"),
+
+  body("interests.*")
+    .optional()
+    .isIn(["general", "products", "partnership"]).withMessage("Nepoznato interesovanje"),
+
   collectValidationErrors,
 ];
 

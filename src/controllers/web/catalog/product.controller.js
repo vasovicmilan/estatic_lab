@@ -142,6 +142,7 @@ export async function productDetails(req, res, next) {
 
     const viewData = prepareProductDetailData(product, {
       relatedProducts: product.povezaniProizvodi || [],
+      relatedServices: product.povezaneUsluge || [],
       testimonials,
     });
     product.recenzije = testimonials;

@@ -5,6 +5,7 @@ import expertService from "./expert.service.js";
 import productService from "./product.service.js";
 import categoryService from "./category.service.js";
 import tagService from "./tag.service.js";
+import businessPartnerService from "./business-partner.service.js";
 import { logError } from "../utils/logger.util.js";
 
 const STATIC_PAGES = [
@@ -15,6 +16,7 @@ const STATIC_PAGES = [
   { path: "/prodavnica", changefreq: "weekly", priority: "0.8" },
   { path: "/blog", changefreq: "weekly", priority: "0.7" },
   { path: "/nas-tim", changefreq: "monthly", priority: "0.6" },
+  { path: "/saradnici", changefreq: "monthly", priority: "0.5" },
   { path: "/kontakt", changefreq: "monthly", priority: "0.6" },
   { path: "/faq", changefreq: "monthly", priority: "0.4" },
   { path: "/politika-privatnosti", changefreq: "yearly", priority: "0.2" },
@@ -53,12 +55,13 @@ function toIso(date) {
 }
 
 export async function getSitemapUrls(base) {
-  const [services, packages, posts, experts, products, categoriesByDomain, tagsByDomain] = await Promise.all([
+  const [services, packages, posts, experts, products, partners, categoriesByDomain, tagsByDomain] = await Promise.all([
     safeList(() => serviceService.listSlugsForSitemap(), "usluge"),
     safeList(() => packageService.listSlugsForSitemap(), "paketi"),
     safeList(() => postService.listSlugsForSitemap(), "blog"),
     safeList(() => expertService.listSlugsForSitemap(), "eksperti"),
     safeList(() => productService.listSlugsForSitemap(), "prodavnica"),
+    safeList(() => businessPartnerService.listSlugsForSitemap(), "saradnici"),
     Promise.all(TAXONOMY_DOMAINS.map((domain) => safeList(() => categoryService.getPublicCategories(domain), `kategorije (${domain})`))),
     Promise.all(TAXONOMY_DOMAINS.map((domain) => safeList(() => tagService.getPublicTags(domain), `tagovi (${domain})`))),
   ]);
@@ -88,6 +91,10 @@ export async function getSitemapUrls(base) {
   for (const product of products) {
     if (!product?.slug) continue;
     urls.push({ loc: `${base}/prodavnica/${product.slug}`, changefreq: "weekly", priority: "0.7", lastmod: toIso(product.updatedAt) });
+  }
+  for (const partner of partners) {
+    if (!partner?.slug) continue;
+    urls.push({ loc: `${base}/saradnici/${partner.slug}`, changefreq: "monthly", priority: "0.5", lastmod: toIso(partner.updatedAt) });
   }
 
   TAXONOMY_DOMAINS.forEach((domain, index) => {

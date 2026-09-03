@@ -30,6 +30,7 @@ export const BLOG_BLOCK_TYPES = [
   "cta",
   "divider",
   "serviceReference",
+  "productReference",
 ];
 
 // One card in a `cards` block. Deliberately NOT ServiceFeatureSchema (icon/title/text
@@ -133,10 +134,11 @@ const ContentBlogSchema = new Schema(
       default: undefined,
     },
 
-    // used by: cta, serviceReference - the link target + button label. Same
-    // shape for both: cta is a standalone "book now" prompt, serviceReference
-    // is a "see also" link into a specific Service page - visually distinct in
-    // the templates but structurally identical, so one sub-schema covers both.
+    // used by: cta, serviceReference, productReference - the link target + button
+    // label. Same shape for all three: cta is a standalone "book now" prompt,
+    // serviceReference/productReference are "see also" links into a specific
+    // Service/Product page - visually distinct in the templates but structurally
+    // identical, so one sub-schema covers all of them.
     button: {
       text: { type: String, trim: true },
       url: { type: String, trim: true },

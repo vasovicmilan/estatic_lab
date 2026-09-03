@@ -106,7 +106,7 @@ export async function serviceDetails(req, res, next) {
     const testimonials = await testimonialService.getApprovedTestimonials({ limit: 6, service: service.id });
     const ratingSummary = await testimonialService.getRatingSummary({ service: service.id });
 
-    const viewData = prepareServiceDetailData(service, { testimonials });
+    const viewData = prepareServiceDetailData(service, { relatedProducts: service.povezaniProizvodi || [], testimonials });
     service.recenzije = testimonials;
     service.ratingSummary = ratingSummary;
     const seo = await generateSeo("service", service, req);

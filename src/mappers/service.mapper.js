@@ -35,6 +35,21 @@ function getResourceIds(service) {
   return service.resources.map((r) => (typeof r === "object" ? r._id?.toString() : r?.toString())).filter(Boolean);
 }
 
+// Each entry in service.relatedProducts may arrive as a raw ObjectId or a
+// populated {_id, name, slug, image} document - same ambiguity handled for
+// resources above.
+function getRelatedProductCards(service) {
+  if (!service.relatedProducts || !Array.isArray(service.relatedProducts)) return [];
+  return service.relatedProducts
+    .filter((p) => p && typeof p === "object" && p.name)
+    .map((p) => ({ id: p._id?.toString(), naziv: p.name, slug: p.slug, slika: formatImage(p.image) }));
+}
+
+function getRelatedProductIds(service) {
+  if (!service.relatedProducts || !Array.isArray(service.relatedProducts)) return [];
+  return service.relatedProducts.map((p) => (typeof p === "object" ? p._id?.toString() : p?.toString())).filter(Boolean);
+}
+
 function getPriceRange(service) {
   const prices = (service.packages || []).filter((p) => p.isActive).map((p) => p.totalPrice);
   if (!prices.length) return null;
@@ -131,6 +146,7 @@ export function mapServiceForAdminDetail(service) {
       redovi: service.comparisonTable || [],
     },
     faq: (service.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
+    povezaniProizvodi: getRelatedProductCards(service),
     seoKljucneReci: service.seoKeywords || [],
     aktivna: service.isActive,
     vreme: {
@@ -152,6 +168,7 @@ export function mapServiceForEdit(service) {
     categories: (service.categories || []).map((c) => c._id?.toString() || c.toString()),
     tags: (service.tags || []).map((t) => t._id?.toString() || t.toString()),
     resources: getResourceIds(service),
+    relatedProducts: getRelatedProductIds(service),
     image: service.image || null,
     gallery: service.gallery || [],
     videos: service.videos || [],
@@ -211,11 +228,28 @@ export function mapServiceForPublicDetail(service) {
       redovi: service.comparisonTable || [],
     },
     faq: (service.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
+    povezaniProizvodi: getRelatedProductCards(service),
   };
 }
 
 export function mapServiceRaw(service) {
   return service;
+}
+
+// Same convention as mapCategoryForSelect/mapResourceForSelect (see category.mapper.js/
+// resource.mapper.js) - a minimal {id, naziv} shape for populating a <select>/
+// multiselect, used by product.controller.js's relatedServices field on the
+// product's own form.
+export function mapServiceForSelect(service) {
+  if (!service) return null;
+  return {
+    id: service._id.toString(),
+    naziv: service.name,
+  };
+}
+
+export function mapServicesForSelect(services = []) {
+  return services.map(mapServiceForSelect).filter(Boolean);
 }
 
 export default {
@@ -226,4 +260,6 @@ export default {
   mapServicesForPublic,
   mapServiceForPublicDetail,
   mapServiceRaw,
+  mapServiceForSelect,
+  mapServicesForSelect,
 };

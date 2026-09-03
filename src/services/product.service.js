@@ -4,6 +4,7 @@ import productRepo from "../repositories/product.repository.js";
 import userRepo from "../repositories/user.repository.js";
 import temporaryOrderRepo from "../repositories/temporary-order.repository.js";
 import couponRepo from "../repositories/coupon.repository.js";
+import serviceRepo from "../repositories/service.repository.js";
 import { generateSlug, generateUniqueSlug } from "../utils/slug.util.js";
 import {
   mapProductsForAdminList,
@@ -11,10 +12,22 @@ import {
   mapProductForEdit,
   mapProductsForPublic,
   mapProductForPublicDetail,
+  mapProductsForSelect,
 } from "../mappers/product.mapper.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 import { deleteUploadedFile, deleteUploadedFiles } from "../utils/file-cleanup.util.js";
+
+// Applied consistently across every read that needs to display related items -
+// admin detail/edit AND the public detail page - so relatedProducts/
+// relatedServices always come back as real documents (name/slug/image), not bare
+// ObjectIds. Same convention as service.service.js's own adminPopulate.
+const adminPopulate = [
+  { path: "categories", select: "name slug" },
+  { path: "tags", select: "name slug" },
+  { path: "relatedProducts", select: "name slug image" },
+  { path: "relatedServices", select: "name slug image" },
+];
 
 function validateVariations(variations = []) {
   for (const v of variations) {
@@ -37,14 +50,14 @@ export async function listProducts({ search = "", filters = {}, limit = 10, page
 
 export async function getProductById(productId) {
   if (!productId) validationError("productId");
-  const product = await productRepo.findProductById(productId);
+  const product = await productRepo.findProductById(productId, { populateFields: adminPopulate });
   if (!product) notFound("Proizvod");
   return mapProductForAdminDetail(product);
 }
 
 export async function getProductForEdit(productId) {
   if (!productId) validationError("productId");
-  const product = await productRepo.findProductById(productId);
+  const product = await productRepo.findProductById(productId, { populateFields: adminPopulate });
   if (!product) notFound("Proizvod");
   return mapProductForEdit(product);
 }
@@ -122,6 +135,7 @@ export async function addSeoAndPublish(productId, data) {
   const merged = {
     seoKeywords: data.seoKeywords ?? existing.seoKeywords ?? [],
     relatedProducts: data.relatedProducts ?? existing.relatedProducts ?? [],
+    relatedServices: data.relatedServices ?? existing.relatedServices ?? [],
     faq: data.faq ?? existing.faq ?? [],
     badge: data.badge ?? existing.badge ?? "none",
     shippingClass: data.shippingClass ?? existing.shippingClass ?? "standard",
@@ -235,13 +249,14 @@ export async function deleteProductById(productId) {
   }
 
   // Tier 2 - current configuration, not a promise to anyone. Coupon.
-  // applicableProducts[] and other products' relatedProducts[] are safe to
-  // auto-clean rather than block on.
+  // applicableProducts[], other products' relatedProducts[], and any service's
+  // relatedProducts[] are safe to auto-clean rather than block on.
   const session = await mongoose.startSession();
   try {
     await session.withTransaction(async () => {
       await couponRepo.pullProductFromAllCoupons(productId, { session });
       await productRepo.pullFromAllRelatedProducts(productId, { session });
+      await serviceRepo.pullProductFromAllServices(productId, { session });
       await productRepo.deleteProductById(productId, { session });
     });
   } finally {
@@ -277,9 +292,19 @@ export async function attachProductCountsToCategories(categories = []) {
   return categories.map((cat, index) => ({ ...cat, count: counts[index] }));
 }
 
+// Same convention as categoryService.getCategoriesForSelect/resourceService.
+// getResourcesForSelect - a lean {id, naziv} list for populating a <select>/
+// multiselect. Used by product.controller.js (relatedProducts field) and
+// service.controller.js (relatedProducts field on the service form).
+export async function getProductsForSelect(excludeId = null) {
+  const { data } = await productRepo.findProducts({ limit: 100, sort: { name: 1 }, populateFields: [] });
+  const products = excludeId ? data.filter((p) => p._id.toString() !== excludeId.toString()) : data;
+  return mapProductsForSelect(products);
+}
+
 export async function getPublicProductBySlug(slug) {
   if (!slug) validationError("slug");
-  const product = await productRepo.findProductBySlug(slug);
+  const product = await productRepo.findProductBySlug(slug, { populateFields: adminPopulate });
   if (!product || !product.isActive) notFound("Proizvod");
   return mapProductForPublicDetail(product);
 }
@@ -371,6 +396,7 @@ export default {
   deleteProductById,
   listPublicProducts,
   getPublicProductBySlug,
+  getProductsForSelect,
   countAllActiveProducts,
   attachProductCountsToCategories,
   getVariationRaw,

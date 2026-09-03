@@ -118,7 +118,23 @@ export function prepareTagFormData(tag = null) {
       value: values.domain,
       options: getDomainOptions(),
     },
-    { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive }
+    { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive },
+    {
+      name: "isIndexable",
+      label: "Dozvoli indeksiranje arhive taga (SEO)",
+      type: "checkbox",
+      width: 6,
+      value: values.isIndexable ?? true,
+      help: "Isključite za tagove korišćene na samo 1-2 mesta - arhiva bi bila tanak, duplikat sadržaj.",
+    },
+    {
+      name: "description",
+      label: "SEO opis arhive taga",
+      type: "text",
+      width: 12,
+      value: values.description || "",
+      help: "Najviše 160 karaktera. Prazno = generički opis.",
+    }
   );
 
   return {
