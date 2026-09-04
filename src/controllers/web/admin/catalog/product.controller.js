@@ -60,14 +60,6 @@ function buildPhase2Payload(req, existing = {}) {
     ? { img: req.uploadedFiles.productImage.img, imgDesc: (req.body.imageDesc || "").trim() }
     : existing.image || null;
 
-  const newGalleryFiles = req.uploadedFiles?.gallery ? [].concat(req.uploadedFiles.gallery) : [];
-  const newGallery = newGalleryFiles.map((f) => ({ img: f.img, imgDesc: (req.body.galleryDesc || "").trim() }));
-  const gallery = [...(existing.gallery || []), ...newGallery];
-
-  const newVideoFiles = req.uploadedFiles?.video ? [].concat(req.uploadedFiles.video) : [];
-  const newVideos = newVideoFiles.map((v) => ({ url: v.url, title: "", thumbnail: v.thumbnail || "", isExternal: false }));
-  const videos = [...(existing.videos || []), ...newVideos];
-
   return {
     categories: toIdArray(req.body.categories),
     tags: toIdArray(req.body.tags),
@@ -75,8 +67,16 @@ function buildPhase2Payload(req, existing = {}) {
     longDescription: parseJsonField(req.body.longDescription, []),
     variations: parseJsonField(req.body.variations, []),
     image,
-    gallery,
-    videos,
+    // Gallery and video are deliberately NOT handled here - this step's
+    // generic file input can't do a real multi-select (see _form.ejs), so it
+    // only ever accepted one image at a time despite claiming to support more.
+    // The dedicated "Galerija i video" page (admin/_media-form.ejs, reachable
+    // from the product detail page right after creation) already does this
+    // correctly - per-image alt text, proper multi-file input, remove
+    // checkboxes - so there's no reason to maintain a second, worse version
+    // of the same feature here. Preserve whatever's already there either way.
+    gallery: existing.gallery || [],
+    videos: existing.videos || [],
   };
 }
 

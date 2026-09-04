@@ -314,18 +314,11 @@ export function prepareProductFormData(product, { categoryOptions = [], tagOptio
     { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive },
   ];
 
-  const relatedSummary = [
-    values.relatedProducts?.length ? `${values.relatedProducts.length} povezan${values.relatedProducts.length === 1 ? "" : "ih"} proizvod${values.relatedProducts.length === 1 ? "" : "a"}` : null,
-    values.relatedServices?.length ? `${values.relatedServices.length} povezan${values.relatedServices.length === 1 ? "a" : "ih"} usluga` : null,
-    values.relatedPosts?.length ? `${values.relatedPosts.length} povezan${values.relatedPosts.length === 1 ? "" : "ih"} post${values.relatedPosts.length === 1 ? "" : "ova"}` : null,
-  ].filter(Boolean);
-
   return {
     formAction: `/admin/proizvodi/${product.id}`,
     formEnctype: "multipart/form-data",
     isEdit: true,
     fields,
-    relatedSummary,
     submitLabel: "Sačuvaj izmene",
     cancelUrl: "/admin/proizvodi",
     breadcrumbs: [
@@ -388,24 +381,6 @@ export function prepareProductDetailsMediaStepData(product, { categoryOptions = 
       help: "Obavezna da bi proizvod mogao biti objavljen u koraku 3.",
     },
     { name: "imageDesc", label: "Opis slike (alt tekst)", type: "text", width: 6, required: !!product.image || undefined, value: product.image?.imgDesc || "" },
-    {
-      name: "gallery",
-      label: "Galerija (dodatne slike)",
-      type: "file",
-      accept: "image/*",
-      multiple: true,
-      width: 8,
-      preview: (product.gallery || []).map((g) => g.url),
-    },
-    { name: "galleryDesc", label: "Opis slika u galeriji (alt tekst)", type: "text", width: 4, value: "" },
-    {
-      name: "video",
-      label: "Video",
-      type: "file",
-      accept: "video/*",
-      multiple: true,
-      width: 12,
-    },
   ];
 
   return {
