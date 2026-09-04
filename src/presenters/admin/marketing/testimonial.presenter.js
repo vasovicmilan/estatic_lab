@@ -86,9 +86,9 @@ export function prepareTestimonialDetailsData(testimonial) {
         title: "GDPR saglasnost",
         type: "table",
         rows: [
-          { label: "Saglasnost data", value: testimonial.saglasnost.data ? "Da" : "NE - ne prikazivati javno" },
-          { label: "Kada", value: testimonial.saglasnost.kada || "-" },
-          { label: "IP adresa", value: testimonial.saglasnost.ip || "-" },
+          { label: "Saglasnost data", value: testimonial.saglasnost?.data ? "Da" : "NE - ne prikazivati javno" },
+          { label: "Kada", value: testimonial.saglasnost?.kada || "-" },
+          { label: "IP adresa", value: testimonial.saglasnost?.ip || "-" },
         ],
       },
     ],
