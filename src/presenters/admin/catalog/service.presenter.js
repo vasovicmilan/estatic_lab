@@ -254,6 +254,28 @@ export function prepareServiceFormData(service = null, { categoryOptions = [], t
         value: (values.relatedProducts || []).map((p) => (typeof p === "object" ? p.id ?? p._id?.toString() : p)),
         options: productOptions.map((p) => ({ value: p.id, label: p.naziv })),
         help: "Proizvodi koji se koriste u ovoj terapiji ili se preporučuju uz nju - prikazuje se na stranici usluge i na stranici svakog izabranog proizvoda.",
+      },
+      {
+        name: "equipmentNoteText",
+        label: "Napomena o opremi (za vlasnike salona)",
+        type: "textarea",
+        width: 12,
+        value: values.equipmentNoteText || "",
+        help: "Odvojeno od preporučenih preparata iznad - kratak tekst za vlasnike salona/klinika koji razmišljaju o profesionalnoj opremi. Prazno = sekcija se ne prikazuje.",
+      },
+      {
+        name: "equipmentNoteButtonText",
+        label: "Tekst dugmeta",
+        type: "text",
+        width: 6,
+        value: values.equipmentNoteButtonText || "",
+      },
+      {
+        name: "equipmentNoteButtonUrl",
+        label: "Link ka opremi (npr. /prodavnica/kategorija/...)",
+        type: "text",
+        width: 6,
+        value: values.equipmentNoteButtonUrl || "",
       }
     );
   }

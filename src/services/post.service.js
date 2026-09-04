@@ -25,8 +25,8 @@ function validateBasicData(data) {
   if (data.status === "scheduled" && !data.scheduledFor) validationError("scheduledFor");
 }
 
-export async function listPosts({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
-  const result = await postRepo.findPosts({ search, limit, page, filters, populateFields: populate });
+export async function listPosts({ search = "", filters = {}, limit = 10, page = 1, sortBy } = {}) {
+  const result = await postRepo.findPosts({ search, limit, page, filters, sortBy, populateFields: populate });
   return { data: mapPostsForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 
@@ -44,8 +44,8 @@ export async function getPostForEdit(postId) {
   return mapPostForEdit(post);
 }
 
-export async function findPublishedPosts({ limit = 10, page = 1, filters = {}, search = "" } = {}) {
-  const result = await postRepo.findPosts({ search, limit, page, filters: { ...filters, publishedOnly: true }, populateFields: populate });
+export async function findPublishedPosts({ limit = 10, page = 1, filters = {}, search = "", sortBy = "featured" } = {}) {
+  const result = await postRepo.findPosts({ search, limit, page, filters: { ...filters, publishedOnly: true }, sortBy, populateFields: populate });
   return { data: mapPostsForCards(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

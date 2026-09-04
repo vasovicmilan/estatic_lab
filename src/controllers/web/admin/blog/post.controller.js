@@ -55,6 +55,10 @@ function buildPostPayload(req, existing = {}) {
   data.tags = Array.isArray(req.body.tags) ? req.body.tags.filter(Boolean) : req.body.tags ? [req.body.tags] : [];
   data.seo = parseJsonField(req.body.seo, existing.seo || {});
   data.isIndexable = parseCheckbox(req.body.isIndexable, existing.isIndexable ?? true);
+  data.isFeatured = parseCheckbox(req.body.isFeatured, existing.isFeatured ?? false);
+  data.featuredOrder = req.body.featuredOrder !== undefined && req.body.featuredOrder !== ""
+    ? parseInt(req.body.featuredOrder, 10)
+    : existing.featuredOrder ?? 0;
   // req.body.scheduledFor is whatever a <input type="datetime-local"> submitted -
   // a naive "YYYY-MM-DDTHH:mm" string with no timezone info. Converting it here
   // (as Europe/Belgrade wall-clock time) rather than letting Mongoose's Date
@@ -73,11 +77,12 @@ function buildPostPayload(req, existing = {}) {
 
 export async function listPosts(req, res, next) {
   try {
-    const { search, status, page = 1, limit = 10 } = req.query;
+    const { search, status, sortBy, page = 1, limit = 10 } = req.query;
 
     const result = await postService.listPosts({
       search: search || "",
       filters: { status: status || undefined },
+      sortBy: sortBy || undefined,
       page: parseInt(page, 10) || 1,
       limit: parseInt(limit, 10) || 10,
     });

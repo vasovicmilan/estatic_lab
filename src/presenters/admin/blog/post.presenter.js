@@ -12,6 +12,7 @@ export function preparePostListData(result, query = {}) {
       { key: "pregledi", label: "Pregledi" },
       { key: "datumObjave", label: "Objavljeno" },
       { key: "zakazanoZa", label: "Zakazano za" },
+      { key: "istaknut", label: "Istaknut" },
     ],
     actions: [
       { type: "view", url: "/admin/blog/detalji/", icon: "eye" },
@@ -46,6 +47,19 @@ export function preparePostListData(result, query = {}) {
             { value: "scheduled", label: "Zakazano" },
             { value: "published", label: "Objavljeno" },
             { value: "archived", label: "Arhivirano" },
+          ],
+        },
+        {
+          type: "select",
+          name: "sortBy",
+          label: "Sortiraj po",
+          value: query.sortBy || "publishedAt",
+          options: [
+            { value: "publishedAt", label: "Datumu objavljivanja (najnovije prvo)" },
+            { value: "scheduledFor", label: "Datumu zakazivanja (najbliže prvo)" },
+            { value: "createdAt", label: "Datumu kreiranja (najnovije prvo)" },
+            { value: "views", label: "Broju pregleda (najviše prvo)" },
+            { value: "featured", label: "Istaknuti prvo" },
           ],
         },
       ],
@@ -226,7 +240,16 @@ export function preparePostFormData(post = null, { categoryOptions = [], tagOpti
       preview: isEdit ? values.coverImage?.url : null,
     },
     { name: "coverImageDesc", label: "Opis slike (alt tekst)", type: "text", width: 6, required: true, value: values.coverImage?.imgDesc || "" },
-    { name: "isIndexable", label: "Dozvoli indeksiranje (SEO)", type: "checkbox", width: 6, value: values.isIndexable }
+    { name: "isIndexable", label: "Dozvoli indeksiranje (SEO)", type: "checkbox", width: 6, value: values.isIndexable },
+    { name: "isFeatured", label: "Istaknuti post (pinovan na vrh bloga)", type: "checkbox", width: 6, value: values.isFeatured ?? false },
+    {
+      name: "featuredOrder",
+      label: "Redosled među istaknutim postovima",
+      type: "number",
+      width: 6,
+      value: values.featuredOrder ?? 0,
+      help: "Manji broj se prikazuje prvi. Ima efekat samo dok je post istaknut.",
+    }
   );
 
   return {

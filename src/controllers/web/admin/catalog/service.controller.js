@@ -80,6 +80,11 @@ function buildStep3Payload(req) {
   data.comparisonTable = parseJsonField(req.body.comparisonTable);
   data.faq = parseJsonField(req.body.faq);
   data.relatedProducts = toIdArray(req.body.relatedProducts);
+  data.equipmentNote = {
+    text: req.body.equipmentNoteText || null,
+    buttonText: req.body.equipmentNoteButtonText || null,
+    buttonUrl: req.body.equipmentNoteButtonUrl || null,
+  };
   data.highlight = parseCheckbox(req.body.highlight, false);
   data.isActive = parseCheckbox(req.body.isActive);
 
@@ -102,6 +107,11 @@ function buildServicePayload(req, existing = {}) {
   data.tags = toIdArray(req.body.tags);
   data.resources = toIdArray(req.body.resources);
   data.relatedProducts = toIdArray(req.body.relatedProducts);
+  data.equipmentNote = {
+    text: req.body.equipmentNoteText || existing.equipmentNote?.text || null,
+    buttonText: req.body.equipmentNoteButtonText || existing.equipmentNote?.buttonText || null,
+    buttonUrl: req.body.equipmentNoteButtonUrl || existing.equipmentNote?.buttonUrl || null,
+  };
 
   data.features = parseJsonField(req.body.features, existing.features || []);
   data.packages = parseJsonField(req.body.packages, existing.packages || []);

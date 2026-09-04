@@ -107,6 +107,20 @@ const ServiceSchema = new Schema(
     // arrays rather than a shared join collection.
     relatedProducts: [{ type: Schema.Types.ObjectId, ref: "Product" }],
 
+    // Separate from relatedProducts on purpose: relatedProducts shows real,
+    // consumer-facing items (e.g. an HL/Skin cream) as "you might also want
+    // this" cards - showing a €5000 salon device in that same grid next to a
+    // facial treatment would confuse a client booking an appointment. This is
+    // a plain text + single link aside instead, aimed at salon/clinic owners
+    // browsing the site who might want the professional equipment behind this
+    // treatment - rendered in its own clearly-separated section, not mixed
+    // into the consumer product recommendations.
+    equipmentNote: {
+      text: { type: String, trim: true, default: null },
+      buttonText: { type: String, trim: true, default: null },
+      buttonUrl: { type: String, trim: true, default: null },
+    },
+
     isActive: {
       type: Boolean,
       default: false,

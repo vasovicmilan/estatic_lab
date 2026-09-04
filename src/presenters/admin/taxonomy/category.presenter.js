@@ -167,6 +167,14 @@ export function prepareCategoryFormData(category = null, { parentOptions = [] } 
       value: values.featureImage?.alt || "",
     },
     { name: "isIndexable", label: "Dozvoli indeksiranje (SEO)", type: "checkbox", width: 6, value: values.isIndexable },
+    {
+      name: "priority",
+      label: "Prioritet redosleda",
+      type: "number",
+      width: 6,
+      value: values.priority ?? 0,
+      help: "Veći broj = prikazuje se ranije na listi kategorija. 0 = podrazumevano (abecedno).",
+    },
     { name: "isActive", label: "Aktivna", type: "checkbox", width: 6, value: values.isActive }
   );
 

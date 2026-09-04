@@ -101,6 +101,20 @@ const PostSchema = new Schema(
       type: Number,
       default: 0,
     },
+
+    // lets the admin pin a post to the top of the public blog listing regardless
+    // of publishedAt - same isFeatured + order convention as TestimonialSchema.
+    // featuredOrder only matters relative to other featured posts (lower first);
+    // meaningless while isFeatured is false.
+    isFeatured: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    featuredOrder: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
@@ -152,6 +166,7 @@ PostSchema.pre("findOneAndUpdate", async function () {
 
 PostSchema.index({ status: 1, publishedAt: -1 });
 PostSchema.index({ status: 1, scheduledFor: 1 });
+PostSchema.index({ status: 1, isFeatured: 1, featuredOrder: 1 });
 PostSchema.index({ categories: 1 });
 PostSchema.index({ tags: 1 });
 PostSchema.index({ author: 1 });

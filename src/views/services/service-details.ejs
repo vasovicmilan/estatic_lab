@@ -159,6 +159,44 @@
     </section>
   <% } %>
 
+  <% if (data.service.povezaniProizvodi && data.service.povezaniProizvodi.length > 0) { %>
+    <section class="border-top py-5">
+      <div class="container">
+        <p class="section-eyebrow justify-content-center d-flex">Preporuka</p>
+        <h2 class="h3 mb-4 text-center">Preporučeni preparati</h2>
+        <div class="row justify-content-center g-3">
+          <% data.service.povezaniProizvodi.forEach(function(proizvod) { %>
+            <div class="col-6 col-md-3">
+              <a href="/prodavnica/<%= proizvod.slug %>" class="text-decoration-none text-body">
+                <div class="card h-100 border-0 shadow-sm">
+                  <% if (proizvod.slika && proizvod.slika.url) { %>
+                    <img src="<%= proizvod.slika.url %>" alt="<%= proizvod.slika.alt || proizvod.naziv %>" class="card-img-top" style="aspect-ratio: 1; object-fit: cover;">
+                  <% } %>
+                  <div class="card-body">
+                    <p class="card-text small mb-0"><%= proizvod.naziv %></p>
+                  </div>
+                </div>
+              </a>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (data.service.opremaNapomena) { %>
+    <section class="bg-light border-top py-4">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-8 text-center">
+            <p class="text-muted mb-2"><%= data.service.opremaNapomena.tekst %></p>
+            <a href="<%= data.service.opremaNapomena.dugmeUrl %>" class="btn btn-outline-secondary btn-sm"><%= data.service.opremaNapomena.dugmeTekst %></a>
+          </div>
+        </div>
+      </div>
+    </section>
+  <% } %>
+
   <% if (data.service.faq && data.service.faq.length > 0) { %>
     <section class="bg-light border-top py-5">
       <div class="container">

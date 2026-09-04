@@ -3,7 +3,7 @@ import { prepareCategoryListData, prepareCategoryDetailsData, prepareCategoryFor
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
-import { normalizeError } from "../../../../utils/error.util.js";
+import { normalizeError, badRequest } from "../../../../utils/error.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
 async function loadParentOptions(domain, excludeId = null) {
@@ -122,8 +122,9 @@ export async function createCategory(req, res, next) {
     // isActive is stored at meta.isActive in the schema, not top-level - the form
     // field is flattened for display (see mapCategoryForEdit) but has to be written
     // back to its real nested path
-    data.meta = { isActive: parseCheckbox(req.body.isActive, true) };
+    data.meta = { isActive: parseCheckbox(req.body.isActive, true), priority: parseInt(req.body.priority, 10) || 0 };
     delete data.isActive;
+    delete data.priority;
 
     const category = await categoryService.createCategory(data);
     logInfo(`[createCategory] Kategorija kreirana: "${category.naziv}"`, { categoryId: category.id, adminId: req.session?.user?.id });
@@ -171,6 +172,9 @@ export async function updateCategory(req, res, next) {
 
     const existing = await categoryService.getCategoryForEdit(categoryId);
     const data = { ...req.body };
+    if (data.parent && data.parent === categoryId) {
+      badRequest("Kategorija ne može biti sopstveni roditelj.");
+    }
     data.featureImage = buildFeatureImage(req, existing.featureImage);
     data.parent = data.parent || null;
     data.isIndexable = parseCheckbox(req.body.isIndexable, existing.isIndexable);
@@ -179,12 +183,14 @@ export async function updateCategory(req, res, next) {
     // nested field - setting a plain data.meta object would replace the whole meta
     // subdocument and silently wipe meta.priority back to its default.
     data["meta.isActive"] = parseCheckbox(req.body.isActive, existing.isActive);
+    data["meta.priority"] = req.body.priority !== undefined && req.body.priority !== "" ? parseInt(req.body.priority, 10) : existing.priority ?? 0;
     delete data.isActive;
+    delete data.priority;
 
     const updated = await categoryService.updateCategoryById(categoryId, data);
     logInfo(`[updateCategory] Kategorija #${categoryId} ažurirana`, { categoryId, adminId: req.session?.user?.id });
     const afterUpdate = await categoryService.getCategoryForEdit(categoryId);
-    const changes = auditLogService.computeChanges(existing, afterUpdate, ["name", "domain", "parent", "isIndexable", "isActive"]);
+    const changes = auditLogService.computeChanges(existing, afterUpdate, ["name", "domain", "parent", "isIndexable", "isActive", "priority"]);
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "CATEGORY_UPDATED",

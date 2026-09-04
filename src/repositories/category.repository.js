@@ -23,15 +23,22 @@ export async function findCategoryBySlug(slug, domain, { session } = {}) {
 // doing this as a handful of small queries instead of one aggregation is fine.
 export async function findCategoryAndDescendantIds(categoryId, domain, { session } = {}) {
   const ids = [categoryId.toString()];
+  const visited = new Set(ids);
   let frontier = [categoryId];
   while (frontier.length) {
     const children = await Category.find({ parent: { $in: frontier }, domain })
       .select("_id")
       .session(session || null)
       .lean();
-    if (!children.length) break;
-    frontier = children.map((c) => c._id);
-    ids.push(...frontier.map((id) => id.toString()));
+    // guards against an accidental parent cycle (e.g. admin sets A's parent to
+    // one of A's own descendants via the dropdown, nothing else currently
+    // stops that) turning this into an infinite loop - only follow ids we
+    // haven't already counted.
+    const newIds = children.map((c) => c._id).filter((id) => !visited.has(id.toString()));
+    if (!newIds.length) break;
+    newIds.forEach((id) => visited.add(id.toString()));
+    frontier = newIds;
+    ids.push(...newIds.map((id) => id.toString()));
   }
   return ids;
 }

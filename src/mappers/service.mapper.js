@@ -169,6 +169,9 @@ export function mapServiceForEdit(service) {
     tags: (service.tags || []).map((t) => t._id?.toString() || t.toString()),
     resources: getResourceIds(service),
     relatedProducts: getRelatedProductIds(service),
+    equipmentNoteText: service.equipmentNote?.text || "",
+    equipmentNoteButtonText: service.equipmentNote?.buttonText || "",
+    equipmentNoteButtonUrl: service.equipmentNote?.buttonUrl || "",
     image: service.image || null,
     gallery: service.gallery || [],
     videos: service.videos || [],
@@ -229,6 +232,13 @@ export function mapServiceForPublicDetail(service) {
     },
     faq: (service.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
     povezaniProizvodi: getRelatedProductCards(service),
+    opremaNapomena: service.equipmentNote?.text
+      ? {
+          tekst: service.equipmentNote.text,
+          dugmeTekst: service.equipmentNote.buttonText || "Pogledajte opremu",
+          dugmeUrl: service.equipmentNote.buttonUrl || "/prodavnica",
+        }
+      : null,
   };
 }
 

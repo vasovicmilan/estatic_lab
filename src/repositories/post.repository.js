@@ -2,6 +2,19 @@ import Post from "../models/post.model.js";
 import { buildPostFilter } from "./filters/post.filter.js";
 import { resolveLimit, resolveSkip, buildPaginationMeta } from "../utils/pagination.util.js";
 
+// keyed lookup for findPosts's sortBy param - POST_SORT_OPTIONS.publishedAt is the
+// default when sortBy is missing or unrecognized.
+const POST_SORT_OPTIONS = {
+  publishedAt: { publishedAt: -1, createdAt: -1, _id: -1 },
+  scheduledFor: { scheduledFor: 1, _id: -1 },
+  createdAt: { createdAt: -1, _id: -1 },
+  views: { views: -1, _id: -1 },
+  // pinned/featured posts first (lowest featuredOrder first among those), then
+  // falls back to newest-published-first - used as the public blog listing's
+  // default so admin-curated posts surface without needing publishedAt bumped.
+  featured: { isFeatured: -1, featuredOrder: 1, publishedAt: -1, _id: -1 },
+};
+
 export async function createPost(data, { session } = {}) {
   const [post] = await Post.create([data], { session });
   return post;
@@ -24,6 +37,7 @@ export async function findPosts({
   limit = 20,
   page = 1,
   filters = {},
+  sortBy,
   populateFields = [
     { path: "categories", select: "name slug" },
     { path: "tags", select: "name slug" },
@@ -34,9 +48,19 @@ export async function findPosts({
   const filter = buildPostFilter({ search, ...filters });
   const resolvedLimit = resolveLimit(limit);
   const skip = resolveSkip(page, resolvedLimit);
+  const sort = POST_SORT_OPTIONS[sortBy] || POST_SORT_OPTIONS.publishedAt;
+
+  // Mongo's ascending sort puts null/missing scheduledFor FIRST, so without this,
+  // every draft/published post (scheduledFor: null) would bury the actually-scheduled
+  // posts at the bottom of "sort by scheduling date" - the opposite of useful. Sorting
+  // by this column only makes sense for posts that have a schedule, so we scope the
+  // filter to those when this sort is explicitly requested.
+  if (sortBy === "scheduledFor" && filter.scheduledFor === undefined) {
+    filter.scheduledFor = { $ne: null };
+  }
 
   let query = Post.find(filter)
-    .sort({ publishedAt: -1, createdAt: -1, _id: -1 })
+    .sort(sort)
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);

@@ -57,6 +57,11 @@ export const validatePostCreate = [
     .notEmpty().withMessage("Zakazan post mora imati datum objave"),
 
   booleanishField("isIndexable", true),
+  booleanishField("isFeatured", true),
+
+  body("featuredOrder")
+    .optional({ values: "falsy" })
+    .isInt().withMessage("Redosled istaknutog posta mora biti ceo broj"),
 
   body("coverImageDesc")
     .custom(requireImageDescIfUploaded((req) => req.uploadedFiles?.coverImage)),
@@ -98,6 +103,12 @@ export const validatePostUpdate = [
   body("scheduledFor")
     .if(body("status").equals("scheduled"))
     .notEmpty().withMessage("Zakazan post mora imati datum objave"),
+
+  booleanishField("isFeatured", true),
+
+  body("featuredOrder")
+    .optional({ values: "falsy" })
+    .isInt().withMessage("Redosled istaknutog posta mora biti ceo broj"),
 
   body("coverImageDesc")
     .custom(requireImageDescIfUploaded((req) => req.uploadedFiles?.coverImage)),

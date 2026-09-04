@@ -67,6 +67,7 @@ export function mapPostsForAdminList(posts = []) {
         pregledi: post.views || 0,
         datumObjave: post.publishedAt ? formatDate(post.publishedAt) : null,
         zakazanoZa: post.status === "scheduled" && post.scheduledFor ? formatDateTime(post.scheduledFor) : null,
+        istaknut: post.isFeatured ? "Da" : "Ne",
         kreiran: formatDate(post.createdAt),
       };
     })
@@ -132,6 +133,8 @@ export function mapPostForEdit(post) {
     scheduledFor: post.scheduledFor ? utcDateToZonedInputValue(post.scheduledFor) : "",
     seo: post.seo || {},
     isIndexable: post.isIndexable,
+    isFeatured: post.isFeatured,
+    featuredOrder: post.featuredOrder,
   };
 }
 
