@@ -7,7 +7,7 @@ import {
   mapServiceForPublicCard,
   mapServiceForPublicDetail,
 } from "../../../src/mappers/service.mapper.js";
-import { buildService, buildServicePackageVariant, id } from "../../helpers/factories.js";
+import { buildService, buildServicePackageVariant, buildProduct, id } from "../../helpers/factories.js";
 
 describe("service.mapper", () => {
   describe("price range", () => {
@@ -75,6 +75,49 @@ describe("service.mapper", () => {
       const service = buildService({ categories: [category] });
       const mapped = mapServiceForEdit(service);
       assert.equal(mapped.categories[0], category._id.toString());
+    });
+
+    it("flattens populated relatedProducts to plain id strings", () => {
+      const relatedProduct = buildProduct();
+      const service = buildService({ relatedProducts: [relatedProduct] });
+      const mapped = mapServiceForEdit(service);
+      assert.equal(mapped.relatedProducts[0], relatedProduct._id.toString());
+    });
+
+    it("also handles already-unpopulated raw ObjectId refs for relatedProducts", () => {
+      const productId = id();
+      const service = buildService({ relatedProducts: [productId] });
+      const mapped = mapServiceForEdit(service);
+      assert.equal(mapped.relatedProducts[0], productId.toString());
+    });
+  });
+
+  describe("relatedProducts (povezaniProizvodi) - populated vs unpopulated", () => {
+    it("mapServiceForAdminDetail only includes populated relatedProducts entries, dropping bare ObjectIds", () => {
+      const relatedProduct = buildProduct({ name: "Serum za lice" });
+      const bareId = id();
+      const service = buildService({ relatedProducts: [relatedProduct, bareId] });
+
+      const mapped = mapServiceForAdminDetail(service);
+
+      assert.equal(mapped.povezaniProizvodi.length, 1);
+      assert.equal(mapped.povezaniProizvodi[0].naziv, "Serum za lice");
+    });
+
+    it("mapServiceForPublicDetail includes an image for each related product card", () => {
+      const relatedProduct = buildProduct({ image: { img: "/images/products/serum.webp", imgDesc: "Serum" } });
+      const service = buildService({ relatedProducts: [relatedProduct] });
+
+      const mapped = mapServiceForPublicDetail(service);
+
+      assert.equal(mapped.povezaniProizvodi.length, 1);
+      assert.equal(mapped.povezaniProizvodi[0].slika.url, "/images/products/serum.webp");
+    });
+
+    it("defaults to an empty array when relatedProducts is absent entirely", () => {
+      const service = buildService({ relatedProducts: undefined });
+      assert.deepEqual(mapServiceForAdminDetail(service).povezaniProizvodi, []);
+      assert.deepEqual(mapServiceForPublicDetail(service).povezaniProizvodi, []);
     });
   });
 

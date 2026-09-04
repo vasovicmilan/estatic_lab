@@ -24,9 +24,36 @@ describe("testimonial.service", () => {
         return { ...data, _id: id() };
       });
 
-      await testimonialService.submitTestimonial({ name: "A", rating: 5, message: "Odlicno iskustvo" });
+      await testimonialService.submitTestimonial({ name: "A", rating: 5, message: "Odlicno iskustvo", consentGiven: true });
 
       assert.equal(payload.status, "pending");
+    });
+
+    it("rejects a submission with no consentGiven (GDPR)", async () => {
+      await assert.rejects(
+        () => testimonialService.submitTestimonial({ name: "A", rating: 5, message: "Odlicno iskustvo" }),
+        (err) => err.statusCode === 400
+      );
+    });
+
+    it("stores the consent snapshot (givenAt/ipAddress) when consent is given", async (t) => {
+      let payload;
+      t.mock.method(testimonialRepo, "createTestimonial", async (data) => {
+        payload = data;
+        return { ...data, _id: id() };
+      });
+
+      await testimonialService.submitTestimonial({
+        name: "A",
+        rating: 5,
+        message: "Odlicno iskustvo",
+        consentGiven: true,
+        consentIpAddress: "203.0.113.5",
+      });
+
+      assert.equal(payload.consentGiven, true);
+      assert.ok(payload.consent.givenAt instanceof Date);
+      assert.equal(payload.consent.ipAddress, "203.0.113.5");
     });
   });
 

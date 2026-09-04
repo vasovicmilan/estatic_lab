@@ -138,6 +138,25 @@ describe("prepareServiceFormData - single-shot edit", () => {
     const view = prepareServiceFormData({ id: "s1", name: "Masaza", comparisonColumns: ["Trajanje", "Cena"] });
     assert.equal(view.fields.find((f) => f.name === "comparisonColumnsCsv").value, "Trajanje, Cena");
   });
+
+  it("only includes relatedProducts on edit, not on create", () => {
+    const createView = prepareServiceFormData();
+    const editView = prepareServiceFormData({ id: "s1", name: "Masaza" });
+
+    assert.ok(!createView.fields.some((f) => f.name === "relatedProducts"));
+    assert.ok(editView.fields.some((f) => f.name === "relatedProducts"));
+  });
+
+  it("maps related-product options and marks the service's current selections on edit", () => {
+    const view = prepareServiceFormData(
+      { id: "s1", name: "Masaza", relatedProducts: [{ id: "p1" }] },
+      { productOptions: [{ id: "p1", naziv: "Ulje za masazu" }] }
+    );
+    const relatedField = view.fields.find((f) => f.name === "relatedProducts");
+
+    assert.deepEqual(relatedField.value, ["p1"]);
+    assert.deepEqual(relatedField.options, [{ value: "p1", label: "Ulje za masazu" }]);
+  });
 });
 
 describe("prepareServicePackagesStepData (phase 2)", () => {
@@ -171,6 +190,17 @@ describe("prepareServiceExtrasStepData (phase 3)", () => {
   it("posts to the extras sub-step endpoint for this specific service", () => {
     const view = prepareServiceExtrasStepData({ id: "s1", name: "Masaza" });
     assert.equal(view.formAction, "/admin/usluge/s1/dodavanje/detalji");
+  });
+
+  it("maps related-product options and marks the service's current selections", () => {
+    const view = prepareServiceExtrasStepData(
+      { id: "s1", name: "Masaza", relatedProducts: [{ id: "p1" }] },
+      { productOptions: [{ id: "p1", naziv: "Ulje za masazu" }] }
+    );
+    const relatedField = view.fields.find((f) => f.name === "relatedProducts");
+
+    assert.deepEqual(relatedField.value, ["p1"]);
+    assert.deepEqual(relatedField.options, [{ value: "p1", label: "Ulje za masazu" }]);
   });
 });
 

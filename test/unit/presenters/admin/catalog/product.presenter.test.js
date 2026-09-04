@@ -34,6 +34,8 @@ function buildMappedProduct(overrides = {}) {
     variations: [{ label: "Standard", price: 250000, stock: 3 }],
     povezaniProizvodi: [],
     relatedProducts: [],
+    povezaneUsluge: [],
+    relatedServices: [],
     faq: [],
     seoKeywords: [],
     oznaka: null,
@@ -188,6 +190,20 @@ describe("prepareProductFormData (single-shot edit)", () => {
     assert.deepEqual(categoriesField.options, [{ value: "c1", label: "Uređaji" }]);
     assert.deepEqual(tagsField.value, ["t1"]);
   });
+
+  it("maps related-product and related-service options and marks the product's current selections", () => {
+    const view = prepareProductFormData(buildMappedProduct({ relatedProducts: [{ id: "p2" }], relatedServices: [{ id: "s1" }] }), {
+      productOptions: [{ id: "p2", naziv: "Krema za lice" }],
+      serviceOptions: [{ id: "s1", naziv: "ESMA tretman lica" }],
+    });
+    const relatedProductsField = view.fields.find((f) => f.name === "relatedProducts");
+    const relatedServicesField = view.fields.find((f) => f.name === "relatedServices");
+
+    assert.deepEqual(relatedProductsField.value, ["p2"]);
+    assert.deepEqual(relatedProductsField.options, [{ value: "p2", label: "Krema za lice" }]);
+    assert.deepEqual(relatedServicesField.value, ["s1"]);
+    assert.deepEqual(relatedServicesField.options, [{ value: "s1", label: "ESMA tretman lica" }]);
+  });
 });
 
 describe("prepareProductDetailsMediaStepData (phase 2)", () => {
@@ -247,6 +263,16 @@ describe("prepareProductSeoPublishStepData (phase 3)", () => {
 
     assert.deepEqual(relatedField.value, ["p2"]);
     assert.deepEqual(relatedField.options, [{ value: "p2", label: "Krema za lice" }]);
+  });
+
+  it("maps related-service options and marks the product's current selections", () => {
+    const view = prepareProductSeoPublishStepData(buildMappedProduct({ relatedServices: [{ id: "s1" }] }), {
+      serviceOptions: [{ id: "s1", naziv: "ESMA tretman lica" }],
+    });
+    const relatedServicesField = view.fields.find((f) => f.name === "relatedServices");
+
+    assert.deepEqual(relatedServicesField.value, ["s1"]);
+    assert.deepEqual(relatedServicesField.options, [{ value: "s1", label: "ESMA tretman lica" }]);
   });
 });
 

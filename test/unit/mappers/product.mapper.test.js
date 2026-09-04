@@ -8,7 +8,7 @@ import {
   mapProductsForPublic,
   mapProductForPublicDetail,
 } from "../../../src/mappers/product.mapper.js";
-import { buildProduct, buildProductVariation, buildCategory, buildTag, id } from "../../helpers/factories.js";
+import { buildProduct, buildProductVariation, buildCategory, buildTag, buildService, id } from "../../helpers/factories.js";
 
 describe("product.mapper", () => {
   describe("price range (via mapProductForPublicCard)", () => {
@@ -193,11 +193,56 @@ describe("product.mapper", () => {
       assert.equal(mapped.relatedProducts[0], related._id.toString());
     });
 
+    it("flattens populated relatedServices down to plain id strings, the same way relatedProducts does", () => {
+      const relatedService = buildService();
+      const product = buildProduct({ relatedServices: [relatedService] });
+
+      const mapped = mapProductForEdit(product);
+
+      assert.equal(mapped.relatedServices[0], relatedService._id.toString());
+    });
+
+    it("also handles already-unpopulated raw ObjectId refs for relatedServices", () => {
+      const serviceId = id();
+      const product = buildProduct({ relatedServices: [serviceId] });
+      const mapped = mapProductForEdit(product);
+      assert.equal(mapped.relatedServices[0], serviceId.toString());
+    });
+
     it("also handles already-unpopulated raw ObjectId refs the same way", () => {
       const categoryId = id();
       const product = buildProduct({ categories: [categoryId] });
       const mapped = mapProductForEdit(product);
       assert.equal(mapped.categories[0], categoryId.toString());
+    });
+  });
+
+  describe("relatedServices (povezaneUsluge) - populated vs unpopulated", () => {
+    it("mapProductForAdminDetail only includes populated relatedServices entries, dropping bare ObjectIds", () => {
+      const relatedService = buildService({ name: "ESMA tretman lica" });
+      const bareId = id();
+      const product = buildProduct({ relatedServices: [relatedService, bareId] });
+
+      const mapped = mapProductForAdminDetail(product);
+
+      assert.equal(mapped.povezaneUsluge.length, 1);
+      assert.equal(mapped.povezaneUsluge[0].naziv, "ESMA tretman lica");
+    });
+
+    it("mapProductForPublicDetail includes an image for each related service card", () => {
+      const relatedService = buildService({ image: { img: "/images/services/tretman.webp", imgDesc: "Tretman" } });
+      const product = buildProduct({ relatedServices: [relatedService] });
+
+      const mapped = mapProductForPublicDetail(product);
+
+      assert.equal(mapped.povezaneUsluge.length, 1);
+      assert.equal(mapped.povezaneUsluge[0].slika.url, "/images/services/tretman.webp");
+    });
+
+    it("defaults to an empty array when relatedServices is absent entirely", () => {
+      const product = buildProduct({ relatedServices: undefined });
+      assert.deepEqual(mapProductForAdminDetail(product).povezaneUsluge, []);
+      assert.deepEqual(mapProductForPublicDetail(product).povezaneUsluge, []);
     });
   });
 

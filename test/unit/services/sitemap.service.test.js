@@ -7,14 +7,16 @@ import expertService from "../../../src/services/expert.service.js";
 import productService from "../../../src/services/product.service.js";
 import categoryService from "../../../src/services/category.service.js";
 import tagService from "../../../src/services/tag.service.js";
+import businessPartnerService from "../../../src/services/business-partner.service.js";
 import { getSitemapUrls } from "../../../src/services/sitemap.service.js";
 
-function mockAllSources(t, { services = [], packages = [], posts = [], experts = [], products = [], categories = [], tags = [] } = {}) {
+function mockAllSources(t, { services = [], packages = [], posts = [], experts = [], products = [], partners = [], categories = [], tags = [] } = {}) {
   t.mock.method(serviceService, "listSlugsForSitemap", async () => services);
   t.mock.method(packageService, "listSlugsForSitemap", async () => packages);
   t.mock.method(postService, "listSlugsForSitemap", async () => posts);
   t.mock.method(expertService, "listSlugsForSitemap", async () => experts);
   t.mock.method(productService, "listSlugsForSitemap", async () => products);
+  t.mock.method(businessPartnerService, "listSlugsForSitemap", async () => partners);
   t.mock.method(categoryService, "getPublicCategories", async () => categories);
   t.mock.method(tagService, "getPublicTags", async () => tags);
 }
@@ -27,6 +29,24 @@ describe("sitemap.service", () => {
     const shopUrl = urls.find((u) => u.loc === "https://beautymedica.rs/prodavnica");
     assert.ok(homeUrl);
     assert.ok(shopUrl, "/prodavnica should be in the static pages list");
+  });
+
+  it("includes /saradnici as a static page, even with zero partners", async (t) => {
+    mockAllSources(t, {});
+    const urls = await getSitemapUrls("https://beautymedica.rs");
+    assert.ok(urls.some((u) => u.loc === "https://beautymedica.rs/saradnici"));
+  });
+
+  it("includes a URL for every business partner with a slug", async (t) => {
+    mockAllSources(t, { partners: [{ slug: "uniforme-doo" }] });
+    const urls = await getSitemapUrls("https://beautymedica.rs");
+    assert.ok(urls.some((u) => u.loc === "https://beautymedica.rs/saradnici/uniforme-doo"));
+  });
+
+  it("skips a business partner with no slug instead of producing a broken URL", async (t) => {
+    mockAllSources(t, { partners: [{ slug: null }, { slug: "valid-slug" }] });
+    const urls = await getSitemapUrls("https://beautymedica.rs");
+    assert.equal(urls.filter((u) => u.loc.includes("/saradnici/")).length, 1);
   });
 
   it("includes a URL for every product with a slug", async (t) => {

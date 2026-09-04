@@ -5,6 +5,7 @@ import productRepo from "../../../src/repositories/product.repository.js";
 import userRepo from "../../../src/repositories/user.repository.js";
 import temporaryOrderRepo from "../../../src/repositories/temporary-order.repository.js";
 import couponRepo from "../../../src/repositories/coupon.repository.js";
+import serviceRepo from "../../../src/repositories/service.repository.js";
 import * as productService from "../../../src/services/product.service.js";
 import eventEmitter from "../../../src/events/event.emitter.js";
 import { buildProduct, buildProductVariation, id } from "../../helpers/factories.js";
@@ -420,6 +421,7 @@ describe("product.service", () => {
       const pullCalls = { coupon: 0, related: 0 };
       t.mock.method(couponRepo, "pullProductFromAllCoupons", async () => { pullCalls.coupon++; });
       t.mock.method(productRepo, "pullFromAllRelatedProducts", async () => { pullCalls.related++; });
+      t.mock.method(serviceRepo, "pullProductFromAllServices", async () => {});
 
       const result = await productService.deleteProductById(id().toString());
 

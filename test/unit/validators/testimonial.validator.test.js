@@ -13,6 +13,7 @@ function validSubmission(overrides = {}) {
     name: "Milica",
     rating: 5,
     message: "Odlicno iskustvo, toplo preporucujem svima koji trebaju masazu.",
+    consentGiven: "on",
     ...overrides,
   };
 }
@@ -23,6 +24,20 @@ describe("testimonial.validator", () => {
       const agent = buildValidatorHarness(validateTestimonialSubmit);
       const res = await agent.post("/test").send(validSubmission());
       assert.equal(res.status, 200);
+    });
+
+    it("rejects a submission with no consentGiven (GDPR)", async () => {
+      const agent = buildValidatorHarness(validateTestimonialSubmit);
+      const res = await agent.post("/test").send(validSubmission({ consentGiven: undefined }));
+      assert.equal(res.status, 400);
+      assert.ok(res.body.errors.consentGiven);
+    });
+
+    it("rejects a submission with consentGiven explicitly false", async () => {
+      const agent = buildValidatorHarness(validateTestimonialSubmit);
+      const res = await agent.post("/test").send(validSubmission({ consentGiven: "false" }));
+      assert.equal(res.status, 400);
+      assert.ok(res.body.errors.consentGiven);
     });
 
     it("rejects a name shorter than 2 characters", async () => {

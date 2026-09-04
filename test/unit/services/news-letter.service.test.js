@@ -11,6 +11,7 @@ describe("news-letter.service", () => {
       const createMock = t.mock.method(newsLetterRepo, "createSubscriber", async () => {
         throw new Error("should not be called");
       });
+      t.mock.method(newsLetterRepo, "updateSubscriberById", async () => {});
 
       const result = await newsLetterService.subscribe("vec@example.com");
 

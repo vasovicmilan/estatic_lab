@@ -7,6 +7,7 @@ import packagePurchaseRepo from "../../../src/repositories/package-purchase.repo
 import packageRepo from "../../../src/repositories/package.repository.js";
 import employeeRepo from "../../../src/repositories/employee.repository.js";
 import couponRepo from "../../../src/repositories/coupon.repository.js";
+import productRepo from "../../../src/repositories/product.repository.js";
 import categoryService from "../../../src/services/category.service.js";
 import * as serviceService from "../../../src/services/service.service.js";
 
@@ -287,6 +288,7 @@ describe("service.service", () => {
       const pullCalls = { employee: 0, coupon: 0 };
       t.mock.method(employeeRepo, "pullServiceFromAllEmployees", async () => { pullCalls.employee++; });
       t.mock.method(couponRepo, "pullServiceFromAllCoupons", async () => { pullCalls.coupon++; });
+      t.mock.method(productRepo, "pullServiceFromAllProducts", async () => {});
 
       const result = await serviceService.deleteServiceById(id().toString());
 
@@ -347,6 +349,7 @@ describe("service.service", () => {
       t.mock.method(serviceRepo, "deleteServiceById", async () => true);
       t.mock.method(employeeRepo, "pullServiceFromAllEmployees", async () => {});
       t.mock.method(couponRepo, "pullServiceFromAllCoupons", async () => {});
+      t.mock.method(productRepo, "pullServiceFromAllProducts", async () => {});
       mockNoBlockingReferences(t);
       // countAppointments is called with statusIn: ["pending", "confirmed"] specifically,
       // so a mock that only returns 0 already proves terminal-status appointments don't

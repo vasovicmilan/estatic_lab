@@ -130,11 +130,69 @@ describe("testimonial.mapper", () => {
     });
   });
 
+  describe("GDPR saglasnost (consentGiven/consent)", () => {
+    it("mapTestimonialForAdminDetail exposes saglasnost.data/kada/ip from consent", () => {
+      const t = buildTestimonial({
+        consentGiven: true,
+        consent: { givenAt: new Date("2026-01-15T10:00:00Z"), ipAddress: "203.0.113.9", textVersion: "v1-2026-09" },
+      });
+      const mapped = mapTestimonialForAdminDetail(t);
+      assert.equal(mapped.saglasnost.data, true);
+      assert.equal(mapped.saglasnost.ip, "203.0.113.9");
+      assert.ok(mapped.saglasnost.kada, "kada should be a formatted, non-empty date string");
+    });
+
+    it("mapTestimonialForAdminDetail reports saglasnost.data as false for a legacy testimonial with no consent recorded", () => {
+      const t = buildTestimonial({ consentGiven: false, consent: { givenAt: null, ipAddress: null, textVersion: null } });
+      const mapped = mapTestimonialForAdminDetail(t);
+      assert.equal(mapped.saglasnost.data, false);
+      assert.equal(mapped.saglasnost.kada, null);
+      assert.equal(mapped.saglasnost.ip, null);
+    });
+
+    it("mapTestimonialForPublic never exposes the consent object (IP address is not public data)", () => {
+      const t = buildTestimonial({ consent: { givenAt: new Date(), ipAddress: "203.0.113.9", textVersion: "v1" } });
+      const mapped = mapTestimonialForPublic(t);
+      assert.equal("consent" in mapped, false);
+      assert.equal("consentGiven" in mapped, false);
+      assert.equal(JSON.stringify(mapped).includes("203.0.113.9"), false, "public mapper output must never contain the submitter's IP address");
+    });
+  });
+
   describe("null safety", () => {
     it("returns null for a null testimonial across every single-item mapper", () => {
       assert.equal(mapTestimonialForAdminDetail(null), null);
       assert.equal(mapTestimonialForEdit(null), null);
       assert.equal(mapTestimonialForPublic(null), null);
+    });
+  });
+
+  describe("GDPR consent (saglasnost)", () => {
+    it("mapTestimonialForAdminDetail exposes consent status, timestamp and IP for moderation", () => {
+      const t = buildTestimonial({
+        consentGiven: true,
+        consent: { givenAt: new Date("2026-09-01T10:00:00Z"), ipAddress: "203.0.113.9", textVersion: "v1-2026-09" },
+      });
+      const mapped = mapTestimonialForAdminDetail(t);
+      assert.equal(mapped.saglasnost.data, true);
+      assert.equal(mapped.saglasnost.ip, "203.0.113.9");
+      assert.ok(mapped.saglasnost.kada, "givenAt must be formatted, not left as a raw Date");
+    });
+
+    it("mapTestimonialForAdminDetail flags missing consent as false, not throwing on a missing consent object", () => {
+      const t = buildTestimonial({ consentGiven: false, consent: undefined });
+      const mapped = mapTestimonialForAdminDetail(t);
+      assert.equal(mapped.saglasnost.data, false);
+      assert.equal(mapped.saglasnost.kada, null);
+      assert.equal(mapped.saglasnost.ip, null);
+    });
+
+    it("mapTestimonialForPublic never exposes the consent object at all - no IP address on the public page", () => {
+      const t = buildTestimonial({ consent: { givenAt: new Date(), ipAddress: "203.0.113.9", textVersion: "v1" } });
+      const mapped = mapTestimonialForPublic(t);
+      assert.equal("consent" in mapped, false);
+      assert.equal("saglasnost" in mapped, false);
+      assert.equal(JSON.stringify(mapped).includes("203.0.113.9"), false, "an IP address must never reach the public-facing payload");
     });
   });
 });
