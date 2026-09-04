@@ -562,6 +562,53 @@ export function buildTemporaryOrder(overrides = {}) {
   };
 }
 
+export function buildBusinessPartner(overrides = {}) {
+  return {
+    _id: id(),
+    name: "Uniforme d.o.o.",
+    slug: "uniforme-doo",
+    shortDescription: "Profesionalna radna odeća za estetske salone i klinike.",
+    content: [],
+    coverImage: { img: "/images/partners/uniforme.webp", imgDesc: "Uniforme d.o.o." },
+    address: "Bulevar oslobođenja 10, Novi Sad",
+    geo: { latitude: 45.2517, longitude: 19.8369 },
+    outboundUrl: "https://uniforme-example.rs/?ref=estetiklab",
+    ctaLabel: "Poseti prodavnicu",
+    isActive: true,
+    seo: { title: "", description: "", keywords: [] },
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+export function buildCampaign(overrides = {}) {
+  const campaign = {
+    _id: id(),
+    title: "Septembarska akcija",
+    subject: "Ne propustite septembarsku akciju!",
+    content: [{ type: "paragraph", text: "Sadrzaj kampanje", order: 0 }],
+    targetInterests: [],
+    status: "draft",
+    scheduledFor: null,
+    sentAt: null,
+    sentCount: 0,
+    failedCount: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+  // findCampaignDocById (unlike findCampaignById) deliberately returns a real,
+  // non-lean Mongoose document because campaign.service.js's sendCampaignNow
+  // calls campaign.save() so Campaign's pre("save") hook runs - this stub
+  // mimics just enough of that (mutate in place, resolve to itself) for tests
+  // exercising that path without a real DB connection.
+  campaign.save = async function () {
+    return campaign;
+  };
+  return campaign;
+}
+
 export default {
   id,
   buildRole,
@@ -591,4 +638,6 @@ export default {
   buildOrderItem,
   buildOrder,
   buildTemporaryOrder,
+  buildBusinessPartner,
+  buildCampaign,
 };
