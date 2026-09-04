@@ -6,6 +6,19 @@ import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { normalizeError, badRequest } from "../../../../utils/error.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
+// complex nested array (content blocks) is submitted as JSON from the
+// dynamic form-builder widget rather than a flat form field - same helper
+// as product.controller.js / post.controller.js use for their longDescription
+function parseJsonField(value, fallback = []) {
+  if (Array.isArray(value) || (value && typeof value === "object")) return value;
+  if (!value) return fallback;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
 async function loadParentOptions(domain, excludeId = null) {
   const options = await categoryService.getCategoriesForSelect(domain || "service");
   return options.filter((c) => c.id !== excludeId);
@@ -118,6 +131,7 @@ export async function createCategory(req, res, next) {
     const data = { ...req.body };
     data.featureImage = buildFeatureImage(req, null);
     data.parent = data.parent || null;
+    data.content = parseJsonField(req.body.content, []);
     data.isIndexable = parseCheckbox(req.body.isIndexable, true);
     // isActive is stored at meta.isActive in the schema, not top-level - the form
     // field is flattened for display (see mapCategoryForEdit) but has to be written
@@ -177,6 +191,7 @@ export async function updateCategory(req, res, next) {
     }
     data.featureImage = buildFeatureImage(req, existing.featureImage);
     data.parent = data.parent || null;
+    data.content = parseJsonField(req.body.content, existing.content || []);
     data.isIndexable = parseCheckbox(req.body.isIndexable, existing.isIndexable);
     // isActive lives at meta.isActive in the schema. Using the dot-notation key here
     // (rather than data.meta = {...}) means Mongoose's $set only touches that one

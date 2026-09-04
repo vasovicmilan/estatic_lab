@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import ContentBlogSchema from "./schemas/content.blog.schema.js";
 
 /**
  * One Category model serves the blog, the service catalogue, and (now) the product
@@ -41,6 +42,22 @@ const CategorySchema = new Schema(
     },
     longDescription: {
       type: String,
+    },
+
+    // Rich, block-based landing-page content for the category's own archive
+    // page - same schema Post/Product already use (headings, FAQ, cards,
+    // productReference/serviceReference, etc). Kept separate from the plain
+    // longDescription string above rather than replacing it: longDescription
+    // is what SEO meta-description fallbacks read (see blog.service.js,
+    // product.controller.js), and forcing every caller to strip HTML/markup
+    // out of block content just to get a plain-text summary would be more
+    // fragile than keeping a short plain string for that purpose. Only
+    // categories worth turning into a real landing page (e.g. a brand or
+    // technology hub like "HL/Skin" or "Aparati i oprema") need this - most
+    // categories can stay with just shortDescription/longDescription.
+    content: {
+      type: [ContentBlogSchema],
+      default: [],
     },
 
     featureImage: {

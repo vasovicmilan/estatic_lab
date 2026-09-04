@@ -11,6 +11,7 @@ import {
 } from "../../../presenters/catalog/product.presenter.js";
 import { generateSeo } from "../../../seo/index.js";
 import { buildItemListJsonLd } from "../../../seo/utils.seo.js";
+import { renderContentBlocks } from "../../../utils/content-blocks.util.js";
 import { logError } from "../../../utils/logger.util.js";
 
 const BADGE_LABELS = {
@@ -76,7 +77,13 @@ export async function productCategory(req, res, next) {
     const result = await productService.listPublicProducts({ page: parseInt(page, 10) || 1, filters: { category: categoryIds } });
 
     const viewData = prepareProductCategoryData(
-      { id: category._id.toString(), naziv: category.name, slug: category.slug, description: category.shortDescription || "" },
+      {
+        id: category._id.toString(),
+        naziv: category.name,
+        slug: category.slug,
+        description: category.shortDescription || "",
+        contentBlocks: renderContentBlocks(category.content),
+      },
       result,
       req.query,
       { categories, tags, totalCount }

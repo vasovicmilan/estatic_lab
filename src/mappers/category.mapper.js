@@ -93,6 +93,7 @@ export function mapCategoryForEdit(category) {
     parent: category.parent?._id?.toString() || category.parent?.toString() || null,
     shortDescription: category.shortDescription || "",
     longDescription: category.longDescription || "",
+    content: category.content || [],
     featureImage: category.featureImage || null,
     isIndexable: category.isIndexable,
     priority: category.meta?.priority ?? 0,

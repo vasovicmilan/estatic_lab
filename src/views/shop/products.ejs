@@ -37,6 +37,11 @@
         <% if (data.subtitle) { %><p class="text-muted mb-2"><%= data.subtitle %></p><% } %>
         <% const catOrTagDesc = (data.category && data.category.description) || (data.tag && data.tag.description); %>
         <% if (catOrTagDesc) { %><p class="mb-4"><%= catOrTagDesc %></p><% } %>
+        <% if (data.category && data.category.contentBlocks && data.category.contentBlocks.length > 0) { %>
+          <div class="category-landing-content mb-5">
+            <%- include("../includes/components/content-blocks-render", { blocks: data.category.contentBlocks }) %>
+          </div>
+        <% } %>
       <% } %>
     </div>
   </section>

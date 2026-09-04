@@ -1,5 +1,6 @@
 import { formatDateTime } from "../../../utils/date.time.util.js";
 import { CATEGORY_DOMAINS } from "../../../models/category.model.js";
+import { BLOG_BLOCK_TYPES } from "../../../models/schemas/content.blog.schema.js";
 
 // Labels only - the actual set of valid domains always comes from CATEGORY_DOMAINS,
 // so adding a new domain there is the only change needed; a domain missing from this
@@ -149,6 +150,15 @@ export function prepareCategoryFormData(category = null, { parentOptions = [] } 
     },
     { name: "shortDescription", label: "Kratak opis", type: "textarea", rows: 2, width: 12, value: values.shortDescription, help: "Najviše 300 karaktera." },
     { name: "longDescription", label: "Dugi opis", type: "textarea", rows: 5, width: 12, value: values.longDescription },
+    {
+      name: "content",
+      label: "Sadržaj landing stranice (napredno)",
+      type: "content-blocks",
+      width: 12,
+      value: values.content || [],
+      blockTypes: BLOG_BLOCK_TYPES,
+      help: "Opciono - samo za kategorije koje treba da budu prava landing stranica (npr. brend ili tehnologija poput HL/Skin). Prikazuje se na arhivi kategorije ispod kratkog opisa, pre liste artikala.",
+    },
     {
       name: "categoryImage",
       label: "Slika",
