@@ -141,7 +141,7 @@ export function prepareServiceDetailsData(service, { employeeCount = 0 } = {}) {
 // ---------------------------------------------------------------------------
 // Phase 1: core info + image
 // ---------------------------------------------------------------------------
-export function prepareServiceFormData(service = null, { categoryOptions = [], tagOptions = [], resourceOptions = [], productOptions = [] } = {}) {
+export function prepareServiceFormData(service = null, { categoryOptions = [], tagOptions = [], resourceOptions = [], productOptions = [], postOptions = [] } = {}) {
   const isEdit = !!service;
   const values = isEdit
     ? service
@@ -254,6 +254,15 @@ export function prepareServiceFormData(service = null, { categoryOptions = [], t
         value: (values.relatedProducts || []).map((p) => (typeof p === "object" ? p.id ?? p._id?.toString() : p)),
         options: productOptions.map((p) => ({ value: p.id, label: p.naziv })),
         help: "Proizvodi koji se koriste u ovoj terapiji ili se preporučuju uz nju - prikazuje se na stranici usluge i na stranici svakog izabranog proizvoda.",
+      },
+      {
+        name: "relatedPosts",
+        label: "Povezani blog postovi",
+        type: "multiselect",
+        width: 12,
+        value: (values.relatedPosts || []).map((p) => (typeof p === "object" ? p.id ?? p._id?.toString() : p)),
+        options: postOptions.map((p) => ({ value: p.id, label: p.naslov })),
+        help: "Postovi koji objašnjavaju ili porede ovu uslugu - prikazuje se u sekciji 'Iz našeg bloga' na stranici usluge.",
       },
       {
         name: "equipmentNoteText",

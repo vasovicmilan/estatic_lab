@@ -24,6 +24,7 @@ const adminPopulate = [
   { path: "tags", select: "name slug" },
   { path: "resources", select: "name capacity isActive" },
   { path: "relatedProducts", select: "name slug image" },
+  { path: "relatedPosts", select: "title slug coverImage" },
 ];
 
 function validatePackages(packages = []) {

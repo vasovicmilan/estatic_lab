@@ -114,6 +114,9 @@ export function mapProductForAdminDetail(product) {
     povezaneUsluge: (product.relatedServices || [])
       .filter((s) => s && typeof s === "object" && s.name)
       .map((s) => ({ id: s._id?.toString(), naziv: s.name, slug: s.slug })),
+    povezaniPostovi: (product.relatedPosts || [])
+      .filter((p) => p && typeof p === "object" && p.title)
+      .map((p) => ({ id: p._id?.toString(), naslov: p.title, slug: p.slug, slika: formatImage(p.coverImage) })),
     faq: (product.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
     seoKljucneReci: product.seoKeywords || [],
     oznaka: translateBadge(product.badge),
@@ -150,6 +153,7 @@ export function mapProductForEdit(product) {
     variations: product.variations || [],
     relatedProducts: (product.relatedProducts || []).map((p) => p._id?.toString() || p.toString()),
     relatedServices: (product.relatedServices || []).map((s) => s._id?.toString() || s.toString()),
+    relatedPosts: (product.relatedPosts || []).map((p) => p._id?.toString() || p.toString()),
     faq: product.faq || [],
     badge: product.badge || "none",
     shippingClass: product.shippingClass || "standard",
@@ -203,6 +207,9 @@ export function mapProductForPublicDetail(product) {
     povezaneUsluge: (product.relatedServices || [])
       .filter((s) => s && typeof s === "object" && s.name)
       .map((s) => ({ id: s._id?.toString(), naziv: s.name, slug: s.slug, slika: formatImage(s.image) })),
+    povezaniPostovi: (product.relatedPosts || [])
+      .filter((p) => p && typeof p === "object" && p.title)
+      .map((p) => ({ id: p._id?.toString(), naslov: p.title, slug: p.slug, slika: formatImage(p.coverImage) })),
     faq: (product.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
     oznaka: translateBadge(product.badge),
     naUpit: !!product.priceOnRequest,

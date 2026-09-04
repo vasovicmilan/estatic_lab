@@ -80,6 +80,11 @@ const ProductSchema = new Schema(
     // admin edits it from whichever record they happen to be on.
     relatedServices: [{ type: Schema.Types.ObjectId, ref: "Service" }],
 
+    // Blog posts that mention or recommend this product - same reasoning as
+    // Service.relatedPosts (no shared taxonomy between Post and Product domains
+    // to auto-match on), manually curated in the direction useful to a shopper.
+    relatedPosts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
+
     faq: [FAQSchema],
 
     // Independent of isActive (published/draft) - this is purely a merchandising

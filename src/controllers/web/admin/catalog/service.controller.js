@@ -4,6 +4,7 @@ import * as tagService from "../../../../services/tag.service.js";
 import * as employeeService from "../../../../services/employee.service.js";
 import * as resourceService from "../../../../services/resource.service.js";
 import * as productService from "../../../../services/product.service.js";
+import * as postService from "../../../../services/post.service.js";
 import {
   prepareServiceListData,
   prepareServiceDetailsData,
@@ -37,11 +38,12 @@ function parseJsonField(value, fallback = []) {
 // which employees can perform a service now lives only on Employee.services, assigned
 // from the employee's own edit form, not here (see service.model.js)
 async function loadFormOptions() {
-  const [categories, tags, resources, products] = await Promise.all([
+  const [categories, tags, resources, products, posts] = await Promise.all([
     categoryService.getCategoriesForSelect("service"),
     tagService.getTagsForSelect("service"),
     resourceService.getResourcesForSelect(),
     productService.getProductsForSelect(),
+    postService.getPostsForSelect(),
   ]);
 
   return {
@@ -49,6 +51,7 @@ async function loadFormOptions() {
     tagOptions: tags,
     resourceOptions: resources,
     productOptions: products,
+    postOptions: posts,
   };
 }
 
@@ -80,6 +83,7 @@ function buildStep3Payload(req) {
   data.comparisonTable = parseJsonField(req.body.comparisonTable);
   data.faq = parseJsonField(req.body.faq);
   data.relatedProducts = toIdArray(req.body.relatedProducts);
+  data.relatedPosts = toIdArray(req.body.relatedPosts);
   data.equipmentNote = {
     text: req.body.equipmentNoteText || null,
     buttonText: req.body.equipmentNoteButtonText || null,
@@ -107,6 +111,7 @@ function buildServicePayload(req, existing = {}) {
   data.tags = toIdArray(req.body.tags);
   data.resources = toIdArray(req.body.resources);
   data.relatedProducts = toIdArray(req.body.relatedProducts);
+  data.relatedPosts = toIdArray(req.body.relatedPosts);
   data.equipmentNote = {
     text: req.body.equipmentNoteText || existing.equipmentNote?.text || null,
     buttonText: req.body.equipmentNoteButtonText || existing.equipmentNote?.buttonText || null,

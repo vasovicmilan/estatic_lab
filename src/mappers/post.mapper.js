@@ -189,6 +189,15 @@ export function mapPostRaw(post) {
   return post;
 }
 
+export function mapPostsForSelect(posts = []) {
+  return posts
+    .map((post) => {
+      if (!post) return null;
+      return { id: post._id.toString(), naslov: post.title };
+    })
+    .filter(Boolean);
+}
+
 export default {
   mapPostsForAdminList,
   mapPostForAdminDetail,
@@ -196,4 +205,5 @@ export default {
   mapPostsForCards,
   mapPostForPublicDetail,
   mapPostRaw,
+  mapPostsForSelect,
 };

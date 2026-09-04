@@ -5,6 +5,7 @@ import {
   mapPostForEdit,
   mapPostsForCards,
   mapPostForPublicDetail,
+  mapPostsForSelect,
 } from "../mappers/post.mapper.js";
 import { generateUniqueSlug } from "../utils/slug.util.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
@@ -137,6 +138,11 @@ export async function listSlugsForSitemap() {
   return postRepo.findActiveSlugsForSitemap();
 }
 
+export async function getPostsForSelect() {
+  const { data } = await postRepo.findPosts({ limit: 200, sortBy: "publishedAt", populateFields: [] });
+  return mapPostsForSelect(data);
+}
+
 export default {
   listPosts,
   getPostById,
@@ -151,4 +157,5 @@ export default {
   updatePostSeo,
   deletePostById,
   listSlugsForSitemap,
+  getPostsForSelect,
 };

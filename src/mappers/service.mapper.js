@@ -50,6 +50,18 @@ function getRelatedProductIds(service) {
   return service.relatedProducts.map((p) => (typeof p === "object" ? p._id?.toString() : p?.toString())).filter(Boolean);
 }
 
+function getRelatedPostCards(entity) {
+  if (!entity.relatedPosts || !Array.isArray(entity.relatedPosts)) return [];
+  return entity.relatedPosts
+    .filter((p) => p && typeof p === "object" && p.title)
+    .map((p) => ({ id: p._id?.toString(), naslov: p.title, slug: p.slug, slika: formatImage(p.coverImage) }));
+}
+
+function getRelatedPostIds(entity) {
+  if (!entity.relatedPosts || !Array.isArray(entity.relatedPosts)) return [];
+  return entity.relatedPosts.map((p) => (typeof p === "object" ? p._id?.toString() : p?.toString())).filter(Boolean);
+}
+
 function getPriceRange(service) {
   const prices = (service.packages || []).filter((p) => p.isActive).map((p) => p.totalPrice);
   if (!prices.length) return null;
@@ -147,6 +159,7 @@ export function mapServiceForAdminDetail(service) {
     },
     faq: (service.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
     povezaniProizvodi: getRelatedProductCards(service),
+    povezaniPostovi: getRelatedPostCards(service),
     seoKljucneReci: service.seoKeywords || [],
     aktivna: service.isActive,
     vreme: {
@@ -169,6 +182,7 @@ export function mapServiceForEdit(service) {
     tags: (service.tags || []).map((t) => t._id?.toString() || t.toString()),
     resources: getResourceIds(service),
     relatedProducts: getRelatedProductIds(service),
+    relatedPosts: getRelatedPostIds(service),
     equipmentNoteText: service.equipmentNote?.text || "",
     equipmentNoteButtonText: service.equipmentNote?.buttonText || "",
     equipmentNoteButtonUrl: service.equipmentNote?.buttonUrl || "",
@@ -232,6 +246,7 @@ export function mapServiceForPublicDetail(service) {
     },
     faq: (service.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
     povezaniProizvodi: getRelatedProductCards(service),
+    povezaniPostovi: getRelatedPostCards(service),
     opremaNapomena: service.equipmentNote?.text
       ? {
           tekst: service.equipmentNote.text,

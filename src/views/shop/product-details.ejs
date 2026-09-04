@@ -159,6 +159,27 @@
     </section>
   <% } %>
 
+  <% if (data.product.povezaniPostovi && data.product.povezaniPostovi.length > 0) { %>
+    <section class="bg-white border-top border-bottom py-5">
+      <div class="container">
+        <p class="section-eyebrow">Saznajte više</p>
+        <h2 class="h3 mb-4">Iz našeg bloga</h2>
+        <div class="row g-4">
+          <% data.product.povezaniPostovi.slice(0, 4).forEach(function(post) { %>
+            <div class="col-md-3">
+              <a href="/blog/<%= post.slug %>" class="card h-100 shadow-sm hover-lift text-decoration-none text-dark">
+                <% if (post.slika && post.slika.url) { %><img src="<%= post.slika.url %>" class="card-img-top product-card-img" alt="<%= post.slika.alt || post.naslov %>"><% } %>
+                <div class="card-body">
+                  <span class="h6"><%= post.naslov %></span>
+                </div>
+              </a>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+  <% } %>
+
   <% if (data.product.faq && data.product.faq.length > 0) { %>
     <section class="py-5">
       <div class="container">

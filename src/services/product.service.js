@@ -28,6 +28,7 @@ const adminPopulate = [
   { path: "tags", select: "name slug" },
   { path: "relatedProducts", select: "name slug image" },
   { path: "relatedServices", select: "name slug image" },
+  { path: "relatedPosts", select: "title slug coverImage" },
 ];
 
 function validateVariations(variations = []) {

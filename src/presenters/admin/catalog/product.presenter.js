@@ -190,7 +190,7 @@ export function prepareProductCreateStep1Data() {
 // the phased creation flow. Kept separate from phase 1 above since their shape
 // diverged once phase 1 got trimmed down.
 // ---------------------------------------------------------------------------
-export function prepareProductFormData(product, { categoryOptions = [], tagOptions = [], productOptions = [], serviceOptions = [] } = {}) {
+export function prepareProductFormData(product, { categoryOptions = [], tagOptions = [], productOptions = [], serviceOptions = [], postOptions = [] } = {}) {
   const values = product;
 
   const fields = [
@@ -258,6 +258,15 @@ export function prepareProductFormData(product, { categoryOptions = [], tagOptio
       value: (values.relatedServices || []).map((s) => (typeof s === "object" ? s.id ?? s._id?.toString() : s)),
       options: serviceOptions.map((s) => ({ value: s.id, label: s.naziv })),
       help: "Terapije u kojima se ovaj proizvod koristi ili preporučuje - prikazuje se na stranici proizvoda i na stranici svake izabrane terapije.",
+    },
+    {
+      name: "relatedPosts",
+      label: "Povezani blog postovi",
+      type: "multiselect",
+      width: 12,
+      value: (values.relatedPosts || []).map((p) => (typeof p === "object" ? p.id ?? p._id?.toString() : p)),
+      options: postOptions.map((p) => ({ value: p.id, label: p.naslov })),
+      help: "Postovi koji pominju ili preporučuju ovaj proizvod - prikazuje se u sekciji 'Iz našeg bloga' na stranici proizvoda.",
     },
     {
       name: "productImage",
@@ -412,7 +421,7 @@ export function prepareProductDetailsMediaStepData(product, { categoryOptions = 
 // ---------------------------------------------------------------------------
 // Phase 3: SEO + remaining optional bits + publish
 // ---------------------------------------------------------------------------
-export function prepareProductSeoPublishStepData(product, { productOptions = [], serviceOptions = [] } = {}) {
+export function prepareProductSeoPublishStepData(product, { productOptions = [], serviceOptions = [], postOptions = [] } = {}) {
   const fields = [
     {
       name: "seoKeywordsCsv",
@@ -437,6 +446,15 @@ export function prepareProductSeoPublishStepData(product, { productOptions = [],
       value: (product.relatedServices || []).map((s) => (typeof s === "object" ? s.id ?? s._id?.toString() : s)),
       options: serviceOptions.map((s) => ({ value: s.id, label: s.naziv })),
       help: "Terapije u kojima se ovaj proizvod koristi ili preporučuje - prikazuje se na stranici proizvoda i na stranici svake izabrane terapije.",
+    },
+    {
+      name: "relatedPosts",
+      label: "Povezani blog postovi",
+      type: "multiselect",
+      width: 12,
+      value: (product.relatedPosts || []).map((p) => (typeof p === "object" ? p.id ?? p._id?.toString() : p)),
+      options: postOptions.map((p) => ({ value: p.id, label: p.naslov })),
+      help: "Postovi koji pominju ili preporučuju ovaj proizvod - prikazuje se u sekciji 'Iz našeg bloga' na stranici proizvoda.",
     },
     {
       name: "faq",

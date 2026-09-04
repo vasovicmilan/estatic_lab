@@ -107,6 +107,13 @@ const ServiceSchema = new Schema(
     // arrays rather than a shared join collection.
     relatedProducts: [{ type: Schema.Types.ObjectId, ref: "Product" }],
 
+    // Blog posts that explain, compare, or set expectations for this service -
+    // Post and Service live in different category/tag domains (see Category's
+    // domain-scoping) so there's no shared taxonomy to auto-match them; this is
+    // a manually curated link in the direction most useful to a client
+    // deciding whether to book, same array-of-refs pattern as relatedProducts.
+    relatedPosts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
+
     // Separate from relatedProducts on purpose: relatedProducts shows real,
     // consumer-facing items (e.g. an HL/Skin cream) as "you might also want
     // this" cards - showing a €5000 salon device in that same grid next to a
