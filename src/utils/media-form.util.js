@@ -9,8 +9,12 @@ function toArray(value) {
  * - existing images round-trip as parallel arrays (img URL + alt text),
  *   since ImageSchema entries have no _id to key off - index position is
  *   how we match a checked "remove" box back to the right image.
- * - newly uploaded files (req.uploadedFiles.gallery) get appended, all
- *   sharing the single "newGalleryDesc" alt-text field from this submission.
+ * - newly uploaded files (req.uploadedFiles.gallery) get appended, each
+ *   paired by index with its own newGalleryDesc[] entry (see
+ *   admin-gallery-uploader.js) - one file input + one description input per
+ *   row, both keep DOM order through multer/busboy's multipart parsing, so
+ *   zipping them by index lines the right description up with the right
+ *   image. A missing description (row submitted blank) just falls back to "".
  */
 export function buildGalleryPayload(req) {
   const existingImg = toArray(req.body.existingGalleryImg);
@@ -21,9 +25,10 @@ export function buildGalleryPayload(req) {
     .map((img, i) => ({ img, imgDesc: existingDesc[i] || "" }))
     .filter((_, i) => !removeIndexes.has(i));
 
-  const newlyUploaded = toArray(req.uploadedFiles?.gallery).map((f) => ({
+  const newDescs = toArray(req.body.newGalleryDesc);
+  const newlyUploaded = toArray(req.uploadedFiles?.gallery).map((f, i) => ({
     img: f.img,
-    imgDesc: (req.body.newGalleryDesc || "").trim(),
+    imgDesc: (newDescs[i] || "").trim(),
   }));
 
   return [...kept, ...newlyUploaded];

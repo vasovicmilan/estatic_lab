@@ -76,7 +76,7 @@ export async function productCategory(req, res, next) {
     const result = await productService.listPublicProducts({ page: parseInt(page, 10) || 1, filters: { category: categoryIds } });
 
     const viewData = prepareProductCategoryData(
-      { id: category._id.toString(), naziv: category.name, slug: category.slug },
+      { id: category._id.toString(), naziv: category.name, slug: category.slug, description: category.shortDescription || "" },
       result,
       req.query,
       { categories, tags, totalCount }
@@ -112,7 +112,7 @@ export async function productTag(req, res, next) {
     const result = await productService.listPublicProducts({ page: parseInt(page, 10) || 1, filters: { tag: tag._id } });
 
     const viewData = prepareProductTagData(
-      { id: tag._id.toString(), naziv: tag.name, slug: tag.slug },
+      { id: tag._id.toString(), naziv: tag.name, slug: tag.slug, description: tag.description || "" },
       result,
       req.query,
       { categories, tags, totalCount }

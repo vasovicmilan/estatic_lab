@@ -44,7 +44,7 @@ export async function getBlogCategoryData(categorySlug, { limit = 9, page = 1 } 
 
   return {
     ...posts,
-    category: { id: category._id.toString(), naziv: category.name, slug: category.slug },
+    category: { id: category._id.toString(), naziv: category.name, slug: category.slug, description: category.shortDescription || "" },
     categories,
     tags,
     totalCount,
@@ -66,14 +66,14 @@ export async function getBlogTagData(tagSlug, { limit = 9, page = 1 } = {}) {
 
   const seo = buildPageSeo({
     title: `#${tag.name} | Blog | Estetik Lab`,
-    description: `Blog objave označene sa ${tag.name}.`,
+    description: tag.description || `Blog objave označene sa ${tag.name}.`,
     canonical: page > 1 ? `/blog/tag/${tag.slug}?page=${page}` : `/blog/tag/${tag.slug}`,
     isIndexable: true,
   });
 
   return {
     ...posts,
-    tag: { id: tag._id.toString(), naziv: tag.name, slug: tag.slug },
+    tag: { id: tag._id.toString(), naziv: tag.name, slug: tag.slug, description: tag.description || "" },
     categories,
     tags,
     totalCount,

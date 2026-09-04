@@ -41,12 +41,14 @@
   <div class="container <%= data.intro ? 'pt-4' : 'pt-5' %>">
     <% if (!data.intro) { %>
       <%- include("../includes/breadcrumbs") %>
-      <h1 class="h3 mb-4">
+      <h1 class="h3 mb-2">
         <% if (data.category) { %><%= data.category.naziv %>
         <% } else if (data.tag) { %>#<%= data.tag.naziv %>
         <% } else if (data.search) { %>Rezultati pretrage: "<%= data.search %>"
         <% } else { %>Blog<% } %>
       </h1>
+      <% const catOrTagDesc = (data.category && data.category.description) || (data.tag && data.tag.description); %>
+      <% if (catOrTagDesc) { %><p class="mb-4"><%= catOrTagDesc %></p><% } %>
     <% } %>
   </div>
 

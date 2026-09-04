@@ -50,7 +50,7 @@ export async function serviceCategory(req, res, next) {
     const categories = await serviceService.attachServiceCountsToCategories(categoriesRaw);
     const result = await serviceService.findActiveServices({ page: parseInt(page, 10) || 1, filters: { category: category._id } });
 
-    const viewData = prepareServiceCategoryData({ id: category._id.toString(), naziv: category.name, slug: category.slug }, result, req.query, { categories, tags, totalCount });
+    const viewData = prepareServiceCategoryData({ id: category._id.toString(), naziv: category.name, slug: category.slug, description: category.shortDescription || "" }, result, req.query, { categories, tags, totalCount });
     const seo = await generateSeo("category", category, req);
     const itemList = buildItemListJsonLd(req, result.data.map((s) => ({ name: s.naziv, path: `/usluge/${s.slug}` })));
     if (itemList) seo.jsonLd = [...(seo.jsonLd || []), itemList];
@@ -81,7 +81,7 @@ export async function serviceTag(req, res, next) {
     const categories = await serviceService.attachServiceCountsToCategories(categoriesRaw);
     const result = await serviceService.findActiveServices({ page: parseInt(page, 10) || 1, filters: { tag: tag._id } });
 
-    const viewData = prepareServiceTagData({ id: tag._id.toString(), naziv: tag.name, slug: tag.slug }, result, req.query, { categories, tags, totalCount });
+    const viewData = prepareServiceTagData({ id: tag._id.toString(), naziv: tag.name, slug: tag.slug, description: tag.description || "" }, result, req.query, { categories, tags, totalCount });
     const seo = await generateSeo("page", { title: tag.name, description: `Usluge sa tagom ${tag.name}.`, slug: `/usluge/tag/${tag.slug}` }, req);
     const itemList = buildItemListJsonLd(req, result.data.map((s) => ({ name: s.naziv, path: `/usluge/${s.slug}` })));
     if (itemList) seo.jsonLd = [...(seo.jsonLd || []), itemList];

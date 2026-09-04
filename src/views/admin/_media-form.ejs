@@ -58,9 +58,14 @@
             <hr>
 
             <label class="form-label">Dodaj nove slike</label>
-            <input type="file" name="gallery" class="form-control mb-2" accept="image/*" multiple>
-            <input type="text" name="newGalleryDesc" class="form-control" placeholder="Opis za nove slike (isti opis za sve dodate slike u ovom koraku)">
-            <small class="text-muted d-block mt-1">Do 10 slika odjednom. Ako želiš poseban opis za svaku, dodaj ih u više navrata.</small>
+            <div data-gallery-uploader data-max="10">
+              <div data-gallery-rows></div>
+              <button type="button" class="btn btn-sm btn-outline-secondary mt-1" data-gallery-add>
+                <i class="bi bi-plus-lg"></i> Dodaj još jednu sliku
+              </button>
+              <small class="text-danger d-none d-block mt-2" data-gallery-limit>Dostignut je maksimum od 10 slika po dodavanju - sačuvaj ove, pa ponovo otvori ovu stranicu za još.</small>
+            </div>
+            <small class="text-muted d-block mt-2">Svaka slika ima svoj poseban opis (alt tekst) - dodaj koliko god slika ti treba, jednu po jednu.</small>
           </div>
         </div>
 
@@ -108,4 +113,5 @@
 </main>
 
 <script src="/js/admin-repeater.js"></script>
+<script src="/js/admin-gallery-uploader.js"></script>
 <%- include("../includes/footer") %>

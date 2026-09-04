@@ -43,7 +43,9 @@
         </div>
       <% } else { %>
         <h1 class="h3 mb-2"><%= data.category ? data.category.naziv : (data.tag ? data.tag.naziv : "Usluge") %></h1>
-        <% if (data.subtitle) { %><p class="text-muted mb-4"><%= data.subtitle %></p><% } %>
+        <% if (data.subtitle) { %><p class="text-muted mb-2"><%= data.subtitle %></p><% } %>
+        <% const catOrTagDesc = (data.category && data.category.description) || (data.tag && data.tag.description); %>
+        <% if (catOrTagDesc) { %><p class="mb-4"><%= catOrTagDesc %></p><% } %>
       <% } %>
     </div>
   </section>

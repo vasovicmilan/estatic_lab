@@ -1,6 +1,6 @@
 import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
-import { isJsonArrayOrArray, booleanishField } from "./helpers/common.validator.js";
+import { isJsonArrayOrArray, isArrayOrString, booleanishField } from "./helpers/common.validator.js";
 
 // Existing gallery images are round-tripped as parallel arrays (img URL + alt
 // text), since ImageSchema entries have no _id to key off (see image.schema.js,
@@ -19,6 +19,10 @@ export const validateMediaUpdate = [
     .custom(isJsonArrayOrArray).withMessage("Neispravan format liste za uklanjanje"),
 
   body("newGalleryDesc")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravan format opisa novih slika"),
+
+  body("newGalleryDesc.*")
     .optional({ values: "falsy" })
     .trim()
     .isLength({ max: 200 }).withMessage("Opis nove slike može imati najviše 200 karaktera"),

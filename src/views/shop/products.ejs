@@ -34,7 +34,9 @@
         <p class="text-muted mb-4"><%= data.resultCount %> <%= data.resultCount === 1 ? "proizvod pronađen" : "proizvoda pronađeno" %></p>
       <% } else { %>
         <h1 class="h3 mb-2"><%= data.badgeTitle || (data.category ? data.category.naziv : (data.tag ? data.tag.naziv : "Prodavnica")) %></h1>
-        <% if (data.subtitle) { %><p class="text-muted mb-4"><%= data.subtitle %></p><% } %>
+        <% if (data.subtitle) { %><p class="text-muted mb-2"><%= data.subtitle %></p><% } %>
+        <% const catOrTagDesc = (data.category && data.category.description) || (data.tag && data.tag.description); %>
+        <% if (catOrTagDesc) { %><p class="mb-4"><%= catOrTagDesc %></p><% } %>
       <% } %>
     </div>
   </section>
