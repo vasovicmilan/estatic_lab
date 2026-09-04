@@ -384,4 +384,22 @@ describe("service.service", () => {
       );
     });
   });
+
+  describe("countServicesReferencingPost", () => {
+    it("delegates to the repository for a given post id", async (t) => {
+      const mock = t.mock.method(serviceRepo, "countServicesReferencingPost", async () => 3);
+      const count = await serviceService.countServicesReferencingPost("post-1");
+
+      assert.equal(count, 3);
+      assert.equal(mock.mock.calls[0].arguments[0], "post-1");
+    });
+
+    it("returns 0 without hitting the repository when no postId is given", async (t) => {
+      const mock = t.mock.method(serviceRepo, "countServicesReferencingPost", async () => 99);
+      const count = await serviceService.countServicesReferencingPost(null);
+
+      assert.equal(count, 0);
+      assert.equal(mock.mock.calls.length, 0);
+    });
+  });
 });

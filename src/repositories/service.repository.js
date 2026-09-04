@@ -76,6 +76,14 @@ export async function countServices(filters = {}, { session } = {}) {
   return Service.countDocuments(buildServiceFilter(filters)).session(session || null);
 }
 
+// Reverse lookup for the admin post-edit form's "Povezano: X usluga" summary -
+// Post doesn't hold its own list of related services (it links out through
+// free-form content blocks instead), so counting the other direction is the
+// only way to show "this many services point back at this post".
+export async function countServicesReferencingPost(postId, { session } = {}) {
+  return Service.countDocuments({ relatedPosts: postId }).session(session || null);
+}
+
 // Called when a Category is deleted - Service.categories[] is current taxonomy
 // assignment, not a promise to anyone, so it's safe to auto-clean rather than
 // block the Category deletion on it.
@@ -109,6 +117,7 @@ export default {
   updateServiceById,
   deleteServiceById,
   countServices,
+  countServicesReferencingPost,
   pullCategoryFromAllServices,
   pullTagFromAllServices,
   pullProductFromAllServices,

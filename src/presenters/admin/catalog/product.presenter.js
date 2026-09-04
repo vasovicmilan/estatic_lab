@@ -314,11 +314,18 @@ export function prepareProductFormData(product, { categoryOptions = [], tagOptio
     { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive },
   ];
 
+  const relatedSummary = [
+    values.relatedProducts?.length ? `${values.relatedProducts.length} povezan${values.relatedProducts.length === 1 ? "" : "ih"} proizvod${values.relatedProducts.length === 1 ? "" : "a"}` : null,
+    values.relatedServices?.length ? `${values.relatedServices.length} povezan${values.relatedServices.length === 1 ? "a" : "ih"} usluga` : null,
+    values.relatedPosts?.length ? `${values.relatedPosts.length} povezan${values.relatedPosts.length === 1 ? "" : "ih"} post${values.relatedPosts.length === 1 ? "" : "ova"}` : null,
+  ].filter(Boolean);
+
   return {
     formAction: `/admin/proizvodi/${product.id}`,
     formEnctype: "multipart/form-data",
     isEdit: true,
     fields,
+    relatedSummary,
     submitLabel: "Sačuvaj izmene",
     cancelUrl: "/admin/proizvodi",
     breadcrumbs: [

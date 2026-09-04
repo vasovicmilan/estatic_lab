@@ -148,7 +148,7 @@ export function preparePostDetailsData(post) {
   };
 }
 
-export function preparePostFormData(post = null, { categoryOptions = [], tagOptions = [], authorOptions = [] } = {}) {
+export function preparePostFormData(post = null, { categoryOptions = [], tagOptions = [], authorOptions = [], relatedSummary = [] } = {}) {
   const isEdit = !!post;
   const values = isEdit ? post : { title: "", excerpt: "", content: [], categories: [], tags: [], author: "", status: "draft", isIndexable: true };
 
@@ -257,6 +257,7 @@ export function preparePostFormData(post = null, { categoryOptions = [], tagOpti
     formEnctype: "multipart/form-data",
     isEdit,
     fields,
+    relatedSummary,
     submitLabel: isEdit ? "Sačuvaj izmene" : "Kreiraj post",
     cancelUrl: "/admin/blog",
     breadcrumbs: [

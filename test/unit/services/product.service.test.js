@@ -487,4 +487,22 @@ describe("product.service", () => {
       await assert.rejects(() => productService.getPublicProductBySlug("nepostojeci"), (err) => err.statusCode === 404);
     });
   });
+
+  describe("countProductsReferencingPost", () => {
+    it("delegates to the repository for a given post id", async (t) => {
+      const mock = t.mock.method(productRepo, "countProductsReferencingPost", async () => 2);
+      const count = await productService.countProductsReferencingPost("post-1");
+
+      assert.equal(count, 2);
+      assert.equal(mock.mock.calls[0].arguments[0], "post-1");
+    });
+
+    it("returns 0 without hitting the repository when no postId is given", async (t) => {
+      const mock = t.mock.method(productRepo, "countProductsReferencingPost", async () => 99);
+      const count = await productService.countProductsReferencingPost(undefined);
+
+      assert.equal(count, 0);
+      assert.equal(mock.mock.calls.length, 0);
+    });
+  });
 });

@@ -316,6 +316,11 @@ export async function listSlugsForSitemap() {
   return serviceRepo.findActiveSlugsForSitemap();
 }
 
+export async function countServicesReferencingPost(postId) {
+  if (!postId) return 0;
+  return serviceRepo.countServicesReferencingPost(postId);
+}
+
 export default {
   listServices,
   getServiceById,
@@ -323,6 +328,7 @@ export default {
   getServiceForEdit,
   getServiceBySlug,
   getServicesForSelect,
+  countServicesReferencingPost,
   findActiveServices,
   findHighlightedServices,
   findServicesByCategorySlug,

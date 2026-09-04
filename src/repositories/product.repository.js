@@ -85,6 +85,12 @@ export async function countProducts(filters = {}, { session } = {}) {
   return Product.countDocuments(buildProductFilter(filters)).session(session || null);
 }
 
+// Reverse lookup for the admin post-edit form's "Povezano: X proizvoda"
+// summary - same reasoning as Service's countServicesReferencingPost.
+export async function countProductsReferencingPost(postId, { session } = {}) {
+  return Product.countDocuments({ relatedPosts: postId }).session(session || null);
+}
+
 // Called when a Category is deleted - Product.categories[] is current taxonomy
 // assignment, not a promise to anyone, so it's safe to auto-clean rather than
 // block the Category deletion on it.
@@ -127,6 +133,7 @@ export default {
   updateProductById,
   deleteProductById,
   countProducts,
+  countProductsReferencingPost,
   pullCategoryFromAllProducts,
   pullTagFromAllProducts,
   pullFromAllRelatedProducts,

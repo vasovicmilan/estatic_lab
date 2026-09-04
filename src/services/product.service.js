@@ -390,6 +390,11 @@ export async function listSlugsForSitemap() {
   return productRepo.findActiveSlugsForSitemap();
 }
 
+export async function countProductsReferencingPost(postId) {
+  if (!postId) return 0;
+  return productRepo.countProductsReferencingPost(postId);
+}
+
 export default {
   listProducts,
   getProductById,
@@ -404,6 +409,7 @@ export default {
   listPublicProducts,
   getPublicProductBySlug,
   getProductsForSelect,
+  countProductsReferencingPost,
   countAllActiveProducts,
   attachProductCountsToCategories,
   getVariationRaw,

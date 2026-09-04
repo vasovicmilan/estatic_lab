@@ -126,6 +126,38 @@ describe("prepareServiceFormData - single-shot edit", () => {
     assert.equal(editView.phaseInfo, undefined);
   });
 
+  describe("relatedSummary (\"Povezano: ...\" banner)", () => {
+    it("is empty on create, since a brand new service has nothing related yet", () => {
+      const view = prepareServiceFormData();
+      assert.deepEqual(view.relatedSummary, []);
+    });
+
+    it("summarizes related products and posts with correct singular/plural wording", () => {
+      const view = prepareServiceFormData({
+        id: "s1",
+        name: "Masaza",
+        relatedProducts: ["p1"],
+        relatedPosts: ["post1", "post2"],
+      });
+      assert.deepEqual(view.relatedSummary, ["1 povezan preparat", "2 povezanih postova"]);
+    });
+
+    it("omits a category entirely when there are zero related items of that type", () => {
+      const view = prepareServiceFormData({ id: "s1", name: "Masaza", relatedProducts: [], relatedPosts: ["post1"] });
+      assert.deepEqual(view.relatedSummary, ["1 povezan post"]);
+    });
+
+    it("pluralizes 5+ products/posts correctly (Serbian genitive plural)", () => {
+      const view = prepareServiceFormData({
+        id: "s1",
+        name: "Masaza",
+        relatedProducts: ["p1", "p2", "p3", "p4", "p5"],
+        relatedPosts: ["a", "b", "c", "d", "e"],
+      });
+      assert.deepEqual(view.relatedSummary, ["5 povezanih preparata", "5 povezanih postova"]);
+    });
+  });
+
   it("requires the image on create, not on edit", () => {
     const createView = prepareServiceFormData();
     const editView = prepareServiceFormData({ id: "s1", name: "Masaza" });

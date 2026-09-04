@@ -2,6 +2,8 @@ import * as postService from "../../../../services/post.service.js";
 import * as categoryService from "../../../../services/category.service.js";
 import * as tagService from "../../../../services/tag.service.js";
 import * as userService from "../../../../services/user.service.js";
+import * as serviceService from "../../../../services/service.service.js";
+import * as productService from "../../../../services/product.service.js";
 import {
   preparePostListData,
   preparePostDetailsData,
@@ -137,7 +139,15 @@ export async function editPostForm(req, res, next) {
     const { postId } = req.params;
     const post = await postService.getPostForEdit(postId);
     const options = await loadFormOptions();
-    const formData = preparePostFormData(post, options);
+    const [relatedServiceCount, relatedProductCount] = await Promise.all([
+      serviceService.countServicesReferencingPost(postId),
+      productService.countProductsReferencingPost(postId),
+    ]);
+    const relatedSummary = [
+      relatedServiceCount ? `${relatedServiceCount} povezan${relatedServiceCount === 1 ? "a" : "ih"} usluga` : null,
+      relatedProductCount ? `${relatedProductCount} povezan${relatedProductCount === 1 ? "" : "ih"} proizvod${relatedProductCount === 1 ? "" : "a"}` : null,
+    ].filter(Boolean);
+    const formData = preparePostFormData(post, { ...options, relatedSummary });
 
     return res.render("admin/_form", {
       pageTitle: `Izmena - ${post.title}`,

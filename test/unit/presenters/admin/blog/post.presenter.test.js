@@ -129,6 +129,17 @@ describe("preparePostFormData", () => {
     assert.equal(editView.fields.find((f) => f.name === "coverImage").required, false);
   });
 
+  it("passes relatedSummary straight through for the shared admin/_form banner, defaulting to empty", () => {
+    const withDefault = preparePostFormData({ id: "p1", title: "Test", status: "draft" });
+    assert.deepEqual(withDefault.relatedSummary, []);
+
+    const withSummary = preparePostFormData(
+      { id: "p1", title: "Test", status: "draft" },
+      { relatedSummary: ["2 povezane usluge", "1 povezan proizvod"] }
+    );
+    assert.deepEqual(withSummary.relatedSummary, ["2 povezane usluge", "1 povezan proizvod"]);
+  });
+
   it("normalizes mixed populated category/tag objects and raw ids into plain id strings", () => {
     const view = preparePostFormData({ id: "p1", title: "Test", status: "draft", categories: [{ id: "c1" }, "c2"], tags: [{ id: "t1" }] });
 

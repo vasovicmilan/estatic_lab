@@ -24,6 +24,15 @@
         </div>
       <% } %>
 
+      <% if (data.relatedSummary && data.relatedSummary.length > 0) { %>
+        <div class="alert alert-light border d-flex align-items-center mb-4" role="alert">
+          <i class="bi bi-link-45deg me-2"></i>
+          <div>
+            <strong>Povezano:</strong> <%= data.relatedSummary.join(" · ") %>
+          </div>
+        </div>
+      <% } %>
+
       <div class="card">
         <div class="card-body">
           <form method="POST" action="<%= data.formAction %><% if (data.isEdit) { %>?_method=PUT<% } %>"

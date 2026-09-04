@@ -306,11 +306,19 @@ export function prepareServiceFormData(service = null, { categoryOptions = [], t
     fields.push({ name: "isActive", label: "Aktivna", type: "checkbox", width: 6, value: values.isActive });
   }
 
+  const relatedSummary = isEdit
+    ? [
+        values.relatedProducts?.length ? `${values.relatedProducts.length} povezan${values.relatedProducts.length === 1 ? "" : "ih"} preparat${values.relatedProducts.length === 1 ? "" : "a"}` : null,
+        values.relatedPosts?.length ? `${values.relatedPosts.length} povezan${values.relatedPosts.length === 1 ? "" : "ih"} post${values.relatedPosts.length === 1 ? "" : "ova"}` : null,
+      ].filter(Boolean)
+    : [];
+
   return {
     formAction: isEdit ? `/admin/usluge/${service.id}` : "/admin/usluge/dodavanje",
     formEnctype: "multipart/form-data",
     isEdit,
     fields,
+    relatedSummary,
     phaseInfo: isEdit ? undefined : { label: "Nova usluga", current: 1, total: 3 },
     submitLabel: isEdit ? "Sačuvaj izmene" : "Sačuvaj i nastavi",
     cancelUrl: "/admin/usluge",

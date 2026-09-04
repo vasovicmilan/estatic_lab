@@ -173,6 +173,24 @@ describe("prepareProductFormData (single-shot edit)", () => {
     assert.equal(imageField.required, false);
   });
 
+  describe("relatedSummary (\"Povezano: ...\" banner)", () => {
+    it("is empty when the product has no related products, services or posts", () => {
+      const view = prepareProductFormData(buildMappedProduct({ relatedProducts: [], relatedServices: [], relatedPosts: [] }));
+      assert.deepEqual(view.relatedSummary, []);
+    });
+
+    it("summarizes all three related-item types when present", () => {
+      const view = prepareProductFormData(
+        buildMappedProduct({
+          relatedProducts: ["p1", "p2"],
+          relatedServices: ["s1"],
+          relatedPosts: ["post1"],
+        })
+      );
+      assert.deepEqual(view.relatedSummary, ["2 povezanih proizvoda", "1 povezana usluga", "1 povezan post"]);
+    });
+  });
+
   it("uses multipart/form-data since this form can upload an image", () => {
     const view = prepareProductFormData(buildMappedProduct());
     assert.equal(view.formEnctype, "multipart/form-data");
