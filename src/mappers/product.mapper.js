@@ -1,6 +1,7 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 import { formatPrice, formatMoney } from "../utils/price.util.js";
 import { renderContentBlocks, contentBlocksToPlainText } from "../utils/content-blocks.util.js";
+import { formatImage } from "../utils/image-format.util.js";
 
 const BADGE_LABELS = {
   none: null,
@@ -19,14 +20,6 @@ const SHIPPING_CLASS_LABELS = {
 
 function translateShippingClass(shippingClass) {
   return SHIPPING_CLASS_LABELS[shippingClass] || SHIPPING_CLASS_LABELS.standard;
-}
-
-function formatImage(image) {
-  if (!image) return null;
-  return {
-    url: image.img || null,
-    alt: image.imgDesc || null,
-  };
 }
 
 function getCategoryNames(product) {

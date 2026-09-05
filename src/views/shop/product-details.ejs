@@ -10,12 +10,20 @@
 
       <div class="row g-5 align-items-center">
         <div class="col-lg-5">
-          <% if (data.product.slika && data.product.slika.url) { %>
+          <% if (data.product.slika && data.product.slika.url) {
+               const v = data.product.slika.variants || {};
+               const srcsetParts = [];
+               if (v.medium) srcsetParts.push(`${v.medium} 800w`);
+               if (v.original) srcsetParts.push(`${v.original} 1600w`);
+               const fullSrc = v.original || data.product.slika.url;
+          %>
             <div class="position-relative">
               <div class="ratio ratio-4x3 rounded-4 overflow-hidden bg-light">
-                <img src="<%= data.product.slika.url %>" alt="<%= data.product.slika.alt || data.product.naziv %>" class="w-100 h-100 object-fit-contain img-clickable p-3"
+                <img src="<%= data.product.slika.url %>"
+                     <% if (srcsetParts.length > 1) { %>srcset="<%= srcsetParts.join(', ') %>" sizes="(min-width: 992px) 470px, 100vw"<% } %>
+                     alt="<%= data.product.slika.alt || data.product.naziv %>" class="w-100 h-100 object-fit-contain img-clickable p-3"
                      data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
-                     data-full-src="<%= data.product.slika.url %>" data-full-alt="<%= data.product.naziv %>"
+                     data-full-src="<%= fullSrc %>" data-full-alt="<%= data.product.naziv %>"
                      loading="lazy" decoding="async">
               </div>
               <% if (data.product.oznaka) { %>
@@ -126,7 +134,7 @@
           <% data.relatedServices.forEach(function(s) { %>
             <div class="col-md-3">
               <a href="/usluge/<%= s.slug %>" class="card h-100 shadow-sm hover-lift text-decoration-none text-dark">
-                <% if (s.slika && s.slika.url) { %><img src="<%= s.slika.url %>" class="card-img-top product-card-img" alt="<%= s.slika.alt || s.naziv %>"><% } %>
+                <% if (s.slika && s.slika.url) { const v = s.slika.variants || {}; const sp = []; if (v.thumb) sp.push(`${v.thumb} 300w`); if (v.medium) sp.push(`${v.medium} 800w`); %><img src="<%= s.slika.url %>" <% if (sp.length > 1) { %>srcset="<%= sp.join(', ') %>" sizes="(min-width: 768px) 33vw, 100vw"<% } %> class="card-img-top product-card-img" alt="<%= s.slika.alt || s.naziv %>" loading="lazy" decoding="async"><% } %>
                 <div class="card-body">
                   <span class="h6"><%= s.naziv %></span>
                 </div>
@@ -147,7 +155,7 @@
           <% data.relatedProducts.forEach(function(p) { %>
             <div class="col-md-3">
               <a href="/prodavnica/<%= p.slug %>" class="card h-100 shadow-sm hover-lift text-decoration-none text-dark">
-                <% if (p.slika && p.slika.url) { %><img src="<%= p.slika.url %>" class="card-img-top product-card-img" alt="<%= p.slika.alt || p.naziv %>"><% } %>
+                <% if (p.slika && p.slika.url) { const v = p.slika.variants || {}; const sp = []; if (v.thumb) sp.push(`${v.thumb} 300w`); if (v.medium) sp.push(`${v.medium} 800w`); %><img src="<%= p.slika.url %>" <% if (sp.length > 1) { %>srcset="<%= sp.join(', ') %>" sizes="(min-width: 768px) 33vw, 100vw"<% } %> class="card-img-top product-card-img" alt="<%= p.slika.alt || p.naziv %>" loading="lazy" decoding="async"><% } %>
                 <div class="card-body">
                   <span class="h6"><%= p.naziv %></span>
                 </div>
@@ -168,7 +176,7 @@
           <% data.product.povezaniPostovi.slice(0, 4).forEach(function(post) { %>
             <div class="col-md-3">
               <a href="/blog/<%= post.slug %>" class="card h-100 shadow-sm hover-lift text-decoration-none text-dark">
-                <% if (post.slika && post.slika.url) { %><img src="<%= post.slika.url %>" class="card-img-top product-card-img" alt="<%= post.slika.alt || post.naslov %>"><% } %>
+                <% if (post.slika && post.slika.url) { const v = post.slika.variants || {}; const sp = []; if (v.thumb) sp.push(`${v.thumb} 300w`); if (v.medium) sp.push(`${v.medium} 800w`); %><img src="<%= post.slika.url %>" <% if (sp.length > 1) { %>srcset="<%= sp.join(', ') %>" sizes="(min-width: 768px) 33vw, 100vw"<% } %> class="card-img-top product-card-img" alt="<%= post.slika.alt || post.naslov %>" loading="lazy" decoding="async"><% } %>
                 <div class="card-body">
                   <span class="h6"><%= post.naslov %></span>
                 </div>

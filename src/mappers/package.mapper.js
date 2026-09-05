@@ -1,13 +1,6 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 import { formatMoney } from "../utils/price.util.js";
-
-function formatImage(image) {
-  if (!image) return null;
-  return {
-    url: image.img || null,
-    alt: image.imgDesc || null,
-  };
-}
+import { formatImage } from "../utils/image-format.util.js";
 
 // A raw (unpopulated) Mongoose ObjectId is ALSO typeof "object" - and it even has a
 // self-aliasing `._id` getter for interop - so `typeof x === "object"` alone cannot

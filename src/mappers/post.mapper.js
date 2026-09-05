@@ -1,5 +1,6 @@
 import { formatDateTime, formatDate, utcDateToZonedInputValue } from "../utils/date.time.util.js";
 import { renderContentBlocks } from "../utils/content-blocks.util.js";
+import { formatImage as formatCoverImage } from "../utils/image-format.util.js";
 
 function translateStatus(status) {
   const map = {
@@ -41,14 +42,6 @@ function getCategorySlugs(post) {
 function getTagNames(post) {
   if (!post.tags || !Array.isArray(post.tags)) return [];
   return post.tags.filter((t) => t && typeof t === "object" && t.name).map((t) => t.name);
-}
-
-function formatCoverImage(image) {
-  if (!image) return null;
-  return {
-    url: image.img || null,
-    alt: image.imgDesc || null,
-  };
 }
 
 export function mapPostsForAdminList(posts = []) {

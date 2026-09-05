@@ -18,8 +18,16 @@
           <% data.partners.forEach(function(partner) { %>
             <div class="col-md-4">
               <a href="/saradnici/<%= partner.slug %>" class="card h-100 shadow-sm hover-lift text-decoration-none text-dark">
-                <% if (partner.slika && partner.slika.url) { %>
-                  <img src="<%= partner.slika.url %>" class="card-img-top" style="height:200px; object-fit:cover;" alt="<%= partner.slika.alt || partner.naziv %>">
+                <% if (partner.slika && partner.slika.url) {
+                     const v = partner.slika.variants || {};
+                     const srcsetParts = [];
+                     if (v.thumb) srcsetParts.push(`${v.thumb} 300w`);
+                     if (v.medium) srcsetParts.push(`${v.medium} 800w`);
+                %>
+                  <img
+                    src="<%= partner.slika.url %>"
+                    <% if (srcsetParts.length > 1) { %>srcset="<%= srcsetParts.join(', ') %>" sizes="(min-width: 768px) 33vw, 100vw"<% } %>
+                    class="card-img-top" style="height:200px; object-fit:cover;" alt="<%= partner.slika.alt || partner.naziv %>" loading="lazy" decoding="async">
                 <% } %>
                 <div class="card-body">
                   <h2 class="h5"><%= partner.naziv %></h2>

@@ -1,13 +1,6 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 import { formatPrice, formatMoney } from "../utils/price.util.js";
-
-function formatImage(image) {
-  if (!image) return null;
-  return {
-    url: image.img || null,
-    alt: image.imgDesc || null,
-  };
-}
+import { formatImage } from "../utils/image-format.util.js";
 
 function getCategoryNames(service) {
   if (!service.categories || !Array.isArray(service.categories)) return [];

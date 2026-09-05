@@ -1,4 +1,5 @@
 import { formatDateTime } from "../utils/date.time.util.js";
+import { formatImage } from "../utils/image-format.util.js";
 
 function getFullName(expert) {
   return `${expert.firstName || ""} ${expert.lastName || ""}`.trim() || "Nepoznato";
@@ -9,14 +10,6 @@ function getServiceNames(expert) {
   return expert.services
     .filter((svc) => svc && typeof svc === "object" && svc.name)
     .map((svc) => svc.name);
-}
-
-function formatImage(image) {
-  if (!image) return null;
-  return {
-    url: image.img || null,
-    alt: image.imgDesc || null,
-  };
 }
 
 export function mapExpertsForAdminList(experts = []) {

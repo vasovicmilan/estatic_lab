@@ -1,11 +1,21 @@
-// {img, imgDesc} (the DB/ImageSchema shape) -> {url, alt} (the display shape every
-// mapper's public output uses). See this file's own comment history for why this
-// isn't (yet) used everywhere - 8 mappers currently keep their own local copy.
+import fileCleanupUtil from "./file-cleanup.util.js";
+
+// {img, imgDesc} (the DB/ImageSchema shape) -> {url, alt, variants} (the display
+// shape every mapper's public output uses). `variants` is the pure/derived
+// {thumb, medium, original} srcset set (see getResponsiveImageUrls below) -
+// safe to include unconditionally here (no fs check) because every image that
+// went through multer.config.js's handleImageUpload got all three variants
+// written together, atomically, on upload; there's no real-world case of an
+// uploaded image missing a sibling. (The one exception - a manually-placed
+// fallback file with no multer-generated siblings - is SiteSettings' hard-
+// coded DEFAULT_HERO_IMAGE, which is why site-settings.service.js additionally
+// runs getVerifiedResponsiveImageUrls below instead of trusting this blindly.)
 export function formatImage(image) {
   if (!image) return null;
   return {
     url: image.img || null,
     alt: image.imgDesc || null,
+    variants: getResponsiveImageUrls(image.img || null),
   };
 }
 
@@ -39,4 +49,21 @@ export function getResponsiveImageUrls(url) {
   };
 }
 
-export default { formatImage, getImageVariantUrl, getResponsiveImageUrls };
+// Same as getResponsiveImageUrls, but additionally checks each derived
+// variant actually exists on disk (via file-cleanup.util.js's imageFileExists)
+// before handing it back, nulling out anything missing instead of leaving a
+// srcset candidate that would 404. Slower (one fs.existsSync per variant) -
+// only worth it for the one place that DOESN'T have multer's atomic-upload
+// guarantee: SiteSettings' hard-coded DEFAULT_HERO_IMAGE fallback (see
+// formatImage's comment above). Card mappers should keep using formatImage's
+// built-in `variants` instead of calling this.
+export function getVerifiedResponsiveImageUrls(url) {
+  const variants = getResponsiveImageUrls(url);
+  return {
+    thumb: fileCleanupUtil.imageFileExists(variants.thumb) ? variants.thumb : null,
+    medium: fileCleanupUtil.imageFileExists(variants.medium) ? variants.medium : null,
+    original: fileCleanupUtil.imageFileExists(variants.original) ? variants.original : null,
+  };
+}
+
+export default { formatImage, getImageVariantUrl, getResponsiveImageUrls, getVerifiedResponsiveImageUrls };

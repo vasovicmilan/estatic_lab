@@ -2,6 +2,7 @@ import { formatDateTime } from "../utils/date.time.util.js";
 import { decryptPhone } from "../utils/phone.util.js";
 import { decryptAddress } from "../utils/address.util.js";
 import { formatMoney } from "../utils/price.util.js";
+import { formatImage } from "../utils/image-format.util.js";
 
 export function translateStatus(status) {
   const map = {
@@ -20,11 +21,6 @@ export function translateStatus(status) {
 function translateActor(actor) {
   const map = { user: "Korisnik", admin: "Administrator" };
   return map[actor] || actor;
-}
-
-function formatImage(image) {
-  if (!image) return null;
-  return { url: image.img || null, alt: image.imgDesc || null };
 }
 
 function getUserName(order) {

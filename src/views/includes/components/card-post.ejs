@@ -1,6 +1,14 @@
 <a href="/blog/<%= post.slug %>" class="card h-100 shadow-sm text-decoration-none text-dark hover-lift">
-  <% if (post.slika && post.slika.url) { %>
-    <img src="<%= post.slika.url %>" class="card-img-top post-card-img" alt="<%= post.slika.alt || post.naslov %>" loading="lazy" decoding="async">
+  <% if (post.slika && post.slika.url) {
+       const v = post.slika.variants || {};
+       const srcsetParts = [];
+       if (v.thumb) srcsetParts.push(`${v.thumb} 300w`);
+       if (v.medium) srcsetParts.push(`${v.medium} 800w`);
+  %>
+    <img
+      src="<%= post.slika.url %>"
+      <% if (srcsetParts.length > 1) { %>srcset="<%= srcsetParts.join(', ') %>" sizes="(min-width: 768px) 33vw, 100vw"<% } %>
+      class="card-img-top post-card-img" alt="<%= post.slika.alt || post.naslov %>" loading="lazy" decoding="async">
   <% } %>
   <div class="card-body d-flex flex-column">
     <div class="small text-muted mono mb-1"><%= post.datumObjave %> &middot; <%= post.vremeCitanja %></div>

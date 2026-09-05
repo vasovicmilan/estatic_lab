@@ -2,6 +2,7 @@ import { formatDateTime, formatDate } from "../utils/date.time.util.js";
 import { decryptPhone } from "../utils/phone.util.js";
 import { decryptAddress } from "../utils/address.util.js";
 import { DEFAULT_SHIPPING_PRICE } from "../config/shop.config.js";
+import { formatImage } from "../utils/image-format.util.js";
 
 function getFullName(user) {
   return `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Nepoznato";
@@ -151,11 +152,6 @@ export function mapUserAddresses(user) {
       };
     })
     .filter(Boolean);
-}
-
-function formatImage(image) {
-  if (!image) return null;
-  return { url: image.img || null, alt: image.imgDesc || null };
 }
 
 // cart.product needs to already be populated (see user.service.js's getCart) - the

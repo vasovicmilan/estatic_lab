@@ -1,6 +1,14 @@
 <div class="card h-100 shadow-sm <%= pkg.najbolji ? 'border-primary' : '' %>">
-  <% if (pkg.slika && pkg.slika.url) { %>
-    <img src="<%= pkg.slika.url %>" class="card-img-top package-card-img" alt="<%= pkg.slika.alt || pkg.naziv %>" loading="lazy" decoding="async">
+  <% if (pkg.slika && pkg.slika.url) {
+       const v = pkg.slika.variants || {};
+       const srcsetParts = [];
+       if (v.thumb) srcsetParts.push(`${v.thumb} 300w`);
+       if (v.medium) srcsetParts.push(`${v.medium} 800w`);
+  %>
+    <img
+      src="<%= pkg.slika.url %>"
+      <% if (srcsetParts.length > 1) { %>srcset="<%= srcsetParts.join(', ') %>" sizes="(min-width: 768px) 33vw, 100vw"<% } %>
+      class="card-img-top package-card-img" alt="<%= pkg.slika.alt || pkg.naziv %>" loading="lazy" decoding="async">
   <% } %>
   <div class="card-body d-flex flex-column">
     <% if (pkg.najbolji || pkg.oznaka) { %>

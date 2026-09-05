@@ -48,10 +48,14 @@ describe("expert.mapper", () => {
   });
 
   describe("image formatting", () => {
-    it("maps gallery images to {url, alt} pairs", () => {
+    it("maps gallery images to {url, alt, variants} entries", () => {
       const expert = buildExpert({ gallery: [{ img: "/images/experts/a.webp", imgDesc: "Slika A" }] });
       const mapped = mapExpertForAdminDetail(expert);
-      assert.deepEqual(mapped.galerija[0], { url: "/images/experts/a.webp", alt: "Slika A" });
+      assert.deepEqual(mapped.galerija[0], {
+        url: "/images/experts/a.webp",
+        alt: "Slika A",
+        variants: { thumb: null, medium: null, original: null },
+      });
     });
 
     it("returns null for a missing main image", () => {

@@ -1,4 +1,5 @@
 import { formatDateTime, formatDate } from "../utils/date.time.util.js";
+import { formatImage } from "../utils/image-format.util.js";
 
 function getDisplayName(testimonial) {
   if (testimonial.name) return testimonial.name;
@@ -21,13 +22,6 @@ function translateStatus(status) {
   return map[status] || status;
 }
 
-function formatImage(image) {
-  if (!image) return null;
-  return {
-    url: image.img || null,
-    alt: image.imgDesc || null,
-  };
-}
 
 function getAvatar(testimonial) {
   const own = formatImage(testimonial.image);

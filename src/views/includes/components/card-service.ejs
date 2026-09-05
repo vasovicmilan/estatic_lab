@@ -1,8 +1,16 @@
 <div class="card h-100 shadow-sm hover-lift position-relative">
   <% const isEsma = service.kategorije && service.kategorije.some(function(k) { return String(k).toUpperCase() === "ESMA"; }); %>
-  <% if (service.slika && service.slika.url) { %>
+  <% if (service.slika && service.slika.url) {
+       const v = service.slika.variants || {};
+       const srcsetParts = [];
+       if (v.thumb) srcsetParts.push(`${v.thumb} 300w`);
+       if (v.medium) srcsetParts.push(`${v.medium} 800w`);
+  %>
     <div class="position-relative">
-      <img src="<%= service.slika.url %>" class="card-img-top service-card-img" alt="<%= service.slika.alt || service.naziv %>" loading="lazy" decoding="async">
+      <img
+        src="<%= service.slika.url %>"
+        <% if (srcsetParts.length > 1) { %>srcset="<%= srcsetParts.join(', ') %>" sizes="(min-width: 768px) 33vw, 100vw"<% } %>
+        class="card-img-top service-card-img" alt="<%= service.slika.alt || service.naziv %>" loading="lazy" decoding="async">
       <% if (service.istaknuto) { %>
         <span class="position-absolute top-0 start-0 m-3 badge text-bg-light">Istaknuto</span>
       <% } %>
