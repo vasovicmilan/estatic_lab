@@ -39,7 +39,9 @@ export async function getBlogCategoryData(categorySlug, { limit = 9, page = 1 } 
     title: `${category.name} | Blog | Estetik Lab`,
     description: category.shortDescription || `Pročitajte sve blog objave iz kategorije ${category.name}.`,
     canonical: page > 1 ? `/blog/kategorija/${category.slug}?page=${page}` : `/blog/kategorija/${category.slug}`,
-    isIndexable: true,
+    // Prazna kategorija (0 objava) nema šta da ponudi crawleru - noindex dok se ne
+    // popuni, umesto da trajno visi kao thin-content stranica u indeksu.
+    isIndexable: posts.total > 0,
   });
 
   return {
@@ -68,7 +70,8 @@ export async function getBlogTagData(tagSlug, { limit = 9, page = 1 } = {}) {
     title: `#${tag.name} | Blog | Estetik Lab`,
     description: tag.description || `Blog objave označene sa ${tag.name}.`,
     canonical: page > 1 ? `/blog/tag/${tag.slug}?page=${page}` : `/blog/tag/${tag.slug}`,
-    isIndexable: true,
+    // Isti princip kao kod kategorija - prazan tag (0 objava) se ne indeksira.
+    isIndexable: posts.total > 0,
   });
 
   return {

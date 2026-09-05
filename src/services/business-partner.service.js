@@ -74,11 +74,13 @@ export async function deleteBusinessPartnerById(partnerId) {
 
 export async function listPublicBusinessPartners() {
   const partners = await businessPartnerRepo.findActiveBusinessPartners();
+  // Dok nema okačenih saradnika, stranica nema realan sadržaj za crawler - noindex
+  // privremeno; čim se doda prvi aktivan saradnik, automatski postaje index, follow.
   const seo = buildPageSeo({
     title: "Naši saradnici | Estetik Lab",
     description: "Upoznajte poslovne saradnike i partnere sa kojima sarađujemo.",
     canonical: "/saradnici",
-    isIndexable: true,
+    isIndexable: partners.length > 0,
     type: "website",
   });
   return { data: mapBusinessPartnersForPublicList(partners), seo };

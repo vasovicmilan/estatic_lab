@@ -65,6 +65,8 @@ export async function serviceCategory(req, res, next) {
       req.query,
       { categories, tags, totalCount }
     );
+    // Dopisano pre generateSeo da category.builder.js može da noindex-uje prazne kategorije.
+    category.itemCount = result.total;
     const seo = await generateSeo("category", category, req);
     const itemList = buildItemListJsonLd(req, result.data.map((s) => ({ name: s.naziv, path: `/usluge/${s.slug}` })));
     if (itemList) seo.jsonLd = [...(seo.jsonLd || []), itemList];

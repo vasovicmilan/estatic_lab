@@ -5,7 +5,11 @@ export async function buildCategorySeo(category, req, siteConfig = {}) {
   const siteName = siteConfig.siteName || "Estetik Lab";
   const title = category.name ? `${escape(category.name)} | ${siteName}` : siteName;
   const description = truncate(category.shortDescription || category.longDescription || siteConfig.defaultDescription || "");
-  const robots = category.meta?.isActive !== false && category.isIndexable !== false ? "index, follow" : "noindex, follow";
+  // itemCount je opciono polje koje kontroler dopisuje pre poziva generateSeo("category", ...)
+  // (broj usluga/proizvoda/objava u toj kategoriji). Ako je eksplicitno 0, kategorija je
+  // trenutno prazna - noindex dok se ne popuni, umesto da trajno visi kao thin content.
+  const isEmpty = category.itemCount === 0;
+  const robots = category.meta?.isActive !== false && category.isIndexable !== false && !isEmpty ? "index, follow" : "noindex, follow";
 
   const basePath =
     category.domain === "post"
