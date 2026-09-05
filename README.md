@@ -39,6 +39,8 @@ Hero image, booking policy (appointment buffer, cancellation/reschedule windows)
 
 Node.js · Express 5 · MongoDB / Mongoose 9 · EJS · Bootstrap 5
 
+CSS/ikonice se ne serviraju direktno iz `node_modules` - `npm run build:css` (Sass + esbuild) pravi prilagođen, minifikovan Bootstrap build, a `npm run build:icons` (Python `fonttools`) seče Bootstrap Icons font na samo iskorišćene ikonice. Videti [`DEPLOYMENT.md`](DEPLOYMENT.md) za detalje i tačan redosled.
+
 ## Testing
 
 Three layers: unit (mocked dependencies), integration (real HTTP requests against an in-memory MongoDB), and E2E (Playwright, real browser against a real running server). Latest run: **2,224/2,224** unit and integration tests, **25/25** E2E tests. See `docs/en/12-testing.md` / `docs/sr/12-testiranje.md`.

@@ -9,8 +9,37 @@ Pretpostavlja se već postojeća infrastruktura (server, Node.js, MongoDB, PM2, 
 ```bash
 git clone <repo-url> <klijent-folder>
 cd <klijent-folder>
-npm install --production
+npm install
 ```
+
+**Napomena:** koristi običan `npm install`, **ne** `npm install --production`. CSS/ikonice build (korak 1.5 ispod) zahteva `sass` i `esbuild`, koji su `devDependencies` - `--production` bi ih preskočio i build bi pukao. Ovi paketi se koriste samo pri build-u, ne u runtime-u servera, pa nema štete od toga što ostaju instalirani na produkciji.
+
+## 1.5. Build CSS i ikonica (obavezno, posle svakog `npm install` i posle svake izmene `.scss`/`.css`/ikonica)
+
+Sajt ne servira Bootstrap/Bootstrap Icons direktno iz `node_modules` - umesto punog paketa, build koraci prave prilagođen, mnogo manji CSS/font specifično za ono što se stvarno koristi u kodu. Bez ovog koraka, `<head>` referencira fajlove koji ne postoje (`src/public/css/bootstrap.custom.min.css`, `app.min.css`, `bootstrap-icons.subset.css`, `src/public/fonts/bootstrap-icons.subset.woff2`) i sajt će raditi bez stilova.
+
+**Jednokratno po serveru** - `build:icons` koristi Python alat `fonttools` (`pyftsubset`) za sečenje Bootstrap Icons fonta na samo iskorišćene ikonice:
+
+```bash
+pip install fonttools brotli --break-system-packages
+```
+
+Ako `pip` upozori da `pyftsubset` nije u `PATH`-u (`~/.local/bin` nije dodat), dodaj ga jednom:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+which pyftsubset   # treba da vrati putanju, ne prazno
+```
+
+**Sam build** (posle svakog `npm install` i posle svake izmene stilova/ikonica):
+
+```bash
+npm run build:css     # custom Bootstrap build (src/assets/scss/custom-bootstrap.scss) + minifikovan app.min.css
+npm run build:icons   # subset Bootstrap Icons font (src/public/fonts/bootstrap-icons.subset.woff2 + prateći CSS)
+```
+
+Izlazni fajlovi se **ne commit-uju u git** (vidi `.gitignore`) - moraju se generisati na svakom serveru/deployment-u posebno. Ako dodaš novu `bi-*` ikonicu klasu bilo gde u `src/views` ili `src/public/js/main.js`, moraš ponovo pokrenuti `npm run build:icons`, inače će ta ikonica nedostajati iz font-a.
 
 ## 2. Environment promenljive
 
@@ -75,11 +104,28 @@ Sledeće **trenutno zahteva ručnu izmenu koda** pre nego što ide u produkciju 
 - `src/config/business.config.js` - naziv, adresa, telefon, društvene mreže (koristi se za kontakt stranicu i JSON-LD strukturirane podatke)
 - `BASE_URL` fallback stringovi u par fajlova (`cors.config.js`, `google-calendar.service.js`, `telegram.listener.js`, itd.) - ovo su samo fallback vrednosti ako `.env`-ov `BASE_URL` nedostaje, pa retko stvarno bitno ako je `.env` popunjen ispravno, ali vredi ih uskladiti
 
+## Ažuriranje postojeće produkcije (npr. beautymedica.rs)
+
+Ovo poglavlje je za **redovno ažuriranje već pokrenutog deployment-a** (ne za podizanje novog klijenta) - standardan tok kad se primenjuje nova izmena koda:
+
+```bash
+cd <postojeci-folder>
+npm install            # ako je package.json promenjen (nova zavisnost)
+npm test                # obavezno pre restart-a
+npm run build:css       # ako je bilo koja .scss/.css izmena
+npm run build:icons     # ako je dodata/uklonjena bi-* ikonica bilo gde
+pm2 restart <ime-procesa>
+```
+
+`npm run build:css`/`build:icons` su bezopasni da se pokrenu i kad ništa nije promenjeno (samo ponovo generišu iste fajlove) - u slučaju sumnje, pokreni oba. Preskačeš ih jedino ako si siguran da izmena ne dodiruje CSS/ikonice.
+
 ## Provera pre lansiranja
 
 ```bash
+npm run build:css     # ako nije već pokrenuto u koraku 1.5
+npm run build:icons   # ako nije već pokrenuto u koraku 1.5
 npm test              # unit + integration testovi
 npx playwright test   # E2E testovi
 ```
 
-Oba treba da prođu na svežem clone-u pre nego što se deployment smatra spremnim.
+Sve četiri komande treba da prođu bez greške na svežem clone-u pre nego što se deployment smatra spremnim. Bez prve dve, sajt će raditi bez stilova (vidi korak 1.5).
