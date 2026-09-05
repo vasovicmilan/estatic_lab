@@ -21,16 +21,31 @@ export const BUSINESS = {
   // Canonical site origin - single source of truth for every "BASE_URL" that used
   // to be redefined with its own fallback in ~10 separate files (email.service.js,
   // seo/index.js, cors.config.js, campaign.service.js, google-calendar.service.js,
-  // telegram.listener.js, partner-account controller/presenter...). All of those
-  // fell back to "https://beautymedica.rs" (no www) whenever BASE_URL wasn't set
-  // in the environment - which is exactly why static-page canonical/og:url tags
-  // (home, /o-nama, /kontakt, /saradnici, /blog listing) pointed at the bare
-  // apex domain while entity pages (built from req.protocol+req.get('host'))
-  // pointed at www, whichever a visitor actually used. www is the form that's
-  // known-good (see the apex-domain bot-detection investigation), so that's
-  // the default now. Still overridable via the BASE_URL env var if the canonical
-  // domain ever changes.
-  siteUrl: process.env.BASE_URL || "https://www.beautymedica.rs",
+  // telegram.listener.js, partner-account controller/presenter...).
+  //
+  // DECISION (confirmed by site owner): beautymedica.rs (bare, no www) is the
+  // registered/intended domain. www is kept only as a DNS alias that must
+  // redirect to the bare domain at the edge (Cloudflare Redirect Rule +
+  // nginx server block, both outside this codebase) - it should never be
+  // the canonical form.
+  //
+  // NOTE: this used to default to the www form after a prior investigation
+  // into the bare apex domain occasionally getting bot-detection-style
+  // challenges from an external fetch tool. That was very likely a
+  // Cloudflare-level challenge (Bot Fight Mode / WAF) unrelated to this
+  // codebase's own isLikelyBot() check (utils/bot-detection.util.js), which
+  // only inspects User-Agent and has no host/domain logic at all - and both
+  // beautymedica.rs and www.beautymedica.rs are Proxied (orange-cloud) through
+  // the same Cloudflare zone, so neither form has a structural reliability
+  // difference. Reverted to the bare domain per the owner's explicit call.
+  //
+  // Entity pages (usluge/prodavnica/paketi/blog post) build their canonical
+  // from req.protocol + req.get("host") (see seo/utils.seo.js buildCanonical),
+  // NOT from this value - so this fix only holds if the edge (Cloudflare +
+  // nginx) always redirects www -> bare before the request reaches Node.
+  // Without that edge redirect, a crawler hitting www directly would still
+  // get a self-referencing www canonical on catalog pages.
+  siteUrl: process.env.BASE_URL || "https://beautymedica.rs",
 
   // Not yet registered as a legal entity (paušalac registration pending -
   // see internal notes). Left null on purpose rather than a placeholder
