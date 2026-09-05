@@ -20,16 +20,15 @@ export function setupStatic(app) {
   // src/assets/scss/custom-bootstrap.scss) - it's already served by the
   // express.static(...public...) line above like any other public asset.
 
+  // Note: no /bootstrap-icons route anymore either. The full bootstrap-icons
+  // font (134 KiB woff2 for ~2000 icons) was replaced by a subset containing
+  // only the 71 glyphs actually used (see npm run build:icons and
+  // scripts/build-icon-subset.mjs) - already served by the express.static(...
+  // public...) line above like any other public asset.
+
   app.use(
     "/bootstrap/js",
     express.static(path.join(__dirname, "..", "..", "node_modules", "bootstrap", "dist", "js"), {
-      maxAge: isProd ? "30d" : 0,
-    })
-  );
-
-  app.use(
-    "/bootstrap-icons",
-    express.static(path.join(__dirname, "..", "..", "node_modules", "bootstrap-icons", "font"), {
       maxAge: isProd ? "30d" : 0,
     })
   );

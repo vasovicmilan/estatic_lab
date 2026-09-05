@@ -10,6 +10,7 @@
     "start": "NODE_ENV=production node src/server.js",
     "start-dev": "NODE_ENV=development nodemon src/server.js",
     "build:css": "sass --quiet-deps --style=compressed --no-source-map src/assets/scss/custom-bootstrap.scss:src/public/css/bootstrap.custom.min.css && esbuild --bundle --minify --loader:.css=css --outfile=src/public/css/app.min.css src/assets/css/app-entry.css",
+    "build:icons": "node scripts/build-icon-subset.mjs",
     "test": "node --env-file=.env.test --test \"test/unit/**/*.test.js\" \"test/integration/**/*.test.js\"",
     "test:watch": "node --env-file=.env.test --test --watch \"test/unit/**/*.test.js\" \"test/integration/**/*.test.js\"",
     "test:coverage": "node --env-file=.env.test --test --experimental-test-coverage \"test/unit/**/*.test.js\" \"test/integration/**/*.test.js\"",
