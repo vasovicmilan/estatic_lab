@@ -14,17 +14,17 @@ describe("prepareServiceListData", () => {
   });
 
   it("computes stats from the actual totalCount and category count passed in", () => {
-    const view = prepareServiceListData({ data: [], page: 1, totalPages: 1 }, { totalCount: 12, categories: [{ naziv: "Masaze", slug: "masaze" }] });
+    const view = prepareServiceListData({ data: [], page: 1, totalPages: 1 }, { totalCount: 12, categories: [{ id: "c1", naziv: "Masaze", slug: "masaze", parent: null }] });
 
     assert.equal(view.stats[0].value, 12);
     assert.equal(view.stats[1].value, 1);
   });
 
   it("marks the 'all services' tab active when no category filter is applied", () => {
-    const view = prepareServiceListData({ data: [], page: 1, totalPages: 1 }, { categories: [{ naziv: "Masaze", slug: "masaze" }] });
+    const view = prepareServiceListData({ data: [], page: 1, totalPages: 1 }, { categories: [{ id: "c1", naziv: "Masaze", slug: "masaze", parent: null }] });
 
-    assert.equal(view.categoryTabs[0].active, true);
-    assert.equal(view.categoryTabs[1].active, false);
+    assert.equal(view.categoryTabRows[0][0].active, true);
+    assert.equal(view.categoryTabRows[0][1].active, false);
   });
 
   it("marks no tag chip active on the plain listing", () => {
@@ -36,12 +36,12 @@ describe("prepareServiceListData", () => {
 describe("prepareServiceCategoryData", () => {
   it("marks the current category's tab active", () => {
     const categories = [
-      { naziv: "Masaze", slug: "masaze" },
-      { naziv: "Nega lica", slug: "nega-lica" },
+      { id: "c1", naziv: "Masaze", slug: "masaze", parent: null },
+      { id: "c2", naziv: "Nega lica", slug: "nega-lica", parent: null },
     ];
-    const view = prepareServiceCategoryData({ naziv: "Masaze", slug: "masaze" }, { data: [], page: 1, totalPages: 1 }, {}, { categories });
+    const view = prepareServiceCategoryData({ id: "c1", naziv: "Masaze", slug: "masaze" }, { data: [], page: 1, totalPages: 1 }, {}, { categories });
 
-    const active = view.categoryTabs.filter((t) => t.active);
+    const active = view.categoryTabRows[0].filter((t) => t.active);
     assert.equal(active.length, 1);
     assert.equal(active[0].label, "Masaze");
   });

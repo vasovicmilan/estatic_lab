@@ -146,7 +146,12 @@ export async function countAllActiveServices() {
 // has, so the /usluge filter tabs can show real counts (e.g. "ESMA 5") instead
 // of just labels.
 export async function attachServiceCountsToCategories(categories = []) {
-  const counts = await Promise.all(categories.map((cat) => serviceRepo.countServices({ category: cat.id, isActive: true })));
+  const counts = await Promise.all(
+    categories.map(async (cat) => {
+      const ids = await categoryService.getCategoryAndDescendantIds(cat.id, "service");
+      return serviceRepo.countServices({ category: ids, isActive: true });
+    })
+  );
   return categories.map((cat, index) => ({ ...cat, count: counts[index] }));
 }
 
@@ -316,11 +321,6 @@ export async function listSlugsForSitemap() {
   return serviceRepo.findActiveSlugsForSitemap();
 }
 
-export async function countServicesReferencingPost(postId) {
-  if (!postId) return 0;
-  return serviceRepo.countServicesReferencingPost(postId);
-}
-
 export default {
   listServices,
   getServiceById,
@@ -328,7 +328,6 @@ export default {
   getServiceForEdit,
   getServiceBySlug,
   getServicesForSelect,
-  countServicesReferencingPost,
   findActiveServices,
   findHighlightedServices,
   findServicesByCategorySlug,

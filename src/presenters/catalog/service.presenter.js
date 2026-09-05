@@ -1,3 +1,5 @@
+import { buildCategoryTabRows } from "./category-tabs.util.js";
+
 // Shown only on the plain /usluge listing (no active category/tag filter) -
 // gives the page real, indexable body copy that explains what the services
 // are and how to choose between them, before the visitor starts browsing.
@@ -37,16 +39,13 @@ const SERVICE_LIST_INTRO = {
 // view (plain list, category, and tag pages alike). These are real links to
 // existing routes (not client-side filtering), so every tab is still its own
 // crawlable, bookmarkable page.
-function buildCategoryTabs(categories = [], activeCategorySlug = null, totalCount = 0) {
-  return [
-    { label: "Sve usluge", href: "/usluge", count: totalCount, active: !activeCategorySlug },
-    ...categories.map((cat) => ({
-      label: cat.naziv,
-      href: `/usluge/kategorija/${cat.slug}`,
-      count: cat.count || 0,
-      active: cat.slug === activeCategorySlug,
-    })),
-  ];
+// Groups a flat category list into one chip-row per hierarchy level - see
+// category-tabs.util.js for the full explanation (shared with product.presenter.js).
+function buildServiceCategoryTabRows(categories, activeCategorySlug, totalCount) {
+  return buildCategoryTabRows(categories, activeCategorySlug, totalCount, {
+    basePath: "/usluge/kategorija",
+    allLabel: "Sve usluge",
+  });
 }
 
 // Builds the "search by topic" tag chips shown below the grid on every /usluge
@@ -68,7 +67,7 @@ export function prepareServiceListData(result, { query = {}, categories = [], ta
       { value: totalCount, label: "tretmana" },
       { value: categories.length, label: "kategorija" },
     ],
-    categoryTabs: buildCategoryTabs(categories, null, totalCount),
+    categoryTabRows: buildServiceCategoryTabRows(categories, null, totalCount),
     tagChips: buildTagChips(tags, null),
     pagination: {
       currentPage: result.page,
@@ -85,7 +84,7 @@ export function prepareServiceCategoryData(category, result, query = {}, { categ
     category,
     services: result.data,
     subtitle: `Usluge iz kategorije „${category.naziv}“, birane i izvedene sa istom pažnjom kao i sve ostalo kod nas.`,
-    categoryTabs: buildCategoryTabs(categories, category.slug, totalCount),
+    categoryTabRows: buildServiceCategoryTabRows(categories, category.slug, totalCount),
     tagChips: buildTagChips(tags, null),
     pagination: {
       currentPage: result.page,
@@ -105,7 +104,7 @@ export function prepareServiceTagData(tag, result, query = {}, { categories = []
     tag,
     services: result.data,
     subtitle: `Usluge označene sa „${tag.naziv}“ - pažljivo odabrane da odgovore na ono što vam treba.`,
-    categoryTabs: buildCategoryTabs(categories, null, totalCount),
+    categoryTabRows: buildServiceCategoryTabRows(categories, null, totalCount),
     tagChips: buildTagChips(tags, tag.slug),
     pagination: {
       currentPage: result.page,

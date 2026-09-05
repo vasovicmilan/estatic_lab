@@ -1,3 +1,5 @@
+import { buildCategoryTabRows } from "./category-tabs.util.js";
+
 const SHOP_TRUST = [
   { icon: "bi-truck", title: "Brza dostava", text: "Šaljemo širom Srbije, sa jasno naznačenim rokom isporuke pre potvrde porudžbine." },
   { icon: "bi-patch-check", title: "Originalna oprema", text: "Prodajemo isključivo profesionalnu kozmetičku opremu i rezervne delove koje sami koristimo u radu." },
@@ -40,16 +42,14 @@ const SHOP_FAQ = [
 // Builds the category filter bar shown at the top of every /prodavnica view
 // (plain list, category, and tag pages alike) - same pattern as /usluge:
 // real links to existing routes, not client-side filtering.
-function buildCategoryTabs(categories = [], activeCategorySlug = null, totalCount = 0) {
-  return [
-    { label: "Svi proizvodi", href: "/prodavnica", count: totalCount, active: !activeCategorySlug },
-    ...categories.map((cat) => ({
-      label: cat.naziv,
-      href: `/prodavnica/kategorija/${cat.slug}`,
-      count: cat.count || 0,
-      active: cat.slug === activeCategorySlug,
-    })),
-  ];
+// Groups a flat category list (all categories in the domain, regardless of
+// depth) into one chip-row per hierarchy level - see category-tabs.util.js
+// for the full explanation (shared with service.presenter.js).
+function buildProductCategoryTabRows(categories, activeCategorySlug, totalCount) {
+  return buildCategoryTabRows(categories, activeCategorySlug, totalCount, {
+    basePath: "/prodavnica/kategorija",
+    allLabel: "Svi proizvodi",
+  });
 }
 
 // Builds the "search by topic" tag chips shown below the grid, with the
@@ -75,7 +75,7 @@ export function prepareProductListData(result, { query = {}, categories = [], ta
     search: query.search || "",
     resultCount: result.total,
     intro: isLandingView ? SHOP_INTRO : null,
-    categoryTabs: buildCategoryTabs(categories, null, totalCount),
+    categoryTabRows: buildProductCategoryTabRows(categories, null, totalCount),
     tagChips: buildTagChips(tags, null),
     trust: isLandingView ? SHOP_TRUST : [],
     faq: isLandingView ? SHOP_FAQ : [],
@@ -95,7 +95,7 @@ export function prepareProductCategoryData(category, result, query = {}, { categ
     category,
     products: result.data,
     subtitle: `Proizvodi iz kategorije „${category.naziv}”.`,
-    categoryTabs: buildCategoryTabs(categories, category.slug, totalCount),
+    categoryTabRows: buildProductCategoryTabRows(categories, category.slug, totalCount),
     tagChips: buildTagChips(tags, null),
     pagination: {
       currentPage: result.page,
@@ -115,7 +115,7 @@ export function prepareProductTagData(tag, result, query = {}, { categories = []
     tag,
     products: result.data,
     subtitle: `Proizvodi označeni sa „${tag.naziv}”.`,
-    categoryTabs: buildCategoryTabs(categories, null, totalCount),
+    categoryTabRows: buildProductCategoryTabRows(categories, null, totalCount),
     tagChips: buildTagChips(tags, tag.slug),
     pagination: {
       currentPage: result.page,

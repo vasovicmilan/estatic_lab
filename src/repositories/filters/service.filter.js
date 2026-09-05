@@ -18,7 +18,7 @@ export function buildServiceFilter({
     ];
   }
 
-  if (category) filter.categories = category;
+  if (category) filter.categories = Array.isArray(category) ? { $in: category } : category;
   if (tag) filter.tags = tag;
   // `resources` is an array field (see service.model.js) - Mongo automatically
   // matches a scalar filter value against any element of an array field, so

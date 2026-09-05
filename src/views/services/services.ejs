@@ -52,17 +52,19 @@
 
   <%- include("../includes/components/ritual-divider") %>
 
-  <% if (data.categoryTabs && data.categoryTabs.length > 0) { %>
+  <% if (data.categoryTabRows && data.categoryTabRows.length > 0) { %>
     <nav class="service-filter-bar" aria-label="Filter po kategoriji">
-      <div class="container">
-        <div class="service-filter-scroll py-3">
-          <% data.categoryTabs.forEach(function(tab) { %>
-            <a href="<%= tab.href %>" class="filter-pill <%= tab.active ? 'active' : '' %>">
-              <%= tab.label %>
-              <span class="filter-pill-count">(<%= tab.count %>)</span>
-            </a>
-          <% }) %>
-        </div>
+      <div class="container d-flex flex-column gap-2 py-3">
+        <% data.categoryTabRows.forEach(function(row, rowIndex) { %>
+          <div class="service-filter-scroll <%= rowIndex > 0 ? 'ps-3 border-start' : '' %>">
+            <% row.forEach(function(tab) { %>
+              <a href="<%= tab.href %>" class="filter-pill <%= rowIndex > 0 ? 'filter-pill-sub' : '' %> <%= tab.active ? 'active' : '' %>">
+                <%= tab.label %>
+                <span class="filter-pill-count">(<%= tab.count %>)</span>
+              </a>
+            <% }) %>
+          </div>
+        <% }) %>
       </div>
     </nav>
   <% } %>
@@ -106,6 +108,18 @@
       </div>
     <% } %>
   </div>
+
+  <% if (data.category && data.category.contentBlocks && data.category.contentBlocks.length > 0) { %>
+    <section class="bg-white border-top py-5">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-9 category-landing-content">
+            <%- include("../includes/components/content-blocks-render", { blocks: data.category.contentBlocks }) %>
+          </div>
+        </div>
+      </div>
+    </section>
+  <% } %>
 
   <% if (data.intro) { %>
     <section class="cta-section py-5 text-white text-center">

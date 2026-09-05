@@ -43,23 +43,29 @@
 
   <%- include("../includes/components/ritual-divider") %>
 
-  <% if (data.categoryTabs && data.categoryTabs.length > 0) { %>
+  <% if (data.categoryTabRows && data.categoryTabRows.length > 0) { %>
     <nav class="service-filter-bar" aria-label="Filter po kategoriji">
-      <div class="container d-flex flex-wrap align-items-center justify-content-between gap-3 py-3">
-        <div class="service-filter-scroll flex-grow-1">
-          <% data.categoryTabs.forEach(function(tab) { %>
-            <a href="<%= tab.href %>" class="filter-pill <%= tab.active ? 'active' : '' %>">
-              <%= tab.label %>
-              <span class="filter-pill-count">(<%= tab.count %>)</span>
-            </a>
-          <% }) %>
-        </div>
-        <form action="/prodavnica" method="GET" role="search" class="shop-search-form">
-          <div class="input-group">
-            <input type="search" name="search" class="form-control" placeholder="Pretraži proizvode..." aria-label="Pretraži proizvode" value="<%= data.search || '' %>">
-            <button type="submit" class="btn btn-primary" aria-label="Pretraži"><i class="bi bi-search" aria-hidden="true"></i></button>
+      <div class="container d-flex flex-column gap-2 py-3">
+        <% data.categoryTabRows.forEach(function(row, rowIndex) { %>
+          <div class="d-flex flex-wrap align-items-center gap-3 <%= rowIndex > 0 ? 'ps-3 border-start' : '' %>">
+            <div class="service-filter-scroll flex-grow-1">
+              <% row.forEach(function(tab) { %>
+                <a href="<%= tab.href %>" class="filter-pill <%= rowIndex > 0 ? 'filter-pill-sub' : '' %> <%= tab.active ? 'active' : '' %>">
+                  <%= tab.label %>
+                  <span class="filter-pill-count">(<%= tab.count %>)</span>
+                </a>
+              <% }) %>
+            </div>
+            <% if (rowIndex === 0) { %>
+              <form action="/prodavnica" method="GET" role="search" class="shop-search-form">
+                <div class="input-group">
+                  <input type="search" name="search" class="form-control" placeholder="Pretraži proizvode..." aria-label="Pretraži proizvode" value="<%= data.search || '' %>">
+                  <button type="submit" class="btn btn-primary" aria-label="Pretraži"><i class="bi bi-search" aria-hidden="true"></i></button>
+                </div>
+              </form>
+            <% } %>
           </div>
-        </form>
+        <% }) %>
       </div>
     </nav>
   <% } %>

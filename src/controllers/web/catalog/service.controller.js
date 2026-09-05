@@ -36,6 +36,8 @@ export async function serviceList(req, res, next) {
   }
 }
 
+import { renderContentBlocks } from "../../../utils/content-blocks.util.js";
+
 export async function serviceCategory(req, res, next) {
   try {
     const { categorySlug } = req.params;
@@ -48,9 +50,21 @@ export async function serviceCategory(req, res, next) {
       serviceService.countAllActiveServices(),
     ]);
     const categories = await serviceService.attachServiceCountsToCategories(categoriesRaw);
-    const result = await serviceService.findActiveServices({ page: parseInt(page, 10) || 1, filters: { category: category._id } });
+    const categoryIds = await categoryService.getCategoryAndDescendantIds(category._id, "service");
+    const result = await serviceService.findActiveServices({ page: parseInt(page, 10) || 1, filters: { category: categoryIds } });
 
-    const viewData = prepareServiceCategoryData({ id: category._id.toString(), naziv: category.name, slug: category.slug, description: category.shortDescription || "" }, result, req.query, { categories, tags, totalCount });
+    const viewData = prepareServiceCategoryData(
+      {
+        id: category._id.toString(),
+        naziv: category.name,
+        slug: category.slug,
+        description: category.shortDescription || "",
+        contentBlocks: renderContentBlocks(category.content),
+      },
+      result,
+      req.query,
+      { categories, tags, totalCount }
+    );
     const seo = await generateSeo("category", category, req);
     const itemList = buildItemListJsonLd(req, result.data.map((s) => ({ name: s.naziv, path: `/usluge/${s.slug}` })));
     if (itemList) seo.jsonLd = [...(seo.jsonLd || []), itemList];

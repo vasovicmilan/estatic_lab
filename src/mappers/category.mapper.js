@@ -109,6 +109,9 @@ export function mapCategoryForPublic(category) {
     naziv: category.name,
     slug: category.slug,
     domen: category.domain,
+    // needed to group a flat category list into hierarchy tiers for the shop's
+    // category chip navigation (see product.presenter.js's buildCategoryTabRows)
+    parent: category.parent?._id?.toString() || category.parent?.toString() || null,
     kratakOpis: category.shortDescription || null,
     slika: category.featureImage?.img || null,
     slikaOpis: category.featureImage?.imgDesc || null,
