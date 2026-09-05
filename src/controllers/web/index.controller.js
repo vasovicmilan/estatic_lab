@@ -6,8 +6,9 @@ import {
   prepareAboutPageData,
   preparePartnershipPageData,
   prepareContactPageData,
+  prepareFaqPageData,
 } from "../../presenters/public/index.presenter.js";
-import { buildWebsiteJsonLd } from "../../seo/utils.seo.js";
+import { buildWebsiteJsonLd, buildFaqPageJsonLd } from "../../seo/utils.seo.js";
 import { logError, logWarn, logInfo } from "../../utils/logger.util.js";
 import { flashAndRedirect } from "../../utils/flash.util.js";
 import { getCapturedReferralCode } from "../../middlewares/coupon-capture.middleware.js";
@@ -36,6 +37,7 @@ export async function aboutPage(req, res, next) {
     const serviceData = await indexService.getAboutPageData();
     return res.render("public/_page", {
       pageTitle: serviceData.seo.pageTitle,
+      pageHeading: "O nama",
       pageDescription: serviceData.seo.pageDescription,
       seo: serviceData.seo,
       showLegalContent: true,
@@ -67,6 +69,7 @@ export async function privacyPage(req, res, next) {
     const serviceData = await indexService.getPrivacyPolicyPageData();
     return res.render("public/_page", {
       pageTitle: serviceData.seo.pageTitle,
+      pageHeading: "Politika privatnosti",
       pageDescription: serviceData.seo.pageDescription,
       seo: serviceData.seo,
       showLegalContent: true,
@@ -83,6 +86,7 @@ export async function termsPage(req, res, next) {
     const serviceData = await indexService.getTermsAndConditionsPageData();
     return res.render("public/_page", {
       pageTitle: serviceData.seo.pageTitle,
+      pageHeading: "Uslovi korišćenja",
       pageDescription: serviceData.seo.pageDescription,
       seo: serviceData.seo,
       showLegalContent: true,
@@ -97,12 +101,21 @@ export async function termsPage(req, res, next) {
 export async function faqPage(req, res, next) {
   try {
     const serviceData = await indexService.getFaqPageData();
+    const faqData = prepareFaqPageData();
+    // FAQPage rich-result eligibility - built here (controller layer) rather
+    // than in the service, since getFaqPageData() intentionally stays
+    // presentation-agnostic (SEO metadata only) and prepareFaqPageData()'s
+    // static content lives in the presenter - the controller is what already
+    // combines both for every other page in this file (see buildWebsiteJsonLd
+    // usage in homePage above).
+    serviceData.seo.jsonLd = [...(serviceData.seo.jsonLd || []), buildFaqPageJsonLd(faqData.items)].filter(Boolean);
     return res.render("public/_page", {
       pageTitle: serviceData.seo.pageTitle,
+      pageHeading: "Česta pitanja",
       pageDescription: serviceData.seo.pageDescription,
       seo: serviceData.seo,
       showFaq: true,
-      data: {},
+      data: faqData,
     });
   } catch (error) {
     logError("[faqPage] Greška pri učitavanju FAQ stranice", error);

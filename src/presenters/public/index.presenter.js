@@ -52,7 +52,7 @@ const GOOGLE_DATA_NOTICE = {
 export function prepareAboutPageData() {
   return {
     intro:
-      "Estetik Lab je kozmetički i wellness centar u Novom Sadu koji spaja stručne tretmane, prodaju profesionalne opreme i uređaja, i pažljiv, individualni pristup svakom klijentu.",
+      "Estetik Lab je kozmetički i wellness centar u Novom Sadu, u širem centru grada u blizini Spensa - koji spaja stručne tretmane, prodaju profesionalne opreme i uređaja, i pažljiv, individualni pristup svakom klijentu.",
     contact: LEGAL_CONTACT,
     sections: [
       {
@@ -72,9 +72,16 @@ export function prepareAboutPageData() {
           "Estetik Lab danas stoji na tri noge, ne samo na tretmanima:",
         ],
         list: [
-          "<strong>Tretmani u salonu</strong> - masaže, nega lica i tela, i estetski tretmani na profesionalnoj ESMA Favorit opremi (miostimulacija, limfna drenaža, mikrostrujni lifting, laserska biorevitalizacija)",
-          "<strong>Prodaja profesionalne opreme i uređaja</strong> - kozmetička oprema, uređaji, rezervni delovi i potrošni materijal iz naše <a href=\"/prodavnica\">prodavnice</a>, za profesionalnu upotrebu",
-          "<strong>Proizvodi za negu</strong> - asortiman koji dopunjuje tretmane i planiramo da ga vremenom proširimo",
+          "<strong>Tretmani u salonu</strong> - masaže i estetski tretmani na profesionalnoj ESMA Favorit opremi (miostimulacija, limfna drenaža, mikrostrujni lifting, laserska biorevitalizacija) za negu lica i tela. Ponudu smo proširili i na HIFU lifting lica i tela, na novom profesionalnom uređaju u našem centru.",
+          "<strong>Prodaja profesionalne opreme i uređaja</strong> - kroz naš Fotromed brend nudimo salonima i klinikama profesionalnu estetsku opremu (uključujući HIFU sisteme, laser i druge tehnologije), rezervne delove i potrošni materijal iz naše <a href=\"/prodavnica\">prodavnice</a>, nezavisno od tretmana koje izvodimo klijentima u našem centru.",
+          "<strong>Proizvodi za negu</strong> - u prodavnici nudimo i HL/Skin, liniju za kućnu negu kože inspirisanu korejskom naukom o nezi kože (čišćenje, tretman, hidratacija u nekoliko jednostavnih koraka), kao dopunu tretmanima u salonu",
+        ],
+      },
+      {
+        title: "Gde se nalazimo",
+        paragraphs: [
+          "Nalazimo se na adresi Maksima Gorkog 6b, u širem centru Novog Sada - u neposrednoj blizini Spensa, Promenade i zgrade suda (Palate pravde), pa nam lako pristupite bilo da dolazite iz centra grada ili okolnih naselja.",
+          "Parking je dostupan sa svih strana zgrade - u plavoj i crvenoj zoni neposredno ispred ulaza, kao i u plavoj zoni kod Spensa u blizini Promenade. Radno vreme: 10:00 - 22:00.",
         ],
       },
       {
@@ -91,6 +98,7 @@ export function prepareAboutPageData() {
           "Sertifikovani terapeuti sa iskustvom u masaži i estetskim tretmanima",
           "Individualni pristup - svaki tretman prilagođavamo vašoj koži, telu i cilju",
           "Opuštajući, miran i negovan ambijent osmišljen za pravi predah od svakodnevice",
+          "Lokacija u širem centru Novog Sada, blizu Spensa i Promenade - lako dostupna bez obzira odakle dolazite",
           "Ista pažnja i kada kupujete opremu ili uređaje iz naše prodavnice, ne samo kada zakazujete tretman",
         ],
       },
@@ -99,6 +107,78 @@ export function prepareAboutPageData() {
         paragraphs: [
           "Iza svakog tretmana stoji tim ljudi koji svoj posao radi sa pažnjom i posvećenošću. Pogledajte ko čini <a href=\"/nas-tim\">naš tim</a> i upoznajte se sa njihovim iskustvom i specijalnostima.",
         ],
+      },
+    ],
+  };
+}
+
+export function prepareFaqPageData() {
+  return {
+    items: [
+      {
+        pitanje: "Kako mogu da zakažem termin?",
+        odgovor:
+          "Izaberite uslugu na stranici \"Usluge\", zatim varijantu i termin koji vam odgovara. Nije potrebno da imate nalog - dovoljno je da unesete vaše podatke za kontakt, a nalog se automatski kreira nakon potvrde radi lakšeg praćenja termina.",
+      },
+      {
+        pitanje: "Da li mogu da otkažem ili pomerim termin?",
+        odgovor:
+          "Da, termin možete otkazati ili pomeriti iz vašeg naloga, u skladu sa rokom za otkazivanje navedenim prilikom zakazivanja. Ako znate da ćete zakasniti ili morate da otkažete u poslednji čas, javite nam se telefonom što pre.",
+      },
+      {
+        pitanje: "Da li je potrebna registracija za zakazivanje?",
+        odgovor:
+          "Ne - termin možete zakazati i kao gost. Ako se vaš email već koristi za postojeći nalog, termin će automatski biti povezan sa tim nalogom.",
+      },
+      {
+        pitanje: "Šta je ESMA Favorit i po čemu se razlikuje od klasičnih tretmana?",
+        odgovor:
+          "ESMA Favorit je profesionalni aparat koji u jednom uređaju kombinuje miostimulaciju, mikrostrujnu terapiju, limfnu drenažu, ultrazvuk i svetlosnu terapiju. Za razliku od jednostavnijih aparata, omogućava terapeutu da kombinuje više modalnosti u okviru istog tretmana, prilagođeno konkretnom cilju.",
+      },
+      {
+        pitanje: "Da li ESMA tretmani i masaže imaju kontraindikacije?",
+        odgovor:
+          "Da - kao i kod svakog estetskog tretmana, postoje stanja kod kojih je potreban oprez ili prethodna konsultacija sa lekarom (trudnoća, srčani pejsmejker, akutne upale, skorašnje operacije i slično). Kontraindikacije za svaki tretman posebno navedene su na stranici te usluge.",
+      },
+      {
+        pitanje: "Koliko tretmana je obično potrebno za vidljiv rezultat?",
+        odgovor:
+          "Zavisi od cilja i tipa tretmana - kod pojedinih (npr. relaks masaža) efekat je vidljiv odmah, dok kod drugih (anticelulit, oblikovanje tela, lifting lica) rezultati dolaze kroz seriju od nekoliko do desetak tretmana. Preporučen broj naveden je na stranici svake usluge.",
+      },
+      {
+        pitanje: "Isplati li se kupiti paket umesto pojedinačnih termina?",
+        odgovor:
+          "Ako planirate da tretman ponavljate, da - paket uvek donosi nižu cenu po seansi u odnosu na pojedinačno zakazivanje, uz fleksibilno zakazivanje termina kad god vama odgovara. Ako niste sigurni da vam tretman odgovara, pojedinačna poseta je bezbedniji prvi korak.",
+      },
+      {
+        pitanje: "Kako se plaćaju porudžbine iz prodavnice?",
+        odgovor:
+          "Online plaćanje karticom trenutno nije dostupno - način plaćanja (uplata na račun, pouzećem i slično) dogovara se prilikom potvrde porudžbine. Porudžbinu možete napraviti i kao gost, bez prethodne registracije.",
+      },
+      {
+        pitanje: "Mogu li da vratim kupljeni proizvod?",
+        odgovor:
+          "Da - imate pravo da odustanete od porudžbine u roku od 14 dana od prijema, bez navođenja razloga, u skladu sa Zakonom o zaštiti potrošača. Detalji su opisani u Uslovima korišćenja.",
+      },
+      {
+        pitanje: "Da li radite HIFU tretmane?",
+        odgovor:
+          "Da - HIFU lifting lica i tela je deo naše ponude, na profesionalnom uređaju u našem centru. Pogledajte stranicu Usluga za detalje, cene i zakazivanje.",
+      },
+      {
+        pitanje: "Prodajete li opremu i uređaje drugim salonima i klinikama?",
+        odgovor:
+          "Da - kroz naš Fotromed brend nudimo profesionalnu estetsku opremu (uključujući HIFU sisteme, laserske i druge uređaje) vlasnicima salona i klinika, nezavisno od tretmana koje izvodimo našim klijentima u Estetik Lab centru.",
+      },
+      {
+        pitanje: "Gde se tačno nalazite i ima li parkinga?",
+        odgovor:
+          "Na adresi Maksima Gorkog 6b, u širem centru Novog Sada, blizu Spensa, Promenade i zgrade suda. Parking je dostupan sa svih strana zgrade - plava i crvena zona ispred ulaza, kao i plava zona kod Spensa.",
+      },
+      {
+        pitanje: "Kako funkcioniše partnerski program?",
+        odgovor:
+          "Ako imate publiku kojoj verujete, možete zarađivati proviziju deleći svoj referalni link - svaka rezervacija termina, kupljeni paket ili porudžbina napravljena preko vašeg linka u naredna 30 dana beleži se kao vaša provizija. Detalje pogledajte na stranici Partnerskog programa.",
       },
     ],
   };
@@ -663,6 +743,7 @@ export default {
   preparePrivacyPolicyData,
   prepareTermsAndConditionsData,
   prepareAboutPageData,
+  prepareFaqPageData,
   preparePartnershipPageData,
   prepareContactPageData,
 };
