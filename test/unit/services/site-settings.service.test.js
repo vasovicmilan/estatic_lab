@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import siteSettingsRepo from "../../../src/repositories/site-settings.repository.js";
 import runtimeSettingsCache from "../../../src/config/runtime-settings.cache.js";
+import fileCleanupUtil from "../../../src/utils/file-cleanup.util.js";
 import * as siteSettingsService from "../../../src/services/site-settings.service.js";
 
 function buildSettingsDoc(overrides = {}) {
@@ -124,6 +125,51 @@ describe("site-settings.service", () => {
       assert.equal(result.hero.image, "/images/site/x-medium.webp");
       assert.equal(result.bookingPolicy.bufferMinutes, 30);
       assert.equal(result.currency.code, "RSD");
+    });
+  });
+
+  describe("getHeroContent", () => {
+    it("derives thumb/original srcset variants alongside the stored medium image when all three files exist on disk", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () =>
+        buildSettingsDoc({ hero: { image: "/images/site/hero-42-medium.webp", imageAlt: "Salon" } })
+      );
+      t.mock.method(fileCleanupUtil, "imageFileExists", () => true);
+
+      const result = await siteSettingsService.getHeroContent();
+
+      assert.equal(result.image, "/images/site/hero-42-medium.webp");
+      assert.deepEqual(result.imageVariants, {
+        thumb: "/images/site/hero-42-thumb.webp",
+        medium: "/images/site/hero-42-medium.webp",
+        original: "/images/site/hero-42-original.webp",
+      });
+    });
+
+    it("REGRESSION: nulls out a variant that doesn't actually exist on disk, instead of handing the template a 404 srcset candidate", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () =>
+        buildSettingsDoc({ hero: { image: "/images/site/hero-42-medium.webp", imageAlt: "Salon" } })
+      );
+      // simulates DEFAULT_HERO_IMAGE / a manually-placed file that only has the
+      // medium variant, not the multer-generated thumb/original siblings
+      t.mock.method(fileCleanupUtil, "imageFileExists", (url) => url.endsWith("-medium.webp"));
+
+      const result = await siteSettingsService.getHeroContent();
+
+      assert.deepEqual(result.imageVariants, {
+        thumb: null,
+        medium: "/images/site/hero-42-medium.webp",
+        original: null,
+      });
+    });
+
+    it("falls back to the hardcoded default image when no admin has uploaded one", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => buildSettingsDoc({ hero: { image: null, imageAlt: "" } }));
+      t.mock.method(fileCleanupUtil, "imageFileExists", (url) => url === "/images/site/hero-medium.webp");
+
+      const result = await siteSettingsService.getHeroContent();
+
+      assert.equal(result.image, "/images/site/hero-medium.webp");
+      assert.deepEqual(result.imageVariants, { thumb: null, medium: "/images/site/hero-medium.webp", original: null });
     });
   });
 });

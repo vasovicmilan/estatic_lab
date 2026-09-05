@@ -321,6 +321,14 @@ export async function listSlugsForSitemap() {
   return serviceRepo.findActiveSlugsForSitemap();
 }
 
+// Mirrors product.service.js's countProductsReferencingPost - both are called
+// together from post.controller.js when deleting a blog post, to warn the
+// admin how many catalog items still reference it before the post is removed.
+export async function countServicesReferencingPost(postId) {
+  if (!postId) return 0;
+  return serviceRepo.countServicesReferencingPost(postId);
+}
+
 export default {
   listServices,
   getServiceById,
@@ -341,4 +349,5 @@ export default {
   deleteServiceById,
   getActiveVariant,
   listSlugsForSitemap,
+  countServicesReferencingPost,
 };

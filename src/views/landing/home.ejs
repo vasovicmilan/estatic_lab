@@ -2,8 +2,20 @@
 <%- include("../includes/navigation") %>
 
 <header class="position-relative text-white hero-section">
-  <% if (data.hero.image) { %>
-    <img src="<%= data.hero.image %>" alt="<%= data.hero.imageAlt || '' %>" class="hero-bg-image" fetchpriority="high">
+  <% if (data.hero.image) {
+       const heroVariants = data.hero.imageVariants || {};
+       const heroSrcsetParts = [];
+       if (heroVariants.thumb) heroSrcsetParts.push(`${heroVariants.thumb} 300w`);
+       if (heroVariants.medium) heroSrcsetParts.push(`${heroVariants.medium} 800w`);
+       if (heroVariants.original) heroSrcsetParts.push(`${heroVariants.original} 1600w`);
+  %>
+    <img
+      src="<%= data.hero.image %>"
+      <% if (heroSrcsetParts.length > 1) { %>srcset="<%= heroSrcsetParts.join(', ') %>" sizes="100vw"<% } %>
+      alt="<%= data.hero.imageAlt || '' %>"
+      class="hero-bg-image"
+      fetchpriority="high"
+    >
     <div class="hero-overlay"></div>
   <% } %>
   <div class="container hero-inner position-relative">

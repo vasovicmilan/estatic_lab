@@ -9,6 +9,7 @@
   "scripts": {
     "start": "NODE_ENV=production node src/server.js",
     "start-dev": "NODE_ENV=development nodemon src/server.js",
+    "build:css": "sass --quiet-deps --style=compressed --no-source-map src/assets/scss/custom-bootstrap.scss:src/public/css/bootstrap.custom.min.css && esbuild --bundle --minify --loader:.css=css --outfile=src/public/css/app.min.css src/assets/css/app-entry.css",
     "test": "node --env-file=.env.test --test \"test/unit/**/*.test.js\" \"test/integration/**/*.test.js\"",
     "test:watch": "node --env-file=.env.test --test --watch \"test/unit/**/*.test.js\" \"test/integration/**/*.test.js\"",
     "test:coverage": "node --env-file=.env.test --test --experimental-test-coverage \"test/unit/**/*.test.js\" \"test/integration/**/*.test.js\"",
@@ -65,8 +66,10 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
+    "esbuild": "^0.28.2",
     "mongodb-memory-server": "^11.2.0",
     "nodemon": "^3.1.14",
+    "sass": "^1.104.0",
     "supertest": "^7.2.2"
   }
 }

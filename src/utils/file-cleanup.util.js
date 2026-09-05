@@ -36,4 +36,22 @@ export async function deleteUploadedFiles(publicUrls = []) {
   await Promise.all((publicUrls || []).filter(Boolean).map(deleteUploadedFile));
 }
 
-export default { deleteUploadedFile, deleteUploadedFiles };
+/**
+ * Synchronous existence check for a previously-uploaded file given its public
+ * URL, used by site-settings.service.js's getHeroContent to avoid serving a
+ * srcset candidate that 404s. Same managed-tree + path-traversal guard as
+ * deleteUploadedFile above, but read-only and synchronous (called during
+ * plain object construction, not worth an async round-trip for a stat()).
+ */
+export function imageFileExists(publicUrl) {
+  if (!publicUrl || typeof publicUrl !== "string") return false;
+  if (!publicUrl.startsWith("/images/") && !publicUrl.startsWith("/videos/")) return false;
+
+  const normalized = path.normalize(publicUrl);
+  if (normalized.includes("..")) return false;
+
+  const filePath = path.join(PUBLIC_PATH, normalized);
+  return fs.existsSync(filePath);
+}
+
+export default { deleteUploadedFile, deleteUploadedFiles, imageFileExists };

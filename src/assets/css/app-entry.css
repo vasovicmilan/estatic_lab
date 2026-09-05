@@ -1,0 +1,4 @@
+/* Bundled by esbuild (npm run build:css) into /public/css/app.min.css.
+   Edit the source files, never edit the generated app.min.css directly. */
+@import "../../public/css/variables.css";
+@import "../../public/css/styles.css";

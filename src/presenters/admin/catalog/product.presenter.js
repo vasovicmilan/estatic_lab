@@ -314,11 +314,24 @@ export function prepareProductFormData(product, { categoryOptions = [], tagOptio
     { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive },
   ];
 
+  // "Povezano: ..." banner shown above the form - same pluralization convention
+  // as post.controller.js's editPostForm (which builds the mirror-image summary
+  // for a blog post: how many products/services reference IT).
+  const relatedProductCount = (values.relatedProducts || []).length;
+  const relatedServiceCount = (values.relatedServices || []).length;
+  const relatedPostCount = (values.relatedPosts || []).length;
+  const relatedSummary = [
+    relatedProductCount ? `${relatedProductCount} povezan${relatedProductCount === 1 ? "" : "ih"} proizvod${relatedProductCount === 1 ? "" : "a"}` : null,
+    relatedServiceCount ? `${relatedServiceCount} povezan${relatedServiceCount === 1 ? "a" : "ih"} usluga` : null,
+    relatedPostCount ? `${relatedPostCount} povezan${relatedPostCount === 1 ? "" : "ih"} post${relatedPostCount === 1 ? "" : "ova"}` : null,
+  ].filter(Boolean);
+
   return {
     formAction: `/admin/proizvodi/${product.id}`,
     formEnctype: "multipart/form-data",
     isEdit: true,
     fields,
+    relatedSummary,
     submitLabel: "Sačuvaj izmene",
     cancelUrl: "/admin/proizvodi",
     breadcrumbs: [

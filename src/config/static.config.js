@@ -14,12 +14,11 @@ export function setupStatic(app) {
     })
   );
 
-  app.use(
-    "/bootstrap/css",
-    express.static(path.join(__dirname, "..", "..", "node_modules", "bootstrap", "dist", "css"), {
-      maxAge: isProd ? "30d" : 0,
-    })
-  );
+  // Note: no /bootstrap/css route anymore. bootstrap.min.css (full, unbuilt
+  // Bootstrap dist) was replaced by a custom Sass build compiled to
+  // src/public/css/bootstrap.custom.min.css (see npm run build:css and
+  // src/assets/scss/custom-bootstrap.scss) - it's already served by the
+  // express.static(...public...) line above like any other public asset.
 
   app.use(
     "/bootstrap/js",

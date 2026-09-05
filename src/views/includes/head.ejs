@@ -34,11 +34,10 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,700;1,9..144,400;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link href="/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="/css/variables.css" rel="stylesheet">
-  <link href="/css/styles.css?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>" rel="stylesheet">
+  <link href="/css/bootstrap.custom.min.css?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>" rel="stylesheet">
+  <link href="/css/app.min.css?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>" rel="stylesheet">
   <script>window.__currencySymbol = <%- JSON.stringify(typeof currencySymbol !== 'undefined' ? currencySymbol : 'RSD') %>;</script>
 
   <script type="application/ld+json"><%- JSON.stringify(typeof orgJsonLd !== 'undefined' ? orgJsonLd : {}) %></script>

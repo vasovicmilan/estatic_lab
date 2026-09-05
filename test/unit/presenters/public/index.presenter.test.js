@@ -97,6 +97,30 @@ describe("prepareHomeData", () => {
     assert.equal(view.hero.secondaryCtaUrl, "/paketi");
   });
 
+  it("derives hero image srcset variants from heroContent.image when heroContent doesn't already carry them", () => {
+    const view = prepareHomeData({ heroContent: { image: "/images/site/hero-42-medium.webp", imageAlt: "Salon" } });
+    assert.deepEqual(view.hero.imageVariants, {
+      thumb: "/images/site/hero-42-thumb.webp",
+      medium: "/images/site/hero-42-medium.webp",
+      original: "/images/site/hero-42-original.webp",
+    });
+  });
+
+  it("passes through heroContent.imageVariants when already provided (site-settings.service.js's shape)", () => {
+    const preComputed = { thumb: "/a-thumb.webp", medium: "/a-medium.webp", original: "/a-original.webp" };
+    const view = prepareHomeData({ heroContent: { image: "/a-medium.webp", imageVariants: preComputed } });
+    assert.equal(view.hero.imageVariants, preComputed);
+  });
+
+  it("still derives variants for the hardcoded fallback image when heroContent is missing entirely", () => {
+    const view = prepareHomeData();
+    assert.deepEqual(view.hero.imageVariants, {
+      thumb: "/images/site/hero-thumb.webp",
+      medium: "/images/site/hero-medium.webp",
+      original: "/images/site/hero-original.webp",
+    });
+  });
+
   it("points the testimonial submission form at the real endpoint", () => {
     const view = prepareHomeData();
     assert.equal(view.testimonialFormAction, "/testimonials/posalji");

@@ -1,4 +1,5 @@
 import BUSINESS from "../../config/business.config.js";
+import { getResponsiveImageUrls } from "../../utils/image-format.util.js";
 
 const WHY_US = [
   {
@@ -545,6 +546,12 @@ export function prepareHomeData({
           // index.service.js's getLandingPageData entirely)
           image: heroContent?.image || "/images/site/hero-medium.webp",
           imageAlt: heroContent?.imageAlt || "",
+          // {thumb, medium, original} for the <img srcset> in landing/home.ejs -
+          // heroContent already carries this when it comes through
+          // site-settings.service.js's getHeroContent, but re-derived here too
+          // so a caller that only passes {image, imageAlt} still gets a working
+          // srcset instead of silently losing it.
+          imageVariants: heroContent?.imageVariants || getResponsiveImageUrls(heroContent?.image || "/images/site/hero-medium.webp"),
         },
 
     intro: {

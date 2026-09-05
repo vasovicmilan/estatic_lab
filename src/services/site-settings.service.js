@@ -2,6 +2,8 @@ import siteSettingsRepo from "../repositories/site-settings.repository.js";
 import runtimeSettingsCache from "../config/runtime-settings.cache.js";
 import { badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
+import { getResponsiveImageUrls } from "../utils/image-format.util.js";
+import fileCleanupUtil from "../utils/file-cleanup.util.js";
 
 // Falls back to the original hardcoded hero image if an admin hasn't uploaded
 // one yet - so a brand-new deployment (or one where the settings document
@@ -13,12 +15,29 @@ const DEFAULT_HERO_IMAGE = "/images/site/hero-medium.webp";
  * section. Returns plain data, not a mongoose document, and always returns a
  * usable image (see DEFAULT_HERO_IMAGE above) so the presenter never has to
  * know or care whether an admin has customized it yet.
+ *
+ * Also derives thumb/original sibling URLs from the stored medium URL (see
+ * getResponsiveImageUrls) so the homepage <img> can use a srcset instead of
+ * always shipping the 800px-wide variant to phones - every hero uploaded
+ * through the admin panel already has all three sizes on disk (multer.config.js
+ * generates them together on upload). Each derived URL is checked against disk
+ * with imageFileExists before being handed to the template: DEFAULT_HERO_IMAGE
+ * is a manually-placed file, not something multer generated, so it isn't
+ * guaranteed to have -thumb/-original siblings - a missing variant comes back
+ * null here rather than becoming a broken <img> candidate in landing/home.ejs.
  */
 export async function getHeroContent() {
   const settings = await siteSettingsRepo.findOrCreateSiteSettings();
+  const image = settings.hero?.image || DEFAULT_HERO_IMAGE;
+  const variants = getResponsiveImageUrls(image);
   return {
-    image: settings.hero?.image || DEFAULT_HERO_IMAGE,
+    image,
     imageAlt: settings.hero?.imageAlt || "",
+    imageVariants: {
+      thumb: fileCleanupUtil.imageFileExists(variants.thumb) ? variants.thumb : null,
+      medium: fileCleanupUtil.imageFileExists(variants.medium) ? variants.medium : null,
+      original: fileCleanupUtil.imageFileExists(variants.original) ? variants.original : null,
+    },
   };
 }
 
