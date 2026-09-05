@@ -2,8 +2,9 @@ import googleCalendarProvider from "../integrations/google-calendar/google-calen
 import GOOGLE_CALENDAR_CONFIG from "../integrations/google-calendar/google-calendar.config.js";
 import { getBookingPolicy } from "../config/runtime-settings.cache.js";
 import { logInfo, logError } from "../utils/logger.util.js";
+import { BUSINESS } from "../config/business.config.js";
 
-const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
+const BASE_URL = BUSINESS.siteUrl;
 // Computed fresh on every call, not once at module load - booking policy is
 // admin-editable now (see runtime-settings.cache.js), so a frozen constant
 // here would mean a policy change only took effect after a server restart.

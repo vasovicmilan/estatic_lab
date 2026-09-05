@@ -6,6 +6,7 @@ import { buildExpertSeo } from "./builders/expert.builder.js";
 import { buildPageSeoWithReq } from "./builders/page.builder.js";
 import { buildProductSeo } from "./builders/product.builder.js";
 import { buildPackageSeo } from "./builders/package.builder.js";
+import { BUSINESS } from "../config/business.config.js";
 
 const builders = {
   service: buildServiceSeo,
@@ -33,10 +34,19 @@ export async function generateSeo(type, source, req, siteConfig = {}) {
 
 // Static/informational pages (home, about, FAQ, etc.) are rendered from the service
 // layer, which has no `req` to build an absolute URL from the way buildCanonical()
-// does for entity pages - so this reads BASE_URL directly instead. IMPORTANT: this
-// was previously missing entirely, which is why canonical/og:url on every static page
-// rendered as a bare relative path ("/", "/o-nama", ...) instead of a real URL.
-const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
+// does for entity pages - so this reads BUSINESS.siteUrl directly instead. IMPORTANT:
+// this was previously missing entirely, which is why canonical/og:url on every static
+// page rendered as a bare relative path ("/", "/o-nama", ...) instead of a real URL.
+//
+// BUG FIX: this used to fall back to "https://beautymedica.rs" (no www) whenever
+// BASE_URL wasn't set in the environment, while buildCanonical(req, path) below
+// (used for entity pages: usluge/paketi/prodavnica/blog post) builds its base from
+// req.protocol + req.get("host") - i.e. whatever host the visitor actually used.
+// Result: static pages (home, /o-nama, /kontakt, /saradnici, /blog listing)
+// canonicalized to the bare apex domain while catalog/detail pages canonicalized
+// to www, whichever a given visitor happened to hit. Now both paths agree on the
+// same single source of truth (business.config.js's siteUrl, defaulting to www).
+const BASE_URL = BUSINESS.siteUrl;
 
 function toAbsoluteUrl(pathOrUrl) {
   if (!pathOrUrl) return BASE_URL;

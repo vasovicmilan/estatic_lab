@@ -5,11 +5,11 @@ import { renderCampaignContentToEmailHtml } from "../utils/campaign-content.util
 import emailService from "./email.service.js";
 import { validationError, notFound, badRequest } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
+import { BUSINESS } from "../config/business.config.js";
 
-// Same fallback-from-env pattern used throughout the codebase (email.service.js,
-// cors.config.js) rather than a shared constant - see those files' own comments
-// on why this stays local to each one.
-const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
+// Now sourced from business.config.js's siteUrl instead of a locally redefined
+// fallback (see business.config.js comment for why this was centralized).
+const BASE_URL = BUSINESS.siteUrl;
 
 export async function listCampaigns({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
   const result = await campaignRepo.findCampaigns({ search, limit, page, filters });

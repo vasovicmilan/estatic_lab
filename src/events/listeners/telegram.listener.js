@@ -21,8 +21,9 @@ import {
   buildStockAlertMessage,
 } from "../../utils/telegram-message.util.js";
 import { logError } from "../../utils/logger.util.js";
+import { BUSINESS } from "../../config/business.config.js";
 
-const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
+const BASE_URL = BUSINESS.siteUrl;
 
 /**
  * Same shape and reasoning as email.listeners.js: this module's only job is

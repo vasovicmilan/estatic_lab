@@ -13,7 +13,24 @@ export const BUSINESS = {
   alternateName: "Beauty Medica",
   email: "estetik.lab.ns@gmail.com",
   phone: "+381 65 977 4000",
-  phoneHref: "+38165977400",
+  // Bug fix: this was missing the trailing "0" ("+38165977400", 11 digits)
+  // against the 12-digit displayed number above - every tel: link on the site
+  // (kontakt page, footer, etc.) was dialing a wrong/nonexistent number.
+  phoneHref: "+381659774000",
+
+  // Canonical site origin - single source of truth for every "BASE_URL" that used
+  // to be redefined with its own fallback in ~10 separate files (email.service.js,
+  // seo/index.js, cors.config.js, campaign.service.js, google-calendar.service.js,
+  // telegram.listener.js, partner-account controller/presenter...). All of those
+  // fell back to "https://beautymedica.rs" (no www) whenever BASE_URL wasn't set
+  // in the environment - which is exactly why static-page canonical/og:url tags
+  // (home, /o-nama, /kontakt, /saradnici, /blog listing) pointed at the bare
+  // apex domain while entity pages (built from req.protocol+req.get('host'))
+  // pointed at www, whichever a visitor actually used. www is the form that's
+  // known-good (see the apex-domain bot-detection investigation), so that's
+  // the default now. Still overridable via the BASE_URL env var if the canonical
+  // domain ever changes.
+  siteUrl: process.env.BASE_URL || "https://www.beautymedica.rs",
 
   // Not yet registered as a legal entity (paušalac registration pending -
   // see internal notes). Left null on purpose rather than a placeholder

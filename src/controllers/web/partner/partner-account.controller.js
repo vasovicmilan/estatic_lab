@@ -15,7 +15,8 @@ import { logError, logInfo, logWarn } from "../../../utils/logger.util.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 
-const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
+import { BUSINESS } from "../../../config/business.config.js";
+const BASE_URL = BUSINESS.siteUrl;
 
 // Everything under /moj-partner-nalog is already behind webAuthMiddleware (see
 // web.routes.js) - explicitly noindex anyway, same defense-in-depth convention

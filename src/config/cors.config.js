@@ -1,11 +1,15 @@
 import cors from "cors";
+import { BUSINESS } from "./business.config.js";
 
 const isProd = process.env.NODE_ENV === "production";
 
-// Same BASE_URL fallback used everywhere else in the codebase (email.service.js,
-// seo/index.js, etc.) - kept in sync so CORS never silently diverges from the
-// domain the rest of the app assumes it's running on.
-const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
+// Same BASE_URL used everywhere else in the codebase (email.service.js, seo/index.js,
+// etc.) - now sourced from business.config.js's siteUrl instead of a locally
+// redefined fallback, so CORS never silently diverges from the domain the rest
+// of the app assumes it's running on. baseUrlVariants() below still generates
+// both www/non-www forms regardless, so this is a source-of-truth cleanup, not
+// a behavior change here.
+const BASE_URL = BUSINESS.siteUrl;
 
 function baseUrlVariants(url) {
   try {

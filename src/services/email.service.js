@@ -11,12 +11,13 @@ import { formatDateTime } from "../utils/date.time.util.js";
 import { getCurrency } from "../config/runtime-settings.cache.js";
 import { formatMoney } from "../utils/price.util.js";
 import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
+import { BUSINESS } from "../config/business.config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const TEMPLATES_PATH = path.join(__dirname, "..", "views", "emails");
 
-const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
+const BASE_URL = BUSINESS.siteUrl;
 const SITE_NAME = process.env.SITE_NAME || "Estetik Lab";
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "estetik.lab.ns@gmail.com";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || SUPPORT_EMAIL;

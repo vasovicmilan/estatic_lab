@@ -2,7 +2,8 @@ import { formatDateTime } from "../../utils/date.time.util.js";
 import { formatPrice, formatMoney } from "../../utils/price.util.js";
 import { translateCommissionSourceType, translateCommissionStatus } from "../../utils/commission-display.util.js";
 
-const BASE_URL = process.env.BASE_URL || "https://beautymedica.rs";
+import { BUSINESS } from "../../config/business.config.js";
+const BASE_URL = BUSINESS.siteUrl;
 
 const PAYOUT_STATUS_LABELS = { requested: "Zatraženo", approved: "Odobreno", paid: "Isplaćeno", rejected: "Odbijeno" };
 
