@@ -1,4 +1,4 @@
-import { buildCategoryTabRows } from "./category-tabs.util.js";
+import { buildCategoryTabRows } from "../../utils/category-tabs.util.js";
 
 // Shown only on the plain /usluge listing (no active category/tag filter) -
 // gives the page real, indexable body copy that explains what the services

@@ -1,4 +1,4 @@
-import { buildCategoryTabRows } from "./category-tabs.util.js";
+import { buildCategoryTabRows } from "../../utils/category-tabs.util.js";
 
 const SHOP_TRUST = [
   { icon: "bi-truck", title: "Brza dostava", text: "Šaljemo širom Srbije, sa jasno naznačenim rokom isporuke pre potvrde porudžbine." },
