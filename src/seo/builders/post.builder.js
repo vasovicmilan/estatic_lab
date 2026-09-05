@@ -1,27 +1,5 @@
-import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd } from "../utils.seo.js";
+import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildFaqPageJsonLd, collectFaqItemsFromContentBlocks } from "../utils.seo.js";
 
-// Pulls every faq block's Q&A pairs into one flat list. A post can have more than
-// one faq block (rare, but the schema allows it) - Google's FAQPage rich result
-// wants one consolidated list per page, not one schema block per content block.
-function collectFaqItems(sadrzaj = []) {
-  return (sadrzaj || [])
-    .filter((block) => block.tip === "faq" && Array.isArray(block.faqStavke))
-    .flatMap((block) => block.faqStavke)
-    .filter((item) => item?.question && item?.answer);
-}
-
-function buildFaqPageJsonLd(faqItems) {
-  if (faqItems.length === 0) return null;
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqItems.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: { "@type": "Answer", text: item.answer },
-    })),
-  };
-}
 
 function buildBlogPostingJsonLd(post, canonical, imageUrl, siteName) {
   return {
@@ -48,7 +26,7 @@ export async function buildPostSeo(post, req, siteConfig = {}) {
   const canonical = buildCanonical(req, `/blog/${post.slug}`);
   const imageUrl = post.slika?.url || post.coverImage?.img || defaultImage;
 
-  const faqItems = collectFaqItems(post.sadrzaj);
+  const faqItems = collectFaqItemsFromContentBlocks(post.sadrzaj);
   const breadcrumb = buildBreadcrumbJsonLd([
     { name: "Početna", url: buildCanonical(req, "/") },
     { name: "Blog", url: buildCanonical(req, "/blog") },

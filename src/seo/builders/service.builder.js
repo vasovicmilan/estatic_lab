@@ -1,4 +1,4 @@
-import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd } from "../utils.seo.js";
+import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd, buildFaqPageJsonLd } from "../utils.seo.js";
 import { getCurrency } from "../../config/runtime-settings.cache.js";
 
 // Each service package/tier (5 seansi, 10 seansi, ...) becomes its own Offer -
@@ -61,7 +61,8 @@ export async function buildServiceSeo(service, req, siteConfig = {}) {
     { name: "Usluge", url: buildCanonical(req, "/usluge") },
     { name: service.naziv, url: canonical },
   ]);
-  const jsonLd = [buildServiceJsonLd(service, canonical, imageUrl, siteName), breadcrumb].filter(Boolean);
+  const faqPage = buildFaqPageJsonLd(service.faq);
+  const jsonLd = [buildServiceJsonLd(service, canonical, imageUrl, siteName), faqPage, breadcrumb].filter(Boolean);
 
   return {
     title,

@@ -1,4 +1,4 @@
-import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd } from "../utils.seo.js";
+import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd, buildFaqPageJsonLd } from "../utils.seo.js";
 import { getCurrency } from "../../config/runtime-settings.cache.js";
 
 // One Offer per active variation, carrying each variation's own price/sku/stock -
@@ -51,7 +51,8 @@ export async function buildProductSeo(product, req, siteConfig = {}) {
     { name: "Prodavnica", url: buildCanonical(req, "/prodavnica") },
     { name: product.naziv, url: canonical },
   ]);
-  const jsonLd = [buildProductJsonLd(product, canonical, imageUrl, siteName), breadcrumb].filter(Boolean);
+  const faqPage = buildFaqPageJsonLd(product.faq);
+  const jsonLd = [buildProductJsonLd(product, canonical, imageUrl, siteName), faqPage, breadcrumb].filter(Boolean);
 
   return {
     title,

@@ -147,4 +147,67 @@ describe("seo builders", () => {
       assert.equal(seo.twitter.card, "summary");
     });
   });
+
+  describe("FAQPage structured data (Google FAQ rich results)", () => {
+    function findFaqPage(jsonLd) {
+      return (jsonLd || []).find((node) => node["@type"] === "FAQPage");
+    }
+
+    it("buildServiceSeo emits a FAQPage node from service.faq ({pitanje, odgovor} pairs)", async () => {
+      const seo = await buildServiceSeo(
+        { naziv: "Masaza", slug: "masaza", faq: [{ pitanje: "Koliko traje?", odgovor: "60 minuta." }] },
+        fakeReq()
+      );
+      const faqPage = findFaqPage(seo.jsonLd);
+      assert.ok(faqPage, "expected a FAQPage node in jsonLd");
+      assert.equal(faqPage.mainEntity[0].name, "Koliko traje?");
+      assert.equal(faqPage.mainEntity[0].acceptedAnswer.text, "60 minuta.");
+    });
+
+    it("buildServiceSeo omits the FAQPage node entirely when the service has no faq", async () => {
+      const seo = await buildServiceSeo({ naziv: "Masaza", slug: "masaza", faq: [] }, fakeReq());
+      assert.equal(findFaqPage(seo.jsonLd), undefined);
+    });
+
+    it("buildProductSeo emits a FAQPage node from product.faq", async () => {
+      const seo = await buildProductSeo(
+        { naziv: "Krema", slug: "krema", faq: [{ pitanje: "Za koji tip kože?", odgovor: "Za sve tipove." }] },
+        fakeReq()
+      );
+      const faqPage = findFaqPage(seo.jsonLd);
+      assert.ok(faqPage);
+      assert.equal(faqPage.mainEntity[0].name, "Za koji tip kože?");
+    });
+
+    it("buildCategorySeo emits a FAQPage node from a faq content block, when the category has one", async () => {
+      const seo = await buildCategorySeo(
+        {
+          name: "HL/Skin",
+          slug: "hl-skin",
+          domain: "product",
+          content: [
+            {
+              type: "faq",
+              order: 1,
+              faqItems: [{ question: "Da li je pogodno za sve tipove kože?", answer: "Da." }],
+            },
+          ],
+        },
+        fakeReq()
+      );
+      const faqPage = findFaqPage(seo.jsonLd);
+      assert.ok(faqPage, "expected a FAQPage node built from the category's content blocks");
+      assert.equal(faqPage.mainEntity[0].name, "Da li je pogodno za sve tipove kože?");
+    });
+
+    it("buildCategorySeo omits the FAQPage node for an ordinary category with no content blocks", async () => {
+      const seo = await buildCategorySeo({ name: "Analiza kože", slug: "analiza-koze", domain: "product" }, fakeReq());
+      assert.equal(findFaqPage(seo.jsonLd), undefined);
+    });
+
+    it("buildCategorySeo still includes a BreadcrumbList even without FAQ content", async () => {
+      const seo = await buildCategorySeo({ name: "Analiza kože", slug: "analiza-koze", domain: "product" }, fakeReq());
+      assert.ok(seo.jsonLd.some((node) => node["@type"] === "BreadcrumbList"));
+    });
+  });
 });

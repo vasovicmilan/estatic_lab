@@ -119,3 +119,37 @@ export function buildReviewJsonLd(testimonials = []) {
     reviewBody: truncate(t.komentar, 300),
   }));
 }
+
+// Shared by every builder that can show FAQ rich results: post (content-block
+// faq), category (content-block faq, same shape - see collectFaqItemsFromContentBlocks
+// below), service and product (their own faq: [FAQSchema] array, mapped to
+// {pitanje, odgovor} - see service.mapper.js / product.mapper.js). Accepts
+// either {question, answer} or {pitanje, odgovor} per item so callers don't
+// each need their own translation step just to reach this function.
+export function buildFaqPageJsonLd(faqItems = []) {
+  const valid = (faqItems || [])
+    .map((item) => ({ question: item?.question || item?.pitanje, answer: item?.answer || item?.odgovor }))
+    .filter((item) => item.question && item.answer);
+  if (valid.length === 0) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: valid.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
+    })),
+  };
+}
+
+// Pulls every faq block's Q&A pairs out of a rendered content-block array (the
+// Serbian-labeled shape from utils/content-blocks.util.js's renderContentBlocks -
+// block.tip === "faq", block.faqStavke). A page can have more than one faq
+// block (rare, but the schema allows it) - Google's FAQPage rich result wants
+// one consolidated list per page, not one schema block per content block.
+export function collectFaqItemsFromContentBlocks(blocks = []) {
+  return (blocks || [])
+    .filter((block) => block.tip === "faq" && Array.isArray(block.faqStavke))
+    .flatMap((block) => block.faqStavke)
+    .filter((item) => item?.question && item?.answer);
+}
