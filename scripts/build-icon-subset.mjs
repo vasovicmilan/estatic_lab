@@ -8,15 +8,28 @@
 // Rebuild whenever a new bi-* class is added to a view or to public/js/main.js.
 //
 // How it finds "used icons":
-//   1. grep every bi-[a-z0-9-]+ token out of src/views/**/*.ejs
-//   2. grep the same out of src/public/js/*.js (a couple of icons - the admin
-//      list reorder buttons - are only ever set via classList.add/remove in
-//      JS, never written literally in a template)
-//   3. look up each class's codepoint in bootstrap-icons' own CSS
-//   4. pyftsubset the font down to exactly those codepoints
-//   5. write a new CSS containing only the @font-face + base rule + the used
+//   1. grep every bi-[a-z0-9-]+ token out of every .ejs/.js file under src/
+//      (see BUG FIX note below for why this is the whole tree, not just
+//      views/ and public/js/)
+//   2. look up each class's codepoint in bootstrap-icons' own CSS
+//   3. pyftsubset the font down to exactly those codepoints
+//   4. write a new CSS containing only the @font-face + base rule + the used
 //      icon rules, pulled verbatim from bootstrap-icons' own CSS so the
 //      codepoints can never drift out of sync with the subset font
+//
+// BUG FIX: this used to scan only src/views/**/*.ejs + src/public/js/*.js.
+// That missed every icon defined as a literal string in the presenter layer
+// and handed to a template as data - e.g. src/presenters/public/index.presenter.js's
+// WHY_US array (icon: "bi-cpu", "bi-patch-check", "bi-person-heart", "bi-flower1")
+// or src/presenters/catalog/service.presenter.js's feature list - since the
+// .ejs itself only ever contains a variable like `class="bi <%= item.icon %>"`,
+// never the literal class name. Result: those icons silently never made it
+// into the subset font (blank glyph, invisible), while any icon that happened
+// to *also* appear literally somewhere in a template kept working - which is
+// why some of a page's icons rendered and others right next to them didn't,
+// with no pattern visible from the template alone. Now scans every .ejs/.js
+// file under src/ (presenters, services, mappers, seeds, etc. included), not
+// just the two directories where an icon class is written as literal markup.
 //
 // Requires Python's fonttools (with the woff2/brotli extra) on PATH:
 //   pip install fonttools brotli --break-system-packages
@@ -31,31 +44,36 @@ const ROOT = path.join(__dirname, "..");
 
 const SRC_FONT = path.join(ROOT, "node_modules/bootstrap-icons/font/bootstrap-icons.css");
 const SRC_WOFF2 = path.join(ROOT, "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2");
-const VIEWS_DIR = path.join(ROOT, "src/views");
-const JS_DIR = path.join(ROOT, "src/public/js");
+const SCAN_ROOT = path.join(ROOT, "src");
 const OUT_DIR = path.join(ROOT, "src/public/css");
 const OUT_FONTS_DIR = path.join(ROOT, "src/public/fonts");
 const OUT_CSS = path.join(OUT_DIR, "bootstrap-icons.subset.css");
 const OUT_WOFF2 = path.join(OUT_FONTS_DIR, "bootstrap-icons.subset.woff2");
 
+// Generated output lives under src/public/css and src/public/fonts - excluded
+// from the scan since they're build artifacts, not sources of truth for what
+// icons are "used" (scanning the generated subset CSS back into its own input
+// would be harmless but pointless, and the .woff2 is binary).
+const SCAN_EXCLUDE_DIRS = new Set(["css", "fonts"]);
+
 function collectUsedIconClasses() {
   const classes = new Set();
   const pattern = /bi-[a-z0-9-]+/g;
+  const exts = [".ejs", ".js"];
 
-  function scanDir(dir, exts) {
+  function scanDir(dir) {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
       if (entry.isDirectory()) {
-        scanDir(full, exts);
+        if (dir === path.join(ROOT, "src/public") && SCAN_EXCLUDE_DIRS.has(entry.name)) continue;
+        scanDir(path.join(dir, entry.name));
       } else if (exts.some((ext) => entry.name.endsWith(ext))) {
-        const content = fs.readFileSync(full, "utf8");
+        const content = fs.readFileSync(path.join(dir, entry.name), "utf8");
         for (const match of content.matchAll(pattern)) classes.add(match[0]);
       }
     }
   }
 
-  scanDir(VIEWS_DIR, [".ejs"]);
-  scanDir(JS_DIR, [".js"]);
+  scanDir(SCAN_ROOT);
 
   // "bi" alone (no suffix) is the base icon class some markup uses directly
   // with a data attribute instead of a name suffix - keep the base rule
