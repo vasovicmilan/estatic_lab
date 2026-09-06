@@ -17,5 +17,6 @@ This documentation is split into focused files, each covering one area of the bu
 | `11-external-integrations.md` | Two-way sync with Google Calendar (per-employee calendars) and the SrediMe booking marketplace |
 | `12-testing.md` | The three test layers (unit, integration, E2E), what each covers, how to run them, and patterns/gotchas discovered while writing E2E tests |
 | `13-business-reports.md` | Business reports (bookings, shop, packages, commissions, coupons) — live current period vs. saved history, automatic and manual generation, email and PDF |
+| `14-data-integrity-and-deletion.md` | What happens when any record gets deleted — when it's blocked, when it's auto-cleaned from related records, and when it's deliberately left alone because the display layer already tolerates a deleted reference |
 
-Each file stands on its own — you don't need to read them in order, though `06` (affiliate program) draws on concepts from `03`, `05`, and `07`, and `11` builds on the appointment lifecycle described in `02`.
+Each file stands on its own — you don't need to read them in order, though `06` (affiliate program) draws on concepts from `03`, `05`, and `07`, `11` builds on the appointment lifecycle described in `02`, and `14` (deletion) is most useful once you already know the entities described in `02`, `03`, and `04`.

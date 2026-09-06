@@ -17,5 +17,6 @@ Ova dokumentacija je podeljena na fokusirane fajlove, gde svaki pokriva jednu ob
 | `11-eksterne-integracije.md` | Dvosmerna sinhronizacija sa Google Calendar-om (kalendar po zaposlenom) i SrediMe pijacom za zakazivanje |
 | `12-testiranje.md` | Tri sloja testova (jedinični, integracioni, E2E), šta svaki pokriva, kako se pokreću, i obrasci/zamke otkriveni pri pisanju E2E testova |
 | `13-poslovni-izvestaji.md` | Poslovni izveštaji (zakazivanja, prodavnica, paketi, provizije, kuponi) — tekući period uživo naspram sačuvane istorije, automatsko i ručno generisanje, email i PDF |
+| `14-integritet-podataka-i-brisanje.md` | Šta se dešava pri brisanju bilo kog zapisa — kada se blokira, kada se automatski čisti iz povezanih zapisa, i kada se namerno ne dira jer je prikazni sloj već otporan na obrisanu referencu |
 
-Svaki fajl je samostalan — nije potrebno da ih čitate po redosledu, iako `06` (partnerski program) koristi pojmove iz `03`, `05` i `07`, a `11` se nadovezuje na životni ciklus termina opisan u `02`.
+Svaki fajl je samostalan — nije potrebno da ih čitate po redosledu, iako `06` (partnerski program) koristi pojmove iz `03`, `05` i `07`, `11` se nadovezuje na životni ciklus termina opisan u `02`, a `14` (brisanje) najviše koristi ako već poznajete entitete opisane u `02`, `03` i `04`.
