@@ -5,6 +5,7 @@ import { createTestApp, closeTestApp, clearTestDatabase } from "../setup/test-ap
 import { getCsrfToken } from "../../helpers/csrf.js";
 import { registerAndLogin, ensureRole } from "../../helpers/session.js";
 import userRepo from "../../../src/repositories/user.repository.js";
+import auditLogRepo from "../../../src/repositories/audit-log.repository.js";
 
 describe("admin user management actions (HTTP)", () => {
   let app;
@@ -85,5 +86,42 @@ describe("admin user management actions (HTTP)", () => {
     assert.equal(res.status, 302);
     const found = await userRepo.findUserById(target._id);
     assert.equal(found, null);
+  });
+
+  it("anonymizes a user - record survives, PII is scrubbed, and it's excluded from the admin list by default", async () => {
+    const agent = request.agent(app);
+    await registerAndLogin(agent, { email: "admin@example.com", roleName: "admin" });
+    const target = await registerAndLogin(request.agent(app), { email: "korisnik5@example.com", roleName: "user" });
+
+    const { token } = await getCsrfToken(agent, `/admin/korisnici/detalji/${target._id}`);
+    const res = await agent
+      .put(`/admin/korisnici/${target._id}/anonimizuj`)
+      .type("form")
+      .send({ CSRFToken: token });
+
+    assert.equal(res.status, 302);
+
+    // The document itself survives (unlike deleteUser above) - only its PII is gone.
+    const anonymized = await userRepo.findUserById(target._id);
+    assert.ok(anonymized, "the user document should still exist after anonymization");
+    assert.equal(anonymized.status, "deleted");
+    assert.equal(anonymized.firstName, "Obrisan");
+    assert.equal(anonymized.email, `obrisan-${target._id}@obrisan.local`);
+    // password is select:false on the schema - a normal findUserById never
+    // returns it (undefined, not null) regardless of what's actually stored,
+    // so it isn't asserted here. firstName/email above are enough to prove
+    // the PII scrub happened; anonymizeUser's own unit test already verifies
+    // password specifically, against the raw update patch before it's saved.
+
+    const logs = await auditLogRepo.findAuditLogs({ filters: { action: "USER_ANONYMIZED", entityId: target._id.toString() } });
+    assert.equal(logs.total, 1);
+
+    // buildUserFilter excludes status:"deleted" by default (see
+    // docs/sr/14-integritet-podataka-i-brisanje.md) - confirm that actually holds
+    // end-to-end through the real admin list route, not just at the filter-builder
+    // unit level.
+    const listRes = await agent.get("/admin/korisnici");
+    assert.equal(listRes.status, 200);
+    assert.ok(!listRes.text.includes(`obrisan-${target._id}@obrisan.local`));
   });
 });

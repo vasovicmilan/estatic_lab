@@ -28,6 +28,7 @@ Each set covers:
 | 11 | External Integrations, Google Calendar & SrediMe |
 | 12 | Testing |
 | 13 | Business Reports |
+| 14 | Data Integrity & Deletion Logic |
 
 For a higher-level walkthrough of *why* each part of the system is built the way it is (business challenge, approach, solution, across every domain), see [`BUSINESS-LOGIC.md`](BUSINESS-LOGIC.md) (English) or [`POSLOVNA-LOGIKA.md`](POSLOVNA-LOGIKA.md) (Serbian).
 
@@ -43,7 +44,7 @@ CSS/ikonice se ne serviraju direktno iz `node_modules` - `npm run build:css` (Sa
 
 ## Testing
 
-Three layers: unit (mocked dependencies), integration (real HTTP requests against an in-memory MongoDB), and E2E (Playwright, real browser against a real running server). Latest run: **2,224/2,224** unit and integration tests, **25/25** E2E tests. See `docs/en/12-testing.md` / `docs/sr/12-testiranje.md`.
+Three layers: unit (mocked dependencies), integration (real HTTP requests against an in-memory MongoDB), and E2E (Playwright, real browser against a real running server). Latest run: **2,520/2,520** unit and integration tests, **25/25** E2E tests. See `docs/en/12-testing.md` / `docs/sr/12-testiranje.md`.
 
 ```bash
 npm test              # unit + integration

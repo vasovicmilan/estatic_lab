@@ -13,6 +13,7 @@ router.put("/:userId", validateUserId, validateProfileUpdate, UserController.upd
 router.put("/:userId/status", validateUserId, validateUserStatus, UserController.updateUserStatus);
 router.put("/:userId/rola", validateUserId, validateUserRole, UserController.updateUserRole);
 router.put("/:userId/verifikuj", validateUserId, UserController.verifyUser);
+router.put("/:userId/anonimizuj", validateUserId, UserController.anonymizeUser);
 
 router.delete("/:userId", validateUserId, UserController.deleteUser);
 

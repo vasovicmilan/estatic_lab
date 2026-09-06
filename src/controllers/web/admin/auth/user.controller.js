@@ -189,6 +189,34 @@ export async function deleteUser(req, res, next) {
   }
 }
 
+export async function anonymizeUser(req, res, next) {
+  try {
+    const { userId } = req.params;
+    const existing = await userService.getUserById(userId).catch(() => null);
+    await userService.anonymizeUser(userId);
+    logInfo(`[anonymizeUser] Korisnik #${userId} anonimizovan`, { userId, adminId: req.session?.user?.id });
+    // Same audit action family as USER_DELETED, but distinct - the record still
+    // exists (just scrubbed), unlike a hard delete. Kept out of admin listings
+    // regardless (see buildUserFilter), so this audit entry is the only durable
+    // trail that the anonymization happened, for whoever it was and when.
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "USER_ANONYMIZED",
+      entity: { type: "User", id: userId },
+      changes: { email: { old: existing?.email || null, new: null } },
+      req,
+      success: true,
+    });
+    return flashAndRedirect(req, res, "success", "Lični podaci korisnika su uklonjeni (nalog je anonimizovan)", "/admin/korisnici");
+  } catch (error) {
+    logError("[anonymizeUser] Greška pri anonimizaciji korisnika", error, { userId: req.params.userId, adminId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, "/admin/korisnici");
+    }
+    next(error);
+  }
+}
+
 export async function editUserForm(req, res, next) {
   try {
     const { userId } = req.params;
@@ -248,6 +276,7 @@ export default {
   updateUserRole,
   verifyUser,
   deleteUser,
+  anonymizeUser,
   editUserForm,
   updateUser,
 };

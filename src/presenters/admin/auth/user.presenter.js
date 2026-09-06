@@ -99,6 +99,7 @@ export function prepareUserDetailsData(user, roleOptions = []) {
           roleFormAction: `/admin/korisnici/${user.id}/rola`,
           statusFormAction: `/admin/korisnici/${user.id}/status`,
           verifyFormAction: `/admin/korisnici/${user.id}/verifikuj`,
+          anonymizeFormAction: `/admin/korisnici/${user.id}/anonimizuj`,
           currentRoleId: user.roleId,
           roleOptions,
           currentStatus: user.statusRaw,
@@ -108,6 +109,7 @@ export function prepareUserDetailsData(user, roleOptions = []) {
             { value: "suspended", label: "Suspendovan" },
           ],
           showVerifyAction: user.statusRaw === "pending",
+          showAnonymizeAction: user.statusRaw !== "deleted",
         },
       },
       {
