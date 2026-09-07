@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import eventEmitter from "../events/event.emitter.js";
 import packagePurchaseRepo from "../repositories/package-purchase.repository.js";
 import packageService from "./package.service.js";
@@ -83,26 +84,47 @@ export async function createPurchaseForUser(userId, packageId, adminId, { expire
 
   const buyer = await userService.findUserById(userId);
 
-  const created = await packagePurchaseRepo.createPackagePurchase({
-    user: userId,
-    userSnapshot: { firstName: buyer?.firstName || null, lastName: buyer?.lastName || null },
-    package: packageId,
-    items,
-    originalPrice,
-    discountApplied,
-    pricePaid: Math.max(0, originalPrice - discountApplied),
-    coupon: couponResult?.coupon._id || null,
-    expiresAt,
-    purchasedBy: adminId,
-    notes,
-  });
+  // BUG FIX: creating the purchase and redeeming its coupon used to be two
+  // separate, unrelated writes - if redeemCoupon failed after the purchase had
+  // already been created (a DB blip, or - since the fix in
+  // coupon.repository.js's redeemCoupon - someone else's concurrent redemption
+  // winning a maxUses race in the moments between this function's earlier
+  // validateCouponForPackagePurchase() read and this point), the customer would
+  // end up with a real, usable package that the coupon's usedCount/usageHistory
+  // never reflects. Wrapping both writes in one transaction means either both
+  // happen or neither does - a failed coupon redemption now aborts the whole
+  // purchase rather than silently under-tracking coupon usage.
+  const session = await mongoose.startSession();
+  let created;
+  try {
+    await session.withTransaction(async () => {
+      created = await packagePurchaseRepo.createPackagePurchase(
+        {
+          user: userId,
+          userSnapshot: { firstName: buyer?.firstName || null, lastName: buyer?.lastName || null },
+          package: packageId,
+          items,
+          originalPrice,
+          discountApplied,
+          pricePaid: Math.max(0, originalPrice - discountApplied),
+          coupon: couponResult?.coupon._id || null,
+          expiresAt,
+          purchasedBy: adminId,
+          notes,
+        },
+        { session }
+      );
 
-  if (couponResult) {
-    await couponService.redeemCoupon(couponResult.coupon._id, {
-      userId,
-      packagePurchaseId: created._id,
-      discountAmount: discountApplied,
+      if (couponResult) {
+        await couponService.redeemCoupon(
+          couponResult.coupon._id,
+          { userId, packagePurchaseId: created._id, discountAmount: discountApplied },
+          { session }
+        );
+      }
     });
+  } finally {
+    await session.endSession();
   }
 
   logInfo("Package purchase recorded", { packagePurchaseId: created._id, userId, packageId, adminId });
@@ -219,39 +241,57 @@ export async function reserveSession(packagePurchaseId, servicePackageId, { sess
 
 // Gives a reserved-but-undelivered session back - called when a package-covered
 // appointment is cancelled or rejected before ever being completed.
+//
+// BUG FIX: used to read the whole document, mutate sessionsReserved in JS with
+// Math.max(0, ...), then .save() it - a read-modify-write race under concurrency
+// (see releaseSessionAtomic's own comment in package-purchase.repository.js).
+// Now delegates to the atomic conditional update, same pattern as reserveSession
+// above: the atomic update either succeeds outright, or - only to produce the
+// right error message, playing no part in the actual decision - a read
+// distinguishes "purchase missing" from "item missing" from "nothing reserved to
+// release" (the last one silently returning the purchase unchanged, matching the
+// old "nothing to release - shouldn't normally happen" behavior exactly).
 export async function releaseSession(packagePurchaseId, servicePackageId, { session } = {}) {
-  const purchase = await packagePurchaseRepo.findPackagePurchaseDocById(packagePurchaseId, { session });
-  if (!purchase) notFound("Kupljeni paket");
+  const updated = await packagePurchaseRepo.releaseSessionAtomic(packagePurchaseId, servicePackageId, { session });
+  if (updated) {
+    logInfo("Package purchase session released", { packagePurchaseId, servicePackageId });
+    return updated;
+  }
 
+  const purchase = await packagePurchaseRepo.findPackagePurchaseById(packagePurchaseId, { session });
+  if (!purchase) notFound("Kupljeni paket");
   const item = purchase.items.find((i) => String(i.servicePackageId) === String(servicePackageId));
   if (!item) return purchase; // nothing to release - shouldn't normally happen
-
-  item.sessionsReserved = Math.max(0, item.sessionsReserved - 1);
-  await purchase.save({ session });
-  logInfo("Package purchase session released", { packagePurchaseId, servicePackageId });
-  return purchase;
+  return purchase; // item exists but sessionsReserved was already 0 - nothing to release
 }
 
 // Converts a reservation into an actually-delivered session - called ONLY when an
 // appointment transitions into "completed". Moves 1 unit from reserved to used;
 // marks the whole purchase "completed" once every item is fully used.
+//
+// BUG FIX: same read-modify-write race as releaseSession above, same fix - the
+// $inc on sessionsReserved/sessionsUsed now happens atomically in one operation
+// (commitSessionAtomic), and the "mark the whole purchase completed" check is a
+// separate, idempotent conditional update run right after (see
+// markCompletedIfAllSessionsUsed's own comment) rather than a mutation on a
+// JS object that then gets saved.
 export async function commitSession(packagePurchaseId, servicePackageId, { session } = {}) {
-  const purchase = await packagePurchaseRepo.findPackagePurchaseDocById(packagePurchaseId, { session });
-  if (!purchase) notFound("Kupljeni paket");
-
-  const item = purchase.items.find((i) => String(i.servicePackageId) === String(servicePackageId));
-  if (!item) badRequest("Ovaj paket ne pokriva izabranu varijantu usluge");
-
-  item.sessionsReserved = Math.max(0, item.sessionsReserved - 1);
-  item.sessionsUsed += 1;
-
-  if (purchase.items.every((i) => i.sessionsUsed >= i.sessionsTotal)) {
-    purchase.status = "completed";
+  const updated = await packagePurchaseRepo.commitSessionAtomic(packagePurchaseId, servicePackageId, { session });
+  if (!updated) {
+    const purchase = await packagePurchaseRepo.findPackagePurchaseById(packagePurchaseId, { session });
+    if (!purchase) notFound("Kupljeni paket");
+    const item = purchase.items.find((i) => String(i.servicePackageId) === String(servicePackageId));
+    if (!item) badRequest("Ovaj paket ne pokriva izabranu varijantu usluge");
+    badRequest("Nema rezervisanu sesiju za ovu varijantu u paketu - ništa ne može biti isporučeno");
   }
 
-  await purchase.save({ session });
-  logInfo("Package purchase session committed (delivered)", { packagePurchaseId, servicePackageId, status: purchase.status });
-  return purchase;
+  const completed = await packagePurchaseRepo.markCompletedIfAllSessionsUsed(packagePurchaseId, { session });
+  logInfo("Package purchase session committed (delivered)", {
+    packagePurchaseId,
+    servicePackageId,
+    status: completed?.status || updated.status,
+  });
+  return completed || updated;
 }
 
 export async function cancelPurchase(packagePurchaseId, adminId) {

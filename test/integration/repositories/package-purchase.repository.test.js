@@ -75,6 +75,73 @@ describe("package-purchase.repository", () => {
     });
   });
 
+  // BUG FIX regression tests for releaseSessionAtomic/commitSessionAtomic - see
+  // their own comments in package-purchase.repository.js. release/commitSession
+  // used to read the whole document, mutate a field in JS, then .save() it - a
+  // classic read-modify-write race. These prove the atomic replacements actually
+  // hold under real concurrent writes against a real (in-memory) MongoDB, not
+  // just that they're called with the right arguments.
+  describe("reserveSessionAtomic / releaseSessionAtomic / commitSessionAtomic", () => {
+    it("reserveSessionAtomic never lets sessionsReserved+sessionsUsed exceed sessionsTotal under real concurrency", async () => {
+      const created = await packagePurchaseRepo.createPackagePurchase(validPurchase({ items: [{ service: new mongoose.Types.ObjectId(), servicePackageId: new mongoose.Types.ObjectId(), sessionsTotal: 1, sessionsUsed: 0, sessionsReserved: 0, unitPrice: 3000 }] }));
+      const variantId = created.items[0].servicePackageId;
+
+      const [resultA, resultB] = await Promise.all([
+        packagePurchaseRepo.reserveSessionAtomic(created._id, variantId),
+        packagePurchaseRepo.reserveSessionAtomic(created._id, variantId),
+      ]);
+
+      const succeeded = [resultA, resultB].filter((r) => r !== null);
+      assert.equal(succeeded.length, 1, "only one of two concurrent reservations should succeed when only 1 session total exists");
+
+      const final = await packagePurchaseRepo.findPackagePurchaseById(created._id);
+      assert.equal(final.items[0].sessionsReserved, 1, "sessionsReserved must be exactly 1, never 2");
+    });
+
+    it("releaseSessionAtomic never drives sessionsReserved negative under real concurrency", async () => {
+      const created = await packagePurchaseRepo.createPackagePurchase(validPurchase({ items: [{ service: new mongoose.Types.ObjectId(), servicePackageId: new mongoose.Types.ObjectId(), sessionsTotal: 3, sessionsUsed: 0, sessionsReserved: 1, unitPrice: 3000 }] }));
+      const variantId = created.items[0].servicePackageId;
+
+      const [resultA, resultB] = await Promise.all([
+        packagePurchaseRepo.releaseSessionAtomic(created._id, variantId),
+        packagePurchaseRepo.releaseSessionAtomic(created._id, variantId),
+      ]);
+
+      const succeeded = [resultA, resultB].filter((r) => r !== null);
+      assert.equal(succeeded.length, 1, "only one of two concurrent releases should succeed when only 1 session was actually reserved");
+
+      const final = await packagePurchaseRepo.findPackagePurchaseById(created._id);
+      assert.equal(final.items[0].sessionsReserved, 0, "sessionsReserved must land on exactly 0, never -1");
+    });
+
+    it("commitSessionAtomic never double-delivers the same reserved session under real concurrency", async () => {
+      const created = await packagePurchaseRepo.createPackagePurchase(validPurchase({ items: [{ service: new mongoose.Types.ObjectId(), servicePackageId: new mongoose.Types.ObjectId(), sessionsTotal: 3, sessionsUsed: 0, sessionsReserved: 1, unitPrice: 3000 }] }));
+      const variantId = created.items[0].servicePackageId;
+
+      const [resultA, resultB] = await Promise.all([
+        packagePurchaseRepo.commitSessionAtomic(created._id, variantId),
+        packagePurchaseRepo.commitSessionAtomic(created._id, variantId),
+      ]);
+
+      const succeeded = [resultA, resultB].filter((r) => r !== null);
+      assert.equal(succeeded.length, 1, "only one of two concurrent commits should succeed when only 1 session was reserved");
+
+      const final = await packagePurchaseRepo.findPackagePurchaseById(created._id);
+      assert.equal(final.items[0].sessionsUsed, 1, "sessionsUsed must land on exactly 1, never 2");
+      assert.equal(final.items[0].sessionsReserved, 0);
+    });
+
+    it("markCompletedIfAllSessionsUsed is a harmless no-op the second time it matches nothing new", async () => {
+      const created = await packagePurchaseRepo.createPackagePurchase(validPurchase({ items: [{ service: new mongoose.Types.ObjectId(), servicePackageId: new mongoose.Types.ObjectId(), sessionsTotal: 1, sessionsUsed: 1, sessionsReserved: 0, unitPrice: 3000 }] }));
+
+      const first = await packagePurchaseRepo.markCompletedIfAllSessionsUsed(created._id);
+      const second = await packagePurchaseRepo.markCompletedIfAllSessionsUsed(created._id);
+
+      assert.equal(first.status, "completed");
+      assert.equal(second, null, "already-completed purchase shouldn't match the $ne:'completed' condition a second time");
+    });
+  });
+
   describe("findActivePurchasesForUserAndVariant", () => {
     it("only returns active purchases covering the given variant, not just the parent service", async () => {
       const userId = new mongoose.Types.ObjectId();

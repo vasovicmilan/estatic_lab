@@ -16,6 +16,22 @@ const ORDER_TERMINAL_NO_COMMISSION_STATUSES = ["cancelled", "returned", "refunde
  * unlike an order that could still be returned.
  */
 export async function recordAppointmentCommissions(appointmentId) {
+  // Idempotency guard: transitionStatus's move into "completed" isn't itself an
+  // atomic conditional update (see appointment.service.js), so two racing
+  // "complete" requests for the same appointment could both pass their status
+  // check and both emit the event this function is called from - with no guard
+  // here, that would silently create a duplicate employee and/or partner
+  // CommissionEntry for the same appointment (double real money owed). This
+  // covers the whole function, not per-entry, since "has anything already been
+  // recorded for this appointment" is the right question - a partial prior run
+  // isn't a real scenario here (both entries below are pushed and created
+  // together, nothing between them can throw).
+  const alreadyRecorded = await commissionRepo.countCommissionEntries({ sourceType: "appointment", appointment: appointmentId });
+  if (alreadyRecorded > 0) {
+    logInfo("Commission already recorded for this appointment - skipping duplicate", { appointmentId });
+    return;
+  }
+
   const appointment = await appointmentService.getAppointmentForCommission(appointmentId);
   if (!appointment) return;
 
@@ -161,6 +177,18 @@ export async function recordOrderCommission(orderId) {
  * reversePackagePurchaseCommission), just less commonly and not on a timer.
  */
 export async function recordPackagePurchaseCommission(packagePurchaseId) {
+  // Same idempotency guard as recordAppointmentCommissions above, and for the
+  // same underlying reason: package_purchase:created is emitted from
+  // createPurchaseForUser with no atomic guard against the event firing twice
+  // for the same purchase (e.g. a retried/duplicated event dispatch), so this
+  // function has to protect itself rather than trust it's only ever called once
+  // per purchase.
+  const alreadyRecorded = await commissionRepo.countCommissionEntries({ sourceType: "package_purchase", packagePurchase: packagePurchaseId });
+  if (alreadyRecorded > 0) {
+    logInfo("Commission already recorded for this package purchase - skipping duplicate", { packagePurchaseId });
+    return;
+  }
+
   const purchase = await packagePurchaseService.getPurchaseForCommission(packagePurchaseId);
   if (!purchase || !purchase.coupon?.partner) return;
 

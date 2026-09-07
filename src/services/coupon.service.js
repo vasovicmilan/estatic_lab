@@ -228,7 +228,22 @@ export async function redeemCoupon(
   { userId, appointmentId = null, packagePurchaseId = null, orderId = null, discountAmount },
   { session } = {}
 ) {
-  return couponRepo.redeemCoupon(couponId, { userId, appointmentId, packagePurchaseId, orderId, discountAmount }, { session });
+  const updated = await couponRepo.redeemCoupon(
+    couponId,
+    { userId, appointmentId, packagePurchaseId, orderId, discountAmount },
+    { session }
+  );
+  // The repository's query now conditions the update on usedCount < maxUses (see its
+  // own comment) - null here means either the coupon no longer exists, or - the case
+  // this is actually guarding against - someone else's concurrent redemption won the
+  // race and used up the last available slot between this caller's earlier
+  // validateCoupon() check and this call. Either way, the caller's whole operation
+  // (booking, package purchase, order) must abort rather than proceed as if the
+  // discount was actually applied.
+  if (!updated) {
+    conflict("Kupon je upravo dostigao maksimalan broj upotreba - pokušajte ponovo bez kupona ili osvežite stranicu");
+  }
+  return updated;
 }
 
 /**

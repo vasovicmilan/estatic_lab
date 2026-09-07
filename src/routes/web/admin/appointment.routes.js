@@ -24,6 +24,7 @@ router.put("/:appointmentId/odbij", validateAppointmentId, validateAppointmentRe
 router.put("/:appointmentId/otkazi", validateAppointmentId, validateAppointmentCancel, AppointmentController.cancelAppointment);
 router.put("/:appointmentId/zavrsi", validateAppointmentId, AppointmentController.completeAppointment);
 router.put("/:appointmentId/nije-se-pojavio", validateAppointmentId, validateAppointmentNoShow, AppointmentController.noShowAppointment);
+router.put("/:appointmentId/ponovo-otvori", validateAppointmentId, AppointmentController.reopenAppointment);
 router.put("/:appointmentId/preraspodeli", validateAppointmentId, validateAppointmentReassign, AppointmentController.reassignAppointment);
 router.put("/:appointmentId/pomeri", validateAppointmentId, validateAppointmentReschedule, AppointmentController.rescheduleAppointment);
 

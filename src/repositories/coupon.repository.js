@@ -48,14 +48,34 @@ export async function countCouponUsagesByUser(couponId, userId, { session } = {}
  * counter in a single update, so it's safe to call inside the same transaction that
  * creates the Appointment (or, now, the same flow that records a PackagePurchase) -
  * two concurrent redemptions can't silently overwrite each other's $inc.
+ *
+ * BUG FIX: this used to be a plain findByIdAndUpdate with no condition on usedCount,
+ * meaning the $inc itself never lost an update under concurrency, but nothing stopped
+ * it from pushing usedCount past maxUses - two requests could both pass
+ * coupon.service.js's validateCoupon() read (both seeing the coupon as still eligible)
+ * and then both redeem here, exceeding a maxUses:1 coupon's cap. The increment being
+ * atomic was necessary but not sufficient - the cap check has to live in the same
+ * atomic operation as the increment, not in an earlier separate read. Now the query
+ * itself only matches a coupon that's either uncapped (maxUses null) or still under
+ * its cap, so at most one of two racing redemptions can ever succeed - the loser gets
+ * null back (see coupon.service.js's redeemCoupon, which turns that into a proper
+ * "already exhausted" error) instead of successfully double-spending the coupon.
+ * maxUsesPerUser is NOT covered by this same atomicity yet - it's still enforced via
+ * a separate countCouponUsagesByUser read in validateCoupon(), so the same class of
+ * race is still theoretically possible there. Lower priority: worst case is one
+ * person redeeming a personal-use coupon slightly more than once via a genuine
+ * double-submit, not a shared cap being blown through by unrelated customers.
  */
 export async function redeemCoupon(
   couponId,
   { userId, appointmentId = null, packagePurchaseId = null, orderId = null, discountAmount },
   { session } = {}
 ) {
-  return Coupon.findByIdAndUpdate(
-    couponId,
+  return Coupon.findOneAndUpdate(
+    {
+      _id: couponId,
+      $or: [{ maxUses: null }, { $expr: { $lt: ["$usedCount", "$maxUses"] } }],
+    },
     {
       $inc: { usedCount: 1 },
       $push: {

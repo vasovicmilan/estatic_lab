@@ -828,6 +828,120 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
     assert.equal(releaseMock.mock.calls.length, 1);
   });
 
+  // BUG FIX regression tests - see transitionStatus's own comment in
+  // appointment.service.js. Reopening (rejected/cancelled/no_show -> pending, admin
+  // only per appointment-status-transitions.js) used to fall through the
+  // packagePurchase branch with no matching case at all, leaving a "pending"
+  // appointment whose session had already been returned to the purchase's pool by
+  // the earlier terminal transition - oversellable capacity.
+  describe("reopenAppointment - package session lifecycle", () => {
+    it("re-reserves a session when reopening a rejected package-covered appointment", async (t) => {
+      const purchaseId = id();
+      const servicePackageId = id();
+      const appointment = buildAppointment({
+        status: "rejected",
+        packagePurchase: purchaseId,
+        variant: { servicePackageId, name: "60 min", duration: 60, price: 3000 },
+      });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "pending" }));
+      const reserveMock = t.mock.method(packagePurchaseService, "reserveSession", async () => ({}));
+      const releaseMock = t.mock.method(packagePurchaseService, "releaseSession", async () => {});
+      const commitMock = t.mock.method(packagePurchaseService, "commitSession", async () => {});
+
+      await appointmentService.reopenAppointment(appointment._id.toString(), id().toString(), "admin");
+
+      assert.equal(reserveMock.mock.calls.length, 1);
+      assert.equal(String(reserveMock.mock.calls[0].arguments[0]), String(purchaseId));
+      assert.equal(String(reserveMock.mock.calls[0].arguments[1]), String(servicePackageId));
+      assert.equal(releaseMock.mock.calls.length, 0);
+      assert.equal(commitMock.mock.calls.length, 0);
+    });
+
+    it("re-reserves a session when reopening a cancelled package-covered appointment", async (t) => {
+      const purchaseId = id();
+      const servicePackageId = id();
+      const appointment = buildAppointment({
+        status: "cancelled",
+        packagePurchase: purchaseId,
+        variant: { servicePackageId, name: "60 min", duration: 60, price: 3000 },
+      });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "pending" }));
+      const reserveMock = t.mock.method(packagePurchaseService, "reserveSession", async () => ({}));
+
+      await appointmentService.reopenAppointment(appointment._id.toString(), id().toString(), "admin");
+
+      assert.equal(reserveMock.mock.calls.length, 1);
+    });
+
+    it("re-reserves a session when reopening a no_show package-covered appointment", async (t) => {
+      const purchaseId = id();
+      const servicePackageId = id();
+      const appointment = buildAppointment({
+        status: "no_show",
+        packagePurchase: purchaseId,
+        variant: { servicePackageId, name: "60 min", duration: 60, price: 3000 },
+      });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "pending" }));
+      const reserveMock = t.mock.method(packagePurchaseService, "reserveSession", async () => ({}));
+
+      await appointmentService.reopenAppointment(appointment._id.toString(), id().toString(), "admin");
+
+      assert.equal(reserveMock.mock.calls.length, 1);
+    });
+
+    it("aborts the reopen (appointment stays in its prior status) when no sessions are left to re-reserve", async (t) => {
+      const purchaseId = id();
+      const servicePackageId = id();
+      const appointment = buildAppointment({
+        status: "cancelled",
+        packagePurchase: purchaseId,
+        variant: { servicePackageId, name: "60 min", duration: 60, price: 3000 },
+      });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      const updateMock = t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "pending" }));
+      t.mock.method(packagePurchaseService, "reserveSession", async () => {
+        const err = new Error("Nema više preostalih seansi za ovu varijantu u paketu");
+        err.statusCode = 400;
+        throw err;
+      });
+
+      await assert.rejects(() => appointmentService.reopenAppointment(appointment._id.toString(), id().toString(), "admin"));
+      // the appointment's own status update must never be reached if reserving the
+      // session failed - a "pending" appointment with nothing backing it is exactly
+      // the broken state this fix exists to prevent
+      assert.equal(updateMock.mock.calls.length, 0);
+    });
+
+    it("does not touch package sessions at all for an a-la-carte (non-package) appointment", async (t) => {
+      const appointment = buildAppointment({ status: "rejected", packagePurchase: null });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "pending" }));
+      const reserveMock = t.mock.method(packagePurchaseService, "reserveSession", async () => ({}));
+
+      await appointmentService.reopenAppointment(appointment._id.toString(), id().toString(), "admin");
+
+      assert.equal(reserveMock.mock.calls.length, 0);
+    });
+
+    it("only admin is allowed to reopen - employee/user attempts are rejected by the state machine", async (t) => {
+      const employeeUser = buildEmployee();
+      // employee is the appointment's own assigned employee, so canAccessAppointment
+      // passes - the rejection this test verifies must come from
+      // appointment-status-transitions.js's TRANSITIONS table (only "admin" has
+      // "pending" listed under cancelled/rejected/no_show), not from access control.
+      const appointment = buildAppointment({ status: "cancelled", employee: employeeUser, packagePurchase: null });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+
+      await assert.rejects(
+        () => appointmentService.reopenAppointment(appointment._id.toString(), employeeUser._id.toString(), "employee"),
+        (err) => err.statusCode === 400
+      );
+    });
+  });
+
   it("does not touch package-purchase lifecycle for an appointment with no packagePurchase", async (t) => {
     const appointment = buildAppointment({ status: "confirmed", packagePurchase: null });
     t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);

@@ -9,6 +9,7 @@ import appointmentRepo from "../../../src/repositories/appointment.repository.js
 import packagePurchaseRepo from "../../../src/repositories/package-purchase.repository.js";
 import packageRepo from "../../../src/repositories/package.repository.js";
 import packagePurchaseService from "../../../src/services/package-purchase.service.js";
+import couponRepo from "../../../src/repositories/coupon.repository.js";
 import Role from "../../../src/models/role.model.js";
 
 async function seedUserRole() {
@@ -215,5 +216,78 @@ describe("booking concurrency (HTTP)", () => {
 
     const reloaded = await packagePurchaseRepo.findPackagePurchaseById(purchase._id);
     assert.equal(reloaded.items[0].sessionsReserved, 1, "sessionsReserved must never exceed sessionsTotal, even under a race");
+  });
+
+  // BUG FIX regression test - see createPurchaseForUser's own comment in
+  // package-purchase.service.js. Before wrapping the purchase-create and
+  // coupon-redeem writes in one real transaction, a losing request in this exact
+  // race would still end up with a persisted PackagePurchase despite its coupon
+  // redemption having been refused - a package the customer effectively got for
+  // free, off the books. This runs against the real replica-set-backed MongoDB
+  // test-app.js provides (unlike db-handler.js's single-node instance), since a
+  // genuine multi-document transaction rollback can only be proven against real
+  // transaction support, not a mock.
+  it("rolls back the whole package purchase when its coupon redemption loses a maxUses race, instead of leaving an unpaid-for purchase behind", async () => {
+    const { service } = await createBookableServiceWithEmployee();
+    const variantId = service.packages[0]._id.toString();
+
+    const packageDoc = await packageRepo.createPackage({
+      name: "Jedna Seansa Paket",
+      slug: "jedna-seansa-paket-kupon",
+      description: "Testni paket sa jednom seansom",
+      items: [{ service: service._id, servicePackageId: variantId, sessions: 1 }],
+      totalPrice: 3000,
+      isActive: true,
+    });
+
+    const coupon = await couponRepo.createCoupon({
+      code: "JEDNOM10",
+      discountType: "percentage",
+      discountValue: 10,
+      maxUses: 1,
+      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    });
+
+    const role = (await Role.findOne({ name: "user" })) || (await Role.create({ name: "user", isDefault: true, priority: 0 }));
+    const buyerA = await userRepo.createUser({
+      email: "kupac-a@example.com",
+      password: "lozinka123",
+      firstName: "Kupac",
+      lastName: "A",
+      role: role._id,
+      status: "active",
+      confirmed: true,
+    });
+    const buyerB = await userRepo.createUser({
+      email: "kupac-b@example.com",
+      password: "lozinka123",
+      firstName: "Kupac",
+      lastName: "B",
+      role: role._id,
+      status: "active",
+      confirmed: true,
+    });
+    const adminId = buyerA._id; // any valid user id works here - createPurchaseForUser only uses it as purchasedBy
+
+    // Two truly parallel purchases of the same maxUses:1 coupon - both pass
+    // validateCouponForPackagePurchase's own read (usedCount is still 0 for
+    // both), so whichever one's redeemCoupon call reaches the atomic update
+    // second must have its entire purchase rolled back, not just its coupon step.
+    const results = await Promise.allSettled([
+      packagePurchaseService.createPurchaseForUser(buyerA._id.toString(), packageDoc._id.toString(), adminId.toString(), { couponCode: "JEDNOM10" }),
+      packagePurchaseService.createPurchaseForUser(buyerB._id.toString(), packageDoc._id.toString(), adminId.toString(), { couponCode: "JEDNOM10" }),
+    ]);
+
+    const succeeded = results.filter((r) => r.status === "fulfilled");
+    const failed = results.filter((r) => r.status === "rejected");
+    assert.equal(succeeded.length, 1, "only one of the two concurrent coupon-discounted purchases should succeed");
+    assert.equal(failed.length, 1, "the other must be rejected (409 conflict from the exhausted coupon), not silently allowed through");
+    assert.equal(failed[0].reason.statusCode, 409);
+
+    const allPurchases = await packagePurchaseRepo.findPackagePurchases({});
+    assert.equal(allPurchases.total, 1, "the losing request's purchase must not exist at all - the transaction should have rolled it back");
+
+    const finalCoupon = await couponRepo.findCouponById(coupon._id);
+    assert.equal(finalCoupon.usedCount, 1, "usedCount must be exactly 1, matching the single purchase that actually persisted");
   });
 });

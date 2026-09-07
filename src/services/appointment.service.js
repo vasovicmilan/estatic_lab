@@ -524,11 +524,27 @@ async function transitionStatus(appointmentId, nextStatus, actorId, actorRole, e
   // back - none of those three represent the service actually being delivered.
   // "completed" is terminal (nothing transitions out of it - see
   // appointment-status-transitions.js), so a session is never committed twice.
+  //
+  // BUG FIX: reopening (admin moving cancelled/rejected/no_show back to "pending" -
+  // see appointment-status-transitions.js's TRANSITIONS table) used to fall through
+  // this block with no branch at all. The session had already been released back to
+  // the purchase's available pool by the earlier cancel/reject/no-show transition, so
+  // the reopened appointment sat there as "pending" while its own packagePurchase
+  // showed that session as free again - a second, unrelated booking could then
+  // legitimately claim the very same session, leaving two live appointments backed by
+  // one paid-for session (oversold capacity). Reopening now re-reserves a session the
+  // same way a brand-new package-covered booking would; if none are left (e.g.
+  // something else already claimed the freed one in the meantime), reserveSession
+  // throws and the whole reopen is aborted - the appointment stays in its prior
+  // terminal status rather than becoming a "pending" appointment with nothing backing
+  // it, which is the correct failure mode here.
   if (appointment.packagePurchase) {
     if (nextStatus === "completed") {
       await packagePurchaseService.commitSession(appointment.packagePurchase, appointment.variant.servicePackageId);
     } else if (nextStatus === "cancelled" || nextStatus === "rejected" || nextStatus === "no_show") {
       await packagePurchaseService.releaseSession(appointment.packagePurchase, appointment.variant.servicePackageId);
+    } else if (nextStatus === "pending") {
+      await packagePurchaseService.reserveSession(appointment.packagePurchase, appointment.variant.servicePackageId);
     }
   }
 
@@ -581,6 +597,30 @@ export async function noShowAppointment(appointmentId, note, actorId, actorRole)
     noShowBy: actorRole === "admin" ? "admin" : "employee",
     noShowAt: new Date(),
     noShowNote: note || "",
+  });
+}
+
+// Admin-only, per appointment-status-transitions.js's TRANSITIONS table (only
+// "admin" has rejected/cancelled/no_show -> "pending" listed at all) - reinstates
+// a mistakenly rejected/cancelled/no-show appointment. Clears the terminal-state
+// fields the earlier transition set, since they'd otherwise describe a rejection/
+// cancellation/no-show that no longer reflects the appointment's actual status.
+// Package-session re-reservation is handled by transitionStatus's own
+// packagePurchase branch (see its comment for the bug this closes) - not repeated
+// here, so this stays a thin wrapper like its siblings above.
+export async function reopenAppointment(appointmentId, actorId, actorRole) {
+  return transitionStatus(appointmentId, "pending", actorId, actorRole, {
+    confirmedBy: null,
+    confirmedAt: null,
+    rejectedBy: null,
+    rejectedAt: null,
+    rejectionReason: null,
+    cancelledBy: null,
+    cancelledAt: null,
+    cancellationReason: null,
+    noShowBy: null,
+    noShowAt: null,
+    noShowNote: null,
   });
 }
 
@@ -804,6 +844,7 @@ export default {
   cancelAppointment,
   completeAppointment,
   noShowAppointment,
+  reopenAppointment,
   reassignAppointment,
   rescheduleAppointment,
   deleteAppointmentById,

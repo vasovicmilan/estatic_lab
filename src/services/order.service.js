@@ -175,7 +175,21 @@ export async function createManualOrder(input, { actorId, actorRole } = {}) {
               title: product.name,
               variantLabel: variation.label,
               sku: variation.sku || product.sku,
-              price: lineTotal,
+              // BUG FIX: this used to store lineTotal (unitPrice * quantity) here,
+              // while a normal checkout (temporary-order.service.js) stores the
+              // plain per-unit variation.price - order.mapper.js's
+              // `ukupno: item.price * item.quantity` assumes the latter
+              // (unit-price) meaning for every order regardless of how it was
+              // created, so a manual order with quantity > 1 displayed a
+              // per-item total multiplied by quantity a second time (e.g. 3x a
+              // 2000 RSD item showed "6000 x 3 = 18000" instead of "2000 x 3 =
+              // 6000") in both the admin order view and the invoice PDF - even
+              // though the order's own top-level `subtotal` below was already
+              // correct, since it was never re-multiplied. Storing the unit
+              // price here instead makes this item's semantics identical to a
+              // normal checkout's, with nothing downstream needing to know or
+              // care which path created the order.
+              price: unitPrice,
               quantity,
               image: product.image || null,
             },
@@ -329,14 +343,47 @@ async function transitionStatus(orderId, nextStatus, actorId, actorRole, extra =
   const updateData = { status: nextStatus, ...extra };
   if (timestampField) updateData[timestampField] = new Date();
 
-  // cancelling/returning an unshipped-or-returned order gives the reserved stock back
-  if (nextStatus === "cancelled" || nextStatus === "returned") {
-    for (const item of order.items) {
-      await productService.restoreVariationStock(item.product, item.variant, item.quantity);
-    }
+  // BUG FIX: stock restoration and the order's own status update used to be two
+  // separate, non-transactional writes (restoreVariationStock was called with no
+  // session at all) - a failure partway through a multi-item order's stock
+  // restoration, or between finishing that loop and updateOrderById itself, could
+  // leave stock restored for some items but not others, or restored with the
+  // order still showing its old status. Same reasoning as
+  // package-purchase.service.js's createPurchaseForUser transaction fix - both
+  // writes now succeed or fail together.
+  //
+  // SECOND BUG FIX: reopening a cancelled order (cancelled -> pending, the only
+  // transition ORDER_STATUSES's TRANSITIONS table allows into "pending" - see
+  // order-status-transitions.js) used to fall through with no stock effect at
+  // all. Since cancelling ALWAYS restores stock unconditionally based only on
+  // the target status, reopening without re-claiming that stock meant a second,
+  // later cancellation of the same (reopened) order would restore stock a SECOND
+  // time for the same original decrement - phantom inventory that was never
+  // actually returned. Reopening now re-decrements stock the same way the
+  // original checkout did; if it's no longer available (something else already
+  // sold it in the meantime), the whole reopen aborts rather than leaving a
+  // "pending" order with insufficient stock behind it - the correct failure mode,
+  // same as appointment.service.js's reopenAppointment.
+  const session = await mongoose.startSession();
+  let updated;
+  try {
+    await session.withTransaction(async () => {
+      if (nextStatus === "cancelled" || nextStatus === "returned") {
+        for (const item of order.items) {
+          await productService.restoreVariationStock(item.product, item.variant, item.quantity, { session });
+        }
+      } else if (nextStatus === "pending" && order.status === "cancelled") {
+        for (const item of order.items) {
+          await productService.decreaseVariationStock(item.product, item.variant, item.quantity, { session });
+        }
+      }
+
+      updated = await orderRepo.updateOrderById(orderId, updateData, { session });
+    });
+  } finally {
+    await session.endSession();
   }
 
-  const updated = await orderRepo.updateOrderById(orderId, updateData);
   logInfo("Order status changed", { orderId, from: order.status, to: nextStatus, actorId, actorRole });
 
   eventEmitter.emit("order:status_changed", { orderId, status: nextStatus, previousStatus: order.status });

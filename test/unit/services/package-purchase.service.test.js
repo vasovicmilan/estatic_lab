@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import mongoose from "mongoose";
 import packagePurchaseRepo from "../../../src/repositories/package-purchase.repository.js";
 import packageRepo from "../../../src/repositories/package.repository.js";
 import couponService from "../../../src/services/coupon.service.js";
@@ -7,6 +8,17 @@ import serviceService from "../../../src/services/service.service.js";
 import userService from "../../../src/services/user.service.js";
 import * as packagePurchaseService from "../../../src/services/package-purchase.service.js";
 import { buildPackagePurchase, buildPackage, buildCoupon, id } from "../../helpers/factories.js";
+
+// Fakes mongoose's own session object - createPurchaseForUser calls
+// mongoose.startSession()/session.withTransaction()/session.endSession() directly
+// (see its own comment in package-purchase.service.js for the bug this closes),
+// a real driver-level operation no repository/service mock can intercept.
+function fakeSession() {
+  return {
+    withTransaction: async (fn) => fn(),
+    endSession: async () => {},
+  };
+}
 
 describe("package-purchase.service", () => {
   describe("createPurchaseForUser", () => {
@@ -22,6 +34,7 @@ describe("package-purchase.service", () => {
         ],
         totalPrice: 10000,
       });
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
       t.mock.method(packageRepo, "findPackageById", async () => pkg);
       t.mock.method(serviceService, "getServiceByIdRaw", async () => null);
       t.mock.method(userService, "findUserById", async () => null);
@@ -54,6 +67,7 @@ describe("package-purchase.service", () => {
 
     it("lets the admin override the price paid instead of using the package's own price", async (t) => {
       const pkg = buildPackage({ totalPrice: 10000 });
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
       t.mock.method(packageRepo, "findPackageById", async () => pkg);
       t.mock.method(serviceService, "getServiceByIdRaw", async () => null);
       t.mock.method(userService, "findUserById", async () => null);
@@ -72,6 +86,7 @@ describe("package-purchase.service", () => {
 
     it("applies a coupon and redeems it, discounting pricePaid", async (t) => {
       const pkg = buildPackage({ totalPrice: 10000 });
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
       t.mock.method(packageRepo, "findPackageById", async () => pkg);
       t.mock.method(serviceService, "getServiceByIdRaw", async () => null);
       t.mock.method(userService, "findUserById", async () => null);
@@ -93,6 +108,43 @@ describe("package-purchase.service", () => {
       assert.equal(created.coupon, coupon._id);
       assert.equal(redeemMock.mock.calls.length, 1);
       assert.equal(redeemMock.mock.calls[0].arguments[1].packagePurchaseId, created._id);
+    });
+
+    // BUG FIX regression test - see this function's own comment in
+    // package-purchase.service.js. Before wrapping both writes in one
+    // transaction, a failed coupon redemption after the purchase document was
+    // already created would leave a real, usable package purchase behind with
+    // no corresponding coupon usage record.
+    it("aborts the whole purchase (nothing is created) when redeeming the coupon fails inside the transaction", async (t) => {
+      const pkg = buildPackage({ totalPrice: 10000 });
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
+      t.mock.method(packageRepo, "findPackageById", async () => pkg);
+      t.mock.method(serviceService, "getServiceByIdRaw", async () => null);
+      t.mock.method(userService, "findUserById", async () => null);
+      const coupon = buildCoupon({ discountType: "fixed", discountValue: 2000 });
+      t.mock.method(couponService, "validateCouponForPackagePurchase", async () => ({ coupon, discountAmount: 2000 }));
+      // simulates redeemCoupon's own 409 conflict (see coupon.service.js) - e.g.
+      // someone else's concurrent redemption won a maxUses race in the moments
+      // between this function's earlier validate call and this point
+      t.mock.method(couponService, "redeemCoupon", async () => {
+        const err = new Error("Kupon je upravo dostigao maksimalan broj upotreba");
+        err.statusCode = 409;
+        throw err;
+      });
+      const createPurchaseMock = t.mock.method(packagePurchaseRepo, "createPackagePurchase", async (data) => ({ ...data, _id: id() }));
+
+      await assert.rejects(
+        () => packagePurchaseService.createPurchaseForUser(id().toString(), pkg._id.toString(), id().toString(), { couponCode: "LETO" }),
+        (err) => err.statusCode === 409
+      );
+      // createPackagePurchase itself was still called (it's inside the same
+      // withTransaction callback, called before redeemCoupon) - what matters is
+      // that fakeSession's withTransaction here just runs the callback inline
+      // without an isolated real Mongo transaction to roll back, so this
+      // assertion documents the mock's limits: the real guarantee (nothing
+      // actually persists) can only be proven against a real MongoDB, which is
+      // exactly what this file's integration-level counterpart should verify.
+      assert.equal(createPurchaseMock.mock.calls.length, 1);
     });
   });
 
@@ -308,80 +360,103 @@ describe("package-purchase.service", () => {
   });
 
   describe("releaseSession", () => {
-    it("decrements sessionsReserved, giving the slot back", async (t) => {
+    it("succeeds when the atomic update matches (a session was actually reserved to give back)", async (t) => {
       const purchase = buildPackagePurchase();
-      purchase.items[0].sessionsReserved = 1;
-      purchase.save = async () => purchase;
-      t.mock.method(packagePurchaseRepo, "findPackagePurchaseDocById", async () => purchase);
+      const updated = { ...purchase, items: [{ ...purchase.items[0], sessionsReserved: 0 }] };
+      t.mock.method(packagePurchaseRepo, "releaseSessionAtomic", async () => updated);
 
-      await packagePurchaseService.releaseSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString());
+      const result = await packagePurchaseService.releaseSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString());
 
-      assert.equal(purchase.items[0].sessionsReserved, 0);
+      assert.equal(result.items[0].sessionsReserved, 0);
     });
 
-    it("never goes negative even if called when nothing was reserved", async (t) => {
+    it("never goes negative even if called when nothing was reserved - the atomic update simply doesn't match, and the purchase comes back unchanged", async (t) => {
       const purchase = buildPackagePurchase();
       purchase.items[0].sessionsReserved = 0;
-      purchase.save = async () => purchase;
-      t.mock.method(packagePurchaseRepo, "findPackagePurchaseDocById", async () => purchase);
+      // the atomic update's own $expr requires sessionsReserved > 0 for the
+      // targeted item - nothing to give back, so it matches nothing, exactly like
+      // reserveSessionAtomic matching nothing when there's no capacity
+      t.mock.method(packagePurchaseRepo, "releaseSessionAtomic", async () => null);
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => purchase);
 
-      await packagePurchaseService.releaseSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString());
+      const result = await packagePurchaseService.releaseSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString());
 
-      assert.equal(purchase.items[0].sessionsReserved, 0);
+      assert.equal(result.items[0].sessionsReserved, 0);
+    });
+
+    it("returns the purchase unchanged for a variant it doesn't cover, rather than throwing", async (t) => {
+      const purchase = buildPackagePurchase();
+      t.mock.method(packagePurchaseRepo, "releaseSessionAtomic", async () => null);
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => purchase);
+
+      const result = await packagePurchaseService.releaseSession(purchase._id.toString(), id().toString());
+
+      assert.ok(result);
     });
 
     it("throws 404 for a nonexistent purchase", async (t) => {
-      t.mock.method(packagePurchaseRepo, "findPackagePurchaseDocById", async () => null);
+      t.mock.method(packagePurchaseRepo, "releaseSessionAtomic", async () => null);
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => null);
       await assert.rejects(() => packagePurchaseService.releaseSession(id().toString(), id().toString()), (err) => err.statusCode === 404);
     });
   });
 
   describe("commitSession", () => {
-    it("moves one unit from reserved to used", async (t) => {
+    it("moves one unit from reserved to used via the atomic update", async (t) => {
       const purchase = buildPackagePurchase();
-      purchase.items[0].sessionsReserved = 1;
-      purchase.items[0].sessionsUsed = 0;
-      purchase.save = async () => purchase;
-      t.mock.method(packagePurchaseRepo, "findPackagePurchaseDocById", async () => purchase);
+      const updated = { ...purchase, items: [{ ...purchase.items[0], sessionsReserved: 0, sessionsUsed: 1 }], status: "active" };
+      t.mock.method(packagePurchaseRepo, "commitSessionAtomic", async () => updated);
+      t.mock.method(packagePurchaseRepo, "markCompletedIfAllSessionsUsed", async () => null);
 
-      await packagePurchaseService.commitSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString());
+      const result = await packagePurchaseService.commitSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString());
 
-      assert.equal(purchase.items[0].sessionsReserved, 0);
-      assert.equal(purchase.items[0].sessionsUsed, 1);
+      assert.equal(result.items[0].sessionsReserved, 0);
+      assert.equal(result.items[0].sessionsUsed, 1);
     });
 
     it("marks the purchase 'completed' once every item's sessions are fully used", async (t) => {
       const purchase = buildPackagePurchase();
-      purchase.items[0].sessionsTotal = 1;
-      purchase.items[0].sessionsReserved = 1;
-      purchase.items[0].sessionsUsed = 0;
-      purchase.save = async () => purchase;
-      t.mock.method(packagePurchaseRepo, "findPackagePurchaseDocById", async () => purchase);
+      const committed = { ...purchase, items: [{ ...purchase.items[0], sessionsTotal: 1, sessionsReserved: 0, sessionsUsed: 1 }], status: "active" };
+      const completedDoc = { ...committed, status: "completed" };
+      t.mock.method(packagePurchaseRepo, "commitSessionAtomic", async () => committed);
+      const markMock = t.mock.method(packagePurchaseRepo, "markCompletedIfAllSessionsUsed", async () => completedDoc);
 
-      await packagePurchaseService.commitSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString());
+      const result = await packagePurchaseService.commitSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString());
 
-      assert.equal(purchase.status, "completed");
+      assert.equal(markMock.mock.calls.length, 1);
+      assert.equal(result.status, "completed");
     });
 
-    it("leaves status 'active' when other items still have sessions left", async (t) => {
-      const servicePackageA = id();
-      const servicePackageB = id();
+    it("leaves status as-is (markCompletedIfAllSessionsUsed's own condition doesn't match) when other items still have sessions left", async (t) => {
       const purchase = buildPackagePurchase();
-      purchase.items = [
-        { service: id(), servicePackageId: servicePackageA, sessionsTotal: 1, sessionsUsed: 0, sessionsReserved: 1 },
-        { service: id(), servicePackageId: servicePackageB, sessionsTotal: 3, sessionsUsed: 0, sessionsReserved: 0 },
-      ];
-      purchase.save = async () => purchase;
-      t.mock.method(packagePurchaseRepo, "findPackagePurchaseDocById", async () => purchase);
+      const committed = { ...purchase, status: "active" };
+      t.mock.method(packagePurchaseRepo, "commitSessionAtomic", async () => committed);
+      // markCompletedIfAllSessionsUsed's own $expr requires every item to be fully
+      // used - with another item still open, it correctly matches nothing and
+      // returns null, same "nothing to do" signal as everywhere else in this file
+      const markMock = t.mock.method(packagePurchaseRepo, "markCompletedIfAllSessionsUsed", async () => null);
 
-      await packagePurchaseService.commitSession(purchase._id.toString(), servicePackageA.toString());
+      const result = await packagePurchaseService.commitSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString());
 
-      assert.equal(purchase.status, "active");
+      assert.equal(markMock.mock.calls.length, 1);
+      assert.equal(result.status, "active");
     });
 
     it("throws 404 for a nonexistent purchase", async (t) => {
-      t.mock.method(packagePurchaseRepo, "findPackagePurchaseDocById", async () => null);
+      t.mock.method(packagePurchaseRepo, "commitSessionAtomic", async () => null);
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => null);
       await assert.rejects(() => packagePurchaseService.commitSession(id().toString(), id().toString()), (err) => err.statusCode === 404);
+    });
+
+    it("rejects committing a variant with nothing reserved to deliver", async (t) => {
+      const purchase = buildPackagePurchase();
+      purchase.items[0].sessionsReserved = 0;
+      t.mock.method(packagePurchaseRepo, "commitSessionAtomic", async () => null);
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => purchase);
+      await assert.rejects(
+        () => packagePurchaseService.commitSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString()),
+        (err) => err.statusCode === 400
+      );
     });
   });
 

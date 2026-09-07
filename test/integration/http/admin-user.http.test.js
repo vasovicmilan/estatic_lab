@@ -6,6 +6,7 @@ import { getCsrfToken } from "../../helpers/csrf.js";
 import { registerAndLogin, ensureRole } from "../../helpers/session.js";
 import userRepo from "../../../src/repositories/user.repository.js";
 import auditLogRepo from "../../../src/repositories/audit-log.repository.js";
+import { id } from "../../helpers/factories.js";
 
 describe("admin user management actions (HTTP)", () => {
   let app;
@@ -123,5 +124,28 @@ describe("admin user management actions (HTTP)", () => {
     const listRes = await agent.get("/admin/korisnici");
     assert.equal(listRes.status, 200);
     assert.ok(!listRes.text.includes(`obrisan-${target._id}@obrisan.local`));
+  });
+
+  it("anonymizing a nonexistent userId redirects with an error flash instead of crashing", async () => {
+    const agent = request.agent(app);
+    await registerAndLogin(agent, { email: "admin@example.com", roleName: "admin" });
+
+    // Grab a CSRF token from the list page rather than a details page, since a
+    // details page for a userId that doesn't exist would itself fail to render.
+    const { token } = await getCsrfToken(agent, "/admin/korisnici");
+    const missingUserId = id();
+    const res = await agent
+      .put(`/admin/korisnici/${missingUserId}/anonimizuj`)
+      .type("form")
+      .send({ CSRFToken: token });
+
+    // userService.anonymizeUser throws a 404 (notFound) for a missing user -
+    // the controller's catch block is expected to turn that into a redirect
+    // with an error flash, not let it bubble up as an unhandled 500.
+    assert.equal(res.status, 302);
+    assert.equal(res.headers.location, "/admin/korisnici");
+
+    const logs = await auditLogRepo.findAuditLogs({ filters: { action: "USER_ANONYMIZED", entityId: missingUserId.toString() } });
+    assert.equal(logs.total, 0, "no audit entry should be written for a failed anonymization attempt");
   });
 });

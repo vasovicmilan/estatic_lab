@@ -121,6 +121,51 @@ describe("coupon.repository", () => {
       assert.equal(updated.usageHistory[0].appointment, null);
       assert.equal(String(updated.usageHistory[0].packagePurchase), String(packagePurchaseId));
     });
+
+    // BUG FIX regression tests - see this function's own comment in
+    // coupon.repository.js. The query used to be a plain findByIdAndUpdate with no
+    // condition on usedCount, so nothing stopped it from pushing usedCount past
+    // maxUses even though the $inc itself never lost an update.
+    it("refuses a redemption once maxUses is already reached, returning null rather than incrementing past the cap", async () => {
+      const coupon = await couponRepo.createCoupon(validCoupon({ maxUses: 1 }));
+      await couponRepo.redeemCoupon(coupon._id, { userId: new mongoose.Types.ObjectId(), discountAmount: 100 });
+
+      const secondAttempt = await couponRepo.redeemCoupon(coupon._id, { userId: new mongoose.Types.ObjectId(), discountAmount: 100 });
+
+      assert.equal(secondAttempt, null);
+      const final = await couponRepo.findCouponById(coupon._id);
+      assert.equal(final.usedCount, 1, "usedCount must not exceed maxUses");
+    });
+
+    it("never allows usedCount to exceed maxUses under real concurrency - the actual race the fix closes", async () => {
+      const coupon = await couponRepo.createCoupon(validCoupon({ maxUses: 1 }));
+
+      const [resultA, resultB] = await Promise.all([
+        couponRepo.redeemCoupon(coupon._id, { userId: new mongoose.Types.ObjectId(), discountAmount: 100 }),
+        couponRepo.redeemCoupon(coupon._id, { userId: new mongoose.Types.ObjectId(), discountAmount: 100 }),
+      ]);
+
+      const succeeded = [resultA, resultB].filter((r) => r !== null);
+      const rejected = [resultA, resultB].filter((r) => r === null);
+      assert.equal(succeeded.length, 1, "exactly one of the two concurrent redemptions should succeed");
+      assert.equal(rejected.length, 1, "exactly one of the two concurrent redemptions should be refused");
+
+      const final = await couponRepo.findCouponById(coupon._id);
+      assert.equal(final.usedCount, 1, "usedCount must be exactly 1, never 2, no matter how the two requests interleaved");
+      assert.equal(final.usageHistory.length, 1);
+    });
+
+    it("still allows unlimited redemptions when maxUses is null", async () => {
+      const coupon = await couponRepo.createCoupon(validCoupon({ maxUses: null }));
+
+      for (let i = 0; i < 5; i++) {
+        const result = await couponRepo.redeemCoupon(coupon._id, { userId: new mongoose.Types.ObjectId(), discountAmount: 50 });
+        assert.ok(result, `redemption #${i + 1} should succeed when maxUses is null`);
+      }
+
+      const final = await couponRepo.findCouponById(coupon._id);
+      assert.equal(final.usedCount, 5);
+    });
   });
 
   describe("findCoupons", () => {

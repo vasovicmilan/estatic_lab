@@ -291,6 +291,31 @@ export async function deleteAppointment(req, res, next) {
   }
 }
 
+export async function reopenAppointment(req, res, next) {
+  try {
+    const { appointmentId } = req.params;
+    const existing = await appointmentService.getAppointmentById(appointmentId, req.session?.user?.id, "admin").catch(() => null);
+
+    await appointmentService.reopenAppointment(appointmentId, req.session?.user?.id, "admin");
+    logInfo(`[reopenAppointment] Termin #${appointmentId} ponovo otvoren`, { appointmentId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "APPOINTMENT_REOPENED",
+      entity: { type: "Appointment", id: appointmentId },
+      changes: { status: { old: existing?.status || null, new: "pending" } },
+      req,
+      success: true,
+    });
+    return flashAndRedirect(req, res, "success", "Termin je ponovo otvoren", `/admin/termini/detalji/${appointmentId}`);
+  } catch (error) {
+    logError("[reopenAppointment] Greška pri ponovnom otvaranju termina", error, { appointmentId: req.params.appointmentId, userId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, `/admin/termini/detalji/${req.params.appointmentId}`);
+    }
+    next(error);
+  }
+}
+
 export default {
   listAppointments,
   appointmentDetails,
@@ -299,6 +324,7 @@ export default {
   cancelAppointment,
   completeAppointment,
   noShowAppointment,
+  reopenAppointment,
   reassignAppointment,
   rescheduleAppointment,
   deleteAppointment,

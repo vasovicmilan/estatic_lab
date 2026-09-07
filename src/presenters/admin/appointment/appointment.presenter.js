@@ -71,9 +71,7 @@ export function prepareAppointmentDetailsData(appointment, { employeeOptions = [
     cancelled: { label: "Otkaži termin", url: `/admin/termini/${appointment.id}/otkazi`, variant: "warning", needsReason: true },
     completed: { label: "Označi kao završen", url: `/admin/termini/${appointment.id}/zavrsi`, variant: "primary", needsReason: false },
     no_show: { label: "Klijent se nije pojavio", url: `/admin/termini/${appointment.id}/nije-se-pojavio`, variant: "warning", needsReason: true },
-    // NOTE: "pending" is a valid transition target from rejected/cancelled/no_show per
-    // appointment-status-transitions.js, but no "reopen" route exists yet - omitted
-    // here rather than pointed at the wrong endpoint. Add a route + this entry together.
+    pending: { label: "Ponovo otvori termin", url: `/admin/termini/${appointment.id}/ponovo-otvori`, variant: "secondary", needsReason: false },
   };
   const statusActions = allowedNextStatuses.map((status) => actionMap[status]).filter(Boolean);
 

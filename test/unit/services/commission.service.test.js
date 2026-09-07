@@ -9,7 +9,31 @@ import { buildAppointment, buildEmployee, buildOrder, buildPackagePurchase, buil
 
 describe("commission.service", () => {
   describe("recordAppointmentCommissions", () => {
+    // BUG FIX regression test - see this function's own comment in
+    // commission.service.js. transitionStatus's move into "completed" isn't an
+    // atomic conditional update, so two racing "complete" requests for the same
+    // appointment could both emit the event this function is called from - with
+    // no guard, that used to silently create a duplicate commission entry
+    // (double real money owed to an employee and/or partner).
+    it("skips creating any entry when a commission for this appointment already exists", async (t) => {
+      const employee = buildEmployee({ payType: "commission", commissionRate: 20 });
+      const appointment = buildAppointment({ employee, finalPrice: 4000, packagePurchase: null, coupon: null });
+      const countMock = t.mock.method(commissionRepo, "countCommissionEntries", async () => 1);
+      const getMock = t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
+      const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
+
+      await commissionService.recordAppointmentCommissions(appointment._id.toString());
+
+      assert.equal(countMock.mock.calls.length, 1);
+      assert.deepEqual(countMock.mock.calls[0].arguments[0], { sourceType: "appointment", appointment: appointment._id.toString() });
+      // the guard must short-circuit before even fetching the appointment - no
+      // point doing the rest of the work once we know this is a duplicate call
+      assert.equal(getMock.mock.calls.length, 0);
+      assert.equal(createMock.mock.calls.length, 0);
+    });
+
     it("does nothing when the appointment can't be found", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       t.mock.method(appointmentService, "getAppointmentForCommission", async () => null);
       const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
 
@@ -19,6 +43,7 @@ describe("commission.service", () => {
     });
 
     it("records an employee entry at the employee's own commissionRate when payType is 'commission'", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const employee = buildEmployee({ payType: "commission", commissionRate: 20 });
       const appointment = buildAppointment({ employee, finalPrice: 4000, packagePurchase: null, coupon: null });
       t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
@@ -36,6 +61,7 @@ describe("commission.service", () => {
     });
 
     it("skips the employee entry when payType is not 'commission' (e.g. salaried)", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const employee = buildEmployee({ payType: "salary", commissionRate: 20 });
       const appointment = buildAppointment({ employee, finalPrice: 4000, packagePurchase: null, coupon: null });
       t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
@@ -47,6 +73,7 @@ describe("commission.service", () => {
     });
 
     it("skips the employee entry when commissionRate is 0/falsy even if payType is 'commission'", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const employee = buildEmployee({ payType: "commission", commissionRate: 0 });
       const appointment = buildAppointment({ employee, finalPrice: 4000, packagePurchase: null, coupon: null });
       t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
@@ -58,6 +85,7 @@ describe("commission.service", () => {
     });
 
     it("pro-rates the employee's base value against the package's TRUE a la carte total, not against originalPrice (which is already the discounted bundle price)", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const employee = buildEmployee({ payType: "commission", commissionRate: 10 });
       const serviceId = id();
       const servicePackageId = id();
@@ -100,6 +128,7 @@ describe("commission.service", () => {
     });
 
     it("compounds a coupon's discount on top of the package's own bundle discount correctly", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const employee = buildEmployee({ payType: "commission", commissionRate: 10 });
       const serviceId = id();
       const servicePackageId = id();
@@ -137,6 +166,7 @@ describe("commission.service", () => {
     });
 
     it("computes the discount ratio against the whole package's true a la carte total, correctly weighting a package that bundles two different-priced services", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const employee = buildEmployee({ payType: "commission", commissionRate: 10 });
       const serviceId = id();
       const servicePackageId = id();
@@ -171,6 +201,7 @@ describe("commission.service", () => {
     });
 
     it("skips the employee entry entirely when no matching package item can be found (pro-rated value is 0)", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const employee = buildEmployee({ payType: "commission", commissionRate: 10 });
       const packagePurchase = buildPackagePurchase({ items: [] }); // nothing matches this appointment's service/variant
       const appointment = buildAppointment({ employee, finalPrice: 0, packagePurchase, coupon: null });
@@ -183,6 +214,7 @@ describe("commission.service", () => {
     });
 
     it("records a partner entry at the partner's commissionRateServices (NOT commissionRateProducts) for an appointment", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const partner = buildPartner({ commissionRateServices: 15, commissionRateProducts: 3 });
       const coupon = buildCoupon({ partner });
       const appointment = buildAppointment({ employee: null, finalPrice: 4000, packagePurchase: null, coupon });
@@ -199,6 +231,7 @@ describe("commission.service", () => {
     });
 
     it("caps the partner's appointment commission at maxCommissionAmountServices when the raw amount would exceed it", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const partner = buildPartner({ commissionRateServices: 50, maxCommissionAmountServices: 500 });
       const coupon = buildCoupon({ partner });
       // 50% of 4000 would be 2000, but the cap limits it to 500
@@ -213,6 +246,7 @@ describe("commission.service", () => {
     });
 
     it("does not cap the partner's commission when maxCommissionAmountServices is null", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const partner = buildPartner({ commissionRateServices: 50, maxCommissionAmountServices: null });
       const coupon = buildCoupon({ partner });
       const appointment = buildAppointment({ employee: null, finalPrice: 4000, packagePurchase: null, coupon });
@@ -225,6 +259,7 @@ describe("commission.service", () => {
     });
 
     it("skips the partner entry when the coupon has no partner attached (a plain discount code)", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const coupon = buildCoupon({ partner: null });
       const appointment = buildAppointment({ employee: null, finalPrice: 4000, packagePurchase: null, coupon });
       t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
@@ -236,6 +271,7 @@ describe("commission.service", () => {
     });
 
     it("records both an employee entry and a partner entry when both apply to the same appointment", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const employee = buildEmployee({ payType: "commission", commissionRate: 20 });
       const partner = buildPartner({ commissionRateServices: 15 });
       const coupon = buildCoupon({ partner });
@@ -303,7 +339,26 @@ describe("commission.service", () => {
   });
 
   describe("recordPackagePurchaseCommission", () => {
+    // BUG FIX regression test - same reasoning as recordAppointmentCommissions'
+    // own regression test above: package_purchase:created has no atomic guard
+    // against firing twice for the same purchase.
+    it("skips creating an entry when a commission for this purchase already exists", async (t) => {
+      const partner = buildPartner({ commissionRateServices: 10 });
+      const purchase = buildPackagePurchase({ coupon: buildCoupon({ partner }), pricePaid: 15000 });
+      const countMock = t.mock.method(commissionRepo, "countCommissionEntries", async () => 1);
+      const getMock = t.mock.method(packagePurchaseService, "getPurchaseForCommission", async () => purchase);
+      const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
+
+      await commissionService.recordPackagePurchaseCommission(purchase._id.toString());
+
+      assert.equal(countMock.mock.calls.length, 1);
+      assert.deepEqual(countMock.mock.calls[0].arguments[0], { sourceType: "package_purchase", packagePurchase: purchase._id.toString() });
+      assert.equal(getMock.mock.calls.length, 0);
+      assert.equal(createMock.mock.calls.length, 0);
+    });
+
     it("does nothing when the purchase can't be found", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       t.mock.method(packagePurchaseService, "getPurchaseForCommission", async () => null);
       const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
 
@@ -313,6 +368,7 @@ describe("commission.service", () => {
     });
 
     it("does nothing when the purchase's coupon has no partner attached", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const purchase = buildPackagePurchase({ coupon: buildCoupon({ partner: null }), pricePaid: 8000 });
       t.mock.method(packagePurchaseService, "getPurchaseForCommission", async () => purchase);
       const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
@@ -323,6 +379,7 @@ describe("commission.service", () => {
     });
 
     it("does nothing when pricePaid is 0 or negative", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const partner = buildPartner();
       const purchase = buildPackagePurchase({ coupon: buildCoupon({ partner }), pricePaid: 0 });
       t.mock.method(packagePurchaseService, "getPurchaseForCommission", async () => purchase);
@@ -334,6 +391,7 @@ describe("commission.service", () => {
     });
 
     it("records an 'earned' entry at commissionRateServices (packages are a services-side commission, not products)", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const partner = buildPartner({ commissionRateServices: 12, commissionRateProducts: 4 });
       const purchase = buildPackagePurchase({ coupon: buildCoupon({ partner }), pricePaid: 9000 });
       t.mock.method(packagePurchaseService, "getPurchaseForCommission", async () => purchase);
@@ -350,6 +408,7 @@ describe("commission.service", () => {
     });
 
     it("caps at maxCommissionAmountServices when set", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const partner = buildPartner({ commissionRateServices: 50, maxCommissionAmountServices: 1000 });
       const purchase = buildPackagePurchase({ coupon: buildCoupon({ partner }), pricePaid: 9000 });
       t.mock.method(packagePurchaseService, "getPurchaseForCommission", async () => purchase);

@@ -298,4 +298,18 @@ describe("redeemCoupon - packagePurchaseId pass-through", () => {
     assert.equal(forwarded.packagePurchaseId, purchaseId);
     assert.equal(forwarded.appointmentId, null);
   });
+
+  // The repository's redeemCoupon now conditions its update on usedCount < maxUses
+  // (atomic, in the same query as the $inc - see coupon.repository.js's own comment
+  // for the race this closes) and returns null when that condition doesn't match,
+  // rather than throwing itself - it's this service layer's job to turn "the atomic
+  // update matched nothing" into a real error the caller's transaction can abort on.
+  it("throws a 409 conflict if the atomic update matched nothing - someone else's concurrent redemption won the race", async (t) => {
+    t.mock.method(couponRepo, "redeemCoupon", async () => null);
+
+    await assert.rejects(
+      () => couponService.redeemCoupon(id(), { userId: id(), discountAmount: 500 }),
+      (err) => err.statusCode === 409
+    );
+  });
 });

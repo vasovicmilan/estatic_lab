@@ -139,6 +139,119 @@ export async function reserveSessionAtomic(packagePurchaseId, servicePackageId, 
   ).lean();
 }
 
+/**
+ * Atomic counterpart to reserveSessionAtomic, for giving a reservation back
+ * (appointment cancelled/rejected/no-show before delivery) without a
+ * read-modify-write race. Same shape: only matches (and only then decrements)
+ * when the specific item still has at least one session actually reserved to
+ * give back - guards against sessionsReserved ever going negative under
+ * concurrent releases the same way reserveSessionAtomic guards against
+ * over-reserving.
+ *
+ * BUG FIX: releaseSession() used to read the whole document, mutate
+ * item.sessionsReserved in JS with Math.max(0, ...), then .save() it - two
+ * concurrent releases for the same item could both read the same
+ * sessionsReserved value and one update would silently overwrite the other's
+ * decrement (a lost update). Mongoose's default optimistic versioning (__v)
+ * would turn that into a thrown VersionError rather than silent corruption,
+ * but there was no retry, so a concurrent release still failed with an error
+ * instead of just... working, the way it does now.
+ */
+export async function releaseSessionAtomic(packagePurchaseId, servicePackageId, { session } = {}) {
+  const variantId = new Types.ObjectId(servicePackageId);
+  return PackagePurchase.findOneAndUpdate(
+    {
+      _id: packagePurchaseId,
+      $expr: {
+        $gt: [
+          {
+            $size: {
+              $filter: {
+                input: "$items",
+                as: "i",
+                cond: {
+                  $and: [{ $eq: ["$$i.servicePackageId", variantId] }, { $gt: ["$$i.sessionsReserved", 0] }],
+                },
+              },
+            },
+          },
+          0,
+        ],
+      },
+    },
+    { $inc: { "items.$[elem].sessionsReserved": -1 } },
+    { arrayFilters: [{ "elem.servicePackageId": variantId }], returnDocument: "after", session }
+  ).lean();
+}
+
+/**
+ * Atomic counterpart for delivering a reservation (appointment completed) -
+ * same reasoning and same guard as releaseSessionAtomic above: only matches
+ * when the item still has a session actually reserved to convert, moving one
+ * unit from sessionsReserved to sessionsUsed in the same atomic operation so
+ * the two counters can never drift out of sync relative to each other under
+ * concurrent commits.
+ */
+export async function commitSessionAtomic(packagePurchaseId, servicePackageId, { session } = {}) {
+  const variantId = new Types.ObjectId(servicePackageId);
+  return PackagePurchase.findOneAndUpdate(
+    {
+      _id: packagePurchaseId,
+      $expr: {
+        $gt: [
+          {
+            $size: {
+              $filter: {
+                input: "$items",
+                as: "i",
+                cond: {
+                  $and: [{ $eq: ["$$i.servicePackageId", variantId] }, { $gt: ["$$i.sessionsReserved", 0] }],
+                },
+              },
+            },
+          },
+          0,
+        ],
+      },
+    },
+    { $inc: { "items.$[elem].sessionsReserved": -1, "items.$[elem].sessionsUsed": 1 } },
+    { arrayFilters: [{ "elem.servicePackageId": variantId }], returnDocument: "after", session }
+  ).lean();
+}
+
+/**
+ * Flips the purchase to "completed" once every item has sessionsUsed >=
+ * sessionsTotal - a separate, idempotent update from commitSessionAtomic's own
+ * $inc, run right after it by package-purchase.service.js's commitSession.
+ * Deliberately conditioned on status not already being "completed" so calling
+ * this redundantly (e.g. the last two items of a purchase get committed a few
+ * milliseconds apart) is a harmless no-op the second time, not a second write.
+ */
+export async function markCompletedIfAllSessionsUsed(packagePurchaseId, { session } = {}) {
+  return PackagePurchase.findOneAndUpdate(
+    {
+      _id: packagePurchaseId,
+      status: { $ne: "completed" },
+      $expr: {
+        $eq: [
+          {
+            $size: {
+              $filter: {
+                input: "$items",
+                as: "i",
+                cond: { $lt: ["$$i.sessionsUsed", "$$i.sessionsTotal"] },
+              },
+            },
+          },
+          0,
+        ],
+      },
+    },
+    { $set: { status: "completed" } },
+    { returnDocument: "after", session }
+  ).lean();
+}
+
 export default {
   createPackagePurchase,
   findPackagePurchaseById,
@@ -151,4 +264,7 @@ export default {
   countPackagePurchases,
   countActivePurchasesWithOutstandingSessionsForService,
   reserveSessionAtomic,
+  releaseSessionAtomic,
+  commitSessionAtomic,
+  markCompletedIfAllSessionsUsed,
 };
