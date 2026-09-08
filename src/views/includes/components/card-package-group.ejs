@@ -1,4 +1,4 @@
-<div class="card h-100 shadow-sm <%= group.tiers.some(function(t){ return t.najbolji; }) ? 'border-primary' : '' %>" <% if (group.tiers.length > 1) { %>data-package-group<% } %>>
+<div class="card h-100 shadow-sm position-relative <%= group.tiers.some(function(t){ return t.najbolji; }) ? 'border-primary' : '' %>" <% if (group.tiers.length > 1) { %>data-package-group<% } %>>
   <% const activeTier = group.tiers.find(function(t) { return t.id === group.defaultTierId; }); %>
   <% if (activeTier.slika && activeTier.slika.url) {
        const v = activeTier.slika.variants || {};
@@ -13,7 +13,9 @@
   <% } %>
   <div class="card-body d-flex flex-column">
     <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-      <h3 class="h5 mb-0"><%= group.naslov %></h3>
+      <h3 class="h5 mb-0">
+        <a href="/paketi/<%= activeTier.slug %>" class="text-decoration-none text-dark stretched-link" data-tier-link-target><%= group.naslov %></a>
+      </h3>
       <span class="badge <%= activeTier.najbolji ? 'text-bg-warning' : 'text-bg-secondary' %> flex-shrink-0" data-tier-badge-target><%= activeTier.oznaka || (activeTier.najbolji ? "Najbolja vrednost" : "") %></span>
     </div>
 
@@ -26,7 +28,7 @@
     <% } %>
 
     <% if (group.tiers.length > 1) { %>
-      <div class="tier-toggle mb-3">
+      <div class="tier-toggle mb-3 position-relative" style="z-index: 2;">
         <% group.tiers.forEach(function(tier) { %>
           <a
             href="/paketi/<%= tier.slug %>"
@@ -59,6 +61,6 @@
       <% } %>
     </div>
 
-    <a href="/paketi/<%= activeTier.slug %>" class="btn btn-primary rounded-pill mt-3" data-tier-cta-target>Zakaži paket</a>
+    <a href="/paketi/<%= activeTier.slug %>" class="btn btn-primary rounded-pill mt-3 position-relative" style="z-index: 2;" data-tier-cta-target>Zakaži paket</a>
   </div>
 </div>

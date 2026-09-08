@@ -233,6 +233,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const badgeEl = card.querySelector("[data-tier-badge-target]");
     const descEl = card.querySelector("[data-tier-desc-target]");
     const ctaEl = card.querySelector("[data-tier-cta-target]");
+    // the whole-card stretched-link (see card-package-group.ejs) has to follow
+    // whichever tier is currently selected, same as the CTA button already
+    // does - otherwise clicking the card body after switching to "10 seansi"
+    // would still navigate to the "5 seansi" page the card started on.
+    const linkEl = card.querySelector("[data-tier-link-target]");
     const buttons = card.querySelectorAll("[data-tier-button]");
 
     buttons.forEach((button) => {
@@ -246,6 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (savingsEl) savingsEl.textContent = button.dataset.tierSavings || "";
         if (descEl) descEl.textContent = button.dataset.tierDesc || "";
         if (ctaEl) ctaEl.setAttribute("href", button.dataset.tierHref || "#");
+        if (linkEl) linkEl.setAttribute("href", button.dataset.tierHref || "#");
 
         if (badgeEl) {
           badgeEl.textContent = button.dataset.tierBadge || "";
