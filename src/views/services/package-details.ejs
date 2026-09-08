@@ -14,8 +14,8 @@
         <div class="col-lg-5">
           <% if (data.package.slika && data.package.slika.url) { %>
             <div class="position-relative">
-              <div class="ratio ratio-4x3 rounded-4 overflow-hidden">
-                <img src="<%= data.package.slika.url %>" alt="<%= data.package.slika.alt || data.package.naziv %>" class="w-100 h-100 object-fit-cover img-clickable"
+              <div class="ratio ratio-4x3 rounded-4 overflow-hidden bg-light">
+                <img src="<%= data.package.slika.url %>" alt="<%= data.package.slika.alt || data.package.naziv %>" class="w-100 h-100 object-fit-contain p-3 img-clickable"
                      data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
                      data-full-src="<%= data.package.slika.url %>" data-full-alt="<%= data.package.naziv %>">
               </div>

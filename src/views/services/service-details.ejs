@@ -31,10 +31,10 @@
                const fullSrc = v.original || data.service.slika.url;
           %>
             <div class="position-relative">
-              <div class="ratio ratio-4x3 rounded-4 overflow-hidden">
+              <div class="ratio ratio-4x3 rounded-4 overflow-hidden bg-light">
                 <img src="<%= data.service.slika.url %>"
                      <% if (srcsetParts.length > 1) { %>srcset="<%= srcsetParts.join(', ') %>" sizes="(min-width: 992px) 470px, 100vw"<% } %>
-                     alt="<%= data.service.slika.alt || data.service.naziv %>" class="w-100 h-100 object-fit-cover img-clickable"
+                     alt="<%= data.service.slika.alt || data.service.naziv %>" class="w-100 h-100 object-fit-contain p-3 img-clickable"
                      data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
                      data-full-src="<%= fullSrc %>" data-full-alt="<%= data.service.naziv %>">
               </div>

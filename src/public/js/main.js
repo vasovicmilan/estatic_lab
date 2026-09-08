@@ -207,16 +207,55 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // image lightbox - click any .img-clickable[data-full-src] to view it full-size
-  // in the shared #imageLightboxModal (see includes/footer.ejs)
+  // in the shared #imageLightboxModal (see includes/footer.ejs). Every
+  // .img-clickable currently on the page (in DOM order) forms one gallery -
+  // main product/service/package image first, then gallery-video.ejs's grid -
+  // so prev/next and the arrow keys cycle through all of them, not just the
+  // ones inside a single <img> element's own container.
   if (typeof bootstrap !== "undefined") {
     const lightboxEl = document.getElementById("imageLightboxModal");
     if (lightboxEl) {
+      const img = document.getElementById("imageLightboxImg");
+      const caption = document.getElementById("imageLightboxCaption");
+      const counter = document.getElementById("imageLightboxCounter");
+      const prevBtn = document.getElementById("lightboxPrevBtn");
+      const nextBtn = document.getElementById("lightboxNextBtn");
+      let galleryItems = [];
+      let currentIndex = 0;
+
+      function showImageAt(index) {
+        if (galleryItems.length === 0) return;
+        // wraps around both ends - a gallery of N images cycling continuously
+        // reads more naturally than disabled buttons at the first/last photo
+        currentIndex = (index + galleryItems.length) % galleryItems.length;
+        const item = galleryItems[currentIndex];
+        img.src = item.dataset.fullSrc || item.src || "";
+        img.alt = item.dataset.fullAlt || item.alt || "";
+        const altText = item.dataset.fullAlt || item.alt || "";
+        caption.textContent = altText;
+        caption.classList.toggle("d-none", !altText);
+        const showNav = galleryItems.length > 1;
+        counter.textContent = showNav ? `${currentIndex + 1} / ${galleryItems.length}` : "";
+        prevBtn.classList.toggle("d-none", !showNav);
+        nextBtn.classList.toggle("d-none", !showNav);
+      }
+
       lightboxEl.addEventListener("show.bs.modal", (event) => {
         const trigger = event.relatedTarget;
         if (!trigger) return;
-        const img = document.getElementById("imageLightboxImg");
-        img.src = trigger.dataset.fullSrc || trigger.src || "";
-        img.alt = trigger.dataset.fullAlt || trigger.alt || "";
+        galleryItems = Array.from(document.querySelectorAll(".img-clickable[data-full-src]"));
+        const clickedIndex = galleryItems.indexOf(trigger);
+        showImageAt(clickedIndex >= 0 ? clickedIndex : 0);
+      });
+
+      prevBtn.addEventListener("click", () => showImageAt(currentIndex - 1));
+      nextBtn.addEventListener("click", () => showImageAt(currentIndex + 1));
+
+      // only listens while the lightbox is actually open, so the arrow keys
+      // don't hijack normal page scrolling/navigation the rest of the time
+      lightboxEl.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowLeft") showImageAt(currentIndex - 1);
+        else if (event.key === "ArrowRight") showImageAt(currentIndex + 1);
       });
     }
   }

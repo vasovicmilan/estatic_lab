@@ -99,10 +99,18 @@
     <div class="modal-content bg-transparent border-0">
       <button type="button" class="btn-close btn-close-white ms-auto m-2" data-bs-dismiss="modal" aria-label="Zatvori"></button>
       <div class="modal-body p-0 text-center">
-        <img id="imageLightboxImg" src="" alt="" class="img-fluid rounded">
+        <img id="imageLightboxImg" src="" alt="" class="rounded">
+        <p id="imageLightboxCaption" class="text-white small mt-2 mb-0 px-3"></p>
+        <p id="imageLightboxCounter" class="text-white-50 small mb-0"></p>
       </div>
     </div>
   </div>
+  <button type="button" id="lightboxPrevBtn" class="lightbox-nav-btn" aria-label="Prethodna slika">
+    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+  </button>
+  <button type="button" id="lightboxNextBtn" class="lightbox-nav-btn" aria-label="Sledeća slika">
+    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+  </button>
 </div>
 
 <%- include("./components/cookie-consent") %>

@@ -1385,3 +1385,81 @@ h1, h2, h3, h4, h5, h6,
   min-width: 100px;
   max-width: 200px;
 }
+
+/* Image lightbox (#imageLightboxModal in footer.ejs, triggered by any
+   .img-clickable - product/service/package detail pages' main image and
+   gallery-video.ejs's gallery grid). Explicit object-fit: contain + a capped
+   height so every image shows whole, regardless of its own aspect ratio -
+   without this, a very tall or very wide image has no guaranteed display
+   size and could look inconsistent (or, with object-fit: cover set anywhere
+   else, cropped) as the lightbox now cycles between images of different
+   shapes via prev/next instead of always being opened fresh on one image. */
+#imageLightboxModal .modal-body img {
+  max-height: 85vh;
+  max-width: 100%;
+  width: auto;
+  object-fit: contain;
+}
+
+/* Same reasoning for gallery thumbnails - a fixed-ratio box so the grid
+   stays even regardless of each photo's native aspect ratio, with
+   object-fit: contain (not cover) so nothing is cropped, on a neutral
+   background for images that don't fill the box. Mirrors the treatment the
+   main product/service image already gets via Bootstrap's ratio helper. */
+.gallery-thumb-wrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background-color: var(--bs-light, #f8f9fa);
+  border-radius: var(--bs-border-radius, 0.375rem);
+  overflow: hidden;
+}
+.gallery-thumb-wrap .gallery-thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Lightbox prev/next controls - large, thumb-friendly tap targets fixed to
+   the viewport edges rather than the modal-dialog (which is only as wide as
+   its content, so anchoring to IT would place the arrows right against a
+   narrow image instead of at the screen edges where they're expected). */
+.lightbox-nav-btn {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1056; /* above Bootstrap's .modal (1055) */
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox-nav-btn:hover,
+.lightbox-nav-btn:focus-visible {
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+}
+.lightbox-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+#lightboxPrevBtn {
+  left: 1rem;
+}
+#lightboxNextBtn {
+  right: 1rem;
+}
+@media (max-width: 575.98px) {
+  .lightbox-nav-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.25rem;
+  }
+}
