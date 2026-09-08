@@ -131,6 +131,26 @@
     </section>
   <% } %>
 
+  <!-- Featured products (shop) -->
+  <% if (data.featuredProducts && data.featuredProducts.length > 0) { %>
+    <section class="container py-5">
+      <div class="d-flex align-items-end justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+          <p class="section-eyebrow mb-2">Iz naše prodavnice</p>
+          <h2 class="h3 mb-0">Nastavite negu i kod kuće</h2>
+        </div>
+        <a href="/prodavnica" class="fw-semibold text-decoration-none text-primary-emphasis">Cela prodavnica &rarr;</a>
+      </div>
+      <div class="row g-4">
+        <% data.featuredProducts.forEach(function(product) { %>
+          <div class="col-6 col-md-3">
+            <%- include("../includes/components/card-product", { product: product }) %>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
   <!-- Our team -->
   <% if (data.featuredExperts && data.featuredExperts.length > 0) { %>
     <section class="bg-light py-5">

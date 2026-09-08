@@ -294,6 +294,35 @@ export async function commitSession(packagePurchaseId, servicePackageId, { sessi
   return completed || updated;
 }
 
+// Undoes a commitSession - specifically for an admin reopening a "no_show"
+// appointment back to "pending" (see appointment.service.js's
+// transitionStatus). A no-show consumes the session on the spot, same as an
+// actually-delivered "completed" visit (business rule: unannounced no-show
+// forfeits the session, a timely cancellation doesn't) - so undoing that
+// admin correction has to put the session back into "reserved", not release
+// it to the general pool the way reopening a cancelled/rejected appointment
+// does (reserveSession above). Also reverts the purchase's own "completed"
+// status if this was the session that had tipped it there - see
+// revertCompletedStatus's own comment.
+export async function uncommitSession(packagePurchaseId, servicePackageId, { session } = {}) {
+  const updated = await packagePurchaseRepo.uncommitSessionAtomic(packagePurchaseId, servicePackageId, { session });
+  if (!updated) {
+    const purchase = await packagePurchaseRepo.findPackagePurchaseById(packagePurchaseId, { session });
+    if (!purchase) notFound("Kupljeni paket");
+    const item = purchase.items.find((i) => String(i.servicePackageId) === String(servicePackageId));
+    if (!item) badRequest("Ovaj paket ne pokriva izabranu varijantu usluge");
+    badRequest("Nema iskorišćenu sesiju za ovu varijantu u paketu da bi se poništila");
+  }
+
+  const reverted = await packagePurchaseRepo.revertCompletedStatus(packagePurchaseId, { session });
+  logInfo("Package purchase session un-committed (no-show reopened)", {
+    packagePurchaseId,
+    servicePackageId,
+    status: reverted?.status || updated.status,
+  });
+  return reverted || updated;
+}
+
 export async function cancelPurchase(packagePurchaseId, adminId) {
   if (!packagePurchaseId) validationError("packagePurchaseId");
   const updated = await packagePurchaseRepo.updatePackagePurchaseById(packagePurchaseId, { status: "cancelled" });
@@ -336,6 +365,7 @@ export default {
   reserveSession,
   releaseSession,
   commitSession,
+  uncommitSession,
   cancelPurchase,
   updatePurchase,
   deletePurchase,

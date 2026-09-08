@@ -39,10 +39,29 @@ export async function dashboard(req, res, next) {
     const recentCommissions = await commissionService.listCommissionsForEarner({ partner: partnerId, limit: 5 });
     const payoutRequests = await payoutRequestService.listPayoutRequestsForEarner({ partner: partnerId, limit: 3 });
 
+    // Only resolve service/package names into a lookup map when at least one
+    // coupon actually restricts itself to specific ones - an empty
+    // applicableServices/applicablePackages means "applies to everything" (see
+    // coupon.model.js), which is the common case and needs no lookup at all.
+    // Same "resolve at the controller layer" reasoning as partnerSeo/
+    // buildFaqPageJsonLd elsewhere in this codebase - preparePartnerDashboardData
+    // shouldn't need to know about service.service.js/package.service.js just
+    // to label a coupon's own scope.
+    const needsNameLookup = coupons.some((c) => c.applicableServices.length > 0 || c.applicablePackages.length > 0);
+    let serviceNamesById = {};
+    let packageNamesById = {};
+    if (needsNameLookup) {
+      const [allServices, allPackagesResult] = await Promise.all([serviceService.getServicesForSelect(), packageService.listPackages({ limit: 200 })]);
+      serviceNamesById = Object.fromEntries(allServices.map((s) => [s.id, s.naziv]));
+      packageNamesById = Object.fromEntries(allPackagesResult.data.map((p) => [p.id, p.naziv]));
+    }
+
     const viewData = preparePartnerDashboardData({
       partner,
       balance,
       coupons,
+      serviceNamesById,
+      packageNamesById,
       recentCommissions: recentCommissions.data,
       payoutRequests: payoutRequests.data,
     });
@@ -148,16 +167,27 @@ export async function catalog(req, res, next) {
     const partnerId = await getOwnPartnerId(req);
     const coupons = await couponService.listCouponsForPartner(partnerId);
     const code = coupons[0]?.code || null;
+    // Artikli only get their own catalog section (and a working referral
+    // link) when some coupon of this partner's actually has a productDiscount
+    // configured (see coupon.model.js's own comment on that field - it's null
+    // by default, opt-in per coupon) - otherwise a partner would see product
+    // links that look shareable but silently apply no discount at checkout.
+    const productCoupon = coupons.find((c) => c.productDiscount);
+    const hasProductDiscount = !!productCoupon;
+    const productCode = productCoupon?.code || null;
+
     const { search = "", servicesPage = 1, packagesPage = 1, productsPage = 1 } = req.query;
 
     const [services, packages, products] = await Promise.all([
       serviceService.listServices({ search, limit: 10, page: parseInt(servicesPage, 10) || 1 }),
       packageService.listPackages({ search, limit: 10, page: parseInt(packagesPage, 10) || 1 }),
-      productService.listPublicProducts({ search, limit: 10, page: parseInt(productsPage, 10) || 1 }),
+      hasProductDiscount
+        ? productService.listPublicProducts({ search, limit: 10, page: parseInt(productsPage, 10) || 1 })
+        : Promise.resolve({ data: [], page: 1, totalPages: 1 }),
     ]);
 
-    const withLink = (items, path) =>
-      items.map((item) => ({ ...item, referralLink: code ? `${BASE_URL}${path}/${item.slug}?code=${encodeURIComponent(code)}` : null }));
+    const withLink = (items, path, linkCode) =>
+      items.map((item) => ({ ...item, referralLink: linkCode ? `${BASE_URL}${path}/${item.slug}?code=${encodeURIComponent(linkCode)}` : null }));
 
     return res.render("partner/catalog", {
       pageTitle: "Katalog za deljenje",
@@ -165,12 +195,13 @@ export async function catalog(req, res, next) {
       seo: await partnerSeo(req, { title: "Katalog za deljenje", description: "Usluge, paketi i proizvodi sa vašim referalnim linkom" }),
       data: {
         hasCode: !!code,
+        hasProductDiscount,
         search,
-        services: withLink(services.data, "/usluge"),
+        services: withLink(services.data, "/usluge", code),
         servicesPagination: { currentPage: services.page, totalPages: services.totalPages, basePath: "/moj-partner-nalog/katalog", pageParam: "servicesPage", query: req.query },
-        packages: withLink(packages.data, "/paketi"),
+        packages: withLink(packages.data, "/paketi", code),
         packagesPagination: { currentPage: packages.page, totalPages: packages.totalPages, basePath: "/moj-partner-nalog/katalog", pageParam: "packagesPage", query: req.query },
-        products: withLink(products.data, "/prodavnica"),
+        products: withLink(products.data, "/prodavnica", productCode),
         productsPagination: { currentPage: products.page, totalPages: products.totalPages, basePath: "/moj-partner-nalog/katalog", pageParam: "productsPage", query: req.query },
       },
     });

@@ -8,6 +8,24 @@ import {
 } from "../../../../src/presenters/partner/partner-account.presenter.js";
 
 describe("preparePartnerDashboardData", () => {
+  // matches coupon.service.js's listCouponsForPartner output shape - every
+  // field it now returns, defaulted to the "unrestricted, unlimited" case so
+  // each test below only needs to override what it's actually testing.
+  function buildTestCoupon(overrides = {}) {
+    return {
+      code: "TEST10",
+      discountType: "percentage",
+      discountValue: 10,
+      applicableServices: [],
+      applicablePackages: [],
+      productDiscount: null,
+      validUntil: null,
+      maxUses: null,
+      usedCount: 0,
+      ...overrides,
+    };
+  }
+
   it("formats every balance figure with the currency suffix, and keeps a raw whole-number availableRaw for the withdrawal form", () => {
     const view = preparePartnerDashboardData({
       partner: { id: "p1" },
@@ -26,21 +44,70 @@ describe("preparePartnerDashboardData", () => {
       partner: { id: "p1" },
       balance: { earned: 0, paid: 0, reserved: 0, available: 0 },
       coupons: [
-        { code: "PETAR10", discountType: "percentage", discountValue: 10 },
-        { code: "PETARFIX", discountType: "fixed", discountValue: 500 },
+        buildTestCoupon({ code: "PETAR10", discountType: "percentage", discountValue: 10 }),
+        buildTestCoupon({ code: "PETARFIX", discountType: "fixed", discountValue: 500 }),
       ],
       recentCommissions: [],
     });
 
-    assert.match(view.referralLinks[0].opis, /10%/);
-    assert.match(view.referralLinks[1].opis, /500 RSD/);
+    assert.match(view.referralLinks[0].uslugeOpis, /10%/);
+    assert.match(view.referralLinks[1].uslugeOpis, /500 RSD/);
+  });
+
+  it("only includes an artikli description when the coupon actually has a productDiscount", () => {
+    const view = preparePartnerDashboardData({
+      partner: { id: "p1" },
+      balance: { earned: 0, paid: 0, reserved: 0, available: 0 },
+      coupons: [
+        buildTestCoupon({ code: "SAMOUSLUGE", productDiscount: null }),
+        buildTestCoupon({ code: "IARTIKLI", productDiscount: { discountType: "fixed", discountValue: 300 } }),
+      ],
+      recentCommissions: [],
+    });
+
+    assert.equal(view.referralLinks[0].artikliOpis, null, "no productDiscount on the coupon -> no artikli line at all");
+    assert.match(view.referralLinks[1].artikliOpis, /300 RSD/);
+  });
+
+  it("describes the coupon's scope - 'applies to everything' when unrestricted, named services/packages when it isn't", () => {
+    const view = preparePartnerDashboardData({
+      partner: { id: "p1" },
+      balance: { earned: 0, paid: 0, reserved: 0, available: 0 },
+      coupons: [
+        buildTestCoupon({ code: "SVE", applicableServices: [], applicablePackages: [] }),
+        buildTestCoupon({ code: "SAMO_S1", applicableServices: ["s1"], applicablePackages: [] }),
+      ],
+      serviceNamesById: { s1: "Tesla-Tone 24" },
+      packageNamesById: {},
+      recentCommissions: [],
+    });
+
+    assert.match(view.referralLinks[0].opseg, /sve usluge i pakete/);
+    assert.match(view.referralLinks[1].opseg, /Tesla-Tone 24/);
+  });
+
+  it("shows 'Važi do' only when the coupon actually has an expiration, but always shows a usage count (unlimited or capped)", () => {
+    const view = preparePartnerDashboardData({
+      partner: { id: "p1" },
+      balance: { earned: 0, paid: 0, reserved: 0, available: 0 },
+      coupons: [
+        buildTestCoupon({ code: "BEZOGRANICENJA", validUntil: null, maxUses: null, usedCount: 7 }),
+        buildTestCoupon({ code: "OGRANICENO", validUntil: new Date("2026-12-31"), maxUses: 50, usedCount: 12 }),
+      ],
+      recentCommissions: [],
+    });
+
+    assert.equal(view.referralLinks[0].vaziDo, null);
+    assert.equal(view.referralLinks[0].iskorisceno, "7 puta", "no maxUses cap - still shows how many times it's been used");
+    assert.ok(view.referralLinks[1].vaziDo);
+    assert.equal(view.referralLinks[1].iskorisceno, "12 / 50");
   });
 
   it("URL-encodes the coupon code into the referral link", () => {
     const view = preparePartnerDashboardData({
       partner: { id: "p1" },
       balance: { earned: 0, paid: 0, reserved: 0, available: 0 },
-      coupons: [{ code: "PETAR & CO", discountType: "fixed", discountValue: 100 }],
+      coupons: [buildTestCoupon({ code: "PETAR & CO", discountType: "fixed", discountValue: 100 })],
       recentCommissions: [],
     });
 
@@ -52,8 +119,8 @@ describe("preparePartnerDashboardData", () => {
       partner: { id: "p1" },
       balance: { earned: 0, paid: 0, reserved: 0, available: 0 },
       coupons: [
-        { code: "A", discountType: "fixed", discountValue: 100 },
-        { code: "B", discountType: "fixed", discountValue: 200 },
+        buildTestCoupon({ code: "A", discountType: "fixed", discountValue: 100 }),
+        buildTestCoupon({ code: "B", discountType: "fixed", discountValue: 200 }),
       ],
       recentCommissions: [],
     });
@@ -151,7 +218,7 @@ describe("preparePartnerCommissionsTabData", () => {
     );
     assert.deepEqual(
       view.filters.sourceType.options.map((o) => o.value),
-      ["", "appointment", "order"]
+      ["", "appointment", "package_purchase", "order"]
     );
   });
 

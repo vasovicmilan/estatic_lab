@@ -7,7 +7,7 @@ const BASE_URL = BUSINESS.siteUrl;
 
 const PAYOUT_STATUS_LABELS = { requested: "Zatraženo", approved: "Odobreno", paid: "Isplaćeno", rejected: "Odbijeno" };
 
-export function preparePartnerDashboardData({ partner, balance, coupons, recentCommissions, payoutRequests = [] }) {
+export function preparePartnerDashboardData({ partner, balance, coupons, serviceNamesById = {}, packageNamesById = {}, recentCommissions, payoutRequests = [] }) {
   return {
     partner,
     balance: {
@@ -24,7 +24,18 @@ export function preparePartnerDashboardData({ partner, balance, coupons, recentC
     // their standing one), so this isn't assumed to be exactly one
     referralLinks: coupons.map((c) => ({
       code: c.code,
-      opis: describeCoupon(c),
+      uslugeOpis: describeMainDiscount(c),
+      opseg: describeScope(c, serviceNamesById, packageNamesById),
+      // null when this coupon doesn't cover artikli at all (see
+      // coupon.service.js's listCouponsForPartner) - the dashboard only shows
+      // an artikli line for coupons that actually have one, instead of always
+      // showing a products discount that might not exist.
+      artikliOpis: c.productDiscount ? describeProductDiscount(c.productDiscount) : null,
+      vaziDo: c.validUntil ? formatDateTime(c.validUntil) : null,
+      // always shown now, capped or not - "iskorišćeno 47 puta" is useful
+      // motivating info for a partner even when there's no maxUses ceiling to
+      // measure it against, not just when a limit makes it a fraction.
+      iskorisceno: c.maxUses ? `${c.usedCount} / ${c.maxUses}` : `${c.usedCount} puta`,
       link: `${BASE_URL}/?code=${encodeURIComponent(c.code)}`,
     })),
     recentCommissions: recentCommissions.map(mapCommissionRow),
@@ -93,6 +104,7 @@ export function preparePartnerCommissionsTabData(result, query = {}) {
         options: [
           { value: "", label: "Svi izvori" },
           { value: "appointment", label: "Termin" },
+          { value: "package_purchase", label: "Paket" },
           { value: "order", label: "Porudžbina" },
         ],
       },
@@ -119,7 +131,39 @@ function mapCommissionRow(entry) {
   };
 }
 
-function describeCoupon(coupon) {
+function describeMainDiscount(coupon) {
   const discount = coupon.discountType === "percentage" ? `${coupon.discountValue}%` : formatMoney(coupon.discountValue);
-  return `Popust od ${discount} za korisnike koji koriste ovaj link`;
+  return `Popust od ${discount} na usluge i pakete za korisnike koji koriste ovaj link`;
+}
+
+// Empty applicableServices/applicablePackages means "this coupon applies to
+// every service and package" (see coupon.model.js's own comment) - that's
+// the common case and reads better as one clear sentence than an empty list.
+// When a coupon IS restricted, name each service/package explicitly rather
+// than just showing a count, since "važi za 3 usluge" tells a partner nothing
+// they can act on - they need to know which 3 to actually promote.
+function describeScope(coupon, serviceNamesById, packageNamesById) {
+  const hasServiceRestriction = coupon.applicableServices.length > 0;
+  const hasPackageRestriction = coupon.applicablePackages.length > 0;
+
+  if (!hasServiceRestriction && !hasPackageRestriction) {
+    return "Važi za sve usluge i pakete";
+  }
+
+  const parts = [];
+  if (hasServiceRestriction) {
+    const names = coupon.applicableServices.map((id) => serviceNamesById[id]).filter(Boolean);
+    if (names.length > 0) parts.push(`usluge: ${names.join(", ")}`);
+  }
+  if (hasPackageRestriction) {
+    const names = coupon.applicablePackages.map((id) => packageNamesById[id]).filter(Boolean);
+    if (names.length > 0) parts.push(`pakete: ${names.join(", ")}`);
+  }
+  return parts.length > 0 ? `Važi samo za ${parts.join(" i ")}` : "Važi za odabrane usluge/pakete";
+}
+
+function describeProductDiscount(productDiscount) {
+  const discount =
+    productDiscount.discountType === "percentage" ? `${productDiscount.discountValue}%` : formatMoney(productDiscount.discountValue);
+  return `Popust od ${discount} i na artikle iz prodavnice`;
 }

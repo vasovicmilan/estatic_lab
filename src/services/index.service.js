@@ -3,6 +3,7 @@ import expertService from "./expert.service.js";
 import testimonialService from "./testimonial.service.js";
 import postService from "./post.service.js";
 import packageService from "./package.service.js";
+import productService from "./product.service.js";
 import contactService from "./contact.service.js";
 import newsLetterService from "./news-letter.service.js";
 import siteSettingsService from "./site-settings.service.js";
@@ -15,14 +16,21 @@ export async function getLandingPageData({
   testimonialLimit = 6,
   latestPostLimit = 3,
   bestPackageLimit = 3,
+  featuredProductLimit = 4,
 } = {}) {
-  const [highlightedServices, allExperts, testimonials, latestPosts, packagesResult, heroContent] = await Promise.all([
+  const [highlightedServices, allExperts, testimonials, latestPosts, packagesResult, heroContent, featuredProductsResult] = await Promise.all([
     serviceService.findHighlightedServices({ limit: highlightedServiceLimit }),
     expertService.getActiveExperts(),
     testimonialService.getApprovedTestimonials({ limit: testimonialLimit, featuredOnly: true, random: true }),
     postService.findPublishedPosts({ limit: latestPostLimit }),
     packageService.findActivePackages({ limit: bestPackageLimit }),
     siteSettingsService.getHeroContent(),
+    // "featured" is the same shop badge product.service.js already uses for
+    // the shop's own sale/featured section (see product.model.js's badge
+    // enum) - reusing it here means featuring a product on the homepage is a
+    // single admin toggle on the product itself, not a second place to
+    // maintain a curated list.
+    productService.listPublicProducts({ filters: { badge: "featured" }, limit: featuredProductLimit }),
   ]);
 
   const seo = buildPageSeo({
@@ -39,6 +47,7 @@ export async function getLandingPageData({
     testimonials,
     latestPosts: latestPosts.data || [],
     bestPackages: packagesResult.data || [],
+    featuredProducts: featuredProductsResult.data || [],
     heroContent,
     seo,
   };

@@ -828,6 +828,59 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
     assert.equal(releaseMock.mock.calls.length, 1);
   });
 
+  // BUG FIX (business rule confirmed with the client): no-show used to release
+  // the session back to the pool, same as cancelled/rejected - meaning an
+  // unannounced no-show cost the client nothing, indistinguishable from a
+  // timely, in-window cancellation. It's now treated like a delivered
+  // ("completed") session instead - forfeited, not forgiven - while
+  // cancelled/rejected are untouched and still release normally.
+  describe("noShowAppointment - package session lifecycle (no-show forfeits the session, unlike a timely cancellation)", () => {
+    it("commits (consumes) the session, the same as an actually-completed visit - it does NOT release it back to the pool", async (t) => {
+      const purchaseId = id();
+      const servicePackageId = id();
+      const employeeUser = buildEmployee();
+      const appointment = buildAppointment({
+        status: "confirmed",
+        employee: employeeUser,
+        packagePurchase: purchaseId,
+        variant: { servicePackageId, name: "60 min", duration: 60, price: 3000 },
+      });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "no_show" }));
+      const commitMock = t.mock.method(packagePurchaseService, "commitSession", async () => ({}));
+      const releaseMock = t.mock.method(packagePurchaseService, "releaseSession", async () => {});
+
+      await appointmentService.noShowAppointment(appointment._id.toString(), "", employeeUser._id.toString(), "employee");
+
+      assert.equal(commitMock.mock.calls.length, 1);
+      assert.equal(String(commitMock.mock.calls[0].arguments[0]), String(purchaseId));
+      assert.equal(String(commitMock.mock.calls[0].arguments[1]), String(servicePackageId));
+      assert.equal(releaseMock.mock.calls.length, 0, "a no-show must never release the session - that would forgive it, same as a cancellation");
+    });
+
+    it("still releases (forgives) the session for an ordinary, timely cancellation - only no_show forfeits", async (t) => {
+      const purchaseId = id();
+      const servicePackageId = id();
+      const owner = buildUser();
+      const appointment = buildAppointment({
+        status: "pending",
+        user: owner,
+        packagePurchase: purchaseId,
+        variant: { servicePackageId, name: "60 min", duration: 60, price: 3000 },
+        startTime: new Date(Date.now() + 48 * 60 * 60 * 1000),
+      });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "cancelled" }));
+      const releaseMock = t.mock.method(packagePurchaseService, "releaseSession", async () => {});
+      const commitMock = t.mock.method(packagePurchaseService, "commitSession", async () => {});
+
+      await appointmentService.cancelAppointment(appointment._id.toString(), "razlog", owner._id.toString(), "user");
+
+      assert.equal(releaseMock.mock.calls.length, 1);
+      assert.equal(commitMock.mock.calls.length, 0);
+    });
+  });
+
   // BUG FIX regression tests - see transitionStatus's own comment in
   // appointment.service.js. Reopening (rejected/cancelled/no_show -> pending, admin
   // only per appointment-status-transitions.js) used to fall through the
@@ -875,7 +928,7 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
       assert.equal(reserveMock.mock.calls.length, 1);
     });
 
-    it("re-reserves a session when reopening a no_show package-covered appointment", async (t) => {
+    it("un-commits the session when reopening a no_show package-covered appointment (it was consumed, not released, on entry)", async (t) => {
       const purchaseId = id();
       const servicePackageId = id();
       const appointment = buildAppointment({
@@ -885,11 +938,15 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
       });
       t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
       t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "pending" }));
+      const uncommitMock = t.mock.method(packagePurchaseService, "uncommitSession", async () => ({}));
       const reserveMock = t.mock.method(packagePurchaseService, "reserveSession", async () => ({}));
 
       await appointmentService.reopenAppointment(appointment._id.toString(), id().toString(), "admin");
 
-      assert.equal(reserveMock.mock.calls.length, 1);
+      assert.equal(uncommitMock.mock.calls.length, 1);
+      assert.equal(String(uncommitMock.mock.calls[0].arguments[0]), String(purchaseId));
+      assert.equal(String(uncommitMock.mock.calls[0].arguments[1]), String(servicePackageId));
+      assert.equal(reserveMock.mock.calls.length, 0, "reopening from no_show must NOT reserve a fresh session - that session was never released to begin with");
     });
 
     it("aborts the reopen (appointment stays in its prior status) when no sessions are left to re-reserve", async (t) => {
@@ -912,6 +969,26 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
       // the appointment's own status update must never be reached if reserving the
       // session failed - a "pending" appointment with nothing backing it is exactly
       // the broken state this fix exists to prevent
+      assert.equal(updateMock.mock.calls.length, 0);
+    });
+
+    it("aborts the reopen of a no_show appointment when there's nothing left to un-commit (e.g. already reopened by someone else)", async (t) => {
+      const purchaseId = id();
+      const servicePackageId = id();
+      const appointment = buildAppointment({
+        status: "no_show",
+        packagePurchase: purchaseId,
+        variant: { servicePackageId, name: "60 min", duration: 60, price: 3000 },
+      });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      const updateMock = t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "pending" }));
+      t.mock.method(packagePurchaseService, "uncommitSession", async () => {
+        const err = new Error("Nema iskorišćenu sesiju za ovu varijantu u paketu da bi se poništila");
+        err.statusCode = 400;
+        throw err;
+      });
+
+      await assert.rejects(() => appointmentService.reopenAppointment(appointment._id.toString(), id().toString(), "admin"));
       assert.equal(updateMock.mock.calls.length, 0);
     });
 

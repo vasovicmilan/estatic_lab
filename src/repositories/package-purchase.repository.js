@@ -220,6 +220,50 @@ export async function commitSessionAtomic(packagePurchaseId, servicePackageId, {
 }
 
 /**
+ * Exact reverse of commitSessionAtomic - moves one unit from sessionsUsed back
+ * to sessionsReserved, atomically. Used when an admin reopens a "no_show"
+ * appointment back to "pending" (see appointment.service.js's transitionStatus):
+ * a no-show consumes the session on the spot (commitSessionAtomic - same
+ * treatment as an actually-delivered "completed" session, per the business
+ * rule that an unannounced no-show forfeits the session while a timely
+ * cancellation doesn't), so undoing that admin correction has to put the
+ * session back into "reserved", not just release it to the general pool the
+ * way reopening a cancelled/rejected appointment does (reserveSessionAtomic) -
+ * this session was never "available" in the pool to begin with, it needs to
+ * land back exactly where a freshly-booked, not-yet-delivered session sits.
+ * No capacity check needed the way reserveSessionAtomic has one: moving a
+ * unit from used to reserved doesn't change (used + reserved) at all, so it
+ * can never push the item over sessionsTotal - only matches (and only then
+ * moves) when there's actually a used session on this item to undo.
+ */
+export async function uncommitSessionAtomic(packagePurchaseId, servicePackageId, { session } = {}) {
+  const variantId = new Types.ObjectId(servicePackageId);
+  return PackagePurchase.findOneAndUpdate(
+    {
+      _id: packagePurchaseId,
+      $expr: {
+        $gt: [
+          {
+            $size: {
+              $filter: {
+                input: "$items",
+                as: "i",
+                cond: {
+                  $and: [{ $eq: ["$$i.servicePackageId", variantId] }, { $gt: ["$$i.sessionsUsed", 0] }],
+                },
+              },
+            },
+          },
+          0,
+        ],
+      },
+    },
+    { $inc: { "items.$[elem].sessionsUsed": -1, "items.$[elem].sessionsReserved": 1 } },
+    { arrayFilters: [{ "elem.servicePackageId": variantId }], returnDocument: "after", session }
+  ).lean();
+}
+
+/**
  * Flips the purchase to "completed" once every item has sessionsUsed >=
  * sessionsTotal - a separate, idempotent update from commitSessionAtomic's own
  * $inc, run right after it by package-purchase.service.js's commitSession.
@@ -252,6 +296,27 @@ export async function markCompletedIfAllSessionsUsed(packagePurchaseId, { sessio
   ).lean();
 }
 
+/**
+ * Reverse of markCompletedIfAllSessionsUsed - run right after
+ * uncommitSessionAtomic in package-purchase.service.js's uncommitSession, in
+ * case the purchase had already flipped to "completed" (every item fully
+ * used) before this particular session got un-committed. Without this, a
+ * purchase could sit there marked "completed" - normally meaning "nothing
+ * left to book" - while actually having a session available again, which
+ * would silently block the customer from booking with it even though it's
+ * usable. Only touches purchases that are actually "completed" right now, so
+ * it's a no-op (matching null, same "nothing to do" signal used everywhere
+ * else in this file) for the ordinary case of un-committing from an
+ * otherwise-still-active purchase.
+ */
+export async function revertCompletedStatus(packagePurchaseId, { session } = {}) {
+  return PackagePurchase.findOneAndUpdate(
+    { _id: packagePurchaseId, status: "completed" },
+    { $set: { status: "active" } },
+    { returnDocument: "after", session }
+  ).lean();
+}
+
 export default {
   createPackagePurchase,
   findPackagePurchaseById,
@@ -266,5 +331,7 @@ export default {
   reserveSessionAtomic,
   releaseSessionAtomic,
   commitSessionAtomic,
+  uncommitSessionAtomic,
   markCompletedIfAllSessionsUsed,
+  revertCompletedStatus,
 };

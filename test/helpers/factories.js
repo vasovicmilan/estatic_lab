@@ -449,7 +449,7 @@ export function buildProduct(overrides = {}) {
     sku: "esma-001",
     slug: "esma-uredjaj",
     shortDescription: "Profesionalni uređaj za tretmane",
-    longDescription: "",
+    longDescription: [],
     categories: [],
     tags: [],
     image: { img: "/images/products/esma.webp", imgDesc: "ESMA uređaj" },

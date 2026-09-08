@@ -520,10 +520,14 @@ async function transitionStatus(appointmentId, nextStatus, actorId, actorRole, e
   }
 
   // Package-purchase session lifecycle: "completed" delivers the reserved session
-  // (moves reserved -> used); "cancelled"/"rejected"/"no_show" gives the reservation
-  // back - none of those three represent the service actually being delivered.
-  // "completed" is terminal (nothing transitions out of it - see
-  // appointment-status-transitions.js), so a session is never committed twice.
+  // (moves reserved -> used) - so does "no_show", per the business rule that an
+  // unannounced no-show forfeits the session the same way an actually-delivered
+  // visit does, while a timely "cancelled"/"rejected" doesn't and gives the
+  // reservation back instead. "completed" is terminal (nothing transitions out
+  // of it - see appointment-status-transitions.js), so a session is never
+  // committed twice from that state; "no_show" is NOT terminal though (it can be
+  // reopened - see the reopen branch below), so its own commit has to be
+  // reversible.
   //
   // BUG FIX: reopening (admin moving cancelled/rejected/no_show back to "pending" -
   // see appointment-status-transitions.js's TRANSITIONS table) used to fall through
@@ -532,17 +536,22 @@ async function transitionStatus(appointmentId, nextStatus, actorId, actorRole, e
   // the reopened appointment sat there as "pending" while its own packagePurchase
   // showed that session as free again - a second, unrelated booking could then
   // legitimately claim the very same session, leaving two live appointments backed by
-  // one paid-for session (oversold capacity). Reopening now re-reserves a session the
-  // same way a brand-new package-covered booking would; if none are left (e.g.
-  // something else already claimed the freed one in the meantime), reserveSession
-  // throws and the whole reopen is aborted - the appointment stays in its prior
-  // terminal status rather than becoming a "pending" appointment with nothing backing
-  // it, which is the correct failure mode here.
+  // one paid-for session (oversold capacity). Reopening now undoes whatever the prior
+  // terminal transition did to the session: reserving a fresh one for
+  // cancelled/rejected (which had released theirs to the general pool), or
+  // un-committing for no_show (which had consumed theirs outright, not released it -
+  // reserveSession would incorrectly claim a SECOND session on top of the one still
+  // marked used). If neither is possible (e.g. something else already claimed the
+  // freed one in the meantime), the whole reopen aborts - the appointment stays in
+  // its prior terminal status rather than becoming a "pending" appointment with
+  // nothing (or the wrong thing) backing it, which is the correct failure mode here.
   if (appointment.packagePurchase) {
-    if (nextStatus === "completed") {
+    if (nextStatus === "completed" || nextStatus === "no_show") {
       await packagePurchaseService.commitSession(appointment.packagePurchase, appointment.variant.servicePackageId);
-    } else if (nextStatus === "cancelled" || nextStatus === "rejected" || nextStatus === "no_show") {
+    } else if (nextStatus === "cancelled" || nextStatus === "rejected") {
       await packagePurchaseService.releaseSession(appointment.packagePurchase, appointment.variant.servicePackageId);
+    } else if (nextStatus === "pending" && appointment.status === "no_show") {
+      await packagePurchaseService.uncommitSession(appointment.packagePurchase, appointment.variant.servicePackageId);
     } else if (nextStatus === "pending") {
       await packagePurchaseService.reserveSession(appointment.packagePurchase, appointment.variant.servicePackageId);
     }

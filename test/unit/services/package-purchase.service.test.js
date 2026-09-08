@@ -460,6 +460,65 @@ describe("package-purchase.service", () => {
     });
   });
 
+  describe("uncommitSession", () => {
+    it("moves one unit from used back to reserved via the atomic update", async (t) => {
+      const purchase = buildPackagePurchase();
+      const updated = { ...purchase, items: [{ ...purchase.items[0], sessionsUsed: 0, sessionsReserved: 1 }], status: "active" };
+      t.mock.method(packagePurchaseRepo, "uncommitSessionAtomic", async () => updated);
+      t.mock.method(packagePurchaseRepo, "revertCompletedStatus", async () => null);
+
+      const result = await packagePurchaseService.uncommitSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString());
+
+      assert.equal(result.items[0].sessionsUsed, 0);
+      assert.equal(result.items[0].sessionsReserved, 1);
+    });
+
+    it("reverts the purchase from 'completed' back to 'active' if un-committing this session is what had tipped it there", async (t) => {
+      const purchase = buildPackagePurchase();
+      const uncommitted = { ...purchase, status: "completed" };
+      const revertedDoc = { ...uncommitted, status: "active" };
+      t.mock.method(packagePurchaseRepo, "uncommitSessionAtomic", async () => uncommitted);
+      const revertMock = t.mock.method(packagePurchaseRepo, "revertCompletedStatus", async () => revertedDoc);
+
+      const result = await packagePurchaseService.uncommitSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString());
+
+      assert.equal(revertMock.mock.calls.length, 1);
+      assert.equal(result.status, "active");
+    });
+
+    it("leaves status as-is when the purchase wasn't 'completed' to begin with", async (t) => {
+      const purchase = buildPackagePurchase();
+      const uncommitted = { ...purchase, status: "active" };
+      t.mock.method(packagePurchaseRepo, "uncommitSessionAtomic", async () => uncommitted);
+      // revertCompletedStatus's own filter requires status:"completed" - with the
+      // purchase already "active", it correctly matches nothing and returns null,
+      // same "nothing to do" signal as everywhere else in this file
+      const revertMock = t.mock.method(packagePurchaseRepo, "revertCompletedStatus", async () => null);
+
+      const result = await packagePurchaseService.uncommitSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString());
+
+      assert.equal(revertMock.mock.calls.length, 1);
+      assert.equal(result.status, "active");
+    });
+
+    it("throws 404 for a nonexistent purchase", async (t) => {
+      t.mock.method(packagePurchaseRepo, "uncommitSessionAtomic", async () => null);
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => null);
+      await assert.rejects(() => packagePurchaseService.uncommitSession(id().toString(), id().toString()), (err) => err.statusCode === 404);
+    });
+
+    it("rejects un-committing a variant with nothing used to undo", async (t) => {
+      const purchase = buildPackagePurchase();
+      purchase.items[0].sessionsUsed = 0;
+      t.mock.method(packagePurchaseRepo, "uncommitSessionAtomic", async () => null);
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => purchase);
+      await assert.rejects(
+        () => packagePurchaseService.uncommitSession(purchase._id.toString(), purchase.items[0].servicePackageId.toString()),
+        (err) => err.statusCode === 400
+      );
+    });
+  });
+
   describe("updatePurchase", () => {
     it("only ever touches expiresAt/notes, never items or pricing", async (t) => {
       let forwarded;

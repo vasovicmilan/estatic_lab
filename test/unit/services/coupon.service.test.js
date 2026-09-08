@@ -313,3 +313,34 @@ describe("redeemCoupon - packagePurchaseId pass-through", () => {
     );
   });
 });
+
+describe("listCouponsForPartner", () => {
+  it("returns productDiscount as null when the coupon doesn't have one, instead of an empty object", async (t) => {
+    const coupon = buildCoupon({ partner: id(), productDiscount: null });
+    t.mock.method(couponRepo, "findCoupons", async () => ({ data: [coupon], total: 1 }));
+
+    const [result] = await couponService.listCouponsForPartner(coupon.partner.toString());
+
+    assert.equal(result.productDiscount, null);
+  });
+
+  it("surfaces productDiscount's own discountType/discountValue when the coupon has one", async (t) => {
+    const coupon = buildCoupon({ partner: id(), productDiscount: buildProductDiscount({ discountType: "fixed", discountValue: 300 }) });
+    t.mock.method(couponRepo, "findCoupons", async () => ({ data: [coupon], total: 1 }));
+
+    const [result] = await couponService.listCouponsForPartner(coupon.partner.toString());
+
+    assert.deepEqual(result.productDiscount, { discountType: "fixed", discountValue: 300 });
+  });
+
+  it("surfaces validUntil/maxUses/usedCount for a more precise dashboard display", async (t) => {
+    const coupon = buildCoupon({ partner: id(), validUntil: new Date("2026-12-31"), maxUses: 50, usedCount: 12 });
+    t.mock.method(couponRepo, "findCoupons", async () => ({ data: [coupon], total: 1 }));
+
+    const [result] = await couponService.listCouponsForPartner(coupon.partner.toString());
+
+    assert.deepEqual(result.validUntil, coupon.validUntil);
+    assert.equal(result.maxUses, 50);
+    assert.equal(result.usedCount, 12);
+  });
+});

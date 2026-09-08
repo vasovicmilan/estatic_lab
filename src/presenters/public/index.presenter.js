@@ -186,7 +186,7 @@ export function prepareFaqPageData() {
 
 export function preparePrivacyPolicyData() {
   return {
-    lastUpdated: "18. jul 2026.",
+    lastUpdated: "8. septembar 2026.",
     intro:
       "Ova Politika privatnosti objašnjava kako Estetik Lab prikuplja, koristi, čuva i štiti vaše podatke prilikom korišćenja našeg sajta, online zakazivanja termina, kupovine proizvoda iz naše prodavnice i drugih usluga koje pružamo u našem wellness centru u Novom Sadu.",
     contact: LEGAL_CONTACT,
@@ -230,6 +230,13 @@ export function preparePrivacyPolicyData() {
               "informacije o kuponu ili korišćenju sesija iz paketa",
               "napomene koje unesete prilikom zakazivanja",
               "podaci o kupljenim paketima tretmana povezanim sa vašim nalogom",
+            ],
+          },
+          {
+            title: "Zdravstveni i medicinski podaci - ne prikupljamo ih",
+            paragraphs: [
+              "<strong>Estetik Lab platforma (sajt, korisnički nalog, obrasci za zakazivanje) ne sadrži nijedno polje namenjeno unosu zdravstvenih ili medicinskih podataka, i takve podatke ne prikupljamo niti čuvamo u digitalnom obliku.</strong> Razgovor o zdravstvenom stanju, alergijama, trudnoći, kontraindikacijama ili drugim okolnostima relevantnim za tretman vodi se isključivo usmeno, uživo sa terapeutom pre samog tretmana - ovi podaci se ne zapisuju niti unose u našu bazu podataka.",
+              "Polje za napomenu prilikom online zakazivanja namenjeno je opštim komentarima (npr. „prvi put dolazim”, „kasnim par minuta”), ne zdravstvenim informacijama - molimo vas da osetljive zdravstvene detalje ostavite za razgovor uživo sa terapeutom, a ne za pisani unos na sajtu.",
             ],
           },
           {
@@ -362,7 +369,7 @@ export function preparePrivacyPolicyData() {
 
 export function prepareTermsAndConditionsData() {
   return {
-    lastUpdated: "18. jul 2026.",
+    lastUpdated: "8. septembar 2026.",
     intro:
       "Korišćenjem sajta Estetik Lab, online zakazivanja termina, kupovine proizvoda iz naše prodavnice i drugih usluga našeg wellness centra, prihvatate sledeće Uslove korišćenja. Molimo vas da ih pažljivo pročitate pre registracije, zakazivanja termina, naručivanja proizvoda ili slanja poruke putem sajta.",
     contact: LEGAL_CONTACT,
@@ -412,15 +419,33 @@ export function prepareTermsAndConditionsData() {
           {
             title: "Otkazivanje termina",
             list: [
-              "Korisnik može samostalno otkazati termin iz svog naloga, najkasnije <strong>24 sata pre</strong> zakazanog vremena.",
-              "Otkazivanje nakon isteka roka od 24 sata može biti moguće isključivo kontaktiranjem našeg tima, u zavisnosti od okolnosti.",
+              "Korisnik može samostalno otkazati termin iz svog naloga, najkasnije <strong>24 sata pre</strong> zakazanog vremena - sistem ovo proverava automatski u trenutku otkazivanja, ne samo kao preporuku.",
+              "Otkazivanje nakon isteka roka od 24 sata nije moguće samostalno kroz nalog - u tom slučaju kontaktirajte naš tim, koji može otkazati termin u vaše ime u zavisnosti od okolnosti.",
+              "Ako je termin plaćen iz paketa tretmana, otkazivanje u dozvoljenom roku vraća seansu na raspolaganje za naredno zakazivanje.",
               "Estetik Lab zadržava pravo da otkaže termin u slučaju više sile, bolesti terapeuta, tehničkih problema ili drugih opravdanih razloga, uz obaveštenje klijenta.",
+            ],
+          },
+          {
+            title: "Promena termina (pomeranje na drugi datum ili vreme)",
+            paragraphs: [
+              "Osim otkazivanja, termin možete i samostalno pomeriti na drugi datum ili vreme iz svog naloga, bez potrebe da ga prvo otkažete pa ponovo zakazujete. Koliko fleksibilnosti imate zavisi od toga koliko je vremena preostalo do trenutno zakazanog termina:",
+            ],
+            list: [
+              "<strong>Više od 24 sata unapred</strong> - potpuna fleksibilnost, termin možete pomeriti na bilo koji dostupan datum i vreme.",
+              "<strong>Između 4 i 24 sata unapred</strong> - termin i dalje možete pomeriti, ali samo na drugo slobodno vreme <strong>istog dana</strong>.",
+              "<strong>Manje od 4 sata unapred</strong> - termin se više ne može samostalno pomeriti kroz nalog; kontaktirajte naš tim.",
+              "Novo vreme koje birate mora biti udaljeno najmanje 30 minuta od trenutka kada pravite izmenu, kako bi naš tim imao minimalno vreme za pripremu.",
+            ],
+            closingParagraphs: [
+              "Ova pravila (24h, 4h i 30 minuta) su podrazumevana i mogu biti izmenjena od strane Estetik Lab-a - trenutno važeće vrednosti uvek se primenjuju automatski u trenutku pokušaja izmene termina.",
             ],
           },
           {
             title: "Nedolazak (no-show)",
             paragraphs: [
-              "Ako se ne pojavite na potvrđeni termin bez prethodnog otkazivanja, termin može biti označen kao nedolazak. U tom slučaju, sesija iz paketa (ako je korišćena) može biti smatrana iskorišćenom, u skladu sa pravilima paketa.",
+              "Ako se ne pojavite na potvrđeni termin bez prethodnog otkazivanja, termin biva označen kao nedolazak (no-show) u vašoj istoriji termina.",
+              "Ako je termin bio plaćen iz paketa tretmana, trenutno se rezervisana seansa vraća na raspolaganje za naredno zakazivanje - nedolazak sam po sebi ne oduzima seansu iz paketa niti se naplaćuje posebna naknada. Zadržavamo pravo da ovu politiku izmenimo u budućnosti, o čemu bismo vas obavestili ažuriranjem ovih uslova.",
+              "Učestali neopravdani nedolasci mogu uticati na mogućnost budućeg online zakazivanja, u razumnoj meri i uz prethodno obaveštenje.",
             ],
           },
         ],
@@ -545,6 +570,7 @@ export function prepareTermsAndConditionsData() {
         title: "13. Zdravstvene napomene i odgovornost klijenta",
         paragraphs: [
           "Pre tretmana dužni ste da naš tim obavestite o postojećim zdravstvenim stanjima, alergijama, trudnoći, implantima, pejsmejkerima, upotrebi lekova ili drugim okolnostima koje mogu uticati na tretman.",
+          "<strong>Ove informacije se razmenjuju isključivo usmenim putem</strong>, u razgovoru sa terapeutom pre tretmana - Estetik Lab platforma (sajt, nalog, obrasci za zakazivanje) nema poseban obrazac niti polje namenjeno unosu zdravstvenih ili medicinskih podataka, i mi takve podatke ne evidentiramo niti čuvamo u digitalnom obliku. Napomena koju ostavite prilikom online zakazivanja je opšteg karaktera (npr. „prvi put dolazim”) - molimo vas da u to polje ne unosite osetljive zdravstvene detalje, već ih ostavite za razgovor uživo sa terapeutom.",
           "Estetik Lab ne snosi odgovornost za posledice ukoliko ste dali nepotpune ili netačne zdravstvene informacije.",
           "Tretmani estetske i wellness prirode ne zamenjuju lekarsku dijagnostiku ili medicinski tretman. Kozmetička oprema i uređaji iz naše prodavnice namenjeni su profesionalnoj upotrebi - pre korišćenja upoznajte se sa priloženim uputstvom i bezbednosnim napomenama proizvođača.",
         ],

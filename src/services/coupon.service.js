@@ -262,6 +262,26 @@ export async function listCouponsForPartner(partnerId) {
     code: c.code,
     discountType: c.discountType,
     discountValue: c.discountValue,
+    // empty array = "applies to every service/package" (see coupon.model.js's
+    // own comment) - the raw ObjectId lists are resolved into readable names
+    // one layer up (partner-account.controller.js), same reasoning as
+    // FAQPage JSON-LD being assembled at the controller layer elsewhere: this
+    // service function shouldn't need to know about service.service.js/
+    // package.service.js just to label a coupon's own scope for display.
+    applicableServices: (c.applicableServices || []).map((s) => s.toString()),
+    applicablePackages: (c.applicablePackages || []).map((p) => p.toString()),
+    // null when this coupon doesn't cover product/shop orders at all (see
+    // coupon.model.js's own comment on productDiscount - absence, not an
+    // empty object, is the "not enabled for this coupon" signal). Exposed
+    // here so the partner dashboard/catalog can show artikli-specific info
+    // (and links) only for coupons that actually discount them, instead of
+    // always showing a products section that might not apply any discount.
+    productDiscount: c.productDiscount
+      ? { discountType: c.productDiscount.discountType, discountValue: c.productDiscount.discountValue }
+      : null,
+    validUntil: c.validUntil,
+    maxUses: c.maxUses,
+    usedCount: c.usedCount,
     isActive: c.isActive,
   }));
 }
