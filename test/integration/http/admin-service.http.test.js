@@ -135,6 +135,64 @@ describe("admin service CRUD + image upload (HTTP)", () => {
     assert.equal(updated.packages[0].duration, 90);
   });
 
+  // BUG FIX regression test - see the _id-stripping comment in
+  // service.controller.js's update(). The "Varijante usluge" repeater used to
+  // have no _id field at all in its schema (see admin-repeater.js/
+  // service.presenter.js), so every edit - even one that didn't touch the
+  // variant at all - silently minted a brand new _id for it. That variant's
+  // _id is exactly what Package.items[].servicePackageId stores, so this
+  // regenerated it into a dangling reference on every unrelated service edit.
+  it("preserves an existing variant's _id across an edit that doesn't touch it - what a Package.items[].servicePackageId reference depends on staying stable", async () => {
+    const agent = request.agent(app);
+    await registerAndLogin(agent, { email: "admin@example.com", roleName: "admin" });
+    const serviceId = await createServiceThroughWizard(agent, { name: "Usluga Sa Varijantom" });
+
+    const before = await serviceRepo.findServiceById(serviceId);
+    const variantId = before.packages[0]._id.toString();
+
+    const { token: editToken } = await getCsrfToken(agent, `/admin/usluge/izmena/${serviceId}`);
+    const res = await agent
+      .put(`/admin/usluge/${serviceId}`)
+      .field("CSRFToken", editToken)
+      .field("name", "Usluga Sa Varijantom - ažurirano")
+      // this is exactly what the fixed repeater now submits: the existing
+      // row's real _id round-tripped via its hidden field, unchanged
+      .field("packages", JSON.stringify([{ _id: variantId, name: "60 minuta", duration: 60, totalPrice: 3000 }]));
+
+    assert.equal(res.status, 302);
+    const after = await serviceRepo.findServiceById(serviceId);
+    assert.equal(after.packages[0]._id.toString(), variantId, "the variant's _id must survive an edit unchanged, not be regenerated");
+  });
+
+  it("still mints a fresh _id for a genuinely new variant row (submitted with a blank _id), without crashing", async () => {
+    const agent = request.agent(app);
+    await registerAndLogin(agent, { email: "admin@example.com", roleName: "admin" });
+    const serviceId = await createServiceThroughWizard(agent, { name: "Usluga Sa Novom Varijantom" });
+
+    const before = await serviceRepo.findServiceById(serviceId);
+    const existingVariantId = before.packages[0]._id.toString();
+
+    const { token: editToken } = await getCsrfToken(agent, `/admin/usluge/izmena/${serviceId}`);
+    const res = await agent
+      .put(`/admin/usluge/${serviceId}`)
+      .field("CSRFToken", editToken)
+      .field("name", "Usluga Sa Novom Varijantom")
+      .field(
+        "packages",
+        JSON.stringify([
+          { _id: existingVariantId, name: "60 minuta", duration: 60, totalPrice: 3000 },
+          { _id: "", name: "90 minuta", duration: 90, totalPrice: 4000 }, // new row - repeater's hidden field is blank for these
+        ])
+      );
+
+    assert.equal(res.status, 302);
+    const after = await serviceRepo.findServiceById(serviceId);
+    assert.equal(after.packages.length, 2);
+    assert.equal(after.packages[0]._id.toString(), existingVariantId, "the existing row keeps its _id");
+    assert.ok(after.packages[1]._id, "the new row gets a real, Mongoose-minted _id");
+    assert.notEqual(after.packages[1]._id.toString(), "", "never an empty string surviving into the database");
+  });
+
   it("deletes a service", async () => {
     const agent = request.agent(app);
     await registerAndLogin(agent, { email: "admin@example.com", roleName: "admin" });

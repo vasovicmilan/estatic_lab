@@ -119,7 +119,27 @@ function buildServicePayload(req, existing = {}) {
   };
 
   data.features = parseJsonField(req.body.features, existing.features || []);
-  data.packages = parseJsonField(req.body.packages, existing.packages || []);
+  // BUG FIX: the "Varijante usluge" repeater's hidden _id field (see
+  // admin-repeater.js) round-trips an EXISTING variant's _id so Mongoose
+  // reuses it instead of minting a new one on every save - without this,
+  // every edit to a service silently regenerated every one of its variant
+  // _ids, orphaning anything that stored the old one (most importantly
+  // Package.items[].servicePackageId - a package would look "unselected" the
+  // next time an admin opened it, since the id it had on file no longer
+  // matched any of the service's current variants; see
+  // docs/*/03-paketi-i-kupovine.md for how that reference is used).
+  // A brand-new row has no _id yet - the hidden field submits "" for those,
+  // which would make Mongoose try to cast an empty string to ObjectId and
+  // throw. Strip _id entirely when it's blank so Mongoose mints a fresh one
+  // for genuinely new variants, same as it always did; keep it for rows that
+  // came with a real one.
+  data.packages = parseJsonField(req.body.packages, existing.packages || []).map((pkg) => {
+    if (!pkg._id) {
+      const { _id, ...rest } = pkg;
+      return rest;
+    }
+    return pkg;
+  });
   data.comparisonColumns = req.body.comparisonColumnsCsv
     ? req.body.comparisonColumnsCsv.split(",").map((c) => c.trim()).filter(Boolean)
     : existing.comparisonColumns || [];
@@ -265,7 +285,16 @@ export async function addServicePackages(req, res, next) {
       });
     }
 
-    const packages = parseJsonField(req.body.packages, []);
+    // same _id-preservation fix as the main update() controller above - see
+    // its comment for why blank _id fields need to be stripped rather than
+    // passed straight through to Mongoose.
+    const packages = parseJsonField(req.body.packages, []).map((pkg) => {
+      if (!pkg._id) {
+        const { _id, ...rest } = pkg;
+        return rest;
+      }
+      return pkg;
+    });
     const service = await serviceService.addPackagesToService(serviceId, packages);
     logInfo(`[addServicePackages] Varijante sačuvane za uslugu #${serviceId}`, { serviceId, adminId: req.session?.user?.id });
 

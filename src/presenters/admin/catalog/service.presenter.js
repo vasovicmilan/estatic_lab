@@ -208,6 +208,7 @@ export function prepareServiceFormData(service = null, { categoryOptions = [], t
         addLabel: "Dodaj varijantu",
         help: "Usluga mora imati bar jednu varijantu (paket) za zakazivanje.",
         itemFields: [
+          { name: "_id", type: "hidden" },
           { name: "name", label: "Naziv varijante", type: "text", required: true },
           { name: "duration", label: "Trajanje (min)", type: "number", min: 5, required: true },
           { name: "totalPrice", label: "Cena", type: "number", min: 0, step: "0.01", required: true },
@@ -344,6 +345,7 @@ export function prepareServicePackagesStepData(service) {
       addLabel: "Dodaj varijantu",
       help: "Dodajte bar jednu varijantu (paket) - bez ovoga usluga ne može biti objavljena.",
       itemFields: [
+        { name: "_id", type: "hidden" },
         { name: "name", label: "Naziv varijante", type: "text", required: true },
         { name: "duration", label: "Trajanje (min)", type: "number", min: 5, required: true },
         { name: "totalPrice", label: "Cena", type: "number", min: 0, step: "0.01", required: true },

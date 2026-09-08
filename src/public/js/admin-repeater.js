@@ -4,7 +4,21 @@
     wrapper.className = "col";
 
     let input;
-    if (subfield.type === "select") {
+    if (subfield.type === "hidden") {
+      // round-trips a value the admin never sees or edits (e.g. an existing
+      // subdocument's _id) - see readRow/sync below for why this exists:
+      // without it, every save would silently hand Mongoose a brand new _id
+      // for every row, orphaning anything elsewhere that stored the old one
+      // (e.g. Package.items[].servicePackageId pointing at a Service's own
+      // ServicePackageSchema variant _id).
+      input = document.createElement("input");
+      input.type = "hidden";
+      input.value = value !== undefined && value !== null ? value : "";
+      input.dataset.repeaterField = subfield.name;
+      wrapper.style.display = "none";
+      wrapper.appendChild(input);
+      return wrapper;
+    } else if (subfield.type === "select") {
       input = document.createElement("select");
       input.className = "form-select form-select-sm";
       const blank = document.createElement("option");
