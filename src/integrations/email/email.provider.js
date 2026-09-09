@@ -92,3 +92,10 @@ export async function sendEmail({ to, subject, html, attachments = [] }) {
   });
   throw lastError;
 }
+
+// same reasoning as every other provider in this codebase (google-calendar,
+// instagram, telegram) - a plain ESM named export can't be mocked directly
+// (its module namespace object's properties aren't configurable per spec),
+// so a default-exported object is what makes this actually testable via
+// t.mock.method the same way the rest of the codebase's tests already do.
+export default { sendEmail };
