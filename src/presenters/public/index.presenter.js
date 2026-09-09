@@ -369,7 +369,7 @@ export function preparePrivacyPolicyData() {
 
 export function prepareTermsAndConditionsData() {
   return {
-    lastUpdated: "8. septembar 2026.",
+    lastUpdated: "9. septembar 2026.",
     intro:
       "Korišćenjem sajta Estetik Lab, online zakazivanja termina, kupovine proizvoda iz naše prodavnice i drugih usluga našeg wellness centra, prihvatate sledeće Uslove korišćenja. Molimo vas da ih pažljivo pročitate pre registracije, zakazivanja termina, naručivanja proizvoda ili slanja poruke putem sajta.",
     contact: LEGAL_CONTACT,
@@ -444,7 +444,7 @@ export function prepareTermsAndConditionsData() {
             title: "Nedolazak (no-show)",
             paragraphs: [
               "Ako se ne pojavite na potvrđeni termin bez prethodnog otkazivanja, termin biva označen kao nedolazak (no-show) u vašoj istoriji termina.",
-              "Ako je termin bio plaćen iz paketa tretmana, trenutno se rezervisana seansa vraća na raspolaganje za naredno zakazivanje - nedolazak sam po sebi ne oduzima seansu iz paketa niti se naplaćuje posebna naknada. Zadržavamo pravo da ovu politiku izmenimo u budućnosti, o čemu bismo vas obavestili ažuriranjem ovih uslova.",
+              "Za razliku od blagovremenog otkazivanja (koje seansu vraća na raspolaganje - videti iznad), neblagovremen, nenajavljen nedolazak <strong>troši rezervisanu seansu iz paketa tretmana</strong> - terapeut je rezervisao termin, došao i čekao vas, pa se seansa smatra iskorišćenom na isti način kao da je tretman obavljen. Ova razlika postoji upravo zato da bi otkazivanje u dozvoljenom roku ostalo bez posledica, dok nedolazak bez ikakve najave nosi realnu posledicu.",
               "Učestali neopravdani nedolasci mogu uticati na mogućnost budućeg online zakazivanja, u razumnoj meri i uz prethodno obaveštenje.",
             ],
           },
