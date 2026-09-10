@@ -4,6 +4,7 @@ import commissionRepo from "../../../src/repositories/commission-entry.repositor
 import appointmentService from "../../../src/services/appointment.service.js";
 import orderService from "../../../src/services/order.service.js";
 import packagePurchaseService from "../../../src/services/package-purchase.service.js";
+import runtimeSettingsCache from "../../../src/config/runtime-settings.cache.js";
 import commissionService from "../../../src/services/commission.service.js";
 import { buildAppointment, buildEmployee, buildOrder, buildPackagePurchase, buildPartner, buildCoupon, id } from "../../helpers/factories.js";
 
@@ -86,6 +87,11 @@ describe("commission.service", () => {
 
     it("pro-rates the employee's base value against the package's TRUE a la carte total, not against originalPrice (which is already the discounted bundle price)", async (t) => {
       t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
+      // floor set to 0 here - this test is specifically about the pro-rating
+      // MATH, not the minimum-floor guarantee (see its own regression tests
+      // further down) - a nonzero default floor would mask the exact
+      // computed value this test needs to assert on
+      t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 0 }));
       const employee = buildEmployee({ payType: "commission", commissionRate: 10 });
       const serviceId = id();
       const servicePackageId = id();
@@ -129,6 +135,7 @@ describe("commission.service", () => {
 
     it("compounds a coupon's discount on top of the package's own bundle discount correctly", async (t) => {
       t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
+      t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 0 }));
       const employee = buildEmployee({ payType: "commission", commissionRate: 10 });
       const serviceId = id();
       const servicePackageId = id();
@@ -284,6 +291,135 @@ describe("commission.service", () => {
       assert.equal(createMock.mock.calls.length, 2);
       const earnerTypes = createMock.mock.calls.map((c) => c.arguments[0].earnerType).sort();
       assert.deepEqual(earnerTypes, ["employee", "partner"]);
+    });
+  });
+
+  // BUG FIX (business decision, confirmed with the client): a
+  // package-covered appointment's pro-rated commission used to round down to
+  // 0 - and skip creating an entry entirely - whenever the package was sold
+  // at a steep promotional discount or given away for free. The employee
+  // performed the same real work regardless of what the package sold for.
+  describe("recordAppointmentCommissions - minimum commission floor (package-covered only)", () => {
+    it("floors the commission up to the configured minimum for a fully free (pricePaid: 0) package", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
+      t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 500 }));
+      const employee = buildEmployee({ payType: "commission", commissionRate: 20 });
+      const serviceId = id();
+      const servicePackageId = id();
+      const packagePurchase = buildPackagePurchase({
+        serviceId,
+        servicePackageId,
+        pricePaid: 0, // given away as a reward - this is the exact scenario reported
+        items: [{ service: serviceId, servicePackageId, unitPrice: 3000, sessionsTotal: 5, sessionsUsed: 1, sessionsReserved: 0 }],
+      });
+      const appointment = buildAppointment({ employee, finalPrice: 0, packagePurchase, service: serviceId, variant: { servicePackageId }, coupon: null });
+      t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
+      const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
+
+      await commissionService.recordAppointmentCommissions(appointment._id.toString());
+
+      assert.equal(createMock.mock.calls.length, 1, "an entry must now be created even though the raw computed amount is 0");
+      const entry = createMock.mock.calls[0].arguments[0];
+      assert.equal(entry.baseValue, 0, "baseValue stays the true (zero) pro-rated value - the floor only affects the payout amount");
+      assert.equal(entry.amount, 500, "amount is floored up to the configured minimum");
+    });
+
+    it("floors up a steep-but-not-quite-free discount too, not just an exact 0", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
+      t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 500 }));
+      const employee = buildEmployee({ payType: "commission", commissionRate: 10 });
+      const serviceId = id();
+      const servicePackageId = id();
+      // unitPrice 3000 * (300 paid / 15000 true total) = 60 base -> 6 RSD raw commission, far under the floor
+      const packagePurchase = buildPackagePurchase({
+        serviceId,
+        servicePackageId,
+        pricePaid: 300,
+        items: [{ service: serviceId, servicePackageId, unitPrice: 3000, sessionsTotal: 5, sessionsUsed: 1, sessionsReserved: 0 }],
+      });
+      const appointment = buildAppointment({ employee, finalPrice: 0, packagePurchase, service: serviceId, variant: { servicePackageId }, coupon: null });
+      t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
+      const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
+
+      await commissionService.recordAppointmentCommissions(appointment._id.toString());
+
+      assert.equal(createMock.mock.calls[0].arguments[0].amount, 500);
+    });
+
+    it("does NOT apply the floor when the pro-rated commission is already above it", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
+      t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 500 }));
+      const employee = buildEmployee({ payType: "commission", commissionRate: 20 });
+      const serviceId = id();
+      const servicePackageId = id();
+      // unitPrice 3000 * (12000 paid / 15000 true total) = 2400 base -> 480 raw... still under 500, bump to a bigger example
+      const packagePurchase = buildPackagePurchase({
+        serviceId,
+        servicePackageId,
+        pricePaid: 15000, // no discount at all
+        items: [{ service: serviceId, servicePackageId, unitPrice: 3000, sessionsTotal: 5, sessionsUsed: 1, sessionsReserved: 0 }],
+      });
+      const appointment = buildAppointment({ employee, finalPrice: 0, packagePurchase, service: serviceId, variant: { servicePackageId }, coupon: null });
+      t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
+      const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
+
+      await commissionService.recordAppointmentCommissions(appointment._id.toString());
+
+      // baseValue 3000 * 20% = 600 - genuinely above the 500 floor, so the
+      // real computed value is what gets paid, not the floor
+      assert.equal(createMock.mock.calls[0].arguments[0].amount, 600);
+    });
+
+    it("never applies the floor to an ordinary a-la-carte (non-package) appointment, no matter how small the commission", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
+      t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 500 }));
+      const employee = buildEmployee({ payType: "commission", commissionRate: 5 });
+      // finalPrice 1000 * 5% = 50 - well under the 500 floor, but this is a
+      // plain a-la-carte appointment, not a package - the floor must not apply
+      const appointment = buildAppointment({ employee, finalPrice: 1000, packagePurchase: null, coupon: null });
+      t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
+      const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
+
+      await commissionService.recordAppointmentCommissions(appointment._id.toString());
+
+      assert.equal(createMock.mock.calls[0].arguments[0].amount, 50, "a-la-carte commission math is untouched by the package-only floor");
+    });
+
+    it("reads the floor from the admin-configurable runtime setting, not a hardcoded value", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
+      const policyMock = t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 1200 }));
+      const employee = buildEmployee({ payType: "commission", commissionRate: 10 });
+      const serviceId = id();
+      const servicePackageId = id();
+      const packagePurchase = buildPackagePurchase({
+        serviceId,
+        servicePackageId,
+        pricePaid: 0,
+        items: [{ service: serviceId, servicePackageId, unitPrice: 3000, sessionsTotal: 5, sessionsUsed: 1, sessionsReserved: 0 }],
+      });
+      const appointment = buildAppointment({ employee, finalPrice: 0, packagePurchase, service: serviceId, variant: { servicePackageId }, coupon: null });
+      t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
+      const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
+
+      await commissionService.recordAppointmentCommissions(appointment._id.toString());
+
+      assert.equal(policyMock.mock.calls.length, 1);
+      assert.equal(createMock.mock.calls[0].arguments[0].amount, 1200, "must use whatever the admin-configured value is, not a hardcoded 500");
+    });
+
+    it("still creates no entry when the package has no matching item at all (null, not 0) - a data mismatch, not a pricing question the floor should paper over", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
+      t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 500 }));
+      const employee = buildEmployee({ payType: "commission", commissionRate: 10 });
+      const packagePurchase = buildPackagePurchase({ items: [{ service: id(), servicePackageId: id(), unitPrice: 3000, sessionsTotal: 5, sessionsUsed: 1, sessionsReserved: 0 }] });
+      // appointment's own service/variant deliberately don't match anything in packagePurchase.items
+      const appointment = buildAppointment({ employee, finalPrice: 0, packagePurchase, service: id(), variant: { servicePackageId: id() }, coupon: null });
+      t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
+      const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
+
+      await commissionService.recordAppointmentCommissions(appointment._id.toString());
+
+      assert.equal(createMock.mock.calls.length, 0, "no entry at all - not even a floored one - when nothing in the package actually matches this appointment");
     });
   });
 

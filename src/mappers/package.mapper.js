@@ -71,7 +71,25 @@ function buildGroupKey(pkg) {
   if (items.length !== 1) return `standalone:${pkg._id}`;
 
   const [item] = items;
-  const serviceKey = isPopulatedService(item.service) ? item.service.slug : item.service?.toString() || "nepoznato";
+  // BUG FIX: this used to fall back to the plain string "nepoznato" whenever
+  // item.service didn't resolve (dangling/deleted service reference, or a
+  // populate() that came back empty) - not just for THIS package, but as the
+  // literal fallback for EVERY package with an unresolved service. Two or
+  // more affected packages would then collide on the exact same group key
+  // ("nepoznato:<servicePackageId or undefined>"), get merged into a single
+  // groupPackagesByTreatment() group, and groupPackagesByTreatment only ever
+  // renders ONE card per group - card-package-group.ejs shows a single
+  // "tier" toggle, not a list of unrelated packages jammed together. Every
+  // affected package except whichever tier ended up as defaultTier
+  // effectively vanished from /paketi without any error, exactly the "some
+  // packages aren't showing" symptom this was reported with. Falling back to
+  // the package's own _id (same as the standalone: branch above) whenever
+  // EITHER half of the key can't be trusted guarantees the fallback can
+  // never collide between two different broken packages, regardless of how
+  // many end up with an unresolved service and/or a missing servicePackageId.
+  if (!isPopulatedService(item.service) && !item.service) return `standalone:${pkg._id}`;
+  if (!item.servicePackageId) return `standalone:${pkg._id}`;
+  const serviceKey = isPopulatedService(item.service) ? item.service.slug : item.service.toString();
   return `${serviceKey}:${item.servicePackageId}`;
 }
 

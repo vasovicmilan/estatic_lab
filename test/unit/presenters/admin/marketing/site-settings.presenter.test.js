@@ -68,13 +68,14 @@ describe("prepareSiteSettingsFormData", () => {
     assert.equal(view.fields.find((f) => f.name === "currencySymbolPosition").value, "after");
   });
 
-  it("marks the first booking-policy field and the first currency field with a sectionTitle", () => {
+  it("marks the first field of each section (booking policy, commission, currency) with a sectionTitle", () => {
     const view = prepareSiteSettingsFormData(undefined);
 
     const sectioned = view.fields.filter((f) => f.sectionTitle);
-    assert.equal(sectioned.length, 2);
+    assert.equal(sectioned.length, 3);
     assert.equal(sectioned[0].name, "bufferMinutes");
-    assert.equal(sectioned[1].name, "currencyCode");
+    assert.equal(sectioned[1].name, "minimumSessionCommission");
+    assert.equal(sectioned[2].name, "currencyCode");
   });
 
   it("posts to /admin/sajt as multipart, since the form can upload a file", () => {

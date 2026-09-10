@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import siteSettingsRepo from "../../../src/repositories/site-settings.repository.js";
-import { loadRuntimeSettings, getBookingPolicy, getCurrency } from "../../../src/config/runtime-settings.cache.js";
+import { loadRuntimeSettings, getBookingPolicy, getCurrency, getCommissionPolicy } from "../../../src/config/runtime-settings.cache.js";
 
 describe("runtime-settings.cache", () => {
   describe("loadRuntimeSettings", () => {
@@ -16,6 +16,7 @@ describe("runtime-settings.cache", () => {
           rescheduleMinLeadMinutes: 20,
         },
         currency: { code: "EUR", symbol: "€", symbolPosition: "before" },
+        commissionPolicy: { minimumSessionCommission: 800 },
       }));
 
       await loadRuntimeSettings();
@@ -23,6 +24,7 @@ describe("runtime-settings.cache", () => {
       assert.equal(getBookingPolicy().bufferMinutes, 45);
       assert.equal(getBookingPolicy().userCancellationCutoffHours, 48);
       assert.deepEqual(getCurrency(), { code: "EUR", symbol: "€", symbolPosition: "before" });
+      assert.equal(getCommissionPolicy().minimumSessionCommission, 800);
     });
 
     it("keeps the previous values instead of crashing when the DB read fails", async (t) => {
@@ -56,6 +58,25 @@ describe("runtime-settings.cache", () => {
       // every other field should still be a real number (fallen back, not undefined/NaN)
       assert.equal(typeof policy.slotGridMinutes, "number");
       assert.equal(typeof policy.userCancellationCutoffHours, "number");
+    });
+
+    it("falls back to the previous cached minimumSessionCommission when commissionPolicy is missing entirely from the document", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => ({
+        bookingPolicy: { bufferMinutes: 30 },
+        currency: {},
+        commissionPolicy: { minimumSessionCommission: 900 },
+      }));
+      await loadRuntimeSettings();
+      assert.equal(getCommissionPolicy().minimumSessionCommission, 900);
+
+      // now a document with no commissionPolicy field at all
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => ({
+        bookingPolicy: { bufferMinutes: 30 },
+        currency: {},
+      }));
+      await loadRuntimeSettings();
+
+      assert.equal(getCommissionPolicy().minimumSessionCommission, 900, "must keep the previous value, not silently reset to the hardcoded default");
     });
   });
 });

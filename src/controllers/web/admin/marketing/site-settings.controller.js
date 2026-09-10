@@ -59,6 +59,9 @@ export async function updateSiteSettings(req, res, next) {
         symbol: req.body.currencySymbol !== undefined ? req.body.currencySymbol.trim() || existing.currency.symbol : existing.currency.symbol,
         symbolPosition: req.body.currencySymbolPosition || existing.currency.symbolPosition,
       },
+      commissionPolicy: {
+        minimumSessionCommission: numberOr(req.body.minimumSessionCommission, existing.commissionPolicy.minimumSessionCommission),
+      },
     });
 
     logInfo("[updateSiteSettings] Podešavanja sajta ažurirana", { adminId: req.session?.user?.id, hasNewImage: !!req.uploadedFile });
@@ -77,6 +80,7 @@ export async function updateSiteSettings(req, res, next) {
           "rescheduleMinLeadMinutes",
         ]),
         ...auditLogService.computeChanges(existing.currency, updated.currency, ["code", "symbol", "symbolPosition"]),
+        ...auditLogService.computeChanges(existing.commissionPolicy, updated.commissionPolicy, ["minimumSessionCommission"]),
       },
       req,
       success: true,

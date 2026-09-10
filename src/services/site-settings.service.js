@@ -61,6 +61,9 @@ export async function getSiteSettingsForEdit() {
       symbol: settings.currency?.symbol,
       symbolPosition: settings.currency?.symbolPosition,
     },
+    commissionPolicy: {
+      minimumSessionCommission: settings.commissionPolicy?.minimumSessionCommission,
+    },
   };
 }
 
@@ -87,7 +90,7 @@ export async function updateHero({ image, imageAlt }) {
  * the schema can't express a relationship BETWEEN two fields (floor < cutoff),
  * only bounds on each field individually.
  */
-export async function updatePolicy({ bookingPolicy, currency }) {
+export async function updatePolicy({ bookingPolicy, currency, commissionPolicy }) {
   if (bookingPolicy) {
     const numericFields = [
       "bufferMinutes",
@@ -109,13 +112,21 @@ export async function updatePolicy({ bookingPolicy, currency }) {
     }
   }
 
+  if (commissionPolicy) {
+    const value = commissionPolicy.minimumSessionCommission;
+    if (typeof value !== "number" || isNaN(value) || value < 0) {
+      badRequest('Neispravna vrednost za "minimalnu proviziju po seansi iz paketa"');
+    }
+  }
+
   await siteSettingsRepo.updateSiteSettings({
     ...(bookingPolicy ? { bookingPolicy } : {}),
     ...(currency ? { currency } : {}),
+    ...(commissionPolicy ? { commissionPolicy } : {}),
   });
 
   await runtimeSettingsCache.loadRuntimeSettings();
-  logInfo("Booking policy / currency settings updated", { bookingPolicy, currency });
+  logInfo("Booking policy / currency / commission policy settings updated", { bookingPolicy, currency, commissionPolicy });
   return getSiteSettingsForEdit();
 }
 

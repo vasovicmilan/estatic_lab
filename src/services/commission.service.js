@@ -3,6 +3,7 @@ import appointmentService from "./appointment.service.js";
 import orderService from "./order.service.js";
 import packagePurchaseService from "./package-purchase.service.js";
 import { ORDER_COMMISSION_GRACE_PERIOD_DAYS } from "../config/shop.config.js";
+import runtimeSettingsCache from "../config/runtime-settings.cache.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 
 const ORDER_TERMINAL_NO_COMMISSION_STATUSES = ["cancelled", "returned", "refunded"];
@@ -44,27 +45,46 @@ export async function recordAppointmentCommissions(appointmentId) {
   // to what the business actually collected for this session; paying them
   // nothing shortchanges them for real work performed. Pro-rating by the
   // package's actual discount ratio is the fair middle ground - see
-  // getPackageProRatedValue.
+  // getPackageProRatedValue. null there (as opposed to a legitimate 0) means
+  // no matching item was found at all - a data mismatch, not a pricing
+  // question - and is handled as "skip entirely" below, same as before.
   const employeeBaseValue = appointment.packagePurchase
     ? getPackageProRatedValue(appointment, appointment.packagePurchase)
     : appointment.finalPrice || 0;
 
-  if (employeeBaseValue > 0 && appointment.employee?.payType === "commission" && appointment.employee.commissionRate) {
-    entries.push({
-      earnerType: "employee",
-      employee: appointment.employee._id,
-      // reuse the appointment's own snapshot rather than re-resolving it - it's the
-      // same employee, frozen at the same moment (booking/reassignment), no reason
-      // to duplicate the lookup or risk it drifting from what the appointment shows.
-      employeeSnapshot: appointment.employeeSnapshot,
-      sourceType: "appointment",
-      appointment: appointment._id,
-      baseValue: employeeBaseValue,
-      rate: appointment.employee.commissionRate,
-      amount: round2(employeeBaseValue * (appointment.employee.commissionRate / 100)),
-      status: "earned",
-      earnedAt: new Date(),
-    });
+  if (employeeBaseValue !== null && appointment.employee?.payType === "commission" && appointment.employee.commissionRate) {
+    // BUG FIX (business decision, confirmed with the client): the
+    // pro-rating above is fair for an ordinary discount, but it rounds all
+    // the way down to 0 for a package sold at a steep promotional price or
+    // given away outright (pricePaid: 0) - the employee still did the exact
+    // same physical work regardless of what the package was sold for, and
+    // used to earn literally nothing for it (the old `employeeBaseValue > 0`
+    // guard skipped creating an entry at all in that case). Scoped
+    // deliberately narrow: only package-covered appointments with a genuine
+    // matched item get this floor - an ordinary a-la-carte appointment's
+    // commission is left exactly as the plain percentage math always
+    // computed, untouched, and a package with no matching item at all (null,
+    // not 0) still gets no entry rather than an unearned floor payout.
+    const rawAmount = round2(employeeBaseValue * (appointment.employee.commissionRate / 100));
+    const amount = appointment.packagePurchase ? Math.max(rawAmount, runtimeSettingsCache.getCommissionPolicy().minimumSessionCommission) : rawAmount;
+
+    if (amount > 0) {
+      entries.push({
+        earnerType: "employee",
+        employee: appointment.employee._id,
+        // reuse the appointment's own snapshot rather than re-resolving it - it's the
+        // same employee, frozen at the same moment (booking/reassignment), no reason
+        // to duplicate the lookup or risk it drifting from what the appointment shows.
+        employeeSnapshot: appointment.employeeSnapshot,
+        sourceType: "appointment",
+        appointment: appointment._id,
+        baseValue: employeeBaseValue,
+        rate: appointment.employee.commissionRate,
+        amount,
+        status: "earned",
+        earnedAt: new Date(),
+      });
+    }
   }
 
   // Partner commission: unaffected by the package pro-rating above - a
@@ -120,13 +140,22 @@ function getALaCarteTotal(items = []) {
   return items.reduce((sum, item) => sum + (item.unitPrice || 0) * (item.sessionsTotal || 0), 0);
 }
 
+// Returns null specifically when no matching item exists at all (a data
+// mismatch between this appointment and the package it claims to be covered
+// by, not a pricing question) - kept distinguishable from a legitimate
+// computed value of exactly 0 (a matched item whose pro-rated share rounds
+// to nothing, e.g. a fully-discounted/gifted package), since only the
+// latter is eligible for recordAppointmentCommissions' minimum-floor
+// guarantee below. A mismatched item isn't a "steep discount", it's a data
+// problem this function has no business papering over with a guaranteed
+// minimum payout.
 function getPackageProRatedValue(appointment, packagePurchase) {
   const item = (packagePurchase.items || []).find(
     (i) =>
       i.service?.toString() === appointment.service?.toString() &&
       i.servicePackageId?.toString() === appointment.variant?.servicePackageId?.toString()
   );
-  if (!item) return 0;
+  if (!item) return null;
 
   const aLaCarteTotal = getALaCarteTotal(packagePurchase.items);
   const discountRatio = aLaCarteTotal > 0 ? packagePurchase.pricePaid / aLaCarteTotal : 1;

@@ -56,11 +56,29 @@ const CurrencySchema = new Schema(
   { _id: false }
 );
 
+// Guarantees a commission-based employee still earns something for a
+// package-covered appointment even when the package itself was sold at a
+// heavy promotional discount or given away entirely (pricePaid: 0) - the
+// employee performed the same real work either way. Deliberately scoped
+// narrow (package-covered appointments only, commission-paid employees
+// only) rather than touching regular a-la-carte commission math at all -
+// see commission.service.js's own comment on getPackageProRatedValue for
+// exactly where this applies and why a flat percentage of a
+// heavily-discounted or free package would otherwise round down to little
+// or nothing.
+const CommissionPolicySchema = new Schema(
+  {
+    minimumSessionCommission: { type: Number, default: 500, min: 0 },
+  },
+  { _id: false }
+);
+
 const SiteSettingsSchema = new Schema(
   {
     hero: { type: HeroSchema, default: () => ({}) },
     bookingPolicy: { type: BookingPolicySchema, default: () => ({}) },
     currency: { type: CurrencySchema, default: () => ({}) },
+    commissionPolicy: { type: CommissionPolicySchema, default: () => ({}) },
     // Reserved for the "o nama" (about us) content block mentioned alongside
     // the hero image - intentionally left out of this schema until that's
     // actually built, so an empty/unused nested object isn't sitting in every

@@ -17,6 +17,7 @@ function buildSettingsDoc(overrides = {}) {
       rescheduleMinLeadMinutes: 30,
     },
     currency: { code: "RSD", symbol: "RSD", symbolPosition: "after" },
+    commissionPolicy: { minimumSessionCommission: 500 },
     ...overrides,
   };
 }
@@ -112,10 +113,36 @@ describe("site-settings.service", () => {
       assert.deepEqual(savedData.currency, { code: "EUR", symbol: "€", symbolPosition: "before" });
       assert.equal("bookingPolicy" in savedData, false);
     });
+
+    it("rejects a non-numeric or negative minimumSessionCommission with a clean 400", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => buildSettingsDoc());
+
+      await assert.rejects(
+        () => siteSettingsService.updatePolicy({ commissionPolicy: { minimumSessionCommission: NaN } }),
+        (err) => err.statusCode === 400
+      );
+      await assert.rejects(
+        () => siteSettingsService.updatePolicy({ commissionPolicy: { minimumSessionCommission: -100 } }),
+        (err) => err.statusCode === 400
+      );
+    });
+
+    it("saves the commission policy independently and refreshes the runtime cache, same as booking policy/currency", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => buildSettingsDoc());
+      const updateMock = t.mock.method(siteSettingsRepo, "updateSiteSettings", async () => {});
+      const refreshMock = t.mock.method(runtimeSettingsCache, "loadRuntimeSettings", async () => {});
+
+      await siteSettingsService.updatePolicy({ commissionPolicy: { minimumSessionCommission: 750 } });
+
+      const savedData = updateMock.mock.calls[0].arguments[0];
+      assert.deepEqual(savedData.commissionPolicy, { minimumSessionCommission: 750 });
+      assert.equal("bookingPolicy" in savedData, false, "updating commission policy alone must not touch booking policy");
+      assert.equal(refreshMock.mock.calls.length, 1);
+    });
   });
 
   describe("getSiteSettingsForEdit", () => {
-    it("returns all three sections - hero, bookingPolicy, currency - from the one stored document", async (t) => {
+    it("returns all four sections - hero, bookingPolicy, currency, commissionPolicy - from the one stored document", async (t) => {
       t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () =>
         buildSettingsDoc({ hero: { image: "/images/site/x-medium.webp", imageAlt: "Salon" } })
       );
@@ -125,6 +152,14 @@ describe("site-settings.service", () => {
       assert.equal(result.hero.image, "/images/site/x-medium.webp");
       assert.equal(result.bookingPolicy.bufferMinutes, 30);
       assert.equal(result.currency.code, "RSD");
+      // REGRESSION: this function used to omit commissionPolicy from its
+      // returned shape entirely, even though the model/repo/controller all
+      // knew about it - existing.commissionPolicy.minimumSessionCommission
+      // in the admin controller then threw on undefined, 500ing the whole
+      // site-settings form (both plain saves and hero-image uploads, since
+      // they share this same read) rather than the clean update this was
+      // meant to be.
+      assert.equal(result.commissionPolicy.minimumSessionCommission, 500);
     });
   });
 

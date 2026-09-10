@@ -67,6 +67,18 @@ const ProductVariationSchema = new Schema(
       type: Number,
       default: 0,
     },
+    // matches ServicePackageSchema's own isBest - an explicit admin flag
+    // rather than inferring "best" from price/order, since neither actually
+    // means "recommended" (the cheapest variation isn't necessarily the one
+    // worth highlighting, and order alone is just display sequence, not a
+    // value judgment). Sorting by this - see product.mapper.js's
+    // mapVariations - is what makes an admin's "isBest" choice actually
+    // surface as "shown first" on the public product page, not just a badge
+    // buried wherever it happened to land in insertion order.
+    isBest: {
+      type: Boolean,
+      default: false,
+    },
     isActive: {
       type: Boolean,
       default: true,

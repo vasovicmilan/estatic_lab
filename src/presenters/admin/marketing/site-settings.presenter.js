@@ -3,6 +3,7 @@ export function prepareSiteSettingsFormData(settings) {
   const hero = values.hero || {};
   const policy = values.bookingPolicy || {};
   const currency = values.currency || {};
+  const commissionPolicy = values.commissionPolicy || {};
 
   const fields = [
     {
@@ -81,6 +82,25 @@ export function prepareSiteSettingsFormData(settings) {
       required: true,
       value: policy.rescheduleCutoffHours,
       help: "Iznad ovog broja sati, termin se može pomeriti na bilo koji dan/vreme.",
+    },
+
+    // ---- Provizija ----
+    // See commission.service.js's own comment on getPackageProRatedValue for
+    // exactly where this applies: only a package-covered appointment's
+    // employee commission, guaranteeing at least this much even when the
+    // package itself was sold at a steep promotional discount or given away
+    // entirely - an ordinary a-la-carte appointment's commission is never
+    // affected by this setting.
+    {
+      sectionTitle: "Provizija",
+      name: "minimumSessionCommission",
+      label: "Minimalna provizija po seansi iz paketa (RSD)",
+      type: "number",
+      width: 6,
+      required: true,
+      min: 0,
+      value: commissionPolicy.minimumSessionCommission,
+      help: "Garantovan minimum za zaposlenog na proviziji kada je termin plaćen iz paketa prodatog po sniženoj/promotivnoj ceni ili poklonjenog (0 RSD) - štiti od toga da tačan procenat popusta obračuna proviziju na skoro ništa.",
     },
 
     // ---- Valuta ----

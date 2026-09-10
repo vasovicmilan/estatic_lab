@@ -107,6 +107,48 @@ describe("package.mapper", () => {
     });
   });
 
+  // BUG FIX regression tests - see buildGroupKey's own comment in
+  // package.mapper.js. Two or more packages with an unresolved service
+  // reference used to all fall back to the exact same "nepoznato:..." group
+  // key, silently merging unrelated packages into a single
+  // groupPackagesByTreatment() card - every package but one effectively
+  // vanished from /paketi with no error anywhere.
+  describe("grupa (group key) - never collides between two unrelated broken packages", () => {
+    it("falls back to the package's own _id when item.service is entirely missing, not a shared generic string", () => {
+      const pkgA = buildPackage({ items: [{ service: null, servicePackageId: id(), sessions: 5 }] });
+      const pkgB = buildPackage({ items: [{ service: null, servicePackageId: id(), sessions: 5 }] });
+
+      const mappedA = mapPackageForPublicCard(pkgA);
+      const mappedB = mapPackageForPublicCard(pkgB);
+
+      assert.notEqual(mappedA.grupa, mappedB.grupa, "two different packages with a missing service reference must never collide on the same group key");
+      assert.match(mappedA.grupa, /standalone:/);
+    });
+
+    it("falls back to the package's own _id when servicePackageId is missing, even if the service itself resolves fine", () => {
+      const sharedServiceId = id();
+      const pkgA = buildPackage({ items: [{ service: sharedServiceId, servicePackageId: null, sessions: 5 }] });
+      const pkgB = buildPackage({ items: [{ service: sharedServiceId, servicePackageId: null, sessions: 10 }] });
+
+      const mappedA = mapPackageForPublicCard(pkgA);
+      const mappedB = mapPackageForPublicCard(pkgB);
+
+      assert.notEqual(mappedA.grupa, mappedB.grupa, "must not collide just because both happen to reference the same (real) service with a missing variant id");
+    });
+
+    it("still correctly groups two legitimate tiers of the SAME service+variant together - the fix doesn't break the intended pairing", () => {
+      const sharedServiceId = id();
+      const sharedVariantId = id();
+      const pkg5 = buildPackage({ items: [{ service: sharedServiceId, servicePackageId: sharedVariantId, sessions: 5 }] });
+      const pkg10 = buildPackage({ items: [{ service: sharedServiceId, servicePackageId: sharedVariantId, sessions: 10 }] });
+
+      const mapped5 = mapPackageForPublicCard(pkg5);
+      const mapped10 = mapPackageForPublicCard(pkg10);
+
+      assert.equal(mapped5.grupa, mapped10.grupa, "two real tiers of the same service+variant must still share a group key so they render as one card with a toggle");
+    });
+  });
+
   describe("null safety", () => {
     it("returns null for a null package across every single-item mapper", () => {
       assert.equal(mapPackageForAdminDetail(null), null);

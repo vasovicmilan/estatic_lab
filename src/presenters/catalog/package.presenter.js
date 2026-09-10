@@ -62,15 +62,29 @@ function groupPackagesByTreatment(packages = []) {
   });
 }
 
-export function preparePackageListData(result, query = {}) {
+export function preparePackageListData(packages, query = {}, { page = 1, perPage = 12 } = {}) {
+  // Grouping happens across the WHOLE catalog first, THEN the resulting
+  // groups (display cards) are what gets paginated - not the raw Package
+  // documents. Doing it the other way around (paginate raw documents, then
+  // group whatever landed on this page) could split a 5/10-session tier pair
+  // across two different pages, silently breaking that pair's toggle on
+  // whichever page ended up with only one half. See package.controller.js's
+  // own comment on why this function now takes the full package list rather
+  // than an already-paginated DB result.
+  const allGroups = groupPackagesByTreatment(packages);
+  const currentPage = Math.max(1, parseInt(page, 10) || 1);
+  const totalPages = Math.max(1, Math.ceil(allGroups.length / perPage));
+  const start = (currentPage - 1) * perPage;
+  const pageGroups = allGroups.slice(start, start + perPage);
+
   return {
-    packages: result.data,
-    packageGroups: groupPackagesByTreatment(result.data),
+    packages,
+    packageGroups: pageGroups,
     subtitle: "Kombinacije tretmana osmišljene da vam donesu više za manje - bez žurbe, uz naš tim koji brine o detaljima.",
     intro: PACKAGE_LIST_INTRO,
     pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
+      currentPage,
+      totalPages,
       basePath: "/paketi",
       query,
     },

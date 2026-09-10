@@ -65,7 +65,19 @@ function buildPhase2Payload(req, existing = {}) {
     tags: toIdArray(req.body.tags),
     shortDescription: req.body.shortDescription || "",
     longDescription: parseJsonField(req.body.longDescription, []),
-    variations: parseJsonField(req.body.variations, []),
+    // same _id-stripping as updateProduct's data.variations below - every row
+    // here is a brand-new variation (this payload only ever runs during the
+    // creation wizard), so the hidden _id field the repeater now submits is
+    // always blank - strip it so Mongoose mints a real one instead of trying
+    // to cast an empty string to ObjectId.
+    variations: parseJsonField(req.body.variations, []).map((v) => {
+      const cleaned = { ...v, isActive: parseCheckbox(v.isActive, true), isBest: parseCheckbox(v.isBest, false) };
+      if (!cleaned._id) {
+        const { _id, ...rest } = cleaned;
+        return rest;
+      }
+      return cleaned;
+    }),
     image,
     // Gallery and video are deliberately NOT handled here - this step's
     // generic file input can't do a real multi-select (see _form.ejs), so it
@@ -113,7 +125,28 @@ function buildProductPayload(req, existing = {}) {
   data.relatedServices = toIdArray(req.body.relatedServices);
   data.relatedPosts = toIdArray(req.body.relatedPosts);
   data.longDescription = parseJsonField(req.body.longDescription, existing.longDescription || []);
-  data.variations = parseJsonField(req.body.variations, existing.variations || []);
+  // BUG FIX: same _id-preservation issue as service.controller.js's update()
+  // had for "Varijante usluge" - the "Varijante" repeater's hidden _id field
+  // (see admin-repeater.js) round-trips an EXISTING variation's _id so
+  // Mongoose reuses it instead of minting a new one on every save. Without
+  // this, every edit to a product silently regenerated every one of its
+  // variation _ids, which orders/carts that had already snapshotted the old
+  // variation _id (see Order/OrderItem's own comment on why they snapshot
+  // rather than reference) don't depend on going forward, but anything that
+  // DOES hold a live reference to a specific variation would be silently
+  // orphaned by an unrelated product edit. A brand-new row has no _id yet -
+  // the hidden field submits "" for those, which would make Mongoose try to
+  // cast an empty string to ObjectId and throw; strip _id entirely when it's
+  // blank so Mongoose mints a fresh one for genuinely new variations, same as
+  // it always did.
+  data.variations = parseJsonField(req.body.variations, existing.variations || []).map((v) => {
+    const cleaned = { ...v, isActive: parseCheckbox(v.isActive, true), isBest: parseCheckbox(v.isBest, false) };
+    if (!cleaned._id) {
+      const { _id, ...rest } = cleaned;
+      return rest;
+    }
+    return cleaned;
+  });
   data.faq = parseJsonField(req.body.faq, existing.faq || []);
   data.badge = ["none", "featured", "sale"].includes(req.body.badge) ? req.body.badge : existing.badge || "none";
   data.shippingClass = ["standard", "freight"].includes(req.body.shippingClass) ? req.body.shippingClass : existing.shippingClass || "standard";

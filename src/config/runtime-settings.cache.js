@@ -20,6 +20,9 @@ let cache = {
     symbol: "RSD",
     symbolPosition: "after",
   },
+  commissionPolicy: {
+    minimumSessionCommission: 500,
+  },
 };
 
 /**
@@ -47,6 +50,9 @@ export async function loadRuntimeSettings() {
         symbol: settings.currency?.symbol || cache.currency.symbol,
         symbolPosition: settings.currency?.symbolPosition || cache.currency.symbolPosition,
       },
+      commissionPolicy: {
+        minimumSessionCommission: settings.commissionPolicy?.minimumSessionCommission ?? cache.commissionPolicy.minimumSessionCommission,
+      },
     };
     logInfo("Runtime settings loaded", cache);
   } catch (error) {
@@ -62,4 +68,8 @@ export function getCurrency() {
   return cache.currency;
 }
 
-export default { loadRuntimeSettings, getBookingPolicy, getCurrency };
+export function getCommissionPolicy() {
+  return cache.commissionPolicy;
+}
+
+export default { loadRuntimeSettings, getBookingPolicy, getCurrency, getCommissionPolicy };

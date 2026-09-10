@@ -46,7 +46,20 @@ function getTotalStock(product) {
 }
 
 function mapVariations(variations = []) {
-  return variations.map((v) => ({
+  // BUG FIX: this used to just .map() in whatever order the variations
+  // array happened to be in (insertion order) - the order/isBest fields
+  // were mapped through as redosled/najbolja below, but nothing ever
+  // actually sorted by them, so an admin's chosen display order had no
+  // visible effect at all. isBest first (an explicit admin call, not
+  // inferred from price - see the schema's own comment), then by order
+  // ascending, then _id as a final stable tiebreaker so two variations
+  // tied on both never silently swap position between renders.
+  const sorted = [...variations].sort((a, b) => {
+    if (a.isBest !== b.isBest) return a.isBest ? -1 : 1;
+    if ((a.order || 0) !== (b.order || 0)) return (a.order || 0) - (b.order || 0);
+    return String(a._id).localeCompare(String(b._id));
+  });
+  return sorted.map((v) => ({
     id: v._id?.toString(),
     naziv: v.label,
     sku: v.sku || null,
@@ -57,6 +70,7 @@ function mapVariations(variations = []) {
     naStanju: v.stock > 0,
     slika: formatImage(v.image),
     redosled: v.order,
+    najbolja: !!v.isBest,
     aktivna: v.isActive,
   }));
 }

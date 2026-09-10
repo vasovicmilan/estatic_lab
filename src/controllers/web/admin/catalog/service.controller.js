@@ -134,11 +134,12 @@ function buildServicePayload(req, existing = {}) {
   // for genuinely new variants, same as it always did; keep it for rows that
   // came with a real one.
   data.packages = parseJsonField(req.body.packages, existing.packages || []).map((pkg) => {
-    if (!pkg._id) {
-      const { _id, ...rest } = pkg;
+    const cleaned = { ...pkg, isActive: parseCheckbox(pkg.isActive, true), isBest: parseCheckbox(pkg.isBest, false) };
+    if (!cleaned._id) {
+      const { _id, ...rest } = cleaned;
       return rest;
     }
-    return pkg;
+    return cleaned;
   });
   data.comparisonColumns = req.body.comparisonColumnsCsv
     ? req.body.comparisonColumnsCsv.split(",").map((c) => c.trim()).filter(Boolean)
@@ -289,11 +290,12 @@ export async function addServicePackages(req, res, next) {
     // its comment for why blank _id fields need to be stripped rather than
     // passed straight through to Mongoose.
     const packages = parseJsonField(req.body.packages, []).map((pkg) => {
-      if (!pkg._id) {
-        const { _id, ...rest } = pkg;
+      const cleaned = { ...pkg, isActive: parseCheckbox(pkg.isActive, true), isBest: parseCheckbox(pkg.isBest, false) };
+      if (!cleaned._id) {
+        const { _id, ...rest } = cleaned;
         return rest;
       }
-      return pkg;
+      return cleaned;
     });
     const service = await serviceService.addPackagesToService(serviceId, packages);
     logInfo(`[addServicePackages] Varijante sačuvane za uslugu #${serviceId}`, { serviceId, adminId: req.session?.user?.id });

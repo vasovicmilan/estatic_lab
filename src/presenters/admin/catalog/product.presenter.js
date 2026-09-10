@@ -223,11 +223,16 @@ export function prepareProductFormData(product, { categoryOptions = [], tagOptio
       addLabel: "Dodaj varijantu",
       help: "Proizvod mora imati bar jednu varijantu da bi ostao objavljen.",
       itemFields: [
+        { name: "_id", type: "hidden" },
         { name: "label", label: "Naziv varijante", type: "text", required: true },
         { name: "sku", label: "SKU varijante (opciono)", type: "text" },
         { name: "price", label: "Cena", type: "number", min: 0, step: "0.01", required: true },
+        { name: "compareAtPrice", label: "Stara cena (opciono - za precrtanu cenu)", type: "number", min: 0, step: "0.01" },
         { name: "stock", label: "Zalihe", type: "number", min: 0, required: true },
         { name: "lowStockThreshold", label: "Prag niskog stanja", type: "number", min: 0 },
+        { name: "order", label: "Redosled prikaza (manji broj = prikazuje se pre)", type: "number", min: 0, value: 0 },
+        { name: "isBest", label: "Najbolja opcija (prikazuje se prva)", type: "select", value: "false", options: [{ value: "true", label: "Da" }, { value: "false", label: "Ne" }] },
+        { name: "isActive", label: "Aktivna", type: "select", value: "true", options: [{ value: "true", label: "Aktivna" }, { value: "false", label: "Neaktivna" }] },
       ],
     },
     {
@@ -376,11 +381,16 @@ export function prepareProductDetailsMediaStepData(product, { categoryOptions = 
       addLabel: "Dodaj varijantu",
       help: "Dodajte bar jednu varijantu - bez ovoga proizvod ne može biti objavljen. Naziv je slobodan tekst (npr. „50ml”, „Glava tip A”).",
       itemFields: [
+        { name: "_id", type: "hidden" },
         { name: "label", label: "Naziv varijante", type: "text", required: true },
         { name: "sku", label: "SKU varijante (opciono)", type: "text" },
         { name: "price", label: "Cena", type: "number", min: 0, step: "0.01", required: true },
+        { name: "compareAtPrice", label: "Stara cena (opciono - za precrtanu cenu)", type: "number", min: 0, step: "0.01" },
         { name: "stock", label: "Zalihe", type: "number", min: 0, required: true },
         { name: "lowStockThreshold", label: "Prag niskog stanja", type: "number", min: 0 },
+        { name: "order", label: "Redosled prikaza (manji broj = prikazuje se pre)", type: "number", min: 0, value: 0 },
+        { name: "isBest", label: "Najbolja opcija (prikazuje se prva)", type: "select", value: "false", options: [{ value: "true", label: "Da" }, { value: "false", label: "Ne" }] },
+        { name: "isActive", label: "Aktivna", type: "select", value: "true", options: [{ value: "true", label: "Aktivna" }, { value: "false", label: "Neaktivna" }] },
       ],
     },
     {

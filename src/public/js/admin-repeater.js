@@ -29,13 +29,46 @@
         const o = document.createElement("option");
         o.value = opt.value;
         o.textContent = opt.label;
-        if (value !== undefined && String(value) === String(opt.value)) o.selected = true;
+        // same "value !== undefined ? value : subfield.value" default
+        // fallback every other field type below uses for a brand-new row -
+        // without this, a new variant's "Aktivna"/"Najbolja opcija" select
+        // would silently submit an empty string instead of a sensible
+        // default (isActive: true, isBest: false), which Mongoose would then
+        // fail to cast to a real Boolean.
+        const effectiveValue = value !== undefined ? value : subfield.value;
+        if (effectiveValue !== undefined && String(effectiveValue) === String(opt.value)) o.selected = true;
         input.appendChild(o);
       });
     } else if (subfield.type === "textarea") {
       input = document.createElement("textarea");
       input.className = "form-control form-control-sm";
       input.value = value ?? "";
+    } else if (subfield.type === "checkbox") {
+      // rendered as a plain Bootstrap checkbox, not the label/input stacking
+      // every other field type uses below - a checkbox's own label sits
+      // beside it, not above it
+      input = document.createElement("input");
+      input.type = "checkbox";
+      // same "value !== undefined ? value : subfield.value" fallback the
+      // number branch below uses for a brand-new row with no rowData yet -
+      // here that means a newly-added variant defaults to isActive:true
+      // (subfield.value) rather than landing unchecked
+      input.checked = value !== undefined ? !!value : !!subfield.value;
+      input.dataset.repeaterField = subfield.name;
+      if (subfield.placeholder) input.placeholder = subfield.placeholder;
+
+      const checkWrapper = document.createElement("div");
+      checkWrapper.className = "form-check";
+      input.className = "form-check-input";
+      input.id = `${subfield.name}-${Math.random().toString(36).slice(2, 8)}`;
+      const checkLabel = document.createElement("label");
+      checkLabel.className = "form-check-label small";
+      checkLabel.htmlFor = input.id;
+      checkLabel.textContent = subfield.label || subfield.name;
+      checkWrapper.appendChild(input);
+      checkWrapper.appendChild(checkLabel);
+      wrapper.appendChild(checkWrapper);
+      return wrapper;
     } else {
       input = document.createElement("input");
       input.type = subfield.type || "text";
@@ -83,7 +116,11 @@
     schema.forEach((subfield) => {
       const input = row.querySelector(`[data-repeater-field="${subfield.name}"]`);
       if (!input) return;
-      obj[subfield.name] = subfield.type === "number" ? (input.value === "" ? null : Number(input.value)) : input.value;
+      if (subfield.type === "checkbox") {
+        obj[subfield.name] = input.checked;
+      } else {
+        obj[subfield.name] = subfield.type === "number" ? (input.value === "" ? null : Number(input.value)) : input.value;
+      }
     });
     return obj;
   }

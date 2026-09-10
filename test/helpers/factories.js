@@ -437,6 +437,7 @@ export function buildProductVariation(overrides = {}) {
     lowStockThreshold: 5,
     image: null,
     order: 0,
+    isBest: false,
     isActive: true,
     ...overrides,
   };

@@ -135,6 +135,52 @@ describe("product.mapper", () => {
     });
   });
 
+  // BUG FIX regression tests - see mapVariations' own comment in
+  // product.mapper.js. Variations used to just .map() in whatever order the
+  // array happened to already be in - the order/isBest fields were mapped
+  // through to redosled/najbolja for display, but nothing ever actually
+  // sorted by them, so an admin's chosen display order (or "best option"
+  // flag) had no visible effect on the public page at all.
+  describe("mapVariations ordering (via mapProductForPublicDetail)", () => {
+    it("sorts by the order field ascending, regardless of the array's original insertion order", () => {
+      const product = buildProduct({
+        variations: [
+          buildProductVariation({ label: "Treca", order: 2 }),
+          buildProductVariation({ label: "Prva", order: 0 }),
+          buildProductVariation({ label: "Druga", order: 1 }),
+        ],
+      });
+      const mapped = mapProductForPublicDetail(product);
+      assert.deepEqual(
+        mapped.varijante.map((v) => v.naziv),
+        ["Prva", "Druga", "Treca"]
+      );
+    });
+
+    it("puts isBest:true variations first, ahead of order - an explicit 'best' call overrides plain display sequence", () => {
+      const product = buildProduct({
+        variations: [
+          buildProductVariation({ label: "Obicna, order 0", order: 0, isBest: false }),
+          buildProductVariation({ label: "Najbolja, order 5", order: 5, isBest: true }),
+        ],
+      });
+      const mapped = mapProductForPublicDetail(product);
+      assert.equal(mapped.varijante[0].naziv, "Najbolja, order 5");
+      assert.equal(mapped.varijante[0].najbolja, true);
+    });
+
+    it("breaks an order tie by _id, so two variations tied on both order and isBest never silently swap position between renders", () => {
+      const a = buildProductVariation({ label: "A", order: 0 });
+      const b = buildProductVariation({ label: "B", order: 0 });
+      const product1 = buildProduct({ variations: [a, b] });
+      const product2 = buildProduct({ variations: [b, a] }); // reversed insertion order
+
+      const mapped1 = mapProductForPublicDetail(product1).varijante.map((v) => v.naziv);
+      const mapped2 = mapProductForPublicDetail(product2).varijante.map((v) => v.naziv);
+      assert.deepEqual(mapped1, mapped2, "the same two variations must land in the same order regardless of array insertion order");
+    });
+  });
+
   describe("mapProductForAdminDetail - variation visibility", () => {
     it("includes inactive variations too, unlike the public detail page (admin needs to see and re-enable them)", () => {
       const product = buildProduct({

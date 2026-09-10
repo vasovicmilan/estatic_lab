@@ -210,8 +210,14 @@ export function prepareServiceFormData(service = null, { categoryOptions = [], t
         itemFields: [
           { name: "_id", type: "hidden" },
           { name: "name", label: "Naziv varijante", type: "text", required: true },
+          { name: "sessions", label: "Broj seansi (1 za jednu posetu, >1 za paket seansi)", type: "number", min: 1, value: 1, required: true },
           { name: "duration", label: "Trajanje (min)", type: "number", min: 5, required: true },
           { name: "totalPrice", label: "Cena", type: "number", min: 0, step: "0.01", required: true },
+          { name: "basePrice", label: "Stara cena (opciono - za precrtanu cenu)", type: "number", min: 0, step: "0.01" },
+          { name: "badge", label: "Oznaka (opciono, npr. NAJPOPULARNIJE)", type: "text" },
+          { name: "order", label: "Redosled prikaza (manji broj = prikazuje se pre)", type: "number", min: 0, value: 0 },
+          { name: "isBest", label: "Najbolja opcija (prikazuje se prva)", type: "select", value: "false", options: [{ value: "true", label: "Da" }, { value: "false", label: "Ne" }] },
+          { name: "isActive", label: "Aktivna", type: "select", value: "true", options: [{ value: "true", label: "Aktivna" }, { value: "false", label: "Neaktivna" }] },
         ],
       },
       {
@@ -347,8 +353,14 @@ export function prepareServicePackagesStepData(service) {
       itemFields: [
         { name: "_id", type: "hidden" },
         { name: "name", label: "Naziv varijante", type: "text", required: true },
+        { name: "sessions", label: "Broj seansi (1 za jednu posetu, >1 za paket seansi)", type: "number", min: 1, value: 1, required: true },
         { name: "duration", label: "Trajanje (min)", type: "number", min: 5, required: true },
         { name: "totalPrice", label: "Cena", type: "number", min: 0, step: "0.01", required: true },
+        { name: "basePrice", label: "Stara cena (opciono - za precrtanu cenu)", type: "number", min: 0, step: "0.01" },
+        { name: "badge", label: "Oznaka (opciono, npr. NAJPOPULARNIJE)", type: "text" },
+        { name: "order", label: "Redosled prikaza (manji broj = prikazuje se pre)", type: "number", min: 0, value: 0 },
+        { name: "isBest", label: "Najbolja opcija (prikazuje se prva)", type: "select", value: "false", options: [{ value: "true", label: "Da" }, { value: "false", label: "Ne" }] },
+        { name: "isActive", label: "Aktivna", type: "select", value: "true", options: [{ value: "true", label: "Aktivna" }, { value: "false", label: "Neaktivna" }] },
       ],
     },
   ];
