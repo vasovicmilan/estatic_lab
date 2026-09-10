@@ -385,6 +385,36 @@ describe("commission.service", () => {
       assert.equal(createMock.mock.calls[0].arguments[0].amount, 50, "a-la-carte commission math is untouched by the package-only floor");
     });
 
+    it("applies the floor to a manually-created appointment with a price override (walk-in gift/nagrada), even with no package involved", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
+      t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 500 }));
+      const employee = buildEmployee({ payType: "commission", commissionRate: 20 });
+      // manualBooking: true mirrors bookAppointment's own `manualBooking: priceOverride != null` -
+      // a gifted walk-in appointment priced at 0 by an admin, not tied to any package
+      const appointment = buildAppointment({ employee, finalPrice: 0, packagePurchase: null, manualBooking: true, coupon: null });
+      t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
+      const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
+
+      await commissionService.recordAppointmentCommissions(appointment._id.toString());
+
+      assert.equal(createMock.mock.calls[0].arguments[0].amount, 500);
+    });
+
+    it("does NOT apply the floor to a manual appointment with no price override (normal-price walk-in booked on someone's behalf)", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
+      t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 500 }));
+      const employee = buildEmployee({ payType: "commission", commissionRate: 5 });
+      // manualBooking stays false here (no priceOverride was used) - this is just an
+      // ordinary-priced walk-in an admin booked for the customer, not a gift
+      const appointment = buildAppointment({ employee, finalPrice: 1000, packagePurchase: null, manualBooking: false, coupon: null });
+      t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
+      const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
+
+      await commissionService.recordAppointmentCommissions(appointment._id.toString());
+
+      assert.equal(createMock.mock.calls[0].arguments[0].amount, 50, "no override means no floor, regardless of how the appointment was created");
+    });
+
     it("reads the floor from the admin-configurable runtime setting, not a hardcoded value", async (t) => {
       t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       const policyMock = t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 1200 }));

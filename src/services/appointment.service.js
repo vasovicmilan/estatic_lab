@@ -464,13 +464,24 @@ export async function bookAppointment(input) {
  * is required here (not optional) since this function's entire reason to exist is
  * the manual price override use case; a caller with no real actor role has no
  * business calling this instead of the public bookAppointment directly.
+ *
+ * `packagePurchaseId` is honored (unlike `couponCode`, which stays hard-disabled
+ * below): if the selected existing user has a matching package, the admin can
+ * explicitly choose to consume a session from it instead of charging/gifting the
+ * appointment separately - see manual-appointment.controller.js's
+ * checkManualAppointmentPackage for how the form discovers/offers this. A coupon
+ * stays categorically off-limits here because it's a customer-facing redeemable
+ * code, not something an admin panel should be replaying on someone's behalf;
+ * `packagePurchaseId` has no such concern (it's just picking an existing balance
+ * the customer already owns) and is still re-validated for real by
+ * bookAppointment/assertUsablePurchase below regardless of what this passes through.
  */
 export async function createManualAppointment(input, { actorId = null, actorRole } = {}) {
   if (actorRole !== "admin" && actorRole !== "employee") {
     forbidden("Samo administrator ili zaposleni mogu ručno kreirati termin");
   }
 
-  const { existingUserId = null, contact = {}, ...rest } = input;
+  const { existingUserId = null, contact = {}, packagePurchaseId = null, ...rest } = input;
 
   let isLoggedIn = false;
   let userId = null;
@@ -492,7 +503,13 @@ export async function createManualAppointment(input, { actorId = null, actorRole
     };
   }
 
-  logInfo("Manual appointment booking initiated", { actorId, actorRole, existingUserId, hasPriceOverride: rest.priceOverride != null });
+  logInfo("Manual appointment booking initiated", {
+    actorId,
+    actorRole,
+    existingUserId,
+    hasPriceOverride: rest.priceOverride != null,
+    hasPackagePurchase: packagePurchaseId != null,
+  });
 
   return bookAppointment({
     ...rest,
@@ -500,12 +517,13 @@ export async function createManualAppointment(input, { actorId = null, actorRole
     userId,
     contact: resolvedContact,
     actorRole,
-    // a manually-created appointment is never paid via a customer's coupon or
-    // package purchase - see bookAppointment's own mutual-exclusion check with
-    // priceOverride, enforced again here so a stray couponCode/packagePurchaseId
-    // in the admin form payload can never slip through
+    // a manually-created appointment is never paid via a customer's coupon - see
+    // the function doc above for why that stays off-limits while packagePurchaseId
+    // doesn't. Only forwarded when there's actually a logged-in existing user to
+    // own it; bookAppointment enforces this same rule itself, this just avoids
+    // even attempting the lookup for a guest/walk-in with no account.
     couponCode: null,
-    packagePurchaseId: null,
+    packagePurchaseId: isLoggedIn ? packagePurchaseId : null,
   });
 }
 

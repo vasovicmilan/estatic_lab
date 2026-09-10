@@ -58,14 +58,16 @@ const CurrencySchema = new Schema(
 
 // Guarantees a commission-based employee still earns something for a
 // package-covered appointment even when the package itself was sold at a
-// heavy promotional discount or given away entirely (pricePaid: 0) - the
-// employee performed the same real work either way. Deliberately scoped
-// narrow (package-covered appointments only, commission-paid employees
-// only) rather than touching regular a-la-carte commission math at all -
-// see commission.service.js's own comment on getPackageProRatedValue for
-// exactly where this applies and why a flat percentage of a
-// heavily-discounted or free package would otherwise round down to little
-// or nothing.
+// heavy promotional discount or given away entirely (pricePaid: 0), and
+// likewise for a manually-created appointment (walk-in gift, nagrada,
+// poklon) whose price was hand-set by an admin/employee - the employee
+// performed the same real work either way. Deliberately scoped narrow
+// (package-covered OR admin-price-overridden appointments only,
+// commission-paid employees only) rather than touching regular a-la-carte
+// commission math at all - see commission.service.js's own comment on
+// recordAppointmentCommissions for exactly where this applies and why a
+// flat percentage of a heavily-discounted or free session would otherwise
+// round down to little or nothing.
 const CommissionPolicySchema = new Schema(
   {
     minimumSessionCommission: { type: Number, default: 500, min: 0 },

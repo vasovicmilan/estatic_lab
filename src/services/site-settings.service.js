@@ -115,7 +115,7 @@ export async function updatePolicy({ bookingPolicy, currency, commissionPolicy }
   if (commissionPolicy) {
     const value = commissionPolicy.minimumSessionCommission;
     if (typeof value !== "number" || isNaN(value) || value < 0) {
-      badRequest('Neispravna vrednost za "minimalnu proviziju po seansi iz paketa"');
+      badRequest('Neispravna vrednost za "minimalnu proviziju po seansi iz paketa ili ručno kreiranog termina"');
     }
   }
 

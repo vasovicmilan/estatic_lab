@@ -10,7 +10,7 @@
       <div class="card">
         <div class="card-body">
           <p class="text-muted small mb-3">
-            Za slučajeve poput nagrada, poklona, ili termina koje klijent nije sam zakazao. Cena se po potrebi može ručno podesiti - u tom slučaju kupon i plaćanje paketom nisu dostupni za ovaj termin.
+            Za slučajeve poput nagrada, poklona, ili termina koje klijent nije sam zakazao. Ako izabrani postojeći korisnik ima paket koji pokriva izabranu uslugu, možete birati da li se termin plaća iz tog paketa ili je zaseban. Cena se po potrebi može ručno podesiti - u tom slučaju kupon i plaćanje paketom nisu dostupni za ovaj termin.
           </p>
 
           <form method="POST" action="<%= data.formAction %>" novalidate data-manual-appointment-form>
@@ -84,6 +84,16 @@
               <div class="col-md-6 mb-3" data-manual-contact-field>
                 <label for="phone" class="form-label">Telefon</label>
                 <input type="text" class="form-control" id="phone" name="phone">
+              </div>
+
+              <div class="col-12 mb-3" data-manual-package-option style="display:none;">
+                <div class="form-check border rounded p-3 bg-light">
+                  <input class="form-check-input" type="checkbox" id="usePackagePurchase" name="packagePurchaseId" value="" data-manual-package-checkbox>
+                  <label class="form-check-label" for="usePackagePurchase">
+                    Iskoristi iz paketa korisnika
+                    <span class="text-muted" data-manual-package-remaining></span>
+                  </label>
+                </div>
               </div>
 
               <div class="col-12">

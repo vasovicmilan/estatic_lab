@@ -67,6 +67,10 @@ export const validateManualAppointmentCreate = [
   body("priceOverride")
     .optional({ checkFalsy: true })
     .isFloat({ min: 0 }).withMessage("Cena mora biti pozitivan broj"),
+  // Only meaningful alongside existingUserId (see checkManualAppointmentPackage/
+  // createManualAppointment) - mutually exclusive with priceOverride, enforced
+  // service-side in bookAppointment, not duplicated here.
+  body("packagePurchaseId").optional({ checkFalsy: true }).isMongoId().withMessage("Neispravan ID kupljenog paketa"),
 
   collectValidationErrors,
 ];

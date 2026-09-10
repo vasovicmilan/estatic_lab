@@ -7,6 +7,7 @@ import {
   validateAppointmentCancel,
   validateAppointmentReassign,
   validateAppointmentId,
+  validateManualAppointmentCreate,
 } from "../../../src/middlewares/validators/appointment.validator.js";
 
 describe("appointment.validator", () => {
@@ -72,6 +73,36 @@ describe("appointment.validator", () => {
       const agent = buildValidatorHarness(validateAppointmentId, { method: "get", path: "/test/:appointmentId" });
       const res = await agent.get(`/test/${new Types.ObjectId().toString()}`);
       assert.equal(res.status, 200);
+    });
+  });
+
+  describe("validateManualAppointmentCreate", () => {
+    function validBody(overrides = {}) {
+      return {
+        serviceId: new Types.ObjectId().toString(),
+        servicePackageId: new Types.ObjectId().toString(),
+        startTime: new Date(Date.now() + 86400000).toISOString(),
+        ...overrides,
+      };
+    }
+
+    it("accepts a body with no packagePurchaseId at all (the common case - no package involved)", async () => {
+      const agent = buildValidatorHarness(validateManualAppointmentCreate);
+      const res = await agent.post("/test").send(validBody());
+      assert.equal(res.status, 200);
+    });
+
+    it("accepts a valid packagePurchaseId", async () => {
+      const agent = buildValidatorHarness(validateManualAppointmentCreate);
+      const res = await agent.post("/test").send(validBody({ packagePurchaseId: new Types.ObjectId().toString() }));
+      assert.equal(res.status, 200);
+    });
+
+    it("rejects a non-mongo-id packagePurchaseId", async () => {
+      const agent = buildValidatorHarness(validateManualAppointmentCreate);
+      const res = await agent.post("/test").send(validBody({ packagePurchaseId: "not-an-id" }));
+      assert.equal(res.status, 400);
+      assert.ok(res.body.errors.packagePurchaseId);
     });
   });
 });

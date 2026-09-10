@@ -85,22 +85,24 @@ export function prepareSiteSettingsFormData(settings) {
     },
 
     // ---- Provizija ----
-    // See commission.service.js's own comment on getPackageProRatedValue for
-    // exactly where this applies: only a package-covered appointment's
-    // employee commission, guaranteeing at least this much even when the
-    // package itself was sold at a steep promotional discount or given away
-    // entirely - an ordinary a-la-carte appointment's commission is never
-    // affected by this setting.
+    // See commission.service.js's own comment on recordAppointmentCommissions
+    // for exactly where this applies: a package-covered appointment's employee
+    // commission, AND a manually-created appointment (walk-in gift, nagrada,
+    // poklon) with an admin-set price override - guaranteeing at least this
+    // much even when the package/price was sniženo/promotivno or given away
+    // entirely (0 RSD). An ordinary a-la-carte appointment (self-booked, at
+    // the normal catalog price, optionally with a coupon) is never affected
+    // by this setting.
     {
       sectionTitle: "Provizija",
       name: "minimumSessionCommission",
-      label: "Minimalna provizija po seansi iz paketa (RSD)",
+      label: "Minimalna provizija po seansi iz paketa ili ručno kreiranog termina (RSD)",
       type: "number",
       width: 6,
       required: true,
       min: 0,
       value: commissionPolicy.minimumSessionCommission,
-      help: "Garantovan minimum za zaposlenog na proviziji kada je termin plaćen iz paketa prodatog po sniženoj/promotivnoj ceni ili poklonjenog (0 RSD) - štiti od toga da tačan procenat popusta obračuna proviziju na skoro ništa.",
+      help: "Garantovan minimum za zaposlenog na proviziji kada je termin plaćen iz paketa prodatog po sniženoj/promotivnoj ceni ili poklonjenog (0 RSD), ili kada je termin ručno kreiran sa ručno podešenom cenom (poklon, nagrada i slično) - štiti od toga da niska/nulta cena obračuna proviziju na skoro ništa.",
     },
 
     // ---- Valuta ----

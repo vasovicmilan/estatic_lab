@@ -2,6 +2,7 @@ import appointmentService from "../../../../services/appointment.service.js";
 import serviceService from "../../../../services/service.service.js";
 import * as employeeService from "../../../../services/employee.service.js";
 import * as userService from "../../../../services/user.service.js";
+import * as packagePurchaseService from "../../../../services/package-purchase.service.js";
 import { prepareManualAppointmentFormData } from "../../../../presenters/admin/appointment/manual-appointment.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
@@ -90,6 +91,7 @@ export async function createManualAppointment(req, res, next) {
       note,
       overridePrice,
       priceOverride,
+      packagePurchaseId,
     } = req.body;
 
     const hasOverride = parseCheckbox(overridePrice, false);
@@ -105,6 +107,12 @@ export async function createManualAppointment(req, res, next) {
         contact: { firstName, lastName, email, phone },
         note: note || "",
         priceOverride: parsedOverride,
+        // hasOverride wins if the admin somehow submitted both - a hand-typed
+        // price is a more deliberate, explicit choice than a leftover checked
+        // box from before the override was toggled on, and bookAppointment
+        // would reject the combination outright anyway (see its own
+        // priceOverride/packagePurchaseId mutual-exclusion check)
+        packagePurchaseId: hasOverride ? null : packagePurchaseId || null,
       },
       { actorId: req.session?.user?.id, actorRole: req.session?.user?.roleName === "admin" ? "admin" : "employee" }
     );
@@ -121,6 +129,7 @@ export async function createManualAppointment(req, res, next) {
       changes: {
         serviceId: { old: null, new: serviceId },
         priceOverride: { old: null, new: parsedOverride },
+        packagePurchaseId: { old: null, new: hasOverride ? null : packagePurchaseId || null },
       },
       req,
       success: true,
@@ -143,4 +152,38 @@ export async function createManualAppointment(req, res, next) {
   }
 }
 
-export default { newManualAppointmentForm, createManualAppointment };
+/**
+ * AJAX check backing the manual-creation form's "use existing user's package"
+ * option (see admin-manual-appointment.js) - called whenever both an existing
+ * user and a service variant are selected, mirroring what the public booking
+ * flow already does automatically via findUsablePurchaseForService (see
+ * booking.controller.js). Never trusted as authorization on its own: the real
+ * check happens again server-side in bookAppointment/assertUsablePurchase at
+ * actual creation time - this only decides whether to show the checkbox at all.
+ */
+export async function checkManualAppointmentPackage(req, res) {
+  try {
+    const { existingUserId, servicePackageId } = req.body;
+    if (!existingUserId || !servicePackageId) {
+      return res.status(400).json({ usable: false, message: "Korisnik i varijanta su obavezni" });
+    }
+
+    const purchase = await packagePurchaseService.findUsablePurchaseForService(existingUserId, servicePackageId);
+    if (!purchase) {
+      return res.status(200).json({ usable: false });
+    }
+
+    const item = (purchase.items || []).find((i) => String(i.servicePackageId) === String(servicePackageId));
+    const preostaloSeansi = item ? item.sessionsTotal - item.sessionsUsed - (item.sessionsReserved || 0) : 0;
+
+    return res.status(200).json({ usable: true, packagePurchaseId: purchase._id.toString(), preostaloSeansi });
+  } catch (error) {
+    logError("[checkManualAppointmentPackage] Greška pri proveri paketa korisnika", error, {
+      body: req.body,
+      userId: req.session?.user?.id,
+    });
+    return res.status(400).json({ usable: false, message: "Greška pri proveri paketa" });
+  }
+}
+
+export default { newManualAppointmentForm, createManualAppointment, checkManualAppointmentPackage };

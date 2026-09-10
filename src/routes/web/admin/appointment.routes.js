@@ -16,6 +16,7 @@ const router = Router();
 
 router.get("/", validateSearch, AppointmentController.listAppointments);
 router.get("/rucno-kreiranje", ManualAppointmentController.newManualAppointmentForm);
+router.post("/rucno-kreiranje/proveri-paket", ManualAppointmentController.checkManualAppointmentPackage);
 router.post("/rucno-kreiranje", validateManualAppointmentCreate, ManualAppointmentController.createManualAppointment);
 router.get("/detalji/:appointmentId", validateAppointmentId, AppointmentController.appointmentDetails);
 

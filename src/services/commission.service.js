@@ -65,8 +65,23 @@ export async function recordAppointmentCommissions(appointmentId) {
     // commission is left exactly as the plain percentage math always
     // computed, untouched, and a package with no matching item at all (null,
     // not 0) still gets no entry rather than an unearned floor payout.
+    //
+    // Same reasoning extends to a manually-created appointment with an
+    // explicit admin/employee price override (appointment.manualBooking -
+    // see appointment.service.js's bookAppointment, which only sets this
+    // flag when priceOverride was actually used): a walk-in gift, contest
+    // prize, or promo giveaway booked through the admin panel is priced by
+    // hand exactly like a discounted/free package, and can just as easily
+    // land at or near 0. The employee still performed the real service, so
+    // it gets the same guaranteed floor. A manual booking with NO override
+    // (staff booking a normal-price walk-in on someone's behalf) leaves
+    // manualBooking false and is priced at the ordinary catalog rate, so it
+    // never needed this floor in the first place - the flag only turns on
+    // precisely when the price was hand-set, which is the only case this
+    // floor is meant to protect against.
+    const isFloorEligible = Boolean(appointment.packagePurchase) || appointment.manualBooking === true;
     const rawAmount = round2(employeeBaseValue * (appointment.employee.commissionRate / 100));
-    const amount = appointment.packagePurchase ? Math.max(rawAmount, runtimeSettingsCache.getCommissionPolicy().minimumSessionCommission) : rawAmount;
+    const amount = isFloorEligible ? Math.max(rawAmount, runtimeSettingsCache.getCommissionPolicy().minimumSessionCommission) : rawAmount;
 
     if (amount > 0) {
       entries.push({

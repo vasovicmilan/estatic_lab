@@ -613,7 +613,7 @@ describe("createManualAppointment - admin/employee wrapper", () => {
     assert.equal(createdPayload.manualBooking, true);
   });
 
-  it("strips any couponCode/packagePurchaseId a caller might still pass, since a manual booking never redeems either", async (t) => {
+  it("strips any couponCode a caller might still pass, and strips packagePurchaseId too when there's no logged-in existing user to own it", async (t) => {
     const soleFreeEmployee = buildEmployee();
 
     t.mock.method(userService, "findUserByEmail", async () => null);
@@ -628,8 +628,15 @@ describe("createManualAppointment - admin/employee wrapper", () => {
     const couponMock = t.mock.method(couponService, "validateCouponForBooking", async () => {
       throw new Error("should never be called for a manual booking");
     });
+    const assertUsableMock = t.mock.method(packagePurchaseService, "assertUsablePurchase", async () => {
+      throw new Error("should never be called - no existingUserId means no account to own a package purchase");
+    });
 
-    t.mock.method(appointmentRepo, "createAppointment", async (data) => ({ ...data, _id: id() }));
+    let createdPayload;
+    t.mock.method(appointmentRepo, "createAppointment", async (data) => {
+      createdPayload = data;
+      return { ...data, _id: id() };
+    });
 
     await appointmentService.createManualAppointment(
       {
@@ -639,12 +646,56 @@ describe("createManualAppointment - admin/employee wrapper", () => {
         contact: { firstName: "Nagrada", email: "nagrada@example.com" },
         priceOverride: 0,
         couponCode: "SHOULDBESTRIPPED",
+        // no existingUserId - a guest/walk-in has no account, so this can never
+        // resolve to anything real regardless of what's sent
         packagePurchaseId: id().toString(),
       },
       { actorId: id().toString(), actorRole: "employee" }
     );
 
     assert.equal(couponMock.mock.calls.length, 0);
+    assert.equal(assertUsableMock.mock.calls.length, 0);
+    assert.equal(createdPayload.packagePurchase, null);
+  });
+
+  it("forwards packagePurchaseId through to bookAppointment when an existing user is selected and no price override is used", async (t) => {
+    const purchase = buildPackagePurchase();
+    const existingUser = buildUser({ _id: purchase.user });
+
+    t.mock.method(userService, "findUserById", async () => existingUser);
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 3000, duration: 60 }) }));
+    t.mock.method(availabilityService, "findAvailableEmployees", async () => [buildEmployee()]);
+    t.mock.method(employeeService, "getEmployeeNameById", async () => "Terapeutkinja");
+    const assertUsableMock = t.mock.method(packagePurchaseService, "assertUsablePurchase", async () => purchase);
+    t.mock.method(packagePurchaseService, "reserveSession", async () => {});
+    t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+
+    let createdPayload;
+    t.mock.method(appointmentRepo, "createAppointment", async (data) => {
+      createdPayload = data;
+      return { ...data, _id: id() };
+    });
+
+    await appointmentService.createManualAppointment(
+      {
+        serviceId: purchase.items[0].service.toString(),
+        servicePackageId: purchase.items[0].servicePackageId.toString(),
+        startTime: tomorrowAt10(),
+        existingUserId: existingUser._id.toString(),
+        contact: {},
+        packagePurchaseId: purchase._id.toString(),
+      },
+      { actorId: id().toString(), actorRole: "admin" }
+    );
+
+    assert.equal(assertUsableMock.mock.calls.length, 1);
+    assert.equal(String(createdPayload.packagePurchase), String(purchase._id));
+    assert.equal(createdPayload.finalPrice, 0);
+    // manualBooking only reflects an explicit price override (see bookAppointment) -
+    // a package-covered manual booking with no override isn't a "hand-priced" gift
+    assert.equal(createdPayload.manualBooking, false);
   });
 });
 
