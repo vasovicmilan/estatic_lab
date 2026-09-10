@@ -8,6 +8,7 @@ import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
+import { zonedInputToUtcDate } from "../../../../utils/date.time.util.js";
 
 /**
  * Loads everything the manual-creation form needs to build its client-side
@@ -102,7 +103,15 @@ export async function createManualAppointment(req, res, next) {
         serviceId,
         servicePackageId,
         employeeId: employeeId || null,
-        startTime: new Date(startTime),
+        // the "Datum i vreme" input is a plain <input type="datetime-local"> - a
+        // naive "YYYY-MM-DDTHH:mm" string with NO timezone info attached. Handing
+        // that straight to `new Date()` parses it as the SERVER PROCESS's own
+        // timezone (UTC on this VPS), not Belgrade - silently booking 1-2h later
+        // (CET/CEST) than the admin actually picked on screen. zonedInputToUtcDate
+        // interprets it as Europe/Belgrade wall-clock time instead, matching what
+        // the admin saw and clicked - see date.time.util.js for the full story
+        // (the exact same bug this app already fixed once for scheduled blog posts).
+        startTime: zonedInputToUtcDate(startTime),
         existingUserId: existingUserId || null,
         contact: { firstName, lastName, email, phone },
         note: note || "",

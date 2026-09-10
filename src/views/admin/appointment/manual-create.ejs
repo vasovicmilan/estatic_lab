@@ -5,6 +5,16 @@
   <%- include("../../includes/breadcrumbs") %>
   <%- include("../../includes/flash-messages") %>
 
+  <%
+    // data.formData only exists after a failed submit (see manual-appointment.controller.js) -
+    // used throughout below both to re-fill what the admin already typed/picked and to
+    // decide the "postojeći korisnik" toggle's initial state, so a validation error never
+    // silently clears the whole form and forces starting over from scratch.
+    const submitted = (typeof data.formData !== 'undefined' && data.formData) || {};
+    const hasFieldErrors = typeof data.errors !== 'undefined' && Object.keys(data.errors).some((k) => k !== 'general');
+    const wasExistingUser = !!submitted.existingUserId;
+  %>
+
   <div class="row">
     <div class="col-lg-8">
       <div class="card">
@@ -19,6 +29,9 @@
             <% if (typeof data.errors !== 'undefined' && data.errors.general) { %>
               <div class="alert alert-danger" role="alert"><%= data.errors.general %></div>
             <% } %>
+            <% if (hasFieldErrors) { %>
+              <div class="alert alert-danger" role="alert">Ispravite označena polja ispod pre nego što pokušate ponovo.</div>
+            <% } %>
 
             <div class="row g-3">
               <div class="col-md-6 mb-3">
@@ -26,64 +39,73 @@
                 <select class="form-select" id="serviceId" name="serviceId" required data-manual-service-select>
                   <option value="">Izaberite...</option>
                   <% data.services.forEach(function(s) { %>
-                    <option value="<%= s.id %>"><%= s.name %></option>
+                    <option value="<%= s.id %>" <%= submitted.serviceId === s.id ? 'selected' : '' %>><%= s.name %></option>
                   <% }) %>
                 </select>
+                <% if (data.errors && data.errors.serviceId) { %><div class="text-danger small mt-1"><%= data.errors.serviceId %></div><% } %>
               </div>
 
               <div class="col-md-6 mb-3">
                 <label for="servicePackageId" class="form-label">Varijanta</label>
-                <select class="form-select" id="servicePackageId" name="servicePackageId" required data-manual-variant-select disabled>
+                <select class="form-select" id="servicePackageId" name="servicePackageId" required data-manual-variant-select <%= submitted.serviceId ? '' : 'disabled' %>>
                   <option value="">Prvo izaberite uslugu</option>
                 </select>
+                <% if (data.errors && data.errors.servicePackageId) { %><div class="text-danger small mt-1"><%= data.errors.servicePackageId %></div><% } %>
               </div>
 
               <div class="col-md-6 mb-3">
                 <label for="employeeId" class="form-label">Terapeut (opciono)</label>
-                <select class="form-select" id="employeeId" name="employeeId" data-manual-employee-select disabled>
+                <select class="form-select" id="employeeId" name="employeeId" data-manual-employee-select <%= submitted.serviceId ? '' : 'disabled' %>>
                   <option value="">Automatski / bilo koji dostupan</option>
                 </select>
+                <% if (data.errors && data.errors.employeeId) { %><div class="text-danger small mt-1"><%= data.errors.employeeId %></div><% } %>
               </div>
 
               <div class="col-md-6 mb-3">
                 <label for="startTime" class="form-label">Datum i vreme</label>
-                <input type="datetime-local" class="form-control" id="startTime" name="startTime" required>
+                <input type="datetime-local" class="form-control" id="startTime" name="startTime" value="<%= submitted.startTime || '' %>" required>
+                <% if (data.errors && data.errors.startTime) { %><div class="text-danger small mt-1"><%= data.errors.startTime %></div><% } %>
               </div>
 
               <div class="col-12">
                 <hr>
                 <div class="form-check mb-2">
-                  <input class="form-check-input" type="checkbox" id="useExistingUser" data-manual-existing-user-toggle>
+                  <input class="form-check-input" type="checkbox" id="useExistingUser" data-manual-existing-user-toggle <%= wasExistingUser ? 'checked' : '' %>>
                   <label class="form-check-label" for="useExistingUser">Postojeći registrovani korisnik</label>
                 </div>
               </div>
 
-              <div class="col-md-8 mb-3" data-manual-existing-user-field style="display:none;">
+              <div class="col-md-8 mb-3" data-manual-existing-user-field style="<%= wasExistingUser ? '' : 'display:none;' %>">
                 <label for="existingUserId" class="form-label">Korisnik</label>
                 <select class="form-select" id="existingUserId" name="existingUserId">
                   <option value="">Izaberite...</option>
                   <% data.userOptions.forEach(function(u) { %>
-                    <option value="<%= u.value %>"><%= u.label %></option>
+                    <option value="<%= u.value %>" <%= submitted.existingUserId === u.value ? 'selected' : '' %>><%= u.label %></option>
                   <% }) %>
                 </select>
                 <div class="form-text">Kontakt podaci (ime, email, telefon) preuzimaju se iz naloga korisnika, osim ako ih dole izričito unesete.</div>
+                <% if (data.errors && data.errors.existingUserId) { %><div class="text-danger small mt-1"><%= data.errors.existingUserId %></div><% } %>
               </div>
 
-              <div class="col-md-6 mb-3" data-manual-contact-field>
+              <div class="col-md-6 mb-3" data-manual-contact-field style="<%= wasExistingUser ? 'display:none;' : '' %>">
                 <label for="firstName" class="form-label">Ime</label>
-                <input type="text" class="form-control" id="firstName" name="firstName" required data-manual-contact-required>
+                <input type="text" class="form-control" id="firstName" name="firstName" value="<%= submitted.firstName || '' %>" required data-manual-contact-required>
+                <% if (data.errors && data.errors.firstName) { %><div class="text-danger small mt-1"><%= data.errors.firstName %></div><% } %>
               </div>
-              <div class="col-md-6 mb-3" data-manual-contact-field>
+              <div class="col-md-6 mb-3" data-manual-contact-field style="<%= wasExistingUser ? 'display:none;' : '' %>">
                 <label for="lastName" class="form-label">Prezime</label>
-                <input type="text" class="form-control" id="lastName" name="lastName">
+                <input type="text" class="form-control" id="lastName" name="lastName" value="<%= submitted.lastName || '' %>">
+                <% if (data.errors && data.errors.lastName) { %><div class="text-danger small mt-1"><%= data.errors.lastName %></div><% } %>
               </div>
-              <div class="col-md-6 mb-3" data-manual-contact-field>
+              <div class="col-md-6 mb-3" data-manual-contact-field style="<%= wasExistingUser ? 'display:none;' : '' %>">
                 <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" name="email" required data-manual-contact-required>
+                <input type="email" class="form-control" id="email" name="email" value="<%= submitted.email || '' %>" required data-manual-contact-required>
+                <% if (data.errors && data.errors.email) { %><div class="text-danger small mt-1"><%= data.errors.email %></div><% } %>
               </div>
-              <div class="col-md-6 mb-3" data-manual-contact-field>
+              <div class="col-md-6 mb-3" data-manual-contact-field style="<%= wasExistingUser ? 'display:none;' : '' %>">
                 <label for="phone" class="form-label">Telefon</label>
-                <input type="text" class="form-control" id="phone" name="phone">
+                <input type="text" class="form-control" id="phone" name="phone" value="<%= submitted.phone || '' %>">
+                <% if (data.errors && data.errors.phone) { %><div class="text-danger small mt-1"><%= data.errors.phone %></div><% } %>
               </div>
 
               <div class="col-12 mb-3" data-manual-package-option style="display:none;">
@@ -94,25 +116,28 @@
                     <span class="text-muted" data-manual-package-remaining></span>
                   </label>
                 </div>
+                <% if (data.errors && data.errors.packagePurchaseId) { %><div class="text-danger small mt-1"><%= data.errors.packagePurchaseId %></div><% } %>
               </div>
 
               <div class="col-12">
                 <hr>
                 <div class="form-check mb-2">
-                  <input class="form-check-input" type="checkbox" id="overridePrice" name="overridePrice" value="1" data-manual-override-toggle>
+                  <input class="form-check-input" type="checkbox" id="overridePrice" name="overridePrice" value="1" data-manual-override-toggle <%= submitted.overridePrice ? 'checked' : '' %>>
                   <label class="form-check-label" for="overridePrice">Ručno podesi cenu (nagrada, poklon, i slično)</label>
                 </div>
               </div>
 
-              <div class="col-md-6 mb-3" data-manual-override-field style="display:none;">
+              <div class="col-md-6 mb-3" data-manual-override-field style="<%= submitted.overridePrice ? '' : 'display:none;' %>">
                 <label for="priceOverride" class="form-label">Cena (<%= currencySymbol %>)</label>
-                <input type="number" class="form-control" id="priceOverride" name="priceOverride" min="0" step="0.01">
+                <input type="number" class="form-control" id="priceOverride" name="priceOverride" min="0" step="0.01" value="<%= submitted.priceOverride || '' %>" <%= submitted.overridePrice ? 'required' : '' %>>
                 <div class="form-text">Ova cena u potpunosti zamenjuje cenu usluge/varijante - kupon i paket nisu dostupni uz ovu opciju.</div>
+                <% if (data.errors && data.errors.priceOverride) { %><div class="text-danger small mt-1"><%= data.errors.priceOverride %></div><% } %>
               </div>
 
               <div class="col-12 mb-3">
                 <label for="note" class="form-label">Napomena (opciono)</label>
-                <textarea class="form-control" id="note" name="note" rows="2" placeholder="npr. „dobitnik nagradne igre na Instagramu”"></textarea>
+                <textarea class="form-control" id="note" name="note" rows="2" placeholder="npr. „dobitnik nagradne igre na Instagramu”"><%= submitted.note || '' %></textarea>
+                <% if (data.errors && data.errors.note) { %><div class="text-danger small mt-1"><%= data.errors.note %></div><% } %>
               </div>
             </div>
 
@@ -131,6 +156,15 @@
   window.__manualAppointmentData = {
     services: <%- JSON.stringify(data.services) %>,
     employeesByService: <%- JSON.stringify(data.employeesByService) %>,
+    // only present after a failed submit - lets the client JS re-select what was
+    // already picked in the two cascading dropdowns it owns (services.varijante/
+    // employeesByService aren't known server-side per-request, so this can't just
+    // be a plain "selected" attribute like the static <select>s above)
+    submitted: {
+      servicePackageId: <%- JSON.stringify(submitted.servicePackageId || "") %>,
+      employeeId: <%- JSON.stringify(submitted.employeeId || "") %>,
+      packagePurchaseId: <%- JSON.stringify(submitted.packagePurchaseId || "") %>,
+    },
   };
 </script>
 <script src="/js/admin-manual-appointment.js"></script>

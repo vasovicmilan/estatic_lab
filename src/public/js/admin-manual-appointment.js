@@ -165,4 +165,26 @@
       }
     });
   }
+
+  // ---- restore state after a failed submit (see manual-create.ejs's `submitted`) ----
+  // serviceId/startTime/existingUserId/contact fields/overridePrice are already
+  // restored server-side via selected/checked/value attributes (see the view's
+  // use of data.formData) - only the two dropdowns THIS script owns need
+  // restoring here, since their <option>s don't exist in the DOM until this
+  // script builds them, and the required-attribute/package-availability side
+  // effects that normally only run on a user-triggered "change" event still
+  // need to run once for whatever the server already rendered as selected/checked.
+  if (serviceSelect.value) {
+    populateVariants(serviceSelect.value);
+    populateEmployees(serviceSelect.value);
+    if (data.submitted && data.submitted.servicePackageId) variantSelect.value = data.submitted.servicePackageId;
+    if (data.submitted && data.submitted.employeeId) employeeSelect.value = data.submitted.employeeId;
+  }
+
+  if (existingUserToggle) {
+    contactRequiredInputs.forEach((input) => {
+      input.required = !existingUserToggle.checked;
+    });
+    if (existingUserToggle.checked) checkPackageAvailability();
+  }
 })();
