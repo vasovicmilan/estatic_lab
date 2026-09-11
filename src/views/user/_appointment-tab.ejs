@@ -9,26 +9,39 @@
   <form method="GET" class="mb-4" style="max-width: 250px;">
     <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
       <% data.filters.forEach(function(f) { %>
-        <option value="<%= f.value %>"><%= f.label %></option>
+        <option value="<%= f.value %>" <%= data.selectedStatus === f.value ? 'selected' : '' %>><%= f.label %></option>
       <% }) %>
     </select>
   </form>
 
   <% if (data.appointments && data.appointments.length > 0) { %>
-    <div class="list-group">
-      <% data.appointments.forEach(function(a) { %>
-        <a href="/nalog/termini/detalji/<%= a.id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-          <div>
-            <div class="fw-semibold"><%= a.usluga %></div>
-            <div class="text-muted small mono"><%= a.datum %></div>
-          </div>
-          <div class="text-end">
-            <span class="badge bg-secondary"><%= a.status %></span>
-            <div class="small price-mono"><%= a.cena %></div>
-          </div>
-        </a>
-      <% }) %>
-    </div>
+    <%
+      // each section only appears when it actually has items for this page -
+      // no empty "Prošli" heading with nothing under it just because the
+      // current page happens to be all-upcoming
+      const sections = [
+        { label: "Danas", items: data.groups.danas },
+        { label: "Predstojeći", items: data.groups.predstojeci },
+        { label: "Prošli", items: data.groups.prosli },
+      ].filter((s) => s.items.length > 0);
+    %>
+    <% sections.forEach(function(section) { %>
+      <h2 class="h6 text-muted text-uppercase mt-4 mb-2"><%= section.label %></h2>
+      <div class="list-group mb-3">
+        <% section.items.forEach(function(a) { %>
+          <a href="/nalog/termini/detalji/<%= a.id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold"><%= a.usluga %></div>
+              <div class="text-muted small mono"><%= a.datum %></div>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-secondary"><%= a.status %></span>
+              <div class="small price-mono"><%= a.cena %></div>
+            </div>
+          </a>
+        <% }) %>
+      </div>
+    <% }) %>
     <%- include("../includes/pagination", { pagination: data.pagination }) %>
   <% } else { %>
     <p class="text-muted">Nemate zakazanih termina. <a href="/usluge">Zakažite jedan</a>.</p>

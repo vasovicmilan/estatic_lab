@@ -176,6 +176,12 @@ export function mapAppointmentForUserShort(appointment) {
     id: appointment._id.toString(),
     usluga: appointment.variant?.name || appointment.service?.name,
     datum: formatDateTime(appointment.startTime),
+    // raw instant, alongside the already-formatted `datum` display string -
+    // user.presenter.js's prepareAppointmentTabData groups the list into
+    // Danas/Predstojeći/Prošli sections, which needs the actual Date to
+    // compare against "now" (in Belgrade time - see date.time.util.js's
+    // getZonedComponents) rather than re-parsing the display string
+    startTimeRaw: appointment.startTime,
     status: translateStatus(appointment.status),
     cena: appointment.finalPrice != null ? formatMoney(appointment.finalPrice) : null,
   };

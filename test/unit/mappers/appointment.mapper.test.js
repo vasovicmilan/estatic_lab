@@ -5,6 +5,7 @@ import {
   mapAppointmentForAdminShort,
   mapAppointmentForAdminDetail,
   mapAppointmentForEmployeeDetail,
+  mapAppointmentForUserShort,
   mapAppointmentForUserDetail,
   mapAppointmentForPublicCalendar,
   mapAppointment,
@@ -12,6 +13,15 @@ import {
 import { buildAppointment, buildUser, buildEmployee, id } from "../../helpers/factories.js";
 
 describe("appointment.mapper", () => {
+  describe("mapAppointmentForUserShort", () => {
+    it("exposes startTimeRaw alongside the formatted datum string - user.presenter.js needs the real Date to group by Danas/Predstojeći/Prošli", () => {
+      const startTime = new Date("2026-09-29T16:30:00.000Z");
+      const mapped = mapAppointmentForUserShort(buildAppointment({ startTime }));
+
+      assert.equal(mapped.startTimeRaw, startTime);
+      assert.ok(mapped.datum);
+    });
+  });
   describe("translateStatus", () => {
     it("translates every known status", () => {
       assert.equal(translateStatus("pending"), "Na čekanju");
