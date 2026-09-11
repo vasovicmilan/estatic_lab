@@ -11,7 +11,7 @@ import {
   mapCategoryForAdminDetail,
   mapCategoryForEdit,
   mapCategoriesForPublic,
-  mapCategoriesForSelect,
+  mapCategoriesForSelectWithHierarchy,
 } from "../mappers/category.mapper.js";
 import { generateUniqueSlug } from "../utils/slug.util.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
@@ -68,7 +68,7 @@ export async function getCategoryAndDescendantIds(categoryId, domain) {
 export async function getCategoriesForSelect(domain) {
   ensureValidDomain(domain);
   const categories = await categoryRepo.findAllCategoriesByDomain(domain, { onlyActive: false });
-  return mapCategoriesForSelect(categories);
+  return mapCategoriesForSelectWithHierarchy(categories);
 }
 
 // bulk name lookup by id - e.g. coupon.service.js building a specific "this

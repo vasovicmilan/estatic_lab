@@ -137,6 +137,56 @@ export function mapCategoriesForSelect(categories = []) {
   return categories.map(mapCategoryForSelect).filter(Boolean);
 }
 
+// Same {id, naziv, slug, domen} shape as mapCategoriesForSelect, but sorted into
+// parent-before-children order with the name visually indented by depth
+// ("— " per level) - so a dropdown reads as a tree, not a flat alphabetical
+// list where a broad parent (e.g. "Aparati i oprema") looks exactly like any
+// narrow leaf category. This matters most for coupon.model.js's
+// excludedCategories: picking a category there also excludes every
+// descendant automatically (see category.service.js's
+// getCategoryAndDescendantIds) - an admin who can't tell a parent from a leaf
+// at a glance can accidentally exclude far more of the catalog than intended
+// with no visual warning at selection time.
+export function mapCategoriesForSelectWithHierarchy(categories = []) {
+  const byParent = new Map();
+  for (const category of categories) {
+    const parentId = category.parent ? (category.parent._id || category.parent).toString() : null;
+    if (!byParent.has(parentId)) byParent.set(parentId, []);
+    byParent.get(parentId).push(category);
+  }
+
+  const result = [];
+  const visited = new Set();
+
+  function walk(parentId, depth) {
+    const children = byParent.get(parentId) || [];
+    for (const category of children) {
+      const idStr = category._id.toString();
+      if (visited.has(idStr)) continue; // guards the same accidental-cycle case findCategoryAndDescendantIds already guards
+      visited.add(idStr);
+      const mapped = mapCategoryForSelect(category);
+      if (mapped) result.push({ ...mapped, naziv: `${"— ".repeat(depth)}${mapped.naziv}` });
+      walk(idStr, depth + 1);
+    }
+  }
+
+  walk(null, 0);
+
+  // orphaned rows (parent id doesn't match any category in this list, e.g. a
+  // stray/mismatched domain) would otherwise silently vanish from the
+  // dropdown entirely - surface them at the root level instead of hiding them
+  for (const category of categories) {
+    const idStr = category._id.toString();
+    if (!visited.has(idStr)) {
+      visited.add(idStr);
+      const mapped = mapCategoryForSelect(category);
+      if (mapped) result.push(mapped);
+    }
+  }
+
+  return result;
+}
+
 export function mapCategoryRaw(category) {
   return category;
 }

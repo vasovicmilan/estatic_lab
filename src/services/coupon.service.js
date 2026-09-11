@@ -16,7 +16,31 @@ export async function getCouponById(couponId) {
   if (!couponId) validationError("couponId");
   const coupon = await couponRepo.findCouponById(couponId);
   if (!coupon) notFound("Kupon");
-  return mapCouponForAdminDetail(coupon);
+  const mapped = mapCouponForAdminDetail(coupon);
+
+  // Enrich each excluded category with how much of the catalog it actually
+  // reaches once subcategories are expanded (see resolveProductCouponEligibility's
+  // own descendant expansion) - a broad parent category can silently exclude
+  // far more than an admin reading just its name would expect. Only bothers
+  // with the extra queries when the coupon actually has exclusions configured.
+  if (mapped.iskljuceneKategorijeArtikala.length > 0) {
+    const [totalActiveProducts, brojevi] = await Promise.all([
+      productService.countAllActiveProducts(),
+      Promise.all(
+        mapped.iskljuceneKategorijeArtikala.map(async (cat) => {
+          const descendantIds = await categoryService.getCategoryAndDescendantIds(cat.id, "product");
+          return productService.countProductsInCategories(descendantIds);
+        })
+      ),
+    ]);
+    mapped.iskljuceneKategorijeArtikala = mapped.iskljuceneKategorijeArtikala.map((cat, i) => ({
+      ...cat,
+      brojIskljucenihProizvoda: brojevi[i],
+      ukupnoProizvodaUProdavnici: totalActiveProducts,
+    }));
+  }
+
+  return mapped;
 }
 
 export async function getCouponForEdit(couponId) {

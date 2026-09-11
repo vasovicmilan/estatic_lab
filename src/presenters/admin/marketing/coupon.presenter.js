@@ -104,7 +104,11 @@ export function prepareCouponDetailsData(coupon) {
         title: "Isključene kategorije artikala",
         type: "list",
         items: coupon.iskljuceneKategorijeArtikala.length
-          ? coupon.iskljuceneKategorijeArtikala.map((c) => c.naziv || c.id)
+          ? coupon.iskljuceneKategorijeArtikala.map((c) =>
+              c.brojIskljucenihProizvoda != null
+                ? `${c.naziv || c.id} - isključuje ${c.brojIskljucenihProizvoda} od ${c.ukupnoProizvodaUProdavnici} proizvoda u prodavnici (uključujući podkategorije)`
+                : c.naziv || c.id
+            )
           : ["Nijedna - popust za artikle važi za sve kategorije"],
       },
       {
@@ -271,7 +275,7 @@ export function prepareCouponFormData(coupon = null, { serviceOptions = [], pack
         width: 12,
         value: (values.excludedCategories || []).map((c) => (typeof c === "object" ? c.id ?? c._id?.toString() : c)),
         options: categoryOptions,
-        help: "Isključenje uvek pobeđuje, čak i ako je konkretan artikal iz ove kategorije slučajno naveden i gore u 'Važi samo za proizvode'. Pokriva i sve podkategorije automatski - novi artikal dodat kasnije u ovu (pod)kategoriju je automatski isključen bez izmene ovog kupona. Namenjeno artiklima koji se prodaju uz pojedinačan dogovor (npr. skupi uređaji) i ne treba da idu preko opšteg popusta.",
+        help: "Isključenje uvek pobeđuje, čak i ako je konkretan artikal iz ove kategorije slučajno naveden i gore u 'Važi samo za proizvode'. Pokriva i sve podkategorije automatski - novi artikal dodat kasnije u ovu (pod)kategoriju je automatski isključen bez izmene ovog kupona. Namenjeno artiklima koji se prodaju uz pojedinačan dogovor (npr. skupi uređaji) i ne treba da idu preko opšteg popusta. Pažnja: lista ispod je uvučena po hijerarhiji ('— ' ispred podkategorije) - biranje šire/roditeljske kategorije isključuje SVE ispod nje, proverite da niste greškom izabrali širu kategoriju od one koju ste nameravali. Nakon čuvanja, koliko tačno artikala ovo isključuje se vidi na stranici detalja kupona.",
       },
       {
         name: "partner",

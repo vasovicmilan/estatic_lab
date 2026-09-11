@@ -70,6 +70,24 @@ describe("prepareCouponDetailsData - the productDiscount block", () => {
     assert.deepEqual(view.sections.find((s) => s.title === "Isključene kategorije artikala").items, ["Aparati i oprema"]);
   });
 
+  it("shows the excluded-product impact count when getCouponById attached one, so an admin can spot an overly-broad exclusion", () => {
+    const view = prepareCouponDetailsData(
+      buildMappedCoupon({
+        iskljuceneKategorijeArtikala: [
+          { naziv: "Aparati i oprema", brojIskljucenihProizvoda: 47, ukupnoProizvodaUProdavnici: 52 },
+        ],
+      })
+    );
+    assert.deepEqual(view.sections.find((s) => s.title === "Isključene kategorije artikala").items, [
+      "Aparati i oprema - isključuje 47 od 52 proizvoda u prodavnici (uključujući podkategorije)",
+    ]);
+  });
+
+  it("falls back to just the name (no count) when no impact count was attached", () => {
+    const view = prepareCouponDetailsData(buildMappedCoupon({ iskljuceneKategorijeArtikala: [{ naziv: "Malo drugo ime" }] }));
+    assert.deepEqual(view.sections.find((s) => s.title === "Isključene kategorije artikala").items, ["Malo drugo ime"]);
+  });
+
   it("shows a clear 'no exclusions' placeholder when the coupon has none", () => {
     const view = prepareCouponDetailsData(buildMappedCoupon({ iskljuceneKategorijeArtikala: [] }));
     assert.deepEqual(view.sections.find((s) => s.title === "Isključene kategorije artikala").items, [

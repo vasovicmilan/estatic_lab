@@ -31,6 +31,56 @@ describe("coupon.service", () => {
     });
   });
 
+  describe("getCouponById - excluded-category impact preview", () => {
+    it("does not touch product/category services at all when the coupon has no excluded categories", async (t) => {
+      t.mock.method(couponRepo, "findCouponById", async () => buildCoupon({ productDiscount: buildProductDiscount() }));
+      const countMock = t.mock.method(productService, "countAllActiveProducts", async () => {
+        throw new Error("should never be called - this coupon excludes nothing");
+      });
+
+      const result = await couponService.getCouponById(id().toString());
+
+      assert.equal(countMock.mock.calls.length, 0);
+      assert.deepEqual(result.iskljuceneKategorijeArtikala, []);
+    });
+
+    it("attaches how many of the store's active products an excluded category actually reaches, subcategories included", async (t) => {
+      const categoryId = id();
+      t.mock.method(couponRepo, "findCouponById", async () =>
+        buildCoupon({ productDiscount: buildProductDiscount({ excludedCategories: [categoryId] }) })
+      );
+      t.mock.method(categoryService, "getCategoryAndDescendantIds", async () => [categoryId.toString(), "child-cat-id"]);
+      t.mock.method(productService, "countAllActiveProducts", async () => 52);
+      const countInCatMock = t.mock.method(productService, "countProductsInCategories", async () => 47);
+
+      const result = await couponService.getCouponById(id().toString());
+
+      assert.equal(result.iskljuceneKategorijeArtikala[0].brojIskljucenihProizvoda, 47);
+      assert.equal(result.iskljuceneKategorijeArtikala[0].ukupnoProizvodaUProdavnici, 52);
+      // the descendant-expanded id set is what actually gets counted, not just the one category picked
+      assert.deepEqual(countInCatMock.mock.calls[0].arguments[0], [categoryId.toString(), "child-cat-id"]);
+    });
+
+    it("computes the count separately for each excluded category when a coupon has more than one", async (t) => {
+      const catA = id();
+      const catB = id();
+      t.mock.method(couponRepo, "findCouponById", async () =>
+        buildCoupon({ productDiscount: buildProductDiscount({ excludedCategories: [catA, catB] }) })
+      );
+      t.mock.method(categoryService, "getCategoryAndDescendantIds", async (catId) => [catId.toString()]);
+      t.mock.method(productService, "countAllActiveProducts", async () => 100);
+      let call = 0;
+      t.mock.method(productService, "countProductsInCategories", async () => (call++ === 0 ? 10 : 20));
+
+      const result = await couponService.getCouponById(id().toString());
+
+      assert.deepEqual(
+        result.iskljuceneKategorijeArtikala.map((c) => c.brojIskljucenihProizvoda),
+        [10, 20]
+      );
+    });
+  });
+
   describe("validateCouponForBooking", () => {
     it("rejects a nonexistent code", async (t) => {
       t.mock.method(couponRepo, "findCouponByCode", async () => null);

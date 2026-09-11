@@ -536,4 +536,26 @@ describe("product.service", () => {
       assert.deepEqual(result[0].categoryIds, []);
     });
   });
+
+  describe("countProductsInCategories", () => {
+    it("returns 0 without querying the repository when given no category ids", async (t) => {
+      const mock = t.mock.method(productRepo, "countProducts", async () => {
+        throw new Error("should never be called with an empty category id list");
+      });
+      const count = await productService.countProductsInCategories([]);
+
+      assert.equal(count, 0);
+      assert.equal(mock.mock.calls.length, 0);
+    });
+
+    it("counts only active products matching any of the given category ids", async (t) => {
+      const categoryIds = ["c1", "c2"];
+      const mock = t.mock.method(productRepo, "countProducts", async () => 47);
+
+      const count = await productService.countProductsInCategories(categoryIds);
+
+      assert.equal(count, 47);
+      assert.deepEqual(mock.mock.calls[0].arguments[0], { category: categoryIds, isActive: true });
+    });
+  });
 });

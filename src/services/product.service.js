@@ -299,6 +299,17 @@ export async function findProductsForCouponCheck(productIds) {
   return products.map((p) => ({ id: p._id.toString(), categoryIds: (p.categories || []).map((c) => c.toString()) }));
 }
 
+// How many active products actually fall under a given set of category ids -
+// e.g. coupon.service.js's getCouponById, showing an admin reviewing a
+// coupon's excludedCategories just how much of the catalog a category
+// exclusion actually reaches once its subcategories are expanded (see
+// category.service.js's getCategoryAndDescendantIds) - a broad parent
+// category can silently exclude far more than its name alone suggests.
+export async function countProductsInCategories(categoryIds) {
+  if (!categoryIds?.length) return 0;
+  return productRepo.countProducts({ category: categoryIds, isActive: true });
+}
+
 // Decorates each public category with how many active products it currently
 // has, so the /prodavnica filter tabs can show real counts, same as /usluge.
 export async function attachProductCountsToCategories(categories = []) {
@@ -425,6 +436,7 @@ export default {
   countAllActiveProducts,
   attachProductCountsToCategories,
   findProductsForCouponCheck,
+  countProductsInCategories,
   getVariationRaw,
   decreaseVariationStock,
   restoreVariationStock,
