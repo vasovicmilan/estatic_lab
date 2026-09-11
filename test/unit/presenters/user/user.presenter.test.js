@@ -22,8 +22,13 @@ describe("prepareProfileTabData", () => {
 });
 
 describe("prepareAppointmentTabData", () => {
+  function result(data, overrides = {}) {
+    return { data, page: 1, totalPages: 1, ...overrides };
+  }
+  const emptyResult = result([]);
+
   it("offers a narrower status filter set than admin - only the customer-relevant statuses", () => {
-    const view = prepareAppointmentTabData({ data: [], page: 1, totalPages: 1 });
+    const view = prepareAppointmentTabData({ upcoming: emptyResult, past: emptyResult });
     assert.deepEqual(
       view.filters.map((f) => f.value),
       ["", "pending", "confirmed", "completed", "cancelled"]
@@ -31,66 +36,73 @@ describe("prepareAppointmentTabData", () => {
   });
 
   it("surfaces the active status filter so the dropdown can show <option selected> - the fix for the 'stuck filtered, can't get back to Svi' bug", () => {
-    const view = prepareAppointmentTabData({ data: [], page: 1, totalPages: 1 }, { status: "confirmed" });
+    const view = prepareAppointmentTabData({ upcoming: emptyResult, past: emptyResult }, { status: "confirmed" });
     assert.equal(view.selectedStatus, "confirmed");
   });
 
   it("defaults selectedStatus to '' (matching the 'Svi' option) when no status query param is present", () => {
-    const view = prepareAppointmentTabData({ data: [], page: 1, totalPages: 1 }, {});
+    const view = prepareAppointmentTabData({ upcoming: emptyResult, past: emptyResult }, {});
     assert.equal(view.selectedStatus, "");
   });
 
-  describe("groups - Danas/Predstojeći/Prošli", () => {
+  describe("upcoming/past are queried and paginated separately - the fix for a same-day cluster splitting across pages", () => {
+    it("exposes upcoming's own page/totalPages under paginationUpcoming, with its own pageParam", () => {
+      const view = prepareAppointmentTabData({ upcoming: result([], { page: 2, totalPages: 5 }), past: emptyResult });
+      assert.equal(view.paginationUpcoming.currentPage, 2);
+      assert.equal(view.paginationUpcoming.totalPages, 5);
+      assert.equal(view.paginationUpcoming.pageParam, "upcomingPage");
+    });
+
+    it("exposes past's own page/totalPages under paginationPast, with its own pageParam", () => {
+      const view = prepareAppointmentTabData({ upcoming: emptyResult, past: result([], { page: 3, totalPages: 7 }) });
+      assert.equal(view.paginationPast.currentPage, 3);
+      assert.equal(view.paginationPast.totalPages, 7);
+      assert.equal(view.paginationPast.pageParam, "pastPage");
+    });
+
+    it("carries the OTHER section's current page through each pagination's query, so paging one never resets the other", () => {
+      const view = prepareAppointmentTabData({ upcoming: emptyResult, past: emptyResult }, { upcomingPage: "4", pastPage: "2" });
+      assert.equal(view.paginationUpcoming.query.pastPage, "2");
+      assert.equal(view.paginationPast.query.upcomingPage, "4");
+    });
+
+    it("carries the active status filter through both paginations' query", () => {
+      const view = prepareAppointmentTabData({ upcoming: emptyResult, past: emptyResult }, { status: "completed" });
+      assert.equal(view.paginationUpcoming.query.status, "completed");
+      assert.equal(view.paginationPast.query.status, "completed");
+    });
+  });
+
+  describe("groups - Danas/Predstojeći come from the 'upcoming' query, Prošli from the separate 'past' query", () => {
     const HOUR = 60 * 60 * 1000;
     const DAY = 24 * HOUR;
 
-    it("puts a mid-afternoon-today appointment in 'danas', not 'predstojeci' or 'prosli'", () => {
+    it("puts a mid-afternoon-today appointment in 'danas', not 'predstojeci'", () => {
       // noon UTC is always the same calendar day in Belgrade (UTC+1/+2) regardless of DST
       const todayNoon = new Date();
       todayNoon.setUTCHours(12, 0, 0, 0);
 
-      const view = prepareAppointmentTabData({ data: [{ id: "a1", startTimeRaw: todayNoon }], page: 1, totalPages: 1 });
+      const view = prepareAppointmentTabData({ upcoming: result([{ id: "a1", startTimeRaw: todayNoon }]), past: emptyResult });
 
       assert.equal(view.groups.danas.length, 1);
       assert.equal(view.groups.predstojeci.length, 0);
-      assert.equal(view.groups.prosli.length, 0);
     });
 
     it("puts a week-from-now appointment in 'predstojeci'", () => {
       const nextWeek = new Date(Date.now() + 7 * DAY);
-      const view = prepareAppointmentTabData({ data: [{ id: "a1", startTimeRaw: nextWeek }], page: 1, totalPages: 1 });
+      const view = prepareAppointmentTabData({ upcoming: result([{ id: "a1", startTimeRaw: nextWeek }]), past: emptyResult });
 
       assert.equal(view.groups.predstojeci.length, 1);
       assert.equal(view.groups.danas.length, 0);
-      assert.equal(view.groups.prosli.length, 0);
     });
 
-    it("puts a week-ago appointment in 'prosli'", () => {
-      const lastWeek = new Date(Date.now() - 7 * DAY);
-      const view = prepareAppointmentTabData({ data: [{ id: "a1", startTimeRaw: lastWeek }], page: 1, totalPages: 1 });
-
-      assert.equal(view.groups.prosli.length, 1);
-      assert.equal(view.groups.danas.length, 0);
-      assert.equal(view.groups.predstojeci.length, 0);
-    });
-
-    it("orders 'predstojeci' soonest-first (ascending), not the query's own furthest-future-first order", () => {
-      const soon = new Date(Date.now() + 2 * DAY);
-      const far = new Date(Date.now() + 20 * DAY);
-      // simulates the repo's own startTime: -1 sort - furthest future first
-      const view = prepareAppointmentTabData({ data: [{ id: "far", startTimeRaw: far }, { id: "soon", startTimeRaw: soon }], page: 1, totalPages: 1 });
-
-      assert.deepEqual(
-        view.groups.predstojeci.map((a) => a.id),
-        ["soon", "far"]
-      );
-    });
-
-    it("keeps 'prosli' most-recent-first (descending) - the repo's natural order is already the useful one for history", () => {
+    it("takes 'prosli' directly from the past query's own data, already sorted most-recent-first by the repo", () => {
       const recent = new Date(Date.now() - 2 * DAY);
       const old = new Date(Date.now() - 20 * DAY);
-      // simulates the repo's own startTime: -1 sort - more recent first
-      const view = prepareAppointmentTabData({ data: [{ id: "recent", startTimeRaw: recent }, { id: "old", startTimeRaw: old }], page: 1, totalPages: 1 });
+      const view = prepareAppointmentTabData({
+        upcoming: emptyResult,
+        past: result([{ id: "recent", startTimeRaw: recent }, { id: "old", startTimeRaw: old }]),
+      });
 
       assert.deepEqual(
         view.groups.prosli.map((a) => a.id),
@@ -98,19 +110,28 @@ describe("prepareAppointmentTabData", () => {
       );
     });
 
-    it("splits a mixed page into all three buckets correctly", () => {
+    it("splits the 'upcoming' query's own data into danas/predstojeci correctly, independent of 'prosli'", () => {
       const todayNoon = new Date();
       todayNoon.setUTCHours(12, 0, 0, 0);
       const future = new Date(Date.now() + 5 * DAY);
       const past = new Date(Date.now() - 5 * DAY);
 
-      const view = prepareAppointmentTabData(
-        { data: [{ id: "f", startTimeRaw: future }, { id: "t", startTimeRaw: todayNoon }, { id: "p", startTimeRaw: past }], page: 1, totalPages: 1 }
-      );
+      const view = prepareAppointmentTabData({
+        upcoming: result([{ id: "f", startTimeRaw: future }, { id: "t", startTimeRaw: todayNoon }]),
+        past: result([{ id: "p", startTimeRaw: past }]),
+      });
 
       assert.equal(view.groups.danas.length, 1);
       assert.equal(view.groups.predstojeci.length, 1);
       assert.equal(view.groups.prosli.length, 1);
+    });
+
+    it("concatenates upcoming+past into `appointments` for the empty-state check, without re-sorting them together", () => {
+      const view = prepareAppointmentTabData({
+        upcoming: result([{ id: "u1" }]),
+        past: result([{ id: "p1" }]),
+      });
+      assert.equal(view.appointments.length, 2);
     });
   });
 });

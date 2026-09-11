@@ -13,6 +13,7 @@ import {
 import { generateSeo } from "../../../seo/index.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import auditLogService from "../../../services/audit-log.service.js";
+import { getStartOfDayInZone } from "../../../utils/date.time.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 
 // Everything under /nalog is already behind webAuthMiddleware (see web.routes.js) -
@@ -44,17 +45,38 @@ export async function profile(req, res, next) {
 
 export async function appointments(req, res, next) {
   try {
-    const { status, page = 1, limit = 10 } = req.query;
+    const { status, upcomingPage = 1, pastPage = 1, limit = 10 } = req.query;
+    const resolvedLimit = parseInt(limit, 10) || 10;
+    const startOfToday = getStartOfDayInZone();
 
-    const result = await appointmentService.findAppointments({
-      requesterId: req.session.user.id,
-      role: "user",
-      filters: { status: status || undefined },
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
-    });
+    // Queried as two SEPARATE lists (each with its own page) rather than one
+    // combined newest-date-first list sliced into pages - a combined list
+    // put same-day appointments at the mercy of wherever the page boundary
+    // happened to fall, sometimes splitting "today" across two different
+    // pages of results (see user.presenter.js's groupAppointmentsByDate).
+    // Querying "upcoming" (today onward, soonest first) and "past" (before
+    // today, most recent first) separately means each list's own pagination
+    // boundary can never land in the middle of a single day.
+    const [upcoming, past] = await Promise.all([
+      appointmentService.findAppointments({
+        requesterId: req.session.user.id,
+        role: "user",
+        filters: { status: status || undefined, dateFrom: startOfToday },
+        sort: { startTime: 1, _id: 1 },
+        page: parseInt(upcomingPage, 10) || 1,
+        limit: resolvedLimit,
+      }),
+      appointmentService.findAppointments({
+        requesterId: req.session.user.id,
+        role: "user",
+        filters: { status: status || undefined, dateTo: startOfToday },
+        sort: { startTime: -1, _id: -1 },
+        page: parseInt(pastPage, 10) || 1,
+        limit: resolvedLimit,
+      }),
+    ]);
 
-    const viewData = prepareAppointmentTabData(result, req.query);
+    const viewData = prepareAppointmentTabData({ upcoming, past }, req.query);
 
     const seo = await userSeo(req, { title: "Moji termini", description: "Pregled vaših zakazanih termina" });
     return res.render("user/_appointment-tab", {

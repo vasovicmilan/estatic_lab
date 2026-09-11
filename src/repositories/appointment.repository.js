@@ -35,6 +35,14 @@ export async function findAppointments({
   limit = 20,
   page = 1,
   filters = {},
+  // overridable so a caller can ask for the oldest/soonest first instead of
+  // the newest-date-first default - e.g. user.controller.js's own appointments()
+  // needs upcoming sorted soonest-first (ascending) and past sorted
+  // most-recent-first (descending) as two SEPARATE queries, not one combined
+  // list - see user.presenter.js's groupAppointmentsByDate for why a single
+  // combined list+pager used to split a same-day cluster of appointments
+  // across two different pages
+  sort = { startTime: -1, _id: -1 },
   populateFields = [
     { path: "user", select: "firstName lastName email phone" },
     { path: "service", select: "name slug" },
@@ -48,7 +56,7 @@ export async function findAppointments({
   const skip = resolveSkip(page, resolvedLimit);
 
   let query = Appointment.find(filter)
-    .sort({ startTime: -1, _id: -1 })
+    .sort(sort)
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);

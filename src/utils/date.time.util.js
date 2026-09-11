@@ -248,6 +248,18 @@ export function utcDateToZonedInputValue(date, timeZone = APP_TIMEZONE) {
   return `${year}-${pad(month)}-${pad(day)}T${pad(hour)}:${pad(minute)}`;
 }
 
+// Midnight (00:00:00.000) of the given date's calendar day, as it's actually
+// experienced in `timeZone` - the boundary user.controller.js's own
+// appointments() needs to split "upcoming" (today onward) from "past"
+// (before today). Deliberately NOT `new Date(date); d.setHours(0,0,0,0)` -
+// setHours() operates in the SERVER PROCESS's own timezone, so that would
+// silently use UTC midnight instead of Belgrade midnight (same class of bug
+// as everything else in this file - see zonedInputToUtcDate's own comment).
+export function getStartOfDayInZone(date = new Date(), timeZone = APP_TIMEZONE) {
+  const { year, month, day } = getZonedComponents(date, timeZone);
+  return zonedComponentsToUtcDate(year, month, day, 0, 0, 0, timeZone);
+}
+
 export default {
   formatDateTime,
   formatDate,
@@ -260,4 +272,5 @@ export default {
   getZonedComponents,
   zonedInputToUtcDate,
   utcDateToZonedInputValue,
+  getStartOfDayInZone,
 };

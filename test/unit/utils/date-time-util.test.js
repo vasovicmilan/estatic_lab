@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { zonedInputToUtcDate, utcDateToZonedInputValue } from "../../../src/utils/date.time.util.js";
+import { zonedInputToUtcDate, utcDateToZonedInputValue, getStartOfDayInZone } from "../../../src/utils/date.time.util.js";
 
 // These exist specifically to fix the scheduled-post publish bug: a
 // <input type="datetime-local"> submits a naive "YYYY-MM-DDTHH:mm" string with
@@ -68,6 +68,33 @@ describe("date.time.util - timezone-aware scheduledFor helpers", () => {
         const utc = zonedInputToUtcDate(input, "Europe/Belgrade");
         assert.equal(utcDateToZonedInputValue(utc, "Europe/Belgrade"), input);
       }
+    });
+  });
+
+  describe("getStartOfDayInZone - the boundary user.controller.js's appointments() splits upcoming/past on", () => {
+    it("returns Belgrade midnight (00:00) for a given instant, not UTC midnight - CEST (summer, UTC+2)", () => {
+      // 2026-07-29 10:00 UTC is 2026-07-29 12:00 in Belgrade (CEST) - same calendar day either way here,
+      // the real assertion is on the exact returned instant
+      const start = getStartOfDayInZone(new Date("2026-07-29T10:00:00.000Z"), "Europe/Belgrade");
+      assert.equal(start.toISOString(), "2026-07-28T22:00:00.000Z"); // 2026-07-29 00:00 Belgrade = 2026-07-28 22:00 UTC (CEST, UTC+2)
+    });
+
+    it("returns Belgrade midnight (00:00) for a given instant, not UTC midnight - CET (winter, UTC+1)", () => {
+      const start = getStartOfDayInZone(new Date("2026-01-15T10:00:00.000Z"), "Europe/Belgrade");
+      assert.equal(start.toISOString(), "2026-01-14T23:00:00.000Z"); // 2026-01-15 00:00 Belgrade = 2026-01-14 23:00 UTC (CET, UTC+1)
+    });
+
+    it("correctly rolls over to the NEXT Belgrade calendar day for a late-evening UTC instant", () => {
+      // 2026-07-29 23:00 UTC is already 2026-07-30 01:00 in Belgrade (CEST) - a naive UTC-midnight
+      // calculation would wrongly still call this "2026-07-29"
+      const start = getStartOfDayInZone(new Date("2026-07-29T23:00:00.000Z"), "Europe/Belgrade");
+      assert.equal(start.toISOString(), "2026-07-29T22:00:00.000Z"); // 2026-07-30 00:00 Belgrade = 2026-07-29 22:00 UTC
+    });
+
+    it("defaults to 'now' when no date is given", () => {
+      const start = getStartOfDayInZone();
+      assert.ok(start instanceof Date);
+      assert.ok(!isNaN(start.getTime()));
     });
   });
 });

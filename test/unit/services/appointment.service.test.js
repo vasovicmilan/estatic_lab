@@ -1103,6 +1103,28 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
   });
 });
 
+describe("findAppointments - sort pass-through", () => {
+  it("passes a caller-supplied sort straight through to the repository", async (t) => {
+    const mock = t.mock.method(appointmentRepo, "findAppointments", async () => ({ data: [], total: 0, page: 1, limit: 10, totalPages: 1 }));
+
+    await appointmentService.findAppointments({
+      requesterId: id().toString(),
+      role: "user",
+      sort: { startTime: 1, _id: 1 },
+    });
+
+    assert.deepEqual(mock.mock.calls[0].arguments[0].sort, { startTime: 1, _id: 1 });
+  });
+
+  it("omits `sort` entirely when the caller doesn't supply one, so the repo keeps its own default", async (t) => {
+    const mock = t.mock.method(appointmentRepo, "findAppointments", async () => ({ data: [], total: 0, page: 1, limit: 10, totalPages: 1 }));
+
+    await appointmentService.findAppointments({ requesterId: id().toString(), role: "user" });
+
+    assert.equal("sort" in mock.mock.calls[0].arguments[0], false);
+  });
+});
+
 describe("findAppointmentsDueForReminder / markReminderSent", () => {
   it("maps each raw appointment returned by the repo to the same shape email templates expect", async (t) => {
     const rawDue = buildAppointment({

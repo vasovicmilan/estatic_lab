@@ -76,12 +76,23 @@ async function resolveEmployeeAssignment(serviceId, start, end, resolvedResource
   return freeEmployees.length === 1 ? freeEmployees[0]._id : null;
 }
 
-export async function findAppointments({ search = "", limit = 20, page = 1, requesterId = null, role = "user", filters = {} } = {}) {
+export async function findAppointments({ search = "", limit = 20, page = 1, requesterId = null, role = "user", filters = {}, sort = undefined } = {}) {
   const scopedFilters = { ...filters };
   if (role === "user") scopedFilters.userId = requesterId;
   if (role === "employee") scopedFilters.employeeId = requesterId;
 
-  const result = await appointmentRepo.findAppointments({ search, limit, page, filters: scopedFilters, populateFields: defaultPopulate });
+  const result = await appointmentRepo.findAppointments({
+    search,
+    limit,
+    page,
+    filters: scopedFilters,
+    // undefined lets the repo keep its own default (newest-date-first) -
+    // only overridden by callers that need a different order, e.g.
+    // user.controller.js's own appointments() querying upcoming/past
+    // separately (see appointment.repository.js's own findAppointments comment)
+    ...(sort ? { sort } : {}),
+    populateFields: defaultPopulate,
+  });
 
   return {
     data: role === "admin" ? mapAppointmentsForAdminList(result.data) : result.data.map((a) => mapAppointment(a, role, "short")),

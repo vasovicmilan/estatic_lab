@@ -16,16 +16,19 @@
 
   <% if (data.appointments && data.appointments.length > 0) { %>
     <%
-      // each section only appears when it actually has items for this page -
-      // no empty "Prošli" heading with nothing under it just because the
-      // current page happens to be all-upcoming
-      const sections = [
+      // "Danas"/"Predstojeći" share one query+pager ("upcoming"), "Prošli" has
+      // its own separate one ("past") - see user.controller.js's appointments()
+      // for why these are two independent queries instead of one combined
+      // list: it's what keeps a single calendar day from ever being split
+      // across two different pages of results.
+      const upcomingSections = [
         { label: "Danas", items: data.groups.danas },
         { label: "Predstojeći", items: data.groups.predstojeci },
-        { label: "Prošli", items: data.groups.prosli },
       ].filter((s) => s.items.length > 0);
+      const pastSection = { label: "Prošli", items: data.groups.prosli };
     %>
-    <% sections.forEach(function(section) { %>
+
+    <% upcomingSections.forEach(function(section) { %>
       <h2 class="h6 text-muted text-uppercase mt-4 mb-2"><%= section.label %></h2>
       <div class="list-group mb-3">
         <% section.items.forEach(function(a) { %>
@@ -42,7 +45,28 @@
         <% }) %>
       </div>
     <% }) %>
-    <%- include("../includes/pagination", { pagination: data.pagination }) %>
+    <% if (upcomingSections.length > 0) { %>
+      <%- include("../includes/pagination", { pagination: data.paginationUpcoming }) %>
+    <% } %>
+
+    <% if (pastSection.items.length > 0) { %>
+      <h2 class="h6 text-muted text-uppercase mt-4 mb-2"><%= pastSection.label %></h2>
+      <div class="list-group mb-3">
+        <% pastSection.items.forEach(function(a) { %>
+          <a href="/nalog/termini/detalji/<%= a.id %>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold"><%= a.usluga %></div>
+              <div class="text-muted small mono"><%= a.datum %></div>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-secondary"><%= a.status %></span>
+              <div class="small price-mono"><%= a.cena %></div>
+            </div>
+          </a>
+        <% }) %>
+      </div>
+      <%- include("../includes/pagination", { pagination: data.paginationPast }) %>
+    <% } %>
   <% } else { %>
     <p class="text-muted">Nemate zakazanih termina. <a href="/usluge">Zakažite jedan</a>.</p>
   <% } %>
