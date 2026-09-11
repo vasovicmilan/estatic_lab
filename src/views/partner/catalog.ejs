@@ -53,9 +53,13 @@
     <h2 class="h5 mt-4 mb-3">Proizvodi</h2>
     <% if (!data.hasProductDiscount) { %>
       <p class="text-muted mb-4"><i class="bi bi-info-circle me-1"></i>Vaš trenutni kod ne uključuje popust na artikle iz prodavnice - samo na usluge i pakete iznad. Kontaktirajte administratora ako želite da se to promeni.</p>
-    <% } else if (data.products.length === 0) { %>
-      <p class="text-muted mb-4"><%= data.search ? "Nema proizvoda koji odgovaraju pretrazi." : "Nema dostupnih proizvoda." %></p>
     <% } else { %>
+      <% if (data.excludedCategoryNames && data.excludedCategoryNames.length > 0) { %>
+        <p class="text-muted small mb-2"><i class="bi bi-info-circle me-1"></i>Vaš kod ne važi za sledeće kategorije artikala, pa ih nema u listi ispod: <strong><%= data.excludedCategoryNames.join(", ") %></strong>. Ovo su artikli koji se prodaju uz poseban dogovor - kontaktirajte administratora za tu vrstu artikala.</p>
+      <% } %>
+      <% if (data.products.length === 0) { %>
+        <p class="text-muted mb-4"><%= data.search ? "Nema proizvoda koji odgovaraju pretrazi." : "Nema dostupnih proizvoda." %></p>
+      <% } else { %>
       <div class="list-group mb-2">
         <% data.products.forEach(function(item) { %>
           <div class="list-group-item d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 gap-sm-3">
@@ -69,6 +73,7 @@
       </div>
       <%- include("../includes/pagination", { pagination: data.productsPagination }) %>
     <% } %>
+  <% } %>
   <% } %>
 </main>
 

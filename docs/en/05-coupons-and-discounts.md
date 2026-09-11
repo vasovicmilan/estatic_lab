@@ -16,6 +16,18 @@ The same coupon system serves three different purchase contexts — a service bo
 
 Either block — services/packages or products — can optionally carry an **upper cap on the discount amount**, regardless of whether the discount is a percentage or a flat amount. This matters most for percentage discounts: a rate that's reasonable for a typical service can be disproportionately large once applied to an expensive item, and the cap acts as a safety net.
 
+## Excluding an entire product category from a coupon
+
+The discount cap above solves "the percentage is too high in absolute terms" for an expensive item, but not a different, more fundamental problem: some products (typically large/expensive devices) aren't sold off a fixed catalog discount at all - the price is negotiated individually, device by device. For those, capping the discount isn't enough - it needs to be **excluded entirely**.
+
+Trying to solve this by manually enumerating products (a whitelist of `applicableProducts`, or the reverse - listing everything EXCEPT a handful) doesn't scale: the catalog grows, and every new expensive item would need every existing partner coupon manually updated to stay out of reach. So the product block has a dedicated mechanism for this instead:
+
+- **`Excluded categories`** — an admin marks a whole category (e.g. "Aparati i oprema" / Devices & equipment) as excluded, once, on the coupon itself. Every product currently in that category, or any of its subcategories, is automatically out of reach for this coupon - and, crucially, **every future product** added to that (sub)category is excluded too, automatically, with no further edit to this or any other coupon required.
+- **Exclusion always wins.** Even if a product from an excluded category happens to also be individually listed on the whitelist (`applicableProducts`), the category exclusion still decides - there's no guessing about which rule "wins", exclusion is an absolute veto.
+- **An order with a mixed cart is rejected outright.** If the cart contains both a covered item and an item from an excluded category, the coupon doesn't apply to that order at all (not partially, on just the "allowed" portion) - the error naming the **specific category** at fault (e.g. "This code doesn't apply to the following items in your cart (category: Aparati i oprema)"), instead of a generic "invalid code" that would leave the customer guessing why. The customer then either removes that item from the cart, or orders it separately without the code.
+
+This mechanism is independent of the discount cap above - they can be combined (a coupon that caps cheaper items and entirely excludes a device category) or used on their own.
+
 ## Coupons and the referral program
 
 A Coupon can optionally be linked to a specific **Partner**. This single distinction is what separates an ordinary promotional discount code (a seasonal sale code, a loyalty discount, and so on) from a genuine **referral code** that earns commission for the partner it belongs to when it's used. See `06-affiliate-partner-program.md` for the full referral and commission logic — this file only covers the discount mechanics themselves, which work identically whether or not a code happens to be tied to a partner.

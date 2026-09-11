@@ -7,7 +7,7 @@ const BASE_URL = BUSINESS.siteUrl;
 
 const PAYOUT_STATUS_LABELS = { requested: "Zatraženo", approved: "Odobreno", paid: "Isplaćeno", rejected: "Odbijeno" };
 
-export function preparePartnerDashboardData({ partner, balance, coupons, serviceNamesById = {}, packageNamesById = {}, recentCommissions, payoutRequests = [] }) {
+export function preparePartnerDashboardData({ partner, balance, coupons, serviceNamesById = {}, packageNamesById = {}, categoryNamesById = {}, recentCommissions, payoutRequests = [] }) {
   return {
     partner,
     balance: {
@@ -30,7 +30,7 @@ export function preparePartnerDashboardData({ partner, balance, coupons, service
       // coupon.service.js's listCouponsForPartner) - the dashboard only shows
       // an artikli line for coupons that actually have one, instead of always
       // showing a products discount that might not exist.
-      artikliOpis: c.productDiscount ? describeProductDiscount(c.productDiscount) : null,
+      artikliOpis: c.productDiscount ? describeProductDiscount(c.productDiscount, categoryNamesById) : null,
       vaziDo: c.validUntil ? formatDateTime(c.validUntil) : null,
       // always shown now, capped or not - "iskorišćeno 47 puta" is useful
       // motivating info for a partner even when there's no maxUses ceiling to
@@ -162,8 +162,12 @@ function describeScope(coupon, serviceNamesById, packageNamesById) {
   return parts.length > 0 ? `Važi samo za ${parts.join(" i ")}` : "Važi za odabrane usluge/pakete";
 }
 
-function describeProductDiscount(productDiscount) {
+function describeProductDiscount(productDiscount, categoryNamesById = {}) {
   const discount =
     productDiscount.discountType === "percentage" ? `${productDiscount.discountValue}%` : formatMoney(productDiscount.discountValue);
-  return `Popust od ${discount} i na artikle iz prodavnice`;
+  const base = `Popust od ${discount} i na artikle iz prodavnice`;
+
+  const excludedNames = (productDiscount.excludedCategories || []).map((id) => categoryNamesById[id]).filter(Boolean);
+  if (excludedNames.length === 0) return base;
+  return `${base} (osim: ${excludedNames.join(", ")})`;
 }

@@ -505,4 +505,35 @@ describe("product.service", () => {
       assert.equal(mock.mock.calls.length, 0);
     });
   });
+
+  describe("findProductsForCouponCheck", () => {
+    it("returns [] without querying the repository when given no ids", async (t) => {
+      const mock = t.mock.method(productRepo, "findProductsByIds", async () => {
+        throw new Error("should never be called with an empty id list");
+      });
+      const result = await productService.findProductsForCouponCheck([]);
+
+      assert.deepEqual(result, []);
+      assert.equal(mock.mock.calls.length, 0);
+    });
+
+    it("maps each product to its own id and its category ids as plain strings, unpopulated", async (t) => {
+      const productId = "p1";
+      const categoryId = "c1";
+      const mock = t.mock.method(productRepo, "findProductsByIds", async () => [{ _id: productId, categories: [categoryId] }]);
+
+      const result = await productService.findProductsForCouponCheck([productId]);
+
+      assert.deepEqual(result, [{ id: productId, categoryIds: [categoryId] }]);
+      // no populate - coupon.service.js's category-exclusion check only ever
+      // needs the raw ids to compare against an excluded-id set, not names
+      assert.deepEqual(mock.mock.calls[0].arguments[1], { populateFields: [] });
+    });
+
+    it("defaults categoryIds to [] for a product with no categories assigned", async (t) => {
+      t.mock.method(productRepo, "findProductsByIds", async () => [{ _id: "p1", categories: [] }]);
+      const result = await productService.findProductsForCouponCheck(["p1"]);
+      assert.deepEqual(result[0].categoryIds, []);
+    });
+  });
 });

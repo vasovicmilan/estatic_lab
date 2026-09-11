@@ -90,7 +90,7 @@ MongoDB transakciji (`session.withTransaction`), pa ako bilo koji korak
 
 | Kad se briše... | Automatski se čisti iz... |
 |---|---|
-| **Category** (bez podkategorija) | `Product.categories[]`, `Service.categories[]`, `Package.categories[]`, `Post.categories[]` |
+| **Category** (bez podkategorija) | `Product.categories[]`, `Service.categories[]`, `Package.categories[]`, `Post.categories[]`, `Coupon.productDiscount.excludedCategories[]` |
 | **Tag** | `Package.tags[]`, `Post.tags[]`, `Product.tags[]`, `Service.tags[]` |
 | **Service** (posle Nivo-1 provera) | `Employee.services[]`, `Coupon.applicableServices[]`, `Product.relatedServices[]` |
 | **Package** (posle Nivo-1 provera) | `Coupon.applicablePackages[]` |
@@ -172,7 +172,7 @@ poreskih razloga).
 
 | Entitet | Nivo 0 (struktura) | Nivo 1 (blokira) | Nivo 2 (auto-čisti) | Nivo 3 (null-safe) |
 |---|:---:|:---:|:---:|:---:|
-| Category | ✅ podkategorije | - | ✅ Product/Service/Package/Post | - |
+| Category | ✅ podkategorije | - | ✅ Product/Service/Package/Post/Coupon | - |
 | Tag | - | - | ✅ Package/Post/Product/Service | - |
 | Service | - | ✅ termini, aktivne sesije, Package | ✅ Employee/Coupon/Product | - |
 | Package | - | ✅ bilo koja kupovina | ✅ Coupon | - |

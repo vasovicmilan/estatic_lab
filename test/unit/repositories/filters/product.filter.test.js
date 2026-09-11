@@ -27,6 +27,25 @@ describe("product.filter (buildProductFilter)", () => {
     assert.equal(filter.tags, tagId);
   });
 
+  it("excludedCategories alone builds a $nin on categories", () => {
+    const excludedId = id();
+    const filter = buildProductFilter({ excludedCategories: [excludedId] });
+    assert.deepEqual(filter.categories, { $nin: [excludedId] });
+  });
+
+  it("combines category ($in) and excludedCategories ($nin) into one categories condition", () => {
+    const categoryId = id();
+    const excludedId = id();
+    const filter = buildProductFilter({ category: categoryId, excludedCategories: [excludedId] });
+    assert.deepEqual(filter.categories, { $in: [categoryId], $nin: [excludedId] });
+  });
+
+  it("an empty excludedCategories array behaves exactly like no excludedCategories at all", () => {
+    const categoryId = id();
+    const filter = buildProductFilter({ category: categoryId, excludedCategories: [] });
+    assert.equal(filter.categories, categoryId, "single category shape is preserved when excludedCategories is empty");
+  });
+
   it("only sets isActive when explicitly true or false, not for null/undefined (don't restrict by default)", () => {
     assert.equal(buildProductFilter({ isActive: true }).isActive, true);
     assert.equal(buildProductFilter({ isActive: false }).isActive, false);

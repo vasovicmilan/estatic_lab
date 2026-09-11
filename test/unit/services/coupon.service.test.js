@@ -1,6 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import couponRepo from "../../../src/repositories/coupon.repository.js";
+import productService from "../../../src/services/product.service.js";
+import categoryService from "../../../src/services/category.service.js";
 import * as couponService from "../../../src/services/coupon.service.js";
 import { buildCoupon, buildProductDiscount, id } from "../../helpers/factories.js";
 
@@ -284,6 +286,135 @@ describe("validateCouponForOrder - separate rule set for products (artikli)", ()
   });
 });
 
+describe("validateCouponForOrder - excludedCategories (devices/expensive items needing their own negotiation)", () => {
+  it("rejects the whole order when a cart item is in an excluded category", async (t) => {
+    const deviceCategoryId = id();
+    const deviceProductId = id();
+    t.mock.method(couponRepo, "findCouponByCode", async () =>
+      buildCoupon({ productDiscount: buildProductDiscount({ excludedCategories: [deviceCategoryId] }) })
+    );
+    t.mock.method(categoryService, "getCategoryAndDescendantIds", async (catId) => [catId.toString()]);
+    t.mock.method(productService, "findProductsForCouponCheck", async () => [
+      { id: deviceProductId.toString(), categoryIds: [deviceCategoryId.toString()] },
+    ]);
+    t.mock.method(categoryService, "getCategoriesByIds", async () => [{ id: deviceCategoryId.toString(), naziv: "Aparati i oprema" }]);
+
+    await assert.rejects(
+      () => couponService.validateCouponForOrder("KOD", { productIds: [deviceProductId], orderValue: 200000 }),
+      (err) => err.statusCode === 400 && /Aparati i oprema/.test(err.message)
+    );
+  });
+
+  it("names the specific excluded category in the error message, not a generic refusal", async (t) => {
+    const categoryId = id();
+    t.mock.method(couponRepo, "findCouponByCode", async () =>
+      buildCoupon({ productDiscount: buildProductDiscount({ excludedCategories: [categoryId] }) })
+    );
+    t.mock.method(categoryService, "getCategoryAndDescendantIds", async () => [categoryId.toString()]);
+    t.mock.method(productService, "findProductsForCouponCheck", async () => [{ id: id().toString(), categoryIds: [categoryId.toString()] }]);
+    t.mock.method(categoryService, "getCategoriesByIds", async () => [{ id: categoryId.toString(), naziv: "EMS uređaji" }]);
+
+    await assert.rejects(
+      () => couponService.validateCouponForOrder("KOD", { productIds: [id()], orderValue: 50000 }),
+      (err) => err.message.includes("EMS uređaji") && !err.message.includes("Kupon ne postoji")
+    );
+  });
+
+  it("expands an excluded parent category to its descendants - a product in a child category is excluded too", async (t) => {
+    const parentCategoryId = id();
+    const childCategoryId = id();
+    const productId = id();
+    t.mock.method(couponRepo, "findCouponByCode", async () =>
+      buildCoupon({ productDiscount: buildProductDiscount({ excludedCategories: [parentCategoryId] }) })
+    );
+    // simulates category.service.js's own descendant expansion - the product is
+    // only tagged with the CHILD category, never the parent directly
+    t.mock.method(categoryService, "getCategoryAndDescendantIds", async () => [parentCategoryId.toString(), childCategoryId.toString()]);
+    t.mock.method(productService, "findProductsForCouponCheck", async () => [{ id: productId.toString(), categoryIds: [childCategoryId.toString()] }]);
+    t.mock.method(categoryService, "getCategoriesByIds", async () => [{ id: childCategoryId.toString(), naziv: "EMS uređaji" }]);
+
+    await assert.rejects(
+      () => couponService.validateCouponForOrder("KOD", { productIds: [productId], orderValue: 50000 }),
+      (err) => err.statusCode === 400
+    );
+  });
+
+  it("exclusion wins even when the excluded product is ALSO explicitly whitelisted on applicableProducts", async (t) => {
+    const categoryId = id();
+    const productId = id();
+    t.mock.method(couponRepo, "findCouponByCode", async () =>
+      buildCoupon({
+        productDiscount: buildProductDiscount({ applicableProducts: [productId], excludedCategories: [categoryId] }),
+      })
+    );
+    t.mock.method(categoryService, "getCategoryAndDescendantIds", async () => [categoryId.toString()]);
+    t.mock.method(productService, "findProductsForCouponCheck", async () => [{ id: productId.toString(), categoryIds: [categoryId.toString()] }]);
+    t.mock.method(categoryService, "getCategoriesByIds", async () => [{ id: categoryId.toString(), naziv: "Aparati" }]);
+
+    await assert.rejects(
+      () => couponService.validateCouponForOrder("KOD", { productIds: [productId], orderValue: 50000 }),
+      (err) => err.statusCode === 400,
+      "an explicit whitelist match must not override the category exclusion"
+    );
+  });
+
+  it("never even looks up products when the coupon has no excludedCategories configured", async (t) => {
+    t.mock.method(couponRepo, "findCouponByCode", async () => buildCoupon({ productDiscount: buildProductDiscount() }));
+    const findMock = t.mock.method(productService, "findProductsForCouponCheck", async () => {
+      throw new Error("should never be called - this coupon has no category exclusions at all");
+    });
+
+    const result = await couponService.validateCouponForOrder("KOD", { productIds: [id()], orderValue: 10000 });
+
+    assert.equal(findMock.mock.calls.length, 0);
+    assert.equal(result.discountAmount, 1000);
+  });
+
+  it("passes through cleanly when the cart has no items from any excluded category", async (t) => {
+    const categoryId = id();
+    const otherCategoryId = id();
+    const productId = id();
+    t.mock.method(couponRepo, "findCouponByCode", async () =>
+      buildCoupon({ productDiscount: buildProductDiscount({ excludedCategories: [categoryId], discountType: "fixed", discountValue: 1500 }) })
+    );
+    t.mock.method(categoryService, "getCategoryAndDescendantIds", async () => [categoryId.toString()]);
+    t.mock.method(productService, "findProductsForCouponCheck", async () => [{ id: productId.toString(), categoryIds: [otherCategoryId.toString()] }]);
+
+    const result = await couponService.validateCouponForOrder("KOD", { productIds: [productId], orderValue: 20000 });
+
+    assert.equal(result.discountAmount, 1500);
+  });
+});
+
+describe("resolveProductCouponEligibility / isProductCouponEligible", () => {
+  it("returns a null applicableProductIds (no restriction) and an empty excluded set for a plain productDiscount", async () => {
+    const eligibility = await couponService.resolveProductCouponEligibility(buildProductDiscount());
+    assert.equal(eligibility.applicableProductIds, null);
+    assert.equal(eligibility.excludedCategoryIds.size, 0);
+  });
+
+  it("returns an empty-but-defined result for a null productDiscount (coupon doesn't cover artikli at all)", async () => {
+    const eligibility = await couponService.resolveProductCouponEligibility(null);
+    assert.equal(eligibility.applicableProductIds.size, 0);
+    assert.equal(eligibility.excludedCategoryIds.size, 0);
+  });
+
+  it("isProductCouponEligible: false when the product's own category is in the excluded set, even with no whitelist restriction", () => {
+    const eligibility = { applicableProductIds: null, excludedCategoryIds: new Set(["cat1"]) };
+    assert.equal(couponService.isProductCouponEligible({ id: "p1", categoryIds: ["cat1"] }, eligibility), false);
+  });
+
+  it("isProductCouponEligible: false when a whitelist exists and the product isn't on it", () => {
+    const eligibility = { applicableProductIds: new Set(["p1"]), excludedCategoryIds: new Set() };
+    assert.equal(couponService.isProductCouponEligible({ id: "p2", categoryIds: [] }, eligibility), false);
+  });
+
+  it("isProductCouponEligible: true when there's no restriction at all and no category exclusion match", () => {
+    const eligibility = { applicableProductIds: null, excludedCategoryIds: new Set(["cat-other"]) };
+    assert.equal(couponService.isProductCouponEligible({ id: "p1", categoryIds: ["cat1"] }, eligibility), true);
+  });
+});
+
 describe("redeemCoupon - packagePurchaseId pass-through", () => {
   it("forwards packagePurchaseId to the repository alongside a null appointmentId", async (t) => {
     const purchaseId = id();
@@ -330,7 +461,22 @@ describe("listCouponsForPartner", () => {
 
     const [result] = await couponService.listCouponsForPartner(coupon.partner.toString());
 
-    assert.deepEqual(result.productDiscount, { discountType: "fixed", discountValue: 300 });
+    assert.deepEqual(result.productDiscount, { discountType: "fixed", discountValue: 300, applicableProducts: [], excludedCategories: [] });
+  });
+
+  it("surfaces productDiscount's applicableProducts/excludedCategories as raw id strings, for the partner catalog to filter with", async (t) => {
+    const productId = id();
+    const categoryId = id();
+    const coupon = buildCoupon({
+      partner: id(),
+      productDiscount: buildProductDiscount({ applicableProducts: [productId], excludedCategories: [categoryId] }),
+    });
+    t.mock.method(couponRepo, "findCoupons", async () => ({ data: [coupon], total: 1 }));
+
+    const [result] = await couponService.listCouponsForPartner(coupon.partner.toString());
+
+    assert.deepEqual(result.productDiscount.applicableProducts, [productId.toString()]);
+    assert.deepEqual(result.productDiscount.excludedCategories, [categoryId.toString()]);
   });
 
   it("surfaces validUntil/maxUses/usedCount for a more precise dashboard display", async (t) => {

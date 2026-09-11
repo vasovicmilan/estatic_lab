@@ -16,6 +16,18 @@ Isti sistem kupona opslužuje tri različita konteksta kupovine — zakazivanje 
 
 Oba dela — za usluge/pakete i za artikle — mogu opciono imati **gornju granicu iznosa popusta**, bez obzira na to da li je popust procenat ili fiksan iznos. Ovo je posebno bitno kod procentualnog popusta: procenat koji je razuman za uobičajenu uslugu može biti neproporcionalno visok kada se primeni na skup artikal, pa granica deluje kao sigurnosna mreža.
 
+## Isključivanje cele kategorije artikala iz kupona
+
+Gornja granica popusta (iznad) rešava problem "procenat je previsok u dinarima" za skup artikal, ali ne rešava drugi, stvarniji problem: neki artikli (tipično veliki/skupi uređaji) se uopšte ne prodaju po fiksnom katalogu popusta — cena se dogovara pojedinačno, uređaj po uređaj. Za takve artikle nije dovoljno "ograničiti" popust, treba ga **potpuno isključiti**.
+
+Pokušaj da se to reši ručnim nabrajanjem (belom listom `Važi samo za proizvode`, ili obrnuto - nabrajanjem svega OSIM par artikala) ne skalira: katalog raste, i svaki novi skup artikal bi zahtevao ručnu izmenu svakog postojećeg partnerskog kupona da bi ostao van dosega. Zato kupon ima poseban mehanizam za ovo, u istom "artikli" bloku:
+
+- **`Isključi kategoriju artikala`** — admin jednom, na samom kuponu, označi celu kategoriju (npr. "Aparati i oprema") kao isključenu. Svaki artikal koji trenutno pripada toj kategoriji, ili bilo kojoj njenoj podkategoriji, je automatski van dosega ovog kupona — a što je najbitnije, **svaki budući artikal** dodat u tu (pod)kategoriju je isto tako automatski isključen, bez ikakve naknadne izmene ovog ili bilo kog drugog kupona.
+- **Isključenje uvek pobeđuje.** Čak i ako je konkretan artikal iz isključene kategorije slučajno naveden i na beloj listi (`Važi samo za proizvode`), isključenje po kategoriji ipak odlučuje - nema nagađanja oko toga koje pravilo "jače važi", isključenje je apsolutni veto.
+- **Porudžbina sa mešovitom korpom se u potpunosti odbija.** Ako korpa sadrži i artikal koji kupon pokriva i artikal iz isključene kategorije, kupon se ne primenjuje uopšte na tu porudžbinu (a ne samo delimično, na "dozvoljeni" deo) - poruka pri pokušaju jasno imenuje **koja konkretna kategorija** je problem (npr. "Kupon ne važi za sledeće artikle u korpi (kategorija: Aparati i oprema)"), umesto generičkog "kod nije validan" koje bi ostavilo kupca da nagađa zašto. Klijent onda ili ukloni taj artikal iz korpe, ili poruči ga posebno bez koda.
+
+Ovaj mehanizam je nezavisan od gornje granice popusta - mogu se koristiti zajedno (npr. kupon koji ima granicu za jeftinije artikle, a potpuno isključuje kategoriju uređaja) ili odvojeno.
+
 ## Kuponi i partnerski program
 
 Kupon može opciono biti povezan sa konkretnim **Partnerom**. Baš ova razlika je ono što razdvaja običan promotivni kod za popust (sezonski kod za rasprodaju, kod za lojalnost, i slično) od pravog **referalnog koda** koji zarađuje proviziju za partnera kome pripada kada se iskoristi. Pogledajte `06-partnerski-program.md` za kompletnu logiku referala i provizije — ovaj fajl pokriva samo mehaniku popusta, koja funkcioniše identično bez obzira da li je kod slučajno povezan sa partnerom ili ne.

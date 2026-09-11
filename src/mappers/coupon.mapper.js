@@ -91,6 +91,9 @@ export function mapCouponForAdminDetail(coupon) {
     primenljivoNaProizvode: (coupon.productDiscount?.applicableProducts || []).map((p) =>
       p?.name ? { id: p._id.toString(), naziv: p.name } : { id: resolveRefId(p) }
     ),
+    iskljuceneKategorijeArtikala: (coupon.productDiscount?.excludedCategories || []).map((c) =>
+      c?.name ? { id: c._id.toString(), naziv: c.name } : { id: resolveRefId(c) }
+    ),
     partner: coupon.partner
       ? {
           id: resolveRefId(coupon.partner),
@@ -139,6 +142,7 @@ export function mapCouponForEdit(coupon) {
     productDiscountMaxAmount: coupon.productDiscount?.maxDiscountAmount ?? null,
     productMinOrderValue: coupon.productDiscount?.minOrderValue ?? 0,
     applicableProducts: (coupon.productDiscount?.applicableProducts || []).map((p) => p._id?.toString() || p.toString()),
+    excludedCategories: (coupon.productDiscount?.excludedCategories || []).map((c) => c._id?.toString() || c.toString()),
     partner: coupon.partner ? resolveRefId(coupon.partner) : null,
     validFrom: coupon.validFrom,
     validUntil: coupon.validUntil,

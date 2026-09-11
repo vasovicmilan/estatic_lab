@@ -65,6 +65,10 @@ export const validateCouponCreate = [
     .optional()
     .custom(isArrayOrString).withMessage("Neispravni proizvodi"),
 
+  body("excludedCategories")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravne kategorije za isključenje"),
+
   body("validUntil")
     .optional({ values: "falsy" })
     .isISO8601().withMessage("Neispravan format datuma"),
@@ -136,6 +140,10 @@ export const validateCouponUpdate = [
   body("applicableProducts")
     .optional()
     .custom(isArrayOrString).withMessage("Neispravni proizvodi"),
+
+  body("excludedCategories")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravne kategorije za isključenje"),
 
   body("partner")
     .optional({ values: "falsy" })

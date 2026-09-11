@@ -83,6 +83,18 @@ describe("coupon.validator", () => {
       assert.equal(res.status, 400);
       assert.ok(res.body.errors.maxUsesPerUser);
     });
+
+    it("accepts excludedCategories as an array of mongo ids", async () => {
+      const agent = buildValidatorHarness(validateCouponCreate);
+      const res = await agent.post("/test").send(validCoupon({ excludedCategories: [new Types.ObjectId().toString()] }));
+      assert.equal(res.status, 200);
+    });
+
+    it("accepts a missing excludedCategories - most coupons don't exclude anything", async () => {
+      const agent = buildValidatorHarness(validateCouponCreate);
+      const res = await agent.post("/test").send(validCoupon());
+      assert.equal(res.status, 200);
+    });
   });
 
   describe("validateCouponUpdate", () => {

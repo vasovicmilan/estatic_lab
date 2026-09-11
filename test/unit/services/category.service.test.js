@@ -6,6 +6,7 @@ import productRepo from "../../../src/repositories/product.repository.js";
 import serviceRepo from "../../../src/repositories/service.repository.js";
 import packageRepo from "../../../src/repositories/package.repository.js";
 import postRepo from "../../../src/repositories/post.repository.js";
+import couponRepo from "../../../src/repositories/coupon.repository.js";
 import * as categoryService from "../../../src/services/category.service.js";
 import { buildCategory, id } from "../../helpers/factories.js";
 import { buildPaginatedResult } from "../../helpers/pagination.js";
@@ -86,11 +87,12 @@ describe("category.service", () => {
       t.mock.method(categoryRepo, "findCategories", async () => buildPaginatedResult([], { total: 0 }));
       t.mock.method(categoryRepo, "deleteCategoryById", async () => true);
 
-      const pullCalls = { product: 0, service: 0, package: 0, post: 0 };
+      const pullCalls = { product: 0, service: 0, package: 0, post: 0, coupon: 0 };
       t.mock.method(productRepo, "pullCategoryFromAllProducts", async () => { pullCalls.product++; });
       t.mock.method(serviceRepo, "pullCategoryFromAllServices", async () => { pullCalls.service++; });
       t.mock.method(packageRepo, "pullCategoryFromAllPackages", async () => { pullCalls.package++; });
       t.mock.method(postRepo, "pullCategoryFromAllPosts", async () => { pullCalls.post++; });
+      t.mock.method(couponRepo, "pullCategoryFromAllCoupons", async () => { pullCalls.coupon++; });
 
       const result = await categoryService.deleteCategoryById(id().toString());
 
@@ -99,6 +101,7 @@ describe("category.service", () => {
       assert.equal(pullCalls.service, 1);
       assert.equal(pullCalls.package, 1);
       assert.equal(pullCalls.post, 1);
+      assert.equal(pullCalls.coupon, 1);
     });
 
     it("aborts the whole transaction and never reaches the terminal delete when an earlier cleanup step fails", async (t) => {
@@ -145,6 +148,29 @@ describe("category.service", () => {
     it("treats an inactive category as not found publicly", async (t) => {
       t.mock.method(categoryRepo, "findCategoryBySlug", async () => buildCategory({ meta: { isActive: false } }));
       await assert.rejects(() => categoryService.getCategoryBySlugAndDomain("neaktivna", "service"), (err) => err.statusCode === 404);
+    });
+  });
+
+  describe("getCategoriesByIds", () => {
+    it("returns [] without querying the repository when given no ids", async (t) => {
+      const mock = t.mock.method(categoryRepo, "findCategoriesByIds", async () => {
+        throw new Error("should never be called with an empty id list");
+      });
+      const result = await categoryService.getCategoriesByIds([]);
+
+      assert.deepEqual(result, []);
+      assert.equal(mock.mock.calls.length, 0);
+    });
+
+    it("maps each category to a minimal {id, naziv, slug} shape", async (t) => {
+      const categoryId = id();
+      t.mock.method(categoryRepo, "findCategoriesByIds", async () => [
+        { _id: categoryId, name: "Aparati i oprema", slug: "aparati-i-oprema" },
+      ]);
+
+      const result = await categoryService.getCategoriesByIds([categoryId]);
+
+      assert.deepEqual(result, [{ id: categoryId.toString(), naziv: "Aparati i oprema", slug: "aparati-i-oprema" }]);
     });
   });
 });

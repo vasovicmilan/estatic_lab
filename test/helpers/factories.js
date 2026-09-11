@@ -319,6 +319,7 @@ export function buildProductDiscount(overrides = {}) {
     maxDiscountAmount: null,
     minOrderValue: 0,
     applicableProducts: [],
+    excludedCategories: [],
     ...overrides,
   };
 }

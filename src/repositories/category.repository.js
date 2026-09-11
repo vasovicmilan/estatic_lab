@@ -16,6 +16,14 @@ export async function findCategoryBySlug(slug, domain, { session } = {}) {
   return Category.findOne({ slug, domain }).session(session || null).lean();
 }
 
+// bulk fetch by id, e.g. resolving names for the categories a coupon excludes
+// (see coupon.service.js's resolveProductCouponEligibility) - one query instead
+// of N, same reasoning as product.repository.js's findProductsByIds.
+export async function findCategoriesByIds(ids, { session } = {}) {
+  if (!ids?.length) return [];
+  return Category.find({ _id: { $in: ids } }).select("name slug domain").session(session || null).lean();
+}
+
 // Returns [categoryId, ...allDescendantIds] as strings - BFS over the parent
 // pointer, not just direct children, so a 3+ level hierarchy (e.g.
 // hl-skin-nega-koze -> hl-skin-nega-lica) still resolves correctly from the
@@ -90,6 +98,7 @@ export default {
   createCategory,
   findCategoryById,
   findCategoryBySlug,
+  findCategoriesByIds,
   findCategoryAndDescendantIds,
   findCategories,
   findAllCategoriesByDomain,

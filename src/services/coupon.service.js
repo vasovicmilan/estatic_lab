@@ -1,4 +1,6 @@
 import couponRepo from "../repositories/coupon.repository.js";
+import productService from "./product.service.js";
+import categoryService from "./category.service.js";
 import { mapCouponsForAdminList, mapCouponForAdminDetail, mapCouponForEdit } from "../mappers/coupon.mapper.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
@@ -151,7 +153,7 @@ async function validateCoupon(code, { userId = null, kind, targetId, value } = {
   }
 
   if (kind === "order") {
-    return validateProductDiscount(coupon, { targetId, value });
+    return await validateProductDiscount(coupon, { targetId, value });
   }
   return validateServiceOrPackageDiscount(coupon, { kind, targetId, value });
 }
@@ -181,7 +183,55 @@ function validateServiceOrPackageDiscount(coupon, { kind, targetId, value }) {
   return { coupon, discountAmount };
 }
 
-function validateProductDiscount(coupon, { targetId, value }) {
+/**
+ * Resolves a coupon's product-discount targeting rules into ready-to-check sets:
+ * the applicable-products whitelist (null = no restriction, every product is
+ * covered) and the full excluded-category id set, expanded to include every
+ * DESCENDANT of each category the admin picked - so excluding a parent like
+ * "Aparati i oprema" also excludes everything underneath it without the admin
+ * having to individually list every child category, same expansion
+ * category.service.js's getCategoryAndDescendantIds already provides
+ * everywhere else category hierarchy matters in this app.
+ *
+ * Shared by both checkout validation (validateProductDiscount below) and the
+ * partner catalog (partner-account.controller.js's catalog()), so a product's
+ * eligibility is computed identically in both places - a partner should never
+ * see a shareable-looking referral link for something checkout would actually
+ * reject at the register.
+ */
+export async function resolveProductCouponEligibility(productDiscount) {
+  if (!productDiscount) return { applicableProductIds: new Set(), excludedCategoryIds: new Set() };
+
+  const applicableProductIds = productDiscount.applicableProducts?.length
+    ? new Set(productDiscount.applicableProducts.map((p) => (typeof p === "object" ? (p._id || p).toString() : String(p))))
+    : null;
+
+  let excludedCategoryIds = new Set();
+  if (productDiscount.excludedCategories?.length) {
+    const rawIds = productDiscount.excludedCategories.map((c) => (typeof c === "object" ? (c._id || c).toString() : String(c)));
+    const expanded = await Promise.all(rawIds.map((catId) => categoryService.getCategoryAndDescendantIds(catId, "product")));
+    excludedCategoryIds = new Set(expanded.flat().map(String));
+  }
+
+  return { applicableProductIds, excludedCategoryIds };
+}
+
+/**
+ * Pure check against the sets resolveProductCouponEligibility produced - whether
+ * ONE product (by id + its own category ids) is actually covered. Category
+ * exclusion is checked FIRST and wins unconditionally, even over an explicit
+ * applicableProducts match - see coupon.model.js's own comment on
+ * excludedCategories for why: an expensive device the admin flagged as "needs
+ * its own negotiation" should never become discountable by accident just
+ * because someone also whitelisted it individually.
+ */
+export function isProductCouponEligible({ id, categoryIds = [] }, { applicableProductIds, excludedCategoryIds }) {
+  if (categoryIds.some((c) => excludedCategoryIds.has(String(c)))) return false;
+  if (applicableProductIds && !applicableProductIds.has(String(id))) return false;
+  return true;
+}
+
+async function validateProductDiscount(coupon, { targetId, value }) {
   const productDiscount = coupon.productDiscount;
   if (!productDiscount) badRequest("Kupon ne važi za proizvode");
 
@@ -190,11 +240,33 @@ function validateProductDiscount(coupon, { targetId, value }) {
   }
 
   // targetId is an array of product ids for an order (multiple line items,
-  // unlike appointment/packagePurchase which only ever have one target) - valid
-  // if productDiscount has no restriction, or at least one item in the cart matches
-  if (productDiscount.applicableProducts?.length) {
-    const targetIds = Array.isArray(targetId) ? targetId : [targetId];
-    const matches = targetIds.some((id) => productDiscount.applicableProducts.some((p) => String(p) === String(id)));
+  // unlike appointment/packagePurchase which only ever have one target)
+  const targetIds = Array.isArray(targetId) ? targetId : [targetId];
+  const eligibility = await resolveProductCouponEligibility(productDiscount);
+
+  // Category exclusion is checked against what's ACTUALLY in the cart, not
+  // just the coupon's configured category list - so the error can name the
+  // specific category the flagged item is really in (its own, most specific
+  // category - not necessarily the parent the admin excluded), instead of a
+  // vague "this code doesn't work" the customer has to guess the reason for.
+  if (eligibility.excludedCategoryIds.size > 0) {
+    const products = await productService.findProductsForCouponCheck(targetIds);
+    const matchedCategoryIds = new Set();
+    for (const product of products) {
+      for (const catId of product.categoryIds) {
+        if (eligibility.excludedCategoryIds.has(catId)) matchedCategoryIds.add(catId);
+      }
+    }
+    if (matchedCategoryIds.size > 0) {
+      const categories = await categoryService.getCategoriesByIds([...matchedCategoryIds]);
+      const names = categories.map((c) => c.naziv).join(", ") || "izabranu kategoriju";
+      badRequest(`Kupon ne važi za sledeće artikle u korpi (kategorija: ${names}) - uklonite ih iz korpe ili nas kontaktirajte za poseban dogovor.`);
+    }
+  }
+
+  // valid if productDiscount has no restriction, or at least one item in the cart matches
+  if (eligibility.applicableProductIds) {
+    const matches = targetIds.some((id) => eligibility.applicableProductIds.has(String(id)));
     if (!matches) badRequest("Kupon ne važi ni za jedan proizvod u porudžbini");
   }
 
@@ -277,7 +349,16 @@ export async function listCouponsForPartner(partnerId) {
     // (and links) only for coupons that actually discount them, instead of
     // always showing a products section that might not apply any discount.
     productDiscount: c.productDiscount
-      ? { discountType: c.productDiscount.discountType, discountValue: c.productDiscount.discountValue }
+      ? {
+          discountType: c.productDiscount.discountType,
+          discountValue: c.productDiscount.discountValue,
+          // raw ids, not resolved names - partner-account.controller.js's
+          // catalog() feeds these straight into resolveProductCouponEligibility
+          // to filter the browsable product list down to what's actually
+          // discountable, exactly the same way checkout validation does
+          applicableProducts: (c.productDiscount.applicableProducts || []).map((p) => (p._id || p).toString()),
+          excludedCategories: (c.productDiscount.excludedCategories || []).map((cat) => (cat._id || cat).toString()),
+        }
       : null,
     validUntil: c.validUntil,
     maxUses: c.maxUses,
@@ -299,4 +380,6 @@ export default {
   validateCouponForOrder,
   redeemCoupon,
   listCouponsForPartner,
+  resolveProductCouponEligibility,
+  isProductCouponEligible,
 };

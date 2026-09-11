@@ -5,6 +5,7 @@ import commissionService from "../../../services/commission.service.js";
 import serviceService from "../../../services/service.service.js";
 import packageService from "../../../services/package.service.js";
 import * as productService from "../../../services/product.service.js";
+import * as categoryService from "../../../services/category.service.js";
 import {
   preparePartnerDashboardData,
   preparePartnerCommissionsTabData,
@@ -56,12 +57,23 @@ export async function dashboard(req, res, next) {
       packageNamesById = Object.fromEntries(allPackagesResult.data.map((p) => [p.id, p.naziv]));
     }
 
+    // Same lazy lookup as above, for the excluded-category ids a coupon's
+    // productDiscount might carry (see coupon.model.js's own comment on
+    // excludedCategories) - only resolved when at least one coupon actually has one.
+    let categoryNamesById = {};
+    const excludedCategoryIds = [...new Set(coupons.flatMap((c) => c.productDiscount?.excludedCategories || []))];
+    if (excludedCategoryIds.length > 0) {
+      const categories = await categoryService.getCategoriesByIds(excludedCategoryIds);
+      categoryNamesById = Object.fromEntries(categories.map((c) => [c.id, c.naziv]));
+    }
+
     const viewData = preparePartnerDashboardData({
       partner,
       balance,
       coupons,
       serviceNamesById,
       packageNamesById,
+      categoryNamesById,
       recentCommissions: recentCommissions.data,
       payoutRequests: payoutRequests.data,
     });
@@ -176,13 +188,34 @@ export async function catalog(req, res, next) {
     const hasProductDiscount = !!productCoupon;
     const productCode = productCoupon?.code || null;
 
+    // Same eligibility rules checkout itself enforces (coupon.service.js's
+    // resolveProductCouponEligibility) - a whitelist (if set) and any excluded
+    // categories, expanded to their descendants. Resolved once here and fed
+    // straight into the product query as a DB-level filter (product.filter.js's
+    // `ids`/`excludedCategories`), so the catalog only ever lists/links artikli
+    // that would actually discount at checkout - never a link that looks
+    // shareable but silently does nothing when someone uses it.
+    const eligibility = productCoupon
+      ? await couponService.resolveProductCouponEligibility(productCoupon.productDiscount)
+      : null;
+    const productFilters = {};
+    if (eligibility?.applicableProductIds) productFilters.ids = [...eligibility.applicableProductIds];
+    if (eligibility?.excludedCategoryIds.size) productFilters.excludedCategories = [...eligibility.excludedCategoryIds];
+
+    // Just the coupon's OWN configured exclusions (not the full descendant-expanded
+    // set eligibility holds) - what the admin actually picked is the meaningful
+    // label for a partner to read, not every expanded leaf category underneath it.
+    const excludedCategoryNames = productCoupon?.productDiscount?.excludedCategories?.length
+      ? (await categoryService.getCategoriesByIds(productCoupon.productDiscount.excludedCategories)).map((c) => c.naziv)
+      : [];
+
     const { search = "", servicesPage = 1, packagesPage = 1, productsPage = 1 } = req.query;
 
     const [services, packages, products] = await Promise.all([
       serviceService.listServices({ search, limit: 10, page: parseInt(servicesPage, 10) || 1 }),
       packageService.listPackages({ search, limit: 10, page: parseInt(packagesPage, 10) || 1 }),
       hasProductDiscount
-        ? productService.listPublicProducts({ search, limit: 10, page: parseInt(productsPage, 10) || 1 })
+        ? productService.listPublicProducts({ search, filters: productFilters, limit: 10, page: parseInt(productsPage, 10) || 1 })
         : Promise.resolve({ data: [], page: 1, totalPages: 1 }),
     ]);
 
@@ -196,6 +229,7 @@ export async function catalog(req, res, next) {
       data: {
         hasCode: !!code,
         hasProductDiscount,
+        excludedCategoryNames,
         search,
         services: withLink(services.data, "/usluge", code),
         servicesPagination: { currentPage: services.page, totalPages: services.totalPages, basePath: "/moj-partner-nalog/katalog", pageParam: "servicesPage", query: req.query },

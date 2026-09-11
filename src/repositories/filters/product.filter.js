@@ -4,6 +4,14 @@
 export function buildProductFilter({
   search = "",
   category = null,
+  // Products in ANY of these category ids are excluded outright - independent
+  // from (and can be combined with) `category` above. Used by the partner
+  // catalog to filter out a coupon's excluded categories at the DB level
+  // (see coupon.service.js's resolveProductCouponEligibility and
+  // partner-account.controller.js's catalog()), rather than filtering an
+  // already-paginated result set after the fact - that would silently return
+  // fewer than `limit` items per page and throw off total/totalPages.
+  excludedCategories = null,
   tag = null,
   isActive = null,
   inStock = null,
@@ -24,7 +32,18 @@ export function buildProductFilter({
   }
 
   if (sku) filter.sku = sku.toLowerCase().trim();
-  if (category) filter.categories = Array.isArray(category) ? { $in: category } : category;
+  // `category` alone keeps its previous exact shape (raw id, or { $in: [...] }
+  // for an array) so existing callers/tests see identical query semantics.
+  // Only wraps into a combined { $in, $nin } object once excludedCategories is
+  // actually in play - see the comment on that param above.
+  if (category && !(excludedCategories && excludedCategories.length > 0)) {
+    filter.categories = Array.isArray(category) ? { $in: category } : category;
+  } else if (category || (excludedCategories && excludedCategories.length > 0)) {
+    const categoryConditions = {};
+    if (category) categoryConditions.$in = Array.isArray(category) ? category : [category];
+    if (excludedCategories?.length) categoryConditions.$nin = excludedCategories;
+    filter.categories = categoryConditions;
+  }
   if (tag) filter.tags = tag;
   if (isActive !== null && isActive !== undefined) filter.isActive = isActive;
   if (badge) filter.badge = badge;

@@ -4,14 +4,16 @@ import mongoose from "mongoose";
 import * as dbHandler from "../setup/db-handler.js";
 import couponRepo from "../../../src/repositories/coupon.repository.js";
 // findCouponById populates applicableServices/applicablePackages/
-// productDiscount.applicableProducts/partner.userId - these models must be
-// registered on the connection before that populate runs, or Mongoose throws
-// MissingSchemaError, regardless of whether the referenced arrays end up empty
-// in a given test. Side-effect imports only, same pattern as this codebase's
-// other integration repository tests (see e.g. order.repository.test.js).
+// productDiscount.applicableProducts/productDiscount.excludedCategories/
+// partner.userId - these models must be registered on the connection before
+// that populate runs, or Mongoose throws MissingSchemaError, regardless of
+// whether the referenced arrays end up empty in a given test. Side-effect
+// imports only, same pattern as this codebase's other integration repository
+// tests (see e.g. order.repository.test.js).
 import "../../../src/models/service.model.js";
 import "../../../src/models/package.model.js";
 import "../../../src/models/product.model.js";
+import "../../../src/models/category.model.js";
 import "../../../src/models/partner.model.js";
 import "../../../src/models/user.model.js";
 

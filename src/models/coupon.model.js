@@ -48,6 +48,20 @@ const ProductDiscountSchema = new Schema(
     // applicablePackages iznad - ali samo OTKAD je admin uopšte uključio ovaj
     // blok (postojanje productDiscount objekta je taj "uključен" signal).
     applicableProducts: [{ type: Schema.Types.ObjectId, ref: "Product" }],
+    // Suprotno od applicableProducts iznad: umesto ručnog nabrajanja pojedinačnih
+    // artikala (belo listanje), ovo isključuje CELU kategoriju (i sve njene
+    // podkategorije - videti category.service.js's getCategoryAndDescendantIds,
+    // isti obrazac koji se koristi svuda gde hijerarhija kategorija ima značaj)
+    // iz ovog kupona - i svaki BUDUĆI artikal dodat u tu kategoriju je automatski
+    // pokriven bez ikakve naknadne izmene kupona. Namenjeno stavkama koje su
+    // "priča za sebe" i ne bi trebalo da idu preko opšteg partnerskog popusta
+    // (npr. skupi/veliki aparati koji se prodaju uz pojedinačan dogovor) - za
+    // razliku od applicableProducts, koje bi za isti cilj zahtevalo ručno
+    // ažuriranje svakog kupona svaki put kad se doda novi skup artikal.
+    // Isključenje UVEK pobeđuje, čak i nad eksplicitnim pogotkom na
+    // applicableProducts iznad - videti coupon.service.js's
+    // resolveProductCouponEligibility za tačnu logiku provere.
+    excludedCategories: [{ type: Schema.Types.ObjectId, ref: "Category" }],
   },
   { _id: false }
 );
@@ -165,5 +179,6 @@ CouponSchema.index({ "usageHistory.appointment": 1 });
 CouponSchema.index({ "usageHistory.packagePurchase": 1 });
 CouponSchema.index({ "usageHistory.order": 1 });
 CouponSchema.index({ "productDiscount.applicableProducts": 1 });
+CouponSchema.index({ "productDiscount.excludedCategories": 1 });
 
 export default model("Coupon", CouponSchema);

@@ -2,6 +2,7 @@ import * as couponService from "../../../../services/coupon.service.js";
 import * as serviceService from "../../../../services/service.service.js";
 import * as packageService from "../../../../services/package.service.js";
 import * as productService from "../../../../services/product.service.js";
+import * as categoryService from "../../../../services/category.service.js";
 import partnerService from "../../../../services/partner.service.js";
 import { prepareCouponListData, prepareCouponDetailsData, prepareCouponFormData } from "../../../../presenters/admin/marketing/coupon.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
@@ -10,10 +11,11 @@ import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
 async function loadFormOptions() {
-  const [services, packages, products, partners] = await Promise.all([
+  const [services, packages, products, categories, partners] = await Promise.all([
     serviceService.listServices({ limit: 200 }),
     packageService.listPackages({ limit: 200 }),
     productService.listProducts({ limit: 200 }),
+    categoryService.getCategoriesForSelect("product"),
     partnerService.listPartners({ limit: 200, filters: { isActive: true } }),
   ]);
 
@@ -21,6 +23,7 @@ async function loadFormOptions() {
     serviceOptions: services.data.map((s) => ({ value: s.id, label: s.naziv })),
     packageOptions: packages.data.map((p) => ({ value: p.id, label: p.naziv })),
     productOptions: products.data.map((p) => ({ value: p.id, label: p.naziv })),
+    categoryOptions: categories.map((c) => ({ value: c.id, label: c.naziv })),
     partnerOptions: partners.data.map((p) => ({ value: p.id, label: p.imePrezime })),
   };
 }
@@ -65,6 +68,7 @@ function buildCouponPayload(req) {
         maxDiscountAmount: req.body.productDiscountMaxAmount ? Number(req.body.productDiscountMaxAmount) : null,
         minOrderValue: req.body.productMinOrderValue ? Number(req.body.productMinOrderValue) : 0,
         applicableProducts: toIdArray(req.body.applicableProducts),
+        excludedCategories: toIdArray(req.body.excludedCategories),
       }
     : null;
   // these were only ever inputs for the block above, never real top-level schema
@@ -75,6 +79,7 @@ function buildCouponPayload(req) {
   delete data.productDiscountMaxAmount;
   delete data.productMinOrderValue;
   delete data.applicableProducts;
+  delete data.excludedCategories;
 
   return data;
 }

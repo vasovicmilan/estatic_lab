@@ -101,6 +101,13 @@ export function prepareCouponDetailsData(coupon) {
         items: coupon.primenljivoNaProizvode.map((p) => p.naziv || p.id),
       },
       {
+        title: "Isključene kategorije artikala",
+        type: "list",
+        items: coupon.iskljuceneKategorijeArtikala.length
+          ? coupon.iskljuceneKategorijeArtikala.map((c) => c.naziv || c.id)
+          : ["Nijedna - popust za artikle važi za sve kategorije"],
+      },
+      {
         title: "Istorija korišćenja",
         type: "table",
         rows: coupon.istorijaKoriscenja.map((u) => ({ label: u.iskoriscenoU, value: `${u.iznosPopusta} (termin ${u.terminId})` })),
@@ -141,7 +148,7 @@ export function prepareCouponDetailsData(coupon) {
   };
 }
 
-export function prepareCouponFormData(coupon = null, { serviceOptions = [], packageOptions = [], productOptions = [], partnerOptions = [] } = {}) {
+export function prepareCouponFormData(coupon = null, { serviceOptions = [], packageOptions = [], productOptions = [], categoryOptions = [], partnerOptions = [] } = {}) {
   const isEdit = !!coupon;
   const values = isEdit
     ? coupon
@@ -161,6 +168,7 @@ export function prepareCouponFormData(coupon = null, { serviceOptions = [], pack
         productDiscountMaxAmount: null,
         productMinOrderValue: 0,
         applicableProducts: [],
+        excludedCategories: [],
         partner: null,
         validFrom: new Date(),
         validUntil: null,
@@ -255,6 +263,15 @@ export function prepareCouponFormData(coupon = null, { serviceOptions = [], pack
         width: 12,
         value: (values.applicableProducts || []).map((p) => (typeof p === "object" ? p.id ?? p._id?.toString() : p)),
         options: productOptions,
+      },
+      {
+        name: "excludedCategories",
+        label: "Isključi kategoriju artikala (opciono - ova kategorija NIKAD ne dobija ovaj popust)",
+        type: "multiselect",
+        width: 12,
+        value: (values.excludedCategories || []).map((c) => (typeof c === "object" ? c.id ?? c._id?.toString() : c)),
+        options: categoryOptions,
+        help: "Isključenje uvek pobeđuje, čak i ako je konkretan artikal iz ove kategorije slučajno naveden i gore u 'Važi samo za proizvode'. Pokriva i sve podkategorije automatski - novi artikal dodat kasnije u ovu (pod)kategoriju je automatski isključen bez izmene ovog kupona. Namenjeno artiklima koji se prodaju uz pojedinačan dogovor (npr. skupi uređaji) i ne treba da idu preko opšteg popusta.",
       },
       {
         name: "partner",

@@ -287,6 +287,18 @@ export async function countAllActiveProducts() {
   return productRepo.countProducts({ isActive: true });
 }
 
+// Raw category-id lookup for a specific set of products - e.g.
+// coupon.service.js's resolveProductCouponEligibility, checking whether any
+// product actually IN a cart/order falls under a coupon's excluded category.
+// Deliberately unpopulated (populateFields: []) - the caller only ever needs
+// the category ObjectIds themselves to compare against an excluded-id set,
+// not their names/slugs, so skipping the populate avoids the extra join.
+export async function findProductsForCouponCheck(productIds) {
+  if (!productIds?.length) return [];
+  const products = await productRepo.findProductsByIds(productIds, { populateFields: [] });
+  return products.map((p) => ({ id: p._id.toString(), categoryIds: (p.categories || []).map((c) => c.toString()) }));
+}
+
 // Decorates each public category with how many active products it currently
 // has, so the /prodavnica filter tabs can show real counts, same as /usluge.
 export async function attachProductCountsToCategories(categories = []) {
@@ -412,6 +424,7 @@ export default {
   countProductsReferencingPost,
   countAllActiveProducts,
   attachProductCountsToCategories,
+  findProductsForCouponCheck,
   getVariationRaw,
   decreaseVariationStock,
   restoreVariationStock,

@@ -4,6 +4,7 @@ import productRepo from "../repositories/product.repository.js";
 import serviceRepo from "../repositories/service.repository.js";
 import packageRepo from "../repositories/package.repository.js";
 import postRepo from "../repositories/post.repository.js";
+import couponRepo from "../repositories/coupon.repository.js";
 import { CATEGORY_DOMAINS } from "../models/category.model.js";
 import {
   mapCategoriesForAdminList,
@@ -70,6 +71,16 @@ export async function getCategoriesForSelect(domain) {
   return mapCategoriesForSelect(categories);
 }
 
+// bulk name lookup by id - e.g. coupon.service.js building a specific "this
+// category isn't covered" checkout message, or the partner catalog describing
+// which category a coupon excludes. Minimal shape on purpose (id + naziv),
+// not the full admin-detail mapping - callers here just need a label.
+export async function getCategoriesByIds(ids) {
+  if (!ids?.length) return [];
+  const categories = await categoryRepo.findCategoriesByIds(ids);
+  return categories.map((c) => ({ id: c._id.toString(), naziv: c.name, slug: c.slug }));
+}
+
 export async function createCategory(data) {
   if (!data) validationError("data");
   if (!data.name) validationError("name");
@@ -118,7 +129,9 @@ export async function deleteCategoryById(categoryId) {
   // Post.categories[] is just current taxonomy assignment, not a promise to anyone
   // (unlike, say, a customer's purchased package) - so rather than blocking the
   // delete, pull the category out of every place it's assigned, atomically with
-  // the delete itself.
+  // the delete itself. Coupon.productDiscount.excludedCategories is the same kind
+  // of "current configuration" reference, not a promise - see coupon.model.js's
+  // own comment on that field.
   const session = await mongoose.startSession();
   try {
     await session.withTransaction(async () => {
@@ -126,6 +139,7 @@ export async function deleteCategoryById(categoryId) {
       await serviceRepo.pullCategoryFromAllServices(categoryId, { session });
       await packageRepo.pullCategoryFromAllPackages(categoryId, { session });
       await postRepo.pullCategoryFromAllPosts(categoryId, { session });
+      await couponRepo.pullCategoryFromAllCoupons(categoryId, { session });
       await categoryRepo.deleteCategoryById(categoryId, { session });
     });
   } finally {
@@ -144,6 +158,7 @@ export default {
   getPublicCategories,
   getCategoryAndDescendantIds,
   getCategoriesForSelect,
+  getCategoriesByIds,
   createCategory,
   updateCategoryById,
   deleteCategoryById,

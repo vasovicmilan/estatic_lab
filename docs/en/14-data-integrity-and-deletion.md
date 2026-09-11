@@ -95,7 +95,7 @@ committed** - not even the delete itself.
 
 | When deleting... | Automatically cleaned from... |
 |---|---|
-| **Category** (no subcategories) | `Product.categories[]`, `Service.categories[]`, `Package.categories[]`, `Post.categories[]` |
+| **Category** (no subcategories) | `Product.categories[]`, `Service.categories[]`, `Package.categories[]`, `Post.categories[]`, `Coupon.productDiscount.excludedCategories[]` |
 | **Tag** | `Package.tags[]`, `Post.tags[]`, `Product.tags[]`, `Service.tags[]` |
 | **Service** (after Tier-1 checks) | `Employee.services[]`, `Coupon.applicableServices[]`, `Product.relatedServices[]` |
 | **Package** (after Tier-1 checks) | `Coupon.applicablePackages[]` |
@@ -181,7 +181,7 @@ for financial/tax reasons).
 
 | Entity | Tier 0 (structure) | Tier 1 (blocks) | Tier 2 (auto-cleans) | Tier 3 (null-safe) |
 |---|:---:|:---:|:---:|:---:|
-| Category | ✅ subcategories | - | ✅ Product/Service/Package/Post | - |
+| Category | ✅ subcategories | - | ✅ Product/Service/Package/Post/Coupon | - |
 | Tag | - | - | ✅ Package/Post/Product/Service | - |
 | Service | - | ✅ appointments, active sessions, Package | ✅ Employee/Coupon/Product | - |
 | Package | - | ✅ any purchase | ✅ Coupon | - |

@@ -11,6 +11,7 @@ function buildMappedCoupon(overrides = {}) {
     primenljivoNaUsluge: [],
     primenljivoNaPakete: [],
     primenljivoNaProizvode: [],
+    iskljuceneKategorijeArtikala: [],
     istorijaKoriscenja: [],
     partner: null,
     vremeVazenja: { pocinje: null, istice: null },
@@ -62,6 +63,18 @@ describe("prepareCouponDetailsData - the productDiscount block", () => {
     assert.deepEqual(view.sections.find((s) => s.title === "Primenljivo na usluge").items, ["Masaza"]);
     assert.deepEqual(view.sections.find((s) => s.title === "Primenljivo na pakete").items, ["3 masaze"]);
     assert.deepEqual(view.sections.find((s) => s.title === "Primenljivo na proizvode").items, ["ESMA uredjaj"]);
+  });
+
+  it("shows excluded product categories by name when the coupon has any", () => {
+    const view = prepareCouponDetailsData(buildMappedCoupon({ iskljuceneKategorijeArtikala: [{ naziv: "Aparati i oprema" }] }));
+    assert.deepEqual(view.sections.find((s) => s.title === "Isključene kategorije artikala").items, ["Aparati i oprema"]);
+  });
+
+  it("shows a clear 'no exclusions' placeholder when the coupon has none", () => {
+    const view = prepareCouponDetailsData(buildMappedCoupon({ iskljuceneKategorijeArtikala: [] }));
+    assert.deepEqual(view.sections.find((s) => s.title === "Isključene kategorije artikala").items, [
+      "Nijedna - popust za artikle važi za sve kategorije",
+    ]);
   });
 
   it("falls back to the raw id when an applicable item has no resolved name", () => {

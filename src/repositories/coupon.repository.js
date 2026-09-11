@@ -12,6 +12,7 @@ export async function findCouponById(id, { session } = {}) {
     .populate("applicableServices", "name")
     .populate("applicablePackages", "name")
     .populate("productDiscount.applicableProducts", "name")
+    .populate("productDiscount.excludedCategories", "name")
     .populate({ path: "partner", populate: { path: "userId", select: "firstName lastName" } })
     .session(session || null)
     .lean();
@@ -142,6 +143,17 @@ export async function pullProductFromAllCoupons(productId, { session } = {}) {
   );
 }
 
+// Called when a product Category is deleted - Coupon.productDiscount.excludedCategories
+// is current targeting config, not a promise to anyone, same reasoning as
+// pullProductFromAllCoupons above. Safe to auto-clean rather than block the delete.
+export async function pullCategoryFromAllCoupons(categoryId, { session } = {}) {
+  return Coupon.updateMany(
+    { "productDiscount.excludedCategories": categoryId },
+    { $pull: { "productDiscount.excludedCategories": categoryId } },
+    { session }
+  );
+}
+
 // Called when a Partner is deleted - Coupon.partner is current referral-attribution
 // config (single ref, not an array, unlike applicableServices/applicablePackages
 // above), not a promise to anyone. Safe to auto-clean: the coupon just becomes a
@@ -163,5 +175,6 @@ export default {
   pullServiceFromAllCoupons,
   pullPackageFromAllCoupons,
   pullProductFromAllCoupons,
+  pullCategoryFromAllCoupons,
   unsetPartnerFromAllCoupons,
 };
