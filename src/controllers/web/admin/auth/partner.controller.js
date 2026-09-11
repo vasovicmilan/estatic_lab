@@ -3,6 +3,7 @@ import * as userService from "../../../../services/user.service.js";
 import payoutRequestService from "../../../../services/payout-request.service.js";
 import couponService from "../../../../services/coupon.service.js";
 import commissionService from "../../../../services/commission.service.js";
+import * as categoryService from "../../../../services/category.service.js";
 import { preparePartnerListData, preparePartnerDetailsData, preparePartnerFormData } from "../../../../presenters/admin/auth/partner.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -54,7 +55,19 @@ export async function partnerDetails(req, res, next) {
     const balance = await payoutRequestService.getBalance("partner", partnerId);
     const coupons = await couponService.listCouponsForPartner(partnerId);
     const commissionsResult = await commissionService.listCommissionsForEarner({ partner: partnerId, limit: 10 });
-    const viewData = preparePartnerDetailsData(partner, balance, coupons, commissionsResult.data);
+
+    // Same lazy lookup pattern as the partner's own dashboard
+    // (partner-account.controller.js) - only resolved when at least one of
+    // this partner's coupons actually excludes a category, so the common
+    // case (no exclusions at all) skips the extra query entirely.
+    let categoryNamesById = {};
+    const excludedCategoryIds = [...new Set(coupons.flatMap((c) => c.productDiscount?.excludedCategories || []))];
+    if (excludedCategoryIds.length > 0) {
+      const categories = await categoryService.getCategoriesByIds(excludedCategoryIds);
+      categoryNamesById = Object.fromEntries(categories.map((c) => [c.id, c.naziv]));
+    }
+
+    const viewData = preparePartnerDetailsData(partner, balance, coupons, commissionsResult.data, categoryNamesById);
 
     return res.render("admin/_details", {
       pageTitle: `Partner - ${partner.korisnik.imePrezime}`,

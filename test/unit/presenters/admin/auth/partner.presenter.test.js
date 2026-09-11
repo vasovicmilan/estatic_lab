@@ -97,6 +97,49 @@ describe("preparePartnerDetailsData", () => {
     assert.match(couponsSection.rows[0].value, /10%/);
   });
 
+  it("shows 'Ne važi za artikle' when a coupon has no productDiscount block at all", () => {
+    const coupons = [{ id: "c1", code: "PETAR10", discountType: "percentage", discountValue: 10, isActive: true, productDiscount: null }];
+    const view = preparePartnerDetailsData(buildMappedPartner(), null, coupons);
+    const couponsSection = view.sections.find((s) => s.title === "Referalni kodovi");
+
+    assert.match(couponsSection.rows[0].value, /Ne važi za artikle/);
+  });
+
+  it("shows the artikli discount alongside the usluge/paketi discount when the coupon has both", () => {
+    const coupons = [
+      {
+        id: "c1",
+        code: "PETAR10",
+        discountType: "percentage",
+        discountValue: 15,
+        isActive: true,
+        productDiscount: { discountType: "percentage", discountValue: 20, applicableProducts: [], excludedCategories: [] },
+      },
+    ];
+    const view = preparePartnerDetailsData(buildMappedPartner(), null, coupons);
+    const couponsSection = view.sections.find((s) => s.title === "Referalni kodovi");
+
+    assert.match(couponsSection.rows[0].value, /Usluge\/paketi: 15%/);
+    assert.match(couponsSection.rows[0].value, /Artikli: 20%/);
+  });
+
+  it("names the excluded category by resolving it through the categoryNamesById map", () => {
+    const coupons = [
+      {
+        id: "c1",
+        code: "PETAR10",
+        discountType: "percentage",
+        discountValue: 15,
+        isActive: true,
+        productDiscount: { discountType: "percentage", discountValue: 20, applicableProducts: [], excludedCategories: ["cat-1"] },
+      },
+    ];
+    const view = preparePartnerDetailsData(buildMappedPartner(), null, coupons, [], { "cat-1": "Aparati i oprema" });
+    const couponsSection = view.sections.find((s) => s.title === "Referalni kodovi");
+
+    assert.match(couponsSection.rows[0].value, /osim: Aparati i oprema/);
+  });
+
   it("translates each commission entry's source type and status for display", () => {
     const commissions = [{ sourceType: "order", baseValue: 20000, rate: 5, amount: 1000, status: "pending" }];
     const view = preparePartnerDetailsData(buildMappedPartner(), null, [], commissions);

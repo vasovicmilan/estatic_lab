@@ -1,6 +1,34 @@
 import { formatPrice, formatMoney } from "../../../utils/price.util.js";
 import { translateCommissionSourceType, translateCommissionStatus } from "../../../utils/commission-display.util.js";
 
+// The coupon's main, always-required block (see coupon.model.js) - covers
+// services/packages. Every coupon has this, unlike the artikli block below.
+function describeServiceDiscount(coupon) {
+  const discount = coupon.discountType === "percentage" ? `${coupon.discountValue}%` : formatMoney(coupon.discountValue);
+  return `${discount} popust`;
+}
+
+// The coupon's separate, OPT-IN artikli (products) block - null/absent when
+// this coupon was never configured to cover product orders at all (see
+// coupon.model.js's own comment on productDiscount - restrictive by default,
+// not every referral code is meant to reach the shop). Shown explicitly
+// either way so an admin never has to guess whether "no artikli line" means
+// "not configured" or "the page forgot to render it" - see coupon.service.js's
+// resolveProductCouponEligibility for the same excludedCategories concept
+// this reuses for the exclusion note. categoryNamesById resolves those ids
+// into names; pass {} to just omit the exclusion note if names aren't needed.
+function describeCouponProductDiscount(productDiscount, categoryNamesById = {}) {
+  if (!productDiscount) return "Ne važi za artikle";
+
+  const discount =
+    productDiscount.discountType === "percentage" ? `${productDiscount.discountValue}%` : formatMoney(productDiscount.discountValue);
+  const base = `${discount} popust`;
+
+  const excludedNames = (productDiscount.excludedCategories || []).map((id) => categoryNamesById[id]).filter(Boolean);
+  if (excludedNames.length === 0) return base;
+  return `${base} (osim: ${excludedNames.join(", ")})`;
+}
+
 export function preparePartnerListData(result, query = {}) {
   return {
     items: result.data,
@@ -49,7 +77,7 @@ export function preparePartnerListData(result, query = {}) {
   };
 }
 
-export function preparePartnerDetailsData(partner, balance = null, coupons = [], commissions = []) {
+export function preparePartnerDetailsData(partner, balance = null, coupons = [], commissions = [], categoryNamesById = {}) {
   return {
     backUrl: "/admin/partneri",
     editUrl: `/admin/partneri/izmena/${partner.id}`,
@@ -70,9 +98,11 @@ export function preparePartnerDetailsData(partner, balance = null, coupons = [],
           coupons.length > 0
             ? coupons.map((c) => ({
                 label: c.code,
-                value: `${c.discountType === "percentage" ? c.discountValue + "%" : formatMoney(c.discountValue)} popust${
-                  c.isActive ? "" : " (neaktivan)"
-                } - <a href="/admin/kuponi/detalji/${c.id}">detalji</a>`,
+                value: [
+                  `Usluge/paketi: ${describeServiceDiscount(c)}${c.isActive ? "" : " (neaktivan)"}`,
+                  `Artikli: ${describeCouponProductDiscount(c.productDiscount, categoryNamesById)}`,
+                  `<a href="/admin/kuponi/detalji/${c.id}">detalji</a>`,
+                ].join("<br>"),
               }))
             : [{ label: "Nema dodeljenih kodova", value: `<a href="/admin/kuponi/dodavanje">Kreiraj kupon za ovog partnera</a>` }],
       },
