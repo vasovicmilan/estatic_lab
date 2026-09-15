@@ -11,12 +11,19 @@ import resourceService from "../../../services/resource.service.js";
 import * as newsletterService from "../../../services/news-letter.service.js";
 import { prepareDashboardData } from "../../../presenters/admin/dashboard.presenter.js";
 import { logError } from "../../../utils/logger.util.js";
+import { getStartOfDayInZone } from "../../../utils/date.time.util.js";
 
+// Was `new Date(); start.setHours(0,0,0,0)` / `end.setDate(end.getDate()+1)` -
+// setHours()/setDate() operate in the SERVER PROCESS's own timezone (UTC on
+// this VPS), not Belgrade, so "today" on the admin dashboard silently used
+// UTC midnight-to-midnight instead of Belgrade midnight-to-midnight - the same
+// 1-2h (CET/CEST) shift bug as everywhere else in this app. `end` is the start
+// of TOMORROW (exclusive), not 23:59:59.999 of today, to match
+// appointment.filter.js's `$lt: dateTo` semantics for the appointments count
+// below. See date.time.util.js's getStartOfDayInZone.
 function todayBounds() {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
+  const start = getStartOfDayInZone();
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
   return { start, end };
 }
 

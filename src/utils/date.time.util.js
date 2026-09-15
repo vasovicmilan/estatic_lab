@@ -260,6 +260,16 @@ export function getStartOfDayInZone(date = new Date(), timeZone = APP_TIMEZONE) 
   return zonedComponentsToUtcDate(year, month, day, 0, 0, 0, timeZone);
 }
 
+// The last millisecond (23:59:59.999) of the given date's calendar day, as
+// experienced in `timeZone` - the counterpart to getStartOfDayInZone for
+// building inclusive "date to" query bounds (admin list filters: audit log,
+// orders, appointments). Same reasoning as getStartOfDayInZone: computed as
+// next day's start minus 1ms rather than a raw `setHours(23,59,59,999)`,
+// which would operate in the SERVER PROCESS's own timezone.
+export function getEndOfDayInZone(date = new Date(), timeZone = APP_TIMEZONE) {
+  return new Date(getStartOfDayInZone(date, timeZone).getTime() + 24 * 60 * 60 * 1000 - 1);
+}
+
 export default {
   formatDateTime,
   formatDate,
@@ -273,4 +283,5 @@ export default {
   zonedInputToUtcDate,
   utcDateToZonedInputValue,
   getStartOfDayInZone,
+  getEndOfDayInZone,
 };

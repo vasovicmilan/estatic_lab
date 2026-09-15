@@ -38,10 +38,20 @@ export const validateAppointmentReassign = [
 ];
 
 export const validateAppointmentReschedule = [
+  // Deliberately NOT .toDate() - newStartTime arrives as a naive
+  // "YYYY-MM-DDTHH:mm" <input type="datetime-local"> string with no timezone
+  // info. express-validator's .toDate() sanitizer just hands that to
+  // `new Date()`, which parses a timezone-less date-time string using the
+  // SERVER PROCESS's own local time (UTC on this VPS) - silently turning
+  // "14:00" as picked on screen into 14:00 UTC, i.e. 16:00 Belgrade in summer
+  // (CEST) - the exact "2 hours ahead" bug this app already fixed once for
+  // manual appointment creation and scheduled blog posts (see
+  // date.time.util.js's zonedInputToUtcDate). Keeping newStartTime a string
+  // here lets appointment.service.js's rescheduleAppointment convert it with
+  // zonedInputToUtcDate instead, the same way those other flows do.
   body("newStartTime")
     .notEmpty().withMessage("Novo vreme je obavezno")
-    .isISO8601().withMessage("Neispravan format vremena")
-    .toDate(),
+    .isISO8601().withMessage("Neispravan format vremena"),
 
   collectValidationErrors,
 ];

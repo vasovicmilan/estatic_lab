@@ -13,6 +13,7 @@ import { getAllowedStatuses } from "../models/appointment-status-transitions.js"
 import { canUserCancelAppointment, getRescheduleWindow, hasMinimumRescheduleLeadTime, isSameCalendarDay } from "../utils/appointment-cancellation.util.js";
 import { buildPhoneRecord } from "../utils/phone.util.js";
 import { isEmployeeWorkingAt } from "../utils/working-hours.util.js";
+import { zonedInputToUtcDate } from "../utils/date.time.util.js";
 import { getBookingPolicy } from "../config/runtime-settings.cache.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
@@ -720,13 +721,17 @@ export async function reassignAppointment(appointmentId, newEmployeeId, actorId)
  *     RESCHEDULE_SAME_DAY_FLOOR_HOURS to RESCHEDULE_CUTOFF_HOURS -> same
  *       calendar day as the current appointment only
  *     < RESCHEDULE_SAME_DAY_FLOOR_HOURS -> not allowed at all
- * - The NEW time must ALWAYS have at least RESCHEDULE_MIN_LEAD_MINUTES of lead
- *   from right now - this one applies to every actor including admin, since
- *   it's a baseline sanity/prep-time floor rather than a customer-facing
- *   protection.
+ * - The NEW time must have at least RESCHEDULE_MIN_LEAD_MINUTES of lead from
+ *   right now for non-admin actors (a baseline sanity/prep-time floor so a
+ *   customer or employee can't reschedule into the next few minutes). Admin
+ *   bypasses this too, same as the tiered window above - staff override means
+ *   staff can move a termin to whenever, including right now, for a genuine
+ *   last-minute fix.
  * - The new window still has to clear the exact same availability checks a
  *   fresh booking would (employee's working hours, no overlap, resource
- *   capacity) - moving a slot doesn't get to skip the checks that created it.
+ *   capacity) - moving a slot doesn't get to skip the checks that created it,
+ *   for any actor including admin, since those protect data integrity
+ *   (no double-booking an employee or a resource), not just the customer.
  */
 export async function rescheduleAppointment(appointmentId, newStartTime, actorId, actorRole) {
   if (!appointmentId) validationError("appointmentId");
@@ -740,15 +745,27 @@ export async function rescheduleAppointment(appointmentId, newStartTime, actorId
     badRequest(`Termin sa statusom "${appointment.status}" se ne može pomeriti`);
   }
 
-  const newStart = newStartTime instanceof Date ? newStartTime : new Date(newStartTime);
-  if (isNaN(newStart.getTime())) badRequest("Neispravno novo vreme termina");
-  if (!hasMinimumRescheduleLeadTime(newStart)) {
-    badRequest(`Izabrano vreme mora biti bar ${getBookingPolicy().rescheduleMinLeadMinutes} minuta unapred`);
-  }
+  // newStartTime arrives as a naive "YYYY-MM-DDTHH:mm" <input type="datetime-local">
+  // string with no timezone info from all three callers (admin/user/employee
+  // controllers) - zonedInputToUtcDate interprets it as Europe/Belgrade
+  // wall-clock time, matching what the admin/user/employee actually saw and
+  // picked on screen. Deliberately NOT `new Date(newStartTime)` - that parses
+  // a timezone-less date-time string using the SERVER PROCESS's own local
+  // time (UTC on this VPS), silently booking 1-2h later (CET/CEST) than
+  // intended. Already-a-Date is passed through unchanged for any internal
+  // caller that constructed the instant itself. See date.time.util.js.
+  const newStart = newStartTime instanceof Date ? newStartTime : zonedInputToUtcDate(newStartTime);
+  if (!newStart || isNaN(newStart.getTime())) badRequest("Neispravno novo vreme termina");
 
-  // admin bypasses the tiered window entirely (staff override) - everyone else
-  // gets checked against how close we already are to the CURRENT appointment
+  // admin bypasses both the minimum-lead-time floor and the tiered window
+  // below entirely (staff override) - everyone else gets checked against how
+  // close we already are to the CURRENT appointment, and against a baseline
+  // future-lead-time floor
   if (actorRole !== "admin") {
+    if (!hasMinimumRescheduleLeadTime(newStart)) {
+      badRequest(`Izabrano vreme mora biti bar ${getBookingPolicy().rescheduleMinLeadMinutes} minuta unapred`);
+    }
+
     const window = getRescheduleWindow(appointment.status, appointment.startTime);
 
     if (window === "forbidden") {

@@ -6,7 +6,7 @@ import resourceService from "./resource.service.js";
 import { validationError, badRequest } from "../utils/error.util.js";
 import { getBookingPolicy } from "../config/runtime-settings.cache.js";
 import { timeStringToDate, isEmployeeWorkingAt, dayOfWeek } from "../utils/working-hours.util.js";
-import { zonedComponentsToUtcDate, getZonedComponents } from "../utils/date.time.util.js";
+import { getZonedComponents, getStartOfDayInZone, getEndOfDayInZone } from "../utils/date.time.util.js";
 
 // Computed fresh from the cache on every call, not once at module load -
 // booking policy is admin-editable now (see runtime-settings.cache.js), so a
@@ -20,16 +20,18 @@ function gridMs() {
   return getBookingPolicy().slotGridMinutes * 60000;
 }
 
+// Was `new Date(date); start.setHours(0,0,0,0)` - setHours() operates in the
+// SERVER PROCESS's own timezone (UTC on this VPS), so "start of day" was
+// silently computed as UTC midnight, not Belgrade midnight - shifting the
+// whole day's slot-generation window by 1-2h and, worse, sometimes pulling
+// in slots that actually belong to the adjacent calendar day in Belgrade.
+// Was hand-rolled here with getZonedComponents+zonedComponentsToUtcDate -
+// now just the shared getStartOfDayInZone/getEndOfDayInZone (added to
+// date.time.util.js so the admin dashboard, employee dashboard, and audit
+// log/order/appointment date filters can all share the exact same day-
+// boundary logic instead of each reimplementing it).
 function dayBounds(date) {
-  // Was `new Date(date); start.setHours(0,0,0,0)` - setHours() operates in the
-  // SERVER PROCESS's own timezone (UTC on this VPS), so "start of day" was
-  // silently computed as UTC midnight, not Belgrade midnight - shifting the
-  // whole day's slot-generation window by 1-2h and, worse, sometimes pulling
-  // in slots that actually belong to the adjacent calendar day in Belgrade.
-  const { year, month, day } = getZonedComponents(date);
-  const start = zonedComponentsToUtcDate(year, month, day, 0, 0, 0);
-  const end = new Date(zonedComponentsToUtcDate(year, month, day, 23, 59, 59).getTime() + 999);
-  return { start, end };
+  return { start: getStartOfDayInZone(date), end: getEndOfDayInZone(date) };
 }
 
 /**

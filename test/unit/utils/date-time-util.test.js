@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { zonedInputToUtcDate, utcDateToZonedInputValue, getStartOfDayInZone } from "../../../src/utils/date.time.util.js";
+import { zonedInputToUtcDate, utcDateToZonedInputValue, getStartOfDayInZone, getEndOfDayInZone } from "../../../src/utils/date.time.util.js";
 
 // These exist specifically to fix the scheduled-post publish bug: a
 // <input type="datetime-local"> submits a naive "YYYY-MM-DDTHH:mm" string with
@@ -95,6 +95,25 @@ describe("date.time.util - timezone-aware scheduledFor helpers", () => {
       const start = getStartOfDayInZone();
       assert.ok(start instanceof Date);
       assert.ok(!isNaN(start.getTime()));
+    });
+  });
+
+  describe("getEndOfDayInZone - inclusive 'date to' bound for admin list filters (audit log/orders/appointments)", () => {
+    it("returns 23:59:59.999 Belgrade for a given instant, not UTC end-of-day - CEST (summer, UTC+2)", () => {
+      const end = getEndOfDayInZone(new Date("2026-07-29T10:00:00.000Z"), "Europe/Belgrade");
+      assert.equal(end.toISOString(), "2026-07-29T21:59:59.999Z"); // 2026-07-29 23:59:59.999 Belgrade = 21:59:59.999 UTC (CEST, UTC+2)
+    });
+
+    it("is exactly 1ms before the start of the next Belgrade day", () => {
+      const end = getEndOfDayInZone(new Date("2026-01-15T10:00:00.000Z"), "Europe/Belgrade");
+      const nextDayStart = getStartOfDayInZone(new Date("2026-01-16T10:00:00.000Z"), "Europe/Belgrade");
+      assert.equal(end.getTime(), nextDayStart.getTime() - 1);
+    });
+
+    it("defaults to 'now' when no date is given", () => {
+      const end = getEndOfDayInZone();
+      assert.ok(end instanceof Date);
+      assert.ok(!isNaN(end.getTime()));
     });
   });
 });

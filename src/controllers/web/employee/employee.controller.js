@@ -14,6 +14,7 @@ import { generateSeo } from "../../../seo/index.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
+import { getStartOfDayInZone } from "../../../utils/date.time.util.js";
 
 // Everything under /moj-nalog is already behind webAuthMiddleware (see
 // web.routes.js) - explicitly noindex anyway, same defense-in-depth convention
@@ -43,11 +44,20 @@ export async function dashboard(req, res, next) {
     const employeeId = employeeIdOf(employee);
     const commissionBased = isCommissionBased(employee);
 
+    // Was `new Date(new Date().setHours(0,0,0,0))` / `setHours(23,59,59,999)` -
+    // both operate in the SERVER PROCESS's own timezone (UTC on this VPS), not
+    // Belgrade, so "today's appointments" on the employee dashboard silently
+    // used UTC day boundaries - the same 1-2h (CET/CEST) shift bug as
+    // everywhere else in this app. dateTo is the start of TOMORROW (exclusive)
+    // to match appointment.filter.js's `$lt: dateTo` semantics.
+    const todayStart = getStartOfDayInZone();
+    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+
     const [today, week] = await Promise.all([
       appointmentService.findAppointments({
         requesterId: employeeId,
         role: "employee",
-        filters: { dateFrom: new Date(new Date().setHours(0, 0, 0, 0)), dateTo: new Date(new Date().setHours(23, 59, 59, 999)) },
+        filters: { dateFrom: todayStart, dateTo: todayEnd },
         limit: 50,
       }),
       appointmentService.findAppointments({ requesterId: employeeId, role: "employee", limit: 50 }),

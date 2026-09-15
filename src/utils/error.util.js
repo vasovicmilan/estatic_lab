@@ -82,6 +82,30 @@ export function wrapError(error) {
     return error;
   }
 
+  // csrf-sync (via http-errors) throws a plain, well-formed 403 tagged
+  // error.code === "EBADCSRFTOKEN" for a missing/stale/mismatched token -
+  // overwhelmingly a scanner POSTing to a random path with no real token at
+  // all (GraphQL/wp-json/MCP probes etc.), occasionally a real visitor's
+  // stale tab after a session refresh. Neither is an application bug. Without
+  // this check it fell through to the generic isOperational: false branch
+  // below - wrongly flagging it as a "genuinely unexpected error" the same
+  // way an actual 500 would be, which made globalErrorHandler's
+  // `isGenuineError = statusCode >= 500 || !isOperational` check fire on
+  // every single rejected scan attempt: logged at `error` level and pinged to
+  // Telegram every time, burying the alerts that actually matter under
+  // routine, already-blocked bot noise (see globalErrorHandler's own comment
+  // about not alerting on scanner 404s - this is the exact same class of
+  // noise, just a 403 instead of a 404). Marking it isOperational: true here
+  // routes it through the same "routine, not a bug" path as everything else
+  // in that comment - logWarn, no Telegram alert - and gives a real visitor
+  // who hits it a sensible message instead of "Interna greška servera".
+  if (error.code === "EBADCSRFTOKEN") {
+    return new AppError("Sesija je istekla ili je zahtev nevalidan - osvežite stranicu i pokušajte ponovo", error.statusCode || 403, {
+      name: "CsrfError",
+      isOperational: true,
+    });
+  }
+
   // Always captured, in every environment - this `details` is only ever read by
   // logError() (server-side log file) and by buildWebErrorContext(), which itself
   // gates what actually reaches the browser response by NODE_ENV. Gating it here

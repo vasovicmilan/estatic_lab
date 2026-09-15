@@ -9,6 +9,7 @@ import couponService from "../../../src/services/coupon.service.js";
 import employeeService from "../../../src/services/employee.service.js";
 import packagePurchaseService from "../../../src/services/package-purchase.service.js";
 import * as appointmentService from "../../../src/services/appointment.service.js";
+import { zonedInputToUtcDate } from "../../../src/utils/date.time.util.js";
 import {
   buildAppointment,
   buildEmployee,
@@ -222,6 +223,70 @@ describe("appointment.service", () => {
       // therapist" display and the /admin/termini unassigned-queue filter break silently
       assert.equal(String(updatePayload.assignedTo), String(newEmployeeId));
       assert.equal(updatePayload.employeeSnapshot.name, "Nova Terapeutkinja");
+    });
+  });
+
+  describe("rescheduleAppointment", () => {
+    // Same "always working" fixture as the reassignAppointment tests above -
+    // isEmployeeWorkingAt just needs to not be the thing that rejects the move
+    // in these cases.
+    const alwaysWorking = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => ({
+      day,
+      slots: [{ from: "00:00", to: "23:59" }],
+    }));
+
+    // Far enough in the future that the tiered reschedule window (24h cutoff/
+    // 4h same-day floor, see runtime-settings.cache.js's defaults) is always
+    // "any_day" for every actor, so these tests only exercise the timezone
+    // conversion and the admin lead-time bypass, not the tiered window rules
+    // (those already have their own coverage in appointment-cancellation.util.test.js).
+    function farFutureAppointment(overrides = {}) {
+      const startTime = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      return buildAppointment({ employee: null, resources: [], status: "pending", startTime, ...overrides });
+    }
+
+    it("interprets a naive datetime-local newStartTime as Belgrade wall-clock time, not the server's own local time", async (t) => {
+      const appointment = farFutureAppointment();
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      let updatePayload;
+      t.mock.method(appointmentRepo, "updateAppointmentById", async (appId, patch) => {
+        updatePayload = patch;
+        return { ...appointment, ...patch };
+      });
+
+      // "2027-06-15T14:00" is what an <input type="datetime-local"> submits -
+      // no timezone info attached. Naively handing that to `new Date()` on a
+      // server running in UTC would store 14:00 UTC (16:00 Belgrade in June,
+      // CEST) - the exact "2 hours ahead" bug. It must instead land on the
+      // real UTC instant for 14:00 Europe/Belgrade.
+      await appointmentService.rescheduleAppointment(appointment._id.toString(), "2027-06-15T14:00", id().toString(), "admin");
+
+      assert.equal(updatePayload.startTime.toISOString(), zonedInputToUtcDate("2027-06-15T14:00").toISOString());
+    });
+
+    it("lets admin reschedule to right now, bypassing the minimum-lead-time floor other actors are held to", async (t) => {
+      const appointment = farFutureAppointment();
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      t.mock.method(appointmentRepo, "updateAppointmentById", async (appId, patch) => ({ ...appointment, ...patch }));
+
+      const almostNow = new Date(Date.now() + 60 * 1000); // 1 minute out - well under the 30-minute floor
+      await appointmentService.rescheduleAppointment(appointment._id.toString(), almostNow, id().toString(), "admin");
+      // no rejection thrown - that's the assertion
+    });
+
+    it("still enforces the minimum-lead-time floor for a non-admin actor (employee)", async (t) => {
+      const appointment = farFutureAppointment();
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      // canAccessAppointment for an employee actor checks against employee/assignedTo -
+      // farFutureAppointment sets employee: null (to skip the working-hours/overlap
+      // checks below), so it must be the fixture's own assignedTo employee acting here.
+      const employeeActorId = appointment.assignedTo._id.toString();
+
+      const almostNow = new Date(Date.now() + 60 * 1000); // 1 minute out - well under the 30-minute floor
+      await assert.rejects(
+        () => appointmentService.rescheduleAppointment(appointment._id.toString(), almostNow, employeeActorId, "employee"),
+        (err) => err.statusCode === 400
+      );
     });
   });
 });

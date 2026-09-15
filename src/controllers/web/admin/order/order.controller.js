@@ -3,6 +3,17 @@ import { prepareOrderListData, prepareOrderDetailsData } from "../../../../prese
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+// dateFrom/dateTo arrive as plain "YYYY-MM-DD" strings with no timezone info -
+// `new Date(dateTo)` parses a date-only string as UTC midnight, not Belgrade
+// midnight, silently shifting the filtered range 1-2h (CET/CEST) on this VPS
+// (system time UTC). order.filter.js's dateTo is an EXCLUSIVE `$lt` bound, so
+// dateTo needs to become the start of the NEXT Belgrade day, not just that
+// day's own midnight - see date.time.util.js.
+import { getStartOfDayInZone } from "../../../../utils/date.time.util.js";
+
+function nextDayStartInZone(dateStr) {
+  return new Date(getStartOfDayInZone(dateStr).getTime() + 24 * 60 * 60 * 1000);
+}
 
 export async function listOrders(req, res, next) {
   try {
@@ -13,8 +24,8 @@ export async function listOrders(req, res, next) {
       role: "admin",
       filters: {
         status: status || undefined,
-        dateFrom: dateFrom ? new Date(dateFrom) : undefined,
-        dateTo: dateTo ? new Date(dateTo) : undefined,
+        dateFrom: dateFrom ? getStartOfDayInZone(dateFrom) : undefined,
+        dateTo: dateTo ? nextDayStartInZone(dateTo) : undefined,
       },
       page: parseInt(page, 10) || 1,
       limit: parseInt(limit, 10) || 10,
