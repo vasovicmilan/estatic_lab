@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import userService from "../../../src/services/user.service.js";
 import eventEmitter from "../../../src/events/event.emitter.js";
-import { hashPassword } from "../../../src/services/crypto.service.js";
+import { hashPassword, verifyJwt } from "../../../src/services/crypto.service.js";
 import * as authService from "../../../src/services/auth.service.js";
 import { buildUser, buildRole } from "../../helpers/factories.js";
 
@@ -72,6 +72,29 @@ describe("auth.service", () => {
       assert.equal(result.roleName, "user");
       assert.ok(result.token, "a JWT should be issued");
       assert.equal(statusUpdateMock.mock.calls.length, 1, "an inactive account should be reactivated on successful login");
+    });
+
+    it("embeds permissions/roleName/isEmployee/isPartner in the JWT payload itself, not just the returned object", async (t) => {
+      // adminMiddleware/requirePermission/employeeMiddleware/partnerMiddleware all
+      // gate on req.user.permissions / req.user.isEmployee / req.user.isPartner -
+      // for a Bearer-token (apiAuthMiddleware) request, req.user IS the decoded JWT,
+      // so a token that only carried {id, email, role} could never pass any of those
+      // gates, even once verified. This is the actual permission data those gates
+      // need, not just what's returned for the caller to put in a session.
+      const hash = await hashPassword("tacnalozinka");
+      const role = buildRole({ name: "editor", permissions: ["manage_appointments_all"] });
+      const user = buildUser({ password: hash, status: "active", role });
+      t.mock.method(userService, "findUserForLogin", async () => user);
+      t.mock.method(userService, "updateLastLogin", async () => {});
+
+      const result = await authService.login("a@example.com", "tacnalozinka");
+      const decoded = verifyJwt(result.token);
+
+      assert.deepEqual(decoded.permissions, ["manage_appointments_all"]);
+      assert.equal(decoded.roleName, "editor");
+      assert.equal(decoded.isEmployee, false);
+      assert.equal(decoded.isPartner, false);
+      assert.equal(decoded.email, user.email);
     });
   });
 

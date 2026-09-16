@@ -95,34 +95,6 @@ export function formatTime(date, timeZone = APP_TIMEZONE) {
   return dtf.format(d);
 }
 
-export function formatDateForInput(date) {
-  if (!date) return null;
-
-  const d = new Date(date);
-  if (isNaN(d.getTime())) return null;
-
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-export function formatDateTimeForInput(date) {
-  if (!date) return null;
-
-  const d = new Date(date);
-  if (isNaN(d.getTime())) return null;
-
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
 export function parseDate(input) {
   if (!input) return null;
   if (input instanceof Date) return isNaN(input.getTime()) ? null : input;
@@ -274,8 +246,6 @@ export default {
   formatDateTime,
   formatDate,
   formatTime,
-  formatDateForInput,
-  formatDateTimeForInput,
   parseDate,
   isValidDate,
   zonedComponentsToUtcDate,

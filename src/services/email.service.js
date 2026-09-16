@@ -7,7 +7,7 @@ import { logError } from "../utils/logger.util.js";
 import { generateOrderInvoicePdf } from "../utils/invoice-pdf.util.js";
 import { generateBusinessReportPdf } from "../utils/business-report-pdf.util.js";
 import { infoRow, infoTable, statusTone, badge, ctaButton, linkFallback, couponBlock } from "../utils/email-content.util.js";
-import { formatDateTime } from "../utils/date.time.util.js";
+import { formatDateTime, getZonedComponents } from "../utils/date.time.util.js";
 import { getCurrency } from "../config/runtime-settings.cache.js";
 import { formatMoney } from "../utils/price.util.js";
 import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
@@ -41,7 +41,10 @@ export async function renderTemplate(templateName, data) {
         BASE_URL,
         SITE_NAME,
         SUPPORT_EMAIL,
-        currentYear: new Date().getFullYear(),
+        // Cosmetic (copyright footer year), but same principle as everywhere else -
+        // was server-local (UTC) getFullYear(), which only ever disagrees with
+        // Belgrade in the ~1-2h window around New Year's - cheap to just get right.
+        currentYear: getZonedComponents(new Date()).year,
         currencySymbol: getCurrency().symbol,
         formatMoney,
         infoRow,

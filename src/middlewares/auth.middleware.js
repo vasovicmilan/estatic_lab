@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import { verifyJwt } from "../services/crypto.service.js";
 
 export function webAuthMiddleware(req, res, next) {
   if (req.session?.isLoggedIn) {
@@ -26,7 +26,11 @@ export function apiAuthMiddleware(req, res, next) {
 
   try {
     const token = authHeader.split(" ")[1];
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    // verifyJwt (crypto.service.js) instead of calling the jsonwebtoken library
+    // directly here - same JWT_SECRET validation-at-startup and single place that
+    // knows how tokens are signed/verified, rather than this file quietly
+    // reaching around that service with its own `import jwt from "jsonwebtoken"`.
+    req.user = verifyJwt(token);
     next();
   } catch (error) {
     return res.status(401).json({ success: false, message: "Unauthorized - invalid token" });
@@ -38,7 +42,7 @@ export function optionalApiAuth(req, res, next) {
 
   if (authHeader?.startsWith("Bearer ")) {
     try {
-      req.user = jwt.verify(authHeader.split(" ")[1], process.env.JWT_SECRET);
+      req.user = verifyJwt(authHeader.split(" ")[1]);
     } catch (error) {
       // not logged in - ignore, this is optional
     }

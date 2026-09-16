@@ -120,6 +120,19 @@ export function wrapError(error) {
   });
 }
 
+// Shared with the four role-gating middlewares (admin/permission/employee/partner) so
+// an unauthenticated /api request gets a JSON 401 instead of the web flow's redirect
+// to /prijava (an HTML login page - nonsensical for a JSON client). Single source of
+// truth for "is this an API-style request" - was previously a local, unexported copy
+// inside error.middleware.js only.
+export function isApiRequest(req) {
+  return (
+    req.originalUrl.startsWith("/api") ||
+    req.xhr ||
+    (req.headers.accept && req.headers.accept.includes("application/json"))
+  );
+}
+
 export function buildWebErrorContext(err, req, extra = {}) {
   const statusCode = err.statusCode || 500;
   const errorId = extra.errorId || Math.random().toString(36).slice(2, 10);

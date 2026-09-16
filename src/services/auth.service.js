@@ -43,8 +43,6 @@ export async function login(email, password) {
     await userService.updateUserStatus(user._id, "active");
   }
 
-  const token = signJwt({ id: user._id, email: user.email, role: user.role?._id || user.role });
-
   // an admin (or anyone) can also have an Employee profile - see employee.service.js's
   // createEmployee, which no longer overwrites an existing higher-priority role when
   // that happens. Checked here, once, at login, same snapshot-into-session convention
@@ -53,6 +51,24 @@ export async function login(email, password) {
   // same reasoning and same convention for Partner
   const partner = await partnerService.findPartnerByUserId(user._id).catch(() => null);
 
+  const roleId = (user.role?._id || user.role).toString();
+  const roleName = user.role?.name || "user";
+  const permissions = user.role?.permissions || [];
+  const isEmployee = !!employee;
+  const isPartner = !!partner;
+
+  // Token payload now mirrors setSessionUser's session shape (roleName/permissions/
+  // isEmployee/isPartner), not just {id, email, role} - previously apiAuthMiddleware
+  // would decode a token and set req.user, but adminMiddleware/requirePermission/
+  // employeeMiddleware/partnerMiddleware all read req.session.user, so a Bearer-token
+  // request could never actually pass any of those gates even with a valid token, and
+  // even once those middlewares are fixed to read req.user, the old token shape had
+  // nothing for them to check. Same 1-day expiry as before (signJwt's default) bounds
+  // how stale an embedded permission set can get after a role change - if that's ever
+  // too long for a specific deployment, shortening expiresIn here is the lever, not a
+  // DB lookup on every request.
+  const token = signJwt({ id: user._id, email: user.email, roleId, roleName, permissions, isEmployee, isPartner });
+
   logInfo("User logged in", { userId: user._id, email: user.email });
 
   return {
@@ -60,11 +76,11 @@ export async function login(email, password) {
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
-    roleId: (user.role?._id || user.role).toString(),
-    roleName: user.role?.name || "user",
-    permissions: user.role?.permissions || [],
-    isEmployee: !!employee,
-    isPartner: !!partner,
+    roleId,
+    roleName,
+    permissions,
+    isEmployee,
+    isPartner,
     token,
   };
 }
@@ -80,9 +96,19 @@ export async function googleAuth(googleData) {
   const user = await userService.findUserByEmail(created.email);
 
   const isNewUser = !user.createdAt || Date.now() - new Date(user.createdAt).getTime() < 5000;
-  const token = signJwt({ id: user._id, email: user.email, role: user.role?._id || user.role });
   const employee = await employeeService.findEmployeeByUserId(user._id).catch(() => null);
   const partner = await partnerService.findPartnerByUserId(user._id).catch(() => null);
+
+  const roleId = (user.role?._id || user.role).toString();
+  const roleName = user.role?.name || "user";
+  const permissions = user.role?.permissions || [];
+  const isEmployee = !!employee;
+  const isPartner = !!partner;
+
+  // Same reasoning as login()'s token above - payload mirrors the session shape so
+  // adminMiddleware/requirePermission/employeeMiddleware/partnerMiddleware can gate a
+  // Bearer-token request the same way they gate a session one.
+  const token = signJwt({ id: user._id, email: user.email, roleId, roleName, permissions, isEmployee, isPartner });
 
   if (isNewUser) {
     eventEmitter.emit("user:registered", { email: user.email, firstName: user.firstName, lastName: user.lastName, userId: user._id, provider: "google" });
@@ -94,11 +120,11 @@ export async function googleAuth(googleData) {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      roleId: (user.role?._id || user.role).toString(),
-      roleName: user.role?.name || "user",
-      permissions: user.role?.permissions || [],
-      isEmployee: !!employee,
-      isPartner: !!partner,
+      roleId,
+      roleName,
+      permissions,
+      isEmployee,
+      isPartner,
       token,
     },
     isNewUser,
