@@ -108,8 +108,12 @@ export function prepareSettingsTabData(user, { errors = {} } = {}) {
       phone: user.telefon || "",
     },
     errors,
-    changePasswordUrl: "/nalog/promena-lozinke",
-    deactivateUrl: "/nalog/deaktivacija",
+    // Were "/nalog/promena-lozinke" and "/nalog/deaktivacija" - neither route exists
+    // (user.routes.js defines /nalog/podesavanja/lozinka and /podesavanja/deaktiviraj).
+    // Found while tracing call sites for the POST->PUT conversion - both forms
+    // (_settings-tab.ejs) were silently 404ing before this fix.
+    changePasswordUrl: "/nalog/podesavanja/lozinka",
+    deactivateUrl: "/nalog/podesavanja/deaktiviraj",
   };
 }
 

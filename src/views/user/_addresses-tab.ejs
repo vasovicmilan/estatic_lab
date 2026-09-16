@@ -23,11 +23,13 @@
                 <div class="d-flex flex-row flex-sm-column gap-1">
                   <% if (!a.podrazumevana) { %>
                     <form action="/nalog/adrese/<%= a.id %>/podrazumevana" method="POST" class="flex-fill">
+                      <input type="hidden" name="_method" value="PUT">
                       <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
                       <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Postavi kao podrazumevanu</button>
                     </form>
                   <% } %>
                   <form action="/nalog/adrese/<%= a.id %>/ukloni" method="POST" data-confirm="Da li ste sigurni da želite da uklonite ovu adresu?" class="flex-fill">
+                    <input type="hidden" name="_method" value="DELETE">
                     <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
                     <button type="submit" class="btn btn-outline-danger btn-sm w-100">Ukloni</button>
                   </form>

@@ -12,7 +12,7 @@ router.get("/izmena/:campaignId", validateCampaignId, CampaignController.editCam
 
 router.post("/", validateCampaignCreate, CampaignController.createCampaign);
 router.put("/:campaignId", validateCampaignId, validateCampaignUpdate, CampaignController.updateCampaign);
-router.post("/:campaignId/posalji", validateCampaignId, CampaignController.sendCampaignNow);
+router.put("/:campaignId/posalji", validateCampaignId, CampaignController.sendCampaignNow);
 router.delete("/:campaignId", validateCampaignId, CampaignController.deleteCampaign);
 
 export default router;

@@ -62,6 +62,18 @@ test.describe("Package purchase commission - employee pro-rating and partner ref
     await registerAndLoginViaUI(adminPage, { email: adminEmail, firstName: "Admin", lastName: "Nalog" });
     await promoteToAdmin(adminPage, adminEmail);
 
+    // minimumSessionCommission defaults to 500 (see runtime-settings.cache.js) and
+    // applies as a floor to EVERY package-covered session's employee commission -
+    // this test is specifically about the pro-rating RATIO (2400 * 10% = 240), which
+    // the 500 floor would otherwise silently override, hiding what this test is
+    // actually checking. Zeroed out through the real admin settings page (the same
+    // one a real admin would use), not a DB backdoor, so this stays a genuine
+    // end-to-end path.
+    await adminPage.goto("/admin/sajt");
+    await adminPage.fill('input[name="minimumSessionCommission"]', "0");
+    await adminPage.getByRole("button", { name: "Sačuvaj izmene" }).click();
+    await expectFlashSuccess(adminPage);
+
     // --- admin: assign the package, no coupon ---
     await adminPage.goto("/admin/kupljeni-paketi/dodavanje");
     await adminPage.locator('select[name="userId"]').selectOption(customer._id.toString());
@@ -143,6 +155,13 @@ test.describe("Package purchase commission - employee pro-rating and partner ref
     const adminPage = await adminContext.newPage();
     await registerAndLoginViaUI(adminPage, { email: adminEmail, firstName: "Admin", lastName: "Nalog" });
     await promoteToAdmin(adminPage, adminEmail);
+
+    // Same reasoning as the test above - zero out the commission floor so this test's
+    // own assertion (2160 * 10% = 216) isn't silently overridden by the 500 default.
+    await adminPage.goto("/admin/sajt");
+    await adminPage.fill('input[name="minimumSessionCommission"]', "0");
+    await adminPage.getByRole("button", { name: "Sačuvaj izmene" }).click();
+    await expectFlashSuccess(adminPage);
 
     // --- admin: assign the package, WITH the partner's referral coupon ---
     await adminPage.goto("/admin/kupljeni-paketi/dodavanje");

@@ -16,6 +16,7 @@
         <div class="card-body d-flex flex-column gap-2">
           <% if (data.canConfirm) { %>
             <form action="/moj-nalog/termini/<%= data.appointment.id %>/potvrdi" method="POST">
+              <input type="hidden" name="_method" value="PUT">
               <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
               <button type="submit" class="btn btn-success w-100">Potvrdi</button>
             </form>
@@ -25,6 +26,7 @@
             <div class="modal fade" id="rejectModal" tabindex="-1">
               <div class="modal-dialog">
                 <form action="/moj-nalog/termini/<%= data.appointment.id %>/odbij" method="POST">
+                  <input type="hidden" name="_method" value="PUT">
                   <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
                   <div class="modal-content">
                     <div class="modal-header"><h5 class="modal-title">Odbij termin</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zatvori"></button></div>
@@ -43,6 +45,7 @@
           <% } %>
           <% if (data.canComplete) { %>
             <form action="/moj-nalog/termini/<%= data.appointment.id %>/zavrsi" method="POST">
+              <input type="hidden" name="_method" value="PUT">
               <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
               <button type="submit" class="btn btn-primary w-100">Označi kao završen</button>
             </form>
@@ -52,6 +55,7 @@
             <div class="modal fade" id="noShowModal" tabindex="-1">
               <div class="modal-dialog">
                 <form action="/moj-nalog/termini/<%= data.appointment.id %>/nije-se-pojavio" method="POST">
+                  <input type="hidden" name="_method" value="PUT">
                   <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
                   <div class="modal-content">
                     <div class="modal-header"><h5 class="modal-title">Klijent se nije pojavio</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zatvori"></button></div>
@@ -73,6 +77,7 @@
             <div class="modal fade" id="rescheduleModal" tabindex="-1">
               <div class="modal-dialog">
                 <form action="/moj-nalog/termini/<%= data.appointment.id %>/pomeri" method="POST">
+                  <input type="hidden" name="_method" value="PUT">
                   <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
                   <div class="modal-content">
                     <div class="modal-header"><h5 class="modal-title">Pomeri termin</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zatvori"></button></div>

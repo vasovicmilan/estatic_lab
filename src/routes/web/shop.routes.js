@@ -11,7 +11,7 @@ const router = Router();
 
 router.get("/", ShopController.cartPage);
 router.post("/dodaj", validateAddToCart, ShopController.addToCart);
-router.post("/azuriraj", validateUpdateCartItem, ShopController.updateCartItem);
+router.put("/azuriraj", validateUpdateCartItem, ShopController.updateCartItem);
 router.post("/ukloni", validateRemoveCartItem, ShopController.removeCartItem);
 
 router.get("/naplata", ShopController.checkoutStep);

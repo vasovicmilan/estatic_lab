@@ -175,9 +175,14 @@ describe("prepareSettingsTabData", () => {
   });
 
   it("points to separate password-change and account-deactivation actions", () => {
+    // These match user.routes.js's actual routes (/podesavanja/lozinka,
+    // /podesavanja/deaktiviraj) - the presenter previously pointed at
+    // "/nalog/promena-lozinke" and "/nalog/deaktivacija", neither of which was
+    // ever a real route, so both forms 404'd. Caught while tracing call sites
+    // for an unrelated POST->PUT conversion.
     const view = prepareSettingsTabData({ firstName: "Petar", lastName: "Petrovic" });
-    assert.equal(view.changePasswordUrl, "/nalog/promena-lozinke");
-    assert.equal(view.deactivateUrl, "/nalog/deaktivacija");
+    assert.equal(view.changePasswordUrl, "/nalog/podesavanja/lozinka");
+    assert.equal(view.deactivateUrl, "/nalog/podesavanja/deaktiviraj");
   });
 });
 

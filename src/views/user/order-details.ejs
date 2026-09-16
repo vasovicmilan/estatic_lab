@@ -39,6 +39,7 @@
     <a href="<%= data.backUrl %>" class="btn btn-outline-secondary">Nazad</a>
     <% if (data.canCancel) { %>
       <form action="/nalog/porudzbine/<%= data.order.id %>/otkazi" method="POST" data-confirm="Da li ste sigurni da želite da otkažete porudžbinu?">
+        <input type="hidden" name="_method" value="PUT">
         <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
         <button type="submit" class="btn btn-outline-danger">Otkaži porudžbinu</button>
       </form>

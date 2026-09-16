@@ -11,21 +11,21 @@ const router = Router();
 router.get("/", UserController.profile);
 router.get("/termini", UserController.appointments);
 router.get("/termini/detalji/:appointmentId", validateAppointmentId, UserController.appointmentDetails);
-router.post("/termini/:appointmentId/otkazi", validateAppointmentId, validateAppointmentCancel, UserController.cancelAppointment);
-router.post("/termini/:appointmentId/pomeri", validateAppointmentId, validateAppointmentReschedule, UserController.rescheduleAppointment);
+router.put("/termini/:appointmentId/otkazi", validateAppointmentId, validateAppointmentCancel, UserController.cancelAppointment);
+router.put("/termini/:appointmentId/pomeri", validateAppointmentId, validateAppointmentReschedule, UserController.rescheduleAppointment);
 
 router.get("/porudzbine", UserController.orders);
 router.get("/porudzbine/detalji/:orderId", validateOrderId, UserController.orderDetails);
-router.post("/porudzbine/:orderId/otkazi", validateOrderId, validateOrderCancel, UserController.cancelOrder);
+router.put("/porudzbine/:orderId/otkazi", validateOrderId, validateOrderCancel, UserController.cancelOrder);
 
 router.get("/adrese", UserController.addresses);
 router.post("/adrese", validateAddressCreate, UserController.addAddress);
-router.post("/adrese/:addressId/ukloni", validateAddressId, UserController.removeAddress);
-router.post("/adrese/:addressId/podrazumevana", validateAddressId, UserController.setDefaultAddress);
+router.delete("/adrese/:addressId/ukloni", validateAddressId, UserController.removeAddress);
+router.put("/adrese/:addressId/podrazumevana", validateAddressId, UserController.setDefaultAddress);
 
 router.get("/podesavanja", UserController.settingsForm);
-router.post("/podesavanja", validateProfileUpdate, UserController.updateSettings);
-router.post("/podesavanja/lozinka", validateChangePassword, AuthController.changePassword);
-router.post("/podesavanja/deaktiviraj", validateDeactivateAccount, AuthController.deactivateAccount);
+router.put("/podesavanja", validateProfileUpdate, UserController.updateSettings);
+router.put("/podesavanja/lozinka", validateChangePassword, AuthController.changePassword);
+router.put("/podesavanja/deaktiviraj", validateDeactivateAccount, AuthController.deactivateAccount);
 
 export default router;

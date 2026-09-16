@@ -24,6 +24,7 @@ import postRoutes from "./admin/post.routes.js";
 import contactRoutes from "./admin/contact.routes.js";
 import couponRoutes from "./admin/coupon.routes.js";
 import newsletterRoutes from "./admin/news-letter.routes.js";
+import campaignRoutes from "./admin/campaign.routes.js";
 import testimonialRoutes from "./admin/testimonial.routes.js";
 import businessPartnerRoutes from "./admin/business-partner.routes.js";
 import productRoutes from "./admin/product.routes.js";
@@ -58,6 +59,13 @@ router.use("/blog", requirePermission("manage_blog"), postRoutes);
 router.use("/kontakt", requirePermission("manage_marketing"), contactRoutes);
 router.use("/kuponi", requirePermission("manage_coupons"), couponRoutes);
 router.use("/newsletter", requirePermission("manage_marketing"), newsletterRoutes);
+// campaign.routes.js existed and was fully wired (controller/validator/views all
+// reference /admin/newsletter/kampanje/... - see campaign.presenter.js's sendUrl and
+// campaign-send-form.ejs) but was never actually mounted here, so every campaign
+// create/edit/send URL in the newsletter section 404'd. Found while tracing call
+// sites for the POST->PUT conversion below - mounted at the path the presenter/views
+// already assumed.
+router.use("/newsletter/kampanje", requirePermission("manage_marketing"), campaignRoutes);
 router.use("/testimoniali", requirePermission("manage_marketing"), testimonialRoutes);
 router.use("/saradnici", requirePermission("manage_marketing"), businessPartnerRoutes);
 router.use("/proizvodi", requirePermission("manage_products"), productRoutes);

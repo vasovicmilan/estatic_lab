@@ -17,17 +17,17 @@ router.get("/", EmployeeController.dashboard);
 
 router.get("/termini", EmployeeController.appointments);
 router.get("/termini/detalji/:appointmentId", validateAppointmentId, EmployeeController.appointmentDetails);
-router.post("/termini/:appointmentId/potvrdi", validateAppointmentId, EmployeeController.confirmAppointment);
-router.post("/termini/:appointmentId/odbij", validateAppointmentId, validateAppointmentReject, EmployeeController.rejectAppointment);
-router.post("/termini/:appointmentId/zavrsi", validateAppointmentId, EmployeeController.completeAppointment);
-router.post("/termini/:appointmentId/nije-se-pojavio", validateAppointmentId, validateAppointmentNoShow, EmployeeController.noShowAppointment);
-router.post("/termini/:appointmentId/pomeri", validateAppointmentId, validateAppointmentReschedule, EmployeeController.rescheduleAppointment);
+router.put("/termini/:appointmentId/potvrdi", validateAppointmentId, EmployeeController.confirmAppointment);
+router.put("/termini/:appointmentId/odbij", validateAppointmentId, validateAppointmentReject, EmployeeController.rejectAppointment);
+router.put("/termini/:appointmentId/zavrsi", validateAppointmentId, EmployeeController.completeAppointment);
+router.put("/termini/:appointmentId/nije-se-pojavio", validateAppointmentId, validateAppointmentNoShow, EmployeeController.noShowAppointment);
+router.put("/termini/:appointmentId/pomeri", validateAppointmentId, validateAppointmentReschedule, EmployeeController.rescheduleAppointment);
 
 router.get("/provizije", EmployeeController.commissions);
 router.get("/isplate", EmployeeController.payoutHistory);
 router.post("/isplata", validatePayoutRequest, EmployeeController.requestPayout);
 
 router.get("/profil", EmployeeController.profile);
-router.post("/profil/radno-vreme", parseJsonFields("workingHours"), validateWorkingHoursUpdate, EmployeeController.updateWorkingHours);
+router.put("/profil/radno-vreme", parseJsonFields("workingHours"), validateWorkingHoursUpdate, EmployeeController.updateWorkingHours);
 
 export default router;

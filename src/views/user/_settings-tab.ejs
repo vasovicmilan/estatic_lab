@@ -13,6 +13,7 @@
         <div class="card-body">
           <% if (data.errors && data.errors.general) { %><div class="alert alert-danger"><%= data.errors.general %></div><% } %>
           <form action="<%= data.formAction %>" method="POST">
+            <input type="hidden" name="_method" value="PUT">
             <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
             <div class="mb-3">
               <label class="form-label">Ime</label>
@@ -39,6 +40,7 @@
         <div class="card-header"><h2 class="h6 mb-0">Promena lozinke</h2></div>
         <div class="card-body">
           <form action="<%= data.changePasswordUrl %>" method="POST">
+            <input type="hidden" name="_method" value="PUT">
             <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
             <div class="mb-3">
               <label class="form-label">Trenutna lozinka</label>
@@ -62,6 +64,7 @@
         <div class="card-body">
           <p class="text-muted small">Nakon deaktivacije nećete moći da se prijavite dok ne kontaktirate podršku.</p>
           <form action="<%= data.deactivateUrl %>" method="POST" data-confirm="Da li ste sigurni da želite da deaktivirate nalog?">
+            <input type="hidden" name="_method" value="PUT">
             <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
             <div class="mb-3">
               <label class="form-label">Lozinka</label>

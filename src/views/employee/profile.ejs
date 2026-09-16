@@ -26,6 +26,7 @@
         <div class="card-header"><h2 class="h6 mb-0">Radno vreme</h2></div>
         <div class="card-body">
           <form action="<%= data.workingHoursEditUrl %>" method="POST">
+            <input type="hidden" name="_method" value="PUT">
             <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
 
             <input type="hidden" name="workingHours" value='<%- JSON.stringify(data.employee.workingHoursRaw || []) %>' data-repeater-input="workingHours">

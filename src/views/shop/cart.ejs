@@ -38,6 +38,7 @@
               <td class="price-mono"><%= item.cena %> <%= currencySymbol %></td>
               <td style="max-width:120px;">
                 <form action="/korpa/azuriraj" method="POST" class="d-flex gap-2">
+                  <input type="hidden" name="_method" value="PUT">
                   <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
                   <% if (item.id) { %>
                     <input type="hidden" name="cartItemId" value="<%= item.id %>">

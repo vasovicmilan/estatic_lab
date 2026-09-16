@@ -101,6 +101,7 @@ describe("employee account routes (HTTP)", () => {
     const { token } = await getCsrfToken(agent, "/moj-nalog/profil");
 
     const res = await agent.post("/moj-nalog/profil/radno-vreme").type("form").send({
+      _method: "PUT",
       CSRFToken: token,
       "workingHours[0][day]": "monday",
       "workingHours[0][slots][0][from]": "09:00",
@@ -119,7 +120,7 @@ describe("employee account routes (HTTP)", () => {
     const { appointment } = await createAppointmentForEmployee(employee._id);
 
     const { token } = await getCsrfToken(agent, `/moj-nalog/termini/detalji/${appointment._id}`);
-    const res = await agent.post(`/moj-nalog/termini/${appointment._id}/potvrdi`).type("form").send({ CSRFToken: token });
+    const res = await agent.post(`/moj-nalog/termini/${appointment._id}/potvrdi`).type("form").send({ _method: "PUT", CSRFToken: token });
 
     assert.equal(res.status, 302);
     const updated = await appointmentRepo.findAppointmentById(appointment._id);

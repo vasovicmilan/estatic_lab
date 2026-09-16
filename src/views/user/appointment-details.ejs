@@ -31,6 +31,7 @@
       <div class="modal fade" id="rescheduleModal" tabindex="-1">
         <div class="modal-dialog">
           <form action="<%= data.rescheduleActionUrl %>" method="POST">
+            <input type="hidden" name="_method" value="PUT">
             <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
             <div class="modal-content">
               <div class="modal-header">
@@ -55,6 +56,7 @@
     <% } %>
     <% if (data.canCancel) { %>
       <form action="/nalog/termini/<%= data.appointment.id %>/otkazi" method="POST" data-confirm="Da li ste sigurni da želite da otkažete termin?">
+        <input type="hidden" name="_method" value="PUT">
         <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
         <button type="submit" class="btn btn-outline-danger">Otkaži termin</button>
       </form>

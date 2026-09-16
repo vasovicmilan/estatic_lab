@@ -72,7 +72,7 @@ describe("user account routes (HTTP)", () => {
     const res = await agent
       .post("/nalog/podesavanja")
       .type("form")
-      .send({ CSRFToken: token, firstName: "Izmenjeno", lastName: "Prezime", phone: "0641112233" });
+      .send({ _method: "PUT", CSRFToken: token, firstName: "Izmenjeno", lastName: "Prezime", phone: "0641112233" });
 
     assert.equal(res.status, 302);
     const user = await userRepo.findUserByEmail("korisnik@example.com");
@@ -97,7 +97,7 @@ describe("user account routes (HTTP)", () => {
     const res = await agent
       .post(`/nalog/termini/${appointment._id}/otkazi`)
       .type("form")
-      .send({ CSRFToken: token, reason: "Predomislio sam se" });
+      .send({ _method: "PUT", CSRFToken: token, reason: "Predomislio sam se" });
 
     assert.equal(res.status, 302);
     const updated = await appointmentRepo.findAppointmentById(appointment._id);
@@ -120,7 +120,7 @@ describe("user account routes (HTTP)", () => {
     const res = await outsiderAgent
       .post(`/nalog/termini/${appointment._id}/otkazi`)
       .type("form")
-      .send({ CSRFToken: token, reason: "Pokusaj tudjeg otkazivanja" });
+      .send({ _method: "PUT", CSRFToken: token, reason: "Pokusaj tudjeg otkazivanja" });
 
     assert.equal(res.status, 302); // flash-redirected with an error, not a raw 403
     const unchanged = await appointmentRepo.findAppointmentById(appointment._id);
