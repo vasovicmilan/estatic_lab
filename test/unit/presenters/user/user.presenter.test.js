@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { getStartOfDayInZone } from "../../../../src/utils/date.time.util.js";
 import {
   prepareProfileTabData,
   prepareAppointmentTabData,
@@ -78,9 +79,15 @@ describe("prepareAppointmentTabData", () => {
     const DAY = 24 * HOUR;
 
     it("puts a mid-afternoon-today appointment in 'danas', not 'predstojeci'", () => {
-      // noon UTC is always the same calendar day in Belgrade (UTC+1/+2) regardless of DST
-      const todayNoon = new Date();
-      todayNoon.setUTCHours(12, 0, 0, 0);
+      // Was `new Date(); .setUTCHours(12,0,0,0)` - anchors to the SERVER's current
+      // UTC calendar date, not Belgrade's. In the ~1-2h window where Belgrade has
+      // already rolled to a new day but UTC hasn't yet (22:00-23:59 UTC), that
+      // produced a timestamp landing on Belgrade-YESTERDAY at noon, not
+      // Belgrade-today - making this test itself fail exactly the class of bug the
+      // presenter's own comment (splitUpcomingByToday) is about, depending on what
+      // time of day the suite happened to run. getStartOfDayInZone anchors to
+      // Belgrade's actual current calendar date instead.
+      const todayNoon = new Date(getStartOfDayInZone().getTime() + 12 * 60 * 60 * 1000);
 
       const view = prepareAppointmentTabData({ upcoming: result([{ id: "a1", startTimeRaw: todayNoon }]), past: emptyResult });
 
@@ -111,8 +118,8 @@ describe("prepareAppointmentTabData", () => {
     });
 
     it("splits the 'upcoming' query's own data into danas/predstojeci correctly, independent of 'prosli'", () => {
-      const todayNoon = new Date();
-      todayNoon.setUTCHours(12, 0, 0, 0);
+      // Same fix as above - anchor to Belgrade's actual current date.
+      const todayNoon = new Date(getStartOfDayInZone().getTime() + 12 * 60 * 60 * 1000);
       const future = new Date(Date.now() + 5 * DAY);
       const past = new Date(Date.now() - 5 * DAY);
 
