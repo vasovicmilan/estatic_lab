@@ -18,5 +18,6 @@ Ova dokumentacija je podeljena na fokusirane fajlove, gde svaki pokriva jednu ob
 | `12-testiranje.md` | Tri sloja testova (jedinični, integracioni, E2E), šta svaki pokriva, kako se pokreću, i obrasci/zamke otkriveni pri pisanju E2E testova |
 | `13-poslovni-izvestaji.md` | Poslovni izveštaji (zakazivanja, prodavnica, paketi, provizije, kuponi) — tekući period uživo naspram sačuvane istorije, automatsko i ručno generisanje, email i PDF |
 | `14-integritet-podataka-i-brisanje.md` | Šta se dešava pri brisanju bilo kog zapisa — kada se blokira, kada se automatski čisti iz povezanih zapisa, i kada se namerno ne dira jer je prikazni sloj već otporan na obrisanu referencu |
+| `15-api-v1-referenca.md` | JSON API (`/api/v1`) — autentikacija (JWT), autorizacija, oblik odgovora, i kompletan spisak ruta po resursu, sa potrebnom dozvolom za svaku |
 
 Svaki fajl je samostalan — nije potrebno da ih čitate po redosledu, iako `06` (partnerski program) koristi pojmove iz `03`, `05` i `07`, `11` se nadovezuje na životni ciklus termina opisan u `02`, a `14` (brisanje) najviše koristi ako već poznajete entitete opisane u `02`, `03` i `04`.
