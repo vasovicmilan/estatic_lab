@@ -18,6 +18,23 @@ import {
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 import { deleteUploadedFile, deleteUploadedFiles } from "../utils/file-cleanup.util.js";
+import { createTtlCache } from "../utils/ttl-cache.util.js";
+
+// attachProductCountsToCategories renders on every /prodavnica* page (list,
+// category, tag) and, for each category shown, calls
+// getCategoryAndDescendantIds - a BFS that does one Mongo round-trip per tree
+// depth level (see category.repository.js's findCategoryAndDescendantIds).
+// With no caching this was O(categories x tree depth) sequential round-trips
+// on EVERY render, which is what turned a single crawler hitting many
+// /prodavnica/tag/* URLs concurrently into p95 ~18s / p99 ~20s responses
+// (2026-09-15 access logs). Category trees change rarely (an admin editing
+// the catalog structure), so a short TTL here trades a few minutes of
+// staleness on a display-only sidebar counter for eliminating that repeated
+// cost on every page view. Deliberately NOT used by coupon.service.js's
+// checkout-time category expansion - that path keeps calling
+// categoryService.getCategoryAndDescendantIds directly, uncached, since
+// coupon eligibility at checkout shouldn't run on stale category data.
+const descendantIdsCache = createTtlCache(3 * 60 * 1000);
 
 // Applied consistently across every read that needs to display related items -
 // admin detail/edit AND the public detail page - so relatedProducts/
@@ -315,7 +332,12 @@ export async function countProductsInCategories(categoryIds) {
 export async function attachProductCountsToCategories(categories = []) {
   const counts = await Promise.all(
     categories.map(async (cat) => {
-      const ids = await categoryService.getCategoryAndDescendantIds(cat.id, "product");
+      const cacheKey = `${cat.id}:product`;
+      let ids = descendantIdsCache.get(cacheKey);
+      if (!ids) {
+        ids = await categoryService.getCategoryAndDescendantIds(cat.id, "product");
+        descendantIdsCache.set(cacheKey, ids);
+      }
       return productRepo.countProducts({ category: ids, isActive: true });
     })
   );

@@ -17,6 +17,7 @@ import { globalLimiter } from "./middlewares/rate-limiter.middleware.js";
 import { couponCaptureMiddleware } from "./middlewares/coupon-capture.middleware.js";
 import { requestIdMiddleware } from "./middlewares/request-id.middleware.js";
 import routes from "./routes/index.routes.js";
+import { legacyUrlMiddleware } from "./middlewares/legacy-url.middleware.js";
 import { notFoundHandler, globalErrorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
@@ -54,6 +55,7 @@ app.use(globalLimiter);
 
 app.use("/", routes);
 
+app.use(legacyUrlMiddleware);
 app.use(notFoundHandler);
 app.use(globalErrorHandler);
 

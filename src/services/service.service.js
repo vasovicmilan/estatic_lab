@@ -18,6 +18,13 @@ import categoryService from "./category.service.js";
 import { generateSlug, generateUniqueSlug } from "../utils/slug.util.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
+import { createTtlCache } from "../utils/ttl-cache.util.js";
+
+// Same TTL-cache reasoning as product.service.js's attachProductCountsToCategories
+// - see the comment there. A separate cache instance (not shared with product's)
+// since the same category id can theoretically exist in both domains with
+// different descendant trees.
+const descendantIdsCache = createTtlCache(3 * 60 * 1000);
 
 const adminPopulate = [
   { path: "categories", select: "name slug" },
@@ -148,7 +155,12 @@ export async function countAllActiveServices() {
 export async function attachServiceCountsToCategories(categories = []) {
   const counts = await Promise.all(
     categories.map(async (cat) => {
-      const ids = await categoryService.getCategoryAndDescendantIds(cat.id, "service");
+      const cacheKey = `${cat.id}:service`;
+      let ids = descendantIdsCache.get(cacheKey);
+      if (!ids) {
+        ids = await categoryService.getCategoryAndDescendantIds(cat.id, "service");
+        descendantIdsCache.set(cacheKey, ids);
+      }
       return serviceRepo.countServices({ category: ids, isActive: true });
     })
   );

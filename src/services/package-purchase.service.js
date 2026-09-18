@@ -291,6 +291,13 @@ export async function commitSession(packagePurchaseId, servicePackageId, { sessi
     servicePackageId,
     status: completed?.status || updated.status,
   });
+
+  eventEmitter.emit("package_session:consumed", {
+    packagePurchaseId: packagePurchaseId.toString(),
+    servicePackageId: servicePackageId.toString(),
+    purchaseStatus: completed?.status || updated.status,
+  });
+
   return completed || updated;
 }
 

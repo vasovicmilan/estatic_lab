@@ -13,6 +13,12 @@ export async function robotsTxt(req, res, next) {
         "Disallow: /nalog",
         "Disallow: /moj-nalog",
         "Disallow: /newsletter/odjava",
+        // Booking-flow state pages (/zakazivanje/:slug/podaci, /termin, ...) -
+        // per-visit availability/form state, not content: infinite crawlable
+        // variations via servicePackageId etc., nothing worth indexing, and
+        // crawlers were burning real crawl budget on them (~2000 hits/2mo in
+        // the access logs, mostly Amazonbot/MJ12bot/Claude-SearchBot).
+        "Disallow: /zakazivanje",
         "Allow: /",
         "",
         `Sitemap: ${base}/sitemap.xml`,

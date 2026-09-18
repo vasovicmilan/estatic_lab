@@ -74,7 +74,27 @@ export function logError(message, error = null, data = {}) {
     };
   }
 
-  logger.error(logData);
+  // ~500 controller catch-blocks across the codebase call logError(...)
+  // unconditionally before doing next(error) - including for routine,
+  // already-expected outcomes like a 404 "Tag nije pronađen" or a 400
+  // validation failure. globalErrorHandler (error.middleware.js) already
+  // classifies these correctly further down the chain (isOperational +
+  // statusCode < 500 -> logWarn, no Telegram alert) - but by then the
+  // controller's own logError call has already written an `error`-level
+  // line, so every routine 404/validation event still doubled into
+  // error.log alongside the small number of lines that actually need
+  // attention. Applying the same classification here, at the source, means
+  // every existing call site is fixed by this one change instead of
+  // rewriting ~500 catch blocks - only a genuinely non-operational error
+  // (an unexpected bug, isOperational !== true) or one with no statusCode/
+  // AppError shape at all (a raw thrown Error) still reaches `error` level.
+  const isRoutine = error && error.isOperational === true && typeof error.statusCode === "number" && error.statusCode < 500;
+
+  if (isRoutine) {
+    logger.warn(logData);
+  } else {
+    logger.error(logData);
+  }
 }
 
 export function logDebug(message, data = {}) {

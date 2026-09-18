@@ -1,4 +1,5 @@
 import couponRepo from "../repositories/coupon.repository.js";
+import eventEmitter from "../events/event.emitter.js";
 import productService from "./product.service.js";
 import categoryService from "./category.service.js";
 import { mapCouponsForAdminList, mapCouponForAdminDetail, mapCouponForEdit } from "../mappers/coupon.mapper.js";
@@ -339,6 +340,16 @@ export async function redeemCoupon(
   if (!updated) {
     conflict("Kupon je upravo dostigao maksimalan broj upotreba - pokušajte ponovo bez kupona ili osvežite stranicu");
   }
+
+  eventEmitter.emit("coupon:applied", {
+    couponId: couponId.toString(),
+    userId: userId ? userId.toString() : null,
+    appointmentId,
+    packagePurchaseId,
+    orderId,
+    discountAmount,
+  });
+
   return updated;
 }
 

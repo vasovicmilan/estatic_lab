@@ -11,6 +11,9 @@ import adminPeopleRoutes from "./admin-people.routes.js";
 import adminAppointmentRoutes from "./admin-appointment.routes.js";
 import adminOrderRoutes from "./admin-order.routes.js";
 import adminCatalogRoutes from "./admin-catalog.routes.js";
+import adminPackagePurchaseRoutes from "./admin-package-purchase.routes.js";
+import adminMarketingRoutes from "./admin-marketing.routes.js";
+import adminOpsRoutes from "./admin-ops.routes.js";
 
 const router = Router();
 
@@ -30,6 +33,9 @@ router.use("/admin", adminPeopleRoutes);
 router.use("/admin/appointments", adminAppointmentRoutes);
 router.use("/admin", adminOrderRoutes);
 router.use("/admin", adminCatalogRoutes);
+router.use("/admin/package-purchases", adminPackagePurchaseRoutes);
+router.use("/admin", adminMarketingRoutes);
+router.use("/admin", adminOpsRoutes);
 router.use("/", cartRoutes);
 router.use("/", catalogRoutes);
 
