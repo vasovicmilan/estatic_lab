@@ -23,6 +23,7 @@
     "report:business-monthly": "NODE_ENV=production node scripts/monthly-business-report.js",
     "report:business-quarterly": "NODE_ENV=production node scripts/quarterly-business-report.js",
     "report:business-yearly": "NODE_ENV=production node scripts/yearly-business-report.js",
+    "backup:daily": "NODE_ENV=production node scripts/backup.js",
     "tutorials:run": "playwright test --config=playwright.tutorials.config.js",
     "tutorials:subtitles": "node e2e-tutorials/scripts/build-subtitles.mjs",
     "tutorials:merge": "node e2e-tutorials/scripts/merge-video.mjs",

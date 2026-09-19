@@ -20,5 +20,6 @@ Ova dokumentacija je podeljena na fokusirane fajlove, gde svaki pokriva jednu ob
 | `14-integritet-podataka-i-brisanje.md` | Šta se dešava pri brisanju bilo kog zapisa — kada se blokira, kada se automatski čisti iz povezanih zapisa, i kada se namerno ne dira jer je prikazni sloj već otporan na obrisanu referencu |
 | `15-api-v1-referenca.md` | JSON API (`/api/v1`) — autentikacija (JWT), autorizacija, oblik odgovora, i kompletan spisak ruta po resursu, sa potrebnom dozvolom za svaku |
 | `16-modularni-feature-flagovi.md` | `ENABLED_MODULES` env promenljiva — kako se blog/shop/booking mogu nezavisno uključiti/isključiti po klijentu, izvedeni flagovi (kuponi/partneri/zaposleni), i šta još nije gejtovano |
+| `17-bekapi.md` | Dnevni lokalni bekap baze i uploadovanih slika/videa — šta je pokriveno, podešavanje servera (`mongodump`/cron), uputstvo za vraćanje, i šta još nedostaje (kopije van servera) |
 
 Svaki fajl je samostalan — nije potrebno da ih čitate po redosledu, iako `06` (partnerski program) koristi pojmove iz `03`, `05` i `07`, `11` se nadovezuje na životni ciklus termina opisan u `02`, a `14` (brisanje) najviše koristi ako već poznajete entitete opisane u `02`, `03` i `04`.
