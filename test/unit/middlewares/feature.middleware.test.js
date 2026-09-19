@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { requireModule } from "../../../src/middlewares/feature.middleware.js";
+import { FEATURES } from "../../../src/config/features.config.js";
 
 // Deliberately NOT trying to reconfigure ENABLED_MODULES per test here (the
 // way features.config.test.js does with a cache-busting import): this file's
@@ -15,23 +16,34 @@ import { requireModule } from "../../../src/middlewares/feature.middleware.js";
 // features.config.js - not what each individual test thinks it's setting.
 //
 // So this file runs under whatever ENABLED_MODULES the test suite already
-// starts with (unset -> the default, all three base modules enabled - see
-// features.config.js) and tests requireModule()'s own branching logic
-// directly: an unknown module name is exactly as "disabled" as a real one
-// that's off, since FEATURES[moduleName] is simply falsy either way - that's
-// enough to exercise both branches without touching process.env at all.
+// starts with. That must NOT be hardcoded to a specific module name like
+// "booking": a white-label deployment can legitimately run this same suite
+// with ENABLED_MODULES=shop,blog (booking off), and a test that assumed
+// "booking" is always enabled would then fail on a perfectly correct 404 -
+// exactly what happened here before this fix. Instead, pick real module
+// names from whatever FEATURES this process actually loaded, so the test
+// exercises requireModule()'s branching logic under ANY valid combination.
 // features.config.test.js is what actually verifies ENABLED_MODULES combinations
-// resolve into the right FEATURES values; this file only needs one of those
-// combinations to hold still while it tests the middleware built on top of it.
+// resolve into the right FEATURES values; this file only needs to know which
+// of the base three ended up on vs. off in this run.
 
 function fakeReq(originalUrl) {
   return { originalUrl };
 }
 
+const BASE_MODULES = ["blog", "shop", "booking"];
+// features.config.js guarantees at least one base module is enabled (it
+// throws at import time otherwise), so this is always found.
+const enabledModule = BASE_MODULES.find((name) => FEATURES[name]);
+// May be undefined under the default (all three enabled) - that's fine, the
+// "unknown module name" test below already covers the disabled branch on
+// its own regardless of which real modules happen to be off.
+const disabledModule = BASE_MODULES.find((name) => !FEATURES[name]);
+
 describe("feature.middleware", () => {
   it("calls next() with no argument when the module is enabled", () => {
     const calls = [];
-    requireModule("booking")(fakeReq("/api/v1/booking/slots"), {}, (...args) => calls.push(args));
+    requireModule(enabledModule)(fakeReq(`/api/v1/${enabledModule}`), {}, (...args) => calls.push(args));
     assert.deepEqual(calls, [[]]);
   });
 
@@ -55,12 +67,20 @@ describe("feature.middleware", () => {
   });
 
   it("checks the exact module name given, not just truthiness of the FEATURES object", () => {
-    const bookingCalls = [];
-    requireModule("booking")(fakeReq("/api/v1/booking/slots"), {}, (...args) => bookingCalls.push(args));
-    assert.deepEqual(bookingCalls, [[]]);
+    const enabledCalls = [];
+    requireModule(enabledModule)(fakeReq(`/api/v1/${enabledModule}`), {}, (...args) => enabledCalls.push(args));
+    assert.deepEqual(enabledCalls, [[]]);
 
-    const shopCalls = [];
-    requireModule("shop")(fakeReq("/api/v1/products"), {}, (...args) => shopCalls.push(args));
-    assert.deepEqual(shopCalls, [[]]);
+    // Only meaningful when this run actually has a real module turned off
+    // (e.g. ENABLED_MODULES=shop,blog leaves "booking" disabled) - under the
+    // default all-enabled state there's no real disabled module to check
+    // here, and the previous test already covers the disabled branch via a
+    // made-up name.
+    if (disabledModule) {
+      const disabledCalls = [];
+      requireModule(disabledModule)(fakeReq(`/api/v1/${disabledModule}`), {}, (...args) => disabledCalls.push(args));
+      assert.equal(disabledCalls.length, 1);
+      assert.equal(disabledCalls[0][0].statusCode, 404);
+    }
   });
 });
