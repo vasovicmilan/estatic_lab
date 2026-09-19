@@ -9,7 +9,7 @@ import { buildProduct } from "../../helpers/factories.js";
 async function loginAndGetToken(app, email) {
   const agent = request.agent(app);
   await registerAndLogin(agent, { email, roleName: "user" });
-  const res = await request(app).post("/api/v1/auth/prijava").send({ email, password: "lozinka123" });
+  const res = await request(app).post("/api/v1/auth/login").send({ email, password: "lozinka123" });
   return res.body.data.token;
 }
 

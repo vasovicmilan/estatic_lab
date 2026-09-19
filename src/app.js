@@ -36,7 +36,10 @@ setupMethodOverride(app);
 setupSanitize(app);
 
 
-setupSession(app);
+// Exposed on the app itself (not just used internally by setupSession) so
+// tests can close this session store's own MongoDB client during teardown -
+// see test-app.js's closeTestApp for why that matters.
+app.set("sessionStore", setupSession(app));
 setupFlash(app); 
 app.use(localsMiddleware);
 app.use(csrfLocals);

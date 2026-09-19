@@ -73,8 +73,17 @@ describe("API v1 booking routes (HTTP)", () => {
   it("GET /booking/:slug/slots returns available slots for a bookable service, unauthenticated", async () => {
     const service = await createBookableService();
     const variantId = service.packages[0]._id.toString();
+    // Explicit future date, not "today" - the sole employee works 00:00-23:59,
+    // but getAvailableSlots correctly drops any slot whose start has already
+    // passed (see availability.service.js) - run this suite late enough in the
+    // evening and "today" can legitimately have zero slots left, which isn't a
+    // bug, just this test being time-of-day dependent for no reason. Tomorrow
+    // always has its full day ahead regardless of when the suite runs.
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dateParam = tomorrow.toISOString().slice(0, 10);
 
-    const res = await request(app).get(`/api/v1/booking/${service.slug}/slots?servicePackageId=${variantId}`);
+    const res = await request(app).get(`/api/v1/booking/${service.slug}/slots?servicePackageId=${variantId}&date=${dateParam}`);
 
     assert.equal(res.status, 200);
     assert.equal(res.body.success, true);
@@ -121,7 +130,13 @@ describe("API v1 booking routes (HTTP)", () => {
 
     const agent = request.agent(app);
     await registerAndLogin(agent, { email: "korisnik@example.com", roleName: "user" });
-    const loginRes = await request(app).post("/api/v1/auth/prijava").send({ email: "korisnik@example.com", password: "lozinka123" });
+    const loginRes = await request(app).post("/api/v1/auth/login").send({ email: "korisnik@example.com", password: "lozinka123" });
+    // See api-v1-admin-appointment-order.http.test.js's loginAsAdmin for why
+    // this diagnostic exists - same unexplained failure, need the real
+    // response body/status to actually find the cause instead of guessing.
+    if (!loginRes.body?.data?.token) {
+      throw new Error(`login did not get a token - status=${loginRes.status} body=${JSON.stringify(loginRes.body)} text=${loginRes.text?.slice(0, 500)}`);
+    }
     const { token } = loginRes.body.data;
 
     const res = await request(app)

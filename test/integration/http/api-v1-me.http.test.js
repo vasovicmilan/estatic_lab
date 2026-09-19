@@ -10,7 +10,7 @@ import orderRepo from "../../../src/repositories/order.repository.js";
 async function loginAndGetToken(app, email) {
   const agent = request.agent(app);
   await registerAndLogin(agent, { email, roleName: "user" });
-  const res = await request(app).post("/api/v1/auth/prijava").send({ email, password: "lozinka123" });
+  const res = await request(app).post("/api/v1/auth/login").send({ email, password: "lozinka123" });
   return { token: res.body.data.token, userId: res.body.data.user.id };
 }
 
@@ -102,10 +102,10 @@ describe("API v1 /me routes (HTTP)", () => {
 
       assert.equal(res.status, 200);
 
-      const oldLogin = await request(app).post("/api/v1/auth/prijava").send({ email: "lozinka@example.com", password: "lozinka123" });
+      const oldLogin = await request(app).post("/api/v1/auth/login").send({ email: "lozinka@example.com", password: "lozinka123" });
       assert.equal(oldLogin.status, 401);
 
-      const newLogin = await request(app).post("/api/v1/auth/prijava").send({ email: "lozinka@example.com", password: "novalozinka456" });
+      const newLogin = await request(app).post("/api/v1/auth/login").send({ email: "lozinka@example.com", password: "novalozinka456" });
       assert.equal(newLogin.status, 200);
     });
   });

@@ -9,7 +9,7 @@ import commissionRepo from "../../../src/repositories/commission-entry.repositor
 async function loginAsAdmin(app, email) {
   const agent = request.agent(app);
   await registerAndLogin(agent, { email, roleName: "admin" });
-  const res = await request(app).post("/api/v1/auth/prijava").send({ email, password: "lozinka123" });
+  const res = await request(app).post("/api/v1/auth/login").send({ email, password: "lozinka123" });
   return res.body.data.token;
 }
 
@@ -40,7 +40,7 @@ describe("API v1 admin ops routes (HTTP)", () => {
   it("403s a plain user (has access_admin_panel gate before any sub-permission)", async () => {
     const agent = request.agent(app);
     await registerAndLogin(agent, { email: "obican@example.com", roleName: "user" });
-    const loginRes = await request(app).post("/api/v1/auth/prijava").send({ email: "obican@example.com", password: "lozinka123" });
+    const loginRes = await request(app).post("/api/v1/auth/login").send({ email: "obican@example.com", password: "lozinka123" });
 
     const res = await request(app).get("/api/v1/admin/dashboard").set("Authorization", `Bearer ${loginRes.body.data.token}`);
     assert.equal(res.status, 403);
@@ -93,7 +93,7 @@ describe("API v1 admin ops routes (HTTP)", () => {
           employee = await employeeRepo.createEmployee({ userId: user._id, isActive: true, payType: "commission", commissionRate: 10 });
         },
       });
-      const employeeLogin = await request(app).post("/api/v1/auth/prijava").send({ email: "zaposleni2@example.com", password: "lozinka123" });
+      const employeeLogin = await request(app).post("/api/v1/auth/login").send({ email: "zaposleni2@example.com", password: "lozinka123" });
 
       // A brand-new employee has no earned commission balance yet - a real payout
       // request would 400 on insufficient balance, so this only exercises the

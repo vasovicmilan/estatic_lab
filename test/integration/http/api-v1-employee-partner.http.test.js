@@ -21,7 +21,7 @@ async function loginAsEmployee(app, email) {
       employee = await employeeRepo.createEmployee({ userId: user._id, isActive: true, payType: "commission", commissionRate: 10 });
     },
   });
-  const res = await request(app).post("/api/v1/auth/prijava").send({ email, password: "lozinka123" });
+  const res = await request(app).post("/api/v1/auth/login").send({ email, password: "lozinka123" });
   return { token: res.body.data.token, employeeId: employee._id.toString(), userId: res.body.data.user.id };
 }
 
@@ -36,7 +36,7 @@ async function loginAsPartner(app, email) {
       partner = await partnerService.createPartner({ userId: user._id, commissionRateServices: 10, commissionRateProducts: 5 });
     },
   });
-  const res = await request(app).post("/api/v1/auth/prijava").send({ email, password: "lozinka123" });
+  const res = await request(app).post("/api/v1/auth/login").send({ email, password: "lozinka123" });
   return { token: res.body.data.token, partnerId: partner.id || partner._id.toString() };
 }
 
@@ -73,7 +73,7 @@ describe("API v1 /employee routes (HTTP)", () => {
   it("403s a plain user (not an employee) trying to reach /employee/dashboard", async () => {
     const agent = request.agent(app);
     await registerAndLogin(agent, { email: "obican@example.com", roleName: "user" });
-    const loginRes = await request(app).post("/api/v1/auth/prijava").send({ email: "obican@example.com", password: "lozinka123" });
+    const loginRes = await request(app).post("/api/v1/auth/login").send({ email: "obican@example.com", password: "lozinka123" });
 
     const res = await request(app).get("/api/v1/employee/dashboard").set("Authorization", `Bearer ${loginRes.body.data.token}`);
     assert.equal(res.status, 403);
@@ -135,7 +135,7 @@ describe("API v1 /partner routes (HTTP)", () => {
   it("403s a plain user (not a partner) trying to reach /partner/dashboard", async () => {
     const agent = request.agent(app);
     await registerAndLogin(agent, { email: "obican2@example.com", roleName: "user" });
-    const loginRes = await request(app).post("/api/v1/auth/prijava").send({ email: "obican2@example.com", password: "lozinka123" });
+    const loginRes = await request(app).post("/api/v1/auth/login").send({ email: "obican2@example.com", password: "lozinka123" });
 
     const res = await request(app).get("/api/v1/partner/dashboard").set("Authorization", `Bearer ${loginRes.body.data.token}`);
     assert.equal(res.status, 403);

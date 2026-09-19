@@ -4,6 +4,7 @@ import postService from "./post.service.js";
 import categoryService from "./category.service.js";
 import BUSINESS from "../config/business.config.js";
 import { logError } from "../utils/logger.util.js";
+import { FEATURES } from "../config/features.config.js";
 
 // llms.txt (https://llmstxt.org) is a plain-markdown index aimed at LLM crawlers
 // and answer engines (ChatGPT/Perplexity/Claude-style browsing, Google's AI
@@ -42,11 +43,16 @@ function categoryLine(base, path, category) {
 }
 
 export async function generateLlmsTxt(base) {
+  // Same reasoning as sitemap.service.js/index.service.js - a disabled
+  // module's data isn't fetched at all, and (for "Prodavnica" specifically,
+  // see below) its whole section is skipped, not just left empty - a
+  // section header with no items and a dead link to a 404-ing /prodavnica
+  // would be worse than no section at all.
   const [servicesResult, packagesResult, postsResult, productCategories] = await Promise.all([
-    safeList(() => serviceService.findActiveServices({ page: 1, limit: 100 }), "usluge"),
-    safeList(() => packageService.findActivePackages({ page: 1, limit: 50 }), "paketi"),
-    safeList(() => postService.findPublishedPosts({ page: 1, limit: 10 }), "blog"),
-    safeList(() => categoryService.getPublicCategories("product"), "kategorije prodavnice"),
+    FEATURES.booking ? safeList(() => serviceService.findActiveServices({ page: 1, limit: 100 }), "usluge") : Promise.resolve({ data: [] }),
+    FEATURES.booking ? safeList(() => packageService.findActivePackages({ page: 1, limit: 50 }), "paketi") : Promise.resolve({ data: [] }),
+    FEATURES.blog ? safeList(() => postService.findPublishedPosts({ page: 1, limit: 10 }), "blog") : Promise.resolve({ data: [] }),
+    FEATURES.shop ? safeList(() => categoryService.getPublicCategories("product"), "kategorije prodavnice") : Promise.resolve([]),
   ]);
 
   const services = servicesResult.data || [];
@@ -74,14 +80,14 @@ export async function generateLlmsTxt(base) {
     lines.push("", `Svi paketi: ${base}/paketi`, "");
   }
 
-  lines.push("## Prodavnica", "");
-  if (productCategories.length > 0) {
-    productCategories.forEach((category) => lines.push(categoryLine(base, "/prodavnica/kategorija", category)));
-    lines.push("");
-  }
-  lines.push(`Ceo katalog: ${base}/prodavnica`, "");
-
-  if (posts.length > 0) {
+  if (FEATURES.shop) {
+    lines.push("## Prodavnica", "");
+    if (productCategories.length > 0) {
+      productCategories.forEach((category) => lines.push(categoryLine(base, "/prodavnica/kategorija", category)));
+      lines.push("");
+    }
+    lines.push(`Ceo katalog: ${base}/prodavnica`, "");
+  }  if (posts.length > 0) {
     lines.push("## Blog", "");
     posts.forEach((post) => lines.push(postLine(base, post)));
     lines.push("", `Svi članci: ${base}/blog`, "");

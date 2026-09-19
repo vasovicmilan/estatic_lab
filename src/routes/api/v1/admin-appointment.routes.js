@@ -17,8 +17,8 @@ const router = Router();
 router.use(apiAuthMiddleware, requirePermission("manage_appointments_all"));
 
 router.get("/", AdminAppointmentController.listAppointments);
-router.get("/rucno-kreiranje/proveri-paket", AdminAppointmentController.checkManualAppointmentPackage);
-router.post("/rucno-kreiranje", validateManualAppointmentCreate, handleApiValidationErrors, AdminAppointmentController.createManualAppointment);
+router.get("/manual/check-package", AdminAppointmentController.checkManualAppointmentPackage);
+router.post("/manual", validateManualAppointmentCreate, handleApiValidationErrors, AdminAppointmentController.createManualAppointment);
 router.get("/:appointmentId", validateAppointmentId, handleApiValidationErrors, AdminAppointmentController.getAppointment);
 router.put("/:appointmentId/confirm", validateAppointmentId, handleApiValidationErrors, AdminAppointmentController.confirmAppointment);
 router.put("/:appointmentId/reject", validateAppointmentId, validateAppointmentReject, handleApiValidationErrors, AdminAppointmentController.rejectAppointment);

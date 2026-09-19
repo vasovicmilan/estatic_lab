@@ -19,5 +19,6 @@ This documentation is split into focused files, each covering one area of the bu
 | `13-business-reports.md` | Business reports (bookings, shop, packages, commissions, coupons) — live current period vs. saved history, automatic and manual generation, email and PDF |
 | `14-data-integrity-and-deletion.md` | What happens when any record gets deleted — when it's blocked, when it's auto-cleaned from related records, and when it's deliberately left alone because the display layer already tolerates a deleted reference |
 | `15-api-v1-reference.md` | The JSON API (`/api/v1`) — authentication (JWT), authorization, response shape, and the full route list per resource with the permission each one requires |
+| `16-module-feature-flags.md` | The `ENABLED_MODULES` env var — how blog/shop/booking can be independently turned on/off per client, derived flags (coupons/partners/employees), and what's not gated yet |
 
 Each file stands on its own — you don't need to read them in order, though `06` (affiliate program) draws on concepts from `03`, `05`, and `07`, `11` builds on the appointment lifecycle described in `02`, and `14` (deletion) is most useful once you already know the entities described in `02`, `03`, and `04`.

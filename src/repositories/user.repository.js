@@ -119,7 +119,7 @@ export async function countUsersWithProductInCart(productId, { session } = {}) {
 export async function incrementCartItemQuantity(userId, product, variant, amount, { session } = {}) {
   return User.findOneAndUpdate(
     { _id: userId, cart: { $elemMatch: { product, variant } } },
-    { $inc: { "cart.$[elem].quantity": amount } },
+    { $inc: { "cart.$[elem].quantity": amount }, $set: { cartUpdatedAt: new Date(), cartReminderStage: 0 } },
     { arrayFilters: [{ "elem.product": product, "elem.variant": variant }], returnDocument: "after", session }
   ).lean();
 }
@@ -127,7 +127,7 @@ export async function incrementCartItemQuantity(userId, product, variant, amount
 export async function addCartItem(userId, { product, variant = null, quantity = 1 }, { session } = {}) {
   return User.findByIdAndUpdate(
     userId,
-    { $push: { cart: { product, variant, quantity } } },
+    { $push: { cart: { product, variant, quantity } }, $set: { cartUpdatedAt: new Date(), cartReminderStage: 0 } },
     { returnDocument: "after", session }
   ).lean();
 }
@@ -135,7 +135,7 @@ export async function addCartItem(userId, { product, variant = null, quantity = 
 export async function setCartItemQuantity(userId, cartItemId, quantity, { session } = {}) {
   return User.findOneAndUpdate(
     { _id: userId, "cart._id": cartItemId },
-    { $set: { "cart.$.quantity": quantity } },
+    { $set: { "cart.$.quantity": quantity, cartUpdatedAt: new Date(), cartReminderStage: 0 } },
     { returnDocument: "after", session }
   ).lean();
 }
@@ -143,20 +143,57 @@ export async function setCartItemQuantity(userId, cartItemId, quantity, { sessio
 export async function removeCartItem(userId, cartItemId, { session } = {}) {
   return User.findByIdAndUpdate(
     userId,
-    { $pull: { cart: { _id: cartItemId } } },
+    { $pull: { cart: { _id: cartItemId } }, $set: { cartUpdatedAt: new Date(), cartReminderStage: 0 } },
     { returnDocument: "after", session }
   ).lean();
 }
 
 export async function clearCart(userId, { session } = {}) {
-  return User.findByIdAndUpdate(userId, { $set: { cart: [] } }, { returnDocument: "after", session }).lean();
+  return User.findByIdAndUpdate(userId, { $set: { cart: [], cartReminderStage: 0 } }, { returnDocument: "after", session }).lean();
 }
 
 // used when merging a guest session cart into a just-logged-in user's own cart -
 // the merge/dedup arithmetic (matching lines by product+variant, summing quantities)
 // belongs in the service layer; this just persists whatever final array it computed
 export async function replaceCart(userId, cartItems, { session } = {}) {
-  return User.findByIdAndUpdate(userId, { $set: { cart: cartItems } }, { returnDocument: "after", session }).lean();
+  return User.findByIdAndUpdate(
+    userId,
+    { $set: { cart: cartItems, cartUpdatedAt: new Date(), cartReminderStage: 0 } },
+    { returnDocument: "after", session }
+  ).lean();
+}
+
+// ==================== CART ABANDONMENT ====================
+// See user.model.js's cartUpdatedAt/cartReminderStage/cartDiscountOfferedAt
+// fields and cart-reminder-jobs.js for how these are used.
+
+export async function findUsersDueForCartReminderStage1(olderThan, { session } = {}) {
+  return User.find({
+    "cart.0": { $exists: true },
+    cartReminderStage: 0,
+    cartUpdatedAt: { $ne: null, $lte: olderThan },
+  })
+    .select("email firstName cart")
+    .session(session || null)
+    .lean();
+}
+
+export async function findUsersDueForCartReminderStage2(olderThan, cooldownBefore, { session } = {}) {
+  return User.find({
+    "cart.0": { $exists: true },
+    cartReminderStage: 1,
+    cartUpdatedAt: { $ne: null, $lte: olderThan },
+    $or: [{ cartDiscountOfferedAt: null }, { cartDiscountOfferedAt: { $lte: cooldownBefore } }],
+  })
+    .select("email firstName cart")
+    .session(session || null)
+    .lean();
+}
+
+export async function markCartReminderSent(userId, stage, { session } = {}) {
+  const update = { cartReminderStage: stage, cartReminderSentAt: new Date() };
+  if (stage === 2) update.cartDiscountOfferedAt = new Date();
+  return User.findByIdAndUpdate(userId, { $set: update }, { session }).lean();
 }
 
 // ==================== ADDRESSES ====================
@@ -221,4 +258,7 @@ export default {
   removeAddressFromUser,
   setDefaultAddress,
   findUserCartQuantities,
+  findUsersDueForCartReminderStage1,
+  findUsersDueForCartReminderStage2,
+  markCartReminderSent,
 }

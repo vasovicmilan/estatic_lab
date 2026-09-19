@@ -6,10 +6,10 @@ The platform has two completely separate "faces": the server-rendered web app (E
 
 The API uses **JWT (Bearer token)**, not sessions/cookies like the web side. Flow:
 
-1. `POST /api/v1/auth/registracija` (register) or `POST /api/v1/auth/prijava` (login) with email/password returns a token in the response body.
+1. `POST /api/v1/auth/register` (register) or `POST /api/v1/auth/login` (login) with email/password returns a token in the response body.
 2. Every following request sends that token in an `Authorization: Bearer <token>` header.
 3. The token is valid for **24 hours** (`crypto.service.js`, `signJwt`), after which re-login is required - there is currently no refresh-token mechanism.
-4. `GET /api/v1/auth/ja` returns the currently-authenticated account's data (a useful "who am I" call for client apps rehydrating a saved token).
+4. `GET /api/v1/auth/me` returns the currently-authenticated account's data (a useful "who am I" call for client apps rehydrating a saved token).
 
 The token carries the user's role (`roleName`) and their **full permission list** (`permissions`) as of login time (the same pattern as the web session - see `01-users-roles-permissions.md`). Consequence: if an admin later edits or removes a permission from someone, **an already-issued token doesn't see that change** until it expires (up to 24h) or the user logs in again. For urgent access revocation (e.g. an employee let go), deactivating the account (`isActive: false`) is more reliable than editing the role alone, since that's checked on every request touching that account, not just at token issuance.
 
@@ -49,7 +49,7 @@ Image/file upload fields (a post's cover image, a product's gallery, etc.) are *
 | `GET /api/v1/catalog/services`, `/packages`, `/products`, `/team`, `/blog/posts`, `/business-partners` (+ `/:slug`) | The same public catalog as the web shop/services/blog, in JSON |
 | `GET /api/v1/booking/:serviceSlug/slots` | Available appointment slots for a service (uses `optionalApiAuth` - works with or without a token) |
 | `POST /api/v1/booking/confirm` | Book an appointment as a guest or a logged-in user |
-| `POST /api/v1/auth/registracija`, `/prijava`, `/zaboravljena-lozinka`, `PUT /resetovanje-lozinke/:token`, `GET /verifikacija/:token` | Standard auth flow |
+| `POST /api/v1/auth/register`, `/login`, `/forgot-password`, `PUT /reset-password/:token`, `GET /verify/:token` | Standard auth flow |
 
 ## Logged-in-user routes (any role, just `apiAuthMiddleware`)
 
@@ -99,11 +99,11 @@ Whole router behind `manage_packages` (no sub-permissions). `GET /`, `GET /:pack
 
 ### Appointments (`admin-appointment.routes.js`)
 
-Whole router behind `manage_appointments_all`. `GET /`, `GET /rucno-kreiranje/proveri-paket`, `POST /rucno-kreiranje`, `GET /:appointmentId`, `PUT /:appointmentId/confirm|reject|cancel|complete|no-show|reopen|reassign|reschedule`, `DELETE /:appointmentId`.
+Whole router behind `manage_appointments_all`. `GET /`, `GET /manual/check-package`, `POST /manual`, `GET /:appointmentId`, `PUT /:appointmentId/confirm|reject|cancel|complete|no-show|reopen|reassign|reschedule`, `DELETE /:appointmentId`.
 
 ### Orders (`admin-order.routes.js`)
 
-Whole router behind `manage_orders`. `GET /orders`, `POST /orders/rucno-kreiranje`, `GET /orders/:orderId`, `PUT /orders/:orderId/process|ship|deliver|complete|return|refund|cancel|reopen|contact`, plus `GET /temporary-orders`, `GET /temporary-orders/:orderId`, `PUT /temporary-orders/:orderId/confirm|shipping`.
+Whole router behind `manage_orders`. `GET /orders`, `POST /orders/manual`, `GET /orders/:orderId`, `PUT /orders/:orderId/process|ship|deliver|complete|return|refund|cancel|reopen|contact`, plus `GET /temporary-orders`, `GET /temporary-orders/:orderId`, `PUT /temporary-orders/:orderId/confirm|shipping`.
 
 ### Marketing (`admin-marketing.routes.js`)
 

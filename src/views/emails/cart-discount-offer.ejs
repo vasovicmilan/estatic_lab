@@ -1,0 +1,19 @@
+<%- include("_layout", {
+  title: "Poklon kod za vašu korpu",
+  eyebrow: "Vaša korpa",
+  heading: `Još uvek vas čeka${typeof firstName !== 'undefined' && firstName ? ', ' + firstName : ''}`,
+  preheader: "Poklon kod za artikle koje ste ostavili u korpi",
+  body: `
+    <p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0 0 20px;">
+      Vaša korpa je i dalje tu, pa smo vam pripremili poklon kod za slučaj da vam treba mali podstrek.
+    </p>
+    ${infoTable(
+      stavke.map(function(item) {
+        return infoRow(`${item.naziv}${item.varijanta ? ' (' + item.varijanta + ')' : ''}`, `&times; ${item.kolicina} - ${formatMoney(item.ukupno)}`);
+      }).join("")
+    )}
+    ${couponBlock(couponCode, `Iskoristite ${couponDiscount}% popusta - važi jednom, na uslugu, paket ili porudžbinu iz prodavnice.`)}
+    ${ctaButton(cartUrl, "Iskoristi kod")}
+    ${linkFallback(cartUrl)}
+  `
+}) %>

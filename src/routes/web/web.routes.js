@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { webAuthMiddleware, optionalWebAuth } from "../../middlewares/auth.middleware.js";
+import { requireModule } from "../../middlewares/feature.middleware.js";
 import * as IndexController from "../../controllers/web/index.controller.js";
 import * as SeoController from "../../controllers/web/seo.controller.js";
 import { contactLimiter, newsletterLimiter, testimonialLimiter, couponLimiter } from "../../middlewares/rate-limiter.middleware.js";
@@ -35,7 +36,7 @@ router.get("/", IndexController.homePage);
 
 // static pages
 router.get("/o-nama", IndexController.aboutPage);
-router.get("/partnerski-program", IndexController.partnershipPage);
+router.get("/partnerski-program", requireModule("partners"), IndexController.partnershipPage);
 router.get("/politika-privatnosti", IndexController.privacyPage);
 router.get("/uslovi-koriscenja", IndexController.termsPage);
 router.get("/faq", IndexController.faqPage);
@@ -70,22 +71,25 @@ router.post(
   IndexController.submitTestimonial
 );
 
+// /nas-tim (Expert - the public "our team" showcase) is deliberately NOT
+// module-gated, same reasoning as catalog.routes.js's /team on the API side -
+// see expert.model.js's own comment: works with zero login/booking behind it.
 router.use("/nas-tim", teamRoutes);
-router.use("/usluge", serviceRoutes);
-router.use("/paketi", packageRoutes);
-router.use("/blog", blogRoutes);
-router.use("/zakazivanje", bookingRoutes);
-router.use("/prodavnica", productRoutes);
+router.use("/usluge", requireModule("booking"), serviceRoutes);
+router.use("/paketi", requireModule("booking"), packageRoutes);
+router.use("/blog", requireModule("blog"), blogRoutes);
+router.use("/zakazivanje", requireModule("booking"), bookingRoutes);
+router.use("/prodavnica", requireModule("shop"), productRoutes);
 
-router.post("/kupon/primeni", couponLimiter, CouponController.applyCoupon);
-router.post("/kupon/ukloni", CouponController.removeCoupon);
-router.use("/korpa", shopRoutes);
+router.post("/kupon/primeni", requireModule("coupons"), couponLimiter, CouponController.applyCoupon);
+router.post("/kupon/ukloni", requireModule("coupons"), CouponController.removeCoupon);
+router.use("/korpa", requireModule("shop"), shopRoutes);
 
 router.use("/", authRoutes);
 
 router.use("/admin", webAuthMiddleware, adminRoutes);
 router.use("/nalog", webAuthMiddleware, userRoutes);
-router.use("/moj-nalog", webAuthMiddleware, employeeRoutes);
-router.use("/moj-partner-nalog", webAuthMiddleware, partnerRoutes);
+router.use("/moj-nalog", requireModule("employees"), webAuthMiddleware, employeeRoutes);
+router.use("/moj-partner-nalog", requireModule("partners"), webAuthMiddleware, partnerRoutes);
 
 export default router;

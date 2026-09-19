@@ -30,10 +30,10 @@ npx playwright test --list   # samo prikazuje koji testovi postoje, ne pokreće 
 ## Šta je pokriveno
 
 ### Jedinični testovi
-Preko 1700 testova pod `test/unit/`, organizovanih po servisu/mape­ru/repozitorijumu/validatoru. Finansijski najosetljiviji servisi — `commission.service.js`, `payout-request.service.js`, `resource.service.js` — su na 100% pokrivenosti linija i funkcija.
+Preko 2100 testova pod `test/unit/`, organizovanih po servisu/mape­ru/repozitorijumu/validatoru. Finansijski najosetljiviji servisi — `commission.service.js`, `payout-request.service.js`, `resource.service.js` — su na 100% pokrivenosti linija i funkcija.
 
 ### E2E testovi
-23 testa pod `test/e2e/`, po poslovnom toku:
+25 testova pod `test/e2e/`, po poslovnom toku:
 
 | Fajl | Šta proverava |
 |---|---|
@@ -44,6 +44,7 @@ Preko 1700 testova pod `test/unit/`, organizovanih po servisu/mape­ru/repozitor
 | `customer-self-service.spec.js` | Klijent vidi i otkazuje sopstvene termine/porudžbine, uz poštovanje 24h roka za otkazivanje termina i "samo na čekanju" pravila za porudžbine |
 | `employee-working-hours.spec.js` | Izmena radnog vremena zaposlenog kroz njegov panel stvarno menja koji termini su dostupni za zakazivanje |
 | `package-purchase.spec.js` | Admin dodeljuje paket klijentu; klijent troši seansu kroz zakazivanje; sesija prelazi iz rezervisano u iskorišćeno tek kada admin završi termin |
+| `package-purchase-commission.spec.js` | Provizija na seansu iz paketa se računa prema stvarnom popustu paketa (ne prema već-diskontovanoj prodajnoj ceni), i ispravno se sabira sa partnerskim referalnim kuponom |
 | `appointment-reassign.spec.js` | Admin premešta termin drugom zaposlenom; padajuća lista već isključuje zaposlene koji nisu dostupni u tom terminu |
 | `order-completion-commission.spec.js` | Provizija sa porudžbine ostaje "na čekanju" kroz obradu/slanje/dostavu, i tek postaje "zarađena" kada je porudžbina označena završenom |
 | `order-cancellation.spec.js` | Otkazivanje ili vraćanje porudžbine vraća rezervisane količine na stanje zaliha |

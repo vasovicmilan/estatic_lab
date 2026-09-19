@@ -6,6 +6,7 @@ import { buildOrganizationJsonLd } from "../seo/organization.builder.js";
 import { getCurrency } from "./runtime-settings.cache.js";
 import { logError, logWarn } from "../utils/logger.util.js";
 import BUSINESS from "./business.config.js";
+import { FEATURES } from "./features.config.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ASSET_VERSION = Date.now();
@@ -43,6 +44,13 @@ export async function localsMiddleware(req, res, next) {
   // straight from the single source of truth without every presenter having
   // to thread it through.
   res.locals.business = BUSINESS;
+  // Available in every EJS template as `features.shop`/`features.blog`/etc -
+  // see features.config.js for what each flag means and how the derived ones
+  // (coupons/partners/employees) are computed. Use this to hide nav links,
+  // homepage sections, footer content, etc. for a disabled module - the
+  // matching requireModule() middleware (feature.middleware.js) is what
+  // actually blocks the routes themselves; this is only for what gets shown.
+  res.locals.features = FEATURES;
   // Admin-editable (see /admin/sajt) - synchronous cache read, not a DB call
   // (runtime-settings.cache.js). For templates that decorate a raw number with
   // a hardcoded currency label directly (rather than going through a mapper's

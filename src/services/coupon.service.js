@@ -5,7 +5,7 @@ import categoryService from "./category.service.js";
 import { mapCouponsForAdminList, mapCouponForAdminDetail, mapCouponForEdit } from "../mappers/coupon.mapper.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
-import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
+import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE, CART_ABANDONMENT_COUPON_CODE, CART_ABANDONMENT_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
 import { formatMoney } from "../utils/price.util.js";
 
 export async function listCoupons({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
@@ -127,6 +127,48 @@ export async function ensureWelcomeCoupon() {
     isActive: true,
   });
   logInfo("Welcome coupon auto-created on first use", { couponId: created._id, code: created.code });
+  return created;
+}
+
+/**
+ * Same idempotent-creation pattern as ensureWelcomeCoupon above - see that
+ * function's comment for why one shared code (not a per-user minted one) is
+ * enough. Called from cart-reminder-jobs.js right before sending the stage-2
+ * "come back, here's a discount" email.
+ *
+ * Unlike the welcome coupon (services/packages only), this one also sets
+ * productDiscount so it actually helps the abandoned-CART use case - but the
+ * top-level discountType/discountValue are required on every coupon (see
+ * coupon.model.js: "glavni, uvek aktivan deo kupona"), so this ends up a
+ * general win-back discount usable anywhere, not product-only. That's a
+ * schema constraint, not a choice made here - there's no way to create a
+ * coupon that discounts products but explicitly excludes services/packages.
+ */
+export async function ensureCartAbandonmentCoupon() {
+  const existing = await couponRepo.findCouponByCode(CART_ABANDONMENT_COUPON_CODE);
+  if (existing) return existing;
+
+  const created = await couponRepo.createCoupon({
+    code: CART_ABANDONMENT_COUPON_CODE,
+    discountType: "percentage",
+    discountValue: CART_ABANDONMENT_COUPON_DISCOUNT_VALUE,
+    maxDiscountAmount: null,
+    minValue: 0,
+    maxUses: null,
+    maxUsesPerUser: 1,
+    applicableServices: [],
+    applicablePackages: [],
+    productDiscount: {
+      discountType: "percentage",
+      discountValue: CART_ABANDONMENT_COUPON_DISCOUNT_VALUE,
+      maxDiscountAmount: null,
+      minOrderValue: 0,
+      applicableProducts: [],
+      excludedCategories: [],
+    },
+    isActive: true,
+  });
+  logInfo("Cart-abandonment coupon auto-created on first use", { couponId: created._id, code: created.code });
   return created;
 }
 
@@ -410,6 +452,7 @@ export default {
   updateCouponById,
   deleteCouponById,
   ensureWelcomeCoupon,
+  ensureCartAbandonmentCoupon,
   validateCouponForBooking,
   validateCouponForPackagePurchase,
   validateCouponForOrder,

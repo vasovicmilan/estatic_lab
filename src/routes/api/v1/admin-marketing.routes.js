@@ -10,25 +10,26 @@ import { validateCampaignCreate, validateCampaignUpdate, validateCampaignId } fr
 import { handleApiValidationErrors } from "../../../middlewares/api-validation.middleware.js";
 import { apiAuthMiddleware } from "../../../middlewares/auth.middleware.js";
 import { requirePermission } from "../../../middlewares/permission.middleware.js";
+import { requireModule } from "../../../middlewares/feature.middleware.js";
 
 const router = Router();
 router.use(apiAuthMiddleware);
 
 // ---- Blog posts ----
-router.get("/posts", requirePermission("manage_blog"), AdminMarketingController.listPosts);
-router.get("/posts/:postId", requirePermission("manage_blog"), validatePostId, handleApiValidationErrors, AdminMarketingController.getPost);
-router.post("/posts", requirePermission("manage_blog"), validatePostCreate, handleApiValidationErrors, AdminMarketingController.createPost);
-router.put("/posts/:postId", requirePermission("manage_blog"), validatePostId, validatePostUpdate, handleApiValidationErrors, AdminMarketingController.updatePost);
-router.put("/posts/:postId/status", requirePermission("manage_blog"), validatePostId, validatePostStatus, handleApiValidationErrors, AdminMarketingController.updatePostStatus);
-router.put("/posts/:postId/seo", requirePermission("manage_blog"), validatePostId, validatePostSeo, handleApiValidationErrors, AdminMarketingController.updatePostSeo);
-router.delete("/posts/:postId", requirePermission("manage_blog"), validatePostId, handleApiValidationErrors, AdminMarketingController.deletePost);
+router.get("/posts", requireModule("blog"), requirePermission("manage_blog"), AdminMarketingController.listPosts);
+router.get("/posts/:postId", requireModule("blog"), requirePermission("manage_blog"), validatePostId, handleApiValidationErrors, AdminMarketingController.getPost);
+router.post("/posts", requireModule("blog"), requirePermission("manage_blog"), validatePostCreate, handleApiValidationErrors, AdminMarketingController.createPost);
+router.put("/posts/:postId", requireModule("blog"), requirePermission("manage_blog"), validatePostId, validatePostUpdate, handleApiValidationErrors, AdminMarketingController.updatePost);
+router.put("/posts/:postId/status", requireModule("blog"), requirePermission("manage_blog"), validatePostId, validatePostStatus, handleApiValidationErrors, AdminMarketingController.updatePostStatus);
+router.put("/posts/:postId/seo", requireModule("blog"), requirePermission("manage_blog"), validatePostId, validatePostSeo, handleApiValidationErrors, AdminMarketingController.updatePostSeo);
+router.delete("/posts/:postId", requireModule("blog"), requirePermission("manage_blog"), validatePostId, handleApiValidationErrors, AdminMarketingController.deletePost);
 
 // ---- Coupons ----
-router.get("/coupons", requirePermission("manage_coupons"), AdminMarketingController.listCoupons);
-router.get("/coupons/:couponId", requirePermission("manage_coupons"), validateCouponId, handleApiValidationErrors, AdminMarketingController.getCoupon);
-router.post("/coupons", requirePermission("manage_coupons"), validateCouponCreate, handleApiValidationErrors, AdminMarketingController.createCoupon);
-router.put("/coupons/:couponId", requirePermission("manage_coupons"), validateCouponId, validateCouponUpdate, handleApiValidationErrors, AdminMarketingController.updateCoupon);
-router.delete("/coupons/:couponId", requirePermission("manage_coupons"), validateCouponId, handleApiValidationErrors, AdminMarketingController.deleteCoupon);
+router.get("/coupons", requireModule("coupons"), requirePermission("manage_coupons"), AdminMarketingController.listCoupons);
+router.get("/coupons/:couponId", requireModule("coupons"), requirePermission("manage_coupons"), validateCouponId, handleApiValidationErrors, AdminMarketingController.getCoupon);
+router.post("/coupons", requireModule("coupons"), requirePermission("manage_coupons"), validateCouponCreate, handleApiValidationErrors, AdminMarketingController.createCoupon);
+router.put("/coupons/:couponId", requireModule("coupons"), requirePermission("manage_coupons"), validateCouponId, validateCouponUpdate, handleApiValidationErrors, AdminMarketingController.updateCoupon);
+router.delete("/coupons/:couponId", requireModule("coupons"), requirePermission("manage_coupons"), validateCouponId, handleApiValidationErrors, AdminMarketingController.deleteCoupon);
 
 // ---- Newsletter subscribers ----
 router.get("/newsletter-subscribers", requirePermission("manage_marketing"), AdminMarketingController.listSubscribers);

@@ -10,7 +10,7 @@ import { infoRow, infoTable, statusTone, badge, ctaButton, linkFallback, couponB
 import { formatDateTime, getZonedComponents } from "../utils/date.time.util.js";
 import { getCurrency } from "../config/runtime-settings.cache.js";
 import { formatMoney } from "../utils/price.util.js";
-import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
+import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE, CART_ABANDONMENT_COUPON_CODE, CART_ABANDONMENT_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
 import { BUSINESS } from "../config/business.config.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -306,6 +306,22 @@ export async function notifyAdminNewTestimonial(testimonial) {
   return emailProvider.sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("TESTIMONIJAL", summary), html });
 }
 
+export async function sendCartReminderEmail({ email, firstName }, cart) {
+  const html = await renderTemplate("cart-reminder", { firstName, stavke: cart.stavke, cartUrl: `${BASE_URL}/korpa` });
+  return emailProvider.sendEmail({ to: email, subject: `Zaboravili ste nešto u korpi - ${SITE_NAME}`, html });
+}
+
+export async function sendCartDiscountEmail({ email, firstName }, cart) {
+  const html = await renderTemplate("cart-discount-offer", {
+    firstName,
+    stavke: cart.stavke,
+    cartUrl: `${BASE_URL}/korpa`,
+    couponCode: CART_ABANDONMENT_COUPON_CODE,
+    couponDiscount: CART_ABANDONMENT_COUPON_DISCOUNT_VALUE,
+  });
+  return emailProvider.sendEmail({ to: email, subject: `Poklon kod za vašu korpu - ${SITE_NAME}`, html });
+}
+
 export async function sendNewsletterWelcomeEmail({ email }, unsubscribeToken) {
   const html = await renderTemplate("newsletter-welcome", { unsubscribeUrl: `${BASE_URL}/newsletter/odjava/${unsubscribeToken}` });
   return emailProvider.sendEmail({ to: email, subject: `Dobrodošli u ${SITE_NAME} newsletter`, html });
@@ -376,6 +392,8 @@ export default {
   notifyAdminNewAppointment,
   notifyAdminAppointmentCancelled,
   sendOrderConfirmationRequestEmail,
+  sendCartReminderEmail,
+  sendCartDiscountEmail,
   sendOrderPendingQuoteEmail,
   sendShippingQuoteReadyEmail,
   sendOrderReceivedEmail,

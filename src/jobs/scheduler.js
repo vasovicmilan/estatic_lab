@@ -7,6 +7,7 @@ import {
   runExpiredTemporaryOrderCleanup,
 } from "./report-jobs.js";
 import { runCommissionGracePeriodSweep } from "./commission-jobs.js";
+import { runCartReminderStage1, runCartReminderStage2 } from "./cart-reminder-jobs.js";
 import { runPublishScheduledPosts } from "./post-jobs.js";
 import { runSendScheduledCampaigns } from "./campaign-jobs.js";
 import { runSredimeSync } from "./sredime-jobs.js";
@@ -58,6 +59,20 @@ export function startScheduler() {
   // the hour (the 14-day withdrawal window doesn't move minute to minute), but
   // frequent enough that a partner's payable balance doesn't sit stale for long.
   cron.schedule("0 2 * * *", () => runCommissionGracePeriodSweep(), { timezone: TIMEZONE });
+
+  // Cart-abandonment reminders - once daily, 07:30/07:40 (staggered like the
+  // business-report pairs below, so they don't contend for the same User
+  // collection in the same instant). Deliberately NOT every-few-minutes
+  // around the clock (that was this job's original schedule, and it's wrong -
+  // a 24h/72h wait window doesn't need minute-level precision, and nobody
+  // wants a "you forgot something in your cart" email landing at 3 AM just
+  // because that's exactly when their cart happened to cross the threshold).
+  // A cart that crosses the threshold at, say, 22:00 simply gets its email
+  // the next morning instead of that same night - the wait window is already
+  // measured in whole hours/days, so being off by at most one day (never
+  // early) doesn't change the intent at all.
+  cron.schedule("30 7 * * *", () => runCartReminderStage1(), { timezone: TIMEZONE });
+  cron.schedule("40 7 * * *", () => runCartReminderStage2(), { timezone: TIMEZONE });
 
   // Scheduled blog post publisher - every 5 minutes. Frequent enough that a post
   // scheduled for e.g. 09:00 actually goes live close to 09:00 rather than sitting

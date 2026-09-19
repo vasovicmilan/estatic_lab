@@ -30,10 +30,10 @@ npx playwright test --list   # just lists which tests exist, doesn't run them
 ## What's covered
 
 ### Unit tests
-Over 1700 tests under `test/unit/`, organized by service/mapper/repository/validator. The most financially sensitive services — `commission.service.js`, `payout-request.service.js`, `resource.service.js` — are at 100% line and function coverage.
+Over 2100 tests under `test/unit/`, organized by service/mapper/repository/validator. The most financially sensitive services — `commission.service.js`, `payout-request.service.js`, `resource.service.js` — are at 100% line and function coverage.
 
 ### E2E tests
-23 tests under `test/e2e/`, by business flow:
+25 tests under `test/e2e/`, by business flow:
 
 | File | What it checks |
 |---|---|
@@ -44,6 +44,7 @@ Over 1700 tests under `test/unit/`, organized by service/mapper/repository/valid
 | `customer-self-service.spec.js` | A customer views and cancels their own appointments/orders, respecting the 24h appointment-cancellation cutoff and the "pending only" rule for orders |
 | `employee-working-hours.spec.js` | Changing an employee's working hours through their own panel actually changes which appointment slots are offered |
 | `package-purchase.spec.js` | An admin assigns a package to a customer; the customer spends a session through booking; the session moves from reserved to used only once an admin completes the appointment |
+| `package-purchase-commission.spec.js` | Commission on a package session is calculated against the package's real discount (not its already-discounted selling price), and correctly compounds with a partner's referral coupon |
 | `appointment-reassign.spec.js` | An admin reassigns an appointment to a different employee; the dropdown already excludes employees who aren't available at that time |
 | `order-completion-commission.spec.js` | An order's commission stays "pending" through processing/shipped/delivered, and only becomes "earned" once the order is marked completed |
 | `order-cancellation.spec.js` | Cancelling or returning an order restores the reserved quantities to stock |

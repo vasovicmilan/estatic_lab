@@ -417,6 +417,23 @@ export async function getCartItemCount(userId) {
   return (user.cart || []).reduce((sum, line) => sum + (line.quantity || 0), 0);
 }
 
+// ==================== CART ABANDONMENT ====================
+// Thin pass-throughs to the repository queries - cart-reminder-jobs.js is the
+// only caller, kept here rather than having the job import the repository
+// directly, same layering as everywhere else in the codebase.
+
+export async function findUsersDueForCartReminderStage1(olderThan) {
+  return userRepo.findUsersDueForCartReminderStage1(olderThan);
+}
+
+export async function findUsersDueForCartReminderStage2(olderThan, cooldownBefore) {
+  return userRepo.findUsersDueForCartReminderStage2(olderThan, cooldownBefore);
+}
+
+export async function markCartReminderSent(userId, stage) {
+  return userRepo.markCartReminderSent(userId, stage);
+}
+
 export async function addToCart(userId, { productId, variantId, quantity = 1 }) {
   if (!userId) validationError("userId");
   if (!productId) validationError("productId");
@@ -564,6 +581,9 @@ export default {
   deleteUser,
   getCart,
   getCartItemCount,
+  findUsersDueForCartReminderStage1,
+  findUsersDueForCartReminderStage2,
+  markCartReminderSent,
   addToCart,
   updateCartItemQuantity,
   removeFromCart,

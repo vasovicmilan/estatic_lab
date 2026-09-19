@@ -6,15 +6,16 @@ import productService from "./product.service.js";
 import categoryService from "./category.service.js";
 import tagService from "./tag.service.js";
 import businessPartnerService from "./business-partner.service.js";
+import { FEATURES } from "../config/features.config.js";
 import { logError } from "../utils/logger.util.js";
 
 const STATIC_PAGES = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/o-nama", changefreq: "monthly", priority: "0.6" },
-  { path: "/usluge", changefreq: "weekly", priority: "0.8" },
-  { path: "/paketi", changefreq: "weekly", priority: "0.8" },
-  { path: "/prodavnica", changefreq: "weekly", priority: "0.8" },
-  { path: "/blog", changefreq: "weekly", priority: "0.7" },
+  { path: "/usluge", changefreq: "weekly", priority: "0.8", feature: "booking" },
+  { path: "/paketi", changefreq: "weekly", priority: "0.8", feature: "booking" },
+  { path: "/prodavnica", changefreq: "weekly", priority: "0.8", feature: "shop" },
+  { path: "/blog", changefreq: "weekly", priority: "0.7", feature: "blog" },
   { path: "/nas-tim", changefreq: "monthly", priority: "0.6" },
   { path: "/saradnici", changefreq: "monthly", priority: "0.5" },
   { path: "/kontakt", changefreq: "monthly", priority: "0.6" },
@@ -38,6 +39,7 @@ const TAG_PATH_BY_DOMAIN = {
   service: (slug) => `/usluge/tag/${slug}`,
 };
 const TAXONOMY_DOMAINS = ["post", "service", "product"];
+const TAXONOMY_DOMAIN_FEATURE = { post: "blog", service: "booking", product: "shop" };
 
 // Each data source is fetched defensively - if one repository call fails, the
 // rest of the sitemap should still render instead of a 500 on the whole file.
@@ -55,18 +57,35 @@ function toIso(date) {
 }
 
 export async function getSitemapUrls(base) {
+  // Same reasoning as index.service.js's getLandingPageData - a disabled
+  // module's URLs are skipped here rather than fetched and left in, so
+  // leftover data from a module that was later turned off (e.g. a client who
+  // used to sell products) can't leave 404-ing sitemap entries behind, since
+  // those routes now correctly 404 via requireModule() (see docs/*/16).
+  // categoriesByDomain/tagsByDomain stay indexed against the FULL
+  // TAXONOMY_DOMAINS array below (not a filtered one) - a disabled domain
+  // just resolves to an empty array at its same index, keeping the
+  // `TAXONOMY_DOMAINS.forEach((domain, index) => ...)` correspondence intact.
   const [services, packages, posts, experts, products, partners, categoriesByDomain, tagsByDomain] = await Promise.all([
-    safeList(() => serviceService.listSlugsForSitemap(), "usluge"),
-    safeList(() => packageService.listSlugsForSitemap(), "paketi"),
-    safeList(() => postService.listSlugsForSitemap(), "blog"),
+    FEATURES.booking ? safeList(() => serviceService.listSlugsForSitemap(), "usluge") : Promise.resolve([]),
+    FEATURES.booking ? safeList(() => packageService.listSlugsForSitemap(), "paketi") : Promise.resolve([]),
+    FEATURES.blog ? safeList(() => postService.listSlugsForSitemap(), "blog") : Promise.resolve([]),
     safeList(() => expertService.listSlugsForSitemap(), "eksperti"),
-    safeList(() => productService.listSlugsForSitemap(), "prodavnica"),
+    FEATURES.shop ? safeList(() => productService.listSlugsForSitemap(), "prodavnica") : Promise.resolve([]),
     safeList(() => businessPartnerService.listSlugsForSitemap(), "saradnici"),
-    Promise.all(TAXONOMY_DOMAINS.map((domain) => safeList(() => categoryService.getPublicCategories(domain), `kategorije (${domain})`))),
-    Promise.all(TAXONOMY_DOMAINS.map((domain) => safeList(() => tagService.getPublicTags(domain), `tagovi (${domain})`))),
+    Promise.all(
+      TAXONOMY_DOMAINS.map((domain) =>
+        FEATURES[TAXONOMY_DOMAIN_FEATURE[domain]] ? safeList(() => categoryService.getPublicCategories(domain), `kategorije (${domain})`) : Promise.resolve([])
+      )
+    ),
+    Promise.all(
+      TAXONOMY_DOMAINS.map((domain) =>
+        FEATURES[TAXONOMY_DOMAIN_FEATURE[domain]] ? safeList(() => tagService.getPublicTags(domain), `tagovi (${domain})`) : Promise.resolve([])
+      )
+    ),
   ]);
 
-  const urls = STATIC_PAGES.map((page) => ({
+  const urls = STATIC_PAGES.filter((page) => !page.feature || FEATURES[page.feature]).map((page) => ({
     loc: `${base}${page.path}`,
     changefreq: page.changefreq,
     priority: page.priority,

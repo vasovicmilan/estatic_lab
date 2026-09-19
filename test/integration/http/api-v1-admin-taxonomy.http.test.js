@@ -10,7 +10,7 @@ async function loginAsAdmin(app, email) {
   // automatically - no need to hand-pick manage_roles/manage_taxonomy/
   // manage_resources here.
   await registerAndLogin(agent, { email, roleName: "admin" });
-  const res = await request(app).post("/api/v1/auth/prijava").send({ email, password: "lozinka123" });
+  const res = await request(app).post("/api/v1/auth/login").send({ email, password: "lozinka123" });
   return res.body.data.token;
 }
 
@@ -32,7 +32,7 @@ describe("API v1 admin taxonomy routes (HTTP)", () => {
   it("requires admin permission - a plain user gets 403", async () => {
     const agent = request.agent(app);
     await registerAndLogin(agent, { email: "obican@example.com", roleName: "user" });
-    const loginRes = await request(app).post("/api/v1/auth/prijava").send({ email: "obican@example.com", password: "lozinka123" });
+    const loginRes = await request(app).post("/api/v1/auth/login").send({ email: "obican@example.com", password: "lozinka123" });
 
     const res = await request(app).get("/api/v1/admin/roles").set("Authorization", `Bearer ${loginRes.body.data.token}`);
     assert.equal(res.status, 403);

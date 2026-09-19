@@ -9,6 +9,7 @@ import newsLetterService from "./news-letter.service.js";
 import siteSettingsService from "./site-settings.service.js";
 import { buildPageSeo } from "../seo/index.js";
 import { validationError } from "../utils/error.util.js";
+import { FEATURES } from "../config/features.config.js";
 
 export async function getLandingPageData({
   highlightedServiceLimit = 6,
@@ -18,19 +19,26 @@ export async function getLandingPageData({
   bestPackageLimit = 3,
   featuredProductLimit = 4,
 } = {}) {
+  // Skipping the fetch entirely for a disabled module (rather than fetching
+  // and then hiding the section in home.ejs) means one less avoidable DB
+  // round-trip on every single homepage render, and the empty result is
+  // exactly what the template's existing `data.X && data.X.length > 0` checks
+  // already treat as "don't render this section" - no template change needed,
+  // see docs/*/16-module-feature-flags.md.
   const [highlightedServices, allExperts, testimonials, latestPosts, packagesResult, heroContent, featuredProductsResult] = await Promise.all([
-    serviceService.findHighlightedServices({ limit: highlightedServiceLimit }),
+    FEATURES.booking ? serviceService.findHighlightedServices({ limit: highlightedServiceLimit }) : Promise.resolve([]),
     expertService.getActiveExperts(),
     testimonialService.getApprovedTestimonials({ limit: testimonialLimit, featuredOnly: true, random: true }),
-    postService.findPublishedPosts({ limit: latestPostLimit }),
-    packageService.findActivePackages({ limit: bestPackageLimit }),
+    FEATURES.blog ? postService.findPublishedPosts({ limit: latestPostLimit }) : Promise.resolve({ data: [] }),
+    // Packages relate exclusively to services (see docs/*/16) - same "booking" gate.
+    FEATURES.booking ? packageService.findActivePackages({ limit: bestPackageLimit }) : Promise.resolve({ data: [] }),
     siteSettingsService.getHeroContent(),
     // "featured" is the same shop badge product.service.js already uses for
     // the shop's own sale/featured section (see product.model.js's badge
     // enum) - reusing it here means featuring a product on the homepage is a
     // single admin toggle on the product itself, not a second place to
     // maintain a curated list.
-    productService.listPublicProducts({ filters: { badge: "featured" }, limit: featuredProductLimit }),
+    FEATURES.shop ? productService.listPublicProducts({ filters: { badge: "featured" }, limit: featuredProductLimit }) : Promise.resolve({ data: [] }),
   ]);
 
   const seo = buildPageSeo({

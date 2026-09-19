@@ -1,0 +1,18 @@
+<%- include("_layout", {
+  title: "Zaboravili ste nešto u korpi",
+  eyebrow: "Vaša korpa",
+  heading: `Ostavili ste nešto u korpi${typeof firstName !== 'undefined' && firstName ? ', ' + firstName : ''}`,
+  preheader: "Vaša korpa vas čeka",
+  body: `
+    <p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0 0 20px;">
+      Primetili smo da imate artikle koji čekaju u vašoj korpi. Nismo ništa rezervisali umesto vas - stavke ostaju u korpi dok se zalihe ne promene.
+    </p>
+    ${infoTable(
+      stavke.map(function(item) {
+        return infoRow(`${item.naziv}${item.varijanta ? ' (' + item.varijanta + ')' : ''}`, `&times; ${item.kolicina} - ${formatMoney(item.ukupno)}`);
+      }).join("")
+    )}
+    ${ctaButton(cartUrl, "Pogledaj korpu")}
+    ${linkFallback(cartUrl)}
+  `
+}) %>

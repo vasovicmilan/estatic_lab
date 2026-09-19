@@ -51,6 +51,45 @@ const UserSchema = new Schema(
       default: [],
     },
 
+    // Touched (repositories/user.repository.js) on every cart mutation - add,
+    // quantity change, remove, or a guest cart merged in at login. Together
+    // with cartReminderStage below, this is what cart-reminder-jobs.js uses to
+    // find carts that have sat untouched long enough to count as abandoned,
+    // without needing a separate collection just to track cart activity.
+    cartUpdatedAt: {
+      type: Date,
+      default: null,
+    },
+    // 0 = no reminder sent since the cart was last touched, 1 = the plain
+    // "you left items in your cart" reminder went out, 2 = the one-time
+    // discount follow-up went out. Reset to 0 whenever the cart is touched
+    // again (a fresh abandonment "episode" starts over) - see
+    // cart-reminder.config.js for the exact wait windows per stage.
+    cartReminderStage: {
+      type: Number,
+      default: 0,
+      enum: [0, 1, 2],
+    },
+    // When the CURRENT stage was sent - informational, not used to gate
+    // anything (cartUpdatedAt + cartReminderStage already fully determine
+    // what's due next).
+    cartReminderSentAt: {
+      type: Date,
+      default: null,
+    },
+    // Separate from cartReminderStage on purpose: this does NOT reset when the
+    // cart is touched again, so it survives across multiple abandon/refill
+    // cycles. cart-reminder-jobs.js won't send a new discount offer while this
+    // is within CART_DISCOUNT_COOLDOWN_DAYS, even if the person abandons a
+    // brand new cart in the meantime - the coupon's own maxUsesPerUser already
+    // stops them from redeeming it twice, but without this a persistent
+    // abandoner would still get a fresh "here's a discount" email every few
+    // days, which is just spam once they've already been offered it once.
+    cartDiscountOfferedAt: {
+      type: Date,
+      default: null,
+    },
+
     googleId: {
       type: String,
       sparse: true,

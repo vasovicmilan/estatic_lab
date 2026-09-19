@@ -13,19 +13,30 @@
     <div class="collapse navbar-collapse" id="mainNav">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item"><a class="nav-link <%= currentPath === '/' ? 'active' : '' %>" href="/">Početna</a></li>
+        <% if (features.booking) { %>
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/usluge') ? 'active' : '' %>" href="/usluge">Usluge</a></li>
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/paketi') ? 'active' : '' %>" href="/paketi">Paketi</a></li>
+        <% } %>
+        <% if (features.shop) { %>
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/prodavnica') ? 'active' : '' %>" href="/prodavnica">Prodavnica</a></li>
+        <% } %>
+        <% if (features.blog) { %>
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/blog') ? 'active' : '' %>" href="/blog">Blog</a></li>
+        <% } %>
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/nas-tim') ? 'active' : '' %>" href="/nas-tim">Naš tim</a></li>
+        <% if (features.partners) { %>
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/partnerski-program') ? 'active' : '' %>" href="/partnerski-program">Partnerski program</a></li>
+        <% } %>
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/kontakt') ? 'active' : '' %>" href="/kontakt">Kontakt</a></li>
       </ul>
 
       <% const isAdmin = user?.roleName === 'admin' || user?.permissions?.includes('access_admin_panel'); %>
       <div class="d-flex align-items-center gap-2">
+        <% if (features.booking) { %>
         <a href="/usluge" class="btn btn-primary btn-sm">Zakažite termin</a>
+        <% } %>
 
+        <% if (features.shop) { %>
         <a href="/korpa" class="btn btn-outline-secondary btn-sm position-relative <%= currentPath?.startsWith('/korpa') ? 'active' : '' %>" aria-label="Korpa">
           <i class="bi bi-cart3" aria-hidden="true"></i>
           <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
@@ -35,6 +46,7 @@
             </span>
           <% } %>
         </a>
+        <% } %>
 
         <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
           <!-- Desktop only - the floating dropdown works fine here, this isn't what
@@ -65,10 +77,14 @@
               <% } %>
 
               <li><a class="dropdown-item" href="/nalog">Moj profil</a></li>
+              <% if (features.booking) { %>
               <li><a class="dropdown-item" href="/nalog/termini">Moji termini</a></li>
+              <% } %>
+              <% if (features.shop) { %>
               <li><a class="dropdown-item" href="/nalog/porudzbine">Moje porudžbine</a></li>
               <li><a class="dropdown-item" href="/nalog/adrese">Moje adrese</a></li>
               <li><a class="dropdown-item" href="/korpa">Korpa</a></li>
+              <% } %>
               <li><a class="dropdown-item" href="/nalog/podesavanja">Podešavanja</a></li>
               <% if (user?.isPartner) { %>
                 <li><a class="dropdown-item" href="/moj-partner-nalog">Partnerski nalog</a></li>
@@ -115,10 +131,14 @@
 
           <div class="text-uppercase text-muted px-1 mb-1 mt-2 mobile-account-heading">Nalog</div>
           <a class="nav-link px-1" href="/nalog">Moj profil</a>
+          <% if (features.booking) { %>
           <a class="nav-link px-1" href="/nalog/termini">Moji termini</a>
+          <% } %>
+          <% if (features.shop) { %>
           <a class="nav-link px-1" href="/nalog/porudzbine">Moje porudžbine</a>
           <a class="nav-link px-1" href="/nalog/adrese">Moje adrese</a>
           <a class="nav-link px-1" href="/korpa">Korpa</a>
+          <% } %>
           <a class="nav-link px-1" href="/nalog/podesavanja">Podešavanja</a>
           <% if (user?.isPartner) { %>
             <a class="nav-link px-1" href="/moj-partner-nalog">Partnerski nalog</a>
@@ -141,16 +161,16 @@
     {
       label: "Zakazivanje", icon: "bi-calendar-check",
       items: [
-        { href: "/admin/termini", label: "Termini", icon: "bi-calendar-check" },
-        { href: "/admin/resursi", label: "Resursi", icon: "bi-grid-3x3-gap" },
+        { href: "/admin/termini", label: "Termini", icon: "bi-calendar-check", feature: features.booking },
+        { href: "/admin/resursi", label: "Resursi", icon: "bi-grid-3x3-gap", feature: features.booking },
       ],
     },
     {
       label: "Katalog", icon: "bi-heart-pulse",
       items: [
-        { href: "/admin/usluge", label: "Usluge", icon: "bi-heart-pulse" },
-        { href: "/admin/paketi", label: "Paketi", icon: "bi-box-seam" },
-        { href: "/admin/kupljeni-paketi", label: "Kupljeni paketi", icon: "bi-bag-check" },
+        { href: "/admin/usluge", label: "Usluge", icon: "bi-heart-pulse", feature: features.booking },
+        { href: "/admin/paketi", label: "Paketi", icon: "bi-box-seam", feature: features.booking },
+        { href: "/admin/kupljeni-paketi", label: "Kupljeni paketi", icon: "bi-bag-check", feature: features.booking },
         { href: "/admin/kategorije", label: "Kategorije", icon: "bi-tags" },
         { href: "/admin/tagovi", label: "Tagovi", icon: "bi-tag" },
       ],
@@ -158,16 +178,16 @@
     {
       label: "Prodavnica", icon: "bi-shop",
       items: [
-        { href: "/admin/proizvodi", label: "Proizvodi", icon: "bi-box2-heart" },
-        { href: "/admin/porudzbine", label: "Porudžbine", icon: "bi-receipt" },
-        { href: "/admin/privremene-porudzbine", label: "Privremene porudžbine", icon: "bi-hourglass-split" },
-        { href: "/admin/kuponi", label: "Kuponi", icon: "bi-ticket-perforated" },
+        { href: "/admin/proizvodi", label: "Proizvodi", icon: "bi-box2-heart", feature: features.shop },
+        { href: "/admin/porudzbine", label: "Porudžbine", icon: "bi-receipt", feature: features.shop },
+        { href: "/admin/privremene-porudzbine", label: "Privremene porudžbine", icon: "bi-hourglass-split", feature: features.shop },
+        { href: "/admin/kuponi", label: "Kuponi", icon: "bi-ticket-perforated", feature: features.coupons },
       ],
     },
     {
       label: "Tim", icon: "bi-people",
       items: [
-        { href: "/admin/zaposleni", label: "Zaposleni", icon: "bi-person-badge" },
+        { href: "/admin/zaposleni", label: "Zaposleni", icon: "bi-person-badge", feature: features.employees },
         { href: "/admin/eksperti", label: "Eksperti", icon: "bi-award" },
         { href: "/admin/korisnici", label: "Korisnici", icon: "bi-people" },
       ],
@@ -175,14 +195,17 @@
     {
       label: "Partnerski program", icon: "bi-diagram-3",
       items: [
-        { href: "/admin/partneri", label: "Partneri", icon: "bi-person-vcard" },
-        { href: "/admin/isplate", label: "Isplate", icon: "bi-cash-coin" },
+        { href: "/admin/partneri", label: "Partneri", icon: "bi-person-vcard", feature: features.partners },
+        // Isplate covers BOTH employee commission payouts and partner payouts
+        // (see admin-ops.routes.js's payout-requests) - relevant whenever
+        // either role can exist, not just when partners are on.
+        { href: "/admin/isplate", label: "Isplate", icon: "bi-cash-coin", feature: features.employees || features.partners },
       ],
     },
     {
       label: "Sadržaj i marketing", icon: "bi-newspaper",
       items: [
-        { href: "/admin/blog", label: "Blog", icon: "bi-newspaper" },
+        { href: "/admin/blog", label: "Blog", icon: "bi-newspaper", feature: features.blog },
         { href: "/admin/kontakt", label: "Kontakt", icon: "bi-envelope-paper" },
         { href: "/admin/newsletter", label: "Newsletter", icon: "bi-send" },
         { href: "/admin/newsletter/kampanje", label: "Kampanje", icon: "bi-megaphone" },
@@ -205,6 +228,14 @@
       ],
     },
   ];
+  // An item with no `feature` key is always shown (general/cross-module content -
+  // roles, categories/tags, users, experts, newsletter, etc. - see docs/*/16).
+  // A group that ends up with zero visible items (e.g. "Zakazivanje" when
+  // booking is off) doesn't render its dropdown at all.
+  adminNavGroups.forEach((group) => {
+    group.items = group.items.filter((item) => item.feature === undefined || item.feature);
+  });
+  const visibleAdminNavGroups = adminNavGroups.filter((group) => group.items.length > 0);
   function isGroupActive(group) {
     return group.items.some((item) => currentPath.startsWith(item.href));
   }
@@ -217,7 +248,7 @@
     <div class="collapse navbar-collapse" id="adminNav">
       <ul class="navbar-nav flex-wrap">
         <li class="nav-item"><a class="nav-link <%= currentPath === '/admin' ? 'active' : '' %>" href="/admin"><i class="bi bi-speedometer2 me-1"></i>Početna</a></li>
-        <% adminNavGroups.forEach(function(group) { %>
+        <% visibleAdminNavGroups.forEach(function(group) { %>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle <%= isGroupActive(group) ? 'active' : '' %>" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="bi <%= group.icon %> me-1"></i><%= group.label %>

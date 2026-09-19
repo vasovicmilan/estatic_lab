@@ -14,11 +14,17 @@
              touching directly, which fails WCAG 2.5.8's touch-target-size/spacing
              check on top of the same contrast problem as above. -->
         <ul class="list-unstyled small">
+          <% if (features.booking) { %>
           <li class="mb-2"><a href="/usluge" class="text-white text-opacity-75 text-decoration-none">Usluge</a></li>
           <li class="mb-2"><a href="/paketi" class="text-white text-opacity-75 text-decoration-none">Paketi</a></li>
+          <% } %>
+          <% if (features.blog) { %>
           <li class="mb-2"><a href="/blog" class="text-white text-opacity-75 text-decoration-none">Blog</a></li>
+          <% } %>
           <li class="mb-2"><a href="/nas-tim" class="text-white text-opacity-75 text-decoration-none">Naš tim</a></li>
+          <% if (features.partners) { %>
           <li class="mb-2"><a href="/partnerski-program" class="text-white text-opacity-75 text-decoration-none">Partnerski program</a></li>
+          <% } %>
           <li class="mb-2"><a href="/saradnici" class="text-white text-opacity-75 text-decoration-none">Naši saradnici</a></li>
           <li class="mb-2"><a href="/kontakt" class="text-white text-opacity-75 text-decoration-none">Kontakt</a></li>
           <li><a href="/o-nama" class="text-white text-opacity-75 text-decoration-none">O nama</a></li>

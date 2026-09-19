@@ -31,7 +31,10 @@ async function createEmployeeForService(serviceId) {
 async function loginAsAdmin(app, email) {
   const agent = request.agent(app);
   await registerAndLogin(agent, { email, roleName: "admin" });
-  const res = await request(app).post("/api/v1/auth/prijava").send({ email, password: "lozinka123" });
+  const res = await request(app).post("/api/v1/auth/login").send({ email, password: "lozinka123" });
+  if (!res.body?.data?.token) {
+    throw new Error(`loginAsAdmin(${email}) did not get a token - status=${res.status} body=${JSON.stringify(res.body)}`);
+  }
   return res.body.data.token;
 }
 
@@ -111,10 +114,21 @@ describe("API v1 admin appointment routes (HTTP)", () => {
     // same reasoning already fixed once for api-v1-booking.http.test.js's guest
     // booking test.
     await ensureRole("user");
-    const startTime = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    // Explicit mid-day time, not "now + 24h" - the employee works 00:00-23:59,
+    // but a 60-minute appointment starting late enough at night would spill
+    // past 23:59 into the next calendar day, which working-hours validation
+    // correctly rejects (working hours are per-day, they don't span midnight).
+    // Run this suite late in the evening and "+24h" can land right on that
+    // edge - not a bug, just this test being time-of-day dependent for no
+    // reason. Tomorrow at a safely mid-day hour has no such edge regardless
+    // of when the suite runs.
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(10, 0, 0, 0);
+    const startTime = tomorrow.toISOString();
 
     const res = await request(app)
-      .post("/api/v1/admin/appointments/rucno-kreiranje")
+      .post("/api/v1/admin/appointments/manual")
       .set("Authorization", `Bearer ${token}`)
       .send({
         serviceId: service._id.toString(),
@@ -191,7 +205,7 @@ describe("API v1 admin order routes (HTTP)", () => {
     await ensureRole("user");
 
     const res = await request(app)
-      .post("/api/v1/admin/orders/rucno-kreiranje")
+      .post("/api/v1/admin/orders/manual")
       .set("Authorization", `Bearer ${token}`)
       .send({
         productId: product._id.toString(),

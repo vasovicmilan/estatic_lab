@@ -6,10 +6,10 @@ Platforma ima dva potpuno odvojena "lica": server-renderovani web (EJS, sesije, 
 
 API koristi **JWT (Bearer token)**, ne sesije/kolačiće kao web strana. Tok:
 
-1. `POST /api/v1/auth/registracija` ili `POST /api/v1/auth/prijava` (email/lozinka) vraća token u telu odgovora.
+1. `POST /api/v1/auth/register` ili `POST /api/v1/auth/login` (email/lozinka) vraća token u telu odgovora.
 2. Svaki sledeći zahtev šalje taj token u `Authorization: Bearer <token>` header-u.
 3. Token važi **24 sata** (`crypto.service.js`, `signJwt`), posle čega je potrebna ponovna prijava - trenutno ne postoji refresh-token mehanizam.
-4. `GET /api/v1/auth/ja` vraća podatke o trenutno prijavljenom nalogu (koristan "ko sam ja" poziv za klijentske aplikacije posle učitavanja sačuvanog tokena).
+4. `GET /api/v1/auth/me` vraća podatke o trenutno prijavljenom nalogu (koristan "ko sam ja" poziv za klijentske aplikacije posle učitavanja sačuvanog tokena).
 
 Token nosi ulogu (`roleName`) i **kompletan spisak dozvola** (`permissions`) korisnika u trenutku prijave (isti obrazac kao sesija na web strani - videti `01-korisnici-role-dozvole.md`). Posledica: ako admin nekom naknadno izmeni ili oduzme dozvolu, **već izdati token to ne vidi** dok ne istekne (do 24h) ili se korisnik ponovo ne prijavi. Za hitno oduzimanje pristupa (npr. otkaz zaposlenom), deaktiviranje naloga (`isActive: false`) je pouzdanije od same izmene role, jer se proverava pri svakom zahtevu koji dotiče taj nalog, ne samo pri izdavanju tokena.
 
@@ -49,7 +49,7 @@ Slika/upload polja (naslovna slika posta, galerija proizvoda, itd.) **nisu podr�
 | `GET /api/v1/catalog/services`, `/packages`, `/products`, `/team`, `/blog/posts`, `/business-partners` (+ `/:slug`) | Isti javni katalog kao web prodavnica/usluge/blog, u JSON obliku |
 | `GET /api/v1/booking/:serviceSlug/slots` | Dostupni termini za uslugu (koristi `optionalApiAuth` - radi i bez i sa tokenom) |
 | `POST /api/v1/booking/confirm` | Zakazivanje termina kao gost ili prijavljen korisnik |
-| `POST /api/v1/auth/registracija`, `/prijava`, `/zaboravljena-lozinka`, `PUT /resetovanje-lozinke/:token`, `GET /verifikacija/:token` | Standardan auth tok |
+| `POST /api/v1/auth/register`, `/login`, `/forgot-password`, `PUT /reset-password/:token`, `GET /verify/:token` | Standardan auth tok |
 
 ## Rute prijavljenog korisnika (bilo koja rola, samo `apiAuthMiddleware`)
 
@@ -99,11 +99,11 @@ Ceo router iza `manage_packages` (nema pod-dozvola). `GET /`, `GET /:packagePurc
 
 ### Zakazivanja (`admin-appointment.routes.js`)
 
-Ceo router iza `manage_appointments_all`. `GET /`, `GET /rucno-kreiranje/proveri-paket`, `POST /rucno-kreiranje`, `GET /:appointmentId`, `PUT /:appointmentId/confirm|reject|cancel|complete|no-show|reopen|reassign|reschedule`, `DELETE /:appointmentId`.
+Ceo router iza `manage_appointments_all`. `GET /`, `GET /manual/check-package`, `POST /manual`, `GET /:appointmentId`, `PUT /:appointmentId/confirm|reject|cancel|complete|no-show|reopen|reassign|reschedule`, `DELETE /:appointmentId`.
 
 ### Porudžbine (`admin-order.routes.js`)
 
-Ceo router iza `manage_orders`. `GET /orders`, `POST /orders/rucno-kreiranje`, `GET /orders/:orderId`, `PUT /orders/:orderId/process|ship|deliver|complete|return|refund|cancel|reopen|contact`, plus `GET /temporary-orders`, `GET /temporary-orders/:orderId`, `PUT /temporary-orders/:orderId/confirm|shipping`.
+Ceo router iza `manage_orders`. `GET /orders`, `POST /orders/manual`, `GET /orders/:orderId`, `PUT /orders/:orderId/process|ship|deliver|complete|return|refund|cancel|reopen|contact`, plus `GET /temporary-orders`, `GET /temporary-orders/:orderId`, `PUT /temporary-orders/:orderId/confirm|shipping`.
 
 ### Marketing (`admin-marketing.routes.js`)
 
