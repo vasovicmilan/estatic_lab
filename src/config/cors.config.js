@@ -31,6 +31,7 @@ const allowedOrigins = new Set([
 if (!isProd) {
   allowedOrigins.add("http://localhost:3002");
   allowedOrigins.add("http://127.0.0.1:3002");
+  allowedOrigins.add('http://localhost:4200');
 }
 
 export function setupCors(app) {
