@@ -15,6 +15,8 @@ import businessReportService from "../../../services/business-report.service.js"
 import siteSettingsService from "../../../services/site-settings.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
 import { getStartOfDayInZone, getEndOfDayInZone } from "../../../utils/date.time.util.js";
+import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
+import { buildAuditActor } from "../../../utils/audit-actor.util.js";
 
 // Mirrors controllers/web/admin/{dashboard,marketing/payout-request,logs/*,
 // reports/business-report,marketing/site-settings,profile}.controller.js - same
@@ -24,14 +26,6 @@ import { getStartOfDayInZone, getEndOfDayInZone } from "../../../utils/date.time
 // download (businessReportDownloadPdf) is deliberately not exposed here - it's a
 // binary file response, not a JSON endpoint; same reasoning as image upload being
 // out of scope elsewhere in this API.
-
-function auditActor(req) {
-  return { actor: req.user, req, success: true };
-}
-
-function paginationMeta(result) {
-  return { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages };
-}
 
 // ================== Dashboard ==================
 
@@ -107,10 +101,10 @@ export async function listPayoutRequests(req, res, next) {
     const { status, earnerType, partnerId, employeeId, page = 1, limit = 10 } = req.query;
     const result = await payoutRequestService.listPayoutRequests({
       filters: { status: status || undefined, earnerType: earnerType || undefined, partner: partnerId || undefined, employee: employeeId || undefined },
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listPayoutRequests] Greška", error, { query: req.query });
     next(error);
@@ -132,7 +126,7 @@ export async function approvePayoutRequest(req, res, next) {
     const { requestId } = req.params;
     const updated = await payoutRequestService.approvePayoutRequest(requestId, req.body.reason || "");
     logInfo(`[api/admin/approvePayoutRequest] Zahtev #${requestId} odobren`, { requestId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "PAYOUT_APPROVED", entity: { type: "PayoutRequest", id: requestId }, changes: { status: { old: "requested", new: "approved" } } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "PAYOUT_APPROVED", entity: { type: "PayoutRequest", id: requestId }, changes: { status: { old: "requested", new: "approved" } } });
     return res.json({ success: true, data: updated });
   } catch (error) {
     logError("[api/admin/approvePayoutRequest] Greška", error, { requestId: req.params.requestId });
@@ -145,7 +139,7 @@ export async function markPayoutRequestPaid(req, res, next) {
     const { requestId } = req.params;
     const updated = await payoutRequestService.markPayoutRequestPaid(requestId, req.body.reason || "");
     logInfo(`[api/admin/markPayoutRequestPaid] Zahtev #${requestId} isplaćen`, { requestId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "PAYOUT_PAID", entity: { type: "PayoutRequest", id: requestId }, changes: { status: { old: null, new: "paid" } } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "PAYOUT_PAID", entity: { type: "PayoutRequest", id: requestId }, changes: { status: { old: null, new: "paid" } } });
     return res.json({ success: true, data: updated });
   } catch (error) {
     logError("[api/admin/markPayoutRequestPaid] Greška", error, { requestId: req.params.requestId });
@@ -158,7 +152,7 @@ export async function rejectPayoutRequest(req, res, next) {
     const { requestId } = req.params;
     const updated = await payoutRequestService.rejectPayoutRequest(requestId, req.body.reason || "");
     logInfo(`[api/admin/rejectPayoutRequest] Zahtev #${requestId} odbijen`, { requestId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "PAYOUT_REJECTED", entity: { type: "PayoutRequest", id: requestId }, changes: { status: { old: null, new: "rejected" } } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "PAYOUT_REJECTED", entity: { type: "PayoutRequest", id: requestId }, changes: { status: { old: null, new: "rejected" } } });
     return res.json({ success: true, data: updated });
   } catch (error) {
     logError("[api/admin/rejectPayoutRequest] Greška", error, { requestId: req.params.requestId });
@@ -172,7 +166,7 @@ export async function recordPayoutDirectly(req, res, next) {
     await payoutRequestService.recordPayoutByAdmin(earnerType, earnerId, Number(amount), note || "");
     logInfo("[api/admin/recordPayoutDirectly] Isplata direktno zabeležena", { earnerType, earnerId, amount, adminId: req.user.id });
     await auditLogService.recordAuditLog({
-      ...auditActor(req),
+      ...buildAuditActor(req),
       action: "PAYOUT_RECORDED_DIRECTLY",
       entity: { type: earnerType === "employee" ? "Employee" : "Partner", id: earnerId },
       changes: { amount: { old: null, new: Number(amount) }, note: { old: null, new: note || null } },
@@ -203,12 +197,12 @@ export async function listAuditLogs(req, res, next) {
           dateTo: dateTo ? getEndOfDayInZone(dateTo) : undefined,
           sortOrder: sortOrder === "asc" ? "asc" : "desc",
         },
-        page: parseInt(page, 10) || 1,
-        limit: parseInt(limit, 10) || 25,
+        page: resolvePage(page),
+        limit: resolveLimit(limit),
       }),
       auditLogService.listDistinctActions(),
     ]);
-    return res.json({ success: true, data: result.data, meta: { ...paginationMeta(result), availableActions } });
+    return res.json({ success: true, data: result.data, meta: { ...pickPaginationMeta(result), availableActions } });
   } catch (error) {
     logError("[api/admin/listAuditLogs] Greška", error, { query: req.query });
     next(error);
@@ -230,8 +224,8 @@ export async function getLogDashboard(req, res, next) {
 export async function listLogSummaries(req, res, next) {
   try {
     const { page = 1, limit = 20 } = req.query;
-    const result = await logReportService.listLogSummaries({ page: parseInt(page, 10) || 1, limit: parseInt(limit, 10) || 20 });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    const result = await logReportService.listLogSummaries({ page: resolvePage(page), limit: resolveLimit(limit) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listLogSummaries] Greška", error, { query: req.query });
     next(error);
@@ -269,8 +263,8 @@ export async function listBusinessReports(req, res, next) {
     if (!REPORT_PERIOD_TYPES.includes(periodType)) return res.status(400).json({ success: false, error: { message: "Nepoznat tip perioda" } });
 
     const { page = 1, limit = 20 } = req.query;
-    const result = await businessReportService.listSummaries(periodType, { page: parseInt(page, 10) || 1, limit: parseInt(limit, 10) || 20 });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    const result = await businessReportService.listSummaries(periodType, { page: resolvePage(page), limit: resolveLimit(limit) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listBusinessReports] Greška", error, { periodType: req.params.periodType, query: req.query });
     next(error);
@@ -340,7 +334,7 @@ export async function updateSiteSettings(req, res, next) {
 
     logInfo("[api/admin/updateSiteSettings] Podešavanja sajta ažurirana", { adminId: req.user.id });
     await auditLogService.recordAuditLog({
-      ...auditActor(req),
+      ...buildAuditActor(req),
       action: "SITE_SETTINGS_UPDATED",
       entity: { type: "SiteSettings", id: "singleton" },
       changes: {

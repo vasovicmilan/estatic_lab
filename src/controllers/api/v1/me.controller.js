@@ -4,6 +4,9 @@ import * as orderService from "../../../services/order.service.js";
 import * as authService from "../../../services/auth.service.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
+import { getStartOfDayInZone, nextDayStartInZone } from "../../../utils/date.time.util.js";
+import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
+import { buildAuditActor } from "../../../utils/audit-actor.util.js";
 
 // Every action here mirrors controllers/web/user/user.controller.js and
 // controllers/web/auth/auth.controller.js's changePassword/deactivateAccount -
@@ -33,7 +36,7 @@ export async function updateProfile(req, res, next) {
 
     logInfo(`[api/updateProfile] Korisnik #${req.user.id} ažurirao podešavanja`, { userId: req.user.id });
     const changes = auditLogService.computeChanges(existing, updated, ["firstName", "lastName", "telefon"]);
-    await auditLogService.recordAuditLog({ actor: req.user, action: "USER_SETTINGS_UPDATED", entity: { type: "User", id: req.user.id }, changes, req, success: true });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "USER_SETTINGS_UPDATED", entity: { type: "User", id: req.user.id }, changes });
 
     return res.json({ success: true, data: updated });
   } catch (error) {
@@ -79,14 +82,19 @@ export async function listAppointments(req, res, next) {
       role: "user",
       filters: {
         status: status || undefined,
-        dateFrom: dateFrom ? new Date(dateFrom) : undefined,
-        dateTo: dateTo ? new Date(dateTo) : undefined,
+        // Same zone-aware bounds as admin-appointment.controller.js's
+        // listAppointments - was a raw `new Date(dateFrom/dateTo)` before, which
+        // (a) reads a "2026-09-20" string in the SERVER PROCESS's own timezone
+        // rather than APP_TIMEZONE, and (b) never widened dateTo to end-of-day,
+        // so a same-day appointment could be silently excluded from the range.
+        dateFrom: dateFrom ? getStartOfDayInZone(dateFrom) : undefined,
+        dateTo: dateTo ? nextDayStartInZone(dateTo) : undefined,
       },
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
 
-    return res.json({ success: true, data: result.data, meta: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages } });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/listAppointments] Greška", error, { userId: req.user.id, query: req.query });
     next(error);
@@ -109,12 +117,10 @@ export async function cancelAppointment(req, res, next) {
     await appointmentService.cancelAppointment(appointmentId, req.body.reason, req.user.id, "user");
     logInfo(`[api/cancelAppointment] Korisnik otkazao termin #${appointmentId}`, { appointmentId, userId: req.user.id });
     await auditLogService.recordAuditLog({
-      actor: req.user,
+      ...buildAuditActor(req),
       action: "APPOINTMENT_CANCELLED",
       entity: { type: "Appointment", id: appointmentId },
       changes: { reason: { old: null, new: req.body.reason || null } },
-      req,
-      success: true,
     });
 
     return res.json({ success: true, data: { message: "Termin je uspešno otkazan." } });
@@ -132,12 +138,10 @@ export async function rescheduleAppointment(req, res, next) {
 
     logInfo(`[api/rescheduleAppointment] Korisnik pomerio termin #${appointmentId}`, { appointmentId, userId: req.user.id });
     await auditLogService.recordAuditLog({
-      actor: req.user,
+      ...buildAuditActor(req),
       action: "APPOINTMENT_RESCHEDULED",
       entity: { type: "Appointment", id: appointmentId },
       changes: { pocetak: { old: existing?.termin?.pocetakRaw ?? null, new: req.body.newStartTime || null } },
-      req,
-      success: true,
     });
 
     return res.json({ success: true, data: updated });
@@ -157,11 +161,11 @@ export async function listOrders(req, res, next) {
       requesterId: req.user.id,
       role: "user",
       filters: { status: status || undefined },
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
 
-    return res.json({ success: true, data: result.data, meta: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages } });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/listOrders] Greška", error, { userId: req.user.id, query: req.query });
     next(error);
@@ -184,12 +188,10 @@ export async function cancelOrder(req, res, next) {
     await orderService.cancelOrder(orderId, req.body.reason, req.user.id, "user");
     logInfo(`[api/cancelOrder] Korisnik otkazao porudžbinu #${orderId}`, { orderId, userId: req.user.id });
     await auditLogService.recordAuditLog({
-      actor: req.user,
+      ...buildAuditActor(req),
       action: "ORDER_CANCELLED",
       entity: { type: "Order", id: orderId },
       changes: { reason: { old: null, new: req.body.reason || null } },
-      req,
-      success: true,
     });
 
     return res.json({ success: true, data: { message: "Porudžbina je uspešno otkazana." } });
@@ -224,7 +226,7 @@ export async function addAddress(req, res, next) {
       isDefault: req.body.isDefault === true || req.body.isDefault === "true",
     });
     logInfo("[api/addAddress] Adresa dodata", { userId: req.user.id });
-    await auditLogService.recordAuditLog({ actor: req.user, action: "USER_ADDRESS_ADDED", entity: { type: "User", id: req.user.id }, req, success: true });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "USER_ADDRESS_ADDED", entity: { type: "User", id: req.user.id } });
 
     return res.status(201).json({ success: true, data: addresses });
   } catch (error) {
@@ -238,7 +240,7 @@ export async function removeAddress(req, res, next) {
     const { addressId } = req.params;
     await userService.removeAddress(req.user.id, addressId);
     logInfo("[api/removeAddress] Adresa uklonjena", { userId: req.user.id, addressId });
-    await auditLogService.recordAuditLog({ actor: req.user, action: "USER_ADDRESS_REMOVED", entity: { type: "User", id: req.user.id }, req, success: true });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "USER_ADDRESS_REMOVED", entity: { type: "User", id: req.user.id } });
 
     return res.json({ success: true, data: { message: "Adresa je uklonjena." } });
   } catch (error) {
@@ -253,12 +255,10 @@ export async function setDefaultAddress(req, res, next) {
     await userService.setDefaultAddress(req.user.id, addressId);
     logInfo("[api/setDefaultAddress] Podrazumevana adresa promenjena", { userId: req.user.id, addressId });
     await auditLogService.recordAuditLog({
-      actor: req.user,
+      ...buildAuditActor(req),
       action: "USER_DEFAULT_ADDRESS_CHANGED",
       entity: { type: "User", id: req.user.id },
       changes: { addressId: { old: null, new: addressId } },
-      req,
-      success: true,
     });
 
     return res.json({ success: true, data: { message: "Podrazumevana adresa je ažurirana." } });

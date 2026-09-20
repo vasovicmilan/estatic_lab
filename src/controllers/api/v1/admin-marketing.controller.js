@@ -7,6 +7,8 @@ import * as contactService from "../../../services/contact.service.js";
 import * as campaignService from "../../../services/campaign.service.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
+import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
+import { buildAuditActor } from "../../../utils/audit-actor.util.js";
 
 // Mirrors controllers/web/admin/{blog/post,marketing/coupon,marketing/news-letter,
 // marketing/testimonial,marketing/business-partner,marketing/contact}.controller.js -
@@ -17,14 +19,6 @@ import { logError, logInfo } from "../../../utils/logger.util.js";
 // Image upload (coverImage/gallery) is out of scope here, same as everywhere else
 // in this API - a post/business partner created or edited through this API simply
 // keeps whatever image it already had (or none, on create).
-
-function auditActor(req) {
-  return { actor: req.user, req, success: true };
-}
-
-function paginationMeta(result) {
-  return { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages };
-}
 
 function toIdArray(value) {
   if (Array.isArray(value)) return value.filter(Boolean);
@@ -51,10 +45,10 @@ export async function listPosts(req, res, next) {
       search: search || "",
       filters: { status: status || undefined },
       sortBy: sortBy || undefined,
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listPosts] Greška", error, { query: req.query });
     next(error);
@@ -76,7 +70,7 @@ export async function createPost(req, res, next) {
     const data = buildPostPayload(req);
     const post = await postService.createPost(data);
     logInfo(`[api/admin/createPost] Post kreiran: "${post.naslov}"`, { postId: post.id, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "POST_CREATED", entity: { type: "Post", id: post.id } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "POST_CREATED", entity: { type: "Post", id: post.id } });
     return res.status(201).json({ success: true, data: post });
   } catch (error) {
     logError("[api/admin/createPost] Greška", error, { body: req.body });
@@ -93,7 +87,7 @@ export async function updatePost(req, res, next) {
     logInfo(`[api/admin/updatePost] Post #${postId} ažuriran`, { postId, adminId: req.user.id });
     const afterUpdate = await postService.getPostForEdit(postId);
     const changes = auditLogService.computeChanges(existing, afterUpdate, ["title", "excerpt", "status", "author"]);
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "POST_UPDATED", entity: { type: "Post", id: postId }, changes });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "POST_UPDATED", entity: { type: "Post", id: postId }, changes });
     return res.json({ success: true, data: updated });
   } catch (error) {
     logError("[api/admin/updatePost] Greška", error, { postId: req.params.postId, body: req.body });
@@ -109,7 +103,7 @@ export async function updatePostStatus(req, res, next) {
     const updated = await postService.updatePostStatus(postId, req.body.status, { scheduledFor });
     logInfo(`[api/admin/updatePostStatus] Status posta #${postId} promenjen na "${req.body.status}"`, { postId, adminId: req.user.id });
     await auditLogService.recordAuditLog({
-      ...auditActor(req),
+      ...buildAuditActor(req),
       action: "POST_STATUS_CHANGED",
       entity: { type: "Post", id: postId },
       changes: { status: { old: existing?.status ?? null, new: req.body.status } },
@@ -133,7 +127,7 @@ export async function updatePostSeo(req, res, next) {
     };
     const updated = await postService.updatePostSeo(postId, seo);
     logInfo(`[api/admin/updatePostSeo] SEO posta #${postId} ažuriran`, { postId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "POST_SEO_UPDATED", entity: { type: "Post", id: postId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "POST_SEO_UPDATED", entity: { type: "Post", id: postId } });
     return res.json({ success: true, data: updated });
   } catch (error) {
     logError("[api/admin/updatePostSeo] Greška", error, { postId: req.params.postId, body: req.body });
@@ -146,7 +140,7 @@ export async function deletePost(req, res, next) {
     const { postId } = req.params;
     await postService.deletePostById(postId);
     logInfo(`[api/admin/deletePost] Post #${postId} obrisan`, { postId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "POST_DELETED", entity: { type: "Post", id: postId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "POST_DELETED", entity: { type: "Post", id: postId } });
     return res.json({ success: true, data: { message: "Post je uspešno obrisan." } });
   } catch (error) {
     logError("[api/admin/deletePost] Greška", error, { postId: req.params.postId });
@@ -200,10 +194,10 @@ export async function listCoupons(req, res, next) {
     const result = await couponService.listCoupons({
       search: search || "",
       filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined },
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listCoupons] Greška", error, { query: req.query });
     next(error);
@@ -225,7 +219,7 @@ export async function createCoupon(req, res, next) {
     const data = buildCouponPayload(req);
     const coupon = await couponService.createCoupon(data);
     logInfo(`[api/admin/createCoupon] Kupon "${coupon.osnovno.kod}" kreiran`, { couponId: coupon.id, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "COUPON_CREATED", entity: { type: "Coupon", id: coupon.id } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "COUPON_CREATED", entity: { type: "Coupon", id: coupon.id } });
     return res.status(201).json({ success: true, data: coupon });
   } catch (error) {
     logError("[api/admin/createCoupon] Greška", error, { body: req.body });
@@ -246,7 +240,7 @@ export async function updateCoupon(req, res, next) {
       "maxUses", "maxUsesPerUser", "validUntil", "isActive",
       "productDiscountEnabled", "productDiscountType", "productDiscountValue", "productDiscountMaxAmount", "productMinOrderValue",
     ]);
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "COUPON_UPDATED", entity: { type: "Coupon", id: couponId }, changes });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "COUPON_UPDATED", entity: { type: "Coupon", id: couponId }, changes });
     return res.json({ success: true, data: updated });
   } catch (error) {
     logError("[api/admin/updateCoupon] Greška", error, { couponId: req.params.couponId, body: req.body });
@@ -259,7 +253,7 @@ export async function deleteCoupon(req, res, next) {
     const { couponId } = req.params;
     await couponService.deleteCouponById(couponId);
     logInfo(`[api/admin/deleteCoupon] Kupon #${couponId} obrisan`, { couponId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "COUPON_DELETED", entity: { type: "Coupon", id: couponId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "COUPON_DELETED", entity: { type: "Coupon", id: couponId } });
     return res.json({ success: true, data: { message: "Kupon je uspešno obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteCoupon] Greška", error, { couponId: req.params.couponId });
@@ -275,10 +269,10 @@ export async function listSubscribers(req, res, next) {
     const result = await newsletterService.listSubscribers({
       search: search || "",
       filters: { status: status || undefined },
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listSubscribers] Greška", error, { query: req.query });
     next(error);
@@ -314,10 +308,10 @@ export async function listTestimonials(req, res, next) {
     const { status, isFeatured, page = 1, limit = 10 } = req.query;
     const result = await testimonialService.listTestimonials({
       filters: { status: status || undefined, isFeatured: isFeatured === "true" ? true : isFeatured === "false" ? false : undefined },
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listTestimonials] Greška", error, { query: req.query });
     next(error);
@@ -341,7 +335,7 @@ export async function approveTestimonial(req, res, next) {
     await testimonialService.approveTestimonial(testimonialId, { isFeatured });
     logInfo(`[api/admin/approveTestimonial] Testimonijal #${testimonialId} odobren`, { testimonialId, isFeatured, adminId: req.user.id });
     await auditLogService.recordAuditLog({
-      ...auditActor(req),
+      ...buildAuditActor(req),
       action: "TESTIMONIAL_APPROVED",
       entity: { type: "Testimonial", id: testimonialId },
       changes: { status: { old: "pending", new: "approved" }, isFeatured: { old: null, new: isFeatured } },
@@ -351,7 +345,7 @@ export async function approveTestimonial(req, res, next) {
   } catch (error) {
     logError("[api/admin/approveTestimonial] Greška", error, { testimonialId: req.params.testimonialId });
     await auditLogService.recordAuditLog({
-      actor: req.user, req, success: false, errorMessage: error.message,
+      ...buildAuditActor(req, { success: false, errorMessage: error.message }),
       action: "TESTIMONIAL_APPROVED",
       entity: { type: "Testimonial", id: req.params.testimonialId },
     });
@@ -365,7 +359,7 @@ export async function rejectTestimonial(req, res, next) {
     await testimonialService.rejectTestimonial(testimonialId);
     logInfo(`[api/admin/rejectTestimonial] Testimonijal #${testimonialId} odbijen`, { testimonialId, adminId: req.user.id });
     await auditLogService.recordAuditLog({
-      ...auditActor(req),
+      ...buildAuditActor(req),
       action: "TESTIMONIAL_REJECTED",
       entity: { type: "Testimonial", id: testimonialId },
       changes: { status: { old: "pending", new: "rejected" } },
@@ -375,7 +369,7 @@ export async function rejectTestimonial(req, res, next) {
   } catch (error) {
     logError("[api/admin/rejectTestimonial] Greška", error, { testimonialId: req.params.testimonialId });
     await auditLogService.recordAuditLog({
-      actor: req.user, req, success: false, errorMessage: error.message,
+      ...buildAuditActor(req, { success: false, errorMessage: error.message }),
       action: "TESTIMONIAL_REJECTED",
       entity: { type: "Testimonial", id: req.params.testimonialId },
     });
@@ -388,7 +382,7 @@ export async function deleteTestimonial(req, res, next) {
     const { testimonialId } = req.params;
     await testimonialService.deleteTestimonialById(testimonialId);
     logInfo(`[api/admin/deleteTestimonial] Testimonijal #${testimonialId} obrisan`, { testimonialId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "TESTIMONIAL_DELETED", entity: { type: "Testimonial", id: testimonialId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "TESTIMONIAL_DELETED", entity: { type: "Testimonial", id: testimonialId } });
     return res.json({ success: true, data: { message: "Testimonijal je uspešno obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteTestimonial] Greška", error, { testimonialId: req.params.testimonialId });
@@ -417,10 +411,10 @@ export async function listBusinessPartners(req, res, next) {
     const { search, page = 1, limit = 10 } = req.query;
     const result = await businessPartnerService.listBusinessPartners({
       search: search || "",
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listBusinessPartners] Greška", error, { query: req.query });
     next(error);
@@ -442,7 +436,7 @@ export async function createBusinessPartner(req, res, next) {
     const data = buildBusinessPartnerPayload(req);
     const partner = await businessPartnerService.createBusinessPartner(data);
     logInfo(`[api/admin/createBusinessPartner] Saradnik kreiran: "${partner.naziv}"`, { partnerId: partner.id, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "BUSINESS_PARTNER_CREATED", entity: { type: "BusinessPartner", id: partner.id } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "BUSINESS_PARTNER_CREATED", entity: { type: "BusinessPartner", id: partner.id } });
     return res.status(201).json({ success: true, data: partner });
   } catch (error) {
     logError("[api/admin/createBusinessPartner] Greška", error, { body: req.body });
@@ -459,7 +453,7 @@ export async function updateBusinessPartner(req, res, next) {
     logInfo(`[api/admin/updateBusinessPartner] Saradnik #${partnerId} ažuriran`, { partnerId, adminId: req.user.id });
     const afterUpdate = await businessPartnerService.getBusinessPartnerForEdit(partnerId);
     const changes = auditLogService.computeChanges(existing, afterUpdate, ["name", "shortDescription", "outboundUrl", "isActive"]);
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "BUSINESS_PARTNER_UPDATED", entity: { type: "BusinessPartner", id: partnerId }, changes });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "BUSINESS_PARTNER_UPDATED", entity: { type: "BusinessPartner", id: partnerId }, changes });
     return res.json({ success: true, data: updated });
   } catch (error) {
     logError("[api/admin/updateBusinessPartner] Greška", error, { partnerId: req.params.partnerId, body: req.body });
@@ -472,7 +466,7 @@ export async function deleteBusinessPartner(req, res, next) {
     const { partnerId } = req.params;
     await businessPartnerService.deleteBusinessPartnerById(partnerId);
     logInfo(`[api/admin/deleteBusinessPartner] Saradnik #${partnerId} obrisan`, { partnerId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "BUSINESS_PARTNER_DELETED", entity: { type: "BusinessPartner", id: partnerId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "BUSINESS_PARTNER_DELETED", entity: { type: "BusinessPartner", id: partnerId } });
     return res.json({ success: true, data: { message: "Saradnik je uspešno obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteBusinessPartner] Greška", error, { partnerId: req.params.partnerId });
@@ -488,10 +482,10 @@ export async function listContacts(req, res, next) {
     const result = await contactService.listContacts({
       search: search || "",
       filters: { status: status || undefined },
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listContacts] Greška", error, { query: req.query });
     next(error);
@@ -546,10 +540,10 @@ export async function listCampaigns(req, res, next) {
     const result = await campaignService.listCampaigns({
       search: search || "",
       filters: { status: status || undefined },
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listCampaigns] Greška", error, { query: req.query });
     next(error);
@@ -571,7 +565,7 @@ export async function createCampaign(req, res, next) {
     const data = buildCampaignPayload(req);
     const campaign = await campaignService.createCampaign(data);
     logInfo(`[api/admin/createCampaign] Kampanja kreirana: "${campaign.naslov}"`, { campaignId: campaign.id, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "CAMPAIGN_CREATED", entity: { type: "Campaign", id: campaign.id } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "CAMPAIGN_CREATED", entity: { type: "Campaign", id: campaign.id } });
     return res.status(201).json({ success: true, data: campaign });
   } catch (error) {
     logError("[api/admin/createCampaign] Greška", error, { body: req.body });
@@ -588,7 +582,7 @@ export async function updateCampaign(req, res, next) {
     logInfo(`[api/admin/updateCampaign] Kampanja #${campaignId} ažurirana`, { campaignId, adminId: req.user.id });
     const afterUpdate = await campaignService.getCampaignForEdit(campaignId);
     const changes = auditLogService.computeChanges(existing, afterUpdate, ["title", "subject", "status"]);
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "CAMPAIGN_UPDATED", entity: { type: "Campaign", id: campaignId }, changes });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "CAMPAIGN_UPDATED", entity: { type: "Campaign", id: campaignId }, changes });
     return res.json({ success: true, data: updated });
   } catch (error) {
     logError("[api/admin/updateCampaign] Greška", error, { campaignId: req.params.campaignId, body: req.body });
@@ -602,7 +596,7 @@ export async function sendCampaignNow(req, res, next) {
     const sent = await campaignService.sendCampaignNow(campaignId);
     logInfo(`[api/admin/sendCampaignNow] Kampanja #${campaignId} poslata`, { campaignId, sentCount: sent.poslato, failedCount: sent.neuspesno, adminId: req.user.id });
     await auditLogService.recordAuditLog({
-      ...auditActor(req),
+      ...buildAuditActor(req),
       action: "CAMPAIGN_SENT",
       entity: { type: "Campaign", id: campaignId },
       changes: { sentCount: { old: null, new: sent.poslato }, failedCount: { old: null, new: sent.neuspesno } },
@@ -619,7 +613,7 @@ export async function deleteCampaign(req, res, next) {
     const { campaignId } = req.params;
     await campaignService.deleteCampaignById(campaignId);
     logInfo(`[api/admin/deleteCampaign] Kampanja #${campaignId} obrisana`, { campaignId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "CAMPAIGN_DELETED", entity: { type: "Campaign", id: campaignId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "CAMPAIGN_DELETED", entity: { type: "Campaign", id: campaignId } });
     return res.json({ success: true, data: { message: "Kampanja je uspešno obrisana." } });
   } catch (error) {
     logError("[api/admin/deleteCampaign] Greška", error, { campaignId: req.params.campaignId });

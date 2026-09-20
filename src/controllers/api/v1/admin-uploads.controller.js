@@ -1,0 +1,101 @@
+import { processUploadForApi, processMultipleUploadsForApi } from "../../../config/multer.config.js";
+import { requireModule } from "../../../middlewares/feature.middleware.js";
+import { AppError } from "../../../utils/error.util.js";
+import { logError, logInfo } from "../../../utils/logger.util.js";
+
+// Fills the gap docs/*/15-api-v1-reference.md used to call out explicitly: creating/
+// editing an entity through /api/v1/admin/* accepts an image/gallery/video field only
+// as an already-hosted { img, imgDesc } (or { url, thumbnail, title }) reference, never
+// a raw file - see admin-catalog.controller.js's and admin-people.controller.js's header
+// comments. This is the endpoint that produces that reference: a client uploads the raw
+// file here first, gets the reference back, then includes it in the normal JSON create/
+// update call. Reuses the exact same sharp/ffmpeg pipeline multer.config.js already runs
+// for the web admin panel (three webp variants for images, a screenshot thumbnail for
+// video) - same files on disk, same URL shape, just reached from a JSON endpoint instead
+// of a multipart form POST.
+
+// type -> the permission required to upload for that entity. Deliberately the SAME
+// permission each entity's own create/update route already requires (see
+// admin-catalog.routes.js / admin-taxonomy.routes.js / admin-marketing.routes.js /
+// admin-people.routes.js) - an upload is scoped to a resource, so "can I upload an
+// image for this?" should never be a broader grant than "can I edit this at all?".
+const TYPE_PERMISSIONS = {
+  services: "manage_services",
+  packages: "manage_packages",
+  products: "manage_products",
+  categories: "manage_taxonomy",
+  posts: "manage_blog",
+  testimonials: "manage_marketing",
+  experts: "manage_employees",
+  partners: "manage_partners",
+  site: "manage_site_content",
+};
+
+// type -> the module gate (feature.middleware.js) the matching entity's own routes
+// already sit behind. Not every type has one (categories/tags/testimonials/experts/site
+// aren't gated by any single module in the routes files this mirrors) - those pass
+// straight through.
+const TYPE_MODULES = {
+  services: "booking",
+  packages: "booking",
+  products: "shop",
+  posts: "blog",
+  partners: "partners",
+};
+
+export function requireUploadPermission(req, res, next) {
+  const permission = TYPE_PERMISSIONS[req.params.type];
+  if (!permission) {
+    return next(new AppError(`Nepoznat tip uploada: "${req.params.type}"`, 400, { name: "ValidationError" }));
+  }
+
+  const permissions = req.user?.permissions || [];
+  if (!permissions.includes(permission)) {
+    return next(new AppError("Nemate dozvolu za upload ovog tipa fajla", 403, { name: "AuthorizationError" }));
+  }
+
+  next();
+}
+
+export function requireUploadModule(req, res, next) {
+  const moduleName = TYPE_MODULES[req.params.type];
+  if (!moduleName) return next();
+  return requireModule(moduleName)(req, res, next);
+}
+
+export const uploadSingleMiddleware = processUploadForApi("file");
+export const uploadGalleryMiddleware = processMultipleUploadsForApi("gallery", 10);
+export const uploadVideoMiddleware = processMultipleUploadsForApi("video", 5);
+
+export async function uploadFile(req, res, next) {
+  try {
+    logInfo(`[api/admin/uploadFile] Fajl otpremljen (tip: ${req.params.type})`, { adminId: req.user?.id, type: req.params.type });
+    return res.status(201).json({ success: true, data: req.uploadedFile });
+  } catch (error) {
+    logError("[api/admin/uploadFile] Greška", error, { type: req.params.type });
+    next(error);
+  }
+}
+
+export async function uploadMultiple(req, res, next) {
+  try {
+    logInfo(`[api/admin/uploadMultiple] ${req.uploadedFiles.length} fajl(ova) otpremljeno (tip: ${req.params.type})`, {
+      adminId: req.user?.id,
+      type: req.params.type,
+    });
+    return res.status(201).json({ success: true, data: req.uploadedFiles });
+  } catch (error) {
+    logError("[api/admin/uploadMultiple] Greška", error, { type: req.params.type });
+    next(error);
+  }
+}
+
+export default {
+  requireUploadPermission,
+  requireUploadModule,
+  uploadSingleMiddleware,
+  uploadGalleryMiddleware,
+  uploadVideoMiddleware,
+  uploadFile,
+  uploadMultiple,
+};

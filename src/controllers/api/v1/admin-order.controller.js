@@ -2,22 +2,13 @@ import orderService from "../../../services/order.service.js";
 import * as tempOrderService from "../../../services/temporary-order.service.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
-import { getStartOfDayInZone } from "../../../utils/date.time.util.js";
+import { getStartOfDayInZone, nextDayStartInZone } from "../../../utils/date.time.util.js";
+import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
+import { buildAuditActor } from "../../../utils/audit-actor.util.js";
+import { createEntityActionFactory } from "../../../utils/admin-entity-action.util.js";
 
 // Mirrors controllers/web/admin/order/{order,manual-order,temporary-order}
 // .controller.js - same services, same audit log entries.
-
-function nextDayStartInZone(dateStr) {
-  return new Date(getStartOfDayInZone(dateStr).getTime() + 24 * 60 * 60 * 1000);
-}
-
-function paginationMeta(result) {
-  return { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages };
-}
-
-function auditActor(req) {
-  return { actor: req.user, req, success: true };
-}
 
 export async function listOrders(req, res, next) {
   try {
@@ -30,10 +21,10 @@ export async function listOrders(req, res, next) {
         dateFrom: dateFrom ? getStartOfDayInZone(dateFrom) : undefined,
         dateTo: dateTo ? nextDayStartInZone(dateTo) : undefined,
       },
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listOrders] Greška", error, { query: req.query });
     next(error);
@@ -50,20 +41,12 @@ export async function getOrder(req, res, next) {
   }
 }
 
-function orderAction(actionName, auditAction, serviceCallFn, successMessage) {
-  return async function (req, res, next) {
-    try {
-      const { orderId } = req.params;
-      await serviceCallFn(orderId, req);
-      logInfo(`[api/admin/${actionName}] Porudžbina #${orderId}`, { orderId, adminId: req.user.id });
-      await auditLogService.recordAuditLog({ ...auditActor(req), action: auditAction, entity: { type: "Order", id: orderId } });
-      return res.json({ success: true, data: { message: successMessage } });
-    } catch (error) {
-      logError(`[api/admin/${actionName}] Greška`, error, { orderId: req.params.orderId });
-      next(error);
-    }
-  };
-}
+const orderAction = createEntityActionFactory({
+  logPrefix: "api/admin",
+  entityType: "Order",
+  entityLabel: "Porudžbina",
+  idParam: "orderId",
+});
 
 export const markProcessing = orderAction("markProcessing", "ORDER_STATUS_PROCESSING", (id, req) => orderService.markProcessing(id, req.user.id), "Porudžbina je u obradi.");
 export const markShipped = orderAction("markShipped", "ORDER_STATUS_SHIPPED", (id, req) => orderService.markShipped(id, req.user.id), "Porudžbina je poslata.");
@@ -79,7 +62,7 @@ export async function updateOrderContact(req, res, next) {
     const { orderId } = req.params;
     await orderService.updateOrderContactInfo(orderId, { phone: req.body.phone, address: req.body.address });
     logInfo(`[api/admin/updateOrderContact] Kontakt podaci porudžbine #${orderId} ažurirani`, { orderId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "ORDER_CONTACT_INFO_UPDATED", entity: { type: "Order", id: orderId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "ORDER_CONTACT_INFO_UPDATED", entity: { type: "Order", id: orderId } });
     return res.json({ success: true, data: { message: "Kontakt podaci su ažurirani." } });
   } catch (error) {
     logError("[api/admin/updateOrderContact] Greška", error, { orderId: req.params.orderId });
@@ -106,7 +89,7 @@ export async function createManualOrder(req, res, next) {
 
     logInfo("[api/admin/createManualOrder] Porudžbina ručno kreirana", { orderId: order.id, adminId: req.user.id });
     await auditLogService.recordAuditLog({
-      ...auditActor(req),
+      ...buildAuditActor(req),
       action: "ORDER_MANUALLY_CREATED",
       entity: { type: "Order", id: order.id },
       changes: { productId: { old: null, new: productId }, variantId: { old: null, new: variantId } },
@@ -124,8 +107,8 @@ export async function createManualOrder(req, res, next) {
 export async function listTemporaryOrders(req, res, next) {
   try {
     const { search, page = 1, limit = 10 } = req.query;
-    const result = await tempOrderService.listTemporaryOrders({ search: search || "", page: parseInt(page, 10) || 1, limit: parseInt(limit, 10) || 10 });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    const result = await tempOrderService.listTemporaryOrders({ search: search || "", page: resolvePage(page), limit: resolveLimit(limit) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listTemporaryOrders] Greška", error, { query: req.query });
     next(error);

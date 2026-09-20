@@ -6,19 +6,31 @@ import * as postService from "../../../services/post.service.js";
 import * as businessPartnerService from "../../../services/business-partner.service.js";
 import * as categoryService from "../../../services/category.service.js";
 import * as tagService from "../../../services/tag.service.js";
+import { generateSeo } from "../../../seo/index.js";
 import { logError } from "../../../utils/logger.util.js";
+import { resolvePage, pickPaginationMeta } from "../../../utils/pagination.util.js";
 
 // Every function below calls the exact same service-layer functions the public web
 // pages call (controllers/web/catalog/*, controllers/web/public/*,
 // controllers/web/blog/*) - the services already return mapped, presentation-safe
 // data (see mapServiceForPublicDetail etc.), so there's nothing left to do here but
-// shape the pagination envelope and res.json() it. No SEO/JSON-LD/breadcrumb/
-// pagination-HTML-label concerns - those are presenter/view-only and don't belong
-// in a JSON response.
-
-function paginationMeta(result) {
-  return { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages };
-}
+// shape the pagination envelope and res.json() it.
+//
+// SEO: the five entity-detail routes below (getService/getPackage/getProduct/getPost/
+// getTeamMember) call the exact same generateSeo(type, entity, req) dispatcher the
+// matching web controller calls (see controllers/web/catalog/service.controller.js's
+// serviceDetails, product.controller.js's productDetails, blog/blog.controller.js's
+// blogPostDetails, public/expert.controller.js's expertDetails) - same title/
+// description/canonical/robots/JSON-LD/OG/Twitter fields, just attached to the JSON
+// response instead of passed to res.render(). Listing routes deliberately do NOT get a
+// `seo` field here - those are simple, mostly-static page titles ("Usluge", "Prodavnica",
+// "Blog"...) a client can just as well hold in its own route config, and the ItemList
+// JSON-LD the web listing pages build (buildItemListJsonLd) depends on the page's own
+// rendered URL structure in a way that doesn't obviously belong in a generic API
+// response - left as a possible follow-up, not done here.
+// Business partners (B2B equipment sales) have no dedicated SEO builder - the web
+// public/business-partner.controller.js doesn't call generateSeo for them either, so
+// there's nothing to mirror; left out on purpose, not an oversight.
 
 // ---- Services ----
 
@@ -36,8 +48,8 @@ export async function listServices(req, res, next) {
       filters.tag = tagDoc._id;
     }
 
-    const result = await serviceService.findActiveServices({ page: parseInt(page, 10) || 1, filters });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    const result = await serviceService.findActiveServices({ page: resolvePage(page), filters });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/listServices] Greška", error, { query: req.query });
     next(error);
@@ -47,7 +59,8 @@ export async function listServices(req, res, next) {
 export async function getService(req, res, next) {
   try {
     const service = await serviceService.getServiceBySlug(req.params.slug);
-    return res.json({ success: true, data: service });
+    const seo = await generateSeo("service", service, req);
+    return res.json({ success: true, data: service, seo });
   } catch (error) {
     logError("[api/getService] Greška", error, { slug: req.params.slug });
     next(error);
@@ -59,8 +72,8 @@ export async function getService(req, res, next) {
 export async function listPackages(req, res, next) {
   try {
     const { page = 1 } = req.query;
-    const result = await packageService.findActivePackages({ page: parseInt(page, 10) || 1, limit: 100 });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    const result = await packageService.findActivePackages({ page: resolvePage(page), limit: 100 });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/listPackages] Greška", error);
     next(error);
@@ -70,7 +83,8 @@ export async function listPackages(req, res, next) {
 export async function getPackage(req, res, next) {
   try {
     const pkg = await packageService.getPackageBySlug(req.params.slug);
-    return res.json({ success: true, data: pkg });
+    const seo = await generateSeo("package", pkg, req);
+    return res.json({ success: true, data: pkg, seo });
   } catch (error) {
     logError("[api/getPackage] Greška", error, { slug: req.params.slug });
     next(error);
@@ -93,8 +107,8 @@ export async function listProducts(req, res, next) {
       filters.tag = tagDoc._id;
     }
 
-    const result = await productService.listPublicProducts({ search: search || "", filters, page: parseInt(page, 10) || 1 });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    const result = await productService.listPublicProducts({ search: search || "", filters, page: resolvePage(page) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/listProducts] Greška", error, { query: req.query });
     next(error);
@@ -104,7 +118,8 @@ export async function listProducts(req, res, next) {
 export async function getProduct(req, res, next) {
   try {
     const product = await productService.getPublicProductBySlug(req.params.slug);
-    return res.json({ success: true, data: product });
+    const seo = await generateSeo("product", product, req);
+    return res.json({ success: true, data: product, seo });
   } catch (error) {
     logError("[api/getProduct] Greška", error, { slug: req.params.slug });
     next(error);
@@ -126,7 +141,8 @@ export async function listTeam(req, res, next) {
 export async function getTeamMember(req, res, next) {
   try {
     const expert = await expertService.getExpertBySlug(req.params.slug);
-    return res.json({ success: true, data: expert });
+    const seo = await generateSeo("expert", expert, req);
+    return res.json({ success: true, data: expert, seo });
   } catch (error) {
     logError("[api/getTeamMember] Greška", error, { slug: req.params.slug });
     next(error);
@@ -149,8 +165,8 @@ export async function listPosts(req, res, next) {
       filters.tag = tagDoc._id;
     }
 
-    const result = await postService.findPublishedPosts({ page: parseInt(page, 10) || 1, filters, search: search || "" });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    const result = await postService.findPublishedPosts({ page: resolvePage(page), filters, search: search || "" });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/listPosts] Greška", error, { query: req.query });
     next(error);
@@ -160,7 +176,8 @@ export async function listPosts(req, res, next) {
 export async function getPost(req, res, next) {
   try {
     const post = await postService.getPublicPostBySlug(req.params.slug);
-    return res.json({ success: true, data: post });
+    const seo = await generateSeo("post", post, req);
+    return res.json({ success: true, data: post, seo });
   } catch (error) {
     logError("[api/getPost] Greška", error, { slug: req.params.slug });
     next(error);

@@ -3,22 +3,13 @@ import availabilityService from "../../../services/availability.service.js";
 import * as packagePurchaseService from "../../../services/package-purchase.service.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
-import { getStartOfDayInZone } from "../../../utils/date.time.util.js";
+import { getStartOfDayInZone, nextDayStartInZone } from "../../../utils/date.time.util.js";
+import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
+import { buildAuditActor } from "../../../utils/audit-actor.util.js";
+import { createEntityActionFactory } from "../../../utils/admin-entity-action.util.js";
 
 // Mirrors controllers/web/admin/appointment/{appointment,manual-appointment}
 // .controller.js - same services, same audit log entries.
-
-function nextDayStartInZone(dateStr) {
-  return new Date(getStartOfDayInZone(dateStr).getTime() + 24 * 60 * 60 * 1000);
-}
-
-function paginationMeta(result) {
-  return { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages };
-}
-
-function auditActor(req) {
-  return { actor: req.user, req, success: true };
-}
 
 export async function listAppointments(req, res, next) {
   try {
@@ -32,10 +23,10 @@ export async function listAppointments(req, res, next) {
         dateTo: dateTo ? nextDayStartInZone(dateTo) : undefined,
         unassignedOnly: unassignedOnly === "true",
       },
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listAppointments] Greška", error, { query: req.query });
     next(error);
@@ -72,20 +63,12 @@ export async function getAppointment(req, res, next) {
   }
 }
 
-function appointmentAction(actionName, auditAction, serviceCallFn, successMessage) {
-  return async function (req, res, next) {
-    try {
-      const { appointmentId } = req.params;
-      await serviceCallFn(appointmentId, req);
-      logInfo(`[api/admin/${actionName}] Termin #${appointmentId}`, { appointmentId, adminId: req.user.id });
-      await auditLogService.recordAuditLog({ ...auditActor(req), action: auditAction, entity: { type: "Appointment", id: appointmentId } });
-      return res.json({ success: true, data: { message: successMessage } });
-    } catch (error) {
-      logError(`[api/admin/${actionName}] Greška`, error, { appointmentId: req.params.appointmentId });
-      next(error);
-    }
-  };
-}
+const appointmentAction = createEntityActionFactory({
+  logPrefix: "api/admin",
+  entityType: "Appointment",
+  entityLabel: "Termin",
+  idParam: "appointmentId",
+});
 
 export const confirmAppointment = appointmentAction(
   "confirmAppointment", "APPOINTMENT_CONFIRMED",
@@ -123,7 +106,7 @@ export async function reassignAppointment(req, res, next) {
     const { appointmentId } = req.params;
     await appointmentService.reassignAppointment(appointmentId, req.body.employeeId, req.user.id);
     logInfo(`[api/admin/reassignAppointment] Termin #${appointmentId} preraspoređen`, { appointmentId, newEmployeeId: req.body.employeeId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "APPOINTMENT_REASSIGNED", entity: { type: "Appointment", id: appointmentId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "APPOINTMENT_REASSIGNED", entity: { type: "Appointment", id: appointmentId } });
     return res.json({ success: true, data: { message: "Termin je preraspoređen." } });
   } catch (error) {
     logError("[api/admin/reassignAppointment] Greška", error, { appointmentId: req.params.appointmentId });
@@ -136,7 +119,7 @@ export async function rescheduleAppointment(req, res, next) {
     const { appointmentId } = req.params;
     const updated = await appointmentService.rescheduleAppointment(appointmentId, req.body.newStartTime, req.user.id, "admin");
     logInfo(`[api/admin/rescheduleAppointment] Termin #${appointmentId} pomeren`, { appointmentId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "APPOINTMENT_RESCHEDULED", entity: { type: "Appointment", id: appointmentId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "APPOINTMENT_RESCHEDULED", entity: { type: "Appointment", id: appointmentId } });
     return res.json({ success: true, data: updated });
   } catch (error) {
     logError("[api/admin/rescheduleAppointment] Greška", error, { appointmentId: req.params.appointmentId });
@@ -149,7 +132,7 @@ export async function deleteAppointment(req, res, next) {
     const { appointmentId } = req.params;
     await appointmentService.deleteAppointmentById(appointmentId, req.user.id);
     logInfo(`[api/admin/deleteAppointment] Termin #${appointmentId} obrisan`, { appointmentId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "APPOINTMENT_DELETED", entity: { type: "Appointment", id: appointmentId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "APPOINTMENT_DELETED", entity: { type: "Appointment", id: appointmentId } });
     return res.json({ success: true, data: { message: "Termin je obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteAppointment] Greška", error, { appointmentId: req.params.appointmentId });
@@ -182,7 +165,7 @@ export async function createManualAppointment(req, res, next) {
 
     logInfo(`[api/admin/createManualAppointment] Termin ručno kreiran za "${email}"`, { appointmentId: appointment.id, adminId: req.user.id });
     await auditLogService.recordAuditLog({
-      ...auditActor(req),
+      ...buildAuditActor(req),
       action: "APPOINTMENT_MANUALLY_CREATED",
       entity: { type: "Appointment", id: appointment.id },
       changes: { serviceId: { old: null, new: serviceId }, priceOverride: { old: null, new: priceOverride ?? null } },

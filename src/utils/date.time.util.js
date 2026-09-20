@@ -242,6 +242,16 @@ export function getEndOfDayInZone(date = new Date(), timeZone = APP_TIMEZONE) {
   return new Date(getStartOfDayInZone(date, timeZone).getTime() + 24 * 60 * 60 * 1000 - 1);
 }
 
+// Midnight of the day AFTER the given date, in `timeZone` - the exclusive
+// upper bound a `$lt` date-range query needs (appointment/order "date to"
+// filters), as opposed to getEndOfDayInZone's inclusive 23:59:59.999 bound,
+// which is for `$lte` filters (audit log). Was redefined identically in every
+// admin controller that filters a date range this way (appointments, orders) -
+// centralized here alongside the other zone-aware date helpers.
+export function nextDayStartInZone(date, timeZone = APP_TIMEZONE) {
+  return new Date(getStartOfDayInZone(date, timeZone).getTime() + 24 * 60 * 60 * 1000);
+}
+
 export default {
   formatDateTime,
   formatDate,
@@ -254,4 +264,5 @@ export default {
   utcDateToZonedInputValue,
   getStartOfDayInZone,
   getEndOfDayInZone,
+  nextDayStartInZone,
 };

@@ -14,6 +14,7 @@ import adminCatalogRoutes from "./admin-catalog.routes.js";
 import adminPackagePurchaseRoutes from "./admin-package-purchase.routes.js";
 import adminMarketingRoutes from "./admin-marketing.routes.js";
 import adminOpsRoutes from "./admin-ops.routes.js";
+import adminUploadsRoutes from "./admin-uploads.routes.js";
 import { requireModule } from "../../../middlewares/feature.middleware.js";
 
 const router = Router();
@@ -30,14 +31,16 @@ const router = Router();
 // cart.routes.js, admin-appointment.routes.js, admin-order.routes.js,
 // admin-package-purchase.routes.js) - simplest and clearest right on the
 // mount. catalog.routes.js, admin-catalog.routes.js, admin-marketing.routes.js,
-// admin-taxonomy.routes.js and admin-people.routes.js are NOT gated here,
-// on purpose - each of those files mixes resources from more than one module
-// in a single router (e.g. admin-catalog.routes.js serves services/packages
-// AND products), so gating the whole mount would incorrectly hide a module
-// that IS enabled just because a different resource in the same file belongs
-// to a disabled one. Those five instead gate each ROUTE individually, inline,
-// the exact same way requirePermission() is already applied per-route in
-// those files - see the "---- <Section> ----" comment blocks inside each one.
+// admin-taxonomy.routes.js, admin-people.routes.js and admin-uploads.routes.js
+// are NOT gated here, on purpose - each of those files mixes resources from
+// more than one module in a single router (e.g. admin-catalog.routes.js serves
+// services/packages AND products), so gating the whole mount would incorrectly
+// hide a module that IS enabled just because a different resource in the same
+// file belongs to a disabled one. Those instead gate each ROUTE individually,
+// inline, the exact same way requirePermission() is already applied per-route
+// in those files - see the "---- <Section> ----" comment blocks inside each
+// one (admin-uploads.routes.js does this via its own requireUploadModule,
+// keyed by the :type in the URL rather than a fixed section of the file).
 router.use("/auth", authRoutes);
 router.use("/booking", requireModule("booking"), bookingRoutes);
 router.use("/me", meRoutes);
@@ -51,6 +54,7 @@ router.use("/admin", adminCatalogRoutes);
 router.use("/admin/package-purchases", requireModule("booking"), adminPackagePurchaseRoutes);
 router.use("/admin", adminMarketingRoutes);
 router.use("/admin", adminOpsRoutes);
+router.use("/admin", adminUploadsRoutes);
 router.use("/", requireModule("shop"), cartRoutes);
 router.use("/", catalogRoutes);
 

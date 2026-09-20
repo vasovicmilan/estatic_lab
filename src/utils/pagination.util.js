@@ -31,3 +31,19 @@ export function buildPaginationMeta({ total, page, limit }) {
     totalPages: Math.max(1, Math.ceil(total / resolvedLimit)),
   };
 }
+
+/**
+ * Relays the pagination fields a paginated repository/service result already
+ * carries (`{ data, page, limit, total, totalPages }`) into the `meta` object
+ * every list controller sends back. Deliberately does NOT recompute totalPages
+ * itself (unlike buildPaginationMeta, which is for building meta from a raw
+ * `{total, page, limit}` when nothing has computed totalPages yet) - the
+ * repository layer already ran buildPaginationMeta once to produce `result`,
+ * so redoing it here would just be trusting the same math twice for no
+ * benefit. Was copy-pasted as a local `paginationMeta(result)` (or inlined
+ * outright) in every api/v1 controller - centralized here so there's one
+ * definition of "what a list endpoint's meta object looks like".
+ */
+export function pickPaginationMeta(result) {
+  return { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages };
+}

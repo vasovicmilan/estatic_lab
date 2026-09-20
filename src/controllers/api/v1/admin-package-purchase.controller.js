@@ -3,29 +3,23 @@ import * as packageService from "../../../services/package.service.js";
 import couponService from "../../../services/coupon.service.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
+import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
+import { buildAuditActor } from "../../../utils/audit-actor.util.js";
 
 // Mirrors controllers/web/admin/catalog/package-purchase.controller.js - same
 // service, same audit log actions/entity type. Returns raw service data rather
 // than routing through the HTML presenters, same reasoning as the other API v1
 // admin controllers.
 
-function auditActor(req) {
-  return { actor: req.user, req, success: true };
-}
-
-function paginationMeta(result) {
-  return { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages };
-}
-
 export async function listPackagePurchases(req, res, next) {
   try {
     const { userId, status, page = 1, limit = 10 } = req.query;
     const result = await packagePurchaseService.listPurchases({
       filters: { userId: userId || undefined, status: status || undefined },
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listPackagePurchases] Greška", error, { query: req.query });
     next(error);
@@ -54,7 +48,7 @@ export async function createPackagePurchase(req, res, next) {
 
     logInfo(`[api/admin/createPackagePurchase] Paket dodeljen korisniku #${userId}`, { packagePurchaseId: purchase.id, adminId: req.user.id });
     await auditLogService.recordAuditLog({
-      ...auditActor(req),
+      ...buildAuditActor(req),
       action: "PACKAGE_PURCHASE_CREATED",
       entity: { type: "PackagePurchase", id: purchase.id },
       changes: {
@@ -81,7 +75,7 @@ export async function updatePackagePurchase(req, res, next) {
     logInfo(`[api/admin/updatePackagePurchase] Kupljeni paket #${packagePurchaseId} ažuriran`, { packagePurchaseId, adminId: req.user.id });
 
     const changes = auditLogService.computeChanges(existing, updated, ["expiresAtRaw", "napomena"]);
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "PACKAGE_PURCHASE_UPDATED", entity: { type: "PackagePurchase", id: packagePurchaseId }, changes });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "PACKAGE_PURCHASE_UPDATED", entity: { type: "PackagePurchase", id: packagePurchaseId }, changes });
 
     return res.json({ success: true, data: updated });
   } catch (error) {
@@ -96,7 +90,7 @@ export async function cancelPackagePurchase(req, res, next) {
     const updated = await packagePurchaseService.cancelPurchase(packagePurchaseId, req.user.id);
     logInfo(`[api/admin/cancelPackagePurchase] Kupljeni paket #${packagePurchaseId} otkazan`, { packagePurchaseId, adminId: req.user.id });
     await auditLogService.recordAuditLog({
-      ...auditActor(req),
+      ...buildAuditActor(req),
       action: "PACKAGE_PURCHASE_CANCELLED",
       entity: { type: "PackagePurchase", id: packagePurchaseId },
       changes: { status: { old: null, new: "cancelled" } },
@@ -105,7 +99,7 @@ export async function cancelPackagePurchase(req, res, next) {
   } catch (error) {
     logError("[api/admin/cancelPackagePurchase] Greška", error, { packagePurchaseId: req.params.packagePurchaseId });
     await auditLogService.recordAuditLog({
-      actor: req.user, req, success: false, errorMessage: error.message,
+      ...buildAuditActor(req, { success: false, errorMessage: error.message }),
       action: "PACKAGE_PURCHASE_CANCELLED",
       entity: { type: "PackagePurchase", id: req.params.packagePurchaseId },
     });
@@ -118,7 +112,7 @@ export async function deletePackagePurchase(req, res, next) {
     const { packagePurchaseId } = req.params;
     await packagePurchaseService.deletePurchase(packagePurchaseId, req.user.id);
     logInfo(`[api/admin/deletePackagePurchase] Kupljeni paket #${packagePurchaseId} obrisan`, { packagePurchaseId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "PACKAGE_PURCHASE_DELETED", entity: { type: "PackagePurchase", id: packagePurchaseId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "PACKAGE_PURCHASE_DELETED", entity: { type: "PackagePurchase", id: packagePurchaseId } });
     return res.json({ success: true, data: { message: "Kupljeni paket je uspešno obrisan." } });
   } catch (error) {
     logError("[api/admin/deletePackagePurchase] Greška", error, { packagePurchaseId: req.params.packagePurchaseId });

@@ -5,6 +5,10 @@ import commissionService from "../../../services/commission.service.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
 import { getStartOfDayInZone } from "../../../utils/date.time.util.js";
+import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
+import { buildAuditActor } from "../../../utils/audit-actor.util.js";
+import { createEntityActionFactory } from "../../../utils/admin-entity-action.util.js";
+import { createEarnerListHandler } from "../../../utils/earner-listing.util.js";
 
 // Mirrors controllers/web/employee/employee.controller.js - same services, same
 // audit log actor shape (req.user, not req.session.user). req.user.isEmployee was
@@ -67,11 +71,11 @@ export async function listAppointments(req, res, next) {
       requesterId: employeeId,
       role: "employee",
       filters: { status: status || undefined },
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
 
-    return res.json({ success: true, data: result.data, meta: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages } });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/employee/listAppointments] Greška", error, { userId: req.user.id, query: req.query });
     next(error);
@@ -89,21 +93,13 @@ export async function getAppointment(req, res, next) {
   }
 }
 
-function appointmentAction(actionName, auditAction, serviceCallFn, successMessage) {
-  return async function (req, res, next) {
-    try {
-      const { appointmentId } = req.params;
-      const employeeId = employeeIdOf(await getOwnEmployee(req));
-      await serviceCallFn(appointmentId, employeeId, req);
-      logInfo(`[api/employee/${actionName}] Zaposleni izvršio akciju nad terminom #${appointmentId}`, { appointmentId, userId: req.user.id });
-      await auditLogService.recordAuditLog({ actor: req.user, action: auditAction, entity: { type: "Appointment", id: appointmentId }, req, success: true });
-      return res.json({ success: true, data: { message: successMessage } });
-    } catch (error) {
-      logError(`[api/employee/${actionName}] Greška`, error, { appointmentId: req.params.appointmentId, userId: req.user.id });
-      next(error);
-    }
-  };
-}
+const appointmentAction = createEntityActionFactory({
+  logPrefix: "api/employee",
+  entityType: "Appointment",
+  entityLabel: "Termin",
+  idParam: "appointmentId",
+  resolveContext: async (req) => employeeIdOf(await getOwnEmployee(req)),
+});
 
 export const confirmAppointment = appointmentAction(
   "confirmAppointment",
@@ -142,12 +138,10 @@ export async function rescheduleAppointment(req, res, next) {
 
     logInfo(`[api/employee/rescheduleAppointment] Zaposleni pomerio termin #${appointmentId}`, { appointmentId, userId: req.user.id });
     await auditLogService.recordAuditLog({
-      actor: req.user,
+      ...buildAuditActor(req),
       action: "APPOINTMENT_RESCHEDULED",
       entity: { type: "Appointment", id: appointmentId },
       changes: { pocetak: { old: existing?.termin?.pocetakRaw ?? null, new: req.body.newStartTime || null } },
-      req,
-      success: true,
     });
 
     return res.json({ success: true, data: updated });
@@ -177,12 +171,10 @@ export async function updateWorkingHours(req, res, next) {
 
     logInfo(`[api/employee/updateWorkingHours] Zaposleni #${req.user.id} ažurirao radno vreme`, { userId: req.user.id });
     await auditLogService.recordAuditLog({
-      actor: req.user,
+      ...buildAuditActor(req),
       action: "EMPLOYEE_WORKING_HOURS_UPDATED",
       entity: { type: "Employee", id: employeeId },
       changes: { workingHours: { old: existingProfile?.workingHours ?? null, new: workingHours } },
-      req,
-      success: true,
     });
 
     return res.json({ success: true, data: { message: "Radno vreme je uspešno ažurirano." } });
@@ -192,44 +184,22 @@ export async function updateWorkingHours(req, res, next) {
   }
 }
 
-export async function listCommissions(req, res, next) {
-  try {
-    const employeeId = employeeIdOf(await getOwnEmployee(req));
-    const { page = 1, limit = 10, status, sourceType } = req.query;
+export const listCommissions = createEarnerListHandler({
+  logPrefix: "api/employee",
+  actionName: "listCommissions",
+  earnerKind: "employee",
+  resolveEarnerId: async (req) => employeeIdOf(await getOwnEmployee(req)),
+  listFn: commissionService.listCommissionsForEarner,
+  includeSourceType: true,
+});
 
-    const result = await commissionService.listCommissionsForEarner({
-      employee: employeeId,
-      status: status || undefined,
-      sourceType: sourceType || undefined,
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
-    });
-
-    return res.json({ success: true, data: result.data, meta: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages } });
-  } catch (error) {
-    logError("[api/employee/listCommissions] Greška", error, { userId: req.user.id, query: req.query });
-    next(error);
-  }
-}
-
-export async function listPayouts(req, res, next) {
-  try {
-    const employeeId = employeeIdOf(await getOwnEmployee(req));
-    const { page = 1, limit = 10, status } = req.query;
-
-    const result = await payoutRequestService.listPayoutRequestsForEarner({
-      employee: employeeId,
-      status: status || undefined,
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
-    });
-
-    return res.json({ success: true, data: result.data, meta: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages } });
-  } catch (error) {
-    logError("[api/employee/listPayouts] Greška", error, { userId: req.user.id, query: req.query });
-    next(error);
-  }
-}
+export const listPayouts = createEarnerListHandler({
+  logPrefix: "api/employee",
+  actionName: "listPayouts",
+  earnerKind: "employee",
+  resolveEarnerId: async (req) => employeeIdOf(await getOwnEmployee(req)),
+  listFn: payoutRequestService.listPayoutRequestsForEarner,
+});
 
 export async function requestPayout(req, res, next) {
   try {
@@ -238,12 +208,10 @@ export async function requestPayout(req, res, next) {
 
     logInfo("[api/employee/requestPayout] Zaposleni zatražio isplatu", { employeeId, amount: req.body.amount });
     await auditLogService.recordAuditLog({
-      actor: req.user,
+      ...buildAuditActor(req),
       action: "PAYOUT_REQUESTED",
       entity: { type: "Employee", id: employeeId },
       changes: { amount: { old: null, new: Number(req.body.amount) } },
-      req,
-      success: true,
     });
 
     return res.status(201).json({ success: true, data: { message: "Zahtev za isplatu je poslat." } });

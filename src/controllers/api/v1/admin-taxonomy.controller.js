@@ -4,6 +4,8 @@ import * as tagService from "../../../services/tag.service.js";
 import * as resourceService from "../../../services/resource.service.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
+import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
+import { buildAuditActor } from "../../../utils/audit-actor.util.js";
 
 // Every function here mirrors its controllers/web/admin/** counterpart 1:1 - same
 // service calls, same audit log entries. What's deliberately NOT here: the
@@ -15,21 +17,13 @@ import { logError, logInfo } from "../../../utils/logger.util.js";
 // only, no multipart/form-data; a category/tag created via this API simply has no
 // featureImage until a dedicated upload endpoint exists.
 
-function paginationMeta(result) {
-  return { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages };
-}
-
-function auditActor(req) {
-  return { actor: req.user, req, success: true };
-}
-
 // ---- Roles ----
 
 export async function listRoles(req, res, next) {
   try {
     const { search, page = 1, limit = 10 } = req.query;
-    const result = await roleService.listRoles({ search: search || "", page: parseInt(page, 10) || 1, limit: parseInt(limit, 10) || 10 });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    const result = await roleService.listRoles({ search: search || "", page: resolvePage(page), limit: resolveLimit(limit) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listRoles] Greška", error, { query: req.query });
     next(error);
@@ -50,7 +44,7 @@ export async function createRole(req, res, next) {
   try {
     const role = await roleService.createRole(req.body);
     logInfo(`[api/admin/createRole] Rola kreirana: "${role.naziv || role.name}"`, { roleId: role.id, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "ROLE_CREATED", entity: { type: "Role", id: role.id } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "ROLE_CREATED", entity: { type: "Role", id: role.id } });
     return res.status(201).json({ success: true, data: role });
   } catch (error) {
     logError("[api/admin/createRole] Greška", error, { body: req.body });
@@ -63,7 +57,7 @@ export async function updateRole(req, res, next) {
     const { roleId } = req.params;
     const role = await roleService.updateRoleById(roleId, req.body);
     logInfo(`[api/admin/updateRole] Rola #${roleId} ažurirana`, { roleId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "ROLE_UPDATED", entity: { type: "Role", id: roleId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "ROLE_UPDATED", entity: { type: "Role", id: roleId } });
     return res.json({ success: true, data: role });
   } catch (error) {
     logError("[api/admin/updateRole] Greška", error, { roleId: req.params.roleId, body: req.body });
@@ -76,7 +70,7 @@ export async function deleteRole(req, res, next) {
     const { roleId } = req.params;
     await roleService.deleteRoleById(roleId);
     logInfo(`[api/admin/deleteRole] Rola #${roleId} obrisana`, { roleId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "ROLE_DELETED", entity: { type: "Role", id: roleId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "ROLE_DELETED", entity: { type: "Role", id: roleId } });
     return res.json({ success: true, data: { message: "Rola je obrisana." } });
   } catch (error) {
     logError("[api/admin/deleteRole] Greška", error, { roleId: req.params.roleId });
@@ -110,10 +104,10 @@ export async function listCategories(req, res, next) {
       domain: domain || undefined,
       parent: parent || undefined,
       isActive: isActive === "true" ? true : isActive === "false" ? false : undefined,
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listCategories] Greška", error, { query: req.query });
     next(error);
@@ -134,7 +128,7 @@ export async function createCategory(req, res, next) {
   try {
     const category = await categoryService.createCategory(buildCategoryData(req.body));
     logInfo(`[api/admin/createCategory] Kategorija kreirana: "${category.naziv}"`, { categoryId: category.id, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "CATEGORY_CREATED", entity: { type: "Category", id: category.id } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "CATEGORY_CREATED", entity: { type: "Category", id: category.id } });
     return res.status(201).json({ success: true, data: category });
   } catch (error) {
     logError("[api/admin/createCategory] Greška", error, { body: req.body });
@@ -147,7 +141,7 @@ export async function updateCategory(req, res, next) {
     const { categoryId } = req.params;
     const category = await categoryService.updateCategoryById(categoryId, buildCategoryData(req.body));
     logInfo(`[api/admin/updateCategory] Kategorija #${categoryId} ažurirana`, { categoryId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "CATEGORY_UPDATED", entity: { type: "Category", id: categoryId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "CATEGORY_UPDATED", entity: { type: "Category", id: categoryId } });
     return res.json({ success: true, data: category });
   } catch (error) {
     logError("[api/admin/updateCategory] Greška", error, { categoryId: req.params.categoryId, body: req.body });
@@ -160,7 +154,7 @@ export async function deleteCategory(req, res, next) {
     const { categoryId } = req.params;
     await categoryService.deleteCategoryById(categoryId);
     logInfo(`[api/admin/deleteCategory] Kategorija #${categoryId} obrisana`, { categoryId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "CATEGORY_DELETED", entity: { type: "Category", id: categoryId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "CATEGORY_DELETED", entity: { type: "Category", id: categoryId } });
     return res.json({ success: true, data: { message: "Kategorija je obrisana." } });
   } catch (error) {
     logError("[api/admin/deleteCategory] Greška", error, { categoryId: req.params.categoryId });
@@ -177,10 +171,10 @@ export async function listTags(req, res, next) {
       search: search || "",
       domain: domain || undefined,
       isActive: isActive === "true" ? true : isActive === "false" ? false : undefined,
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listTags] Greška", error, { query: req.query });
     next(error);
@@ -201,7 +195,7 @@ export async function createTag(req, res, next) {
   try {
     const tag = await tagService.createTag(req.body);
     logInfo(`[api/admin/createTag] Tag kreiran: "${tag.naziv}"`, { tagId: tag.id, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "TAG_CREATED", entity: { type: "Tag", id: tag.id } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "TAG_CREATED", entity: { type: "Tag", id: tag.id } });
     return res.status(201).json({ success: true, data: tag });
   } catch (error) {
     logError("[api/admin/createTag] Greška", error, { body: req.body });
@@ -214,7 +208,7 @@ export async function updateTag(req, res, next) {
     const { tagId } = req.params;
     const tag = await tagService.updateTagById(tagId, req.body);
     logInfo(`[api/admin/updateTag] Tag #${tagId} ažuriran`, { tagId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "TAG_UPDATED", entity: { type: "Tag", id: tagId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "TAG_UPDATED", entity: { type: "Tag", id: tagId } });
     return res.json({ success: true, data: tag });
   } catch (error) {
     logError("[api/admin/updateTag] Greška", error, { tagId: req.params.tagId, body: req.body });
@@ -227,7 +221,7 @@ export async function deleteTag(req, res, next) {
     const { tagId } = req.params;
     await tagService.deleteTagById(tagId);
     logInfo(`[api/admin/deleteTag] Tag #${tagId} obrisan`, { tagId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "TAG_DELETED", entity: { type: "Tag", id: tagId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "TAG_DELETED", entity: { type: "Tag", id: tagId } });
     return res.json({ success: true, data: { message: "Tag je obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteTag] Greška", error, { tagId: req.params.tagId });
@@ -243,10 +237,10 @@ export async function listResources(req, res, next) {
     const result = await resourceService.listResources({
       search: search || "",
       isActive: isActive === "true" ? true : isActive === "false" ? false : undefined,
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
     });
-    return res.json({ success: true, data: result.data, meta: paginationMeta(result) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listResources] Greška", error, { query: req.query });
     next(error);
@@ -267,7 +261,7 @@ export async function createResource(req, res, next) {
   try {
     const resource = await resourceService.createResource(req.body);
     logInfo(`[api/admin/createResource] Resurs kreiran: "${resource.naziv}"`, { resourceId: resource.id, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "RESOURCE_CREATED", entity: { type: "Resource", id: resource.id } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "RESOURCE_CREATED", entity: { type: "Resource", id: resource.id } });
     return res.status(201).json({ success: true, data: resource });
   } catch (error) {
     logError("[api/admin/createResource] Greška", error, { body: req.body });
@@ -280,7 +274,7 @@ export async function updateResource(req, res, next) {
     const { resourceId } = req.params;
     const resource = await resourceService.updateResourceById(resourceId, req.body);
     logInfo(`[api/admin/updateResource] Resurs #${resourceId} ažuriran`, { resourceId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "RESOURCE_UPDATED", entity: { type: "Resource", id: resourceId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "RESOURCE_UPDATED", entity: { type: "Resource", id: resourceId } });
     return res.json({ success: true, data: resource });
   } catch (error) {
     logError("[api/admin/updateResource] Greška", error, { resourceId: req.params.resourceId, body: req.body });
@@ -293,7 +287,7 @@ export async function deleteResource(req, res, next) {
     const { resourceId } = req.params;
     await resourceService.deleteResourceById(resourceId);
     logInfo(`[api/admin/deleteResource] Resurs #${resourceId} obrisan`, { resourceId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...auditActor(req), action: "RESOURCE_DELETED", entity: { type: "Resource", id: resourceId } });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "RESOURCE_DELETED", entity: { type: "Resource", id: resourceId } });
     return res.json({ success: true, data: { message: "Resurs je obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteResource] Greška", error, { resourceId: req.params.resourceId });

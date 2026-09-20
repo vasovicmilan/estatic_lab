@@ -9,6 +9,8 @@ import * as categoryService from "../../../services/category.service.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
 import { BUSINESS } from "../../../config/business.config.js";
+import { buildAuditActor } from "../../../utils/audit-actor.util.js";
+import { createEarnerListHandler } from "../../../utils/earner-listing.util.js";
 
 const BASE_URL = BUSINESS.siteUrl;
 
@@ -66,44 +68,22 @@ export async function dashboard(req, res, next) {
   }
 }
 
-export async function listCommissions(req, res, next) {
-  try {
-    const partnerId = await getOwnPartnerId(req);
-    const { page = 1, limit = 10, status, sourceType } = req.query;
+export const listCommissions = createEarnerListHandler({
+  logPrefix: "api/partner",
+  actionName: "listCommissions",
+  earnerKind: "partner",
+  resolveEarnerId: getOwnPartnerId,
+  listFn: commissionService.listCommissionsForEarner,
+  includeSourceType: true,
+});
 
-    const result = await commissionService.listCommissionsForEarner({
-      partner: partnerId,
-      status: status || undefined,
-      sourceType: sourceType || undefined,
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
-    });
-
-    return res.json({ success: true, data: result.data, meta: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages } });
-  } catch (error) {
-    logError("[api/partner/listCommissions] Greška", error, { userId: req.user.id, query: req.query });
-    next(error);
-  }
-}
-
-export async function listPayouts(req, res, next) {
-  try {
-    const partnerId = await getOwnPartnerId(req);
-    const { page = 1, limit = 10, status } = req.query;
-
-    const result = await payoutRequestService.listPayoutRequestsForEarner({
-      partner: partnerId,
-      status: status || undefined,
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
-    });
-
-    return res.json({ success: true, data: result.data, meta: { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages } });
-  } catch (error) {
-    logError("[api/partner/listPayouts] Greška", error, { userId: req.user.id, query: req.query });
-    next(error);
-  }
-}
+export const listPayouts = createEarnerListHandler({
+  logPrefix: "api/partner",
+  actionName: "listPayouts",
+  earnerKind: "partner",
+  resolveEarnerId: getOwnPartnerId,
+  listFn: payoutRequestService.listPayoutRequestsForEarner,
+});
 
 export async function requestPayout(req, res, next) {
   try {
@@ -112,12 +92,10 @@ export async function requestPayout(req, res, next) {
 
     logInfo("[api/partner/requestPayout] Partner zatražio isplatu", { partnerId, amount: req.body.amount });
     await auditLogService.recordAuditLog({
-      actor: req.user,
+      ...buildAuditActor(req),
       action: "PAYOUT_REQUESTED",
       entity: { type: "Partner", id: partnerId },
       changes: { amount: { old: null, new: Number(req.body.amount) } },
-      req,
-      success: true,
     });
 
     return res.status(201).json({ success: true, data: { message: "Zahtev za isplatu je poslat." } });

@@ -14,6 +14,9 @@ router.use(apiAuthMiddleware);
 // ---- Services ----
 router.get("/services", requireModule("booking"), requirePermission("manage_services"), AdminCatalogController.listServices);
 router.get("/services/:serviceId", requireModule("booking"), requirePermission("manage_services"), validateServiceId, handleApiValidationErrors, AdminCatalogController.getService);
+// Raw/edit shape - see admin-catalog.controller.js's getServiceForEdit header comment
+// for why this is a second endpoint rather than changing getService's response.
+router.get("/services/:serviceId/edit", requireModule("booking"), requirePermission("manage_services"), validateServiceId, handleApiValidationErrors, AdminCatalogController.getServiceForEdit);
 // Just phase 1's required-field check (name/slug) - packages/features/isActive are
 // all optional at create time (see admin-catalog.controller.js's header comment),
 // so validateServicePackagesStep/validateServiceExtrasStep (which require packages)
@@ -26,6 +29,10 @@ router.delete("/services/:serviceId", requireModule("booking"), requirePermissio
 // ---- Packages ---- (packages relate exclusively to services, see docs/*/16 - same "booking" gate as services above)
 router.get("/packages", requireModule("booking"), requirePermission("manage_packages"), AdminCatalogController.listPackages);
 router.get("/packages/:packageId", requireModule("booking"), requirePermission("manage_packages"), validatePackageId, handleApiValidationErrors, AdminCatalogController.getPackage);
+// Raw/edit shape - see admin-catalog.controller.js's getPackageForEdit header
+// comment for why this is a second endpoint rather than changing getPackage's
+// response (same reasoning as services/:serviceId/edit above).
+router.get("/packages/:packageId/edit", requireModule("booking"), requirePermission("manage_packages"), validatePackageId, handleApiValidationErrors, AdminCatalogController.getPackageForEdit);
 router.post("/packages", requireModule("booking"), requirePermission("manage_packages"), validatePackageCreate, handleApiValidationErrors, AdminCatalogController.createPackage);
 router.put("/packages/:packageId", requireModule("booking"), requirePermission("manage_packages"), validatePackageId, validatePackageUpdate, handleApiValidationErrors, AdminCatalogController.updatePackage);
 router.delete("/packages/:packageId", requireModule("booking"), requirePermission("manage_packages"), validatePackageId, handleApiValidationErrors, AdminCatalogController.deletePackage);

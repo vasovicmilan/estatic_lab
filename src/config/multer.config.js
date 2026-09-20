@@ -200,5 +200,71 @@ function processMultipleUploads(fieldsConfig = []) {
   ];
 }
 
+// =============== DYNAMIC-TYPE UPLOAD (API layer) ===============
+// Same handleImageUpload/processVideo pipeline as processUpload/processMultipleUploads
+// above, but resolves `type` from the request (req.params.type) at request time instead
+// of a value fixed when the route module loads. The web routes always know their entity
+// type upfront (e.g. serviceUploads = processMultipleUploads([{..., type: "services"}])),
+// because each web route file only ever uploads for its own entity. A single generic
+// /api/v1/admin/uploads/:type endpoint shared across every entity doesn't have that
+// luxury - the caller specifies it per request instead. getDestination() already falls
+// back an unrecognized type to "site", so an unknown :type here just lands there rather
+// than throwing - the route layer is expected to reject unknown types before this runs
+// (see admin-uploads.controller.js's requireUploadPermission).
+
+function processUploadForApi(fieldName) {
+  return [
+    upload.single(fieldName),
+    async (req, res, next) => {
+      try {
+        if (!req.file) return res.status(400).json({ success: false, error: { message: "Fajl nije poslat." } });
+
+        const type = req.params.type || "site";
+        const destination = getDestination(type);
+        const isVideo = ALLOWED_VIDEO_TYPES.includes(req.file.mimetype);
+
+        req.uploadedFile = isVideo
+          ? await processVideo(req.file.buffer, generateFilename(req.file.originalname))
+          : await handleImageUpload(req.file, destination, type);
+
+        next();
+      } catch (error) {
+        next(error);
+      }
+    },
+  ];
+}
+
+function processMultipleUploadsForApi(fieldName, maxCount = 10) {
+  return [
+    upload.array(fieldName, maxCount),
+    async (req, res, next) => {
+      try {
+        if (!req.files || req.files.length === 0) {
+          return res.status(400).json({ success: false, error: { message: "Nijedan fajl nije poslat." } });
+        }
+
+        const type = req.params.type || "site";
+        const destination = getDestination(type);
+        const results = [];
+
+        for (const file of req.files) {
+          const isVideo = ALLOWED_VIDEO_TYPES.includes(file.mimetype);
+          results.push(
+            isVideo
+              ? await processVideo(file.buffer, generateFilename(file.originalname))
+              : await handleImageUpload(file, destination, type)
+          );
+        }
+
+        req.uploadedFiles = results;
+        next();
+      } catch (error) {
+        next(error);
+      }
+    },
+  ];
+}
+
 export default upload;
-export { processUpload, processMultipleUploads, getDestination };
+export { processUpload, processMultipleUploads, getDestination, processUploadForApi, processMultipleUploadsForApi };
