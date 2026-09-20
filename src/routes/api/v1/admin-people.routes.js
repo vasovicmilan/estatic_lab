@@ -35,6 +35,10 @@ router.delete("/employees/:employeeId", requireModule("employees"), requirePermi
 // comment: works with zero login accounts behind it)
 router.get("/experts", requirePermission("manage_employees"), AdminPeopleController.listExperts);
 router.get("/experts/:expertId", requirePermission("manage_employees"), validateExpertId, handleApiValidationErrors, AdminPeopleController.getExpert);
+// Raw/edit shape - see admin-people.controller.js's getExpertForEdit header
+// comment for why this is a second endpoint rather than changing getExpert's
+// response (same reasoning as admin-catalog.routes.js's :id/edit routes).
+router.get("/experts/:expertId/edit", requirePermission("manage_employees"), validateExpertId, handleApiValidationErrors, AdminPeopleController.getExpertForEdit);
 router.post("/experts", requirePermission("manage_employees"), validateExpertCreate, handleApiValidationErrors, AdminPeopleController.createExpert);
 router.put("/experts/:expertId", requirePermission("manage_employees"), validateExpertId, validateExpertUpdate, handleApiValidationErrors, AdminPeopleController.updateExpert);
 router.delete("/experts/:expertId", requirePermission("manage_employees"), validateExpertId, handleApiValidationErrors, AdminPeopleController.deleteExpert);

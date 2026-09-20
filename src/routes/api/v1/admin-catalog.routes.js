@@ -40,6 +40,10 @@ router.delete("/packages/:packageId", requireModule("booking"), requirePermissio
 // ---- Products ----
 router.get("/products", requireModule("shop"), requirePermission("manage_products"), AdminCatalogController.listProducts);
 router.get("/products/:productId", requireModule("shop"), requirePermission("manage_products"), validateProductId, handleApiValidationErrors, AdminCatalogController.getProduct);
+// Raw/edit shape - see admin-catalog.controller.js's getProductForEdit header
+// comment for why this is a second endpoint rather than changing getProduct's
+// response (same reasoning as services/:serviceId/edit and packages/:packageId/edit above).
+router.get("/products/:productId/edit", requireModule("shop"), requirePermission("manage_products"), validateProductId, handleApiValidationErrors, AdminCatalogController.getProductForEdit);
 router.post("/products", requireModule("shop"), requirePermission("manage_products"), validateProductStep1, handleApiValidationErrors, AdminCatalogController.createProduct);
 router.put("/products/:productId", requireModule("shop"), requirePermission("manage_products"), validateProductId, validateProductUpdate, handleApiValidationErrors, AdminCatalogController.updateProduct);
 router.put("/products/:productId/seo", requireModule("shop"), requirePermission("manage_products"), validateProductId, validateProductSeo, handleApiValidationErrors, AdminCatalogController.updateProductSeo);

@@ -27,10 +27,22 @@ function toIdArray(value) {
 
 // ================== Blog posts ==================
 
+// BUG FIX: this used to unconditionally overwrite coverImage/gallery with
+// whatever `existing` already had (or null/[] on create), discarding
+// req.body.coverImage/req.body.gallery entirely - since createPost's
+// validateBasicData requires coverImage.img, that made it *impossible* to ever
+// create a post through this API (every call failed the "coverImage" check),
+// and equally impossible to change a post's cover image on update. Now mirrors
+// how admin-catalog.controller.js/admin-people.controller.js already handle
+// image/gallery: a client uploads via POST /admin/uploads/posts(/gallery) first
+// (see admin-uploads.routes.js - "posts" is already a supported upload type),
+// then passes the returned { img, imgDesc, ... } / array straight back on the
+// create/update JSON body; req.body wins when provided, existing is only the
+// fallback on update when the caller didn't touch that field.
 function buildPostPayload(req, existing = {}) {
   const data = { ...req.body };
-  data.coverImage = existing.coverImage || null;
-  data.gallery = existing.gallery || [];
+  data.coverImage = req.body.coverImage ?? existing.coverImage ?? null;
+  data.gallery = Array.isArray(req.body.gallery) ? req.body.gallery : existing.gallery || [];
   data.content = Array.isArray(req.body.content) ? req.body.content : existing.content || [];
   data.categories = toIdArray(req.body.categories);
   data.tags = toIdArray(req.body.tags);

@@ -249,6 +249,20 @@ export async function getProduct(req, res, next) {
   }
 }
 
+// Raw/edit shape - same reasoning as getPackageForEdit above.
+// productService.getProductForEdit already existed (mapProductForEdit,
+// English-keyed, raw values) but had no route wired to it - this is purely
+// additive, getProduct's existing response is unchanged.
+export async function getProductForEdit(req, res, next) {
+  try {
+    const product = await productService.getProductForEdit(req.params.productId);
+    return res.json({ success: true, data: product });
+  } catch (error) {
+    logError("[api/admin/getProductForEdit] Greška", error, { productId: req.params.productId });
+    next(error);
+  }
+}
+
 export async function createProduct(req, res, next) {
   try {
     // createProduct (not the createDraftProduct wizard) - a genuine single-step
@@ -303,5 +317,5 @@ export async function deleteProduct(req, res, next) {
 export default {
   listServices, getService, getServiceForEdit, createService, updateService, updateServiceSeo, deleteService,
   listPackages, getPackage, getPackageForEdit, createPackage, updatePackage, deletePackage,
-  listProducts, getProduct, createProduct, updateProduct, updateProductSeo, deleteProduct,
+  listProducts, getProduct, getProductForEdit, createProduct, updateProduct, updateProductSeo, deleteProduct,
 };

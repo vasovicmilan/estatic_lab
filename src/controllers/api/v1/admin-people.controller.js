@@ -273,6 +273,20 @@ export async function getExpert(req, res, next) {
   }
 }
 
+// Raw/edit shape - same reasoning as admin-catalog.controller.js's
+// getPackageForEdit/getProductForEdit. expertService.getExpertForEdit already
+// existed (mapExpertForEdit, English-keyed, raw values) but had no route wired
+// to it - this is purely additive, getExpert's existing response is unchanged.
+export async function getExpertForEdit(req, res, next) {
+  try {
+    const expert = await expertService.getExpertForEdit(req.params.expertId);
+    return res.json({ success: true, data: expert });
+  } catch (error) {
+    logError("[api/admin/getExpertForEdit] Greška", error, { expertId: req.params.expertId });
+    next(error);
+  }
+}
+
 export async function createExpert(req, res, next) {
   try {
     const data = { ...req.body };
@@ -386,6 +400,6 @@ export async function deletePartner(req, res, next) {
 export default {
   listUsers, getUser, updateUser, updateUserStatus, updateUserRole, verifyUser, anonymizeUser, deleteUser,
   listEmployees, getEmployee, createEmployee, updateEmployee, updateEmployeeWorkingHours, deleteEmployee,
-  listExperts, getExpert, createExpert, updateExpert, deleteExpert,
+  listExperts, getExpert, getExpertForEdit, createExpert, updateExpert, deleteExpert,
   listPartners, getPartner, createPartner, updatePartner, deletePartner,
 };
