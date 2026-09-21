@@ -15,6 +15,7 @@ import adminPackagePurchaseRoutes from "./admin-package-purchase.routes.js";
 import adminMarketingRoutes from "./admin-marketing.routes.js";
 import adminOpsRoutes from "./admin-ops.routes.js";
 import adminUploadsRoutes from "./admin-uploads.routes.js";
+import publicFormsRoutes from "./public-forms.routes.js";
 import { requireModule } from "../../../middlewares/feature.middleware.js";
 
 const router = Router();
@@ -57,5 +58,12 @@ router.use("/admin", adminOpsRoutes);
 router.use("/admin", adminUploadsRoutes);
 router.use("/", requireModule("shop"), cartRoutes);
 router.use("/", catalogRoutes);
+// Gap fix: contact/newsletter/testimonial-submission had no API v1 equivalent
+// (only the admin READ/status side of each existed here) - see
+// public-forms.controller.js's header comment. Not module-gated for the same
+// reason catalogRoutes above isn't as a whole - contact and newsletter aren't
+// tied to booking/shop, and a submitted testimonial can reference a service,
+// package, or product interchangeably.
+router.use("/", publicFormsRoutes);
 
 export default router;

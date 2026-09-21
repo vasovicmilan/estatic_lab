@@ -4,7 +4,7 @@ import { validateBookingConfirm } from "../../../middlewares/validators/booking.
 import { validateHoneypot } from "../../../middlewares/validators/spam.validator.js";
 import { handleApiValidationErrors } from "../../../middlewares/api-validation.middleware.js";
 import { optionalApiAuth } from "../../../middlewares/auth.middleware.js";
-import { bookingLimiter, availabilityLimiter } from "../../../middlewares/rate-limiter.middleware.js";
+import { bookingLimiter, availabilityLimiter, couponLimiter } from "../../../middlewares/rate-limiter.middleware.js";
 
 const router = Router();
 
@@ -14,5 +14,13 @@ const router = Router();
 // attached to their account instead of staying a guest booking.
 router.get("/:serviceSlug/slots", availabilityLimiter, optionalApiAuth, BookingController.getSlots);
 router.post("/confirm", bookingLimiter, optionalApiAuth, validateHoneypot, validateBookingConfirm, handleApiValidationErrors, BookingController.confirmBooking);
+
+// Gap fix (see booking.controller.js's own comments on each) - the Angular
+// booking widget had no way to know a referral code was already captured, or
+// to preview a coupon's discount before confirming. Both public, same as the
+// rest of this router - no auth wall, optionalApiAuth so a logged-in caller's
+// own per-user coupon limits are still honored by validateCouponForBooking.
+router.get("/referral-code", availabilityLimiter, BookingController.getCapturedReferral);
+router.post("/coupon/check", couponLimiter, optionalApiAuth, BookingController.checkCoupon);
 
 export default router;

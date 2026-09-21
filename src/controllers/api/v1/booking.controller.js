@@ -3,6 +3,8 @@ import * as availabilityService from "../../../services/availability.service.js"
 import * as employeeService from "../../../services/employee.service.js";
 import * as appointmentService from "../../../services/appointment.service.js";
 import * as packagePurchaseService from "../../../services/package-purchase.service.js";
+import couponService from "../../../services/coupon.service.js";
+import { getCapturedReferralCode } from "../../../middlewares/coupon-capture.middleware.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
 import { badRequest } from "../../../utils/error.util.js";
 
@@ -91,4 +93,52 @@ export async function confirmBooking(req, res, next) {
   }
 }
 
-export default { getSlots, confirmBooking };
+// GET /api/v1/booking/referral-code
+// Gap fix: the referral/partner code captured from `?code=` in the URL (see
+// coupon-capture.middleware.js) is stored in an httpOnly cookie on purpose -
+// it can't be read directly by frontend JS. The web flow doesn't need to
+// read it client-side either (contactStep auto-applies it server-side into
+// req.session.activeCoupon), but the Angular booking widget has no session
+// to auto-apply into - it needs an explicit way to ask "is a code already
+// captured for this visitor?" so it can pre-fill (not silently apply) the
+// coupon field, exactly like the web contact-step does automatically.
+export function getCapturedReferral(req, res) {
+  return res.json({ success: true, data: { code: getCapturedReferralCode(req) } });
+}
+
+// POST /api/v1/booking/coupon/check
+// Gap fix: there was no public way to preview a coupon's discount before
+// confirming a booking - confirmBooking already validates+redeems couponCode
+// internally (see appointmentService.bookAppointment), but only at the very
+// end, after every other field was already filled in. This is a read-only
+// preview (mirrors admin-package-purchase.controller.js's
+// checkPackagePurchaseCoupon), open to guests same as the rest of booking -
+// serviceId/servicePackageId are looked up server-side rather than trusting
+// a client-sent price, so the discount preview can't be spoofed by sending a
+// fake appointmentValue.
+export async function checkCoupon(req, res) {
+  try {
+    const { code, serviceId, servicePackageId } = req.body;
+    if (!code || !serviceId || !servicePackageId) {
+      return res.status(400).json({ success: false, error: { message: "Kod kupona, usluga i varijanta su obavezni" } });
+    }
+
+    const { variant } = await serviceService.getActiveVariant(serviceId, servicePackageId);
+    if (!variant) return res.status(404).json({ success: false, error: { message: "Izabrana varijanta nije pronađena" } });
+
+    const { discountAmount } = await couponService.validateCouponForBooking(code, {
+      userId: req.user?.id || null,
+      serviceId,
+      appointmentValue: variant.totalPrice,
+    });
+
+    return res.json({
+      success: true,
+      data: { originalPrice: variant.totalPrice, discountAmount, finalPrice: Math.max(0, variant.totalPrice - discountAmount) },
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 400).json({ success: false, error: { message: error.message || "Kupon nije važeći" } });
+  }
+}
+
+export default { getSlots, confirmBooking, getCapturedReferral, checkCoupon };
