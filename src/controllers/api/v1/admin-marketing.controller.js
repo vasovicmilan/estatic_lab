@@ -406,7 +406,12 @@ export async function deleteTestimonial(req, res, next) {
 
 function buildBusinessPartnerPayload(req, existing = {}) {
   const data = { ...req.body };
-  data.coverImage = existing.coverImage || null;
+  // Same bug class already fixed in buildPostPayload: this used to unconditionally
+  // overwrite coverImage with the existing (or null on create) value, discarding
+  // whatever the client sent in req.body.coverImage - which made createBusinessPartner's
+  // `if (!data.coverImage) validationError("coverImage")` check always fail, so
+  // creating a business partner via the API was completely broken.
+  data.coverImage = req.body.coverImage ?? existing.coverImage ?? null;
   data.content = Array.isArray(req.body.content) ? req.body.content : existing.content || [];
   data.isActive = req.body.isActive !== undefined ? Boolean(req.body.isActive) : existing.isActive ?? true;
   data.geo = {
@@ -433,12 +438,31 @@ export async function listBusinessPartners(req, res, next) {
   }
 }
 
+// Gap fix: unlike every other entity in this file (Post, Coupon, Testimonial, ...)
+// GET /business-partners/:partnerId was wired to the RAW edit shape
+// (getBusinessPartnerForEdit) instead of the formatted display shape
+// (getBusinessPartnerById -> mapBusinessPartnerForAdminDetail, which renders
+// `content` through renderContentBlocks() into the Serbian-keyed shape the shared
+// content-blocks display component expects) - so a read-only admin detail view
+// had no display-shape endpoint to call, only the raw one meant for pre-filling
+// the edit form. Flipped to match the established :id (display) / :id/edit (raw)
+// convention used everywhere else (see getBusinessPartnerForEdit right below).
 export async function getBusinessPartner(req, res, next) {
+  try {
+    const partner = await businessPartnerService.getBusinessPartnerById(req.params.partnerId);
+    return res.json({ success: true, data: partner });
+  } catch (error) {
+    logError("[api/admin/getBusinessPartner] Greška", error, { partnerId: req.params.partnerId });
+    next(error);
+  }
+}
+
+export async function getBusinessPartnerForEdit(req, res, next) {
   try {
     const partner = await businessPartnerService.getBusinessPartnerForEdit(req.params.partnerId);
     return res.json({ success: true, data: partner });
   } catch (error) {
-    logError("[api/admin/getBusinessPartner] Greška", error, { partnerId: req.params.partnerId });
+    logError("[api/admin/getBusinessPartnerForEdit] Greška", error, { partnerId: req.params.partnerId });
     next(error);
   }
 }
@@ -638,7 +662,7 @@ export default {
   listCoupons, getCoupon, createCoupon, updateCoupon, deleteCoupon,
   listSubscribers, getSubscriber, deleteSubscriber,
   listTestimonials, getTestimonial, approveTestimonial, rejectTestimonial, deleteTestimonial,
-  listBusinessPartners, getBusinessPartner, createBusinessPartner, updateBusinessPartner, deleteBusinessPartner,
+  listBusinessPartners, getBusinessPartner, getBusinessPartnerForEdit, createBusinessPartner, updateBusinessPartner, deleteBusinessPartner,
   listContacts, getContact, updateContactStatus,
   listCampaigns, getCampaign, createCampaign, updateCampaign, sendCampaignNow, deleteCampaign,
 };

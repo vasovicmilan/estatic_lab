@@ -178,6 +178,21 @@ export async function getEmployee(req, res, next) {
   }
 }
 
+// Raw/edit shape - same reasoning as getExpertForEdit/getProductForEdit/
+// getPackageForEdit above. employeeService.getEmployeeForEdit already existed
+// (used internally by updateEmployee's before/after audit diff) but had no
+// route wired to it - purely additive, getEmployee's existing response is
+// unchanged.
+export async function getEmployeeForEdit(req, res, next) {
+  try {
+    const employee = await employeeService.getEmployeeForEdit(req.params.employeeId);
+    return res.json({ success: true, data: employee });
+  } catch (error) {
+    logError("[api/admin/getEmployeeForEdit] Greška", error, { employeeId: req.params.employeeId });
+    next(error);
+  }
+}
+
 export async function createEmployee(req, res, next) {
   try {
     const employee = await employeeService.createEmployee(req.body);
@@ -359,6 +374,19 @@ export async function getPartner(req, res, next) {
   }
 }
 
+// Raw/edit shape - same reasoning as getEmployeeForEdit/getExpertForEdit above.
+// partnerService.getPartnerForEdit already existed (mapPartnerForEdit, raw
+// userId instead of display strings) but had no route wired to it.
+export async function getPartnerForEdit(req, res, next) {
+  try {
+    const partner = await partnerService.getPartnerForEdit(req.params.partnerId);
+    return res.json({ success: true, data: partner });
+  } catch (error) {
+    logError("[api/admin/getPartnerForEdit] Greška", error, { partnerId: req.params.partnerId });
+    next(error);
+  }
+}
+
 export async function createPartner(req, res, next) {
   try {
     const partner = await partnerService.createPartner(req.body);
@@ -399,7 +427,7 @@ export async function deletePartner(req, res, next) {
 
 export default {
   listUsers, getUser, updateUser, updateUserStatus, updateUserRole, verifyUser, anonymizeUser, deleteUser,
-  listEmployees, getEmployee, createEmployee, updateEmployee, updateEmployeeWorkingHours, deleteEmployee,
+  listEmployees, getEmployee, getEmployeeForEdit, createEmployee, updateEmployee, updateEmployeeWorkingHours, deleteEmployee,
   listExperts, getExpert, getExpertForEdit, createExpert, updateExpert, deleteExpert,
-  listPartners, getPartner, createPartner, updatePartner, deletePartner,
+  listPartners, getPartner, getPartnerForEdit, createPartner, updatePartner, deletePartner,
 };

@@ -28,6 +28,12 @@ const TYPE_PERMISSIONS = {
   testimonials: "manage_marketing",
   experts: "manage_employees",
   partners: "manage_partners",
+  // Gap fix: business-partner (admin-marketing.routes.js's /business-partners,
+  // permission manage_marketing) needed a coverImage upload the same way every
+  // other entity above does, but had no entry here at all - so any "business-partners"
+  // upload attempt was rejected up front with "Nepoznat tip uploada" and the
+  // admin had no way to satisfy createBusinessPartner's required coverImage field.
+  "business-partners": "manage_marketing",
   site: "manage_site_content",
 };
 

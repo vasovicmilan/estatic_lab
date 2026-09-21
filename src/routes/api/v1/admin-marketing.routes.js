@@ -46,6 +46,10 @@ router.delete("/testimonials/:testimonialId", requirePermission("manage_marketin
 // ---- Business partners ----
 router.get("/business-partners", requirePermission("manage_marketing"), AdminMarketingController.listBusinessPartners);
 router.get("/business-partners/:partnerId", requirePermission("manage_marketing"), validateBusinessPartnerId, handleApiValidationErrors, AdminMarketingController.getBusinessPartner);
+// Raw/edit shape - see admin-marketing.controller.js's getBusinessPartner header
+// comment for why this is now a second endpoint (same reasoning as the Category/
+// Employee/Partner :id/edit routes elsewhere in this codebase).
+router.get("/business-partners/:partnerId/edit", requirePermission("manage_marketing"), validateBusinessPartnerId, handleApiValidationErrors, AdminMarketingController.getBusinessPartnerForEdit);
 router.post("/business-partners", requirePermission("manage_marketing"), validateBusinessPartnerCreate, handleApiValidationErrors, AdminMarketingController.createBusinessPartner);
 router.put("/business-partners/:partnerId", requirePermission("manage_marketing"), validateBusinessPartnerId, validateBusinessPartnerUpdate, handleApiValidationErrors, AdminMarketingController.updateBusinessPartner);
 router.delete("/business-partners/:partnerId", requirePermission("manage_marketing"), validateBusinessPartnerId, handleApiValidationErrors, AdminMarketingController.deleteBusinessPartner);

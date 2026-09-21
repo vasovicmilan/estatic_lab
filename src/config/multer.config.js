@@ -39,7 +39,7 @@ const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 // passed explicitly at every call site (see the routes files) and is what the
 // returned URL (/images/${type}/...) is built from too - so this makes the
 // folder actually written to match the URL that gets saved to the database.
-const KNOWN_IMAGE_TYPES = new Set(["services", "packages", "products", "categories", "posts", "testimonials", "experts", "partners", "site"]);
+const KNOWN_IMAGE_TYPES = new Set(["services", "packages", "products", "categories", "posts", "testimonials", "experts", "partners", "business-partners", "site"]);
 
 function getDestination(type) {
   const subfolder = KNOWN_IMAGE_TYPES.has(type) ? type : "site";

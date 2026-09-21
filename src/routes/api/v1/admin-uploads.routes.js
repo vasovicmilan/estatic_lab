@@ -14,8 +14,9 @@ const router = Router();
 router.use(apiAuthMiddleware);
 
 // :type is one of the keys admin-uploads.controller.js's TYPE_PERMISSIONS knows about
-// (services/packages/products/categories/posts/testimonials/experts/partners/site) -
-// requireUploadPermission rejects anything else with a 400 before multer ever runs.
+// (services/packages/products/categories/posts/testimonials/experts/partners/
+// business-partners/site) - requireUploadPermission rejects anything else with a 400
+// before multer ever runs.
 //
 // Response shape matches exactly what handleImageUpload()/processVideo() in
 // multer.config.js already produce for the web admin panel's req.uploadedFile /

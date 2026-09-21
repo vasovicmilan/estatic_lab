@@ -25,6 +25,7 @@ router.delete("/users/:userId", requirePermission("manage_users"), validateUserI
 // ---- Employees ---- (a real login+schedule staff account that fulfils appointments - booking-only)
 router.get("/employees", requireModule("employees"), requirePermission("manage_employees"), AdminPeopleController.listEmployees);
 router.get("/employees/:employeeId", requireModule("employees"), requirePermission("manage_employees"), validateEmployeeId, handleApiValidationErrors, AdminPeopleController.getEmployee);
+router.get("/employees/:employeeId/edit", requireModule("employees"), requirePermission("manage_employees"), validateEmployeeId, handleApiValidationErrors, AdminPeopleController.getEmployeeForEdit);
 router.post("/employees", requireModule("employees"), requirePermission("manage_employees"), validateEmployeeCreate, handleApiValidationErrors, AdminPeopleController.createEmployee);
 router.put("/employees/:employeeId", requireModule("employees"), requirePermission("manage_employees"), validateEmployeeId, validateEmployeeUpdate, handleApiValidationErrors, AdminPeopleController.updateEmployee);
 router.put("/employees/:employeeId/working-hours", requireModule("employees"), requirePermission("manage_employees"), validateEmployeeId, validateWorkingHoursUpdate, handleApiValidationErrors, AdminPeopleController.updateEmployeeWorkingHours);
@@ -46,6 +47,10 @@ router.delete("/experts/:expertId", requirePermission("manage_employees"), valid
 // ---- Partners ----
 router.get("/partners", requireModule("partners"), requirePermission("manage_partners"), AdminPeopleController.listPartners);
 router.get("/partners/:partnerId", requireModule("partners"), requirePermission("manage_partners"), validatePartnerId, handleApiValidationErrors, AdminPeopleController.getPartner);
+// Raw/edit shape - see admin-people.controller.js's getPartnerForEdit header
+// comment for why this is a second endpoint rather than changing getPartner's
+// response (same reasoning as the Employee/Expert :id/edit routes above).
+router.get("/partners/:partnerId/edit", requireModule("partners"), requirePermission("manage_partners"), validatePartnerId, handleApiValidationErrors, AdminPeopleController.getPartnerForEdit);
 router.post("/partners", requireModule("partners"), requirePermission("manage_partners"), validatePartnerCreate, handleApiValidationErrors, AdminPeopleController.createPartner);
 router.put("/partners/:partnerId", requireModule("partners"), requirePermission("manage_partners"), validatePartnerId, validatePartnerUpdate, handleApiValidationErrors, AdminPeopleController.updatePartner);
 router.delete("/partners/:partnerId", requireModule("partners"), requirePermission("manage_partners"), validatePartnerId, handleApiValidationErrors, AdminPeopleController.deletePartner);
