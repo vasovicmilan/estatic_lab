@@ -124,6 +124,21 @@ export async function getCategory(req, res, next) {
   }
 }
 
+// Raw/edit shape - same reasoning as admin-catalog.controller.js's
+// getPackageForEdit/getProductForEdit (see that file's header comment for the
+// full rationale). categoryService.getCategoryForEdit already existed
+// (mapCategoryForEdit, English-keyed, raw values) but had no route wired to
+// it - this is purely additive, getCategory's existing response is unchanged.
+export async function getCategoryForEdit(req, res, next) {
+  try {
+    const category = await categoryService.getCategoryForEdit(req.params.categoryId);
+    return res.json({ success: true, data: category });
+  } catch (error) {
+    logError("[api/admin/getCategoryForEdit] Greška", error, { categoryId: req.params.categoryId });
+    next(error);
+  }
+}
+
 export async function createCategory(req, res, next) {
   try {
     const category = await categoryService.createCategory(buildCategoryData(req.body));
@@ -187,6 +202,19 @@ export async function getTag(req, res, next) {
     return res.json({ success: true, data: tag });
   } catch (error) {
     logError("[api/admin/getTag] Greška", error, { tagId: req.params.tagId });
+    next(error);
+  }
+}
+
+// Raw/edit shape - same reasoning as getCategoryForEdit above.
+// tagService.getTagForEdit already existed (mapTagForEdit) but had no route
+// wired to it - purely additive, getTag's existing response is unchanged.
+export async function getTagForEdit(req, res, next) {
+  try {
+    const tag = await tagService.getTagForEdit(req.params.tagId);
+    return res.json({ success: true, data: tag });
+  } catch (error) {
+    logError("[api/admin/getTagForEdit] Greška", error, { tagId: req.params.tagId });
     next(error);
   }
 }
@@ -257,6 +285,19 @@ export async function getResource(req, res, next) {
   }
 }
 
+// Raw/edit shape - same reasoning as getCategoryForEdit above.
+// resourceService.getResourceForEdit already existed but had no route wired
+// to it - purely additive, getResource's existing response is unchanged.
+export async function getResourceForEdit(req, res, next) {
+  try {
+    const resource = await resourceService.getResourceForEdit(req.params.resourceId);
+    return res.json({ success: true, data: resource });
+  } catch (error) {
+    logError("[api/admin/getResourceForEdit] Greška", error, { resourceId: req.params.resourceId });
+    next(error);
+  }
+}
+
 export async function createResource(req, res, next) {
   try {
     const resource = await resourceService.createResource(req.body);
@@ -297,7 +338,7 @@ export async function deleteResource(req, res, next) {
 
 export default {
   listRoles, getRole, createRole, updateRole, deleteRole,
-  listCategories, getCategory, createCategory, updateCategory, deleteCategory,
-  listTags, getTag, createTag, updateTag, deleteTag,
-  listResources, getResource, createResource, updateResource, deleteResource,
+  listCategories, getCategory, getCategoryForEdit, createCategory, updateCategory, deleteCategory,
+  listTags, getTag, getTagForEdit, createTag, updateTag, deleteTag,
+  listResources, getResource, getResourceForEdit, createResource, updateResource, deleteResource,
 };

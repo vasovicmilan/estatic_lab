@@ -26,6 +26,10 @@ router.delete("/roles/:roleId", requirePermission("manage_roles"), validateRoleI
 // route would hide it even for a still-enabled domain)
 router.get("/categories", requirePermission("manage_taxonomy"), AdminTaxonomyController.listCategories);
 router.get("/categories/:categoryId", requirePermission("manage_taxonomy"), validateCategoryId, handleApiValidationErrors, AdminTaxonomyController.getCategory);
+// Raw/edit shape - see admin-taxonomy.controller.js's getCategoryForEdit header
+// comment for why this is a second endpoint rather than changing getCategory's
+// response (same reasoning as admin-catalog.routes.js's :id/edit routes).
+router.get("/categories/:categoryId/edit", requirePermission("manage_taxonomy"), validateCategoryId, handleApiValidationErrors, AdminTaxonomyController.getCategoryForEdit);
 router.post("/categories", requirePermission("manage_taxonomy"), validateCategoryCreate, handleApiValidationErrors, AdminTaxonomyController.createCategory);
 router.put("/categories/:categoryId", requirePermission("manage_taxonomy"), validateCategoryId, validateCategoryUpdate, handleApiValidationErrors, AdminTaxonomyController.updateCategory);
 router.delete("/categories/:categoryId", requirePermission("manage_taxonomy"), validateCategoryId, handleApiValidationErrors, AdminTaxonomyController.deleteCategory);
@@ -33,6 +37,7 @@ router.delete("/categories/:categoryId", requirePermission("manage_taxonomy"), v
 // ---- Tags ---- (same reasoning as Categories above - polymorphic across domains)
 router.get("/tags", requirePermission("manage_taxonomy"), AdminTaxonomyController.listTags);
 router.get("/tags/:tagId", requirePermission("manage_taxonomy"), validateTagId, handleApiValidationErrors, AdminTaxonomyController.getTag);
+router.get("/tags/:tagId/edit", requirePermission("manage_taxonomy"), validateTagId, handleApiValidationErrors, AdminTaxonomyController.getTagForEdit);
 router.post("/tags", requirePermission("manage_taxonomy"), validateTagCreate, handleApiValidationErrors, AdminTaxonomyController.createTag);
 router.put("/tags/:tagId", requirePermission("manage_taxonomy"), validateTagId, validateTagUpdate, handleApiValidationErrors, AdminTaxonomyController.updateTag);
 router.delete("/tags/:tagId", requirePermission("manage_taxonomy"), validateTagId, handleApiValidationErrors, AdminTaxonomyController.deleteTag);
@@ -40,6 +45,7 @@ router.delete("/tags/:tagId", requirePermission("manage_taxonomy"), validateTagI
 // ---- Resources ---- (rooms/equipment/tables used for appointments - booking-only)
 router.get("/resources", requireModule("booking"), requirePermission("manage_resources"), AdminTaxonomyController.listResources);
 router.get("/resources/:resourceId", requireModule("booking"), requirePermission("manage_resources"), validateResourceId, handleApiValidationErrors, AdminTaxonomyController.getResource);
+router.get("/resources/:resourceId/edit", requireModule("booking"), requirePermission("manage_resources"), validateResourceId, handleApiValidationErrors, AdminTaxonomyController.getResourceForEdit);
 router.post("/resources", requireModule("booking"), requirePermission("manage_resources"), validateResourceCreate, handleApiValidationErrors, AdminTaxonomyController.createResource);
 router.put("/resources/:resourceId", requireModule("booking"), requirePermission("manage_resources"), validateResourceId, validateResourceUpdate, handleApiValidationErrors, AdminTaxonomyController.updateResource);
 router.delete("/resources/:resourceId", requireModule("booking"), requirePermission("manage_resources"), validateResourceId, handleApiValidationErrors, AdminTaxonomyController.deleteResource);
