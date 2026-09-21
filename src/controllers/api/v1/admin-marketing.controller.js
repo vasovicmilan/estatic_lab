@@ -216,12 +216,29 @@ export async function listCoupons(req, res, next) {
   }
 }
 
+// Gap fix: same bug class as getBusinessPartner above - this was wired to the
+// RAW edit shape (getCouponForEdit) instead of the formatted display shape
+// (getCouponById -> mapCouponForAdminDetail, which resolves populated service/
+// package/product/category names and the partner's display name, formats money,
+// and includes usage history), so a read-only admin detail view had no
+// display-shape endpoint to call. Flipped to match the established :id (display)
+// / :id/edit (raw) convention (see getCouponForEdit right below).
 export async function getCoupon(req, res, next) {
+  try {
+    const coupon = await couponService.getCouponById(req.params.couponId);
+    return res.json({ success: true, data: coupon });
+  } catch (error) {
+    logError("[api/admin/getCoupon] Greška", error, { couponId: req.params.couponId });
+    next(error);
+  }
+}
+
+export async function getCouponForEdit(req, res, next) {
   try {
     const coupon = await couponService.getCouponForEdit(req.params.couponId);
     return res.json({ success: true, data: coupon });
   } catch (error) {
-    logError("[api/admin/getCoupon] Greška", error, { couponId: req.params.couponId });
+    logError("[api/admin/getCouponForEdit] Greška", error, { couponId: req.params.couponId });
     next(error);
   }
 }
@@ -659,7 +676,7 @@ export async function deleteCampaign(req, res, next) {
 
 export default {
   listPosts, getPost, createPost, updatePost, updatePostStatus, updatePostSeo, deletePost,
-  listCoupons, getCoupon, createCoupon, updateCoupon, deleteCoupon,
+  listCoupons, getCoupon, getCouponForEdit, createCoupon, updateCoupon, deleteCoupon,
   listSubscribers, getSubscriber, deleteSubscriber,
   listTestimonials, getTestimonial, approveTestimonial, rejectTestimonial, deleteTestimonial,
   listBusinessPartners, getBusinessPartner, getBusinessPartnerForEdit, createBusinessPartner, updateBusinessPartner, deleteBusinessPartner,

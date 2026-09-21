@@ -27,6 +27,10 @@ router.delete("/posts/:postId", requireModule("blog"), requirePermission("manage
 // ---- Coupons ----
 router.get("/coupons", requireModule("coupons"), requirePermission("manage_coupons"), AdminMarketingController.listCoupons);
 router.get("/coupons/:couponId", requireModule("coupons"), requirePermission("manage_coupons"), validateCouponId, handleApiValidationErrors, AdminMarketingController.getCoupon);
+// Raw/edit shape - see admin-marketing.controller.js's getCoupon header comment
+// for why this is now a second endpoint (same reasoning as the business-partners
+// :id/edit route above).
+router.get("/coupons/:couponId/edit", requireModule("coupons"), requirePermission("manage_coupons"), validateCouponId, handleApiValidationErrors, AdminMarketingController.getCouponForEdit);
 router.post("/coupons", requireModule("coupons"), requirePermission("manage_coupons"), validateCouponCreate, handleApiValidationErrors, AdminMarketingController.createCoupon);
 router.put("/coupons/:couponId", requireModule("coupons"), requirePermission("manage_coupons"), validateCouponId, validateCouponUpdate, handleApiValidationErrors, AdminMarketingController.updateCoupon);
 router.delete("/coupons/:couponId", requireModule("coupons"), requirePermission("manage_coupons"), validateCouponId, handleApiValidationErrors, AdminMarketingController.deleteCoupon);
