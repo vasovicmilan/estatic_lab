@@ -4,7 +4,7 @@ How an employee sets their own working hours, and how that immediately affects w
 
 <video src="../../videos/radno-vreme-zaposlenog/merged.en.burned.webm" controls width="720"></video>
 
-_titl je zapečen u video - ne treba spoljni .vtt fajl_
+_Subtitles are burned into the video - no external .vtt file needed_
 
 ## 1. No working hours, no slots
 

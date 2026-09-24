@@ -4,7 +4,7 @@ Kad se paket kupi preko partnerovog koda za preporuku, dva popusta se kombinuju:
 
 <video src="../../videos/provizija-za-paket-sa-preporukom/merged.sr.burned.webm" controls width="720"></video>
 
-_titl je zapečen u video - ne treba spoljni .vtt fajl_
+_Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 
 ## 1. Registracija
 

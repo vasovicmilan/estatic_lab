@@ -4,7 +4,7 @@ Registrovan klijent unosi telefon već pri registraciji, čuva adresu na svom na
 
 <video src="../../videos/kupovina-sa-nalogom/merged.sr.burned.webm" controls width="720"></video>
 
-_titl je zapečen u video - ne treba spoljni .vtt fajl_
+_Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 
 ## 1. Registracija sa telefonom
 

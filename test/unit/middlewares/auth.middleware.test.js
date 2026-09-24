@@ -40,27 +40,30 @@ describe("auth.middleware - apiAuthMiddleware", () => {
   it("rejects with 401 when no Authorization header is present", () => {
     const req = { headers: {} };
     const res = fakeRes();
-    let nextCalled = false;
+    let passedError = null;
 
-    apiAuthMiddleware(req, res, () => {
-      nextCalled = true;
+    apiAuthMiddleware(req, res, (err) => {
+      passedError = err;
     });
 
-    assert.equal(nextCalled, false);
-    assert.equal(res.statusCode, 401);
+    assert.ok(passedError, "next should be called with an error");
+    assert.equal(passedError.statusCode, 401);
+    assert.equal(passedError.name, "AuthenticationError");
+    assert.equal(res.jsonBody, null, "the middleware must not write its own response body");
   });
 
   it("rejects with 401 for a malformed/invalid token", () => {
     const req = { headers: { authorization: "Bearer not-a-real-token" } };
     const res = fakeRes();
-    let nextCalled = false;
+    let passedError = null;
 
-    apiAuthMiddleware(req, res, () => {
-      nextCalled = true;
+    apiAuthMiddleware(req, res, (err) => {
+      passedError = err;
     });
 
-    assert.equal(nextCalled, false);
-    assert.equal(res.statusCode, 401);
+    assert.ok(passedError, "next should be called with an error");
+    assert.equal(passedError.statusCode, 401);
+    assert.equal(passedError.name, "AuthenticationError");
   });
 });
 

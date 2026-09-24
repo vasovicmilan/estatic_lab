@@ -311,7 +311,21 @@ Built to grow later (e.g. an "about us" page's content) without needing a new mo
 
 ---
 
-## 15. Security and Infrastructure
+## 15. The JSON API (`/api/v1`)
+
+**Business challenge.** The platform's customers and staff use the server-rendered website, but the business also needs the same system to be usable from a separate frontend (a mobile app, a new Angular frontend, or a white-label client with their own design) without anyone re-implementing pricing, booking rules, commission or payout logic a second time and letting the two copies drift apart.
+
+**How it was solved.** A JSON API under `/api/v1` sits next to the website and calls exactly the same services, so every business rule described in this document applies identically through either door. It covers the public catalog, booking (including coupon preview and referral capture), the customer's own account (`/me`), the cart and checkout, the employee and partner areas, the public contact/newsletter/testimonial forms, and the whole admin panel including image and video uploads (upload first, then reference the result in the normal create/update call).
+
+**Access rules stay the same as on the website.** Callers sign in with email and password and receive a token valid for 24 hours. Admin routes have two independent checks, exactly like the web panel: the general "may enter the admin area" permission for the whole admin surface, plus the specific permission of each area (users, payouts, products, and so on). Employee and partner routes are open only to accounts that actually have an employee or partner profile. Modules switched off for a client (see `docs/en/16-module-feature-flags.md`) disappear from the API too.
+
+**One error format, every time.** Whatever went wrong (missing token, missing permission, too many requests, invalid input, a genuine bug), the caller gets the same response shape with a short error ID. The same ID is written to the server log, so a reported problem can be found directly.
+
+**Why this approach.** One set of business rules and one permission model means a rule fixed once is fixed everywhere, and a frontend team can build against a single predictable contract. The deliberate trade-off: permissions are copied into the token at sign-in, so a change made by an admin reaches an already-signed-in API user only after the token expires (up to 24 hours); for urgent revocation the account itself is deactivated, which is checked on every request. Versioning by folder (`v1`) means a future `v2` can change the contract without touching what existing clients rely on. For the route list and details see `docs/en/15-api-v1-reference.md`.
+
+---
+
+## 16. Security and Infrastructure
 
 **Business challenge.** A production platform handling personal data and payments needs to be resilient against common attacks without relying solely on "security through obscurity."
 
@@ -324,7 +338,7 @@ Built to grow later (e.g. an "about us" page's content) without needing a new mo
 
 ---
 
-## 16. Testing
+## 17. Testing
 
 **Business challenge.** Business logic at this scale (commission calculation, coupon validation, status transitions, transactional protection against double-booking) has to stay correct through constant changes. A bug in the commission calculation directly means the wrong amount of money paid out, as section 9 just demonstrated with a concrete example.
 
@@ -367,7 +381,7 @@ Users/Roles (1)
 
 External integrations (11) <-- builds on the appointment lifecycle (2)
 Notifications (12) <-- follow nearly every event from (2)-(10)
-Site content (13), Admin/Logs (14), Security (15), Testing (16): run through all of the above
+Site content (13), Admin/Logs (14), JSON API (15), Security (16), Testing (17): run through all of the above
 ```
 
 ---

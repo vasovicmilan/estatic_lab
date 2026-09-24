@@ -31,18 +31,19 @@ Each set covers:
 | 14 | Data Integrity & Deletion Logic |
 | 15 | API v1 Reference |
 | 16 | Module Feature Flags |
+| 17 | Backups |
 
 For a higher-level walkthrough of *why* each part of the system is built the way it is (business challenge, approach, solution, across every domain), see [`BUSINESS-LOGIC.md`](BUSINESS-LOGIC.md) (English) or [`POSLOVNA-LOGIKA.md`](POSLOVNA-LOGIKA.md) (Serbian).
 
 ## Admin-configurable settings
 
-Hero image, booking policy (appointment buffer, cancellation/reschedule windows), and currency are all editable from the admin panel (`/admin/sajt`), no code change or redeploy needed, and changes take effect immediately. Everything else about the catalog (services, packages, products, staff) is entered through the admin panel as well. See `09-admin-operations.md` and `DEPLOYMENT.md`.
+Hero image, booking policy (appointment buffer, cancellation/reschedule windows), and currency are all editable from the admin panel (`/admin/sajt`), no code change or redeploy needed, and changes take effect immediately. Everything else about the catalog (services, packages, products, staff) is entered through the admin panel as well. See [`docs/en/09-admin-operations.md`](docs/en/09-admin-operations.md) and [`DEPLOYMENT.md`](DEPLOYMENT.md).
 
 ## Stack
 
 Node.js · Express 5 · MongoDB / Mongoose 9 · EJS · Bootstrap 5
 
-CSS/ikonice se ne serviraju direktno iz `node_modules` - `npm run build:css` (Sass + esbuild) pravi prilagođen, minifikovan Bootstrap build, a `npm run build:icons` (Python `fonttools`) seče Bootstrap Icons font na samo iskorišćene ikonice. Videti [`DEPLOYMENT.md`](DEPLOYMENT.md) za detalje i tačan redosled.
+CSS and icons are not served straight from `node_modules` - `npm run build:css` (Sass + esbuild) produces a customized, minified Bootstrap build, and `npm run build:icons` (Python `fonttools`) trims the Bootstrap Icons font down to only the icons actually used. See [`DEPLOYMENT.md`](DEPLOYMENT.md) for details and the exact order.
 
 ## Testing
 

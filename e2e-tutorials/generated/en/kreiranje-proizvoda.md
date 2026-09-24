@@ -4,7 +4,7 @@ Adding a product goes through three separate phases - basic details, then variat
 
 <video src="../../videos/kreiranje-proizvoda/merged.en.burned.webm" controls width="720"></video>
 
-_titl je zapečen u video - ne treba spoljni .vtt fajl_
+_Subtitles are burned into the video - no external .vtt file needed_
 
 ## 1. Admin logs in
 

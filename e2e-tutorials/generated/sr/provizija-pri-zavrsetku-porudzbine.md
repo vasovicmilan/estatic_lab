@@ -4,7 +4,7 @@ Partnerova provizija za porudžbinu ostaje „na čekanju” kroz sve međukorak
 
 <video src="../../videos/provizija-pri-zavrsetku-porudzbine/merged.sr.burned.webm" controls width="720"></video>
 
-_titl je zapečen u video - ne treba spoljni .vtt fajl_
+_Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 
 ## 1. Prijava administratora
 

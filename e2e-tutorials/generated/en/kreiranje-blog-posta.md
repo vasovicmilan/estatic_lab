@@ -4,7 +4,7 @@ The admin writes and publishes a new blog post - a title, a short excerpt, body 
 
 <video src="../../videos/kreiranje-blog-posta/merged.en.burned.webm" controls width="720"></video>
 
-_titl je zapečen u video - ne treba spoljni .vtt fajl_
+_Subtitles are burned into the video - no external .vtt file needed_
 
 ## 1. Admin logs in
 

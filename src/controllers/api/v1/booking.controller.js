@@ -6,7 +6,7 @@ import * as packagePurchaseService from "../../../services/package-purchase.serv
 import couponService from "../../../services/coupon.service.js";
 import { getCapturedReferralCode } from "../../../middlewares/coupon-capture.middleware.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
-import { badRequest } from "../../../utils/error.util.js";
+import { AppError, badRequest } from "../../../utils/error.util.js";
 
 // The web booking flow is a 4-step wizard because a browser needs a page per step
 // (service -> slots -> contact form -> confirm), with session state carrying the
@@ -116,15 +116,15 @@ export function getCapturedReferral(req, res) {
 // serviceId/servicePackageId are looked up server-side rather than trusting
 // a client-sent price, so the discount preview can't be spoofed by sending a
 // fake appointmentValue.
-export async function checkCoupon(req, res) {
+export async function checkCoupon(req, res, next) {
   try {
     const { code, serviceId, servicePackageId } = req.body;
     if (!code || !serviceId || !servicePackageId) {
-      return res.status(400).json({ success: false, error: { message: "Kod kupona, usluga i varijanta su obavezni" } });
+      return next(new AppError("Kod kupona, usluga i varijanta su obavezni", 400));
     }
 
     const { variant } = await serviceService.getActiveVariant(serviceId, servicePackageId);
-    if (!variant) return res.status(404).json({ success: false, error: { message: "Izabrana varijanta nije pronađena" } });
+    if (!variant) return next(new AppError("Izabrana varijanta nije pronađena", 404));
 
     const { discountAmount } = await couponService.validateCouponForBooking(code, {
       userId: req.user?.id || null,
@@ -137,7 +137,7 @@ export async function checkCoupon(req, res) {
       data: { originalPrice: variant.totalPrice, discountAmount, finalPrice: Math.max(0, variant.totalPrice - discountAmount) },
     });
   } catch (error) {
-    return res.status(error.statusCode || 400).json({ success: false, error: { message: error.message || "Kupon nije važeći" } });
+    next(error);
   }
 }
 

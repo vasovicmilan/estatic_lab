@@ -3,6 +3,7 @@ import availabilityService from "../../../services/availability.service.js";
 import * as packagePurchaseService from "../../../services/package-purchase.service.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
+import { AppError } from "../../../utils/error.util.js";
 import { getStartOfDayInZone, nextDayStartInZone } from "../../../utils/date.time.util.js";
 import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
 import { buildAuditActor } from "../../../utils/audit-actor.util.js";
@@ -182,11 +183,11 @@ export async function createManualAppointment(req, res, next) {
 // package" option - never trusted as authorization on its own (bookAppointment/
 // assertUsablePurchase re-checks for real at actual creation time), just decides
 // whether to offer the option.
-export async function checkManualAppointmentPackage(req, res) {
+export async function checkManualAppointmentPackage(req, res, next) {
   try {
     const { existingUserId, servicePackageId } = req.body;
     if (!existingUserId || !servicePackageId) {
-      return res.status(400).json({ success: false, error: { message: "Korisnik i varijanta su obavezni" } });
+      return next(new AppError("Korisnik i varijanta su obavezni", 400));
     }
 
     const purchase = await packagePurchaseService.findUsablePurchaseForService(existingUserId, servicePackageId);
@@ -198,7 +199,7 @@ export async function checkManualAppointmentPackage(req, res) {
     return res.json({ success: true, data: { usable: true, packagePurchaseId: purchase._id.toString(), remainingSessions } });
   } catch (error) {
     logError("[api/admin/checkManualAppointmentPackage] Greška", error, { body: req.body });
-    return res.status(400).json({ success: false, error: { message: "Greška pri proveri paketa" } });
+    next(error);
   }
 }
 

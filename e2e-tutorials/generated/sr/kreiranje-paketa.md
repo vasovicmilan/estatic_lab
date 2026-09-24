@@ -4,7 +4,7 @@ Administrator kreira novi paket sesija - bira postojeću uslugu, unosi cenu i ob
 
 <video src="../../videos/kreiranje-paketa/merged.sr.burned.webm" controls width="720"></video>
 
-_titl je zapečen u video - ne treba spoljni .vtt fajl_
+_Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 
 ## 1. Prijava administratora
 

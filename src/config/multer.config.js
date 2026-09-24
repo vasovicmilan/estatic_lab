@@ -5,6 +5,7 @@ import fs from "fs-extra";
 import sharp from "sharp";
 import ffmpeg from "fluent-ffmpeg";
 import ffmpegStatic from "ffmpeg-static";
+import { AppError } from "../utils/error.util.js";
 
 ffmpeg.setFfmpegPath(ffmpegStatic);
 
@@ -217,7 +218,7 @@ function processUploadForApi(fieldName) {
     upload.single(fieldName),
     async (req, res, next) => {
       try {
-        if (!req.file) return res.status(400).json({ success: false, error: { message: "Fajl nije poslat." } });
+        if (!req.file) return next(new AppError("Fajl nije poslat.", 400));
 
         const type = req.params.type || "site";
         const destination = getDestination(type);
@@ -241,7 +242,7 @@ function processMultipleUploadsForApi(fieldName, maxCount = 10) {
     async (req, res, next) => {
       try {
         if (!req.files || req.files.length === 0) {
-          return res.status(400).json({ success: false, error: { message: "Nijedan fajl nije poslat." } });
+          return next(new AppError("Nijedan fajl nije poslat.", 400));
         }
 
         const type = req.params.type || "site";

@@ -88,22 +88,26 @@ for (const { name, middleware, passingUser, failingUser } of cases) {
       assert.equal(nextCalled, false);
     });
 
-    it("returns a JSON 401 (not a redirect) for an unauthenticated API request (no req.user)", () => {
+    it("passes a 401 AuthenticationError to next() (not a redirect, no inline body) for an unauthenticated API request (no req.user)", () => {
       // Bearer-token requests have no session to flash a message into or redirect a
       // JSON client to an HTML login page - this is exactly the gap that meant a
       // valid, verified token could never actually pass these gates before.
       const req = fakeApiReq();
       const res = fakeRes();
-      let nextCalled = false;
+      let passedError = null;
 
-      middleware(req, res, () => {
-        nextCalled = true;
+      middleware(req, res, (err) => {
+        passedError = err;
       });
 
+      // globalErrorHandler renders the standard { success:false, error:{ id, ... } }
+      // JSON for this - the middleware itself must not answer with its own body.
       assert.equal(res.redirected, null);
-      assert.equal(res.statusCode, 401);
-      assert.equal(res.jsonBody.success, false);
-      assert.equal(nextCalled, false);
+      assert.equal(res.statusCode, null);
+      assert.equal(res.jsonBody, null);
+      assert.ok(passedError, "next should be called with an error");
+      assert.equal(passedError.statusCode, 401);
+      assert.equal(passedError.name, "AuthenticationError");
     });
 
     it("calls next(AppError 403) when req.user exists but lacks the required permission/flag", () => {

@@ -4,7 +4,7 @@ A customer can view and cancel their own upcoming appointment from their account
 
 <video src="../../videos/otkazivanje-termina/merged.en.burned.webm" controls width="720"></video>
 
-_titl je zapečen u video - ne treba spoljni .vtt fajl_
+_Subtitles are burned into the video - no external .vtt file needed_
 
 ## 1. Register
 

@@ -14,6 +14,7 @@ import logReportService from "../../../services/log-report.service.js";
 import businessReportService from "../../../services/business-report.service.js";
 import siteSettingsService from "../../../services/site-settings.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
+import { AppError } from "../../../utils/error.util.js";
 import { getStartOfDayInZone, getEndOfDayInZone } from "../../../utils/date.time.util.js";
 import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
 import { buildAuditActor } from "../../../utils/audit-actor.util.js";
@@ -235,7 +236,7 @@ export async function listLogSummaries(req, res, next) {
 export async function getLogSummary(req, res, next) {
   try {
     const summary = await logReportService.getLogSummaryByDate(req.params.date);
-    if (!summary) return res.status(404).json({ success: false, error: { message: `Nema sačuvanog izveštaja za ${req.params.date}` } });
+    if (!summary) return next(new AppError(`Nema sačuvanog izveštaja za ${req.params.date}`, 404));
     return res.json({ success: true, data: summary });
   } catch (error) {
     logError("[api/admin/getLogSummary] Greška", error, { date: req.params.date });
@@ -260,7 +261,7 @@ export async function getBusinessReportDashboard(req, res, next) {
 export async function listBusinessReports(req, res, next) {
   try {
     const { periodType } = req.params;
-    if (!REPORT_PERIOD_TYPES.includes(periodType)) return res.status(400).json({ success: false, error: { message: "Nepoznat tip perioda" } });
+    if (!REPORT_PERIOD_TYPES.includes(periodType)) return next(new AppError("Nepoznat tip perioda", 400));
 
     const { page = 1, limit = 20 } = req.query;
     const result = await businessReportService.listSummaries(periodType, { page: resolvePage(page), limit: resolveLimit(limit) });
@@ -274,10 +275,10 @@ export async function listBusinessReports(req, res, next) {
 export async function getBusinessReport(req, res, next) {
   try {
     const { periodType, periodKey } = req.params;
-    if (!REPORT_PERIOD_TYPES.includes(periodType)) return res.status(400).json({ success: false, error: { message: "Nepoznat tip perioda" } });
+    if (!REPORT_PERIOD_TYPES.includes(periodType)) return next(new AppError("Nepoznat tip perioda", 400));
 
     const summary = await businessReportService.getSummary(periodType, periodKey);
-    if (!summary) return res.status(404).json({ success: false, error: { message: `Nema sačuvanog izveštaja za ${periodKey}` } });
+    if (!summary) return next(new AppError(`Nema sačuvanog izveštaja za ${periodKey}`, 404));
     return res.json({ success: true, data: summary });
   } catch (error) {
     logError("[api/admin/getBusinessReport] Greška", error, { periodType: req.params.periodType, periodKey: req.params.periodKey });

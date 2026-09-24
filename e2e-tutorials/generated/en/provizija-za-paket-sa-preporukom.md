@@ -4,7 +4,7 @@ When a package is bought through a partner's referral code, two discounts combin
 
 <video src="../../videos/provizija-za-paket-sa-preporukom/merged.en.burned.webm" controls width="720"></video>
 
-_titl je zapečen u video - ne treba spoljni .vtt fajl_
+_Subtitles are burned into the video - no external .vtt file needed_
 
 ## 1. Register
 

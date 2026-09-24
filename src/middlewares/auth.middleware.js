@@ -1,4 +1,5 @@
 import { verifyJwt } from "../services/crypto.service.js";
+import { AuthenticationError } from "../utils/error.util.js";
 
 export function webAuthMiddleware(req, res, next) {
   if (req.session?.isLoggedIn) {
@@ -21,7 +22,7 @@ export function apiAuthMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {
-    return res.status(401).json({ success: false, message: "Unauthorized - no token provided" });
+    return next(new AuthenticationError("Nedostaje token za autorizaciju"));
   }
 
   try {
@@ -33,7 +34,7 @@ export function apiAuthMiddleware(req, res, next) {
     req.user = verifyJwt(token);
     next();
   } catch (error) {
-    return res.status(401).json({ success: false, message: "Unauthorized - invalid token" });
+    return next(new AuthenticationError("Token nije validan ili je istekao"));
   }
 }
 

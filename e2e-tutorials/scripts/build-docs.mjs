@@ -97,7 +97,7 @@ async function buildScenario(scenarioId) {
       const relPath = relativeLink(outDir, burnedPath);
       lines.push(`<video src="${relPath}" controls width="720"></video>`);
       lines.push("");
-      lines.push(`_titl je zapečen u video - ne treba spoljni .vtt fajl_`);
+      lines.push(lang === "sr" ? `_Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_` : `_Subtitles are burned into the video - no external .vtt file needed_`);
       lines.push("");
     } else if (await fs.pathExists(mergedPath)) {
       const relPath = relativeLink(outDir, mergedPath);

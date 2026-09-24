@@ -1,4 +1,4 @@
-import { AppError, isApiRequest } from "../utils/error.util.js";
+import { AppError, AuthenticationError, isApiRequest } from "../utils/error.util.js";
 
 export function adminMiddleware(req, res, next) {
   // req.user is set by whichever auth ran before this - webAuthMiddleware (session)
@@ -8,7 +8,7 @@ export function adminMiddleware(req, res, next) {
   // this middleware was still looking at a session that a token-only request never has.
   if (!req.user) {
     if (isApiRequest(req)) {
-      return res.status(401).json({ success: false, message: "Unauthorized - morate biti prijavljeni" });
+      return next(new AuthenticationError("Morate biti prijavljeni"));
     }
     req.flash("error", "Morate biti prijavljeni");
     return res.redirect(`/prijava?redirect=${encodeURIComponent(req.originalUrl)}`);

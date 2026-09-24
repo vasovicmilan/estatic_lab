@@ -4,7 +4,7 @@ An employee has their own dedicated account area for their appointments - confir
 
 <video src="../../videos/zaposleni-upravlja-terminima/merged.en.burned.webm" controls width="720"></video>
 
-_titl je zapečen u video - ne treba spoljni .vtt fajl_
+_Subtitles are burned into the video - no external .vtt file needed_
 
 ## 1. Employee logs in
 

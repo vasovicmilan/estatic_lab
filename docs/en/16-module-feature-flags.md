@@ -48,8 +48,6 @@ Two forms, depending on whether a file serves one module or several:
 - Footer (`footer.ejs`) - same module-specific links hidden as the header nav
 - Sitemap (`sitemap.service.js`) - both the static landing-page entries (`/usluge`, `/prodavnica`, `/blog`) and the per-record entries (individual services/products/posts, plus their categories/tags) are skipped for a disabled module - this also covers a client who used to have a module enabled: leftover DB records from before don't leave dead, 404-ing sitemap entries behind
 - `llms.txt` (`llms-txt.service.js`) - same idea as the sitemap; the whole "Prodavnica" section (not just its items) is skipped when `shop` is off, rather than left as an empty heading with a dead link
-- Footer (`footer.ejs`) - same module-specific links hidden as the header nav
-- Sitemap (`sitemap.service.js`) - both the static landing-page entries (`/usluge`, `/prodavnica`, `/blog`) and the per-record entries (individual services/products/posts, plus their categories/tags) are skipped for a disabled module - this also covers a client who used to have a module enabled: leftover DB records from before don't leave dead, 404-ing sitemap entries behind
 
 Web side (`web.routes.js`), mount-level - each router is single-purpose:
 - `/blog` → `blog`
@@ -73,6 +71,7 @@ API v1, **per-route** inside files that mix modules:
 - `admin-marketing.routes.js` - posts → `blog`, coupons → `coupons`; newsletter/testimonials/business-partners/contacts/campaigns NOT gated (general marketing content, not tied to any one module)
 - `admin-taxonomy.routes.js` - resources → `booking`; roles/categories/tags NOT gated (roles always exist, categories/tags are polymorphic across domains)
 - `admin-people.routes.js` - employees → `employees`, partners → `partners`; users and experts NOT gated (users are general, experts are deliberately independent of booking, same as `/nas-tim`)
+- `admin-uploads.routes.js` - gated by the `:type` in the URL: `services`/`packages` → `booking`, `products` → `shop`, `posts` → `blog`, `partners` → `partners`; other types NOT gated
 
 ## What is NOT gated - real, named work that remains
 

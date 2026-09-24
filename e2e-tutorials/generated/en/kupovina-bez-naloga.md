@@ -4,7 +4,7 @@ A customer never has to register - filling in checkout details is enough, and an
 
 <video src="../../videos/kupovina-bez-naloga/merged.en.burned.webm" controls width="720"></video>
 
-_titl je zapečen u video - ne treba spoljni .vtt fajl_
+_Subtitles are burned into the video - no external .vtt file needed_
 
 ## 1. Open the first product
 

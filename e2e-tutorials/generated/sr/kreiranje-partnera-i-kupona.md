@@ -4,7 +4,7 @@ Administrator promoviše postojećeg korisnika u partnera, podešava mu stope pr
 
 <video src="../../videos/kreiranje-partnera-i-kupona/merged.sr.burned.webm" controls width="720"></video>
 
-_titl je zapečen u video - ne treba spoljni .vtt fajl_
+_Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 
 ## 1. Prijava administratora
 

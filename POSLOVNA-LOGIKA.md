@@ -311,7 +311,21 @@ Spremno da se u budućnosti proširi (npr. sadržaj stranice "O nama") bez potre
 
 ---
 
-## 15. Bezbednost i infrastruktura
+## 15. JSON API (`/api/v1`)
+
+**Poslovni izazov.** Kupci i osoblje koriste sajt koji se renderuje na serveru, ali biznisu je potrebno da isti sistem može da se koristi i iz odvojenog frontenda (mobilna aplikacija, novi Angular frontend ili white-label klijent sa sopstvenim dizajnom), a da niko ne mora ponovo da implementira cene, pravila zakazivanja, proviziju ili isplate i da dozvoli da se dve kopije vremenom razilaze.
+
+**Kako je rešeno.** JSON API pod `/api/v1` stoji pored sajta i poziva potpuno iste servise, pa se svako poslovno pravilo opisano u ovom dokumentu primenjuje identično kroz oba ulaza. Pokriva javni katalog, zakazivanje (uključujući pregled kupona i beleženje referalnog koda), sopstveni nalog korisnika (`/me`), korpu i checkout, zone zaposlenih i partnera, javne forme za kontakt/newsletter/testimonijale i ceo admin panel, uključujući upload slika i videa (prvo upload, pa se rezultat referencira u običnom create/update pozivu).
+
+**Pravila pristupa ostaju ista kao na sajtu.** Pozivalac se prijavljuje email-om i lozinkom i dobija token koji važi 24 sata. Admin rute imaju dve nezavisne provere, tačno kao web panel: opštu dozvolu "sme li u admin zonu" za celu admin površinu, plus specifičnu dozvolu svake oblasti (korisnici, isplate, proizvodi i tako dalje). Rute za zaposlene i partnere otvorene su samo nalozima koji zaista imaju profil zaposlenog ili partnera. Moduli isključeni za klijenta (videti `docs/sr/16-modularni-feature-flagovi.md`) nestaju i iz API-ja.
+
+**Jedan format greške, uvek.** Bez obzira šta je pošlo naopako (nedostaje token, nedostaje dozvola, previše zahteva, nevalidan unos, pravi bag), pozivalac dobija isti oblik odgovora sa kratkim ID-jem greške. Isti ID se upisuje u serverski log, pa se prijavljeni problem može naći direktno.
+
+**Zašto ovaj pristup.** Jedan skup poslovnih pravila i jedan model dozvola znači da ispravka pravila važi svuda, a frontend tim gradi prema jednom predvidljivom ugovoru. Namerni kompromis: dozvole se kopiraju u token pri prijavi, pa izmena koju admin napravi stiže do već prijavljenog API korisnika tek kad token istekne (do 24 sata); za hitno oduzimanje pristupa deaktivira se sam nalog, što se proverava pri svakom zahtevu. Verzionisanje po folderu (`v1`) omogućava da budući `v2` promeni ugovor bez diranja onoga na šta se postojeći klijenti oslanjaju. Za spisak ruta i detalje videti `docs/sr/15-api-v1-referenca.md`.
+
+---
+
+## 16. Bezbednost i infrastruktura
 
 **Poslovni izazov.** Produkciona platforma koja obrađuje lične podatke i plaćanja treba da bude otporna na uobičajene napade bez oslanjanja isključivo na "security through obscurity".
 
@@ -324,7 +338,7 @@ Spremno da se u budućnosti proširi (npr. sadržaj stranice "O nama") bez potre
 
 ---
 
-## 16. Testiranje
+## 17. Testiranje
 
 **Poslovni izazov.** Poslovna logika ovog obima (obračun provizije, validacija kupona, prelazi statusa, transakciona zaštita od duplog zakazivanja) mora ostati tačna kroz stalne izmene. Greška u obračunu provizije direktno znači pogrešnu isplatu novca, kao što je sekcija 9 upravo pokazala na konkretnom primeru.
 
@@ -367,7 +381,7 @@ Korisnici/Role (1)
 
 Eksterne integracije (11) <-- nadovezuje se na zivotni ciklus termina (2)
 Notifikacije (12) <-- prate skoro svaki dogadjaj iz (2)-(10)
-Sadrzaj sajta (13), Admin/Logovi (14), Bezbednost (15), Testiranje (16): prozimaju sve gore navedeno
+Sadrzaj sajta (13), Admin/Logovi (14), JSON API (15), Bezbednost (16), Testiranje (17): prozimaju sve gore navedeno
 ```
 
 ---

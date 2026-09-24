@@ -4,7 +4,7 @@ A registered customer enters their phone at registration, saves an address to th
 
 <video src="../../videos/kupovina-sa-nalogom/merged.en.burned.webm" controls width="720"></video>
 
-_titl je zapečen u video - ne treba spoljni .vtt fajl_
+_Subtitles are burned into the video - no external .vtt file needed_
 
 ## 1. Register with a phone number
 

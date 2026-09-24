@@ -17,6 +17,8 @@ import adminOpsRoutes from "./admin-ops.routes.js";
 import adminUploadsRoutes from "./admin-uploads.routes.js";
 import publicFormsRoutes from "./public-forms.routes.js";
 import { requireModule } from "../../../middlewares/feature.middleware.js";
+import { apiAuthMiddleware } from "../../../middlewares/auth.middleware.js";
+import { adminMiddleware } from "../../../middlewares/admin.middleware.js";
 
 const router = Router();
 
@@ -47,6 +49,14 @@ router.use("/booking", requireModule("booking"), bookingRoutes);
 router.use("/me", meRoutes);
 router.use("/employee", requireModule("employees"), employeeRoutes);
 router.use("/partner", requireModule("partners"), partnerRoutes);
+// One gate for the WHOLE /admin API surface, mirroring the web side where
+// admin.routes.js does router.use(adminMiddleware) once for everything: a valid token
+// AND the general access_admin_panel permission. Each route then still needs its own
+// specific permission (requirePermission in the route files) - two independent
+// layers. Before this mount-level gate only admin-ops.routes.js required
+// access_admin_panel, so a role holding e.g. manage_users without access_admin_panel
+// could call those API routes even though the web panel would have refused it.
+router.use("/admin", apiAuthMiddleware, adminMiddleware);
 router.use("/admin", adminTaxonomyRoutes);
 router.use("/admin", adminPeopleRoutes);
 router.use("/admin/appointments", requireModule("booking"), adminAppointmentRoutes);

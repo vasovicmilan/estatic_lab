@@ -71,6 +71,7 @@ API v1, **po pojedinačnoj ruti** unutar fajlova koji mešaju module:
 - `admin-marketing.routes.js` — postovi → `blog`, kuponi → `coupons`; newsletter/testimonijali/saradnici/kontakt/kampanje NISU gejtovani (opšti marketing sadržaj, ne vezan ni za jedan modul)
 - `admin-taxonomy.routes.js` — resursi → `booking`; role/kategorije/tagovi NISU gejtovani (role postoje uvek, kategorije/tagovi su polimorfni preko domena)
 - `admin-people.routes.js` — zaposleni → `employees`, partneri → `partners`; korisnici i eksperti NISU gejtovani (korisnici su opšti, eksperti su namerno nezavisni od booking-a, isto kao `/nas-tim`)
+- `admin-uploads.routes.js` — gejtovano po `:type` iz URL-a: `services`/`packages` → `booking`, `products` → `shop`, `posts` → `blog`, `partners` → `partners`; ostali tipovi NISU gejtovani
 
 ## Šta NIJE gejtovano — stvaran, imenovan posao koji ostaje
 

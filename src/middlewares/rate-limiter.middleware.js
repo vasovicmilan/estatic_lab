@@ -12,10 +12,11 @@ const skipInTest = () => process.env.NODE_ENV === "test";
 
 function handleRateLimitExceeded(message, statusCode = 429) {
   return (req, res, next) => {
-    if (req.originalUrl.startsWith("/api")) {
-      return res.status(statusCode).json({ success: false, message });
-    }
-    next(new AppError(message, statusCode));
+    // Same path for web and /api: globalErrorHandler renders HTML or the standard
+    // JSON error shape depending on the request (isApiRequest), so a rate-limited
+    // API client gets the same { success:false, error:{ id, status, message, code } }
+    // as every other error instead of a one-off { success, message } body.
+    next(new AppError(message, statusCode, { name: "RateLimitError" }));
   };
 }
 

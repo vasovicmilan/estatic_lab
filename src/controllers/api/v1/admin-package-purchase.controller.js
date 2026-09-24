@@ -3,6 +3,7 @@ import * as packageService from "../../../services/package.service.js";
 import couponService from "../../../services/coupon.service.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
+import { AppError } from "../../../utils/error.util.js";
 import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
 import { buildAuditActor } from "../../../utils/audit-actor.util.js";
 
@@ -125,16 +126,16 @@ export async function deletePackagePurchase(req, res, next) {
  * package-purchase.controller.js's checkPackagePurchaseCoupon. Does NOT redeem
  * the coupon (that only happens inside createPurchaseForUser's transaction).
  */
-export async function checkPackagePurchaseCoupon(req, res) {
+export async function checkPackagePurchaseCoupon(req, res, next) {
   try {
     const { code, packageId, userId } = req.body;
     if (!code || !packageId) {
-      return res.status(400).json({ success: false, error: { message: "Kod kupona i paket su obavezni" } });
+      return next(new AppError("Kod kupona i paket su obavezni", 400));
     }
 
     const pkg = await packageService.getPackageByIdRaw(packageId);
     if (!pkg) {
-      return res.status(404).json({ success: false, error: { message: "Paket nije pronađen" } });
+      return next(new AppError("Paket nije pronađen", 404));
     }
 
     const { discountAmount } = await couponService.validateCouponForPackagePurchase(code, {
@@ -148,7 +149,7 @@ export async function checkPackagePurchaseCoupon(req, res) {
       data: { originalPrice: pkg.totalPrice, discountAmount, finalPrice: Math.max(0, pkg.totalPrice - discountAmount) },
     });
   } catch (error) {
-    return res.status(error.statusCode || 400).json({ success: false, error: { message: error.message || "Kupon nije važeći" } });
+    next(error);
   }
 }
 

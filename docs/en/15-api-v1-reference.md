@@ -13,7 +13,7 @@ The API uses **JWT (Bearer token)**, not sessions/cookies like the web side. Flo
 
 The token carries the user's role (`roleName`) and their **full permission list** (`permissions`) as of login time (the same pattern as the web session - see `01-users-roles-permissions.md`). Consequence: if an admin later edits or removes a permission from someone, **an already-issued token doesn't see that change** until it expires (up to 24h) or the user logs in again. For urgent access revocation (e.g. an employee let go), deactivating the account (`isActive: false`) is more reliable than editing the role alone, since that's checked on every request touching that account, not just at token issuance.
 
-Without an `Authorization` header (or with an invalid/expired/forged token), every protected route returns `401` before touching the database.
+Without an `Authorization` header (or with an invalid/expired/forged token), every protected route returns `401` before touching the database. Like every other error, it uses the standard error shape below.
 
 ## Authorization
 
@@ -22,7 +22,7 @@ Two layers, both applied as Express middleware before a request ever reaches a c
 - **`apiAuthMiddleware`** - does a token even exist and is it valid. There's no "partial" access - a token is either valid or it isn't.
 - **`requirePermission("some_permission")`** - does the decoded `permissions` array from the token contain that specific permission. Same permission list and meaning as the web side (`01-users-roles-permissions.md`) - the API doesn't introduce a parallel/different permission system.
 
-Most `/admin/*` routes have **two levels**: the whole router requires at least `access_admin_panel` (a general "are you even allowed into the admin panel"), and each individual route on top of that requires its own specific permission (e.g. `manage_users`, `manage_payouts`). This is deliberate defense in depth - missing a specific check on one route still leaves the general check in place.
+`/admin/*` routes have **two independent levels**, mirroring the web `/admin` panel: one gate on the whole `/api/v1/admin` mount (`apiAuthMiddleware` + `adminMiddleware` in `routes/api/v1/index.routes.js`) requires a valid token **and** the general `access_admin_panel` permission ("are you even allowed into the admin panel"), and each individual route on top of that requires its own specific permission (e.g. `manage_users`, `manage_payouts`). This is deliberate defense in depth - forgetting the specific check on one route still leaves the general gate in place, and holding a specific permission without `access_admin_panel` gets you nowhere.
 
 All `/admin/*` routes return `403` (not `404`) when the token is valid but the matching permission is missing - the distinction between "you don't exist" and "you're not allowed" is intentional, same as on the web side.
 
@@ -38,9 +38,11 @@ Every JSON response follows one consistent shape:
 { "success": false, "error": { "id": "abc12345", "status": 400, "message": "...", "code": null } }
 ```
 
-`meta` only appears on listing routes (pagination). `error.id` is the same ID written to `error.log` (see `10-logs-and-audit-trail.md`) - useful when reporting an issue, since it lets the exact server log line be found by ID instead of by timestamp.
+`meta` only appears on listing routes (pagination). `error.id` is the same ID that appears in the server log line for that error (`errorId` field and `[id]` in the message - see `10-logs-and-audit-trail.md`) and is also returned in the `X-Error-ID` response header - useful when reporting an issue, since it lets the exact server log line be found by ID instead of by timestamp. Note that routine client errors (4xx) are logged at `warn` level, so they end up in the general app log, not `error.log`; only unexpected errors and 5xx go to `error.log`. Every response also carries an `X-Request-Id` header (a random UUID per request).
 
-Image/file upload fields (a post's cover image, a product's gallery, etc.) are **not supported through the JSON API** - creating/editing through `/api/v1/admin/*` always leaves the existing image untouched (or empty on create). Image upload still goes exclusively through the web `/admin` panel.
+**Every** error goes through this one shape - including `401` (missing/invalid token), `403` (missing permission), `429` (rate limited), validation errors (`400`, with the field list in `error.details`) and upload errors. Controllers and middleware never answer with their own ad-hoc error body; they pass an error to the central error handler, which is what produces the `id`, the `X-Error-ID` header and the log line.
+
+Image/file upload fields (a post's cover image, a product's gallery, etc.) are handled in **two steps** through the JSON API: first upload the file to `/api/v1/admin/uploads/...` (see "Uploads" below), then pass the returned object as the image/gallery/video field of the normal JSON create/update call. The create/update routes themselves do not accept file bodies.
 
 ## Public routes (no token)
 
@@ -49,12 +51,16 @@ Image/file upload fields (a post's cover image, a product's gallery, etc.) are *
 | `GET /api/v1/catalog/services`, `/packages`, `/products`, `/team`, `/blog/posts`, `/business-partners` (+ `/:slug`) | The same public catalog as the web shop/services/blog, in JSON |
 | `GET /api/v1/booking/:serviceSlug/slots` | Available appointment slots for a service (uses `optionalApiAuth` - works with or without a token) |
 | `POST /api/v1/booking/confirm` | Book an appointment as a guest or a logged-in user |
+| `GET /api/v1/booking/referral-code` | The referral (partner) code already captured for this visitor, if any |
+| `POST /api/v1/booking/coupon/check` | Preview a coupon's discount before confirming a booking (`optionalApiAuth` - a logged-in caller's per-user coupon limits are honored) |
+| `POST /api/v1/contact`, `/newsletter-subscribe`, `/testimonials` | The public contact form, newsletter sign-up and testimonial submission, with the same honeypot and rate limits as their web equivalents |
+| `GET /api/v1/orders/:orderId/confirm/:token` | Order confirmation via the link in the confirmation email (no login) |
 | `POST /api/v1/auth/register`, `/login`, `/forgot-password`, `PUT /reset-password/:token`, `GET /verify/:token` | Standard auth flow |
 
 ## Logged-in-user routes (any role, just `apiAuthMiddleware`)
 
-- **`/api/v1/me/*`** - the caller's own account: profile, password, account deletion, appointments, orders, addresses. No `requirePermission` check since it's always "mine", never someone else's.
-- **`/api/v1/cart/*`** - cart and checkout (only the `/cart` and `/orders/checkout` branches require a token; the rest of `cart.routes.js` is public where it needs to be).
+- **`/api/v1/me/*`** - the caller's own account: profile, password, account deletion, appointments (incl. cancel and reschedule), orders (incl. cancel), addresses (incl. default address). No `requirePermission` check since it's always "mine", never someone else's.
+- **`/api/v1/cart`, `/api/v1/cart/items`, `POST /api/v1/orders/checkout`** - cart and checkout; all of these require a token. The only public route in `cart.routes.js` is the emailed order-confirmation link listed above.
 
 ## Role-specific routes (a dedicated middleware, not `requirePermission`)
 
@@ -63,7 +69,11 @@ Image/file upload fields (a post's cover image, a product's gallery, etc.) are *
 
 ## Admin routes (`/api/v1/admin/*`)
 
-Each of these requires `apiAuthMiddleware` + `access_admin_panel`, plus the permission listed below. This mirrors the web `/admin` panel - same rules, same services, just JSON instead of EJS rendering.
+Each of these requires a valid token and `access_admin_panel` (the mount-level gate described under Authorization), plus the permission listed below. This mirrors the web `/admin` panel - same rules, same services, just JSON instead of EJS rendering.
+
+Besides the routes listed, most resources also expose `GET /:id/edit` (the record prepared for an edit form - employees, experts, partners, categories, tags, resources, services, packages, products, coupons, business partners).
+
+Routes belonging to a module that is switched off for the deployment (`ENABLED_MODULES`) respond `404` - see `16-module-feature-flags.md` for which routes are gated.
 
 ### People (`admin-people.routes.js`)
 
@@ -96,6 +106,18 @@ Each of these requires `apiAuthMiddleware` + `access_admin_panel`, plus the perm
 ### Package purchases (`admin-package-purchase.routes.js`, mounted at `/admin/package-purchases`)
 
 Whole router behind `manage_packages` (no sub-permissions). `GET /`, `GET /:packagePurchaseId`, `POST /check-coupon` (discount preview only, before finalizing), `POST /`, `PUT /:packagePurchaseId` (+ `/cancel`), `DELETE /:packagePurchaseId`.
+
+### Uploads (`admin-uploads.routes.js`)
+
+Requires the admin-mount gate (token + `access_admin_panel`) plus the same permission as the target entity's own create/update route (an upload is never a broader grant than editing that entity).
+
+| Method | Route | Notes |
+|---|---|---|
+| POST | `/uploads/:type` | Single image; returns `{ img, imgThumb, imgMedium, imgOriginal, imgDesc }` |
+| POST | `/uploads/:type/gallery` | Multiple images |
+| POST | `/uploads/:type/video` | Video; returns `{ url, thumbnail, title }` |
+
+`:type` is one of `services`, `packages`, `products`, `categories`, `posts`, `testimonials`, `experts`, `partners`, `business-partners`, `site` (permissions: `manage_services`, `manage_packages`, `manage_products`, `manage_taxonomy`, `manage_blog`, `manage_marketing`, `manage_employees`, `manage_partners`, `manage_marketing`, `manage_site_content`). Any other value is rejected with `400` before the file is processed. Types tied to a module (`services`/`packages` → booking, `products` → shop, `posts` → blog, `partners` → partners) are also gated by that module.
 
 ### Appointments (`admin-appointment.routes.js`)
 
@@ -131,10 +153,9 @@ Whole router behind `manage_orders`. `GET /orders`, `POST /orders/manual`, `GET 
 
 ## What's NOT covered by the API yet
 
-- **Image/file uploads** - see the note above; still exclusive to the web `/admin` panel.
 - **Any web `/admin` sub-area not explicitly listed above** - if a new web-only admin screen is added, check whether it needs an API equivalent rather than assuming one already exists.
 
 ## Known limitations (deliberate trade-offs, not bugs)
 
 - **Up to 24h stale permissions in the token** - see the Authentication section above.
-- **No per-token/per-user rate limiting on `/api/v1/admin/*`** - the global rate limiter (`globalLimiter`) still applies by IP, but there's no additional admin-API-specific limit (unlike `loginLimiter`/`bookingLimiter`/`availabilityLimiter` on more sensitive public routes).
+- **Rate limiting is per IP, not per token/user** - every `/api/v1` request goes through `apiLimiter` (120 requests/minute) on top of the app-wide `globalLimiter` (200/minute); `POST /auth/login` additionally has the stricter `apiAuthLimiter` (10 failed attempts per 15 minutes), and the public forms/booking routes have their own limiters. There is no additional admin-API-specific limit.
