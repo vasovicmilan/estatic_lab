@@ -59,8 +59,29 @@ export function logInfo(message, data = {}) {
   logger.info({ msg: message, ...data });
 }
 
-export function logWarn(message, data = {}) {
-  logger.warn({ msg: message, ...data });
+// Accepts both call shapes:
+//   logWarn(message, data)
+//   logWarn(message, error, data)   <- used by globalErrorHandler
+// Previously only the first shape existed, so logWarn(msg, error, {ctx}) spread the
+// Error object itself as `data` (only its enumerable own props survived - name,
+// statusCode, isOperational, details, errorCode; message/stack are non-enumerable)
+// and silently dropped the third argument, i.e. all request context (method, url,
+// ip, errorId...). That is why routine 4xx lines had no URL and no message.
+export function logWarn(message, errorOrData = {}, maybeData = {}) {
+  if (errorOrData instanceof Error) {
+    logger.warn({
+      msg: message,
+      ...maybeData,
+      error: {
+        name: errorOrData.name || "Error",
+        message: errorOrData.message,
+        errorCode: errorOrData.errorCode ?? undefined,
+      },
+    });
+    return;
+  }
+
+  logger.warn({ msg: message, ...errorOrData });
 }
 
 export function logError(message, error = null, data = {}) {
@@ -70,6 +91,7 @@ export function logError(message, error = null, data = {}) {
     logData.error = {
       name: error.name || "Error",
       message: error.message || String(error),
+      errorCode: error.errorCode ?? undefined,
       stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     };
   }

@@ -25,6 +25,14 @@ export function generateRandomToken(bytes = 32) {
   return crypto.randomBytes(bytes).toString("hex");
 }
 
+// Short, URL/grep-friendly identifier attached to every handled error (log line,
+// X-Error-ID header, error page, API payload, Telegram alert) so a single ID a user
+// reports can be searched straight in the logs. 4 random bytes -> 8 hex chars
+// (~4.3 billion values); cryptographically random, unlike Math.random().
+export function generateErrorId() {
+  return crypto.randomBytes(4).toString("hex");
+}
+
 const ALGO = "aes-256-gcm";
 const KEY = Buffer.from(AES_SECRET, "utf8");
 // Standard, full-length GCM auth tag - was already what getAuthTag()/setAuthTag()

@@ -9,6 +9,7 @@ import {
   signJwt,
   verifyJwt,
   sha256,
+  generateErrorId,
 } from "../../../src/services/crypto.service.js";
 
 describe("crypto.service", () => {
@@ -82,5 +83,16 @@ describe("crypto.service", () => {
     it("produces different hashes for different inputs", () => {
       assert.notEqual(sha256("a"), sha256("b"));
     });
+  });
+});
+
+describe("generateErrorId", () => {
+  it("returns an 8-char lowercase hex id", () => {
+    assert.match(generateErrorId(), /^[0-9a-f]{8}$/);
+  });
+
+  it("returns different ids on repeated calls", () => {
+    const ids = new Set(Array.from({ length: 200 }, () => generateErrorId()));
+    assert.equal(ids.size, 200);
   });
 });

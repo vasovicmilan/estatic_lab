@@ -1,6 +1,7 @@
 import { AppError, wrapError, buildWebErrorContext, buildApiErrorPayload, isApiRequest } from "../utils/error.util.js";
 import { logError, logWarn, maskSensitive } from "../utils/logger.util.js";
 import { alertError } from "../utils/telegram-alert.util.js";
+import { generateErrorId } from "../services/crypto.service.js";
 
 export function notFoundHandler(req, res, next) {
   next(new AppError(`Stranica "${req.originalUrl}" nije pronađena`, 404, { name: "NotFoundError" }));
@@ -8,7 +9,7 @@ export function notFoundHandler(req, res, next) {
 
 export function globalErrorHandler(err, req, res, next) {
   const error = wrapError(err);
-  const errorId = Math.random().toString(36).slice(2, 10);
+  const errorId = generateErrorId();
 
   // 4xx (bad input, not found, forbidden, etc.) is routine - the internet is full of
   // scanners probing for .env/wp-content/phpinfo.php on every public IP, and this app
@@ -18,7 +19,16 @@ export function globalErrorHandler(err, req, res, next) {
   const isGenuineError = error.statusCode >= 500 || !error.isOperational;
   const logFn = isGenuineError ? logError : logWarn;
 
-  logFn(`Unhandled error [${errorId}]`, error, {
+  // The label must say what actually happened - "Unhandled error" on every line
+  // (including routine, fully handled 404/403s) made the log look like the app was
+  // crashing constantly. Only a non-operational error is a real unexpected bug.
+  let label;
+  if (!error.isOperational) label = "Unexpected error";
+  else if (error.statusCode >= 500) label = "Server error";
+  else label = "Handled error";
+
+  logFn(`${label} [${errorId}] ${error.name} ${error.statusCode} ${req.method} ${req.originalUrl}`, error, {
+    errorId,
     method: req.method,
     url: req.originalUrl,
     params: req.params,

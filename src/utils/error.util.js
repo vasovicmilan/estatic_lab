@@ -1,3 +1,5 @@
+import { generateErrorId } from "../services/crypto.service.js";
+
 export class AppError extends Error {
   constructor(message, statusCode = 500, options = {}) {
     super(message);
@@ -135,7 +137,7 @@ export function isApiRequest(req) {
 
 export function buildWebErrorContext(err, req, extra = {}) {
   const statusCode = err.statusCode || 500;
-  const errorId = extra.errorId || Math.random().toString(36).slice(2, 10);
+  const errorId = extra.errorId || generateErrorId();
 
   return {
     statusCode,
@@ -152,7 +154,7 @@ export function buildWebErrorContext(err, req, extra = {}) {
 
 export function buildApiErrorPayload(err, req, extra = {}) {
   const statusCode = err.statusCode || 500;
-  const errorId = extra.errorId || Math.random().toString(36).slice(2, 10);
+  const errorId = extra.errorId || generateErrorId();
 
   const payload = {
     success: false,
