@@ -1,0 +1,284 @@
+<%
+/**
+ * Dedicated view for /admin/sajt - NOT the generic admin/_form.ejs every
+ * other admin edit page renders.
+ *
+ * WHY a whole separate view instead of the generic one: this page needs
+ * THREE independent <form>s, each posting to its own route -
+ *   1) the original hero/booking-policy/currency/commission fields -> PUT /admin/sajt
+ *   2) the salon-wide display "radno vreme"                       -> PUT /admin/sajt/radno-vreme
+ *   3) the one-off "neradni dani" (closed dates/praznici)          -> PUT /admin/sajt/neradni-dani
+ * - and admin/_form.ejs only ever renders ONE <form>, driven by ONE flat
+ * `data.fields` array all posting to ONE `data.formAction`. Reshaping
+ * admin/_form.ejs itself to support several independent forms on one page
+ * would touch the single template ~40 OTHER controllers render unchanged
+ * (grep `render("admin/_form"` across src/controllers) - far riskier than
+ * duplicating its (small, stable) generic field-render chain into this one
+ * page-specific view and leaving admin/_form.ejs completely untouched.
+ *
+ * Form (1) below is therefore a near-verbatim copy of admin/_form.ejs's own
+ * card/form/field-loop markup (same field types, same data-* conventions),
+ * so it behaves identically to how this page rendered before this file
+ * existed. Forms (2) and (3) are hand-authored, following the same
+ * conventions admin/_form.ejs's own "schedule"/"repeater" field types use
+ * (a hidden JSON input kept in sync by a small client script - see
+ * admin-day-hours.js for form (2), and admin-repeater.js - reused as-is,
+ * unmodified - for form (3)).
+ */
+%>
+<%- include("../../includes/head") %>
+<%- include("../../includes/navigation") %>
+
+<main class="container-fluid py-4">
+  <%- include("../../includes/breadcrumbs") %>
+  <%- include("../../includes/flash-messages") %>
+
+  <div class="row">
+    <div class="col-lg-8">
+
+      <!-- ============================================================ -->
+      <!-- Forma 1: Hero slika, politika zakazivanja, provizija, valuta -->
+      <!-- Posts to /admin/sajt (updateSiteSettings) - unchanged behavior -->
+      <!-- ============================================================ -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="card-title mb-0">Osnovna podešavanja</h6>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="<%= data.formAction %><% if (data.isEdit) { %>?_method=PUT<% } %>"
+                enctype="<%= data.formEnctype || 'application/x-www-form-urlencoded' %>" novalidate
+                data-form>
+
+            <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+
+            <% if (data.formMethod && data.formMethod !== 'POST') { %>
+              <input type="hidden" name="_method" value="<%= data.formMethod %>">
+            <% } else if (data.isEdit) { %>
+              <input type="hidden" name="_method" value="PUT">
+            <% } %>
+
+            <% if (typeof data.errors !== 'undefined' && data.errors.general) { %>
+              <div class="alert alert-danger" role="alert"><%= data.errors.general %></div>
+            <% } %>
+
+            <div class="row g-3">
+            <% data.fields.forEach(function(field) { %>
+              <% if (field.sectionTitle) { %>
+                <div class="col-12">
+                  <hr class="mt-2">
+                  <h6 class="text-uppercase text-muted small fw-bold mb-2"><%= field.sectionTitle %></h6>
+                </div>
+              <% } %>
+              <div class="col-md-<%= field.width || 12 %> mb-3" data-field-wrapper="<%= field.name %>">
+
+                <% if (field.type !== 'checkbox' && field.type !== 'hidden') { %>
+                  <label for="<%= field.name %>" class="form-label">
+                    <%= field.label %>
+                    <% if (field.required) { %><span class="text-danger" aria-hidden="true">*</span><span class="visually-hidden">(obavezno)</span><% } %>
+                  </label>
+                <% } %>
+
+                <% if (field.type === 'text' || field.type === 'email' || field.type === 'number' || field.type === 'date' || field.type === 'datetime-local' || field.type === 'url' || field.type === 'tel') { %>
+                  <input type="<%= field.type %>"
+                         class="form-control <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'is-invalid' : '' %>"
+                         id="<%= field.name %>"
+                         name="<%= field.name %>"
+                         value="<%= (typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined) ? data.formData[field.name] : (field.value !== undefined && field.value !== null ? field.value : '') %>"
+                         <% if (field.required) { %>required<% } %>
+                         <% if (field.disabled) { %>disabled<% } %>
+                         <% if (field.placeholder) { %>placeholder="<%- field.placeholder %>"<% } %>
+                         <% if (field.min !== undefined) { %>min="<%- field.min %>"<% } %>
+                         <% if (field.max !== undefined) { %>max="<%- field.max %>"<% } %>
+                         <% if (field.step !== undefined) { %>step="<%- field.step %>"<% } %>
+                         data-field="<%= field.name %>">
+
+                <% } else if (field.type === 'select') { %>
+                  <select class="form-select <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'is-invalid' : '' %>"
+                          id="<%= field.name %>"
+                          name="<%= field.name %>"
+                          <% if (field.required) { %>required<% } %>
+                          <% if (field.disabled) { %>disabled<% } %>
+                          data-field="<%= field.name %>">
+                    <option value="">Izaberite...</option>
+                    <% field.options.forEach(function(opt) { %>
+                      <option value="<%- opt.value %>" <%= (function() {
+                        const selected = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
+                        return selected === opt.value ? 'selected' : '';
+                      })() %>>
+                        <%= opt.label %>
+                      </option>
+                    <% }) %>
+                  </select>
+
+                <% } else if (field.type === 'file') { %>
+                  <input type="file"
+                        class="form-control <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'is-invalid' : '' %>"
+                        id="<%= field.name %>"
+                        name="<%= field.name %>"
+                        accept="<%= field.accept || 'image/jpeg,image/png,image/webp' %>"
+                        <% if (field.required) { %>required<% } %>
+                        data-field="<%= field.name %>"
+                        data-file-preview="<%= field.name %>_preview">
+                  <% if (field.preview) { %>
+                    <div id="<%= field.name %>_preview" class="mt-2">
+                      <img src="<%= field.preview %>" alt="Trenutna slika" class="rounded" style="max-height: 150px;">
+                      <p class="text-muted small mt-1">Trenutna slika</p>
+                    </div>
+                  <% } %>
+
+                <% } else if (field.type === 'checkbox') { %>
+                  <div class="form-check">
+                    <input type="hidden" name="<%= field.name %>" value="0">
+                    <input type="checkbox"
+                           class="form-check-input <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'is-invalid' : '' %>"
+                           id="<%= field.name %>"
+                           name="<%= field.name %>"
+                           value="1"
+                           <% if (field.disabled) { %>disabled<% } %>
+                           <%= (function() {
+                             const val = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
+                             return val ? 'checked' : '';
+                           })() %>
+                           data-field="<%= field.name %>">
+                    <label class="form-check-label" for="<%= field.name %>"><%= field.label %></label>
+                  </div>
+
+                <% } else if (field.type === 'hidden') { %>
+                  <input type="hidden" name="<%= field.name %>" value="<%= typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : (field.value || '') %>" data-field="<%= field.name %>">
+                <% } %>
+
+                <% if (typeof data.errors !== 'undefined' && data.errors[field.name]) { %>
+                  <div class="text-danger small mt-1" data-field-error="<%= field.name %>"><%= data.errors[field.name] %></div>
+                <% } else { %>
+                  <div class="text-danger small mt-1 d-none" data-field-error="<%= field.name %>"></div>
+                <% } %>
+
+                <% if (field.help) { %>
+                  <small class="text-muted d-block mt-1"><%= field.help %></small>
+                <% } %>
+              </div>
+            <% }) %>
+            </div>
+
+            <div class="d-flex gap-2 pt-3 border-top">
+              <button type="submit" class="btn btn-primary" data-submit-btn>
+                <i class="bi bi-check-lg"></i> <span data-submit-label><%= data.submitLabel || "Sačuvaj" %></span>
+                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" data-submit-spinner></span>
+              </button>
+              <a href="<%= data.cancelUrl %>" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg"></i> Odustani
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- Forma 2: Radno vreme (prikaz na sajtu)                       -->
+      <!-- Posts to /admin/sajt/radno-vreme (updateWorkingHours)        -->
+      <!-- Fixed 7-row "day-hours" widget - see admin-day-hours.js      -->
+      <!-- ============================================================ -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="card-title mb-0">Radno vreme (prikaz na sajtu)</h6>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="<%= data.workingHoursFormAction %>?_method=PUT" novalidate data-form>
+            <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+            <input type="hidden" name="_method" value="PUT">
+
+            <div class="mb-3" data-field-wrapper="workingHours">
+              <div class="form-label" id="workingHours_label"><%= data.workingHoursField.label %></div>
+
+              <input type="hidden" name="workingHours" value='<%- JSON.stringify(data.workingHoursField.value) %>' data-repeater-input="workingHours">
+              <div class="border rounded p-3"
+                   data-day-hours="workingHours"
+                   data-day-hours-days='<%- JSON.stringify(data.workingHoursField.days || []) %>'
+                   data-day-hours-value='<%- JSON.stringify(data.workingHoursField.value || []) %>'>
+                <div data-day-hours-rows></div>
+              </div>
+
+              <% if (data.workingHoursField.help) { %>
+                <small class="text-muted d-block mt-1"><%= data.workingHoursField.help %></small>
+              <% } %>
+            </div>
+
+            <div class="d-flex gap-2 pt-3 border-top">
+              <button type="submit" class="btn btn-primary" data-submit-btn>
+                <i class="bi bi-check-lg"></i> Sačuvaj radno vreme
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- Forma 3: Neradni dani / praznici                             -->
+      <!-- Posts to /admin/sajt/neradni-dani (updateClosedDates)        -->
+      <!-- Reuses the existing generic "repeater" widget/admin-repeater.js -->
+      <!-- as-is, exactly like admin/_form.ejs's own 'repeater' branch  -->
+      <!-- ============================================================ -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="card-title mb-0">Neradni dani / praznici</h6>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="<%= data.closedDatesFormAction %>?_method=PUT" novalidate data-form>
+            <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+            <input type="hidden" name="_method" value="PUT">
+
+            <%
+              let closedDatesValue = data.closedDatesField.value;
+              if (!Array.isArray(closedDatesValue)) closedDatesValue = [];
+            %>
+            <div class="mb-3" data-field-wrapper="closedDates">
+              <div class="form-label" id="closedDates_label"><%= data.closedDatesField.label %></div>
+
+              <input type="hidden" name="closedDates" value='<%- JSON.stringify(closedDatesValue) %>' data-repeater-input="closedDates">
+              <div class="border rounded p-3"
+                   data-repeater="closedDates"
+                   data-repeater-schema='<%- JSON.stringify(data.closedDatesField.itemFields || []) %>'
+                   data-repeater-value='<%- JSON.stringify(closedDatesValue) %>'>
+                <div data-repeater-rows></div>
+                <button type="button" class="btn btn-sm btn-outline-primary mt-2" data-repeater-add>
+                  <i class="bi bi-plus-lg"></i> <%= data.closedDatesField.addLabel || "Dodaj stavku" %>
+                </button>
+                <small class="text-muted d-block mt-2" data-repeater-empty <%= closedDatesValue.length ? 'style="display:none"' : '' %>>Nijedna stavka nije dodata.</small>
+              </div>
+
+              <% if (data.closedDatesField.help) { %>
+                <small class="text-muted d-block mt-1"><%= data.closedDatesField.help %></small>
+              <% } %>
+            </div>
+
+            <div class="d-flex gap-2 pt-3 border-top">
+              <button type="submit" class="btn btn-primary" data-submit-btn>
+                <i class="bi bi-check-lg"></i> Sačuvaj neradne dane
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+
+    <% if (typeof data.sidebar !== 'undefined') { %>
+      <div class="col-lg-4">
+        <% data.sidebar.forEach(function(card) { %>
+          <div class="card mb-4">
+            <div class="card-header">
+              <h6 class="card-title mb-0"><%= card.title %></h6>
+            </div>
+            <div class="card-body">
+              <%- include("../components/" + card.content, { data: card.data }) %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<script src="/js/admin-repeater.js"></script>
+<script src="/js/admin-day-hours.js"></script>
+<%- include("../../includes/footer") %>

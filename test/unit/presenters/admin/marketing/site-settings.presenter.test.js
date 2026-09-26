@@ -84,4 +84,75 @@ describe("prepareSiteSettingsFormData", () => {
     assert.equal(view.formAction, "/admin/sajt");
     assert.equal(view.formEnctype, "multipart/form-data");
   });
+
+  describe("workingHoursField (radno vreme, own form)", () => {
+    it("is kept out of the main `fields` array - it posts to its own route, not /admin/sajt", () => {
+      const view = prepareSiteSettingsFormData(undefined);
+
+      assert.equal(view.fields.some((f) => f.name === "workingHours"), false);
+      assert.equal(view.workingHoursField.type, "day-hours");
+      assert.equal(view.workingHoursFormAction, "/admin/sajt/radno-vreme");
+    });
+
+    it("translates all 7 weekdays into the field's day options", () => {
+      const view = prepareSiteSettingsFormData(undefined);
+
+      assert.equal(view.workingHoursField.days.length, 7);
+      assert.equal(view.workingHoursField.days[0].label, "Ponedeljak");
+      assert.equal(view.workingHoursField.days[6].label, "Nedelja");
+    });
+
+    it("carries the stored 7-day schedule through as the field's value", () => {
+      const workingHours = [
+        { day: "monday", isOpen: true, from: "09:00", to: "17:00" },
+        { day: "tuesday", isOpen: true, from: "09:00", to: "17:00" },
+        { day: "wednesday", isOpen: false, from: "09:00", to: "20:00" },
+        { day: "thursday", isOpen: true, from: "09:00", to: "17:00" },
+        { day: "friday", isOpen: true, from: "09:00", to: "17:00" },
+        { day: "saturday", isOpen: false, from: "09:00", to: "20:00" },
+        { day: "sunday", isOpen: false, from: "09:00", to: "20:00" },
+      ];
+      const view = prepareSiteSettingsFormData({ workingHours });
+
+      assert.deepEqual(view.workingHoursField.value, workingHours);
+    });
+
+    it("falls back to an all-closed 7-day default when nothing is stored yet", () => {
+      const view = prepareSiteSettingsFormData(undefined);
+
+      assert.equal(view.workingHoursField.value.length, 7);
+      assert.equal(view.workingHoursField.value.every((wh) => wh.isOpen === false), true);
+    });
+  });
+
+  describe("closedDatesField (neradni dani, own form)", () => {
+    it("is kept out of the main `fields` array - it posts to its own route, not /admin/sajt", () => {
+      const view = prepareSiteSettingsFormData(undefined);
+
+      assert.equal(view.fields.some((f) => f.name === "closedDates"), false);
+      assert.equal(view.closedDatesField.type, "repeater");
+      assert.equal(view.closedDatesFormAction, "/admin/sajt/neradni-dani");
+    });
+
+    it("reuses the generic repeater's itemFields shape (date, reason, recurringYearly)", () => {
+      const view = prepareSiteSettingsFormData(undefined);
+
+      const names = view.closedDatesField.itemFields.map((f) => f.name);
+      assert.deepEqual(names, ["date", "reason", "recurringYearly"]);
+    });
+
+    it("formats a stored Date instance as a plain YYYY-MM-DD string for the date input", () => {
+      const view = prepareSiteSettingsFormData({
+        closedDates: [{ date: new Date("2026-01-01T00:00:00.000Z"), reason: "Nova godina", recurringYearly: true }],
+      });
+
+      assert.deepEqual(view.closedDatesField.value, [{ date: "2026-01-01", reason: "Nova godina", recurringYearly: true }]);
+    });
+
+    it("defaults to an empty list when nothing is stored yet", () => {
+      const view = prepareSiteSettingsFormData(undefined);
+
+      assert.deepEqual(view.closedDatesField.value, []);
+    });
+  });
 });

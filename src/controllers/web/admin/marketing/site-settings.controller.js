@@ -12,7 +12,13 @@ export async function siteSettingsForm(req, res, next) {
     const settings = await siteSettingsService.getSiteSettingsForEdit();
     const formData = prepareSiteSettingsFormData(settings);
 
-    return res.render("admin/_form", {
+    // Custom view, NOT the generic admin/_form.ejs every other admin edit
+    // page uses - this page needs THREE independent <form>s (main policy,
+    // radno vreme, neradni dani), each posting to its own route, and
+    // admin/_form.ejs only ever renders one. See site-settings.ejs's header
+    // comment for why a dedicated view was safer here than reshaping
+    // admin/_form.ejs itself (used, unchanged, by dozens of other pages).
+    return res.render("admin/marketing/site-settings", {
       pageTitle: PAGE_TITLE,
       pageDescription: PAGE_DESCRIPTION,
       data: { ...formData, errors: {}, csrfToken: res.locals.csrfToken },
@@ -93,7 +99,7 @@ export async function updateSiteSettings(req, res, next) {
     if (error.statusCode) {
       const settings = await siteSettingsService.getSiteSettingsForEdit().catch(() => null);
       const formData = prepareSiteSettingsFormData(settings);
-      return res.status(error.statusCode).render("admin/_form", {
+      return res.status(error.statusCode).render("admin/marketing/site-settings", {
         pageTitle: PAGE_TITLE,
         pageDescription: PAGE_DESCRIPTION,
         data: { ...formData, errors: { general: error.message }, formData: req.body, csrfToken: res.locals.csrfToken },

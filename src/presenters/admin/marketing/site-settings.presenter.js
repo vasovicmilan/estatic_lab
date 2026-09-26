@@ -1,3 +1,43 @@
+import { DAYS_OF_WEEK } from "../../../utils/working-hours.util.js";
+
+const DAY_LABELS = {
+  monday: "Ponedeljak",
+  tuesday: "Utorak",
+  wednesday: "Sreda",
+  thursday: "Četvrtak",
+  friday: "Petak",
+  saturday: "Subota",
+  sunday: "Nedelja",
+};
+
+function translateDay(day) {
+  return DAY_LABELS[day] || day;
+}
+
+// Unconfigured default shown when the singleton document somehow has no
+// workingHours yet (shouldn't happen in practice - site-settings.model.js's
+// schema always supplies defaultWorkingHours() - but mirrors it here anyway
+// so this presenter never crashes indexing into an empty array) - same
+// "every day isOpen:false" shape as the model default.
+function defaultWorkingHoursValue() {
+  return DAYS_OF_WEEK.map((day) => ({ day, isOpen: false, from: "09:00", to: "20:00" }));
+}
+
+// site-settings.service.js's getSiteSettingsForEdit hands back `date` as a
+// real Date instance (straight off the Mongoose subdocument, not a
+// pre-serialized string) - String(aDateInstance) gives its verbose
+// toString() form ("Wed Jan 01 2026 00:00:00 GMT+0000 (...)"), not an ISO
+// string, so slicing THAT to 10 chars would silently produce garbage
+// ("Wed Jan 0") instead of "2026-01-01". Handles a plain string too (in case
+// this is ever called with an already-serialized value, e.g. re-rendering
+// req.body after a validation error) for the same reason coupon.presenter.js
+// guards its own date fields with `String(...).slice(0, 10)`.
+function toDateInputValue(date) {
+  if (!date) return "";
+  if (date instanceof Date) return isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
+  return String(date).slice(0, 10);
+}
+
 export function prepareSiteSettingsFormData(settings) {
   const values = settings || {};
   const hero = values.hero || {};
@@ -141,6 +181,58 @@ export function prepareSiteSettingsFormData(settings) {
     },
   ];
 
+  // ---- Radno vreme (prikaz na sajtu) ----
+  // Rendered as its OWN <form> (posting to /admin/sajt/radno-vreme, a
+  // different route/controller action than the fields above) - deliberately
+  // kept OUT of the `fields` array above, which drives the single generic
+  // <form> admin/_form.ejs renders. See site-settings.ejs for why this page
+  // needed a dedicated, hand-authored view instead of the generic one every
+  // other admin/_form.ejs-driven page uses (in short: three independent
+  // <form>s on one page, and admin/_form.ejs only ever renders one).
+  //
+  // Fixed 7-row shape (never add/remove a day, unlike Employee.workingHours'
+  // "schedule" field type) - see site-settings.model.js's WorkingHoursDaySchema
+  // and admin-day-hours.js for the client-side counterpart of this "day-hours"
+  // field type.
+  const workingHoursField = {
+    name: "workingHours",
+    label: "Radno vreme (prikaz na sajtu)",
+    type: "day-hours",
+    days: DAYS_OF_WEEK.map((d) => ({ value: d, label: translateDay(d) })),
+    value: values.workingHours && values.workingHours.length === 7 ? values.workingHours : defaultWorkingHoursValue(),
+    help: "Ovo je INFORMATIVNI raspored prikazan posetiocima (kontakt strana, footer, SEO) - ne utiče na to koji termini se mogu zakazati (to i dalje zavisi od radnog vremena svakog zaposlenog).",
+  };
+
+  // ---- Neradni dani / praznici ----
+  // Also its own <form> (posting to /admin/sajt/neradni-dani). Reuses the
+  // existing generic "repeater" field type/admin-repeater.js as-is - this
+  // shape (a variable-length list of {date, reason, recurringYearly} rows) is
+  // exactly what that widget was already built for.
+  const closedDatesField = {
+    name: "closedDates",
+    label: "Neradni dani / praznici",
+    type: "repeater",
+    addLabel: "Dodaj neradni dan",
+    itemFields: [
+      { name: "date", label: "Datum", type: "date", required: true },
+      { name: "reason", label: "Razlog (opciono)", type: "text" },
+      { name: "recurringYearly", label: "Ponavlja se svake godine", type: "checkbox" },
+    ],
+    // A repeater's "date" subfield renders as a plain <input type="date">
+    // (admin-repeater.js's default branch), which only accepts/pre-fills a
+    // bare "YYYY-MM-DD" string - NOT a Date object's default toString(). The
+    // stored value (site-settings.service.js's updateClosedDates always saves
+    // a real Date) has to be re-formatted here the same way
+    // coupon.presenter.js's own validFrom/validUntil date fields already do,
+    // or every existing row would silently render with an empty date picker.
+    value: (values.closedDates || []).map((cd) => ({
+      date: toDateInputValue(cd.date),
+      reason: cd.reason || "",
+      recurringYearly: !!cd.recurringYearly,
+    })),
+    help: "Ovi datumi blokiraju ZAKAZIVANJE za sve zaposlene (praznik, kolektivni godišnji odmor...), bez obzira na nečije lično radno vreme.",
+  };
+
   return {
     formAction: "/admin/sajt",
     formEnctype: "multipart/form-data",
@@ -148,6 +240,10 @@ export function prepareSiteSettingsFormData(settings) {
     fields,
     submitLabel: "Sačuvaj izmene",
     cancelUrl: "/admin",
+    workingHoursField,
+    workingHoursFormAction: "/admin/sajt/radno-vreme",
+    closedDatesField,
+    closedDatesFormAction: "/admin/sajt/neradni-dani",
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Sadržaj sajta", url: null },
