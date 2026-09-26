@@ -351,12 +351,16 @@ export async function updatePackageGallery(req, res, next) {
 export async function deletePackage(req, res, next) {
   try {
     const { packageId } = req.params;
+    // Snapshot identifying fields before the delete - nothing left to read once
+    // deletePackageById returns.
+    const existing = await packageService.getPackageById(packageId).catch(() => null);
     await packageService.deletePackageById(packageId);
     logInfo(`[deletePackage] Paket #${packageId} obrisan`, { packageId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "PACKAGE_DELETED",
       entity: { type: "Package", id: packageId },
+      changes: { naziv: { old: existing?.naziv || null, new: null }, cena: { old: existing?.cena || null, new: null } },
       req,
       success: true,
     });

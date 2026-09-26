@@ -170,12 +170,15 @@ export async function updateResource(req, res, next) {
 export async function deleteResource(req, res, next) {
   try {
     const { resourceId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteResourceById returns.
+    const existing = await resourceService.getResourceForEdit(resourceId).catch(() => null);
     await resourceService.deleteResourceById(resourceId);
     logInfo(`[deleteResource] Resurs #${resourceId} obrisan`, { resourceId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "RESOURCE_DELETED",
       entity: { type: "Resource", id: resourceId },
+      changes: { name: { old: existing?.name || null, new: null } },
       req,
       success: true,
     });

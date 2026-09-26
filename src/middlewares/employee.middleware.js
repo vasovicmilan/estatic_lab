@@ -1,4 +1,5 @@
 import { AppError, AuthenticationError, isApiRequest } from "../utils/error.util.js";
+import auditLogService from "../services/audit-log.service.js";
 
 export function employeeMiddleware(req, res, next) {
   // See admin.middleware.js's comment - req.user (not req.session) is the
@@ -17,6 +18,16 @@ export function employeeMiddleware(req, res, next) {
   // of an Employee record (checked once at login - see auth.service.js), which is the
   // real source of truth here, not roleName.
   if (!req.user.isEmployee) {
+    // Same fire-and-forget convention as permission.middleware.js's requirePermission.
+    auditLogService.recordAuditLog({
+      actor: req.user,
+      action: "PERMISSION_DENIED",
+      entity: { type: "Route", id: null },
+      changes: { path: { old: null, new: req.originalUrl }, requiredPermission: { old: null, new: "isEmployee" } },
+      req,
+      success: false,
+      errorMessage: "Nemate pravo pristupa ovoj stranici",
+    });
     return next(new AppError("Nemate pravo pristupa ovoj stranici", 403));
   }
 

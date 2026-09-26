@@ -334,12 +334,15 @@ export async function updatePostSeo(req, res, next) {
 export async function deletePost(req, res, next) {
   try {
     const { postId } = req.params;
+    // Snapshot before the delete - nothing left to read once deletePostById returns.
+    const existing = await postService.getPostForEdit(postId).catch(() => null);
     await postService.deletePostById(postId);
     logInfo(`[deletePost] Post #${postId} obrisan`, { postId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "POST_DELETED",
       entity: { type: "Post", id: postId },
+      changes: { naslov: { old: existing?.naslov || existing?.title || null, new: null } },
       req,
       success: true,
     });

@@ -68,9 +68,21 @@ export async function updateRole(req, res, next) {
 export async function deleteRole(req, res, next) {
   try {
     const { roleId } = req.params;
+    // Snapshot before the delete, including the full permissions array - once
+    // deleteRoleById returns there is no other durable record of what this role
+    // could actually do.
+    const existing = await roleService.getRoleForEdit(roleId).catch(() => null);
     await roleService.deleteRoleById(roleId);
     logInfo(`[api/admin/deleteRole] Rola #${roleId} obrisana`, { roleId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "ROLE_DELETED", entity: { type: "Role", id: roleId } });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "ROLE_DELETED",
+      entity: { type: "Role", id: roleId },
+      changes: {
+        name: { old: existing?.name || null, new: null },
+        permissions: { old: existing?.permissions || null, new: null },
+      },
+    });
     return res.json({ success: true, data: { message: "Rola je obrisana." } });
   } catch (error) {
     logError("[api/admin/deleteRole] Greška", error, { roleId: req.params.roleId });
@@ -167,9 +179,16 @@ export async function updateCategory(req, res, next) {
 export async function deleteCategory(req, res, next) {
   try {
     const { categoryId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteCategoryById returns.
+    const existing = await categoryService.getCategoryForEdit(categoryId).catch(() => null);
     await categoryService.deleteCategoryById(categoryId);
     logInfo(`[api/admin/deleteCategory] Kategorija #${categoryId} obrisana`, { categoryId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "CATEGORY_DELETED", entity: { type: "Category", id: categoryId } });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "CATEGORY_DELETED",
+      entity: { type: "Category", id: categoryId },
+      changes: { name: { old: existing?.name || null, new: null } },
+    });
     return res.json({ success: true, data: { message: "Kategorija je obrisana." } });
   } catch (error) {
     logError("[api/admin/deleteCategory] Greška", error, { categoryId: req.params.categoryId });
@@ -247,9 +266,16 @@ export async function updateTag(req, res, next) {
 export async function deleteTag(req, res, next) {
   try {
     const { tagId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteTagById returns.
+    const existing = await tagService.getTagForEdit(tagId).catch(() => null);
     await tagService.deleteTagById(tagId);
     logInfo(`[api/admin/deleteTag] Tag #${tagId} obrisan`, { tagId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "TAG_DELETED", entity: { type: "Tag", id: tagId } });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "TAG_DELETED",
+      entity: { type: "Tag", id: tagId },
+      changes: { name: { old: existing?.name || null, new: null } },
+    });
     return res.json({ success: true, data: { message: "Tag je obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteTag] Greška", error, { tagId: req.params.tagId });
@@ -326,9 +352,16 @@ export async function updateResource(req, res, next) {
 export async function deleteResource(req, res, next) {
   try {
     const { resourceId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteResourceById returns.
+    const existing = await resourceService.getResourceForEdit(resourceId).catch(() => null);
     await resourceService.deleteResourceById(resourceId);
     logInfo(`[api/admin/deleteResource] Resurs #${resourceId} obrisan`, { resourceId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "RESOURCE_DELETED", entity: { type: "Resource", id: resourceId } });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "RESOURCE_DELETED",
+      entity: { type: "Resource", id: resourceId },
+      changes: { name: { old: existing?.name || null, new: null } },
+    });
     return res.json({ success: true, data: { message: "Resurs je obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteResource] Greška", error, { resourceId: req.params.resourceId });

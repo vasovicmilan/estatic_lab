@@ -1,4 +1,5 @@
 import { AppError, AuthenticationError, isApiRequest } from "../utils/error.util.js";
+import auditLogService from "../services/audit-log.service.js";
 
 export function requirePermission(permission) {
   return (req, res, next) => {
@@ -14,6 +15,21 @@ export function requirePermission(permission) {
 
     const permissions = req.user.permissions || [];
     if (!permissions.includes(permission)) {
+      // Fire-and-forget, deliberately not awaited - this middleware must stay
+      // synchronous-shaped (next() below can't wait on a DB write), and
+      // recordAuditLog already swallows its own failures. entity carries the
+      // route + the permission that was missing since there's no single
+      // "entity" a permission check is about - no schema change needed, this
+      // is exactly what the entity.type/id pair is flexible enough to hold.
+      auditLogService.recordAuditLog({
+        actor: req.user,
+        action: "PERMISSION_DENIED",
+        entity: { type: "Route", id: null },
+        changes: { path: { old: null, new: req.originalUrl }, requiredPermission: { old: null, new: permission } },
+        req,
+        success: false,
+        errorMessage: "Nemate dozvolu za pristup ovoj stranici",
+      });
       return next(new AppError("Nemate dozvolu za pristup ovoj stranici", 403));
     }
 

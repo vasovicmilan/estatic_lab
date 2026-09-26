@@ -231,6 +231,14 @@ export async function createProductDraft(req, res, next) {
 
     const product = await productService.createDraftProduct({ name: req.body.name, sku: req.body.sku, slug: req.body.slug });
     logInfo(`[createProductDraft] Nacrt proizvoda kreiran: "${product.name}"`, { productId: product.id, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PRODUCT_DRAFT_CREATED",
+      entity: { type: "Product", id: product.id },
+      changes: { naziv: { old: null, new: product.name } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Proizvod kreiran - dodajte detalje, varijante i medije", `/admin/proizvodi/${product.id}/dodavanje/detalji`);
   } catch (error) {
@@ -289,6 +297,19 @@ export async function addProductDetailsMedia(req, res, next) {
     const data = buildPhase2Payload(req, existing);
     const product = await productService.addDetailsAndMedia(productId, data);
     logInfo(`[addProductDetailsMedia] Detalji i medija sačuvani za proizvod #${productId}`, { productId, adminId: req.session?.user?.id });
+    // Just counts, not the images/videos/variations themselves - see this task's
+    // header comment on keeping media-step `changes` lightweight.
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PRODUCT_DETAILS_MEDIA_UPDATED",
+      entity: { type: "Product", id: productId },
+      changes: {
+        variationCount: { old: null, new: (data.variations || []).length },
+        hasImage: { old: null, new: !!data.image },
+      },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Detalji sačuvani - podesite SEO i objavite proizvod", `/admin/proizvodi/${product.id}/dodavanje/seo`);
   } catch (error) {
@@ -510,6 +531,14 @@ export async function updateProductGallery(req, res, next) {
 
     const updated = await productService.updateProductById(productId, { gallery, videos });
     logInfo(`[updateProductGallery] Galerija/video proizvoda #${productId} ažurirani`, { productId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PRODUCT_GALLERY_UPDATED",
+      entity: { type: "Product", id: productId },
+      changes: { galleryCount: { old: null, new: gallery.length }, videoCount: { old: null, new: videos.length } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Galerija i video su uspešno ažurirani", `/admin/proizvodi/detalji/${updated.id}`);
   } catch (error) {
@@ -563,6 +592,14 @@ export async function updateProductSeo(req, res, next) {
 
     const updated = await productService.updateProductSeo(productId, keywords);
     logInfo(`[updateProductSeo] SEO proizvoda #${productId} ažuriran`, { productId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PRODUCT_SEO_UPDATED",
+      entity: { type: "Product", id: productId },
+      changes: { seoKeywords: { old: null, new: keywords } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "SEO podaci su uspešno ažurirani", `/admin/proizvodi/detalji/${updated.id}`);
   } catch (error) {
@@ -585,12 +622,16 @@ export async function updateProductSeo(req, res, next) {
 export async function deleteProduct(req, res, next) {
   try {
     const { productId } = req.params;
+    // Snapshot identifying fields before the delete - the record is gone once
+    // deleteProductById returns, so this is the only chance to capture them.
+    const existing = await productService.getProductById(productId).catch(() => null);
     await productService.deleteProductById(productId);
     logInfo(`[deleteProduct] Proizvod #${productId} obrisan`, { productId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "PRODUCT_DELETED",
       entity: { type: "Product", id: productId },
+      changes: { naziv: { old: existing?.naziv || null, new: null }, sku: { old: existing?.sku || null, new: null } },
       req,
       success: true,
     });

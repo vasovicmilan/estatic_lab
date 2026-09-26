@@ -180,7 +180,11 @@ export function buildAppointmentReassignedMessage(appointment, employeeName) {
   ].join("\n");
 }
 
-export function buildErrorAlertMessage(message, context = {}) {
+// repeatCount is how many times this SAME error key was suppressed by the 5-minute
+// per-key throttle (telegram-alert.util.js) since it last actually fired - without
+// this, a burst of identical errors during that window would silently vanish after
+// the first ping, with no sign in Telegram that it kept happening.
+export function buildErrorAlertMessage(message, context = {}, repeatCount = 0) {
   const { errorId, method, url, statusCode, env, ...rest } = context;
 
   const lines = [`🚨 <b>Greška na sajtu</b>`, "", escapeHtml(message)];
@@ -189,6 +193,7 @@ export function buildErrorAlertMessage(message, context = {}) {
   if (statusCode) lines.push(`🔢 <b>Status:</b> ${statusCode}`);
   if (env) lines.push(`🌍 <b>Okruženje:</b> ${escapeHtml(env)}`);
   if (errorId) lines.push(`🆔 <b>ID greške:</b> <code>${escapeHtml(errorId)}</code>`);
+  if (repeatCount > 0) lines.push(`🔁 <b>Ponovilo se ${repeatCount}x u poslednjih 5 minuta</b>`);
 
   const restKeys = Object.keys(rest);
   if (restKeys.length) {

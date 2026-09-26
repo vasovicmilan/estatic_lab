@@ -170,12 +170,15 @@ export async function updateTag(req, res, next) {
 export async function deleteTag(req, res, next) {
   try {
     const { tagId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteTagById returns.
+    const existing = await tagService.getTagForEdit(tagId).catch(() => null);
     await tagService.deleteTagById(tagId);
     logInfo(`[deleteTag] Tag #${tagId} obrisan`, { tagId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "TAG_DELETED",
       entity: { type: "Tag", id: tagId },
+      changes: { name: { old: existing?.name || null, new: null } },
       req,
       success: true,
     });

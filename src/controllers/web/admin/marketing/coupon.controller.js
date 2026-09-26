@@ -268,12 +268,15 @@ export async function updateCoupon(req, res, next) {
 export async function deleteCoupon(req, res, next) {
   try {
     const { couponId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteCouponById returns.
+    const existing = await couponService.getCouponForEdit(couponId).catch(() => null);
     await couponService.deleteCouponById(couponId);
     logInfo(`[deleteCoupon] Kupon #${couponId} obrisan`, { couponId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "COUPON_DELETED",
       entity: { type: "Coupon", id: couponId },
+      changes: { code: { old: existing?.code || null, new: null } },
       req,
       success: true,
     });

@@ -249,12 +249,15 @@ export async function cancelPackagePurchase(req, res, next) {
 export async function deletePackagePurchase(req, res, next) {
   try {
     const { packagePurchaseId } = req.params;
+    // Snapshot before the delete - nothing left to read once deletePurchase returns.
+    const existing = await packagePurchaseService.getPurchaseById(packagePurchaseId).catch(() => null);
     await packagePurchaseService.deletePurchase(packagePurchaseId, req.session?.user?.id);
     logInfo(`[deletePackagePurchase] Kupljeni paket #${packagePurchaseId} obrisan`, { packagePurchaseId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "PACKAGE_PURCHASE_DELETED",
       entity: { type: "PackagePurchase", id: packagePurchaseId },
+      changes: { paket: { old: existing?.paket || null, new: null }, cena: { old: existing?.cena || null, new: null } },
       req,
       success: true,
     });

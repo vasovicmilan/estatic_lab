@@ -1,5 +1,11 @@
 import * as authService from "../../../services/auth.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
+import auditLogService from "../../../services/audit-log.service.js";
+
+// This API surface is stateless JWT auth (see this file's header comment) - there
+// is no server-side session to destroy, so unlike the web controller there is no
+// LOGOUT or self-service changePassword/deactivateAccount endpoint here to audit.
+// LOGIN_SUCCEEDED/LOGIN_FAILED are the one pair that does apply, on login below.
 
 // Every action here calls the exact same auth.service.js functions the web
 // controller (controllers/web/auth/auth.controller.js) calls - no business logic
@@ -36,6 +42,13 @@ export async function login(req, res, next) {
   try {
     const user = await authService.login(req.body.email, req.body.password);
     logInfo(`[api/login] Korisnik "${user.email}" uspešno prijavljen`, { userId: user.id });
+    await auditLogService.recordAuditLog({
+      actor: { id: user.id, email: user.email, role: user.roleName },
+      action: "LOGIN_SUCCEEDED",
+      entity: { type: "User", id: user.id },
+      req,
+      success: true,
+    });
 
     return res.json({
       success: true,
@@ -55,6 +68,17 @@ export async function login(req, res, next) {
     });
   } catch (error) {
     logError("[api/login] Greška pri prijavi", error, { email: req.body.email });
+    // Same reasoning as the web controller's login: the error message from
+    // authService.login is already the same generic "Pogrešan email ili lozinka"
+    // whether the email is unknown or the password is wrong, so this entry
+    // doesn't leak that distinction either.
+    await auditLogService.recordAuditLog({
+      actor: { id: null, email: req.body.email || null, role: null },
+      action: "LOGIN_FAILED",
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
     next(error);
   }
 }

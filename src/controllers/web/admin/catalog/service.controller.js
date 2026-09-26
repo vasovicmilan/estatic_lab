@@ -233,6 +233,14 @@ export async function createServiceDraft(req, res, next) {
     const data = buildStep1Payload(req);
     const service = await serviceService.createDraftService(data);
     logInfo(`[createServiceDraft] Nacrt usluge kreiran: "${service.name}"`, { serviceId: service.id, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "SERVICE_DRAFT_CREATED",
+      entity: { type: "Service", id: service.id },
+      changes: { naziv: { old: null, new: service.name } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Osnovni podaci sačuvani - dodajte varijante", `/admin/usluge/${service.id}/dodavanje/paketi`);
   } catch (error) {
@@ -299,6 +307,14 @@ export async function addServicePackages(req, res, next) {
     });
     const service = await serviceService.addPackagesToService(serviceId, packages);
     logInfo(`[addServicePackages] Varijante sačuvane za uslugu #${serviceId}`, { serviceId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "SERVICE_PACKAGES_UPDATED",
+      entity: { type: "Service", id: serviceId },
+      changes: { packageCount: { old: null, new: packages.length } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Varijante sačuvane - dodaj još detalja ili objavi uslugu", `/admin/usluge/${service.id}/dodavanje/detalji`);
   } catch (error) {
@@ -519,6 +535,16 @@ export async function updateServiceGallery(req, res, next) {
 
     const updated = await serviceService.updateServiceById(serviceId, { gallery, videos });
     logInfo(`[updateServiceGallery] Galerija/video usluge #${serviceId} ažurirani`, { serviceId, adminId: req.session?.user?.id });
+    // Just counts, not the images/videos themselves - see this task's header
+    // comment on keeping media-step `changes` lightweight.
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "SERVICE_GALLERY_UPDATED",
+      entity: { type: "Service", id: serviceId },
+      changes: { galleryCount: { old: null, new: gallery.length }, videoCount: { old: null, new: videos.length } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Galerija i video su uspešno ažurirani", `/admin/usluge/detalji/${updated.id}`);
   } catch (error) {
@@ -576,6 +602,14 @@ export async function updateServiceSeo(req, res, next) {
 
     const updated = await serviceService.updateServiceSeo(serviceId, keywords);
     logInfo(`[updateServiceSeo] SEO usluge #${serviceId} ažuriran`, { serviceId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "SERVICE_SEO_UPDATED",
+      entity: { type: "Service", id: serviceId },
+      changes: { seoKeywords: { old: null, new: keywords } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "SEO podaci su uspešno ažurirani", `/admin/usluge/detalji/${updated.id}`);
   } catch (error) {
@@ -598,12 +632,16 @@ export async function updateServiceSeo(req, res, next) {
 export async function deleteService(req, res, next) {
   try {
     const { serviceId } = req.params;
+    // Snapshot the identifying fields before the delete - once deleteServiceById
+    // returns, the record is gone and there'd be nothing left to put in `changes`.
+    const existing = await serviceService.getServiceById(serviceId).catch(() => null);
     await serviceService.deleteServiceById(serviceId);
     logInfo(`[deleteService] Usluga #${serviceId} obrisana`, { serviceId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "SERVICE_DELETED",
       entity: { type: "Service", id: serviceId },
+      changes: { naziv: { old: existing?.naziv || null, new: null } },
       req,
       success: true,
     });

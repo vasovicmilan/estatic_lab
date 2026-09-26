@@ -241,12 +241,15 @@ export async function updateCategory(req, res, next) {
 export async function deleteCategory(req, res, next) {
   try {
     const { categoryId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteCategoryById returns.
+    const existing = await categoryService.getCategoryForEdit(categoryId).catch(() => null);
     await categoryService.deleteCategoryById(categoryId);
     logInfo(`[deleteCategory] Kategorija #${categoryId} obrisana`, { categoryId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "CATEGORY_DELETED",
       entity: { type: "Category", id: categoryId },
+      changes: { name: { old: existing?.name || null, new: null } },
       req,
       success: true,
     });

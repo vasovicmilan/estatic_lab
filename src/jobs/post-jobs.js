@@ -1,4 +1,6 @@
 import postRepo from "../repositories/post.repository.js";
+import auditLogService from "../services/audit-log.service.js";
+import { buildSystemActor } from "../utils/audit-actor.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 import { alertError } from "../utils/telegram-alert.util.js";
 
@@ -31,10 +33,24 @@ export async function runPublishScheduledPosts() {
         // comment on findDueScheduledPosts in post.repository.js.
         await post.save();
         published += 1;
+        // Same action name the admin's own manual status change uses
+        // (post.controller.js's POST_STATUS_CHANGED) - this is that same
+        // transition, just system-triggered on schedule instead of a click.
+        await auditLogService.recordAuditLog({
+          ...buildSystemActor(),
+          action: "POST_STATUS_CHANGED",
+          entity: { type: "Post", id: post._id.toString() },
+          changes: { status: { old: "scheduled", new: "published" } },
+        });
       } catch (error) {
         // one bad post (e.g. failed a validator on save) shouldn't block the
         // rest of the batch from publishing on schedule
         logError(`[cron] publish-scheduled-posts failed for post ${post._id}`, error, { postId: post._id.toString() });
+        await auditLogService.recordAuditLog({
+          ...buildSystemActor({ success: false, errorMessage: error.message }),
+          action: "POST_STATUS_CHANGED",
+          entity: { type: "Post", id: post._id.toString() },
+        });
       }
     }
 

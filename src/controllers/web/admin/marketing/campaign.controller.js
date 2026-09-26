@@ -218,12 +218,15 @@ export async function sendCampaignNow(req, res, next) {
 export async function deleteCampaign(req, res, next) {
   try {
     const { campaignId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteCampaignById returns.
+    const existing = await campaignService.getCampaignForEdit(campaignId).catch(() => null);
     await campaignService.deleteCampaignById(campaignId);
     logInfo(`[deleteCampaign] Kampanja #${campaignId} obrisana`, { campaignId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "CAMPAIGN_DELETED",
       entity: { type: "Campaign", id: campaignId },
+      changes: { naslov: { old: existing?.naslov || existing?.title || null, new: null } },
       req,
       success: true,
     });

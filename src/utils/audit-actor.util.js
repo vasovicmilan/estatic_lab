@@ -15,4 +15,16 @@ export function buildAuditActor(req, overrides = {}) {
   return { actor: req.user, req, success: true, ...overrides };
 }
 
-export default { buildAuditActor };
+// Cron/system jobs (src/jobs/*) have no `req` at all - there's no HTTP request
+// to pull ip/userAgent/requestId from, and no logged-in user to be the actor.
+// recordAuditLog's `actor` shape still expects { id, email, role }, so this
+// gives every system-triggered write a recognizable, consistent actor
+// (role: "system", id/email null) instead of each job improvising its own
+// shape or faking a `req` object just to reuse buildAuditActor. No `req` is
+// passed through, so ip/userAgent/requestId simply stay null on these entries -
+// there's genuinely no request they could be correlated to.
+export function buildSystemActor(overrides = {}) {
+  return { actor: { id: null, email: null, role: "system" }, success: true, ...overrides };
+}
+
+export default { buildAuditActor, buildSystemActor };

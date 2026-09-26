@@ -182,12 +182,20 @@ export async function updateRole(req, res, next) {
 export async function deleteRole(req, res, next) {
   try {
     const { roleId } = req.params;
+    // Snapshot before the delete, including the full permissions array - once
+    // deleteRoleById returns there is no other durable record of what this role
+    // could actually do.
+    const existing = await roleService.getRoleForEdit(roleId).catch(() => null);
     await roleService.deleteRoleById(roleId);
     logInfo(`[deleteRole] Rola #${roleId} obrisana`, { roleId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "ROLE_DELETED",
       entity: { type: "Role", id: roleId },
+      changes: {
+        name: { old: existing?.name || null, new: null },
+        permissions: { old: existing?.permissions || null, new: null },
+      },
       req,
       success: true,
     });

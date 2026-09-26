@@ -2,6 +2,8 @@ import { processUploadForApi, processMultipleUploadsForApi } from "../../../conf
 import { requireModule } from "../../../middlewares/feature.middleware.js";
 import { AppError } from "../../../utils/error.util.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
+import auditLogService from "../../../services/audit-log.service.js";
+import { buildAuditActor } from "../../../utils/audit-actor.util.js";
 
 // Fills the gap docs/*/15-api-v1-reference.md used to call out explicitly: creating/
 // editing an entity through /api/v1/admin/* accepts an image/gallery/video field only
@@ -73,9 +75,22 @@ export const uploadSingleMiddleware = processUploadForApi("file");
 export const uploadGalleryMiddleware = processMultipleUploadsForApi("gallery", 10);
 export const uploadVideoMiddleware = processMultipleUploadsForApi("video", 5);
 
+// FILE_UPLOADED covers every upload shape this endpoint serves (single/gallery/
+// video, across every entry in TYPE_PERMISSIONS) with one action name - the raw
+// file is uploaded here BEFORE the entity it belongs to is created/updated (see
+// this file's header comment), so there is no entity id yet to attach the entry
+// to; `entity.type` is the upload's `:type` route param instead (e.g. "services",
+// "products"), and `changes` records what was actually produced so the audit
+// trail still says something concrete happened, not just "an upload occurred".
 export async function uploadFile(req, res, next) {
   try {
     logInfo(`[api/admin/uploadFile] Fajl otpremljen (tip: ${req.params.type})`, { adminId: req.user?.id, type: req.params.type });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "FILE_UPLOADED",
+      entity: { type: req.params.type, id: null },
+      changes: { field: { old: null, new: "file" }, path: { old: null, new: req.uploadedFile?.img || req.uploadedFile?.url || null } },
+    });
     return res.status(201).json({ success: true, data: req.uploadedFile });
   } catch (error) {
     logError("[api/admin/uploadFile] Greška", error, { type: req.params.type });
@@ -88,6 +103,12 @@ export async function uploadMultiple(req, res, next) {
     logInfo(`[api/admin/uploadMultiple] ${req.uploadedFiles.length} fajl(ova) otpremljeno (tip: ${req.params.type})`, {
       adminId: req.user?.id,
       type: req.params.type,
+    });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "FILE_UPLOADED",
+      entity: { type: req.params.type, id: null },
+      changes: { field: { old: null, new: "gallery/video" }, count: { old: null, new: req.uploadedFiles?.length || 0 } },
     });
     return res.status(201).json({ success: true, data: req.uploadedFiles });
   } catch (error) {

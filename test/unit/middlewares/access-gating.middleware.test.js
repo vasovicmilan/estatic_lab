@@ -4,6 +4,7 @@ import { adminMiddleware } from "../../../src/middlewares/admin.middleware.js";
 import { requirePermission } from "../../../src/middlewares/permission.middleware.js";
 import { employeeMiddleware } from "../../../src/middlewares/employee.middleware.js";
 import { partnerMiddleware } from "../../../src/middlewares/partner.middleware.js";
+import auditLogService from "../../../src/services/audit-log.service.js";
 
 function fakeWebReq(overrides = {}) {
   const flashCalls = [];
@@ -133,6 +134,26 @@ for (const { name, middleware, passingUser, failingUser } of cases) {
       });
 
       assert.equal(nextCalledWith, undefined);
+    });
+
+    it("records a failed PERMISSION_DENIED audit entry (actor = req.user, path = req.originalUrl) when access is denied", (t) => {
+      // adminMiddleware doesn't go through requirePermission/employeeMiddleware/
+      // partnerMiddleware's PERMISSION_DENIED audit call - it's a separate,
+      // unaudited gate (out of scope for this task's audit-log fixes).
+      if (name === "adminMiddleware") return;
+
+      const req = fakeWebReq({ user: failingUser, originalUrl: "/admin/tajno" });
+      const res = fakeRes();
+      const auditMock = t.mock.method(auditLogService, "recordAuditLog", async () => {});
+
+      middleware(req, res, () => {});
+
+      assert.equal(auditMock.mock.calls.length, 1);
+      const call = auditMock.mock.calls[0].arguments[0];
+      assert.equal(call.action, "PERMISSION_DENIED");
+      assert.equal(call.success, false);
+      assert.equal(call.actor, failingUser);
+      assert.equal(call.changes.path.new, "/admin/tajno");
     });
 
     it("calls next() with no error when req.user has the required permission/flag - token-based (API request)", () => {

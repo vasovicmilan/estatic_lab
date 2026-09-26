@@ -18,12 +18,21 @@ import { couponCaptureMiddleware } from "./middlewares/coupon-capture.middleware
 import { requestIdMiddleware } from "./middlewares/request-id.middleware.js";
 import { linkContextMiddleware } from "./middlewares/link-context.middleware.js";
 import routes from "./routes/index.routes.js";
+import healthRoutes from "./routes/health.routes.js";
 import { legacyUrlMiddleware } from "./middlewares/legacy-url.middleware.js";
 import { notFoundHandler, globalErrorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
 
 setupHelmet(app);
+
+// Mounted before CORS/session/CSRF/globalLimiter and everything else below - an
+// uptime monitor needs no auth, no cookies, and must not be caught by globalLimiter
+// (see rate-limiter.middleware.js's globalLimiter, applied further down) or a
+// well-behaved 30-60s poll could get 429'd during exactly the traffic spike or
+// incident when the monitor matters most.
+app.use(healthRoutes);
+
 setupCors(app);
 setupStatic(app);
 setupMorgan(app);

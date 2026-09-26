@@ -9,6 +9,7 @@ import { generateSeo } from "../../../seo/index.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 import { generateRandomToken } from "../../../services/crypto.service.js";
+import auditLogService from "../../../services/audit-log.service.js";
 
 // Login/register/reset-password are all public (no auth wall - see auth.routes.js),
 // but none of them are content worth indexing, and the reset/claim-account links in
@@ -104,10 +105,29 @@ export async function login(req, res, next) {
     setSessionUser(req, user);
 
     logInfo(`[login] Korisnik "${user.email}" uspešno prijavljen`, { userId: user.id });
+    await auditLogService.recordAuditLog({
+      actor: { id: user.id, email: user.email, role: user.roleName },
+      action: "LOGIN_SUCCEEDED",
+      entity: { type: "User", id: user.id },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", `Dobrodošli nazad, ${user.firstName}!`, redirectTo);
   } catch (error) {
     logError("[login] Greška pri prijavi", error, { email: req.body.email });
+    // Actor here is only the attempted email, never a resolved user id - there is
+    // no logged-in user yet, and the error message itself (authService.login) is
+    // deliberately the same generic "Pogrešan email ili lozinka" whether the email
+    // doesn't exist or the password is just wrong, so this audit entry must not
+    // leak that distinction either - errorMessage is just the same generic text.
+    await auditLogService.recordAuditLog({
+      actor: { id: null, email: req.body.email || null, role: null },
+      action: "LOGIN_FAILED",
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
 
     if (error.statusCode === 401 || error.statusCode === 400) {
       const viewData = prepareLoginFormData({ errors: { general: error.message }, formData: req.body, redirectTo: req.body.redirectTo });
@@ -233,13 +253,25 @@ export async function googleCallback(req, res, next) {
 }
 
 export async function logout(req, res, next) {
-  const email = req.session?.user?.email;
+  const user = req.session?.user;
+  // Recorded BEFORE session.destroy, not in its callback - by the time that
+  // callback runs the session (and so req.session.user) is already gone, and
+  // buildAuditActor-style logging needs the actor captured while it's still there.
+  if (user) {
+    await auditLogService.recordAuditLog({
+      actor: user,
+      action: "LOGOUT",
+      entity: { type: "User", id: user.id },
+      req,
+      success: true,
+    });
+  }
   req.session.destroy((err) => {
     if (err) {
-      logError("[logout] Greška pri uništavanju sesije", err, { email });
+      logError("[logout] Greška pri uništavanju sesije", err, { email: user?.email });
       return next(err);
     }
-    logInfo(`[logout] Korisnik "${email}" odjavljen`, { email });
+    logInfo(`[logout] Korisnik "${user?.email}" odjavljen`, { email: user?.email });
     res.clearCookie("connect.sid");
     return res.redirect("/");
   });
@@ -348,10 +380,25 @@ export async function changePassword(req, res, next) {
 
     await authService.changePassword(req.session.user.id, req.body.oldPassword, req.body.newPassword, req.body.confirmPassword);
     logInfo(`[changePassword] Korisnik #${req.session.user.id} promenio lozinku`, { userId: req.session.user.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PASSWORD_CHANGED",
+      entity: { type: "User", id: req.session.user.id },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Lozinka je uspešno promenjena", "/nalog/podesavanja");
   } catch (error) {
     logError("[changePassword] Greška pri promeni lozinke", error, { userId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PASSWORD_CHANGED",
+      entity: { type: "User", id: req.session?.user?.id },
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
     if (error.statusCode) {
       return flashAndRedirect(req, res, "error", error.message, "/nalog/podesavanja");
     }
@@ -361,8 +408,18 @@ export async function changePassword(req, res, next) {
 
 export async function deactivateAccount(req, res, next) {
   try {
-    await authService.deactivateAccount(req.session.user.id, req.body.password);
-    const email = req.session.user.email;
+    const user = req.session.user;
+    await authService.deactivateAccount(user.id, req.body.password);
+    // Recorded before session.destroy for the same reason as logout - req.session.user
+    // won't exist any more once the destroy callback runs.
+    await auditLogService.recordAuditLog({
+      actor: user,
+      action: "ACCOUNT_DEACTIVATED",
+      entity: { type: "User", id: user.id },
+      req,
+      success: true,
+    });
+    const email = user.email;
 
     req.session.destroy((err) => {
       if (err) logError("[deactivateAccount] Greška pri uništavanju sesije", err, { email });
@@ -372,6 +429,14 @@ export async function deactivateAccount(req, res, next) {
     });
   } catch (error) {
     logError("[deactivateAccount] Greška pri deaktivaciji naloga", error, { userId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "ACCOUNT_DEACTIVATED",
+      entity: { type: "User", id: req.session?.user?.id },
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
     if (error.statusCode) {
       return flashAndRedirect(req, res, "error", error.message, "/nalog/podesavanja");
     }

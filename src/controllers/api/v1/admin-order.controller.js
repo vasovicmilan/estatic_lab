@@ -130,9 +130,19 @@ export async function confirmTemporaryOrder(req, res, next) {
     const { orderId } = req.params;
     const order = await orderService.confirmOrderByAdmin(orderId, req.user.id);
     logInfo(`[api/admin/confirmTemporaryOrder] Privremena porudžbina #${orderId} potvrđena od strane admina`, { orderId, adminId: req.user.id });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "TEMPORARY_ORDER_CONFIRMED_BY_ADMIN",
+      entity: { type: "Order", id: order.id },
+    });
     return res.json({ success: true, data: order });
   } catch (error) {
     logError("[api/admin/confirmTemporaryOrder] Greška", error, { orderId: req.params.orderId });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req, { success: false, errorMessage: error.message }),
+      action: "TEMPORARY_ORDER_CONFIRMED_BY_ADMIN",
+      entity: { type: "Order", id: req.params.orderId },
+    });
     next(error);
   }
 }
@@ -146,9 +156,20 @@ export async function setTemporaryOrderShipping(req, res, next) {
     const shippingAmount = Number(req.body.shippingAmount);
     await tempOrderService.updateTemporaryOrderShipping(orderId, shippingAmount, req.user.id);
     logInfo(`[api/admin/setTemporaryOrderShipping] Cena dostave postavljena za #${orderId}`, { orderId, shippingAmount, adminId: req.user.id });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "TEMPORARY_ORDER_SHIPPING_SET",
+      entity: { type: "TemporaryOrder", id: orderId },
+      changes: { shippingAmount: { old: null, new: shippingAmount } },
+    });
     return res.json({ success: true, data: { message: "Cena dostave je sačuvana." } });
   } catch (error) {
     logError("[api/admin/setTemporaryOrderShipping] Greška", error, { orderId: req.params.orderId });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req, { success: false, errorMessage: error.message }),
+      action: "TEMPORARY_ORDER_SHIPPING_SET",
+      entity: { type: "TemporaryOrder", id: req.params.orderId },
+    });
     next(error);
   }
 }

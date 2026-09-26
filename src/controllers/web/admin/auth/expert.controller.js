@@ -222,12 +222,17 @@ export async function updateExpert(req, res, next) {
 export async function deleteExpert(req, res, next) {
   try {
     const { expertId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteExpertById returns.
+    const existing = await expertService.getExpertForEdit(expertId).catch(() => null);
     await expertService.deleteExpertById(expertId);
     logInfo(`[deleteExpert] Ekspert #${expertId} obrisan`, { expertId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "EXPERT_DELETED",
       entity: { type: "Expert", id: expertId },
+      changes: {
+        imePrezime: { old: existing ? `${existing.firstName || ""} ${existing.lastName || ""}`.trim() : null, new: null },
+      },
       req,
       success: true,
     });

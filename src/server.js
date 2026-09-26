@@ -10,7 +10,9 @@ import { initTelegramBot, stopTelegramBot } from "./integrations/telegram/telegr
 import { initGoogleCalendarClient } from "./integrations/google-calendar/google-calendar.provider.js";
 import { startScheduler } from "./jobs/scheduler.js";
 import { loadRuntimeSettings } from "./config/runtime-settings.cache.js";
+import { registerMongoConnectionListeners } from "./config/mongo-connection.events.js";
 import { logInfo, logError } from "./utils/logger.util.js";
+import { alertError } from "./utils/telegram-alert.util.js";
 
 const PORT = process.env.PORT || 3000;
 
@@ -36,6 +38,11 @@ async function start() {
       : undefined;
     await mongoose.connect(process.env.MONGO_URI, mongoOptions);
     logInfo("MongoDB connected");
+
+    // Wired up right after the initial connect succeeds - see mongo-connection.events.js
+    // for why a dropped/errored connection gets its own clearly-labeled Telegram alert
+    // instead of surfacing only as a wave of ordinary-looking request 500s.
+    registerMongoConnectionListeners();
 
     // Populates the in-memory booking-policy/currency cache from SiteSettings
     // before anything starts serving traffic - see runtime-settings.cache.js.
@@ -73,11 +80,24 @@ async function start() {
   }
 }
 
-process.on("unhandledRejection", (reason) => {
-  logError("Unhandled promise rejection", reason instanceof Error ? reason : new Error(String(reason)));
+// A rejected promise nobody caught is just as much an unrecoverable-state signal as
+// a thrown exception nobody caught (this is Node's own guidance, not just this app's
+// opinion - see https://nodejs.org/api/process.html#event-unhandledrejection). Before
+// this fix, an unhandled rejection only logged and the process kept running, silently
+// drifting into whatever half-broken state produced it, while the equivalent thrown
+// exception below (uncaughtException) already correctly treats that as fatal. So this
+// now mirrors uncaughtException exactly: log, page Telegram, then exit so the process
+// manager (PM2) restarts into a known-good state instead of a corrupted one.
+process.on("unhandledRejection", async (reason) => {
+  const error = reason instanceof Error ? reason : new Error(String(reason));
+  logError("Unhandled promise rejection", error);
+  // Awaited (and never allowed to throw past this handler) so the alert has a chance
+  // to actually reach Telegram before process.exit(1) tears the process down.
+  await alertError(error.message, { source: "unhandledRejection" }).catch(() => {});
+  process.exit(1);
 });
 
-process.on("uncaughtException", (error) => {  
+process.on("uncaughtException", (error) => {
   logError("Uncaught exception", error);
   process.exit(1);
 });

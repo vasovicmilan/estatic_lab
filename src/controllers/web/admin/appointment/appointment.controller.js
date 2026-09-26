@@ -283,12 +283,15 @@ export async function rescheduleAppointment(req, res, next) {
 export async function deleteAppointment(req, res, next) {
   try {
     const { appointmentId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteAppointmentById returns.
+    const existing = await appointmentService.getAppointmentById(appointmentId, req.session?.user?.id, "admin").catch(() => null);
     await appointmentService.deleteAppointmentById(appointmentId, req.session?.user?.id);
     logInfo(`[deleteAppointment] Termin #${appointmentId} obrisan`, { appointmentId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "APPOINTMENT_DELETED",
       entity: { type: "Appointment", id: appointmentId },
+      changes: { status: { old: existing?.status || null, new: null }, pocetak: { old: existing?.termin?.pocetakRaw ?? null, new: null } },
       req,
       success: true,
     });

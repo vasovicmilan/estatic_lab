@@ -114,6 +114,12 @@ export async function updateServiceSeo(req, res, next) {
   try {
     const { serviceId } = req.params;
     const service = await serviceService.updateServiceSeo(serviceId, req.body.seoKeywords);
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "SERVICE_SEO_UPDATED",
+      entity: { type: "Service", id: serviceId },
+      changes: { seoKeywords: { old: null, new: req.body.seoKeywords } },
+    });
     return res.json({ success: true, data: service });
   } catch (error) {
     logError("[api/admin/updateServiceSeo] Greška", error, { serviceId: req.params.serviceId });
@@ -124,9 +130,16 @@ export async function updateServiceSeo(req, res, next) {
 export async function deleteService(req, res, next) {
   try {
     const { serviceId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteServiceById returns.
+    const existing = await serviceService.getServiceById(serviceId).catch(() => null);
     await serviceService.deleteServiceById(serviceId);
     logInfo(`[api/admin/deleteService] Usluga #${serviceId} obrisana`, { serviceId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "SERVICE_DELETED", entity: { type: "Service", id: serviceId } });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "SERVICE_DELETED",
+      entity: { type: "Service", id: serviceId },
+      changes: { naziv: { old: existing?.naziv || null, new: null } },
+    });
     return res.json({ success: true, data: { message: "Usluga je obrisana." } });
   } catch (error) {
     logError("[api/admin/deleteService] Greška", error, { serviceId: req.params.serviceId });
@@ -211,9 +224,16 @@ export async function updatePackage(req, res, next) {
 export async function deletePackage(req, res, next) {
   try {
     const { packageId } = req.params;
+    // Snapshot before the delete - nothing left to read once deletePackageById returns.
+    const existing = await packageService.getPackageById(packageId).catch(() => null);
     await packageService.deletePackageById(packageId);
     logInfo(`[api/admin/deletePackage] Paket #${packageId} obrisan`, { packageId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "PACKAGE_DELETED", entity: { type: "Package", id: packageId } });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "PACKAGE_DELETED",
+      entity: { type: "Package", id: packageId },
+      changes: { naziv: { old: existing?.naziv || null, new: null }, cena: { old: existing?.cena || null, new: null } },
+    });
     return res.json({ success: true, data: { message: "Paket je obrisan." } });
   } catch (error) {
     logError("[api/admin/deletePackage] Greška", error, { packageId: req.params.packageId });
@@ -294,6 +314,12 @@ export async function updateProductSeo(req, res, next) {
   try {
     const { productId } = req.params;
     const product = await productService.updateProductSeo(productId, req.body.seoKeywords);
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "PRODUCT_SEO_UPDATED",
+      entity: { type: "Product", id: productId },
+      changes: { seoKeywords: { old: null, new: req.body.seoKeywords } },
+    });
     return res.json({ success: true, data: product });
   } catch (error) {
     logError("[api/admin/updateProductSeo] Greška", error, { productId: req.params.productId });
@@ -304,9 +330,16 @@ export async function updateProductSeo(req, res, next) {
 export async function deleteProduct(req, res, next) {
   try {
     const { productId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteProductById returns.
+    const existing = await productService.getProductById(productId).catch(() => null);
     await productService.deleteProductById(productId);
     logInfo(`[api/admin/deleteProduct] Proizvod #${productId} obrisan`, { productId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "PRODUCT_DELETED", entity: { type: "Product", id: productId } });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "PRODUCT_DELETED",
+      entity: { type: "Product", id: productId },
+      changes: { naziv: { old: existing?.naziv || null, new: null }, sku: { old: existing?.sku || null, new: null } },
+    });
     return res.json({ success: true, data: { message: "Proizvod je obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteProduct] Greška", error, { productId: req.params.productId });

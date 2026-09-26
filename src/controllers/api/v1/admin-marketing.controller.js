@@ -150,9 +150,16 @@ export async function updatePostSeo(req, res, next) {
 export async function deletePost(req, res, next) {
   try {
     const { postId } = req.params;
+    // Snapshot before the delete - nothing left to read once deletePostById returns.
+    const existing = await postService.getPostForEdit(postId).catch(() => null);
     await postService.deletePostById(postId);
     logInfo(`[api/admin/deletePost] Post #${postId} obrisan`, { postId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "POST_DELETED", entity: { type: "Post", id: postId } });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "POST_DELETED",
+      entity: { type: "Post", id: postId },
+      changes: { naslov: { old: existing?.naslov || existing?.title || null, new: null } },
+    });
     return res.json({ success: true, data: { message: "Post je uspešno obrisan." } });
   } catch (error) {
     logError("[api/admin/deletePost] Greška", error, { postId: req.params.postId });
@@ -280,9 +287,16 @@ export async function updateCoupon(req, res, next) {
 export async function deleteCoupon(req, res, next) {
   try {
     const { couponId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteCouponById returns.
+    const existing = await couponService.getCouponForEdit(couponId).catch(() => null);
     await couponService.deleteCouponById(couponId);
     logInfo(`[api/admin/deleteCoupon] Kupon #${couponId} obrisan`, { couponId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "COUPON_DELETED", entity: { type: "Coupon", id: couponId } });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "COUPON_DELETED",
+      entity: { type: "Coupon", id: couponId },
+      changes: { code: { old: existing?.code || null, new: null } },
+    });
     return res.json({ success: true, data: { message: "Kupon je uspešno obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteCoupon] Greška", error, { couponId: req.params.couponId });
@@ -321,11 +335,24 @@ export async function getSubscriber(req, res, next) {
 export async function deleteSubscriber(req, res, next) {
   try {
     const { subscriberId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteSubscriberById returns.
+    const existing = await newsletterService.getSubscriberById(subscriberId).catch(() => null);
     await newsletterService.deleteSubscriberById(subscriberId);
     logInfo(`[api/admin/deleteSubscriber] Pretplatnik #${subscriberId} obrisan`, { subscriberId, adminId: req.user.id });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "SUBSCRIBER_DELETED",
+      entity: { type: "NewsletterSubscriber", id: subscriberId },
+      changes: { email: { old: existing?.osnovno?.email || existing?.email || null, new: null } },
+    });
     return res.json({ success: true, data: { message: "Pretplatnik je uspešno obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteSubscriber] Greška", error, { subscriberId: req.params.subscriberId });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req, { success: false, errorMessage: error.message }),
+      action: "SUBSCRIBER_DELETED",
+      entity: { type: "NewsletterSubscriber", id: req.params.subscriberId },
+    });
     next(error);
   }
 }
@@ -409,9 +436,16 @@ export async function rejectTestimonial(req, res, next) {
 export async function deleteTestimonial(req, res, next) {
   try {
     const { testimonialId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteTestimonialById returns.
+    const existing = await testimonialService.getTestimonialById(testimonialId).catch(() => null);
     await testimonialService.deleteTestimonialById(testimonialId);
     logInfo(`[api/admin/deleteTestimonial] Testimonijal #${testimonialId} obrisan`, { testimonialId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "TESTIMONIAL_DELETED", entity: { type: "Testimonial", id: testimonialId } });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "TESTIMONIAL_DELETED",
+      entity: { type: "Testimonial", id: testimonialId },
+      changes: { ime: { old: existing?.ime || null, new: null } },
+    });
     return res.json({ success: true, data: { message: "Testimonijal je uspešno obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteTestimonial] Greška", error, { testimonialId: req.params.testimonialId });
@@ -517,9 +551,16 @@ export async function updateBusinessPartner(req, res, next) {
 export async function deleteBusinessPartner(req, res, next) {
   try {
     const { partnerId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteBusinessPartnerById returns.
+    const existing = await businessPartnerService.getBusinessPartnerForEdit(partnerId).catch(() => null);
     await businessPartnerService.deleteBusinessPartnerById(partnerId);
     logInfo(`[api/admin/deleteBusinessPartner] Saradnik #${partnerId} obrisan`, { partnerId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "BUSINESS_PARTNER_DELETED", entity: { type: "BusinessPartner", id: partnerId } });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "BUSINESS_PARTNER_DELETED",
+      entity: { type: "BusinessPartner", id: partnerId },
+      changes: { name: { old: existing?.name || null, new: null } },
+    });
     return res.json({ success: true, data: { message: "Saradnik je uspešno obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteBusinessPartner] Greška", error, { partnerId: req.params.partnerId });
@@ -664,9 +705,16 @@ export async function sendCampaignNow(req, res, next) {
 export async function deleteCampaign(req, res, next) {
   try {
     const { campaignId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteCampaignById returns.
+    const existing = await campaignService.getCampaignForEdit(campaignId).catch(() => null);
     await campaignService.deleteCampaignById(campaignId);
     logInfo(`[api/admin/deleteCampaign] Kampanja #${campaignId} obrisana`, { campaignId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "CAMPAIGN_DELETED", entity: { type: "Campaign", id: campaignId } });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "CAMPAIGN_DELETED",
+      entity: { type: "Campaign", id: campaignId },
+      changes: { naslov: { old: existing?.naslov || existing?.title || null, new: null } },
+    });
     return res.json({ success: true, data: { message: "Kampanja je uspešno obrisana." } });
   } catch (error) {
     logError("[api/admin/deleteCampaign] Greška", error, { campaignId: req.params.campaignId });

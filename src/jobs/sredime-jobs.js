@@ -1,5 +1,7 @@
 import employeeService from "../services/employee.service.js";
 import externalBusyIntervalService from "../services/external-busy-interval.service.js";
+import auditLogService from "../services/audit-log.service.js";
+import { buildSystemActor } from "../utils/audit-actor.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 import { alertError } from "../utils/telegram-alert.util.js";
 
@@ -32,6 +34,18 @@ export async function runSredimeSync() {
         const { synced, removed } = await externalBusyIntervalService.syncEmployeeFromIcs(employee);
         totalSynced += synced;
         totalRemoved += removed;
+        // This actually writes/removes busy-interval records that block booking
+        // slots for this employee, so it's a real data mutation worth tracing -
+        // one entry per employee (not one aggregate for the whole run) since
+        // each sync is genuinely about that one employee's calendar.
+        if (synced > 0 || removed > 0) {
+          await auditLogService.recordAuditLog({
+            ...buildSystemActor(),
+            action: "EMPLOYEE_SREDIME_CALENDAR_SYNCED",
+            entity: { type: "Employee", id: employee._id.toString() },
+            changes: { synced: { old: null, new: synced }, removed: { old: null, new: removed } },
+          });
+        }
       } catch (error) {
         // One employee's feed being unreachable (bad URL, SrediMe hiccup) should
         // never stop the rest of the batch from syncing - logged and alerted

@@ -125,12 +125,15 @@ export async function rejectTestimonial(req, res, next) {
 export async function deleteTestimonial(req, res, next) {
   try {
     const { testimonialId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteTestimonialById returns.
+    const existing = await testimonialService.getTestimonialById(testimonialId).catch(() => null);
     await testimonialService.deleteTestimonialById(testimonialId);
     logInfo(`[deleteTestimonial] Testimonijal #${testimonialId} obrisan`, { testimonialId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "TESTIMONIAL_DELETED",
       entity: { type: "Testimonial", id: testimonialId },
+      changes: { ime: { old: existing?.ime || null, new: null } },
       req,
       success: true,
     });

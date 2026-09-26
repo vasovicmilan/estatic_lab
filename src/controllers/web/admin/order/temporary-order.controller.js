@@ -6,6 +6,7 @@ import {
 } from "../../../../presenters/admin/order/temporary-order.presenter.js";
 import { logError, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 
 export async function listTemporaryOrders(req, res, next) {
   try {
@@ -52,10 +53,25 @@ export async function confirmTemporaryOrderByAdmin(req, res, next) {
     const { orderId } = req.params;
     const order = await orderService.confirmOrderByAdmin(orderId, req.session?.user?.id);
     logInfo(`[confirmTemporaryOrderByAdmin] Privremena porudžbina #${orderId} potvrđena od strane admina`, { orderId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "TEMPORARY_ORDER_CONFIRMED_BY_ADMIN",
+      entity: { type: "Order", id: order.id },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Porudžbina je potvrđena", `/admin/porudzbine/detalji/${order.id}`);
   } catch (error) {
     logError("[confirmTemporaryOrderByAdmin] Greška pri potvrđivanju porudžbine od strane admina", error, { orderId: req.params.orderId, userId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "TEMPORARY_ORDER_CONFIRMED_BY_ADMIN",
+      entity: { type: "Order", id: req.params.orderId },
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
     if (error.statusCode) {
       return flashAndRedirect(req, res, "error", error.message, `/admin/privremene-porudzbine/detalji/${req.params.orderId}`);
     }
@@ -72,10 +88,26 @@ export async function setTemporaryOrderShipping(req, res, next) {
     const shippingAmount = Number(req.body.shippingAmount);
     await tempOrderService.updateTemporaryOrderShipping(orderId, shippingAmount, req.session?.user?.id);
     logInfo(`[setTemporaryOrderShipping] Cena dostave postavljena za privremenu porudžbinu #${orderId}`, { orderId, shippingAmount, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "TEMPORARY_ORDER_SHIPPING_SET",
+      entity: { type: "TemporaryOrder", id: orderId },
+      changes: { shippingAmount: { old: null, new: shippingAmount } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Cena dostave je sačuvana", `/admin/privremene-porudzbine/detalji/${orderId}`);
   } catch (error) {
     logError("[setTemporaryOrderShipping] Greška pri postavljanju cene dostave", error, { orderId: req.params.orderId, userId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "TEMPORARY_ORDER_SHIPPING_SET",
+      entity: { type: "TemporaryOrder", id: req.params.orderId },
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
     if (error.statusCode) {
       return flashAndRedirect(req, res, "error", error.message, `/admin/privremene-porudzbine/detalji/${req.params.orderId}`);
     }

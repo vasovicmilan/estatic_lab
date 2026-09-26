@@ -337,9 +337,18 @@ export async function updateExpert(req, res, next) {
 export async function deleteExpert(req, res, next) {
   try {
     const { expertId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteExpertById returns.
+    const existing = await expertService.getExpertForEdit(expertId).catch(() => null);
     await expertService.deleteExpertById(expertId);
     logInfo(`[api/admin/deleteExpert] Ekspert #${expertId} obrisan`, { expertId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "EXPERT_DELETED", entity: { type: "Expert", id: expertId } });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "EXPERT_DELETED",
+      entity: { type: "Expert", id: expertId },
+      changes: {
+        imePrezime: { old: existing ? `${existing.firstName || ""} ${existing.lastName || ""}`.trim() : null, new: null },
+      },
+    });
     return res.json({ success: true, data: { message: "Ekspert je obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteExpert] Greška", error, { expertId: req.params.expertId });
@@ -415,9 +424,16 @@ export async function updatePartner(req, res, next) {
 export async function deletePartner(req, res, next) {
   try {
     const { partnerId } = req.params;
+    // Snapshot before the delete - nothing left to read once deletePartnerById returns.
+    const existing = await partnerService.getPartnerForEdit(partnerId).catch(() => null);
     await partnerService.deletePartnerById(partnerId);
     logInfo(`[api/admin/deletePartner] Partner #${partnerId} obrisan`, { partnerId, adminId: req.user.id });
-    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "PARTNER_DELETED", entity: { type: "Partner", id: partnerId } });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "PARTNER_DELETED",
+      entity: { type: "Partner", id: partnerId },
+      changes: { imePrezime: { old: existing?.imePrezime || null, new: null } },
+    });
     return res.json({ success: true, data: { message: "Partner je obrisan." } });
   } catch (error) {
     logError("[api/admin/deletePartner] Greška", error, { partnerId: req.params.partnerId });

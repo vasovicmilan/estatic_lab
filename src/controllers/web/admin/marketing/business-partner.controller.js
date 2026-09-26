@@ -205,12 +205,15 @@ export async function updateBusinessPartner(req, res, next) {
 export async function deleteBusinessPartner(req, res, next) {
   try {
     const { partnerId } = req.params;
+    // Snapshot before the delete - nothing left to read once deleteBusinessPartnerById returns.
+    const existing = await businessPartnerService.getBusinessPartnerForEdit(partnerId).catch(() => null);
     await businessPartnerService.deleteBusinessPartnerById(partnerId);
     logInfo(`[deleteBusinessPartner] Saradnik #${partnerId} obrisan`, { partnerId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "BUSINESS_PARTNER_DELETED",
       entity: { type: "BusinessPartner", id: partnerId },
+      changes: { name: { old: existing?.name || null, new: null } },
       req,
       success: true,
     });

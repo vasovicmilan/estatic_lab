@@ -2,11 +2,18 @@ import { Schema, model } from "mongoose";
 
 const AuditLogSchema = new Schema(
   {
+    // Retention: 2 years (730 days). MongoDB's TTL monitor deletes documents
+    // once `timestamp` is older than `expireAfterSeconds`, on its own background
+    // sweep - no cron job needed to purge old entries, and no separate
+    // `expiresAt` field to keep in sync, since `timestamp` (the actual audit
+    // moment) already IS the field every entry needs expiry measured from.
+    // NOTE: `index: true` further down would create a second, plain index on
+    // this same field - the TTL index below is the only index this field
+    // needs, so it stays off here.
     timestamp: {
       type: Date,
       default: Date.now,
       required: true,
-      index: true,
     },
 
     actor: {
@@ -61,5 +68,12 @@ const AuditLogSchema = new Schema(
 AuditLogSchema.index({ "entity.type": 1, "entity.id": 1, timestamp: -1 });
 // "show me everything this person did, most recent first"
 AuditLogSchema.index({ "actor.id": 1, timestamp: -1 });
+
+// TTL index, 2-year retention: MongoDB's background TTL monitor drops a
+// document once its `timestamp` is more than `expireAfterSeconds` in the past,
+// automatically, without any cron/job code having to purge old entries itself.
+// 730 days * 86400 seconds/day = 63072000.
+const AUDIT_LOG_RETENTION_SECONDS = 730 * 24 * 60 * 60;
+AuditLogSchema.index({ timestamp: 1 }, { expireAfterSeconds: AUDIT_LOG_RETENTION_SECONDS });
 
 export default model("AuditLog", AuditLogSchema);

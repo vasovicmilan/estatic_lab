@@ -1,6 +1,8 @@
 import logReportService from "../services/log-report.service.js";
 import emailService from "../services/email.service.js";
 import tempOrderService from "../services/temporary-order.service.js";
+import auditLogService from "../services/audit-log.service.js";
+import { buildSystemActor } from "../utils/audit-actor.util.js";
 import { getRawLogTextForDate } from "../utils/log-analysis.util.js";
 import { formatDate, toDateKey } from "../utils/date.time.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
@@ -78,6 +80,17 @@ export async function runExpiredTemporaryOrderCleanup() {
     const result = await tempOrderService.cleanupExpiredTemporaryOrders();
     if (result.total > 0) {
       logInfo(`[cron] Cleaned up ${result.cleaned}/${result.total} expired temporary orders`);
+      // Genuinely data-mutating (releases reserved stock and deletes the
+      // temporary order records - see cleanupExpiredTemporaryOrders), unlike
+      // the log-report jobs above this one which only read and email a
+      // summary. One aggregate entry per run, not one per order - same
+      // reasoning as commission-jobs.js's grace-period sweep.
+      await auditLogService.recordAuditLog({
+        ...buildSystemActor(),
+        action: "TEMPORARY_ORDERS_EXPIRED_CLEANED_UP",
+        entity: { type: "TemporaryOrder", id: null },
+        changes: { cleaned: { old: null, new: result.cleaned }, total: { old: null, new: result.total } },
+      });
     }
   });
 }

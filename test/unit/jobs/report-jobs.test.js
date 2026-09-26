@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import logReportService from "../../../src/services/log-report.service.js";
 import emailService from "../../../src/services/email.service.js";
 import tempOrderService from "../../../src/services/temporary-order.service.js";
+import auditLogService from "../../../src/services/audit-log.service.js";
 import {
   runDailyLogReport,
   runWeeklyLogReport,
@@ -104,10 +105,34 @@ describe("report-jobs", () => {
   describe("runExpiredTemporaryOrderCleanup", () => {
     it("delegates to cleanupExpiredTemporaryOrders", async (t) => {
       const cleanupMock = t.mock.method(tempOrderService, "cleanupExpiredTemporaryOrders", async () => ({ total: 3, cleaned: 3 }));
+      t.mock.method(auditLogService, "recordAuditLog", async () => {});
 
       await runExpiredTemporaryOrderCleanup();
 
       assert.equal(cleanupMock.mock.calls.length, 1);
+    });
+
+    it("records one TEMPORARY_ORDERS_EXPIRED_CLEANED_UP audit entry with a system actor when anything was cleaned", async (t) => {
+      t.mock.method(tempOrderService, "cleanupExpiredTemporaryOrders", async () => ({ total: 3, cleaned: 2 }));
+      const auditMock = t.mock.method(auditLogService, "recordAuditLog", async () => {});
+
+      await runExpiredTemporaryOrderCleanup();
+
+      assert.equal(auditMock.mock.calls.length, 1);
+      const call = auditMock.mock.calls[0].arguments[0];
+      assert.equal(call.action, "TEMPORARY_ORDERS_EXPIRED_CLEANED_UP");
+      assert.equal(call.actor.role, "system");
+      assert.equal(call.actor.id, null);
+      assert.deepEqual(call.changes, { cleaned: { old: null, new: 2 }, total: { old: null, new: 3 } });
+    });
+
+    it("does not record an audit entry when nothing was due for cleanup", async (t) => {
+      t.mock.method(tempOrderService, "cleanupExpiredTemporaryOrders", async () => ({ total: 0, cleaned: 0 }));
+      const auditMock = t.mock.method(auditLogService, "recordAuditLog", async () => {});
+
+      await runExpiredTemporaryOrderCleanup();
+
+      assert.equal(auditMock.mock.calls.length, 0);
     });
 
     it("REGRESSION: never throws, even if cleanup itself fails", async (t) => {
