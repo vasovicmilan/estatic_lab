@@ -27,11 +27,17 @@ export async function runSendScheduledCampaigns() {
     let sent = 0;
     for (const campaign of dueCampaigns) {
       try {
-        // goes through campaignService.sendCampaignNow (not a bulk update) so a
-        // scheduled campaign sends through the exact same path - subscriber
-        // resolution, email.service.js call, sentCount/failedCount recording -
-        // as the admin's manual "Pošalji odmah" button
-        const result = await campaignService.sendCampaignNow(campaign._id.toString());
+        // goes through campaignService.sendScheduledCampaign, which atomically
+        // claims the campaign (status "scheduled" -> "sending") before sending -
+        // this is what makes a tick whose send overlaps the next one safe: the
+        // next tick's findDueScheduledCampaigns can still return this same
+        // campaign (its status hasn't changed from the DB's point of view until
+        // one claim wins), but only one of the two ticks' claims actually
+        // matches, so it only ever really sends once. A null result means this
+        // exact race happened and another run already has (or already finished)
+        // this campaign - skip it, don't count it, and don't re-send.
+        const result = await campaignService.sendScheduledCampaign(campaign._id.toString());
+        if (!result) continue;
         sent += 1;
         // Same CAMPAIGN_SENT action the admin's manual "Pošalji odmah" button
         // records (campaign.controller.js) - this job takes the exact same

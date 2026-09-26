@@ -1,7 +1,7 @@
 import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
 import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
-import { isJsonArrayOrArray, isArrayOrString, slugField, booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
+import { isJsonArrayOrArray, isArrayOrString, slugField, booleanishField, mongoIdParamValidator, isSafeContentUrl } from "./helpers/common.validator.js";
 
 // Phase 1 - core info + image. No `packages` rule here anymore: that's phase 2's job.
 export const validateServiceStep1 = [
@@ -71,6 +71,10 @@ export const validateServiceExtrasStep = [
     .optional()
     .custom(isArrayOrString).withMessage("Neispravni povezani proizvodi"),
 
+  body("equipmentNoteButtonUrl")
+    .optional({ values: "falsy" })
+    .custom(isSafeContentUrl).withMessage("Link mora koristiti dozvoljenu šemu (http, https, mailto, tel ili relativnu putanju)"),
+
   booleanishField("highlight", true),
 
   // default true when the field is present-but-empty-ish is handled in the controller
@@ -113,6 +117,10 @@ export const validateServiceUpdate = [
   body("relatedProducts")
     .optional()
     .custom(isArrayOrString).withMessage("Neispravni povezani proizvodi"),
+
+  body("equipmentNoteButtonUrl")
+    .optional({ values: "falsy" })
+    .custom(isSafeContentUrl).withMessage("Link mora koristiti dozvoljenu šemu (http, https, mailto, tel ili relativnu putanju)"),
 
   booleanishField("highlight", true),
 

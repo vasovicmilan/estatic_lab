@@ -2,7 +2,14 @@ import { Schema, model } from "mongoose";
 import ContentBlogSchema from "./schemas/content.blog.schema.js";
 import { NEWSLETTER_INTERESTS } from "./news-letter.model.js";
 
-export const CAMPAIGN_STATUSES = ["draft", "scheduled", "sent"];
+// "sending" and "failed" exist only for the scheduled cron sweep's atomic claim
+// (see campaign.repository.js's claimDueCampaignForSending / markCampaignSendFailed
+// and campaign.service.js's sendScheduledCampaign) - a campaign never sits in
+// "sending" for a human to pick, it's the brief in-flight state between a tick
+// claiming it and the send actually completing, and "failed" is where a claimed
+// send that threw ends up so a later tick's findDueScheduledCampaigns (which only
+// matches "scheduled") never silently retries it forever.
+export const CAMPAIGN_STATUSES = ["draft", "scheduled", "sending", "sent", "failed"];
 
 // Which block types are safe to render in an email client - a deliberately
 // smaller list than BLOG_BLOCK_TYPES (post/product content). gallery/video/table/

@@ -19,15 +19,39 @@ export async function hasOverlappingExternalInterval(employeeId, startTime, endT
   return externalBusyIntervalRepo.existsOverlapping(employeeId, "sredime", startTime, endTime);
 }
 
+// node-ical's async.fromURL spreads its options object straight into the
+// fetch() call it makes internally (see node_modules/node-ical/lib/core-api.js),
+// so a standard AbortSignal is how a caller applies a timeout to it - there's
+// no separate library-level timeout option to reach for. Without this, one
+// employee's slow/unresponsive SrediMe feed would hang the fetch's underlying
+// TCP connection indefinitely (a hang, not a rejection - try/catch around the
+// call can't do anything about it, only a signal that actually aborts the
+// in-flight request can), and since jobs/sredime-jobs.js runs this cron tick
+// every 15 minutes, a single bad feed left unbounded could block that whole
+// tick, not just that one employee's sync.
+const ICS_FETCH_TIMEOUT_MS = 15_000;
+
 // Fetches + parses one employee's SrediMe ICS feed and reconciles it against
 // what's already cached for them. Called by jobs/sredime-jobs.js on a cron
 // schedule - never in the request path, so a slow or failing feed here can
-// never block a customer looking at the booking page.
+// never block a customer looking at the booking page. jobs/sredime-jobs.js's
+// runSredimeSync already isolates each employee's call in its own try/catch, so
+// a timeout here surfaces as an ordinary per-employee failure (logged +
+// alerted, loop continues) rather than anything special-cased in this
+// function - the timeout's whole job is making sure the *hang* itself can't
+// happen, not handling the resulting error.
 export async function syncEmployeeFromIcs(employee) {
   if (!employee?.sredimeIcsUrl) return { synced: 0, removed: 0 };
 
   const employeeId = employee._id;
-  const parsed = await ical.async.fromURL(employee.sredimeIcsUrl);
+  const abortController = new AbortController();
+  const timeoutHandle = setTimeout(() => abortController.abort(), ICS_FETCH_TIMEOUT_MS);
+  let parsed;
+  try {
+    parsed = await ical.async.fromURL(employee.sredimeIcsUrl, { signal: abortController.signal });
+  } finally {
+    clearTimeout(timeoutHandle);
+  }
 
   const now = new Date();
   const currentUids = [];

@@ -1,7 +1,7 @@
 import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
 import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
-import { isJsonArrayOrArray, slugField, booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
+import { isJsonArrayOrArray, slugField, booleanishField, mongoIdParamValidator, contentBlocksHaveSafeUrls } from "./helpers/common.validator.js";
 
 export const validateBusinessPartnerCreate = [
   body("name")
@@ -18,7 +18,8 @@ export const validateBusinessPartnerCreate = [
 
   body("content")
     .optional()
-    .custom(isJsonArrayOrArray).withMessage("Sadržaj nije u ispravnom formatu"),
+    .custom(isJsonArrayOrArray).withMessage("Sadržaj nije u ispravnom formatu")
+    .custom(contentBlocksHaveSafeUrls).withMessage("Link u sadržaju mora koristiti dozvoljenu šemu (http, https, mailto, tel ili relativnu putanju)"),
 
   body("outboundUrl")
     .trim()
@@ -66,7 +67,8 @@ export const validateBusinessPartnerUpdate = [
 
   body("content")
     .optional()
-    .custom(isJsonArrayOrArray).withMessage("Sadržaj nije u ispravnom formatu"),
+    .custom(isJsonArrayOrArray).withMessage("Sadržaj nije u ispravnom formatu")
+    .custom(contentBlocksHaveSafeUrls).withMessage("Link u sadržaju mora koristiti dozvoljenu šemu (http, https, mailto, tel ili relativnu putanju)"),
 
   body("outboundUrl")
     .optional()

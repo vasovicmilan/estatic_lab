@@ -116,6 +116,19 @@ describe("service.validator", () => {
       const res = await agent.post("/test").send({ isActive: "0" });
       assert.equal(res.status, 200);
     });
+
+    it("rejects a javascript: URL for the equipment note button", async () => {
+      const agent = buildValidatorHarness(validateServiceExtrasStep);
+      const res = await agent.post("/test").send({ equipmentNoteButtonUrl: "javascript:alert(1)" });
+      assert.equal(res.status, 400);
+      assert.ok(res.body.errors.equipmentNoteButtonUrl);
+    });
+
+    it("accepts a safe equipment note button URL", async () => {
+      const agent = buildValidatorHarness(validateServiceExtrasStep);
+      const res = await agent.post("/test").send({ equipmentNoteButtonUrl: "/prodavnica" });
+      assert.equal(res.status, 200);
+    });
   });
 
   describe("validateServiceUpdate", () => {
@@ -129,6 +142,13 @@ describe("service.validator", () => {
       const agent = buildValidatorHarness(validateServiceUpdate);
       const res = await agent.post("/test").send({ slug: "Not Valid" });
       assert.equal(res.status, 400);
+    });
+
+    it("rejects a javascript: URL for the equipment note button", async () => {
+      const agent = buildValidatorHarness(validateServiceUpdate);
+      const res = await agent.post("/test").send({ equipmentNoteButtonUrl: "javascript:alert(1)" });
+      assert.equal(res.status, 400);
+      assert.ok(res.body.errors.equipmentNoteButtonUrl);
     });
   });
 

@@ -1,6 +1,6 @@
 import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
-import { isJsonArrayOrArray, isArrayOrString, mongoIdParamValidator } from "./helpers/common.validator.js";
+import { isJsonArrayOrArray, isArrayOrString, mongoIdParamValidator, contentBlocksHaveSafeUrls } from "./helpers/common.validator.js";
 // scheduledFor arrives as a naive "YYYY-MM-DDTHH:mm" datetime-local string with
 // no timezone info - see post.validator.js's identical comment for why the
 // "must be in the future" check needs zonedInputToUtcDate rather than a plain
@@ -22,7 +22,8 @@ export const validateCampaignCreate = [
 
   body("content")
     .optional()
-    .custom(isJsonArrayOrArray).withMessage("Sadržaj nije u ispravnom formatu"),
+    .custom(isJsonArrayOrArray).withMessage("Sadržaj nije u ispravnom formatu")
+    .custom(contentBlocksHaveSafeUrls).withMessage("Link u sadržaju mora koristiti dozvoljenu šemu (http, https, mailto, tel ili relativnu putanju)"),
 
   body("targetInterests")
     .optional()
@@ -66,7 +67,8 @@ export const validateCampaignUpdate = [
 
   body("content")
     .optional()
-    .custom(isJsonArrayOrArray).withMessage("Sadržaj nije u ispravnom formatu"),
+    .custom(isJsonArrayOrArray).withMessage("Sadržaj nije u ispravnom formatu")
+    .custom(contentBlocksHaveSafeUrls).withMessage("Link u sadržaju mora koristiti dozvoljenu šemu (http, https, mailto, tel ili relativnu putanju)"),
 
   body("targetInterests")
     .optional()

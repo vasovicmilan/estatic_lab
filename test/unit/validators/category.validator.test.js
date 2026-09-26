@@ -83,6 +83,21 @@ describe("category.validator", () => {
       assert.equal(res.status, 400);
       assert.ok(res.body.errors.priority);
     });
+
+    it("rejects a javascript: URL in a content block's button", async () => {
+      const agent = buildValidatorHarness(validateCategoryCreate);
+      const content = JSON.stringify([{ type: "cta", button: { text: "Klikni", url: "javascript:alert(1)" } }]);
+      const res = await agent.post("/test").send(validCategory({ content }));
+      assert.equal(res.status, 400);
+      assert.ok(res.body.errors.content);
+    });
+
+    it("accepts a safe URL in a content block's button", async () => {
+      const agent = buildValidatorHarness(validateCategoryCreate);
+      const content = JSON.stringify([{ type: "cta", button: { text: "Klikni", url: "/prodavnica" } }]);
+      const res = await agent.post("/test").send(validCategory({ content }));
+      assert.equal(res.status, 200);
+    });
   });
 
   describe("validateCategoryUpdate", () => {

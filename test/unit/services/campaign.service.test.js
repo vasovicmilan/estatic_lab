@@ -142,4 +142,72 @@ describe("campaign.service", () => {
       assert.equal(campaign.status, "sent");
     });
   });
+
+  describe("sendScheduledCampaign - used only by jobs/campaign-jobs.js's cron sweep", () => {
+    it("REGRESSION: a null claim (already picked up by another/overlapping tick) is skipped without sending anything", async (t) => {
+      const claimMock = t.mock.method(campaignRepo, "claimDueCampaignForSending", async () => null);
+      const sendMock = t.mock.method(emailService, "sendNewsletterCampaign", async () => {
+        throw new Error("should never be called - nothing was actually claimed");
+      });
+
+      const result = await campaignService.sendScheduledCampaign(id().toString());
+
+      assert.equal(result, null);
+      assert.equal(claimMock.mock.calls.length, 1);
+      assert.equal(sendMock.mock.calls.length, 0);
+    });
+
+    it("REGRESSION: of two overlapping cron ticks racing to send the same due campaign, only one actually sends - the same 'atomic claim, null means someone else has it' guard as payout-request.repository.js's updatePayoutRequestStatusAtomic", async (t) => {
+      // Simulates the exact race the atomic claim exists for: two ticks both
+      // read the same "scheduled" campaign via findDueScheduledCampaigns
+      // before either one's claim has flipped its status, then both try to
+      // claim it. In real Mongo, only one findOneAndUpdate's filter (status
+      // still "scheduled") matches; the other finds it already flipped to
+      // "sending" and gets null. This fake repo reproduces that with a shared
+      // "already claimed" flag the first call to actually match sets.
+      const campaign = buildCampaign({ status: "scheduled", targetInterests: [] });
+      t.mock.method(campaign, "save", async () => campaign);
+      let alreadyClaimed = false;
+      let claimCount = 0;
+
+      t.mock.method(campaignRepo, "claimDueCampaignForSending", async () => {
+        if (alreadyClaimed) return null; // the loser: filter no longer matches
+        alreadyClaimed = true; // the winner flips status - simulates Mongo's write serialization
+        claimCount += 1;
+        campaign.status = "sending";
+        return campaign;
+      });
+      t.mock.method(campaignRepo, "findCampaignById", async () => campaign);
+      t.mock.method(newsLetterRepo, "findAllActiveSubscribers", async () => [buildSubscriber()]);
+      const sendMock = t.mock.method(emailService, "sendNewsletterCampaign", async (subscribers) =>
+        subscribers.map((s) => ({ email: s.email, sent: true }))
+      );
+
+      const results = await Promise.allSettled([
+        campaignService.sendScheduledCampaign(campaign._id.toString()),
+        campaignService.sendScheduledCampaign(campaign._id.toString()),
+      ]);
+
+      assert.equal(results.every((r) => r.status === "fulfilled"), true, "the skipped run resolves to null, it never rejects");
+      const sentResults = results.filter((r) => r.value !== null);
+      assert.equal(sentResults.length, 1, "exactly one of the two concurrent ticks must actually send");
+      assert.equal(claimCount, 1, "the underlying atomic claim must only actually flip the status once");
+      assert.equal(sendMock.mock.calls.length, 1, "the email provider must only actually be invoked once - no duplicate newsletter");
+      assert.equal(campaign.status, "sent");
+    });
+
+    it("REGRESSION: when the send itself throws after being claimed, the campaign is moved to 'failed' (not left stuck in 'sending', and not silently left 'scheduled' for the next tick to retry)", async (t) => {
+      const campaign = buildCampaign({ status: "scheduled", targetInterests: [] });
+      t.mock.method(campaignRepo, "claimDueCampaignForSending", async () => campaign);
+      t.mock.method(newsLetterRepo, "findAllActiveSubscribers", async () => {
+        throw new Error("mail provider unreachable");
+      });
+      const failMock = t.mock.method(campaignRepo, "markCampaignSendFailed", async () => ({ ...campaign, status: "failed" }));
+
+      await assert.rejects(() => campaignService.sendScheduledCampaign(campaign._id.toString()), /mail provider unreachable/);
+
+      assert.equal(failMock.mock.calls.length, 1);
+      assert.equal(failMock.mock.calls[0].arguments[0], campaign._id.toString());
+    });
+  });
 });

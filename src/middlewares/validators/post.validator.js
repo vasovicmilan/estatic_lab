@@ -1,7 +1,7 @@
 import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
 import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
-import { isJsonArrayOrArray, isArrayOrString, slugField, booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
+import { isJsonArrayOrArray, isArrayOrString, slugField, booleanishField, mongoIdParamValidator, contentBlocksHaveSafeUrls } from "./helpers/common.validator.js";
 // scheduledFor arrives as a naive "YYYY-MM-DDTHH:mm" datetime-local string with
 // no timezone info - comparing it via plain `new Date(value)` is ambiguous (it's
 // parsed using the server process's own local time, not necessarily Belgrade),
@@ -24,7 +24,8 @@ export const validatePostCreate = [
 
   body("content")
     .optional()
-    .custom(isJsonArrayOrArray).withMessage("Sadržaj nije u ispravnom formatu"),
+    .custom(isJsonArrayOrArray).withMessage("Sadržaj nije u ispravnom formatu")
+    .custom(contentBlocksHaveSafeUrls).withMessage("Link u sadržaju mora koristiti dozvoljenu šemu (http, https, mailto, tel ili relativnu putanju)"),
 
   body("categories")
     .optional()
@@ -84,7 +85,8 @@ export const validatePostUpdate = [
 
   body("content")
     .optional()
-    .custom(isJsonArrayOrArray).withMessage("Sadržaj nije u ispravnom formatu"),
+    .custom(isJsonArrayOrArray).withMessage("Sadržaj nije u ispravnom formatu")
+    .custom(contentBlocksHaveSafeUrls).withMessage("Link u sadržaju mora koristiti dozvoljenu šemu (http, https, mailto, tel ili relativnu putanju)"),
 
   body("status")
     .optional()

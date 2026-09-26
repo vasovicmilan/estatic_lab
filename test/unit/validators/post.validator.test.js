@@ -58,6 +58,21 @@ describe("post.validator", () => {
       assert.equal(res.status, 200);
     });
 
+    it("rejects a javascript: URL in a content block's button", async () => {
+      const agent = buildValidatorHarness(validatePostCreate);
+      const content = JSON.stringify([{ type: "cta", button: { text: "Klikni", url: "javascript:alert(1)" } }]);
+      const res = await agent.post("/test").send(validPost({ content }));
+      assert.equal(res.status, 400);
+      assert.ok(res.body.errors.content);
+    });
+
+    it("accepts an http(s)/relative URL in a content block's button", async () => {
+      const agent = buildValidatorHarness(validatePostCreate);
+      const content = JSON.stringify([{ type: "cta", button: { text: "Klikni", url: "https://example.com" } }]);
+      const res = await agent.post("/test").send(validPost({ content }));
+      assert.equal(res.status, 200);
+    });
+
     it("rejects a non-mongo-id author", async () => {
       const agent = buildValidatorHarness(validatePostCreate);
       const res = await agent.post("/test").send(validPost({ author: "not-an-id" }));
@@ -78,6 +93,14 @@ describe("post.validator", () => {
       const agent = buildValidatorHarness(validatePostUpdate);
       const res = await agent.post("/test").send({});
       assert.equal(res.status, 200);
+    });
+
+    it("rejects a javascript: URL in a content block's button", async () => {
+      const agent = buildValidatorHarness(validatePostUpdate);
+      const content = JSON.stringify([{ type: "productReference", button: { text: "Kupi", url: "javascript:alert(document.cookie)" } }]);
+      const res = await agent.post("/test").send({ content });
+      assert.equal(res.status, 400);
+      assert.ok(res.body.errors.content);
     });
   });
 

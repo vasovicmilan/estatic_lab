@@ -32,9 +32,14 @@ export async function getCampaignForEdit(campaignId) {
 
 // A sent campaign is a historical record of what actually went out - editing it
 // after the fact would make that record lie, and "content, subject, and who
-// received it" already can't be un-sent anyway.
+// received it" already can't be un-sent anyway. "sending" is blocked too - it's
+// the brief in-flight state between the cron sweep's atomic claim (see
+// campaign.repository.js's claimDueCampaignForSending) and the send actually
+// completing, and editing content out from under a send already in progress
+// would be at least as confusing as editing a sent one.
 function assertNotSent(campaign) {
   if (campaign.status === "sent") badRequest("Poslata kampanja se ne može menjati");
+  if (campaign.status === "sending") badRequest("Kampanja se trenutno šalje i ne može se menjati");
 }
 
 export async function createCampaign(data) {
@@ -88,15 +93,12 @@ export async function deleteCampaignById(campaignId) {
   return { success: true };
 }
 
-// Shared by the "Pošalji sada" admin action and jobs/campaign-jobs.js's
-// scheduled sweep - both just need "render, resolve recipients, send, record
-// the outcome" with no other difference between them.
-export async function sendCampaignNow(campaignId) {
-  if (!campaignId) validationError("campaignId");
-  const campaign = await campaignRepo.findCampaignDocById(campaignId);
-  if (!campaign) notFound("Kampanja");
-  if (campaign.status === "sent") badRequest("Kampanja je već poslata");
-
+// The actual "render, resolve recipients, send, record the outcome" work,
+// shared by the "Pošalji sada" admin path and the scheduled cron sweep below -
+// takes the live Mongoose doc (already fetched/claimed by the caller) so it can
+// just mutate + .save() it, with no re-fetch or status check of its own.
+async function performSend(campaign) {
+  const campaignId = campaign._id.toString();
   const subscribers = campaign.targetInterests.length
     ? await newsLetterRepo.findActiveSubscribersByInterests(campaign.targetInterests)
     : await newsLetterRepo.findAllActiveSubscribers();
@@ -126,6 +128,50 @@ export async function sendCampaignNow(campaignId) {
   return getCampaignById(campaignId);
 }
 
+// Used by the "Pošalji sada" admin action only - a human clicking a button on
+// one specific campaign they're looking at right now, so there's no
+// overlapping-cron-tick race to guard against here (see sendScheduledCampaign
+// below for that).
+export async function sendCampaignNow(campaignId) {
+  if (!campaignId) validationError("campaignId");
+  const campaign = await campaignRepo.findCampaignDocById(campaignId);
+  if (!campaign) notFound("Kampanja");
+  if (campaign.status === "sent") badRequest("Kampanja je već poslata");
+  if (campaign.status === "sending") badRequest("Kampanja se trenutno šalje");
+
+  return performSend(campaign);
+}
+
+// Used by jobs/campaign-jobs.js's scheduled sweep. Unlike sendCampaignNow, this
+// first does an ATOMIC claim (status "scheduled" -> "sending", only if still
+// due) via campaignRepo.claimDueCampaignForSending - this is what actually
+// closes the race: if a previous tick's sweep is still mid-send on this exact
+// campaign when this tick's findDueScheduledCampaigns also picked it up (still
+// "scheduled" in the DB at read time), only one of the two ticks' claims can
+// match, so only one ever reaches performSend. A null claim means "some other
+// tick already has (or is already through with) this one" and the caller must
+// skip it, never re-send it. If the send itself throws after being claimed
+// (e.g. the mail provider is down), the campaign is moved to "failed" rather
+// than left stuck in "sending" - "failed" isn't picked up by
+// findDueScheduledCampaigns, so a bad send is surfaced to an admin instead of
+// being silently retried (and re-sent to whoever it already partially reached)
+// forever.
+export async function sendScheduledCampaign(campaignId) {
+  if (!campaignId) validationError("campaignId");
+  const claimed = await campaignRepo.claimDueCampaignForSending(campaignId);
+  if (!claimed) {
+    logInfo("[campaign] Skipping campaign already claimed by another run", { campaignId: campaignId.toString() });
+    return null;
+  }
+
+  try {
+    return await performSend(claimed);
+  } catch (error) {
+    await campaignRepo.markCampaignSendFailed(campaignId);
+    throw error;
+  }
+}
+
 export default {
   listCampaigns,
   getCampaignById,
@@ -134,4 +180,5 @@ export default {
   updateCampaignById,
   deleteCampaignById,
   sendCampaignNow,
+  sendScheduledCampaign,
 };

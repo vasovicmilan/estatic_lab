@@ -2,7 +2,7 @@ import { body } from "express-validator";
 import { CATEGORY_DOMAINS } from "../../models/category.model.js";
 import { collectValidationErrors } from "./collect-validation-errors.js";
 import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
-import { slugField, booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
+import { isJsonArrayOrArray, slugField, booleanishField, mongoIdParamValidator, contentBlocksHaveSafeUrls } from "./helpers/common.validator.js";
 
 export const validateCategoryCreate = [
   body("name")
@@ -29,6 +29,11 @@ export const validateCategoryCreate = [
   body("longDescription")
     .optional()
     .trim(),
+
+  body("content")
+    .optional()
+    .custom(isJsonArrayOrArray).withMessage("Sadržaj nije u ispravnom formatu")
+    .custom(contentBlocksHaveSafeUrls).withMessage("Link u sadržaju mora koristiti dozvoljenu šemu (http, https, mailto, tel ili relativnu putanju)"),
 
   booleanishField("isIndexable"),
 
@@ -64,6 +69,11 @@ export const validateCategoryUpdate = [
     .optional()
     .trim()
     .isLength({ max: 300 }).withMessage("Kratak opis može imati najviše 300 karaktera"),
+
+  body("content")
+    .optional()
+    .custom(isJsonArrayOrArray).withMessage("Sadržaj nije u ispravnom formatu")
+    .custom(contentBlocksHaveSafeUrls).withMessage("Link u sadržaju mora koristiti dozvoljenu šemu (http, https, mailto, tel ili relativnu putanju)"),
 
   booleanishField("isIndexable"),
 

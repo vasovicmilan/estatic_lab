@@ -1,7 +1,7 @@
 import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
 import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
-import { isJsonArrayOrArray, isArrayOrString, slugField, booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
+import { isJsonArrayOrArray, isArrayOrString, slugField, booleanishField, mongoIdParamValidator, contentBlocksHaveSafeUrls } from "./helpers/common.validator.js";
 
 // Phase 1 - bare minimum, just enough to get a row in the DB.
 export const validateProductStep1 = [
@@ -42,7 +42,7 @@ export const validateProductDetailsMediaStep = [
 
   body("longDescription")
     .optional()
-    .trim(),
+    .custom(contentBlocksHaveSafeUrls).withMessage("Link u sadržaju mora koristiti dozvoljenu šemu (http, https, mailto, tel ili relativnu putanju)"),
 
   body("imageDesc")
     .custom(requireImageDescIfUploaded((req) => req.uploadedFiles?.productImage)),
@@ -97,6 +97,10 @@ export const validateProductUpdate = [
   body("tags")
     .optional()
     .custom(isArrayOrString).withMessage("Neispravni tagovi"),
+
+  body("longDescription")
+    .optional()
+    .custom(contentBlocksHaveSafeUrls).withMessage("Link u sadržaju mora koristiti dozvoljenu šemu (http, https, mailto, tel ili relativnu putanju)"),
 
   body("relatedProducts")
     .optional()
