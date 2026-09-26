@@ -233,9 +233,18 @@ export async function findUserCartQuantities(userId, { session } = {}) {
   return User.findById(userId).select("cart").session(session || null).lean();
 }
 
+// Same reasoning as findUserCartQuantities above - runs on every Bearer-token
+// request (auth.middleware.js's apiAuthMiddleware/optionalApiAuth), so it
+// projects only what that revocation check needs (see user.model.js's
+// tokenValidAfter) instead of the full document + role populate findUserById does.
+export async function findAuthStateById(userId, { session } = {}) {
+  return User.findById(userId).select("status tokenValidAfter").session(session || null).lean();
+}
+
 export default {
   createUser,
   findUserById,
+  findAuthStateById,
   findUserByEmailWithPassword,
   findUserByEmail,
   findUserByIdWithPassword,

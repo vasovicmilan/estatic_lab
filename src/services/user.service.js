@@ -265,7 +265,11 @@ export async function deactivateAccount(userId, password) {
     if (!isValid) unauthorized("Lozinka nije ispravna");
   }
 
-  await userRepo.updateUserById(userId, { status: "inactive" });
+  // tokenValidAfter revokes any Bearer token already issued for this account (see
+  // user.model.js's field comment and auth.middleware.js's apiAuthMiddleware) - the
+  // session itself is destroyed by the caller (auth.controller.js/me.controller.js),
+  // but a Bearer-token client has no session for that to touch.
+  await userRepo.updateUserById(userId, { status: "inactive", tokenValidAfter: new Date() });
   logInfo("Account deactivated", { userId });
   return { email: user.email, firstName: user.firstName };
 }
@@ -326,7 +330,19 @@ export async function updateProfile(userId, data) {
 export async function updateUserStatus(userId, status) {
   if (!userId) validationError("userId");
   if (!status) validationError("status");
-  const updated = await userRepo.updateUserById(userId, { status });
+
+  const updateData = { status };
+  // Revokes any Bearer token already issued for this account the moment an admin
+  // suspends/deactivates it (see user.model.js's tokenValidAfter comment and
+  // auth.middleware.js's apiAuthMiddleware) - without this, a token issued before
+  // the status change kept passing auth until it naturally expired. Deliberately
+  // NOT set when moving to "active"/any other status - see the model field's own
+  // comment on why reactivation must not touch it.
+  if (status === "suspended" || status === "inactive") {
+    updateData.tokenValidAfter = new Date();
+  }
+
+  const updated = await userRepo.updateUserById(userId, updateData);
   if (!updated) notFound("Korisnik");
   logInfo("User status changed", { userId, status });
   return mapUserForAdminDetail(updated);

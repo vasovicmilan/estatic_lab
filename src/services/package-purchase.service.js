@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import eventEmitter from "../events/event.emitter.js";
 import packagePurchaseRepo from "../repositories/package-purchase.repository.js";
+import appointmentRepo from "../repositories/appointment.repository.js";
 import packageService from "./package.service.js";
 import serviceService from "./service.service.js";
 import userService from "./user.service.js";
@@ -356,6 +357,22 @@ export async function deletePurchase(packagePurchaseId, adminId) {
   if (!packagePurchaseId) validationError("packagePurchaseId");
   const existing = await packagePurchaseRepo.findPackagePurchaseById(packagePurchaseId);
   if (!existing) notFound("Kupljeni paket");
+
+  // Same active-commitments guard as service.service.js's deleteServiceById: an
+  // appointment still holding a "pending"/"confirmed" slot against this exact
+  // package purchase (Appointment.packagePurchase) is relying on its remaining
+  // reserved/unused sessions - deleting the purchase out from under it would
+  // leave that appointment pointing at nothing. Only "still needs the package"
+  // statuses count; a terminal (completed/cancelled/rejected/no_show)
+  // appointment has already released or consumed its session and doesn't block.
+  const activeAppointments = await appointmentRepo.countAppointments({
+    packagePurchaseId,
+    statusIn: ["pending", "confirmed"],
+  });
+  if (activeAppointments > 0) {
+    badRequest("Ne može se obrisati paket dok postoje zakazani termini koji koriste preostale sesije.");
+  }
+
   await packagePurchaseRepo.deletePackagePurchaseById(packagePurchaseId);
   logInfo("Package purchase deleted", { packagePurchaseId, adminId });
   return { success: true };

@@ -149,62 +149,68 @@ describe("payout-request.service", () => {
 
   describe("approvePayoutRequest", () => {
     it("throws 404 when the request doesn't exist", async (t) => {
+      t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async () => null);
       t.mock.method(payoutRepo, "findPayoutRequestById", async () => null);
       await assert.rejects(() => payoutService.approvePayoutRequest(id().toString()), (err) => err.statusCode === 404);
     });
 
     it("refuses to approve a request that isn't in 'requested' status", async (t) => {
+      // the atomic filter (status: "requested") simply finds nothing when the
+      // document is already in some other status - null result, not a thrown
+      // CastError or similar, is exactly what a lost race also looks like
+      const updateMock = t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async () => null);
       t.mock.method(payoutRepo, "findPayoutRequestById", async () => buildPayoutRequest({ status: "approved" }));
-      const updateMock = t.mock.method(payoutRepo, "updatePayoutRequestById", async () => ({}));
 
-      await assert.rejects(() => payoutService.approvePayoutRequest(id().toString()), (err) => err.statusCode === 400);
-      assert.equal(updateMock.mock.calls.length, 0);
+      await assert.rejects(() => payoutService.approvePayoutRequest(id().toString()), (err) => err.statusCode === 409);
+      assert.equal(updateMock.mock.calls[0].arguments[1], "requested", "must only ever transition out of 'requested'");
     });
 
-    it("moves a 'requested' entry to 'approved', stamps approvedAt, and emits payout:status_changed", async (t) => {
+    it("moves a 'requested' entry to 'approved', stamps approvedAt, and emits payout:status_changed - in one atomic write, no separate read-then-write", async (t) => {
       const request = buildPayoutRequest({ status: "requested" });
-      let findCallCount = 0;
-      t.mock.method(payoutRepo, "findPayoutRequestById", async () => {
-        findCallCount += 1;
-        // second lookup (after the update) reflects the new status
-        return findCallCount === 1 ? request : { ...request, status: "approved" };
-      });
-      const updateMock = t.mock.method(payoutRepo, "updatePayoutRequestById", async () => ({}));
+      const findMock = t.mock.method(payoutRepo, "findPayoutRequestById", async () => request);
+      const updateMock = t.mock.method(
+        payoutRepo,
+        "updatePayoutRequestStatusAtomic",
+        async () => ({ ...request, status: "approved", approvedAt: new Date() })
+      );
       const emitMock = t.mock.method(eventEmitter, "emit", () => {});
 
       const result = await payoutService.approvePayoutRequest(request._id.toString(), "u redu je");
 
-      const [, changes] = updateMock.mock.calls[0].arguments;
+      const [reqId, statusFilter, changes] = updateMock.mock.calls[0].arguments;
+      assert.equal(reqId, request._id.toString());
+      assert.equal(statusFilter, "requested");
       assert.equal(changes.status, "approved");
       assert.ok(changes.approvedAt instanceof Date);
       assert.equal(changes.adminNote, "u redu je");
       assert.equal(result.status, "approved");
       assert.equal(emitMock.mock.calls[0].arguments[0], "payout:status_changed");
       assert.equal(emitMock.mock.calls[0].arguments[1].status, "approved");
+      assert.equal(findMock.mock.calls.length, 0, "the happy path needs no extra read - the atomic update alone confirms the transition");
     });
   });
 
   describe("markPayoutRequestPaid", () => {
     it("throws 404 when the request doesn't exist", async (t) => {
+      t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async () => null);
       t.mock.method(payoutRepo, "findPayoutRequestById", async () => null);
       await assert.rejects(() => payoutService.markPayoutRequestPaid(id().toString()), (err) => err.statusCode === 404);
     });
 
     it("accepts a request in 'requested' status (approval can be skipped, going straight to paid)", async (t) => {
       const request = buildPayoutRequest({ status: "requested" });
-      t.mock.method(payoutRepo, "findPayoutRequestById", async () => request);
-      const updateMock = t.mock.method(payoutRepo, "updatePayoutRequestById", async () => ({}));
+      const updateMock = t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async () => ({ ...request, status: "paid" }));
       t.mock.method(eventEmitter, "emit", () => {});
 
       await payoutService.markPayoutRequestPaid(request._id.toString());
 
-      assert.equal(updateMock.mock.calls[0].arguments[1].status, "paid");
+      assert.equal(updateMock.mock.calls[0].arguments[2].status, "paid");
+      assert.deepEqual(updateMock.mock.calls[0].arguments[1], { $in: ["requested", "approved"] });
     });
 
     it("accepts a request in 'approved' status", async (t) => {
       const request = buildPayoutRequest({ status: "approved" });
-      t.mock.method(payoutRepo, "findPayoutRequestById", async () => request);
-      const updateMock = t.mock.method(payoutRepo, "updatePayoutRequestById", async () => ({}));
+      const updateMock = t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async () => ({ ...request, status: "paid" }));
       t.mock.method(eventEmitter, "emit", () => {});
 
       await payoutService.markPayoutRequestPaid(request._id.toString());
@@ -213,64 +219,101 @@ describe("payout-request.service", () => {
     });
 
     it("refuses to mark an already-'paid' or 'rejected' request as paid again", async (t) => {
+      t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async () => null);
       t.mock.method(payoutRepo, "findPayoutRequestById", async () => buildPayoutRequest({ status: "paid" }));
-      await assert.rejects(() => payoutService.markPayoutRequestPaid(id().toString()), (err) => err.statusCode === 400);
+      await assert.rejects(() => payoutService.markPayoutRequestPaid(id().toString()), (err) => err.statusCode === 409);
 
+      t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async () => null);
       t.mock.method(payoutRepo, "findPayoutRequestById", async () => buildPayoutRequest({ status: "rejected" }));
-      await assert.rejects(() => payoutService.markPayoutRequestPaid(id().toString()), (err) => err.statusCode === 400);
+      await assert.rejects(() => payoutService.markPayoutRequestPaid(id().toString()), (err) => err.statusCode === 409);
     });
 
     it("stamps paidAt and emits payout:status_changed with status 'paid'", async (t) => {
       const request = buildPayoutRequest({ status: "approved" });
-      t.mock.method(payoutRepo, "findPayoutRequestById", async () => request);
-      const updateMock = t.mock.method(payoutRepo, "updatePayoutRequestById", async () => ({}));
+      t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async () => ({ ...request, status: "paid", paidAt: new Date() }));
       const emitMock = t.mock.method(eventEmitter, "emit", () => {});
 
-      await payoutService.markPayoutRequestPaid(request._id.toString());
+      const result = await payoutService.markPayoutRequestPaid(request._id.toString());
 
-      assert.ok(updateMock.mock.calls[0].arguments[1].paidAt instanceof Date);
+      assert.ok(result.paidAt instanceof Date);
       assert.equal(emitMock.mock.calls[0].arguments[1].status, "paid");
+    });
+
+    it("the second of two concurrent 'mark paid' calls for the same request gets a 409 conflict, never a silent double payout", async (t) => {
+      // Simulates the exact race the atomic guard exists for: two requests hit
+      // markPayoutRequestPaid for the same document at nearly the same time.
+      // In real Mongo, only one findOneAndUpdate's filter (status still
+      // "requested"/"approved") matches; the other finds the document already
+      // flipped and gets null. This fake repo reproduces that by flipping a
+      // shared "already paid" flag the first call to actually match sets.
+      const request = buildPayoutRequest({ status: "requested" });
+      let alreadyPaid = false;
+      let paidCount = 0;
+
+      t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async (reqId, statusFilter, updateData) => {
+        if (alreadyPaid) return null; // the loser: filter no longer matches
+        alreadyPaid = true; // the winner flips status - simulates Mongo's write serialization
+        paidCount += 1;
+        return { ...request, ...updateData };
+      });
+      t.mock.method(payoutRepo, "findPayoutRequestById", async () => ({ ...request, status: "paid" }));
+      t.mock.method(eventEmitter, "emit", () => {});
+
+      const results = await Promise.allSettled([
+        payoutService.markPayoutRequestPaid(request._id.toString()),
+        payoutService.markPayoutRequestPaid(request._id.toString()),
+      ]);
+
+      const fulfilled = results.filter((r) => r.status === "fulfilled");
+      const rejected = results.filter((r) => r.status === "rejected");
+
+      assert.equal(fulfilled.length, 1, "exactly one of the two concurrent requests must succeed");
+      assert.equal(rejected.length, 1, "the other must be rejected, not silently succeed");
+      assert.equal(rejected[0].reason.statusCode, 409);
+      assert.equal(paidCount, 1, "the underlying atomic update must only actually flip the status once - no double payout");
     });
   });
 
   describe("rejectPayoutRequest", () => {
     it("throws 404 when the request doesn't exist", async (t) => {
+      t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async () => null);
       t.mock.method(payoutRepo, "findPayoutRequestById", async () => null);
       await assert.rejects(() => payoutService.rejectPayoutRequest(id().toString()), (err) => err.statusCode === 404);
     });
 
     it("refuses to reject an already-paid request - money already sent can't be un-sent by a status flip", async (t) => {
+      const updateMock = t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async () => null);
       t.mock.method(payoutRepo, "findPayoutRequestById", async () => buildPayoutRequest({ status: "paid" }));
-      const updateMock = t.mock.method(payoutRepo, "updatePayoutRequestById", async () => ({}));
 
-      await assert.rejects(() => payoutService.rejectPayoutRequest(id().toString()), (err) => err.statusCode === 400);
-      assert.equal(updateMock.mock.calls.length, 0);
+      await assert.rejects(() => payoutService.rejectPayoutRequest(id().toString()), (err) => err.statusCode === 409);
+      assert.deepEqual(updateMock.mock.calls[0].arguments[1], { $ne: "paid" });
     });
 
     it("allows rejecting either 'requested' or 'approved' - not just the initial state", async (t) => {
       const requested = buildPayoutRequest({ status: "requested" });
-      t.mock.method(payoutRepo, "findPayoutRequestById", async () => requested);
-      t.mock.method(payoutRepo, "updatePayoutRequestById", async () => ({}));
+      t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async () => ({ ...requested, status: "rejected" }));
       t.mock.method(eventEmitter, "emit", () => {});
       await payoutService.rejectPayoutRequest(requested._id.toString());
 
       const approved = buildPayoutRequest({ status: "approved" });
-      t.mock.method(payoutRepo, "findPayoutRequestById", async () => approved);
-      const updateMock = t.mock.method(payoutRepo, "updatePayoutRequestById", async () => ({}));
+      const updateMock = t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async () => ({ ...approved, status: "rejected" }));
       await payoutService.rejectPayoutRequest(approved._id.toString());
 
-      assert.equal(updateMock.mock.calls[0].arguments[1].status, "rejected");
+      assert.equal(updateMock.mock.calls[0].arguments[2].status, "rejected");
     });
 
     it("stamps rejectedAt, stores the adminNote, and emits payout:status_changed with status 'rejected'", async (t) => {
       const request = buildPayoutRequest({ status: "requested" });
-      t.mock.method(payoutRepo, "findPayoutRequestById", async () => request);
-      const updateMock = t.mock.method(payoutRepo, "updatePayoutRequestById", async () => ({}));
+      const updateMock = t.mock.method(
+        payoutRepo,
+        "updatePayoutRequestStatusAtomic",
+        async () => ({ ...request, status: "rejected", rejectedAt: new Date(), adminNote: "Nedovoljno sredstava" })
+      );
       const emitMock = t.mock.method(eventEmitter, "emit", () => {});
 
       await payoutService.rejectPayoutRequest(request._id.toString(), "Nedovoljno sredstava");
 
-      const [, changes] = updateMock.mock.calls[0].arguments;
+      const [, , changes] = updateMock.mock.calls[0].arguments;
       assert.equal(changes.status, "rejected");
       assert.ok(changes.rejectedAt instanceof Date);
       assert.equal(changes.adminNote, "Nedovoljno sredstava");

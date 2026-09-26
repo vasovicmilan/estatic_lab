@@ -218,12 +218,65 @@ describe("user.service", () => {
       t.mock.method(userRepo, "findUserByIdWithPassword", async () => user);
       await assert.rejects(() => userService.deactivateAccount(user._id.toString(), undefined), (err) => err.statusCode === 400);
     });
+
+    // Revocation: a Bearer-token client has no session for auth.controller.js/
+    // me.controller.js to destroy, so tokenValidAfter is the only thing that stops
+    // an already-issued token from still working after self-deactivation (see
+    // user.model.js's field comment and auth.middleware.js's apiAuthMiddleware).
+    it("bumps tokenValidAfter to now alongside status when deactivating", async (t) => {
+      const user = buildUser({ password: null }); // no password on file -> no password check to satisfy
+      t.mock.method(userRepo, "findUserByIdWithPassword", async () => user);
+      const updateMock = t.mock.method(userRepo, "updateUserById", async () => user);
+
+      const before = Date.now();
+      await userService.deactivateAccount(user._id.toString(), undefined);
+      const after = Date.now();
+
+      assert.equal(updateMock.mock.calls.length, 1);
+      const [, patch] = updateMock.mock.calls[0].arguments;
+      assert.equal(patch.status, "inactive");
+      assert.ok(patch.tokenValidAfter instanceof Date);
+      assert.ok(patch.tokenValidAfter.getTime() >= before && patch.tokenValidAfter.getTime() <= after);
+    });
   });
 
   describe("updateUserStatus / updateUserRole / deleteUser", () => {
     it("updateUserStatus throws 404 for a nonexistent user", async (t) => {
       t.mock.method(userRepo, "updateUserById", async () => null);
       await assert.rejects(() => userService.updateUserStatus("missing", "inactive"), (err) => err.statusCode === 404);
+    });
+
+    it("updateUserStatus bumps tokenValidAfter when an admin suspends an account", async (t) => {
+      const updateMock = t.mock.method(userRepo, "updateUserById", async () => buildUser({ status: "suspended" }));
+      await userService.updateUserStatus("some-id", "suspended");
+
+      assert.equal(updateMock.mock.calls.length, 1);
+      const [, patch] = updateMock.mock.calls[0].arguments;
+      assert.equal(patch.status, "suspended");
+      assert.ok(patch.tokenValidAfter instanceof Date, "suspending must revoke already-issued tokens");
+    });
+
+    it("updateUserStatus bumps tokenValidAfter when an admin deactivates (inactive) an account", async (t) => {
+      const updateMock = t.mock.method(userRepo, "updateUserById", async () => buildUser({ status: "inactive" }));
+      await userService.updateUserStatus("some-id", "inactive");
+
+      assert.equal(updateMock.mock.calls.length, 1);
+      const [, patch] = updateMock.mock.calls[0].arguments;
+      assert.ok(patch.tokenValidAfter instanceof Date);
+    });
+
+    it("updateUserStatus does NOT touch tokenValidAfter when reactivating an account back to active", async (t) => {
+      // Reactivation must restore access without invalidating tokens issued
+      // after it - the old pre-suspension token stays dead via the tokenValidAfter
+      // value already stored on the user, not by moving it forward again here
+      // (see user.model.js's tokenValidAfter comment).
+      const updateMock = t.mock.method(userRepo, "updateUserById", async () => buildUser({ status: "active" }));
+      await userService.updateUserStatus("some-id", "active");
+
+      assert.equal(updateMock.mock.calls.length, 1);
+      const [, patch] = updateMock.mock.calls[0].arguments;
+      assert.equal(patch.status, "active");
+      assert.equal("tokenValidAfter" in patch, false);
     });
 
     it("updateUserRole requires both userId and roleId", async () => {

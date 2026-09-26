@@ -14,7 +14,7 @@ import { canUserCancelAppointment, getRescheduleWindow, hasMinimumRescheduleLead
 import { buildPhoneRecord } from "../utils/phone.util.js";
 import { isEmployeeWorkingAt } from "../utils/working-hours.util.js";
 import { zonedInputToUtcDate, getStartOfDayInZone, nextDayStartInZone, formatTime } from "../utils/date.time.util.js";
-import { getBookingPolicy } from "../config/runtime-settings.cache.js";
+import { getBookingPolicy, isDateClosed } from "../config/runtime-settings.cache.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 
@@ -287,6 +287,16 @@ export async function bookAppointment(input) {
   let systemAssigned = false;
 
   if (employeeId) {
+    // Salon-wide closed day (praznik, kolektivni godišnji odmor...) - unlike the
+    // "find available" search path (availability.service.js's
+    // getAvailableSlots/findAvailableEmployees, which resolveEmployeeAssignment
+    // below delegates to), an EXPLICITLY chosen employeeId skips that search
+    // entirely, so isDateClosed was never consulted here. Checked first, before
+    // the employee-specific working-hours/overlap/resource checks below, same
+    // as availability.service.js checks it before looking at any individual
+    // employee's schedule.
+    if (isDateClosed(start)) badRequest("Ovaj datum je neradni dan.");
+
     const employeeDoc = await employeeService.getEmployeeByIdRaw(employeeId);
     if (!employeeDoc) notFound("Zaposleni");
     if (!isEmployeeWorkingAt(employeeDoc, start, end)) {
@@ -756,6 +766,16 @@ export async function rescheduleAppointment(appointmentId, newStartTime, actorId
   // caller that constructed the instant itself. See date.time.util.js.
   const newStart = newStartTime instanceof Date ? newStartTime : zonedInputToUtcDate(newStartTime);
   if (!newStart || isNaN(newStart.getTime())) badRequest("Neispravno novo vreme termina");
+
+  // Salon-wide closed day (praznik, kolektivni godišnji odmor...) - the reschedule
+  // path builds its own new-window checks below (working hours/overlap/resource
+  // capacity) instead of going through availability.service.js's
+  // getAvailableSlots/findAvailableEmployees, so isDateClosed was never consulted
+  // here. Checked first, before even the actor-tiered lead-time/window rules,
+  // and NOT gated behind `actorRole !== "admin"` like those are - same as the
+  // working-hours/overlap/resource checks further down, a closed day protects
+  // data integrity for every actor, admin included, not just the customer.
+  if (isDateClosed(newStart)) badRequest("Ovaj datum je neradni dan.");
 
   // admin bypasses both the minimum-lead-time floor and the tiered window
   // below entirely (staff override) - everyone else gets checked against how

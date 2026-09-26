@@ -10,6 +10,8 @@ import employeeService from "../../../src/services/employee.service.js";
 import packagePurchaseService from "../../../src/services/package-purchase.service.js";
 import * as appointmentService from "../../../src/services/appointment.service.js";
 import { zonedInputToUtcDate } from "../../../src/utils/date.time.util.js";
+import siteSettingsRepo from "../../../src/repositories/site-settings.repository.js";
+import { loadRuntimeSettings } from "../../../src/config/runtime-settings.cache.js";
 import {
   buildAppointment,
   buildEmployee,
@@ -300,6 +302,194 @@ function fakeSession() {
     endSession: async () => {},
   };
 }
+
+// Salon-wide closed day (site-settings.model.js's closedDates) enforcement for
+// the two booking/reschedule paths that used to skip isDateClosed entirely -
+// see availability.service.test.js's own "closed-day override" describe for
+// the sibling coverage of the "find available" search path (getAvailableSlots/
+// findAvailableEmployees), which was never the bug here. Drives the real
+// runtime-settings.cache.js cache via the real loadRuntimeSettings() (not a
+// stubbed isDateClosed), the same way availability.service.test.js does, so
+// this exercises the exact same code path production traffic does.
+describe("closed-date enforcement (explicit-employeeId booking + reschedule)", () => {
+  async function setClosedDates(t, closedDates) {
+    t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => ({
+      bookingPolicy: {},
+      currency: {},
+      workingHours: [],
+      closedDates,
+    }));
+    await loadRuntimeSettings();
+  }
+
+  // every test in this describe must leave the shared in-memory cache back at
+  // "no closed dates" - otherwise a closed date set by one test would leak
+  // into and silently fail every unrelated test that runs afterwards in this
+  // same process.
+  function restoreNoClosedDates(t) {
+    t.after(async () => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => ({
+        bookingPolicy: {},
+        currency: {},
+        workingHours: [],
+        closedDates: [],
+      }));
+      await loadRuntimeSettings();
+    });
+  }
+
+  const alwaysWorking = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => ({
+    day,
+    slots: [{ from: "00:00", to: "23:59" }],
+  }));
+
+  it("rejects booking with an explicitly chosen employeeId when the target date is closed", async (t) => {
+    restoreNoClosedDates(t);
+    const closedStart = tomorrowAt10();
+    await setClosedDates(t, [{ date: closedStart, reason: "Praznik", recurringYearly: false }]);
+
+    const chosen = buildEmployee();
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
+    t.mock.method(userService, "findUserByEmail", async () => null);
+    // must never be reached - the closed-day check must short-circuit before
+    // this (the first employeeId-specific lookup) is ever called
+    const getEmployeeMock = t.mock.method(employeeService, "getEmployeeByIdRaw", async () => ({ ...chosen, workingHours: alwaysWorking }));
+
+    await assert.rejects(
+      () =>
+        appointmentService.bookAppointment({
+          serviceId: id().toString(),
+          servicePackageId: id().toString(),
+          employeeId: chosen._id.toString(),
+          startTime: closedStart,
+          contact: { firstName: "Ana", email: "ana@example.com" },
+        }),
+      (err) => err.statusCode === 400
+    );
+    assert.equal(getEmployeeMock.mock.calls.length, 0);
+  });
+
+  it("still books normally with an explicitly chosen employeeId on a non-closed date (regression)", async (t) => {
+    restoreNoClosedDates(t);
+    const openStart = tomorrowAt10();
+    // a DIFFERENT date is closed - proves the check is date-specific, not a
+    // blanket "any closedDates entry exists" short-circuit
+    const otherClosedDate = new Date(openStart.getTime() + 10 * 24 * 60 * 60 * 1000);
+    await setClosedDates(t, [{ date: otherClosedDate, reason: "Praznik", recurringYearly: false }]);
+
+    const chosen = buildEmployee();
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(userService, "findUserByEmail", async () => null);
+    t.mock.method(userService, "createGuestUser", async () => buildUser());
+    t.mock.method(userService, "findUserById", async () => buildUser());
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
+    t.mock.method(employeeService, "getEmployeeByIdRaw", async () => ({ ...chosen, workingHours: alwaysWorking }));
+    t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => buildAppointment());
+    t.mock.method(employeeService, "getEmployeeNameById", async () => "Izabrana Terapeutkinja");
+
+    let createdPayload;
+    t.mock.method(appointmentRepo, "createAppointment", async (data) => {
+      createdPayload = data;
+      return { ...data, _id: id() };
+    });
+
+    await appointmentService.bookAppointment({
+      serviceId: id().toString(),
+      servicePackageId: id().toString(),
+      employeeId: chosen._id.toString(),
+      startTime: openStart,
+      contact: { firstName: "Ana", email: "ana@example.com" },
+    });
+
+    assert.equal(String(createdPayload.employee), String(chosen._id));
+  });
+
+  it("rejects rescheduling an appointment onto a closed date", async (t) => {
+    restoreNoClosedDates(t);
+    // far enough out that the tiered reschedule window is always "any_day" -
+    // this test is only about the closed-date check, not the tiered window
+    const newStart = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    newStart.setHours(10, 0, 0, 0);
+    await setClosedDates(t, [{ date: newStart, reason: "Praznik", recurringYearly: false }]);
+
+    const appointment = buildAppointment({ employee: null, resources: [], status: "pending", startTime: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) });
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+    t.mock.method(appointmentRepo, "updateAppointmentById", async () => {
+      throw new Error("should never be reached - closed-date check must run first");
+    });
+
+    await assert.rejects(
+      () => appointmentService.rescheduleAppointment(appointment._id.toString(), newStart, id().toString(), "admin"),
+      (err) => err.statusCode === 400
+    );
+  });
+
+  it("rejects rescheduling onto a closed date even for an admin actor (no staff-override bypass for this check)", async (t) => {
+    restoreNoClosedDates(t);
+    const newStart = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes out - well under any non-admin lead-time floor, admin normally bypasses that
+    await setClosedDates(t, [{ date: newStart, reason: "Praznik", recurringYearly: false }]);
+
+    const appointment = buildAppointment({ employee: null, resources: [], status: "pending", startTime: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) });
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+
+    await assert.rejects(
+      () => appointmentService.rescheduleAppointment(appointment._id.toString(), newStart, id().toString(), "admin"),
+      (err) => err.statusCode === 400
+    );
+  });
+
+  it("still reschedules normally onto a non-closed date (regression)", async (t) => {
+    restoreNoClosedDates(t);
+    const newStart = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    newStart.setHours(10, 0, 0, 0);
+    // a DIFFERENT date is closed - proves the check is date-specific
+    const otherClosedDate = new Date(newStart.getTime() + 10 * 24 * 60 * 60 * 1000);
+    await setClosedDates(t, [{ date: otherClosedDate, reason: "Praznik", recurringYearly: false }]);
+
+    const appointment = buildAppointment({ employee: null, resources: [], status: "pending", startTime: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) });
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+    let updatePayload;
+    t.mock.method(appointmentRepo, "updateAppointmentById", async (appId, patch) => {
+      updatePayload = patch;
+      return { ...appointment, ...patch };
+    });
+
+    await appointmentService.rescheduleAppointment(appointment._id.toString(), newStart, id().toString(), "admin");
+
+    assert.equal(updatePayload.startTime.toISOString(), newStart.toISOString());
+  });
+
+  it("also rejects an explicit-employeeId booking on a recurring-yearly closed date, matched by month/day regardless of year", async (t) => {
+    restoreNoClosedDates(t);
+    const targetStart = tomorrowAt10();
+    // stored with a totally different YEAR, but the same month/day - recurringYearly
+    // must match on month/day alone (see runtime-settings.cache.js's isDateClosed)
+    const recurringStoredDate = new Date(targetStart);
+    recurringStoredDate.setFullYear(targetStart.getFullYear() - 5);
+    await setClosedDates(t, [{ date: recurringStoredDate, reason: "Novogodišnji praznik", recurringYearly: true }]);
+
+    const chosen = buildEmployee();
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(serviceService, "getActiveVariant", async () => ({ variant: buildServicePackageVariant({ totalPrice: 2800, duration: 40 }) }));
+    t.mock.method(userService, "findUserByEmail", async () => null);
+    const getEmployeeMock = t.mock.method(employeeService, "getEmployeeByIdRaw", async () => ({ ...chosen, workingHours: alwaysWorking }));
+
+    await assert.rejects(
+      () =>
+        appointmentService.bookAppointment({
+          serviceId: id().toString(),
+          servicePackageId: id().toString(),
+          employeeId: chosen._id.toString(),
+          startTime: targetStart,
+          contact: { firstName: "Ana", email: "ana@example.com" },
+        }),
+      (err) => err.statusCode === 400
+    );
+    assert.equal(getEmployeeMock.mock.calls.length, 0);
+  });
+});
 
 describe("bookAppointment - employee assignment", () => {
   it("auto-assigns when exactly one employee is free - no real choice is being deferred", async (t) => {

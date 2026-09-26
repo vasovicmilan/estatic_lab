@@ -65,6 +65,20 @@ export async function updatePayoutRequestById(id, updateData, { session } = {}) 
   return PayoutRequest.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
+// Atomic status-transition guard: the filter includes the CURRENT expected
+// status alongside the _id, so the flip only happens if the document is still
+// in a status that allows it. Two near-simultaneous requests (e.g. two admins
+// both clicking "mark as paid" on the same request) both pass an earlier,
+// separate read-then-check, but only one of these findOneAndUpdate calls can
+// actually match and flip the status - Mongo serializes concurrent writes to
+// the same document, so whichever one lands first changes `status`, and the
+// second one's filter (still requiring the OLD status) then matches nothing
+// and gets `null` back. Callers must treat a null result as "someone else
+// already changed this" (409 Conflict), never as "nothing to do".
+export async function updatePayoutRequestStatusAtomic(id, statusFilter, updateData, { session } = {}) {
+  return PayoutRequest.findOneAndUpdate({ _id: id, status: statusFilter }, { $set: updateData }, { new: true, runValidators: true, session }).lean();
+}
+
 // Used by employee.service.js's deleteEmployeeById - PayoutRequest.employee has no
 // name snapshot, so it must block deletion rather than silently orphan a payout
 // record with no readable "who this was paid to" left.
@@ -79,5 +93,6 @@ export default {
   sumPendingRequestedAmount,
   sumPaidAmount,
   updatePayoutRequestById,
+  updatePayoutRequestStatusAtomic,
   countPayoutRequests,
 };

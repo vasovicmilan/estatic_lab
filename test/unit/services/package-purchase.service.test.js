@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
 import packagePurchaseRepo from "../../../src/repositories/package-purchase.repository.js";
+import appointmentRepo from "../../../src/repositories/appointment.repository.js";
 import packageRepo from "../../../src/repositories/package.repository.js";
 import couponService from "../../../src/services/coupon.service.js";
 import serviceService from "../../../src/services/service.service.js";
@@ -550,6 +551,56 @@ describe("package-purchase.service", () => {
     it("throws 404 for a nonexistent purchase", async (t) => {
       t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => null);
       await assert.rejects(() => packagePurchaseService.deletePurchase(id().toString(), id().toString()), (err) => err.statusCode === 404);
+    });
+
+    // Guard added alongside service.service.js's deleteServiceById /
+    // employee.service.js's own active-appointments checks - a PackagePurchase
+    // still backing a pending/confirmed appointment (Appointment.packagePurchase)
+    // must not be deletable out from under it.
+    it("rejects deleting a purchase that a pending/confirmed appointment still references", async (t) => {
+      const purchase = buildPackagePurchase();
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => purchase);
+      const countMock = t.mock.method(appointmentRepo, "countAppointments", async () => 1);
+      const deleteMock = t.mock.method(packagePurchaseRepo, "deletePackagePurchaseById", async () => purchase);
+
+      await assert.rejects(
+        () => packagePurchaseService.deletePurchase(purchase._id.toString(), id().toString()),
+        (err) => err.statusCode === 400
+      );
+      assert.equal(countMock.mock.calls.length, 1);
+      assert.deepEqual(countMock.mock.calls[0].arguments[0], {
+        packagePurchaseId: purchase._id.toString(),
+        statusIn: ["pending", "confirmed"],
+      });
+      assert.equal(deleteMock.mock.calls.length, 0);
+    });
+
+    it("succeeds when no appointment references the purchase at all (regression check)", async (t) => {
+      const purchase = buildPackagePurchase();
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => purchase);
+      t.mock.method(appointmentRepo, "countAppointments", async () => 0);
+      const deleteMock = t.mock.method(packagePurchaseRepo, "deletePackagePurchaseById", async () => purchase);
+
+      const result = await packagePurchaseService.deletePurchase(purchase._id.toString(), id().toString());
+
+      assert.equal(result.success, true);
+      assert.equal(deleteMock.mock.calls.length, 1);
+    });
+
+    it("succeeds when the only referencing appointments are completed/cancelled (terminal statuses don't block)", async (t) => {
+      const purchase = buildPackagePurchase();
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => purchase);
+      // simulates the real filter: statusIn: ["pending", "confirmed"] matches
+      // none of this purchase's referencing appointments because they're all
+      // completed/cancelled/rejected/no_show, so the count comes back 0
+      const countMock = t.mock.method(appointmentRepo, "countAppointments", async () => 0);
+      const deleteMock = t.mock.method(packagePurchaseRepo, "deletePackagePurchaseById", async () => purchase);
+
+      const result = await packagePurchaseService.deletePurchase(purchase._id.toString(), id().toString());
+
+      assert.equal(result.success, true);
+      assert.equal(countMock.mock.calls.length, 1);
+      assert.equal(deleteMock.mock.calls.length, 1);
     });
   });
 });

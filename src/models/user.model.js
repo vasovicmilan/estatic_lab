@@ -135,6 +135,23 @@ const UserSchema = new Schema(
     acceptance: { type: Boolean, default: true, required: true },
     confirmed: { type: Boolean, default: false },
     lastLogin: Date,
+
+    // Server-side JWT revocation. apiAuthMiddleware/optionalApiAuth verify the
+    // token's signature and expiry with jwt.verify (see crypto.service.js), which
+    // says nothing about whether the account has since been suspended/deactivated
+    // - a token issued before that happened would otherwise keep passing auth
+    // until it naturally expires. Bumped to "now" whenever the account moves to
+    // "inactive"/"suspended" (user.service.js's deactivateAccount/updateUserStatus)
+    // so the middleware can reject any previously-issued token whose `iat` predates
+    // it, even though its signature is still valid. Deliberately NOT touched when
+    // the account is reactivated back to "active" - that would otherwise
+    // instantly invalidate the very tokens reactivation is supposed to restore
+    // access for; a reactivated user's old (pre-suspension) token stays revoked
+    // and they simply log in again, which is expected.
+    tokenValidAfter: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

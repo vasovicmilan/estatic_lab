@@ -11,6 +11,7 @@ export function buildAppointmentFilter({
   userId = null,
   employeeId = null,
   serviceId = null,
+  packagePurchaseId = null,
   status = null,
   statusIn = null,
   dateFrom = null,
@@ -32,6 +33,8 @@ export function buildAppointmentFilter({
   }
 
   if (serviceId) filter.service = serviceId;
+
+  if (packagePurchaseId) filter.packagePurchase = packagePurchaseId;
 
   if (status) filter.status = status;
   if (statusIn) filter.status = { $in: statusIn };
