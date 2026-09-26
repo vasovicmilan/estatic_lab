@@ -18,8 +18,23 @@ function buildSettingsDoc(overrides = {}) {
     },
     currency: { code: "RSD", symbol: "RSD", symbolPosition: "after" },
     commissionPolicy: { minimumSessionCommission: 500 },
+    workingHours: [
+      { day: "monday", isOpen: false, from: "09:00", to: "20:00" },
+      { day: "tuesday", isOpen: false, from: "09:00", to: "20:00" },
+      { day: "wednesday", isOpen: false, from: "09:00", to: "20:00" },
+      { day: "thursday", isOpen: false, from: "09:00", to: "20:00" },
+      { day: "friday", isOpen: false, from: "09:00", to: "20:00" },
+      { day: "saturday", isOpen: false, from: "09:00", to: "20:00" },
+      { day: "sunday", isOpen: false, from: "09:00", to: "20:00" },
+    ],
+    closedDates: [],
     ...overrides,
   };
+}
+
+const FULL_WEEK_DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+function buildFullWeek(overridesByDay = {}) {
+  return FULL_WEEK_DAYS.map((day) => ({ day, isOpen: true, from: "09:00", to: "20:00", ...overridesByDay[day] }));
 }
 
 describe("site-settings.service", () => {
@@ -205,6 +220,98 @@ describe("site-settings.service", () => {
 
       assert.equal(result.image, "/images/site/hero-medium.webp");
       assert.deepEqual(result.imageVariants, { thumb: null, medium: "/images/site/hero-medium.webp", original: null });
+    });
+  });
+
+  describe("updateWorkingHours", () => {
+    it("rejects a payload that doesn't have exactly 7 days", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => buildSettingsDoc());
+      await assert.rejects(
+        () => siteSettingsService.updateWorkingHours(buildFullWeek().slice(0, 6)),
+        (err) => err.statusCode === 400
+      );
+    });
+
+    it("rejects an invalid or duplicated day", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => buildSettingsDoc());
+      const withBadDay = buildFullWeek();
+      withBadDay[0] = { ...withBadDay[0], day: "funday" };
+      await assert.rejects(() => siteSettingsService.updateWorkingHours(withBadDay), (err) => err.statusCode === 400);
+
+      const withDuplicateDay = buildFullWeek();
+      withDuplicateDay[1] = { ...withDuplicateDay[1], day: withDuplicateDay[0].day };
+      await assert.rejects(() => siteSettingsService.updateWorkingHours(withDuplicateDay), (err) => err.statusCode === 400);
+    });
+
+    it("rejects a malformed time string or from >= to on an open day", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => buildSettingsDoc());
+
+      const badFormat = buildFullWeek({ monday: { from: "9am" } });
+      await assert.rejects(() => siteSettingsService.updateWorkingHours(badFormat), (err) => err.statusCode === 400);
+
+      const badOrder = buildFullWeek({ monday: { from: "20:00", to: "09:00" } });
+      await assert.rejects(() => siteSettingsService.updateWorkingHours(badOrder), (err) => err.statusCode === 400);
+    });
+
+    it("does not validate from/to on a day marked isOpen: false, since it's just leftover display data", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => buildSettingsDoc());
+      const updateMock = t.mock.method(siteSettingsRepo, "updateSiteSettings", async () => {});
+      t.mock.method(runtimeSettingsCache, "loadRuntimeSettings", async () => {});
+
+      const week = buildFullWeek();
+      week[6] = { day: "sunday", isOpen: false, from: "garbage", to: "also garbage" };
+
+      await siteSettingsService.updateWorkingHours(week);
+
+      assert.equal(updateMock.mock.calls.length, 1);
+    });
+
+    it("saves a valid 7-day schedule and refreshes the runtime cache immediately", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => buildSettingsDoc());
+      const updateMock = t.mock.method(siteSettingsRepo, "updateSiteSettings", async () => {});
+      const refreshMock = t.mock.method(runtimeSettingsCache, "loadRuntimeSettings", async () => {});
+
+      const week = buildFullWeek({ sunday: { isOpen: false } });
+      await siteSettingsService.updateWorkingHours(week);
+
+      const saved = updateMock.mock.calls[0].arguments[0].workingHours;
+      assert.equal(saved.length, 7);
+      assert.equal(saved.find((d) => d.day === "sunday").isOpen, false);
+      assert.equal(refreshMock.mock.calls.length, 1);
+    });
+  });
+
+  describe("updateClosedDates", () => {
+    it("rejects a non-array payload", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => buildSettingsDoc());
+      await assert.rejects(() => siteSettingsService.updateClosedDates("not-an-array"), (err) => err.statusCode === 400);
+    });
+
+    it("rejects an entry with an unparseable date", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => buildSettingsDoc());
+      await assert.rejects(
+        () => siteSettingsService.updateClosedDates([{ date: "not-a-date" }]),
+        (err) => err.statusCode === 400
+      );
+    });
+
+    it("normalizes reason/recurringYearly and saves, refreshing the runtime cache", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => buildSettingsDoc());
+      const updateMock = t.mock.method(siteSettingsRepo, "updateSiteSettings", async () => {});
+      const refreshMock = t.mock.method(runtimeSettingsCache, "loadRuntimeSettings", async () => {});
+
+      await siteSettingsService.updateClosedDates([
+        { date: "2026-01-01", reason: "  Nova godina  ", recurringYearly: true },
+        { date: "2026-05-01" }, // no reason/recurringYearly given
+      ]);
+
+      const saved = updateMock.mock.calls[0].arguments[0].closedDates;
+      assert.equal(saved.length, 2);
+      assert.equal(saved[0].reason, "Nova godina");
+      assert.equal(saved[0].recurringYearly, true);
+      assert.equal(saved[1].reason, "");
+      assert.equal(saved[1].recurringYearly, false);
+      assert.equal(refreshMock.mock.calls.length, 1);
     });
   });
 });

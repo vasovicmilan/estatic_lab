@@ -66,10 +66,13 @@ export async function removeItem(req, res, next) {
 // TemporaryOrder, not an immediate Order (see shop.service.js's checkout /
 // tempOrderService.createTemporaryOrder) - the real Order only exists once
 // confirmOrder below is hit with the emailed token. Deliberately unchanged here,
-// not something to special-case away for the API. Worth knowing for a mobile
-// client: the confirmation link in that email currently points at the WEB
-// /korpa/potvrda/:orderId/:token URL, not a deep link back into the app - opening
-// fine in a browser, but not yet a native in-app flow.
+// not something to special-case away for the API. The confirmation link in that
+// email is built with buildLink("orderConfirm", ...) (see email.service.js and
+// link.builder.js), so a checkout made through this API route - i.e. inside the
+// /api/... request context linkContextMiddleware tags as "frontend" - gets a
+// link into the Angular app's own /korpa/potvrda/:orderId/:token route, while a
+// web checkout gets the EJS site's route of the same shape. No special-casing
+// needed here; the target is resolved per request automatically.
 export async function checkout(req, res, next) {
   const { firstName, lastName, email, phone, city, postalCode, street, number, note, couponCode } = req.body;
 

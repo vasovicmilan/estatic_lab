@@ -103,4 +103,68 @@ export async function updateSiteSettings(req, res, next) {
   }
 }
 
-export default { siteSettingsForm, updateSiteSettings };
+/**
+ * Saves the salon-wide DISPLAY working-hours schedule (separate form/section
+ * from the main site-settings save above - see site-settings.routes.js).
+ * Validation of the payload SHAPE already happened in
+ * validateWorkingHoursUpdate (site-settings.validator.js); the cross-field
+ * business rules (exactly 7 days, from < to) are enforced by
+ * siteSettingsService.updateWorkingHours itself, which throws a 400 the same
+ * way updatePolicy does for booking policy.
+ */
+export async function updateWorkingHours(req, res, next) {
+  try {
+    const existing = await siteSettingsService.getSiteSettingsForEdit();
+    const updated = await siteSettingsService.updateWorkingHours(req.body.workingHours);
+
+    logInfo("[updateWorkingHours] Radno vreme salona (prikaz) ažurirano", { adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "SITE_SETTINGS_WORKING_HOURS_UPDATED",
+      entity: { type: "SiteSettings", id: "singleton" },
+      changes: { workingHours: { before: existing.workingHours, after: updated.workingHours } },
+      req,
+      success: true,
+    });
+
+    return flashAndRedirect(req, res, "success", "Radno vreme je uspešno ažurirano", "/admin/sajt");
+  } catch (error) {
+    logError("[updateWorkingHours] Greška pri ažuriranju radnog vremena", error, { userId: req.session?.user?.id, body: req.body });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, "/admin/sajt");
+    }
+    next(error);
+  }
+}
+
+/**
+ * Saves the list of one-off closed dates/praznici. Same pattern as
+ * updateWorkingHours above - full replace of the list, validated shape via
+ * validateClosedDatesUpdate, business rules in the service.
+ */
+export async function updateClosedDates(req, res, next) {
+  try {
+    const existing = await siteSettingsService.getSiteSettingsForEdit();
+    const updated = await siteSettingsService.updateClosedDates(req.body.closedDates);
+
+    logInfo("[updateClosedDates] Neradni dani salona ažurirani", { adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "SITE_SETTINGS_CLOSED_DATES_UPDATED",
+      entity: { type: "SiteSettings", id: "singleton" },
+      changes: { closedDates: { before: existing.closedDates, after: updated.closedDates } },
+      req,
+      success: true,
+    });
+
+    return flashAndRedirect(req, res, "success", "Neradni dani su uspešno ažurirani", "/admin/sajt");
+  } catch (error) {
+    logError("[updateClosedDates] Greška pri ažuriranju neradnih dana", error, { userId: req.session?.user?.id, body: req.body });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, "/admin/sajt");
+    }
+    next(error);
+  }
+}
+
+export default { siteSettingsForm, updateSiteSettings, updateWorkingHours, updateClosedDates };

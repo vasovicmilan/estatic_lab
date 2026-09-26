@@ -12,6 +12,7 @@ import { runPublishScheduledPosts } from "./post-jobs.js";
 import { runSendScheduledCampaigns } from "./campaign-jobs.js";
 import { runSredimeSync } from "./sredime-jobs.js";
 import { runAppointmentReminders } from "./appointment-reminder-jobs.js";
+import { runEmployeeEveningDigest, runEmployeeMorningDigest } from "./employee-reminder-jobs.js";
 import {
   runDailyBusinessReport,
   runWeeklyBusinessReport,
@@ -98,6 +99,21 @@ export function startScheduler() {
   // means the reminder goes out a few minutes later next tick, never twice
   // and never silently skipped.
   cron.schedule("*/15 * * * *", () => runAppointmentReminders(), { timezone: TIMEZONE });
+
+  // Employee daily appointment digests - two FIXED clock times, not a rolling
+  // window like the customer reminders above, because these are framed
+  // relative to a calendar day ("your appointments for tomorrow"/"today"),
+  // not a fixed number of hours before each individual appointment. 19:00
+  // evening-before digest ("sutra") plus 08:00 morning-of digest ("danas") -
+  // both grouped per employee, one email per employee covering every
+  // appointment they have that day (see employee-reminder-jobs.js and
+  // appointment.service.js's findAppointmentsForEmployeeDigest), and each
+  // guarded by its own idempotency field (employeeEveningReminderSentAt /
+  // employeeMorningReminderSentAt - see appointment.model.js) so a missed or
+  // re-run tick never double-sends. Email only - employees have no
+  // per-employee Telegram chat id in this system (see employee.model.js).
+  cron.schedule("0 19 * * *", () => runEmployeeEveningDigest(), { timezone: TIMEZONE });
+  cron.schedule("0 8 * * *", () => runEmployeeMorningDigest(), { timezone: TIMEZONE });
 
   // Business reports (bookings/sales/commissions/coupons - see
   // business-report.service.js) - a genuinely different report from the

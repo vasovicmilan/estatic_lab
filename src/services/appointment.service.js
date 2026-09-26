@@ -13,7 +13,7 @@ import { getAllowedStatuses } from "../models/appointment-status-transitions.js"
 import { canUserCancelAppointment, getRescheduleWindow, hasMinimumRescheduleLeadTime, isSameCalendarDay } from "../utils/appointment-cancellation.util.js";
 import { buildPhoneRecord } from "../utils/phone.util.js";
 import { isEmployeeWorkingAt } from "../utils/working-hours.util.js";
-import { zonedInputToUtcDate } from "../utils/date.time.util.js";
+import { zonedInputToUtcDate, getStartOfDayInZone, nextDayStartInZone, formatTime } from "../utils/date.time.util.js";
 import { getBookingPolicy } from "../config/runtime-settings.cache.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
@@ -884,6 +884,72 @@ export async function markReminderSent(appointmentId, sentAtField) {
   return appointmentRepo.updateAppointmentById(appointmentId, { [sentAtField]: new Date() });
 }
 
+/**
+ * Tomorrow's/today's confirmed, not-yet-digested appointments, grouped by the
+ * employee who's actually doing them and mapped to the same "employee short"
+ * display shape (klijent/usluga) the employee-facing UI already uses (see
+ * mapAppointmentForEmployeeShort) plus a bare `vreme` (time-only, not the full
+ * date - the digest is already scoped to one specific day, so repeating that
+ * day on every line would just be noise). Used by
+ * jobs/employee-reminder-jobs.js's two digest runs.
+ *
+ * dayOffset: 0 = today (the 08:00 "danas" run), 1 = tomorrow (the 19:00
+ * "sutra" run) - resolved against the Belgrade CALENDAR day via
+ * getStartOfDayInZone/nextDayStartInZone, not a rolling 24h window, since
+ * "tomorrow's appointments" has to mean the same literal day no matter what
+ * minute the cron actually fires.
+ *
+ * Grouped by `employee || assignedTo` - same either/or as
+ * canAccessAppointment/findBusyIntervals above (the customer's own pick vs a
+ * system/admin assignment) - because either field can be the one actually
+ * holding "who does this". An appointment with neither set (still pending
+ * assignment) is silently dropped: there's nobody to send it to, and it'll
+ * naturally get picked up by a later run once someone's assigned, since the
+ * sentAt guard is still null.
+ */
+export async function findAppointmentsForEmployeeDigest(dayOffset, sentAtField) {
+  const anchor = new Date(Date.now() + dayOffset * 24 * 60 * 60 * 1000);
+  const dayStart = getStartOfDayInZone(anchor);
+  const dayEnd = nextDayStartInZone(dayStart);
+  const appointments = await appointmentRepo.findAppointmentsForEmployeeDigest(sentAtField, dayStart, dayEnd);
+
+  const groupsByEmployeeId = new Map();
+  for (const appointment of appointments) {
+    const employee = appointment.employee || appointment.assignedTo;
+    if (!employee || !employee._id) continue;
+
+    const key = employee._id.toString();
+    if (!groupsByEmployeeId.has(key)) groupsByEmployeeId.set(key, { employee, appointments: [] });
+    groupsByEmployeeId.get(key).appointments.push({
+      ...mapAppointment(appointment, "employee", "short"),
+      vreme: formatTime(appointment.startTime),
+      // kept only for the sort below - formatDateTime's Serbian "dd.mm.yyyy.
+      // HH:mm" string (the mapper's `datum` field) doesn't round-trip through
+      // `new Date()`, so sorting needs the real Date, not the display string.
+      startTimeRaw: appointment.startTime,
+    });
+  }
+
+  for (const group of groupsByEmployeeId.values()) {
+    group.appointments.sort((a, b) => new Date(a.startTimeRaw) - new Date(b.startTimeRaw));
+    group.appointments.forEach((a) => delete a.startTimeRaw);
+  }
+
+  return Array.from(groupsByEmployeeId.values());
+}
+
+/**
+ * Bulk idempotency-guard update for the employee digest jobs - see
+ * markReminderSent above for the single-appointment equivalent used by the
+ * customer reminder job. A digest run touches many appointments (every
+ * appointment across every employee that just got emailed) in one go, so this
+ * goes straight to the repository's updateMany rather than looping
+ * markReminderSent per appointment id.
+ */
+export async function markEmployeeDigestSent(appointmentIds, sentAtField) {
+  return appointmentRepo.markAppointmentsDigestSent(appointmentIds, sentAtField);
+}
+
 export default {
   findAppointments,
   getAppointmentById,
@@ -907,4 +973,6 @@ export default {
   getGoogleEventId,
   findAppointmentsDueForReminder,
   markReminderSent,
+  findAppointmentsForEmployeeDigest,
+  markEmployeeDigestSent,
 };

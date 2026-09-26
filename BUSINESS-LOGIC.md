@@ -321,6 +321,8 @@ Built to grow later (e.g. an "about us" page's content) without needing a new mo
 
 **One error format, every time.** Whatever went wrong (missing token, missing permission, too many requests, invalid input, a genuine bug), the caller gets the same response shape with a short error ID. The same ID is written to the server log, so a reported problem can be found directly.
 
+**Links in emails follow the door.** A verification, password-reset, order-confirmation or unsubscribe link in an email opens the same face the person used: someone who registered on the website gets a website link, someone who registered through the separate frontend gets a link to that frontend. Staff alerts work the same way. One central place builds every such link, so a new frontend only needs its own set of pages, not changes across the codebase.
+
 **Why this approach.** One set of business rules and one permission model means a rule fixed once is fixed everywhere, and a frontend team can build against a single predictable contract. The deliberate trade-off: permissions are copied into the token at sign-in, so a change made by an admin reaches an already-signed-in API user only after the token expires (up to 24 hours); for urgent revocation the account itself is deactivated, which is checked on every request. Versioning by folder (`v1`) means a future `v2` can change the contract without touching what existing clients rely on. For the route list and details see `docs/en/15-api-v1-reference.md`.
 
 ---

@@ -168,14 +168,14 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const res = await fetch("/kupon/primeni", {
           method: "POST",
-          headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+          headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": csrfToken },
           body: JSON.stringify(payload),
         });
         const json = await res.json();
         if (json.success) {
           showApplied(json.code, json.discountAmount);
         } else {
-          showError(json.message);
+          showError(json.error?.message || "Kupon nije važeći.");
         }
       } catch {
         showError("Greška - pokušajte ponovo.");

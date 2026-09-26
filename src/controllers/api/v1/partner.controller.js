@@ -8,11 +8,10 @@ import * as productService from "../../../services/product.service.js";
 import * as categoryService from "../../../services/category.service.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
-import { BUSINESS } from "../../../config/business.config.js";
 import { buildAuditActor } from "../../../utils/audit-actor.util.js";
 import { createEarnerListHandler } from "../../../utils/earner-listing.util.js";
+import { buildSiteUrl } from "../../../utils/link.builder.js";
 
-const BASE_URL = BUSINESS.siteUrl;
 
 // Mirrors controllers/web/partner/partner-account.controller.js - same services,
 // same referral-link construction, same audit log actor shape (req.user).
@@ -131,7 +130,7 @@ export async function catalog(req, res, next) {
     ]);
 
     const withLink = (items, path, linkCode) =>
-      items.map((item) => ({ ...item, referralLink: linkCode ? `${BASE_URL}${path}/${item.slug}?code=${encodeURIComponent(linkCode)}` : null }));
+      items.map((item) => ({ ...item, referralLink: linkCode ? buildSiteUrl(`${path}/${item.slug}`, { query: { code: linkCode } }) : null }));
 
     return res.json({
       success: true,

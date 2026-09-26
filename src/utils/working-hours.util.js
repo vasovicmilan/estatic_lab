@@ -1,5 +1,19 @@
 import { zonedComponentsToUtcDate, getZonedComponents } from "./date.time.util.js";
 
+// Canonical day-of-week enum, lowercase, Monday-first - matches
+// Employee.model.js's WorkingHoursSchema.day enum exactly. Exported so any
+// other schedule that needs "the 7 days, in order" (site-settings.model.js's
+// salon-wide display schedule) shares this one list instead of redefining its
+// own copy that could silently drift out of sync (different casing, order,
+// or a typo'd day name).
+export const DAYS_OF_WEEK = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+// Canonical "HH:MM" (24h) format every working-hours time string in this app
+// is expected to match - shared so a new schedule (site-settings.model.js)
+// validates times the same way isEmployeeWorkingAt/timeStringToDate below
+// already assume, instead of inventing a subtly different regex.
+export const TIME_STRING_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
 export function dayOfWeek(date) {
   // Was date.getDay() - reads the SERVER PROCESS's own timezone (UTC on this
   // VPS), not Belgrade. Near midnight the two calendars can genuinely disagree
@@ -54,4 +68,4 @@ export function isEmployeeWorkingAt(employee, startTime, endTime) {
   });
 }
 
-export default { dayOfWeek, timeStringToDate, isEmployeeWorkingAt };
+export default { dayOfWeek, timeStringToDate, isEmployeeWorkingAt, DAYS_OF_WEEK, TIME_STRING_RE };

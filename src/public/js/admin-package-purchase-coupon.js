@@ -49,7 +49,7 @@
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
       const res = await fetch("/admin/kupljeni-paketi/proveri-kupon", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+        headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": csrfToken },
         body: JSON.stringify({ code, packageId: packageSelect.value, userId: userSelect?.value || null }),
       });
       const data = await res.json();
@@ -58,7 +58,7 @@
         const symbol = window.__currencySymbol || "RSD";
         showCouponNote("text-success", `Kupon važi - popust ${data.discountAmount} ${symbol}. Cena sa kuponom: ${data.finalPrice} ${symbol}.`);
       } else {
-        showCouponNote("text-danger", data.message || "Kupon nije važeći.");
+        showCouponNote("text-danger", data.error?.message || "Kupon nije važeći.");
       }
     } catch {
       showCouponNote("text-danger", "Greška pri proveri kupona - pokušajte ponovo.");

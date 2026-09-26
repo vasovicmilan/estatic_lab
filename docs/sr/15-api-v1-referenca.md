@@ -38,23 +38,41 @@ Svaki JSON odgovor ima dosledan oblik:
 { "success": false, "error": { "id": "abc12345", "status": 400, "message": "...", "code": null } }
 ```
 
-`meta` se pojavljuje samo na listing rutama (paginacija). `error.id` je isti ID koji se pojavljuje u serverskom log redu te greške (polje `errorId` i `[id]` u poruci - videti `10-logovi-i-revizija.md`) i vraća se i u `X-Error-ID` response header-u - koristan pri prijavi problema, jer omogućava da se tačan red u serverskom logu pronađe po ID-ju umesto po vremenu. Napomena: rutinske klijentske greške (4xx) se loguju na `warn` nivou, pa završavaju u opštem app logu, a ne u `error.log`; u `error.log` idu samo neočekivane greške i 5xx. Svaki odgovor nosi i `X-Request-Id` header (nasumičan UUID po zahtevu).
+`meta` se pojavljuje samo na listing rutama (paginacija). `error.id` je isti ID koji se pojavljuje u serverskom log redu te greške (polje `errorId` i `[id]` u poruci - videti `10-logovi-i-revizija.md`) i vraća se i u `X-Error-ID` response header-u - koristan pri prijavi problema, jer omogućava da se tačan red u serverskom logu pronađe po ID-ju umesto po vremenu. Napomena: rutinske klijentske greške (4xx) se loguju na `warn` nivou, pa završavaju u opštem app logu, a ne u `error.log`; u `error.log` idu samo neočekivane greške i 5xx. Nekoliko AJAX pomoćnika koje sam sajt koristi (pregled kupona na formama, provera paketa na formi za ručno zakazivanje) odgovara greškama u istom obliku kada zahtev šalje `Accept: application/json`, što skripte sajta rade. Svaki odgovor nosi i `X-Request-Id` header (nasumičan UUID po zahtevu).
 
 **Svaka** greška ide kroz ovaj jedan oblik - uključujući `401` (nedostaje/nevažeći token), `403` (nedostaje dozvola), `429` (rate limit), greške validacije (`400`, sa spiskom polja u `error.details`) i greške uploada. Kontroleri i middleware-i nikad ne odgovaraju sopstvenim ad-hoc telom greške; prosleđuju grešku centralnom handler-u, koji je taj koji pravi `id`, `X-Error-ID` header i log red.
 
 Slika/upload polja (naslovna slika posta, galerija proizvoda, itd.) kroz JSON API idu u **dva koraka**: prvo se fajl otpremi na `/api/v1/admin/uploads/...` (videti "Upload" ispod), pa se vraćeni objekat prosleđuje kao image/gallery/video polje običnog JSON create/update poziva. Same create/update rute ne prihvataju fajlove u telu zahteva.
 
+## Linkovi u mejlovima i alarmima
+
+Mejlovi i Telegram alarmi sadrže linkove (verifikacija naloga, reset lozinke, potvrda porudžbine, odjava, "otvori ovaj termin u admin panelu"...). Ista akcija može da se pokrene sa sajta koji se renderuje na serveru ili preko ovog API-ja iz odvojenog frontenda, a link mora da otvori onu stranu koju osoba stvarno koristi. Svi ovakvi linkovi se prave na jednom mestu, `src/utils/link.builder.js` (`buildLink(name, params)`), iz tabele ruta koja za svaku akciju čuva putanju na sajtu i putanju na frontendu.
+
+Koja strana se koristi određuje se automatski: svaki zahtev pod `/api/*` označen je kao "frontend", svaki drugi kao "web" (`link-context.middleware.js`), a oznaka prati zahtev u servise, event listenere i mejlove koje pokrene. Posao bez ikakvog zahteva (cron podsetnici, zakazane kampanje) koristi `LINKS_DEFAULT_TARGET` (podrazumevano `web` - postaviti na `frontend` kad odvojeni frontend preuzme javni domen). Frontend linkovi koriste `FRONTEND_URL` (ako nije postavljen, koristi se `BASE_URL`; lokalni Angular dev: `http://localhost:4200`).
+
+Frontend mora da ima ove rute za token linkove (svaka čita parametre iz URL-a i zove odgovarajuću API rutu):
+
+| Frontend ruta | Zove |
+|---|---|
+| `/verifikacija/:token` | `GET /api/v1/auth/verify/:token` |
+| `/resetovanje-lozinke/:token` i `/preuzmi-nalog/:token` (preuzimanje naloga gosta - isti tok) | `PUT /api/v1/auth/reset-password/:token` |
+| `/newsletter/odjava/:token` | `POST /api/v1/newsletter/unsubscribe/:token` |
+| `/korpa/potvrda/:orderId/:token` | `GET /api/v1/orders/:orderId/confirm/:token` |
+
+Linkovi ka nalogu, zaposlenom i adminu (`/moj-nalog/zakazivanja`, `/zaposleni-panel/termini`, `/admin/zakazivanja/:id`, `/admin/porudzbine/:id`, `/admin/prodavnica/:id`, `/admin/poruke/:id/pregled`) već postoje u Angular aplikaciji. Novi link se dodaje kao jedan unos sa obe varijante u `LINK_ROUTES`; unit test proverava da obe varijante primaju iste parametre.
+
 ## Javne rute (bez tokena)
 
 | Ruta | Šta radi |
 |---|---|
-| `GET /api/v1/catalog/services`, `/packages`, `/products`, `/team`, `/blog/posts`, `/business-partners` (+ `/:slug`) | Isti javni katalog kao web prodavnica/usluge/blog, u JSON obliku |
+| `GET /api/v1/services`, `/packages`, `/products`, `/team`, `/blog/posts`, `/business-partners` (+ `/:slug`) | Isti javni katalog kao web prodavnica/usluge/blog, u JSON obliku |
 | `GET /api/v1/booking/:serviceSlug/slots` | Dostupni termini za uslugu (koristi `optionalApiAuth` - radi i bez i sa tokenom) |
 | `POST /api/v1/booking/confirm` | Zakazivanje termina kao gost ili prijavljen korisnik |
 | `GET /api/v1/booking/referral-code` | Referalni (partnerski) kod koji je već zabeležen za ovog posetioca, ako postoji |
 | `POST /api/v1/booking/coupon/check` | Pregled popusta kupona pre potvrde zakazivanja (`optionalApiAuth` - poštuju se limiti kupona po korisniku za prijavljenog pozivaoca) |
 | `POST /api/v1/contact`, `/newsletter-subscribe`, `/testimonials` | Javna kontakt forma, prijava na newsletter i slanje testimonijala, sa istim honeypot-om i rate limitima kao web ekvivalenti |
 | `GET /api/v1/orders/:orderId/confirm/:token` | Potvrda porudžbine preko linka iz mejla (bez prijave) |
+| `POST /api/v1/newsletter/unsubscribe/:token` | Odjava preko linka iz newsletter mejla (namerno POST: mail skeneri koji GET-uju svaki link ne smeju nekoga slučajno da odjave) |
 | `POST /api/v1/auth/register`, `/login`, `/forgot-password`, `PUT /reset-password/:token`, `GET /verify/:token` | Standardan auth tok |
 
 ## Rute prijavljenog korisnika (bilo koja rola, samo `apiAuthMiddleware`)
@@ -71,7 +89,7 @@ Slika/upload polja (naslovna slika posta, galerija proizvoda, itd.) kroz JSON AP
 
 Svaka od ovih zahteva validan token i `access_admin_panel` (kapija na nivou mount-a, opisana u Autorizaciji), plus dozvolu navedenu ispod. Ovo je ogledalo web `/admin` panela - ista pravila, isti servisi, samo JSON umesto EJS render-a.
 
-Pored navedenih ruta, većina resursa izlaže i `GET /:id/edit` (zapis pripremljen za formu za izmenu - zaposleni, eksperti, partneri, kategorije, tagovi, resursi, usluge, paketi, proizvodi, kuponi, saradnici).
+Pored navedenih ruta, većina resursa izlaže i `GET /:id/edit` (zapis pripremljen za formu za izmenu - zaposleni, eksperti, partneri, kategorije, tagovi, resursi, usluge, paketi, proizvodi, kuponi, saradnici, newsletter kampanje).
 
 Rute modula koji je isključen za deployment (`ENABLED_MODULES`) odgovaraju sa `404` - videti `16-modularni-feature-flagovi.md` za spisak gejtovanih ruta.
 

@@ -38,23 +38,41 @@ Every JSON response follows one consistent shape:
 { "success": false, "error": { "id": "abc12345", "status": 400, "message": "...", "code": null } }
 ```
 
-`meta` only appears on listing routes (pagination). `error.id` is the same ID that appears in the server log line for that error (`errorId` field and `[id]` in the message - see `10-logs-and-audit-trail.md`) and is also returned in the `X-Error-ID` response header - useful when reporting an issue, since it lets the exact server log line be found by ID instead of by timestamp. Note that routine client errors (4xx) are logged at `warn` level, so they end up in the general app log, not `error.log`; only unexpected errors and 5xx go to `error.log`. Every response also carries an `X-Request-Id` header (a random UUID per request).
+`meta` only appears on listing routes (pagination). `error.id` is the same ID that appears in the server log line for that error (`errorId` field and `[id]` in the message - see `10-logs-and-audit-trail.md`) and is also returned in the `X-Error-ID` response header - useful when reporting an issue, since it lets the exact server log line be found by ID instead of by timestamp. Note that routine client errors (4xx) are logged at `warn` level, so they end up in the general app log, not `error.log`; only unexpected errors and 5xx go to `error.log`. The few AJAX helpers the website itself uses (coupon preview on forms, package check on the manual-appointment form) answer errors in this same shape when the request sends `Accept: application/json`, which the site's own scripts do. Every response also carries an `X-Request-Id` header (a random UUID per request).
 
 **Every** error goes through this one shape - including `401` (missing/invalid token), `403` (missing permission), `429` (rate limited), validation errors (`400`, with the field list in `error.details`) and upload errors. Controllers and middleware never answer with their own ad-hoc error body; they pass an error to the central error handler, which is what produces the `id`, the `X-Error-ID` header and the log line.
 
 Image/file upload fields (a post's cover image, a product's gallery, etc.) are handled in **two steps** through the JSON API: first upload the file to `/api/v1/admin/uploads/...` (see "Uploads" below), then pass the returned object as the image/gallery/video field of the normal JSON create/update call. The create/update routes themselves do not accept file bodies.
 
+## Links in emails and alerts
+
+Emails and Telegram alerts contain links (verify account, reset password, confirm order, unsubscribe, "open this appointment in the admin panel"...). The same action can be started from the server-rendered website or through this API by a separate frontend, and the link has to open the face the person actually uses. All such links are built in one place, `src/utils/link.builder.js` (`buildLink(name, params)`), from a route table that holds the website path and the frontend path for each action.
+
+Which face is used is decided automatically: every request under `/api/*` is marked as "frontend", every other request as "web" (`link-context.middleware.js`), and the mark follows the request into the services, event listeners and emails it triggers. Work with no request at all (cron reminders, scheduled campaigns) uses `LINKS_DEFAULT_TARGET` (`web` by default - set to `frontend` when the separate frontend takes over the public domain). Frontend links use `FRONTEND_URL` (falls back to `BASE_URL` when unset; local Angular dev: `http://localhost:4200`).
+
+The frontend has to provide these routes for the token links (each reads its params from the URL and calls the matching API route):
+
+| Frontend route | Calls |
+|---|---|
+| `/verifikacija/:token` | `GET /api/v1/auth/verify/:token` |
+| `/resetovanje-lozinke/:token` and `/preuzmi-nalog/:token` (guest account claim - same flow) | `PUT /api/v1/auth/reset-password/:token` |
+| `/newsletter/odjava/:token` | `POST /api/v1/newsletter/unsubscribe/:token` |
+| `/korpa/potvrda/:orderId/:token` | `GET /api/v1/orders/:orderId/confirm/:token` |
+
+Account, employee and admin links (`/moj-nalog/zakazivanja`, `/zaposleni-panel/termini`, `/admin/zakazivanja/:id`, `/admin/porudzbine/:id`, `/admin/prodavnica/:id`, `/admin/poruke/:id/pregled`) already exist in the Angular app. To add a new link, add one entry with both variants to `LINK_ROUTES`; a unit test checks that both variants take the same parameters.
+
 ## Public routes (no token)
 
 | Route | What it does |
 |---|---|
-| `GET /api/v1/catalog/services`, `/packages`, `/products`, `/team`, `/blog/posts`, `/business-partners` (+ `/:slug`) | The same public catalog as the web shop/services/blog, in JSON |
+| `GET /api/v1/services`, `/packages`, `/products`, `/team`, `/blog/posts`, `/business-partners` (+ `/:slug`) | The same public catalog as the web shop/services/blog, in JSON |
 | `GET /api/v1/booking/:serviceSlug/slots` | Available appointment slots for a service (uses `optionalApiAuth` - works with or without a token) |
 | `POST /api/v1/booking/confirm` | Book an appointment as a guest or a logged-in user |
 | `GET /api/v1/booking/referral-code` | The referral (partner) code already captured for this visitor, if any |
 | `POST /api/v1/booking/coupon/check` | Preview a coupon's discount before confirming a booking (`optionalApiAuth` - a logged-in caller's per-user coupon limits are honored) |
 | `POST /api/v1/contact`, `/newsletter-subscribe`, `/testimonials` | The public contact form, newsletter sign-up and testimonial submission, with the same honeypot and rate limits as their web equivalents |
 | `GET /api/v1/orders/:orderId/confirm/:token` | Order confirmation via the link in the confirmation email (no login) |
+| `POST /api/v1/newsletter/unsubscribe/:token` | Unsubscribe via the link in a newsletter email (POST on purpose: mail scanners that GET every link must not be able to unsubscribe someone) |
 | `POST /api/v1/auth/register`, `/login`, `/forgot-password`, `PUT /reset-password/:token`, `GET /verify/:token` | Standard auth flow |
 
 ## Logged-in-user routes (any role, just `apiAuthMiddleware`)
@@ -71,7 +89,7 @@ Image/file upload fields (a post's cover image, a product's gallery, etc.) are h
 
 Each of these requires a valid token and `access_admin_panel` (the mount-level gate described under Authorization), plus the permission listed below. This mirrors the web `/admin` panel - same rules, same services, just JSON instead of EJS rendering.
 
-Besides the routes listed, most resources also expose `GET /:id/edit` (the record prepared for an edit form - employees, experts, partners, categories, tags, resources, services, packages, products, coupons, business partners).
+Besides the routes listed, most resources also expose `GET /:id/edit` (the record prepared for an edit form - employees, experts, partners, categories, tags, resources, services, packages, products, coupons, business partners, newsletter campaigns).
 
 Routes belonging to a module that is switched off for the deployment (`ENABLED_MODULES`) respond `404` - see `16-module-feature-flags.md` for which routes are gated.
 

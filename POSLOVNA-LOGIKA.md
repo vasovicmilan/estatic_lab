@@ -321,6 +321,8 @@ Spremno da se u budućnosti proširi (npr. sadržaj stranice "O nama") bez potre
 
 **Jedan format greške, uvek.** Bez obzira šta je pošlo naopako (nedostaje token, nedostaje dozvola, previše zahteva, nevalidan unos, pravi bag), pozivalac dobija isti oblik odgovora sa kratkim ID-jem greške. Isti ID se upisuje u serverski log, pa se prijavljeni problem može naći direktno.
 
+**Linkovi u mejlovima prate ulaz.** Link za verifikaciju, reset lozinke, potvrdu porudžbine ili odjavu u mejlu otvara istu stranu koju je osoba koristila: ko se registrovao na sajtu dobija link ka sajtu, ko se registrovao kroz odvojeni frontend dobija link ka tom frontendu. Alarmi za osoblje rade isto. Jedno centralno mesto pravi sve takve linkove, pa novom frontendu trebaju samo sopstvene stranice, a ne izmene po celom kodu.
+
 **Zašto ovaj pristup.** Jedan skup poslovnih pravila i jedan model dozvola znači da ispravka pravila važi svuda, a frontend tim gradi prema jednom predvidljivom ugovoru. Namerni kompromis: dozvole se kopiraju u token pri prijavi, pa izmena koju admin napravi stiže do već prijavljenog API korisnika tek kad token istekne (do 24 sata); za hitno oduzimanje pristupa deaktivira se sam nalog, što se proverava pri svakom zahtevu. Verzionisanje po folderu (`v1`) omogućava da budući `v2` promeni ugovor bez diranja onoga na šta se postojeći klijenti oslanjaju. Za spisak ruta i detalje videti `docs/sr/15-api-v1-referenca.md`.
 
 ---

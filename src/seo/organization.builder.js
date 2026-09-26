@@ -1,18 +1,43 @@
 import BUSINESS from "../config/business.config.js";
 import employeeService from "../services/employee.service.js";
+import runtimeSettingsCache from "../config/runtime-settings.cache.js";
 
 // Rendered once per request into every page via res.locals.orgJsonLd (set in
 // locals.config.js) - unlike generateSeo()'s per-type builders, this doesn't vary
 // by page, so it doesn't go through that registry.
 //
-// openingHoursSpecification comes from employeeService.getAggregateBusinessHours()
-// rather than a hardcoded schedule - there's no fixed salon schedule to hardcode,
-// since who's actually here on a given day depends on individual employee
-// schedules. That function is cached in-memory (see employee.service.js), so this
-// doesn't cost a DB round trip on every request.
+// openingHoursSpecification prefers the admin-editable, salon-wide FIXED
+// schedule (site-settings.model.js's workingHours - see admin/sajt) once one
+// has actually been configured (hasFixedWorkingHours() - "unconfigured" means
+// every day still defaults to isOpen: false), and only falls back to
+// employeeService.getAggregateBusinessHours() - hours derived from whichever
+// employees happen to have a shift that day - when the admin hasn't set fixed
+// hours yet. Same reasoning as before for why a derived fallback exists at
+// all (there's no fixed schedule to hardcode by default), but a real,
+// intentional salon schedule is now allowed to take over once one exists,
+// since "when are we open" is a business decision an admin should be able to
+// state directly rather than always inferring it from who happens to be
+// scheduled. getAggregateBusinessHours() stays cached in-memory
+// (employee.service.js) and getWorkingHours()/hasFixedWorkingHours() are
+// synchronous cache reads (runtime-settings.cache.js) - neither path costs a
+// DB round trip on a normal request.
+async function resolveOpeningHours() {
+  if (runtimeSettingsCache.hasFixedWorkingHours()) {
+    return runtimeSettingsCache
+      .getWorkingHours()
+      .filter((wh) => wh.isOpen)
+      .map((wh) => ({
+        dayOfWeek: wh.day.charAt(0).toUpperCase() + wh.day.slice(1),
+        opens: wh.from,
+        closes: wh.to,
+      }));
+  }
+  return employeeService.getAggregateBusinessHours();
+}
+
 export async function buildOrganizationJsonLd(req) {
   const base = `${req.protocol}://${req.get("host")}`;
-  const hours = await employeeService.getAggregateBusinessHours();
+  const hours = await resolveOpeningHours();
 
   return {
     "@context": "https://schema.org",

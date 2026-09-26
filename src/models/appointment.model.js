@@ -105,6 +105,22 @@ const AppointmentSchema = new Schema(
     reminder24hSentAt: { type: Date, default: null },
     reminder4hSentAt: { type: Date, default: null },
 
+    // Idempotency guards for the EMPLOYEE daily digest crons (see
+    // src/jobs/employee-reminder-jobs.js) - same null-means-unsent pattern as
+    // reminder24hSentAt/reminder4hSentAt above, but for a completely separate
+    // audience/shape: those two are customer-facing, one-reminder-per-
+    // appointment, fired on a rolling hours-before window; these two are
+    // employee-facing, one-digest-email-per-employee-per-day covering ALL of
+    // that employee's appointments at once, fired at two fixed clock times
+    // instead. "evening" = the 19:00 run that tells an employee what's on
+    // their calendar TOMORROW (dayOffset 1); "morning" = the 08:00 run that
+    // tells them what's on it TODAY (dayOffset 0). Two independent fields
+    // (not one) for the same reason as the customer pair: either job can be
+    // disabled, changed, or fail on its own without touching the other one's
+    // guard, and a plain null check stays a trivial, race-safe query filter.
+    employeeEveningReminderSentAt: { type: Date, default: null },
+    employeeMorningReminderSentAt: { type: Date, default: null },
+
     assignedTo: {
       type: Schema.Types.ObjectId,
       ref: "Employee",

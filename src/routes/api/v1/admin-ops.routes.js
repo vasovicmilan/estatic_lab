@@ -4,6 +4,7 @@ import { validateDirectPayoutRecord } from "../../../middlewares/validators/payo
 import { validateProfileUpdate } from "../../../middlewares/validators/user.validator.js";
 import { mongoIdParamValidator } from "../../../middlewares/validators/helpers/common.validator.js";
 import { handleApiValidationErrors } from "../../../middlewares/api-validation.middleware.js";
+import { validateWorkingHoursUpdate, validateClosedDatesUpdate } from "../../../middlewares/validators/site-settings.validator.js";
 import { apiAuthMiddleware } from "../../../middlewares/auth.middleware.js";
 import { requirePermission } from "../../../middlewares/permission.middleware.js";
 
@@ -41,6 +42,20 @@ router.get("/business-reports/history/:periodType/:periodKey", requirePermission
 // ---- Site settings ----
 router.get("/site-settings", requirePermission("manage_site_content"), AdminOpsController.getSiteSettings);
 router.put("/site-settings", requirePermission("manage_site_content"), AdminOpsController.updateSiteSettings);
+router.put(
+  "/site-settings/radno-vreme",
+  requirePermission("manage_site_content"),
+  validateWorkingHoursUpdate,
+  handleApiValidationErrors,
+  AdminOpsController.updateWorkingHours
+);
+router.put(
+  "/site-settings/neradni-dani",
+  requirePermission("manage_site_content"),
+  validateClosedDatesUpdate,
+  handleApiValidationErrors,
+  AdminOpsController.updateClosedDates
+);
 
 // ---- Admin's own profile (just access_admin_panel, already required by the whole router) ----
 router.get("/profile", AdminOpsController.getProfile);

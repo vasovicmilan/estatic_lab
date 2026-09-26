@@ -16,8 +16,7 @@ import { logError, logInfo, logWarn } from "../../../utils/logger.util.js";
 import auditLogService from "../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 
-import { BUSINESS } from "../../../config/business.config.js";
-const BASE_URL = BUSINESS.siteUrl;
+import { buildSiteUrl } from "../../../utils/link.builder.js";
 
 // Everything under /moj-partner-nalog is already behind webAuthMiddleware (see
 // web.routes.js) - explicitly noindex anyway, same defense-in-depth convention
@@ -220,7 +219,7 @@ export async function catalog(req, res, next) {
     ]);
 
     const withLink = (items, path, linkCode) =>
-      items.map((item) => ({ ...item, referralLink: linkCode ? `${BASE_URL}${path}/${item.slug}?code=${encodeURIComponent(linkCode)}` : null }));
+      items.map((item) => ({ ...item, referralLink: linkCode ? buildSiteUrl(`${path}/${item.slug}`, { query: { code: linkCode } }) : null }));
 
     return res.render("partner/catalog", {
       pageTitle: "Katalog za deljenje",

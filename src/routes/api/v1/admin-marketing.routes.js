@@ -66,6 +66,10 @@ router.put("/contacts/:contactId/status", requirePermission("manage_marketing"),
 // ---- Newsletter campaigns ----
 router.get("/newsletter-campaigns", requirePermission("manage_marketing"), AdminMarketingController.listCampaigns);
 router.get("/newsletter-campaigns/:campaignId", requirePermission("manage_marketing"), validateCampaignId, handleApiValidationErrors, AdminMarketingController.getCampaign);
+// getCampaign already returns the raw edit shape (campaignService.getCampaignForEdit), so /edit is
+// the same handler - added so campaigns follow the same GET /:id/edit convention as every other
+// admin resource (the Angular admin-campaign-form calls this path).
+router.get("/newsletter-campaigns/:campaignId/edit", requirePermission("manage_marketing"), validateCampaignId, handleApiValidationErrors, AdminMarketingController.getCampaign);
 router.post("/newsletter-campaigns", requirePermission("manage_marketing"), validateCampaignCreate, handleApiValidationErrors, AdminMarketingController.createCampaign);
 router.put("/newsletter-campaigns/:campaignId", requirePermission("manage_marketing"), validateCampaignId, validateCampaignUpdate, handleApiValidationErrors, AdminMarketingController.updateCampaign);
 router.put("/newsletter-campaigns/:campaignId/send", requirePermission("manage_marketing"), validateCampaignId, handleApiValidationErrors, AdminMarketingController.sendCampaignNow);

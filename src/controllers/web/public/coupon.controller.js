@@ -1,6 +1,6 @@
 import couponService from "../../../services/coupon.service.js";
 import { logInfo, logWarn } from "../../../utils/logger.util.js";
-import { normalizeError } from "../../../utils/error.util.js";
+import { AppError, normalizeError } from "../../../utils/error.util.js";
 
 function getAuth(req) {
   const isLoggedIn = !!req.session?.isLoggedIn;
@@ -51,10 +51,14 @@ export async function tryApplyCoupon(req, { code, context, serviceId, appointmen
   }
 }
 
-export async function applyCoupon(req, res) {
+export async function applyCoupon(req, res, next) {
   const { code, context, serviceId, appointmentValue, productIds, orderValue } = req.body;
   const result = await tryApplyCoupon(req, { code, context, serviceId, appointmentValue, productIds, orderValue });
-  return res.status(result.success ? 200 : 400).json(result);
+  // tryApplyCoupon deliberately returns { success:false, message } instead of throwing (the
+  // cookie-based auto-apply must stay silent); the explicit HTTP endpoint turns that into
+  // the app-wide error shape via globalErrorHandler.
+  if (!result.success) return next(new AppError(result.message, 400));
+  return res.status(200).json(result);
 }
 
 export async function removeCoupon(req, res) {

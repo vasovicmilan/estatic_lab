@@ -4,7 +4,7 @@ import externalBusyIntervalService from "./external-busy-interval.service.js";
 import serviceService from "./service.service.js";
 import resourceService from "./resource.service.js";
 import { validationError, badRequest } from "../utils/error.util.js";
-import { getBookingPolicy } from "../config/runtime-settings.cache.js";
+import { getBookingPolicy, isDateClosed } from "../config/runtime-settings.cache.js";
 import { timeStringToDate, isEmployeeWorkingAt, dayOfWeek } from "../utils/working-hours.util.js";
 import { getZonedComponents, getStartOfDayInZone, getEndOfDayInZone } from "../utils/date.time.util.js";
 
@@ -228,6 +228,17 @@ export async function getAvailableSlots({ serviceId, servicePackageId, employeeI
   const { start: todayStart } = dayBounds(new Date());
   if (targetDate < todayStart) badRequest("Ne možete zakazati termin u prošlosti");
 
+  // Salon-wide closed day (praznik, kolektivni godišnji odmor...) - see
+  // site-settings.model.js's ClosedDateSchema/runtime-settings.cache.js's
+  // isDateClosed. This is a hard override checked ONCE here, before looking
+  // at a single employee's own Employee.workingHours, rather than inside
+  // getEmployeeFreeSlotsForDay per employee - same end result (nobody has
+  // any slots that day) but one cheap in-memory cache read per request
+  // instead of one per employee. Individual employee schedules are
+  // deliberately never consulted here; a closed day means nobody, regardless
+  // of who would otherwise be on shift.
+  if (isDateClosed(targetDate)) return [];
+
   const { variant, service } = await serviceService.getActiveVariant(serviceId, servicePackageId);
 
   const candidates = employeeId
@@ -310,6 +321,13 @@ export async function getAvailableSlots({ serviceId, servicePackageId, employeeI
  * bottleneck isn't a person), so this returns [] without even looking at candidates.
  */
 export async function findAvailableEmployees(serviceId, startTime, endTime, { session, resources = [] } = {}) {
+  // Same salon-wide closed-day override as getAvailableSlots above - checked
+  // here too since this is the FINAL source of truth the booking transaction
+  // actually trusts (the slot list a visitor saw may be a few seconds stale),
+  // so a request racing a just-added closed date must still be rejected here,
+  // not just filtered out of the earlier read-path list.
+  if (isDateClosed(startTime)) return [];
+
   for (const { resourceId, capacity } of resources) {
     const resourceCount = await appointmentService.countOverlappingResourceAppointments(resourceId, startTime, endTime, { session });
     if (!capacity || resourceCount >= capacity) return [];

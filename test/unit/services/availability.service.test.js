@@ -8,6 +8,8 @@ import * as availabilityService from "../../../src/services/availability.service
 import { buildEmployee, buildServicePackageVariant, id } from "../../helpers/factories.js";
 import { getZonedComponents } from "../../../src/utils/date.time.util.js";
 import { timeStringToDate } from "../../../src/utils/working-hours.util.js";
+import siteSettingsRepo from "../../../src/repositories/site-settings.repository.js";
+import { loadRuntimeSettings } from "../../../src/config/runtime-settings.cache.js";
 
 // Slot instants are real UTC Date objects representing Belgrade wall-clock
 // time - reading them back with Date's own getHours()/getMinutes() answers
@@ -232,6 +234,68 @@ describe("availability.service", () => {
       const result = await availabilityService.findAvailableEmployees(id().toString(), start, end);
 
       assert.deepEqual(result, []);
+    });
+  });
+
+  // Salon-wide closed day (site-settings.model.js's closedDates) - a HARD
+  // override checked before any individual employee's own Employee.workingHours
+  // is even looked at. Drives the real runtime-settings.cache.js cache via the
+  // real loadRuntimeSettings() (not a stubbed isDateClosed) so this exercises
+  // the exact same code path production traffic does; t.after restores the
+  // cache to "no closed dates" afterwards so later tests in this file/process
+  // aren't affected by the mutation.
+  describe("closed-day override (site-settings.closedDates)", () => {
+    it("getAvailableSlots returns no slots at all for a closed day, regardless of any employee's own schedule", async (t) => {
+      const { date, dayName } = futureDateOnDay();
+      const variant = buildServicePackageVariant({ duration: 60 });
+      t.mock.method(serviceService, "getActiveVariant", async () => ({ variant, service: {} }));
+      const employee = buildEmployee({ workingHours: [{ day: dayName, slots: [{ from: "09:00", to: "17:00" }] }] });
+      t.mock.method(employeeRepo, "findEmployeesByService", async () => [employee]);
+      t.mock.method(appointmentRepo, "findBusyIntervals", async () => []);
+      t.mock.method(externalBusyIntervalRepo, "findByEmployeeAndRange", async () => []);
+
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => ({
+        bookingPolicy: {},
+        currency: {},
+        workingHours: [],
+        closedDates: [{ date, reason: "Test praznik", recurringYearly: false }],
+      }));
+      await loadRuntimeSettings();
+
+      const result = await availabilityService.getAvailableSlots({ serviceId: id().toString(), servicePackageId: id().toString(), date });
+      assert.deepEqual(result, []);
+
+      // restore the cache to "unconfigured" for any test running after this one
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => ({ bookingPolicy: {}, currency: {}, workingHours: [], closedDates: [] }));
+      await loadRuntimeSettings();
+    });
+
+    it("findAvailableEmployees rejects a booking attempt on a closed day even with a perfectly free employee", async (t) => {
+      const { date, dayName } = futureDateOnDay();
+      const start = new Date(date);
+      start.setHours(10, 0, 0, 0);
+      const end = new Date(start.getTime() + 60 * 60000);
+
+      t.mock.method(employeeRepo, "findEmployeesByService", async () => [
+        buildEmployee({ workingHours: [{ day: dayName, slots: [{ from: "09:00", to: "17:00" }] }] }),
+      ]);
+      t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+      t.mock.method(externalBusyIntervalRepo, "existsOverlapping", async () => false);
+
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => ({
+        bookingPolicy: {},
+        currency: {},
+        workingHours: [],
+        closedDates: [{ date, reason: "Test praznik", recurringYearly: false }],
+      }));
+      await loadRuntimeSettings();
+
+      const result = await availabilityService.findAvailableEmployees(id().toString(), start, end);
+      assert.deepEqual(result, []);
+
+      // restore the cache to "unconfigured" for any test running after this one
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => ({ bookingPolicy: {}, currency: {}, workingHours: [], closedDates: [] }));
+      await loadRuntimeSettings();
     });
   });
 });

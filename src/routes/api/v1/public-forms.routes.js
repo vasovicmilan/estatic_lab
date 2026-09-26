@@ -17,6 +17,7 @@ const router = Router();
 
 router.post("/contact", contactLimiter, validateHoneypot, validateContactCreate, handleApiValidationErrors, PublicFormsController.submitContact);
 router.post("/newsletter-subscribe", newsletterLimiter, validateHoneypot, validateNewsletterSubscribe, handleApiValidationErrors, PublicFormsController.subscribeNewsletter);
+router.post("/newsletter/unsubscribe/:token", newsletterLimiter, PublicFormsController.unsubscribeNewsletter);
 router.post("/testimonials", testimonialLimiter, validateHoneypot, validateTestimonialSubmit, handleApiValidationErrors, PublicFormsController.submitTestimonial);
 
 export default router;

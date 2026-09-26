@@ -211,6 +211,56 @@ export async function findAppointmentsDueForReminder(sentAtField, windowHours, {
     .lean();
 }
 
+/**
+ * Confirmed appointments landing inside one literal calendar day
+ * [dayStart, dayEnd) that haven't had this particular EMPLOYEE digest sent yet
+ * (sentAtField null) - the query behind the employee daily digest crons (see
+ * jobs/employee-reminder-jobs.js). Deliberately NOT a rolling
+ * hours-before-now window like findAppointmentsDueForReminder above: "your
+ * appointments for tomorrow" has to mean the same literal Belgrade calendar
+ * day no matter what minute the 19:00/08:00 job happens to actually run, so
+ * the caller passes exact bounds computed with date.time.util's
+ * getStartOfDayInZone/nextDayStartInZone rather than an hours number.
+ * Populates employee AND assignedTo (with each one's userId, for the
+ * recipient's name/email) because either field can be the one actually
+ * holding "who does this" - same either/or as findBusyIntervals/
+ * canAccessAppointment elsewhere in this codebase (employee = customer-picked,
+ * assignedTo = system/admin-assigned) - plus user/contactSnapshot and service
+ * so the caller can read the client's name and the service name for the
+ * digest line without a second query per appointment.
+ */
+export async function findAppointmentsForEmployeeDigest(sentAtField, dayStart, dayEnd, { session } = {}) {
+  return Appointment.find({
+    status: "confirmed",
+    startTime: { $gte: dayStart, $lt: dayEnd },
+    [sentAtField]: null,
+  })
+    .populate({ path: "employee", populate: { path: "userId", select: "firstName lastName email" } })
+    .populate({ path: "assignedTo", populate: { path: "userId", select: "firstName lastName email" } })
+    .populate({ path: "user", select: "firstName lastName email" })
+    .populate({ path: "service", select: "name" })
+    .session(session || null)
+    .lean();
+}
+
+/**
+ * Bulk-marks every appointment in `appointmentIds` as having had this
+ * digest sent, in one round trip - a digest run can cover dozens of
+ * appointments across many employees in a single tick, so looping
+ * updateAppointmentById once per appointment (like the single-reminder
+ * customer job does, where a "batch" is realistically a handful of rows)
+ * would be needless DB round trips here. `$set` (not a full replace) so this
+ * never touches any other field on these documents.
+ */
+export async function markAppointmentsDigestSent(appointmentIds, sentAtField, { session } = {}) {
+  if (!appointmentIds || appointmentIds.length === 0) return { matchedCount: 0, modifiedCount: 0 };
+  return Appointment.updateMany(
+    { _id: { $in: appointmentIds } },
+    { $set: { [sentAtField]: new Date() } },
+    { session }
+  );
+}
+
 export default {
   createAppointment,
   findAppointmentById,
@@ -225,4 +275,6 @@ export default {
   deleteAppointmentById,
   countAppointments,
   findAppointmentsDueForReminder,
+  findAppointmentsForEmployeeDigest,
+  markAppointmentsDigestSent,
 }

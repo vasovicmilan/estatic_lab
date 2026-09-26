@@ -3,7 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import userService from "../services/user.service.js";
 import { buildOrganizationJsonLd } from "../seo/organization.builder.js";
-import { getCurrency } from "./runtime-settings.cache.js";
+import { getCurrency, getWorkingHours } from "./runtime-settings.cache.js";
 import { logError, logWarn } from "../utils/logger.util.js";
 import BUSINESS from "./business.config.js";
 import { FEATURES } from "./features.config.js";
@@ -57,6 +57,13 @@ export async function localsMiddleware(req, res, next) {
   // formatMoney call) - e.g. "Iznos u <%= currencySymbol %>" instead of a
   // literal "Iznos u RSD".
   res.locals.currencySymbol = getCurrency().symbol;
+  // Salon-wide DISPLAY schedule (footer, kontakt) - synchronous cache read,
+  // same reasoning as currencySymbol above. NEVER the booking-availability
+  // source of truth (that stays Employee.workingHours) - this is only ever
+  // rendered for humans to read "kada smo otvoreni", never used to compute a
+  // bookable slot. Exposed globally (not just from the contact-page
+  // presenter) so footer.ejs, which renders on every page, can show it too.
+  res.locals.salonWorkingHours = getWorkingHours();
 
   res.locals.success = req.flash ? req.flash("success") : [];
   res.locals.error = req.flash ? req.flash("error") : [];

@@ -1,7 +1,15 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import siteSettingsRepo from "../../../src/repositories/site-settings.repository.js";
-import { loadRuntimeSettings, getBookingPolicy, getCurrency, getCommissionPolicy } from "../../../src/config/runtime-settings.cache.js";
+import {
+  loadRuntimeSettings,
+  getBookingPolicy,
+  getCurrency,
+  getCommissionPolicy,
+  getWorkingHours,
+  hasFixedWorkingHours,
+  isDateClosed,
+} from "../../../src/config/runtime-settings.cache.js";
 
 describe("runtime-settings.cache", () => {
   describe("loadRuntimeSettings", () => {
@@ -77,6 +85,84 @@ describe("runtime-settings.cache", () => {
       await loadRuntimeSettings();
 
       assert.equal(getCommissionPolicy().minimumSessionCommission, 900, "must keep the previous value, not silently reset to the hardcoded default");
+    });
+
+    it("loads workingHours/closedDates from the document, defaulting missing pieces sanely", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => ({
+        bookingPolicy: {},
+        currency: {},
+        workingHours: [{ day: "monday", isOpen: true, from: "09:00", to: "18:00" }],
+        closedDates: [{ date: new Date("2026-01-01T00:00:00.000Z"), reason: "Nova godina", recurringYearly: true }],
+      }));
+
+      await loadRuntimeSettings();
+
+      assert.deepEqual(getWorkingHours(), [{ day: "monday", isOpen: true, from: "09:00", to: "18:00" }]);
+      assert.equal(getWorkingHours().some((wh) => wh.isOpen), true);
+      assert.equal(hasFixedWorkingHours(), true);
+    });
+  });
+
+  describe("hasFixedWorkingHours", () => {
+    it("is false (unconfigured) when every day defaults to isOpen: false", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => ({
+        bookingPolicy: {},
+        currency: {},
+        workingHours: [
+          { day: "monday", isOpen: false, from: "09:00", to: "20:00" },
+          { day: "tuesday", isOpen: false, from: "09:00", to: "20:00" },
+        ],
+        closedDates: [],
+      }));
+
+      await loadRuntimeSettings();
+
+      assert.equal(hasFixedWorkingHours(), false);
+    });
+  });
+
+  describe("isDateClosed", () => {
+    it("matches a non-recurring closed date only on the exact calendar day", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => ({
+        bookingPolicy: {},
+        currency: {},
+        workingHours: [],
+        closedDates: [{ date: new Date("2026-12-24T00:00:00.000Z"), reason: "Vanredni odmor", recurringYearly: false }],
+      }));
+
+      await loadRuntimeSettings();
+
+      assert.equal(isDateClosed(new Date("2026-12-24T10:00:00.000Z")), true);
+      assert.equal(isDateClosed(new Date("2027-12-24T10:00:00.000Z")), false, "a non-recurring date must not match a different year");
+      assert.equal(isDateClosed(new Date("2026-12-25T10:00:00.000Z")), false);
+    });
+
+    it("matches a recurringYearly closed date on the same month/day regardless of the stored year", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => ({
+        bookingPolicy: {},
+        currency: {},
+        workingHours: [],
+        closedDates: [{ date: new Date("2020-01-01T00:00:00.000Z"), reason: "Nova godina", recurringYearly: true }],
+      }));
+
+      await loadRuntimeSettings();
+
+      assert.equal(isDateClosed(new Date("2026-01-01T10:00:00.000Z")), true);
+      assert.equal(isDateClosed(new Date("2099-01-01T10:00:00.000Z")), true);
+      assert.equal(isDateClosed(new Date("2026-01-02T10:00:00.000Z")), false);
+    });
+
+    it("returns false when no closed dates are configured", async (t) => {
+      t.mock.method(siteSettingsRepo, "findOrCreateSiteSettings", async () => ({
+        bookingPolicy: {},
+        currency: {},
+        workingHours: [],
+        closedDates: [],
+      }));
+
+      await loadRuntimeSettings();
+
+      assert.equal(isDateClosed(new Date()), false);
     });
   });
 });

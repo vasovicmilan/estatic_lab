@@ -1,0 +1,12 @@
+<%- include("_layout", {
+  title: "Pregled termina",
+  eyebrow: "Termini",
+  heading: `Vaši termini za ${when === "sutra" ? "sutra" : "danas"}${typeof firstName !== "undefined" && firstName ? ", " + firstName : ""}`,
+  preheader: `Pregled vaših termina za ${when === "sutra" ? "sutra" : "danas"}`,
+  body: `
+    <p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0 0 20px;">
+      Evo pregleda termina koje imate zakazane za ${when === "sutra" ? "sutra" : "danas"} - ukupno ${appointments.length} ${appointments.length === 1 ? "termin" : "termina"}.
+    </p>
+    ${infoTable(appointments.map((a) => infoRow(a.vreme || "-", `${a.klijent || "-"} &middot; ${a.usluga || "-"}`)).join(""))}
+  `
+}) %>

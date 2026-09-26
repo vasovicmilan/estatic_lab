@@ -2,8 +2,7 @@ import { formatDateTime } from "../../utils/date.time.util.js";
 import { formatPrice, formatMoney } from "../../utils/price.util.js";
 import { translateCommissionSourceType, translateCommissionStatus } from "../../utils/commission-display.util.js";
 
-import { BUSINESS } from "../../config/business.config.js";
-const BASE_URL = BUSINESS.siteUrl;
+import { buildSiteUrl } from "../../utils/link.builder.js";
 
 const PAYOUT_STATUS_LABELS = { requested: "Zatraženo", approved: "Odobreno", paid: "Isplaćeno", rejected: "Odbijeno" };
 
@@ -36,7 +35,7 @@ export function preparePartnerDashboardData({ partner, balance, coupons, service
       // motivating info for a partner even when there's no maxUses ceiling to
       // measure it against, not just when a limit makes it a fraction.
       iskorisceno: c.maxUses ? `${c.usedCount} / ${c.maxUses}` : `${c.usedCount} puta`,
-      link: `${BASE_URL}/?code=${encodeURIComponent(c.code)}`,
+      link: buildSiteUrl("/", { query: { code: c.code } }),
     })),
     recentCommissions: recentCommissions.map(mapCommissionRow),
     payoutRequests: payoutRequests.map(mapPayoutRequestRow),

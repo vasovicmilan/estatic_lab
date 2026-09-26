@@ -7,6 +7,31 @@
              background, a real WCAG AA failure - .text-white + .text-opacity-75
              (native Bootstrap utilities, no custom CSS needed) measures 7.77:1. -->
         <p class="text-white text-opacity-75 small">Vaš prostor za opuštanje i negu.</p>
+        <%
+          // Rendered only once an admin has actually filled in a fixed
+          // schedule (site-settings.model.js's workingHours defaults every
+          // day to isOpen: false/"unconfigured") - showing "Zatvoreno" for
+          // all 7 days on every page footer before anyone has set real hours
+          // would misinform visitors rather than help them. This is purely
+          // informational (see /admin/sajt) - it never reflects, and never
+          // feeds, actual booking-slot availability (Employee.workingHours).
+          const DAY_LABELS_SR = {
+            monday: "Ponedeljak", tuesday: "Utorak", wednesday: "Sreda", thursday: "Četvrtak",
+            friday: "Petak", saturday: "Subota", sunday: "Nedelja",
+          };
+          const hasConfiguredHours = typeof salonWorkingHours !== "undefined" && salonWorkingHours.some((wh) => wh.isOpen);
+        %>
+        <% if (hasConfiguredHours) { %>
+          <h6 class="mt-4">Radno vreme</h6>
+          <ul class="list-unstyled small mb-0">
+            <% salonWorkingHours.forEach((wh) => { %>
+              <li class="d-flex justify-content-between text-white text-opacity-75" style="max-width: 220px;">
+                <span><%= DAY_LABELS_SR[wh.day] || wh.day %></span>
+                <span><%= wh.isOpen ? `${wh.from} - ${wh.to}` : "Zatvoreno" %></span>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
       </div>
       <div class="col-md-4">
         <h6>Brzi linkovi</h6>

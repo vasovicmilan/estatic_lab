@@ -5,6 +5,7 @@ import * as userService from "../../../../services/user.service.js";
 import * as packagePurchaseService from "../../../../services/package-purchase.service.js";
 import { prepareManualAppointmentFormData } from "../../../../presenters/admin/appointment/manual-appointment.presenter.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
+import { AppError } from "../../../../utils/error.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
@@ -170,11 +171,11 @@ export async function createManualAppointment(req, res, next) {
  * check happens again server-side in bookAppointment/assertUsablePurchase at
  * actual creation time - this only decides whether to show the checkbox at all.
  */
-export async function checkManualAppointmentPackage(req, res) {
+export async function checkManualAppointmentPackage(req, res, next) {
   try {
     const { existingUserId, servicePackageId } = req.body;
     if (!existingUserId || !servicePackageId) {
-      return res.status(400).json({ usable: false, message: "Korisnik i varijanta su obavezni" });
+      return next(new AppError("Korisnik i varijanta su obavezni", 400));
     }
 
     const purchase = await packagePurchaseService.findUsablePurchaseForService(existingUserId, servicePackageId);
@@ -191,7 +192,7 @@ export async function checkManualAppointmentPackage(req, res) {
       body: req.body,
       userId: req.session?.user?.id,
     });
-    return res.status(400).json({ usable: false, message: "Greška pri proveri paketa" });
+    next(error);
   }
 }
 

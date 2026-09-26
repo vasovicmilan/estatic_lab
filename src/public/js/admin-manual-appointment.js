@@ -83,7 +83,7 @@
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
       const res = await fetch("/admin/termini/rucno-kreiranje/proveri-paket", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+        headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": csrfToken },
         body: JSON.stringify({ existingUserId: userId, servicePackageId }),
       });
       const result = await res.json();

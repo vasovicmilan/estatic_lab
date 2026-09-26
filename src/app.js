@@ -16,6 +16,7 @@ import { csrfLocals, csrfWebProtection } from "./config/csrf.config.js";
 import { globalLimiter } from "./middlewares/rate-limiter.middleware.js";
 import { couponCaptureMiddleware } from "./middlewares/coupon-capture.middleware.js";
 import { requestIdMiddleware } from "./middlewares/request-id.middleware.js";
+import { linkContextMiddleware } from "./middlewares/link-context.middleware.js";
 import routes from "./routes/index.routes.js";
 import { legacyUrlMiddleware } from "./middlewares/legacy-url.middleware.js";
 import { notFoundHandler, globalErrorHandler } from "./middlewares/error.middleware.js";
@@ -55,6 +56,9 @@ app.use((req, res, next) => {
 
 setupViewEngine(app);
 app.use(globalLimiter);
+// After every body/session middleware (AsyncLocalStorage context is most reliable when set
+// this late) and right before the routes: tells link.builder.js whether this request is web or /api.
+app.use(linkContextMiddleware);
 
 app.use("/", routes);
 

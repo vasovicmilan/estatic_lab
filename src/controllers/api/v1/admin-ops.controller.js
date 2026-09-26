@@ -355,6 +355,60 @@ export async function updateSiteSettings(req, res, next) {
   }
 }
 
+/**
+ * Mirrors controllers/web/admin/marketing/site-settings.controller.js's own
+ * updateWorkingHours - same service call, same audit log entry, JSON response
+ * shape instead of a flash+redirect. Request-shape validation already ran
+ * (validateWorkingHoursUpdate + handleApiValidationErrors, see
+ * admin-ops.routes.js), so a thrown error past this point is a genuine
+ * business-rule rejection (missing day, from >= to...), which next(error)
+ * hands to the same {success:false, error:{...}} shape every other /api/v1
+ * error uses (see error.util.js/AppError, not a bespoke shape here).
+ */
+export async function updateWorkingHours(req, res, next) {
+  try {
+    const existing = await siteSettingsService.getSiteSettingsForEdit();
+    const updated = await siteSettingsService.updateWorkingHours(req.body.workingHours);
+
+    logInfo("[api/admin/updateWorkingHours] Radno vreme salona (prikaz) ažurirano", { adminId: req.user.id });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "SITE_SETTINGS_WORKING_HOURS_UPDATED",
+      entity: { type: "SiteSettings", id: "singleton" },
+      changes: { workingHours: { before: existing.workingHours, after: updated.workingHours } },
+    });
+
+    return res.json({ success: true, data: updated });
+  } catch (error) {
+    logError("[api/admin/updateWorkingHours] Greška", error, { body: req.body });
+    next(error);
+  }
+}
+
+/**
+ * Mirrors updateClosedDates on the web side - full-list replace of the
+ * salon's one-off closures/praznici, same audit log entry.
+ */
+export async function updateClosedDates(req, res, next) {
+  try {
+    const existing = await siteSettingsService.getSiteSettingsForEdit();
+    const updated = await siteSettingsService.updateClosedDates(req.body.closedDates);
+
+    logInfo("[api/admin/updateClosedDates] Neradni dani salona ažurirani", { adminId: req.user.id });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "SITE_SETTINGS_CLOSED_DATES_UPDATED",
+      entity: { type: "SiteSettings", id: "singleton" },
+      changes: { closedDates: { before: existing.closedDates, after: updated.closedDates } },
+    });
+
+    return res.json({ success: true, data: updated });
+  } catch (error) {
+    logError("[api/admin/updateClosedDates] Greška", error, { body: req.body });
+    next(error);
+  }
+}
+
 // ================== Admin's own profile ==================
 
 export async function getProfile(req, res, next) {
@@ -384,6 +438,6 @@ export default {
   listAuditLogs,
   getLogDashboard, listLogSummaries, getLogSummary,
   getBusinessReportDashboard, listBusinessReports, getBusinessReport,
-  getSiteSettings, updateSiteSettings,
+  getSiteSettings, updateSiteSettings, updateWorkingHours, updateClosedDates,
   getProfile, updateProfile,
 };

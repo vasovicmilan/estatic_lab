@@ -2,9 +2,8 @@ import googleCalendarProvider from "../integrations/google-calendar/google-calen
 import GOOGLE_CALENDAR_CONFIG from "../integrations/google-calendar/google-calendar.config.js";
 import { getBookingPolicy } from "../config/runtime-settings.cache.js";
 import { logInfo, logError } from "../utils/logger.util.js";
-import { BUSINESS } from "../config/business.config.js";
+import { buildLink } from "../utils/link.builder.js";
 
-const BASE_URL = BUSINESS.siteUrl;
 // Computed fresh on every call, not once at module load - booking policy is
 // admin-editable now (see runtime-settings.cache.js), so a frozen constant
 // here would mean a policy change only took effect after a server restart.
@@ -37,7 +36,7 @@ function buildEventPayload(appointment) {
       `Klijent: ${clientName}`,
       appointment.korisnik?.telefon ? `Telefon: ${appointment.korisnik.telefon}` : null,
       appointment.napomena ? `Napomena: ${appointment.napomena}` : null,
-      `Detalji: ${BASE_URL}/admin/termini/detalji/${appointment.id}`,
+      `Detalji: ${buildLink("adminAppointment", { id: appointment.id })}`,
     ]
       .filter(Boolean)
       .join("\n"),

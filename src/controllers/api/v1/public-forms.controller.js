@@ -50,6 +50,21 @@ export async function subscribeNewsletter(req, res, next) {
   }
 }
 
+// Target of the unsubscribe link in every newsletter/welcome email (link.builder.js's
+// "newsletterUnsubscribe"): the frontend page reads :token from its URL and calls this.
+// POST (not GET) because it changes state - mail scanners/link prefetchers that GET every
+// URL in a message must never be able to unsubscribe someone by accident.
+export async function unsubscribeNewsletter(req, res, next) {
+  try {
+    const result = await indexService.unsubscribeNewsletter(req.params.token);
+    logInfo("[api/unsubscribeNewsletter] Odjava sa newslettera");
+    return res.json({ success: true, data: { message: result.message } });
+  } catch (error) {
+    logError("[api/unsubscribeNewsletter] Greška pri odjavi sa newslettera", error);
+    next(error);
+  }
+}
+
 export async function submitTestimonial(req, res, next) {
   try {
     const data = { ...req.body };
@@ -71,4 +86,4 @@ export async function submitTestimonial(req, res, next) {
   }
 }
 
-export default { submitContact, subscribeNewsletter, submitTestimonial };
+export default { submitContact, subscribeNewsletter, unsubscribeNewsletter, submitTestimonial };

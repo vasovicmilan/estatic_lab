@@ -21,9 +21,8 @@ import {
   buildStockAlertMessage,
 } from "../../utils/telegram-message.util.js";
 import { logError } from "../../utils/logger.util.js";
-import { BUSINESS } from "../../config/business.config.js";
+import { buildLink } from "../../utils/link.builder.js";
 
-const BASE_URL = BUSINESS.siteUrl;
 
 /**
  * Same shape and reasoning as email.listeners.js: this module's only job is
@@ -67,7 +66,7 @@ function toFlatAppointment(appointment) {
     coupon: appointment.kupon,
     cancelledBy: appointment.otkazao || null,
     cancelReason: appointment.razlogOtkazivanja || null,
-    adminUrl: appointment.id ? `${BASE_URL}/admin/termini/detalji/${appointment.id}` : null,
+    adminUrl: appointment.id ? buildLink("adminAppointment", { id: appointment.id }) : null,
   };
 }
 
@@ -128,7 +127,7 @@ function toFlatOrder(order) {
     note: order.napomena,
     cancelledBy: order.otkazao || null,
     cancelReason: order.razlogOtkazivanja || null,
-    adminUrl: order.id ? `${BASE_URL}/admin/porudzbine/detalji/${order.id}` : null,
+    adminUrl: order.id ? buildLink("adminOrder", { id: order.id }) : null,
   };
 }
 
@@ -162,7 +161,7 @@ eventEmitter.on(
 eventEmitter.on(
   "product:out_of_stock",
   safe("product:out_of_stock", async ({ productId, productName, sku, variantLabel }) => {
-    const text = buildStockAlertMessage({ productName, sku, variantLabel, stock: 0, isOutOfStock: true, adminUrl: `${BASE_URL}/admin/proizvodi/izmena/${productId}` });
+    const text = buildStockAlertMessage({ productName, sku, variantLabel, stock: 0, isOutOfStock: true, adminUrl: buildLink("adminProductEdit", { id: productId }) });
     await telegramService.sendTelegramMessage("PRODUCTS", text);
   })
 );
@@ -170,7 +169,7 @@ eventEmitter.on(
 eventEmitter.on(
   "product:low_stock",
   safe("product:low_stock", async ({ productId, productName, sku, variantLabel, stock }) => {
-    const text = buildStockAlertMessage({ productName, sku, variantLabel, stock, isOutOfStock: false, adminUrl: `${BASE_URL}/admin/proizvodi/izmena/${productId}` });
+    const text = buildStockAlertMessage({ productName, sku, variantLabel, stock, isOutOfStock: false, adminUrl: buildLink("adminProductEdit", { id: productId }) });
     await telegramService.sendTelegramMessage("PRODUCTS", text);
   })
 );
