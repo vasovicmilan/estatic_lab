@@ -7,47 +7,48 @@ import { validateResourceCreate, validateResourceUpdate, validateResourceId } fr
 import { handleApiValidationErrors } from "../../../middlewares/api-validation.middleware.js";
 import { apiAuthMiddleware } from "../../../middlewares/auth.middleware.js";
 import { requirePermission } from "../../../middlewares/permission.middleware.js";
+import { PERMISSION } from "../../../models/role.model.js";
 import { requireModule } from "../../../middlewares/feature.middleware.js";
 
 const router = Router();
 router.use(apiAuthMiddleware);
 
 // ---- Roles ---- (not module-specific - a role/permission exists regardless of which modules are enabled)
-router.get("/roles", requirePermission("manage_roles"), AdminTaxonomyController.listRoles);
-router.get("/roles/:roleId", requirePermission("manage_roles"), validateRoleId, handleApiValidationErrors, AdminTaxonomyController.getRole);
-router.post("/roles", requirePermission("manage_roles"), validateRoleCreate, handleApiValidationErrors, AdminTaxonomyController.createRole);
-router.put("/roles/:roleId", requirePermission("manage_roles"), validateRoleId, validateRoleUpdate, handleApiValidationErrors, AdminTaxonomyController.updateRole);
-router.delete("/roles/:roleId", requirePermission("manage_roles"), validateRoleId, handleApiValidationErrors, AdminTaxonomyController.deleteRole);
+router.get("/roles", requirePermission(PERMISSION.MANAGE_ROLES), AdminTaxonomyController.listRoles);
+router.get("/roles/:roleId", requirePermission(PERMISSION.MANAGE_ROLES), validateRoleId, handleApiValidationErrors, AdminTaxonomyController.getRole);
+router.post("/roles", requirePermission(PERMISSION.MANAGE_ROLES), validateRoleCreate, handleApiValidationErrors, AdminTaxonomyController.createRole);
+router.put("/roles/:roleId", requirePermission(PERMISSION.MANAGE_ROLES), validateRoleId, validateRoleUpdate, handleApiValidationErrors, AdminTaxonomyController.updateRole);
+router.delete("/roles/:roleId", requirePermission(PERMISSION.MANAGE_ROLES), validateRoleId, handleApiValidationErrors, AdminTaxonomyController.deleteRole);
 
 // ---- Categories ---- (NOT module-gated - a category is polymorphic across
 // blog/service/product domains via its own `domain` field, see
 // category.service.js's getCategoryAndDescendantIds; this single CRUD screen
 // manages categories for whichever domains ARE enabled, so gating the whole
 // route would hide it even for a still-enabled domain)
-router.get("/categories", requirePermission("manage_taxonomy"), AdminTaxonomyController.listCategories);
-router.get("/categories/:categoryId", requirePermission("manage_taxonomy"), validateCategoryId, handleApiValidationErrors, AdminTaxonomyController.getCategory);
+router.get("/categories", requirePermission(PERMISSION.MANAGE_TAXONOMY), AdminTaxonomyController.listCategories);
+router.get("/categories/:categoryId", requirePermission(PERMISSION.MANAGE_TAXONOMY), validateCategoryId, handleApiValidationErrors, AdminTaxonomyController.getCategory);
 // Raw/edit shape - see admin-taxonomy.controller.js's getCategoryForEdit header
 // comment for why this is a second endpoint rather than changing getCategory's
 // response (same reasoning as admin-catalog.routes.js's :id/edit routes).
-router.get("/categories/:categoryId/edit", requirePermission("manage_taxonomy"), validateCategoryId, handleApiValidationErrors, AdminTaxonomyController.getCategoryForEdit);
-router.post("/categories", requirePermission("manage_taxonomy"), validateCategoryCreate, handleApiValidationErrors, AdminTaxonomyController.createCategory);
-router.put("/categories/:categoryId", requirePermission("manage_taxonomy"), validateCategoryId, validateCategoryUpdate, handleApiValidationErrors, AdminTaxonomyController.updateCategory);
-router.delete("/categories/:categoryId", requirePermission("manage_taxonomy"), validateCategoryId, handleApiValidationErrors, AdminTaxonomyController.deleteCategory);
+router.get("/categories/:categoryId/edit", requirePermission(PERMISSION.MANAGE_TAXONOMY), validateCategoryId, handleApiValidationErrors, AdminTaxonomyController.getCategoryForEdit);
+router.post("/categories", requirePermission(PERMISSION.MANAGE_TAXONOMY), validateCategoryCreate, handleApiValidationErrors, AdminTaxonomyController.createCategory);
+router.put("/categories/:categoryId", requirePermission(PERMISSION.MANAGE_TAXONOMY), validateCategoryId, validateCategoryUpdate, handleApiValidationErrors, AdminTaxonomyController.updateCategory);
+router.delete("/categories/:categoryId", requirePermission(PERMISSION.MANAGE_TAXONOMY), validateCategoryId, handleApiValidationErrors, AdminTaxonomyController.deleteCategory);
 
 // ---- Tags ---- (same reasoning as Categories above - polymorphic across domains)
-router.get("/tags", requirePermission("manage_taxonomy"), AdminTaxonomyController.listTags);
-router.get("/tags/:tagId", requirePermission("manage_taxonomy"), validateTagId, handleApiValidationErrors, AdminTaxonomyController.getTag);
-router.get("/tags/:tagId/edit", requirePermission("manage_taxonomy"), validateTagId, handleApiValidationErrors, AdminTaxonomyController.getTagForEdit);
-router.post("/tags", requirePermission("manage_taxonomy"), validateTagCreate, handleApiValidationErrors, AdminTaxonomyController.createTag);
-router.put("/tags/:tagId", requirePermission("manage_taxonomy"), validateTagId, validateTagUpdate, handleApiValidationErrors, AdminTaxonomyController.updateTag);
-router.delete("/tags/:tagId", requirePermission("manage_taxonomy"), validateTagId, handleApiValidationErrors, AdminTaxonomyController.deleteTag);
+router.get("/tags", requirePermission(PERMISSION.MANAGE_TAXONOMY), AdminTaxonomyController.listTags);
+router.get("/tags/:tagId", requirePermission(PERMISSION.MANAGE_TAXONOMY), validateTagId, handleApiValidationErrors, AdminTaxonomyController.getTag);
+router.get("/tags/:tagId/edit", requirePermission(PERMISSION.MANAGE_TAXONOMY), validateTagId, handleApiValidationErrors, AdminTaxonomyController.getTagForEdit);
+router.post("/tags", requirePermission(PERMISSION.MANAGE_TAXONOMY), validateTagCreate, handleApiValidationErrors, AdminTaxonomyController.createTag);
+router.put("/tags/:tagId", requirePermission(PERMISSION.MANAGE_TAXONOMY), validateTagId, validateTagUpdate, handleApiValidationErrors, AdminTaxonomyController.updateTag);
+router.delete("/tags/:tagId", requirePermission(PERMISSION.MANAGE_TAXONOMY), validateTagId, handleApiValidationErrors, AdminTaxonomyController.deleteTag);
 
 // ---- Resources ---- (rooms/equipment/tables used for appointments - booking-only)
-router.get("/resources", requireModule("booking"), requirePermission("manage_resources"), AdminTaxonomyController.listResources);
-router.get("/resources/:resourceId", requireModule("booking"), requirePermission("manage_resources"), validateResourceId, handleApiValidationErrors, AdminTaxonomyController.getResource);
-router.get("/resources/:resourceId/edit", requireModule("booking"), requirePermission("manage_resources"), validateResourceId, handleApiValidationErrors, AdminTaxonomyController.getResourceForEdit);
-router.post("/resources", requireModule("booking"), requirePermission("manage_resources"), validateResourceCreate, handleApiValidationErrors, AdminTaxonomyController.createResource);
-router.put("/resources/:resourceId", requireModule("booking"), requirePermission("manage_resources"), validateResourceId, validateResourceUpdate, handleApiValidationErrors, AdminTaxonomyController.updateResource);
-router.delete("/resources/:resourceId", requireModule("booking"), requirePermission("manage_resources"), validateResourceId, handleApiValidationErrors, AdminTaxonomyController.deleteResource);
+router.get("/resources", requireModule("booking"), requirePermission(PERMISSION.MANAGE_RESOURCES), AdminTaxonomyController.listResources);
+router.get("/resources/:resourceId", requireModule("booking"), requirePermission(PERMISSION.MANAGE_RESOURCES), validateResourceId, handleApiValidationErrors, AdminTaxonomyController.getResource);
+router.get("/resources/:resourceId/edit", requireModule("booking"), requirePermission(PERMISSION.MANAGE_RESOURCES), validateResourceId, handleApiValidationErrors, AdminTaxonomyController.getResourceForEdit);
+router.post("/resources", requireModule("booking"), requirePermission(PERMISSION.MANAGE_RESOURCES), validateResourceCreate, handleApiValidationErrors, AdminTaxonomyController.createResource);
+router.put("/resources/:resourceId", requireModule("booking"), requirePermission(PERMISSION.MANAGE_RESOURCES), validateResourceId, validateResourceUpdate, handleApiValidationErrors, AdminTaxonomyController.updateResource);
+router.delete("/resources/:resourceId", requireModule("booking"), requirePermission(PERMISSION.MANAGE_RESOURCES), validateResourceId, handleApiValidationErrors, AdminTaxonomyController.deleteResource);
 
 export default router;

@@ -50,7 +50,7 @@ export async function getUserById(userId) {
 
 export async function findUserProfile(userId) {
   if (!userId) validationError("userId");
-  const user = await userRepo.findUserById(userId, { populateFields: [{ path: "role", select: "name" }] });
+  const user = await userRepo.findUserById(userId, { populateFields: [{ path: "role", select: "name" }], withPassword: true });
   if (!user) notFound("Korisnik");
   return mapUserForProfile(user);
 }
@@ -221,6 +221,11 @@ export async function resetPassword(token, newPassword) {
 
   const passwordHash = await hashPassword(newPassword);
   const wasGuest = user.status === "guest";
+  // Covers both the guest-claim case and a Google-only account using "forgot
+  // password" to set a local password for the first time - either way there was
+  // no password on file before this call, so the confirmation email sent for
+  // user:password_changed below should read "password set", not "changed".
+  const wasPasswordSetup = !user.password;
 
   await userRepo.updateUserById(user._id, {
     password: passwordHash,
@@ -230,8 +235,8 @@ export async function resetPassword(token, newPassword) {
     ...(wasGuest ? { status: "active", confirmed: true } : {}),
   });
 
-  logInfo("Password reset", { userId: user._id, wasGuest });
-  return { email: user.email, firstName: user.firstName };
+  logInfo("Password reset", { userId: user._id, wasGuest, wasPasswordSetup });
+  return { email: user.email, firstName: user.firstName, wasPasswordSetup };
 }
 
 export async function changePassword(userId, oldPassword, newPassword) {
@@ -252,6 +257,32 @@ export async function changePassword(userId, oldPassword, newPassword) {
 
   logInfo("Password changed", { userId });
   return { email: user.email, firstName: user.firstName };
+}
+
+// Lets a user who has never had a local password (today: Google-only accounts -
+// see user.model.js's password field, select:false and simply unset until a
+// password exists) set one for the first time from their own profile, without
+// going through the forgot-password email flow. Deliberately refuses when a
+// password already exists - that account already went through registration or a
+// previous set/reset/change, so any further password update belongs to
+// changePassword (which requires proving the current password), not this.
+export async function setPassword(userId, newPassword) {
+  if (!userId) validationError("userId");
+  if (!newPassword) validationError("newPassword");
+  if (newPassword.length < 8) badRequest("Lozinka mora imati najmanje 8 karaktera");
+
+  const user = await userRepo.findUserByIdWithPassword(userId);
+  if (!user) notFound("Korisnik");
+  if (user.password) badRequest("Nalog već ima podešenu lozinku. Koristite promenu lozinke.");
+
+  const passwordHash = await hashPassword(newPassword);
+  await userRepo.updateUserById(userId, { password: passwordHash });
+
+  logInfo("Password set for the first time", { userId });
+  // login() only ever checks user.password (not `provider`) to decide whether an
+  // account can use email+password auth - persisting the hash above is already
+  // enough to make that check pass, no separate "hasPassword"/provider flip needed.
+  return { email: user.email, firstName: user.firstName, wasPasswordSetup: true };
 }
 
 export async function deactivateAccount(userId, password) {
@@ -586,6 +617,7 @@ export default {
   setPasswordResetToken,
   resetPassword,
   changePassword,
+  setPassword,
   deactivateAccount,
   anonymizeUser,
   updateProfile,

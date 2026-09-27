@@ -6,6 +6,7 @@ import sharp from "sharp";
 import ffmpeg from "fluent-ffmpeg";
 import ffmpegStatic from "ffmpeg-static";
 import { AppError } from "../utils/error.util.js";
+import { detectVideoMimeType } from "../utils/video-signature.util.js";
 
 ffmpeg.setFfmpegPath(ffmpegStatic);
 
@@ -110,6 +111,24 @@ async function handleImageUpload(file, destination, type) {
 // =============== VIDEO (ffmpeg - thumbnail only, no re-encode) ===============
 
 async function processVideo(buffer, baseFilename) {
+  // fileFilter (above) only checked file.mimetype, which is a value the
+  // UPLOADING CLIENT sets in the multipart request and can lie about (send
+  // any payload with "Content-Type: video/mp4" and a fileFilter keyed off
+  // mimetype alone waves it straight through). This is the real gate: it
+  // sniffs the file's own magic bytes (see video-signature.util.js) and
+  // rejects before the buffer is EVER written to disk - unlike the image
+  // path (handleImageUpload), which effectively self-validates by requiring
+  // sharp to successfully decode the buffer, nothing downstream of here
+  // would otherwise notice a non-video payload: it's written straight to
+  // PUBLIC_PATH/videos and served as a static file with no decode step
+  // (ffmpeg only reads it back afterward to grab a screenshot).
+  const detectedType = detectVideoMimeType(buffer);
+  if (!ALLOWED_VIDEO_TYPES.includes(detectedType)) {
+    throw new AppError("Fajl nije prepoznat kao validan video (mp4/webm) na osnovu sadržaja fajla.", 400, {
+      name: "ValidationError",
+    });
+  }
+
   const videoDir = path.join(PUBLIC_PATH, "videos");
   const thumbDir = path.join(PUBLIC_PATH, "videos", "thumbnails");
 

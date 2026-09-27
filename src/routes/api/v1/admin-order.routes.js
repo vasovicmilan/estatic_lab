@@ -4,9 +4,10 @@ import { validateOrderId, validateOrderCancel, validateOrderReturn, validateOrde
 import { handleApiValidationErrors } from "../../../middlewares/api-validation.middleware.js";
 import { apiAuthMiddleware } from "../../../middlewares/auth.middleware.js";
 import { requirePermission } from "../../../middlewares/permission.middleware.js";
+import { PERMISSION } from "../../../models/role.model.js";
 
 const router = Router();
-router.use(apiAuthMiddleware, requirePermission("manage_orders"));
+router.use(apiAuthMiddleware, requirePermission(PERMISSION.MANAGE_ORDERS));
 
 router.get("/orders", AdminOrderController.listOrders);
 router.post("/orders/manual", validateManualOrderCreate, handleApiValidationErrors, AdminOrderController.createManualOrder);

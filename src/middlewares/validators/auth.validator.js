@@ -96,6 +96,24 @@ export const validateChangePassword = [
   collectValidationErrors,
 ];
 
+// Same shape as validateResetPassword's password fields (min-length rule, confirm
+// match) - no oldPassword field, since this is only reachable when the account
+// has none yet (see user.service.js's setPassword).
+export const validateSetPassword = [
+  body("newPassword")
+    .notEmpty().withMessage("Lozinka je obavezna")
+    .isLength({ min: 8 }).withMessage("Lozinka mora imati najmanje 8 karaktera"),
+
+  body("confirmPassword")
+    .notEmpty().withMessage("Potvrda lozinke je obavezna")
+    .custom((value, { req }) => {
+      if (value !== req.body.newPassword) throw new Error("Lozinke se ne poklapaju");
+      return true;
+    }),
+
+  collectValidationErrors,
+];
+
 export const validateDeactivateAccount = [
   body("password")
     .optional({ values: "falsy" }),
@@ -119,6 +137,7 @@ export default {
   validateRequestPasswordReset,
   validateResetPassword,
   validateChangePassword,
+  validateSetPassword,
   validateDeactivateAccount,
   validateResendVerification,
 };

@@ -28,6 +28,13 @@ export const PERMISSIONS = [
   "view_dashboard",
 ];
 
+// Typo-safe references for route/middleware call sites (e.g. `PERMISSION.MANAGE_PRODUCTS`)
+// so a misspelled string constant fails at import time instead of silently never
+// matching any real permission. Derived from PERMISSIONS so the two can never drift.
+export const PERMISSION = Object.freeze(
+  Object.fromEntries(PERMISSIONS.map((value) => [value.toUpperCase(), value]))
+);
+
 const RoleSchema = new Schema(
   {
     name: {

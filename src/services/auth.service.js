@@ -140,7 +140,11 @@ export async function verifyAccount(token) {
 
 export async function requestPasswordReset(email) {
   if (!email) validationError("email");
-  const user = await userService.findUserByEmail(email);
+  // findUserForLogin (not findUserByEmail) - same "does this account exist" lookup,
+  // but also opts back into the select:false password field, which is the only way
+  // to tell here whether this is a Google-only account (no password yet) so the
+  // email sent below can say "set a password" instead of "reset your password".
+  const user = await userService.findUserForLogin(email);
   // deliberately the same response whether or not the email exists - don't leak
   // account existence through response timing/content
   if (!user) return { message: "Ako email postoji, poslat je link za reset lozinke" };
@@ -150,6 +154,11 @@ export async function requestPasswordReset(email) {
     email: user.email,
     firstName: user.firstName,
     resetToken: result.token,
+    // Google-only account, never had a local password - reuses the exact same
+    // reset-token link/flow, just with different email wording (see
+    // email.service.js's sendPasswordResetEmail / views/emails/password-reset.ejs).
+    // A user who already has a password keeps getting the normal "reset" copy.
+    isPasswordSetup: !user.password,
   });
   return { message: "Ako email postoji, poslat je link za reset lozinke" };
 }
@@ -167,6 +176,17 @@ export async function resetPassword(token, newPassword, confirmPassword) {
 export async function changePassword(userId, oldPassword, newPassword, confirmPassword) {
   if (newPassword !== confirmPassword) badRequest("Lozinke se ne poklapaju");
   const result = await userService.changePassword(userId, oldPassword, newPassword);
+  eventEmitter.emit("user:password_changed", result);
+  return result;
+}
+
+// Manual, profile-page equivalent of the forgot-password "set a password" path
+// above: same restriction (only when the account has no password yet), same
+// user:password_changed notification email, just triggered by the logged-in
+// user directly instead of via an emailed token link.
+export async function setPassword(userId, newPassword, confirmPassword) {
+  if (newPassword !== confirmPassword) badRequest("Lozinke se ne poklapaju");
+  const result = await userService.setPassword(userId, newPassword);
   eventEmitter.emit("user:password_changed", result);
   return result;
 }
@@ -201,6 +221,7 @@ export default {
   requestPasswordReset,
   resetPassword,
   changePassword,
+  setPassword,
   deactivateAccount,
   resendVerificationEmail,
   verifyAccountByAdmin,

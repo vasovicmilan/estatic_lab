@@ -8,13 +8,14 @@ import {
 import { handleApiValidationErrors } from "../../../middlewares/api-validation.middleware.js";
 import { apiAuthMiddleware } from "../../../middlewares/auth.middleware.js";
 import { requirePermission } from "../../../middlewares/permission.middleware.js";
+import { PERMISSION } from "../../../models/role.model.js";
 
 // Mounted at /admin/package-purchases (see index.routes.js) - same permission
 // ("manage_packages") as the web equivalent at /admin/kupljeni-paketi, since a
 // purchased package is managed alongside the packages themselves.
 
 const router = Router();
-router.use(apiAuthMiddleware, requirePermission("manage_packages"));
+router.use(apiAuthMiddleware, requirePermission(PERMISSION.MANAGE_PACKAGES));
 
 router.get("/", AdminPackagePurchaseController.listPackagePurchases);
 router.get("/:packagePurchaseId", validatePackagePurchaseId, handleApiValidationErrors, AdminPackagePurchaseController.getPackagePurchase);

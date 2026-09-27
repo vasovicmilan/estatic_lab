@@ -14,8 +14,12 @@ export async function createUser(data, { session } = {}) {
   return user;
 }
 
-export async function findUserById(id, { populateFields = [], session } = {}) {
+// withPassword opts back into the `select: false` password field (see
+// findUserByEmailWithPassword below) without exposing the hash itself to
+// callers - only used where a mapper needs to derive a hasPassword boolean.
+export async function findUserById(id, { populateFields = [], session, withPassword = false } = {}) {
   let query = User.findById(id).session(session || null);
+  if (withPassword) query = query.select("+password");
   query = applyPopulate(query, populateFields);
   return query.lean();
 }

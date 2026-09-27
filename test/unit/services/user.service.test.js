@@ -188,6 +188,26 @@ describe("user.service", () => {
       assert.equal(updatePayload.status, "active");
       assert.equal(updatePayload.confirmed, true);
     });
+
+    it("flags wasPasswordSetup when the account had no password before (Google-only forgot-password)", async (t) => {
+      const googleOnly = buildUser({ password: null, provider: "google", status: "active" });
+      t.mock.method(userRepo, "findUserByResetToken", async () => googleOnly);
+      t.mock.method(userRepo, "updateUserById", async (id_, patch) => ({ ...googleOnly, ...patch }));
+
+      const result = await userService.resetPassword("valid-token", "newpassword1");
+
+      assert.equal(result.wasPasswordSetup, true);
+    });
+
+    it("does NOT flag wasPasswordSetup for a normal reset on an account that already had a password", async (t) => {
+      const normal = buildUser({ password: "$2b$12$existinghash", status: "active" });
+      t.mock.method(userRepo, "findUserByResetToken", async () => normal);
+      t.mock.method(userRepo, "updateUserById", async (id_, patch) => ({ ...normal, ...patch }));
+
+      const result = await userService.resetPassword("valid-token", "newpassword1");
+
+      assert.equal(result.wasPasswordSetup, false);
+    });
   });
 
   describe("changePassword", () => {
@@ -207,6 +227,45 @@ describe("user.service", () => {
 
       await assert.rejects(
         () => userService.changePassword(user._id.toString(), "anything", "newpassword1"),
+        (err) => err.statusCode === 400
+      );
+    });
+  });
+
+  describe("setPassword", () => {
+    it("succeeds for a Google-only account with no password set", async (t) => {
+      const user = buildUser({ password: null, provider: "google" });
+      t.mock.method(userRepo, "findUserByIdWithPassword", async () => user);
+      let updatePayload;
+      t.mock.method(userRepo, "updateUserById", async (id_, patch) => {
+        updatePayload = patch;
+        return { ...user, ...patch };
+      });
+
+      const result = await userService.setPassword(user._id.toString(), "newpassword1");
+
+      assert.ok(updatePayload.password, "a new password hash should be persisted");
+      assert.equal(result.wasPasswordSetup, true);
+    });
+
+    it("is rejected for a user who already has a password", async (t) => {
+      const user = buildUser({ password: "$2b$12$existinghash" });
+      t.mock.method(userRepo, "findUserByIdWithPassword", async () => user);
+      const updateMock = t.mock.method(userRepo, "updateUserById", async () => user);
+
+      await assert.rejects(
+        () => userService.setPassword(user._id.toString(), "newpassword1"),
+        (err) => err.statusCode === 400
+      );
+      assert.equal(updateMock.mock.calls.length, 0, "the existing password must not be touched");
+    });
+
+    it("enforces the same minimum length rule as the other password endpoints", async (t) => {
+      const user = buildUser({ password: null, provider: "google" });
+      t.mock.method(userRepo, "findUserByIdWithPassword", async () => user);
+
+      await assert.rejects(
+        () => userService.setPassword(user._id.toString(), "short"),
         (err) => err.statusCode === 400
       );
     });

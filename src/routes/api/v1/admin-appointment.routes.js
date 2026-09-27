@@ -12,9 +12,10 @@ import {
 import { handleApiValidationErrors } from "../../../middlewares/api-validation.middleware.js";
 import { apiAuthMiddleware } from "../../../middlewares/auth.middleware.js";
 import { requirePermission } from "../../../middlewares/permission.middleware.js";
+import { PERMISSION } from "../../../models/role.model.js";
 
 const router = Router();
-router.use(apiAuthMiddleware, requirePermission("manage_appointments_all"));
+router.use(apiAuthMiddleware, requirePermission(PERMISSION.MANAGE_APPOINTMENTS_ALL));
 
 router.get("/", AdminAppointmentController.listAppointments);
 router.get("/manual/check-package", AdminAppointmentController.checkManualAppointmentPackage);

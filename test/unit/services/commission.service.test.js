@@ -299,7 +299,10 @@ describe("commission.service", () => {
   // 0 - and skip creating an entry entirely - whenever the package was sold
   // at a steep promotional discount or given away for free. The employee
   // performed the same real work regardless of what the package sold for.
-  describe("recordAppointmentCommissions - minimum commission floor (package-covered only)", () => {
+  // Later extended to manual-override bookings and, most recently, to
+  // ordinary a-la-carte appointments with a coupon applied - see the
+  // isFloorEligible comment in commission.service.js.
+  describe("recordAppointmentCommissions - minimum commission floor (package, manual-override, and coupon-discounted appointments)", () => {
     it("floors the commission up to the configured minimum for a fully free (pricePaid: 0) package", async (t) => {
       t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 500 }));
@@ -370,19 +373,64 @@ describe("commission.service", () => {
       assert.equal(createMock.mock.calls[0].arguments[0].amount, 600);
     });
 
-    it("never applies the floor to an ordinary a-la-carte (non-package) appointment, no matter how small the commission", async (t) => {
+    it("never applies the floor to a TRULY plain appointment (no package, no manual override, no coupon), no matter how small the commission", async (t) => {
       t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
       t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 500 }));
       const employee = buildEmployee({ payType: "commission", commissionRate: 5 });
-      // finalPrice 1000 * 5% = 50 - well under the 500 floor, but this is a
-      // plain a-la-carte appointment, not a package - the floor must not apply
-      const appointment = buildAppointment({ employee, finalPrice: 1000, packagePurchase: null, coupon: null });
+      // finalPrice 1000 * 5% = 50 - well under the 500 floor, but this
+      // appointment used none of the three floor-eligible mechanisms (no
+      // package, no manual price override, no coupon) - the floor must not apply
+      const appointment = buildAppointment({ employee, finalPrice: 1000, packagePurchase: null, manualBooking: false, coupon: null });
       t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
       const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
 
       await commissionService.recordAppointmentCommissions(appointment._id.toString());
 
       assert.equal(createMock.mock.calls[0].arguments[0].amount, 50, "a-la-carte commission math is untouched by the package-only floor");
+    });
+
+    // Confirms the exact numeric example from the money-correctness audit:
+    // full price 1000, 20% coupon -> discountApplied 200 -> finalPrice (the
+    // ACTUAL charged amount) 800. Both the employee's base value and the
+    // floor-eligibility check must key off finalPrice/employeeBaseValue -
+    // which appointment.model.js's pre-save hook already computes as the
+    // post-discount charged amount, never the pre-discount full price - so
+    // there is no separate "full price" the floor could mistakenly read
+    // instead. This test locks in that the base the commission math runs on
+    // is the 800 actually collected, not the 1000 full price - AND (per the
+    // client's later decision, see the isFloorEligible comment in
+    // commission.service.js) that a coupon-discounted appointment IS now
+    // floor-eligible, so the employee's raw 160 gets bumped up to the 500
+    // minimum.
+    it("bases a coupon-discounted a-la-carte appointment's commission on the actually-charged (post-discount) amount, and floors it since coupon appointments are now floor-eligible", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
+      t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 500 }));
+      const employee = buildEmployee({ payType: "commission", commissionRate: 20 });
+      const partner = buildPartner({ commissionRateServices: 10 });
+      const coupon = buildCoupon({ partner });
+      // Full price 1000, 20% coupon discount (200) -> finalPrice 800, exactly
+      // as appointment.model.js's pre-save hook computes it.
+      const appointment = buildAppointment({ employee, finalPrice: 800, packagePurchase: null, coupon });
+      t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
+      const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
+
+      await commissionService.recordAppointmentCommissions(appointment._id.toString());
+
+      assert.equal(createMock.mock.calls.length, 2);
+      const employeeEntry = createMock.mock.calls.find((c) => c.arguments[0].earnerType === "employee").arguments[0];
+      const partnerEntry = createMock.mock.calls.find((c) => c.arguments[0].earnerType === "partner").arguments[0];
+
+      // baseValue is still 800 (the actually-charged amount, not 1000 full
+      // price), and the raw 800 * 20% = 160 is now floored up to 500 because
+      // this appointment carries a coupon (isFloorEligible is now true here).
+      assert.equal(employeeEntry.baseValue, 800);
+      assert.equal(employeeEntry.amount, 500, "raw 160 is below the 500 floor, and coupon appointments are now floor-eligible");
+
+      // The partner side is a wholly separate commission (referral-based, not
+      // employee-floor-eligible) and is untouched by the employee floor:
+      // 800 * 10% = 80, based on the same actually-charged 800.
+      assert.equal(partnerEntry.baseValue, 800);
+      assert.equal(partnerEntry.amount, 80);
     });
 
     it("applies the floor to a manually-created appointment with a price override (walk-in gift/nagrada), even with no package involved", async (t) => {
@@ -413,6 +461,24 @@ describe("commission.service", () => {
       await commissionService.recordAppointmentCommissions(appointment._id.toString());
 
       assert.equal(createMock.mock.calls[0].arguments[0].amount, 50, "no override means no floor, regardless of how the appointment was created");
+    });
+
+    it("applies the floor to a coupon-discounted a-la-carte appointment whose resulting commission genuinely falls below it", async (t) => {
+      t.mock.method(commissionRepo, "countCommissionEntries", async () => 0);
+      t.mock.method(runtimeSettingsCache, "getCommissionPolicy", () => ({ minimumSessionCommission: 500 }));
+      const employee = buildEmployee({ payType: "commission", commissionRate: 5 });
+      const coupon = buildCoupon({ discountType: "percentage", discountValue: 33 });
+      // 1500 RSD service, 33% coupon -> 1000 RSD actually charged (finalPrice),
+      // 5% commission rate -> 50 RSD raw commission, far under the 500 floor.
+      const appointment = buildAppointment({ employee, finalPrice: 1000, packagePurchase: null, manualBooking: false, coupon });
+      t.mock.method(appointmentService, "getAppointmentForCommission", async () => appointment);
+      const createMock = t.mock.method(commissionRepo, "createCommissionEntry", async () => ({}));
+
+      await commissionService.recordAppointmentCommissions(appointment._id.toString());
+
+      const entry = createMock.mock.calls[0].arguments[0];
+      assert.equal(entry.baseValue, 1000);
+      assert.equal(entry.amount, 500, "raw 50 is floored up to the configured 500 minimum because a coupon was applied");
     });
 
     it("reads the floor from the admin-configurable runtime setting, not a hardcoded value", async (t) => {

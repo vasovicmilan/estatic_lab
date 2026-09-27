@@ -64,15 +64,15 @@ eventEmitter.on(
 
 eventEmitter.on(
   "user:password_reset_requested",
-  safe("user:password_reset_requested", async ({ email, firstName, resetToken }) => {
-    await emailService.sendPasswordResetEmail({ email, firstName }, resetToken);
+  safe("user:password_reset_requested", async ({ email, firstName, resetToken, isPasswordSetup }) => {
+    await emailService.sendPasswordResetEmail({ email, firstName }, resetToken, { isPasswordSetup });
   })
 );
 
 eventEmitter.on(
   "user:password_changed",
-  safe("user:password_changed", async ({ email, firstName }) => {
-    await emailService.sendPasswordChangedEmail({ email, firstName });
+  safe("user:password_changed", async ({ email, firstName, wasPasswordSetup }) => {
+    await emailService.sendPasswordChangedEmail({ email, firstName }, { wasPasswordSetup });
   })
 );
 

@@ -117,18 +117,28 @@ export async function sendClaimAccountEmail({ email, firstName }, resetToken) {
   return emailProvider.sendEmail({ to: email, subject: `Vaš termin je zakazan - preuzmite vaš ${SITE_NAME} nalog`, html });
 }
 
-export async function sendPasswordResetEmail({ email, firstName }, resetToken) {
+// isPasswordSetup: forgot-password used on a Google-only account (no local password
+// on file yet) - same reset-token link/flow as a normal reset, just rendered with
+// "set a password" copy instead of "reset your password" (see password-reset.ejs).
+// A user who already has a password never gets this flag set.
+export async function sendPasswordResetEmail({ email, firstName }, resetToken, { isPasswordSetup = false } = {}) {
   const html = await renderTemplate("password-reset", {
     firstName,
     resetUrl: buildLink("resetPassword", { token: resetToken }),
     isAccountClaim: false,
+    isPasswordSetup,
   });
-  return emailProvider.sendEmail({ to: email, subject: `Reset lozinke - ${SITE_NAME}`, html });
+  const subject = isPasswordSetup ? `Podesite lozinku za nalog - ${SITE_NAME}` : `Reset lozinke - ${SITE_NAME}`;
+  return emailProvider.sendEmail({ to: email, subject, html });
 }
 
-export async function sendPasswordChangedEmail({ email, firstName }) {
-  const html = await renderTemplate("password-changed", { firstName });
-  return emailProvider.sendEmail({ to: email, subject: `Vaša lozinka je promenjena - ${SITE_NAME}`, html });
+// wasPasswordSetup: the account had no password before this (Google-only account
+// via forgot-password or the profile "set password" endpoint, or a guest account
+// being claimed) - copy reads "password set" instead of "password changed".
+export async function sendPasswordChangedEmail({ email, firstName }, { wasPasswordSetup = false } = {}) {
+  const html = await renderTemplate("password-changed", { firstName, wasPasswordSetup });
+  const subject = wasPasswordSetup ? `Lozinka je podešena - ${SITE_NAME}` : `Vaša lozinka je promenjena - ${SITE_NAME}`;
+  return emailProvider.sendEmail({ to: email, subject, html });
 }
 
 export async function sendAccountDeactivatedEmail({ email, firstName }) {

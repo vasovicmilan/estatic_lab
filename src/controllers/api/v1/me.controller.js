@@ -56,6 +56,22 @@ export async function changePassword(req, res, next) {
   }
 }
 
+// Narrower than changePassword above: only for a caller with NO password yet
+// (Google-only account - see authService.setPassword/userService.setPassword),
+// which is exactly what rejects the request when a password already exists,
+// pointing that case at changePassword instead.
+export async function setPassword(req, res, next) {
+  try {
+    await authService.setPassword(req.user.id, req.body.newPassword, req.body.confirmPassword);
+    logInfo(`[api/setPassword] Korisnik #${req.user.id} podesio lozinku`, { userId: req.user.id });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "PASSWORD_SET", entity: { type: "User", id: req.user.id } });
+    return res.json({ success: true, data: { message: "Lozinka je uspešno podešena." } });
+  } catch (error) {
+    logError("[api/setPassword] Greška", error, { userId: req.user.id });
+    next(error);
+  }
+}
+
 // No session to destroy (see auth.controller.js's deactivateAccount) - a Bearer
 // token stays technically valid until it expires (see auth.service.js's signJwt -
 // 1 day by default), it just stops passing any gate that checks the account is
@@ -269,7 +285,7 @@ export async function setDefaultAddress(req, res, next) {
 }
 
 export default {
-  getProfile, updateProfile, changePassword, deactivateAccount,
+  getProfile, updateProfile, changePassword, setPassword, deactivateAccount,
   listAppointments, getAppointment, cancelAppointment, rescheduleAppointment,
   listOrders, getOrder, cancelOrder,
   listAddresses, addAddress, removeAddress, setDefaultAddress,

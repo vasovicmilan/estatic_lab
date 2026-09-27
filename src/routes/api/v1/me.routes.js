@@ -1,7 +1,7 @@
 import { Router } from "express";
 import * as MeController from "../../../controllers/api/v1/me.controller.js";
 import { validateProfileUpdate, validateAddressCreate, validateAddressId } from "../../../middlewares/validators/user.validator.js";
-import { validateChangePassword, validateDeactivateAccount } from "../../../middlewares/validators/auth.validator.js";
+import { validateChangePassword, validateSetPassword, validateDeactivateAccount } from "../../../middlewares/validators/auth.validator.js";
 import { validateAppointmentCancel, validateAppointmentReschedule, validateAppointmentId } from "../../../middlewares/validators/appointment.validator.js";
 import { validateOrderCancel, validateOrderId } from "../../../middlewares/validators/order.validator.js";
 import { handleApiValidationErrors } from "../../../middlewares/api-validation.middleware.js";
@@ -16,6 +16,7 @@ router.use(apiAuthMiddleware);
 router.get("/", MeController.getProfile);
 router.put("/", validateProfileUpdate, handleApiValidationErrors, MeController.updateProfile);
 router.put("/password", validateChangePassword, handleApiValidationErrors, MeController.changePassword);
+router.put("/set-password", validateSetPassword, handleApiValidationErrors, MeController.setPassword);
 router.delete("/", validateDeactivateAccount, handleApiValidationErrors, MeController.deactivateAccount);
 
 router.get("/appointments", MeController.listAppointments);

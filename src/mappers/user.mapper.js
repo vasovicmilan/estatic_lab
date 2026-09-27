@@ -121,6 +121,10 @@ export function mapUserForProfile(user) {
     status: translateStatus(user.status),
     poslednjiLogin: user.lastLogin ? formatDateTime(user.lastLogin) : null,
     clanOd: formatDate(user.createdAt),
+    // Same check as auth.service.js's login()/user.service.js's changePassword -
+    // whether this account has a local password set yet (false for a
+    // Google-only account), never the hash itself.
+    hasPassword: !!user.password,
   };
 }
 

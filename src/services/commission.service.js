@@ -5,6 +5,7 @@ import packagePurchaseService from "./package-purchase.service.js";
 import { ORDER_COMMISSION_GRACE_PERIOD_DAYS } from "../config/shop.config.js";
 import runtimeSettingsCache from "../config/runtime-settings.cache.js";
 import { logInfo, logError } from "../utils/logger.util.js";
+import { roundMoney } from "../utils/money.util.js";
 
 const ORDER_TERMINAL_NO_COMMISSION_STATUSES = ["cancelled", "returned", "refunded"];
 
@@ -59,12 +60,9 @@ export async function recordAppointmentCommissions(appointmentId) {
     // given away outright (pricePaid: 0) - the employee still did the exact
     // same physical work regardless of what the package was sold for, and
     // used to earn literally nothing for it (the old `employeeBaseValue > 0`
-    // guard skipped creating an entry at all in that case). Scoped
-    // deliberately narrow: only package-covered appointments with a genuine
-    // matched item get this floor - an ordinary a-la-carte appointment's
-    // commission is left exactly as the plain percentage math always
-    // computed, untouched, and a package with no matching item at all (null,
-    // not 0) still gets no entry rather than an unearned floor payout.
+    // guard skipped creating an entry at all in that case). A package with no
+    // matching item at all (null, not 0) still gets no entry rather than an
+    // unearned floor payout - that's a data mismatch, not a pricing question.
     //
     // Same reasoning extends to a manually-created appointment with an
     // explicit admin/employee price override (appointment.manualBooking -
@@ -79,8 +77,26 @@ export async function recordAppointmentCommissions(appointmentId) {
     // never needed this floor in the first place - the flag only turns on
     // precisely when the price was hand-set, which is the only case this
     // floor is meant to protect against.
-    const isFloorEligible = Boolean(appointment.packagePurchase) || appointment.manualBooking === true;
-    const rawAmount = round2(employeeBaseValue * (appointment.employee.commissionRate / 100));
+    //
+    // BUG FIX (business decision, confirmed with the client, 2026-09):
+    // an ordinary a-la-carte appointment with a coupon discount applied
+    // (appointment.coupon) gets the same floor too. This was originally left
+    // out, but not because it was ever weighed and rejected as a special
+    // case for coupons specifically - it was simply out of scope when the
+    // floor was first added for packages/manual-overrides, an oversight of
+    // narrow initial scope rather than a deliberate exclusion. The
+    // underlying reasoning was never about HOW the price got low, only that
+    // it did while the same real work was performed: the employee did the
+    // exact same physical work regardless of what the appointment was priced
+    // at, whether that's because of a package, a manual override, or a
+    // customer coupon. A plain a-la-carte appointment with none of the three
+    // (full catalog price, no discount lever pulled at all) still has no
+    // reason to ever land near 0, so it's still excluded - the floor exists
+    // to guarantee a fair minimum wherever the CHARGED price was
+    // deliberately lowered by one of these three mechanisms, not to pad
+    // every low-ticket service.
+    const isFloorEligible = Boolean(appointment.packagePurchase) || appointment.manualBooking === true || Boolean(appointment.coupon);
+    const rawAmount = roundMoney(employeeBaseValue * (appointment.employee.commissionRate / 100));
     const amount = isFloorEligible ? Math.max(rawAmount, runtimeSettingsCache.getCommissionPolicy().minimumSessionCommission) : rawAmount;
 
     if (amount > 0) {
@@ -117,7 +133,7 @@ export async function recordAppointmentCommissions(appointmentId) {
       appointment: appointment._id,
       baseValue: partnerBaseValue,
       rate,
-      amount: applyCap(round2(partnerBaseValue * (rate / 100)), partner.maxCommissionAmountServices),
+      amount: applyCap(roundMoney(partnerBaseValue * (rate / 100)), partner.maxCommissionAmountServices),
       status: "earned",
       earnedAt: new Date(),
     });
@@ -174,7 +190,7 @@ function getPackageProRatedValue(appointment, packagePurchase) {
 
   const aLaCarteTotal = getALaCarteTotal(packagePurchase.items);
   const discountRatio = aLaCarteTotal > 0 ? packagePurchase.pricePaid / aLaCarteTotal : 1;
-  return round2(item.unitPrice * discountRatio);
+  return roundMoney(item.unitPrice * discountRatio);
 }
 
 /**
@@ -199,7 +215,7 @@ export async function recordOrderCommission(orderId) {
     order: order._id,
     baseValue,
     rate,
-    amount: applyCap(round2(baseValue * (rate / 100)), partner.maxCommissionAmountProducts),
+    amount: applyCap(roundMoney(baseValue * (rate / 100)), partner.maxCommissionAmountProducts),
     status: "pending",
   });
 
@@ -248,7 +264,7 @@ export async function recordPackagePurchaseCommission(packagePurchaseId) {
     packagePurchase: purchase._id,
     baseValue,
     rate,
-    amount: applyCap(round2(baseValue * (rate / 100)), partner.maxCommissionAmountServices),
+    amount: applyCap(roundMoney(baseValue * (rate / 100)), partner.maxCommissionAmountServices),
     status: "earned",
     earnedAt: new Date(),
   });
@@ -342,10 +358,6 @@ export async function processGracePeriodCommissions() {
 
   logInfo("Commission grace-period sweep complete", { total: pending.length, earned, reversed, stillPending });
   return { total: pending.length, earned, reversed, stillPending };
-}
-
-function round2(value) {
-  return Math.round(value * 100) / 100;
 }
 
 // Caps a computed commission amount at the earner's configured ceiling for

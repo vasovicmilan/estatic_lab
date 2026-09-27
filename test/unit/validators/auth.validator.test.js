@@ -6,6 +6,7 @@ import {
   validateLogin,
   validateRequestPasswordReset,
   validateResetPassword,
+  validateSetPassword,
 } from "../../../src/middlewares/validators/auth.validator.js";
 
 function validRegistration(overrides = {}) {
@@ -119,6 +120,28 @@ describe("auth.validator", () => {
     it("accepts a valid reset payload", async () => {
       const agent = buildValidatorHarness(validateResetPassword, { path: "/test/:token" });
       const res = await agent.post("/test/sometoken").send({ newPassword: "lozinka123", confirmPassword: "lozinka123" });
+      assert.equal(res.status, 200);
+    });
+  });
+
+  describe("validateSetPassword", () => {
+    it("rejects a password shorter than 8 characters", async () => {
+      const agent = buildValidatorHarness(validateSetPassword);
+      const res = await agent.post("/test").send({ newPassword: "short", confirmPassword: "short" });
+      assert.equal(res.status, 400);
+      assert.ok(res.body.errors.newPassword);
+    });
+
+    it("rejects mismatched password confirmation", async () => {
+      const agent = buildValidatorHarness(validateSetPassword);
+      const res = await agent.post("/test").send({ newPassword: "lozinka123", confirmPassword: "different1" });
+      assert.equal(res.status, 400);
+      assert.ok(res.body.errors.confirmPassword);
+    });
+
+    it("accepts a valid set-password payload", async () => {
+      const agent = buildValidatorHarness(validateSetPassword);
+      const res = await agent.post("/test").send({ newPassword: "lozinka123", confirmPassword: "lozinka123" });
       assert.equal(res.status, 200);
     });
   });

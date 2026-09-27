@@ -100,14 +100,36 @@ describe("auth.service", () => {
 
   describe("requestPasswordReset / resendVerificationEmail", () => {
     it("returns the same message whether or not the email exists (no account enumeration)", async (t) => {
-      t.mock.method(userService, "findUserByEmail", async () => null);
+      t.mock.method(userService, "findUserForLogin", async () => null);
       const resultForMissing = await authService.requestPasswordReset("nepostojeci@example.com");
 
-      t.mock.method(userService, "findUserByEmail", async () => buildUser());
+      t.mock.method(userService, "findUserForLogin", async () => buildUser());
       t.mock.method(userService, "setPasswordResetToken", async () => ({ token: "abc" }));
       const resultForExisting = await authService.requestPasswordReset("postojeci@example.com");
 
       assert.equal(resultForMissing.message, resultForExisting.message);
+    });
+
+    it("flags the reset token as a password SETUP for a Google-only account (no password on file)", async (t) => {
+      t.mock.method(userService, "findUserForLogin", async () => buildUser({ password: null, provider: "google" }));
+      t.mock.method(userService, "setPasswordResetToken", async () => ({ token: "abc" }));
+      const emitMock = t.mock.method(eventEmitter, "emit");
+
+      await authService.requestPasswordReset("google@example.com");
+
+      const call = emitMock.mock.calls.find((c) => c.arguments[0] === "user:password_reset_requested");
+      assert.equal(call.arguments[1].isPasswordSetup, true);
+    });
+
+    it("does NOT flag the reset token as a setup for an account that already has a password", async (t) => {
+      t.mock.method(userService, "findUserForLogin", async () => buildUser({ password: "$2b$12$hash" }));
+      t.mock.method(userService, "setPasswordResetToken", async () => ({ token: "abc" }));
+      const emitMock = t.mock.method(eventEmitter, "emit");
+
+      await authService.requestPasswordReset("normal@example.com");
+
+      const call = emitMock.mock.calls.find((c) => c.arguments[0] === "user:password_reset_requested");
+      assert.equal(call.arguments[1].isPasswordSetup, false);
     });
 
     it("resendVerificationEmail refuses to resend for an already-confirmed account", async (t) => {
@@ -129,6 +151,28 @@ describe("auth.service", () => {
         () => authService.changePassword("userId", "staralozinka", "novalozinka1", "necega-drugo"),
         (err) => err.statusCode === 400
       );
+    });
+  });
+
+  describe("setPassword", () => {
+    it("rejects mismatched new/confirm passwords before ever calling userService", async (t) => {
+      const setPasswordMock = t.mock.method(userService, "setPassword", async () => ({}));
+      await assert.rejects(
+        () => authService.setPassword("userId", "novalozinka1", "necega-drugo"),
+        (err) => err.statusCode === 400
+      );
+      assert.equal(setPasswordMock.mock.calls.length, 0);
+    });
+
+    it("emits user:password_changed on success so the confirmation email goes out", async (t) => {
+      t.mock.method(userService, "setPassword", async () => ({ email: "g@example.com", firstName: "G", wasPasswordSetup: true }));
+      const emitMock = t.mock.method(eventEmitter, "emit");
+
+      await authService.setPassword("userId", "novalozinka1", "novalozinka1");
+
+      const call = emitMock.mock.calls.find((c) => c.arguments[0] === "user:password_changed");
+      assert.ok(call, "user:password_changed should be emitted");
+      assert.equal(call.arguments[1].wasPasswordSetup, true);
     });
   });
 });

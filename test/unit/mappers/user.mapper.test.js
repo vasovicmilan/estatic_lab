@@ -4,6 +4,7 @@ import {
   mapUserForAdminShort,
   mapUserForAdminDetail,
   mapUserForSelect,
+  mapUserForProfile,
   mapUserAddresses,
   mapUserCart,
   mapUser,
@@ -70,6 +71,23 @@ describe("user.mapper", () => {
 
     it("returns null for a null user", () => {
       assert.equal(mapUserForSelect(null), null);
+    });
+  });
+
+  describe("mapUserForProfile - hasPassword flag", () => {
+    it("is true when the account has a local password hash", () => {
+      const mapped = mapUserForProfile(buildUser({ password: "$2b$12$hashedpasswordvaluehere" }));
+      assert.equal(mapped.hasPassword, true);
+    });
+
+    it("is false for a Google-only account with no password set yet", () => {
+      const mapped = mapUserForProfile(buildUser({ password: undefined, provider: "google" }));
+      assert.equal(mapped.hasPassword, false);
+    });
+
+    it("never leaks the password hash itself in the mapped shape", () => {
+      const mapped = mapUserForProfile(buildUser());
+      assert.equal(mapped.password, undefined);
     });
   });
 
