@@ -47,6 +47,7 @@ export async function findEmployees({
   page = 1,
   filters = {},
   populateFields = [{ path: "userId", select: "firstName lastName email phone" }],
+  sort = { createdAt: -1, _id: -1 },
   session,
 } = {}) {
   const filter = buildEmployeeFilter(filters);
@@ -54,7 +55,7 @@ export async function findEmployees({
   const skip = resolveSkip(page, resolvedLimit);
 
   let query = Employee.find(filter)
-    .sort({ createdAt: -1, _id: -1 })
+    .sort(sort)
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);

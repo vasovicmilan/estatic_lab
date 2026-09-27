@@ -12,9 +12,16 @@ import { createEntityActionFactory } from "../../../utils/admin-entity-action.ut
 // Mirrors controllers/web/admin/appointment/{appointment,manual-appointment}
 // .controller.js - same services, same audit log entries.
 
+// Same whitelist pattern as admin-catalog.controller.js's PRODUCT_SORT_FIELDS -
+// `datum`/`konacnaCena` are plain scalar columns (startTime, finalPrice) on the
+// Appointment schema, `status` likewise. `korisnik`/`usluga` are NOT included:
+// they're populated ref display names (user/service), not sortable at the DB level.
+const APPOINTMENT_SORT_FIELDS = { datum: "startTime", status: "status", konacnaCena: "finalPrice" };
+
 export async function listAppointments(req, res, next) {
   try {
-    const { search, status, dateFrom, dateTo, unassignedOnly, page = 1, limit = 10 } = req.query;
+    const { search, status, dateFrom, dateTo, unassignedOnly, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = APPOINTMENT_SORT_FIELDS[sort];
     const result = await appointmentService.findAppointments({
       search: search || "",
       role: "admin",
@@ -26,6 +33,7 @@ export async function listAppointments(req, res, next) {
       },
       page: resolvePage(page),
       limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
     });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {

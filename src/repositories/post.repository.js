@@ -38,6 +38,11 @@ export async function findPosts({
   page = 1,
   filters = {},
   sortBy,
+  // Explicit column sort (admin DataTable) - same shape/precedence as
+  // product.repository.js's findProducts `sort` option. Takes priority over
+  // the `sortBy` preset system above (used by the public blog listing), which
+  // stays untouched for that caller.
+  sort: explicitSort,
   populateFields = [
     { path: "categories", select: "name slug" },
     { path: "tags", select: "name slug" },
@@ -48,7 +53,7 @@ export async function findPosts({
   const filter = buildPostFilter({ search, ...filters });
   const resolvedLimit = resolveLimit(limit);
   const skip = resolveSkip(page, resolvedLimit);
-  const sort = POST_SORT_OPTIONS[sortBy] || POST_SORT_OPTIONS.publishedAt;
+  const sort = explicitSort || POST_SORT_OPTIONS[sortBy] || POST_SORT_OPTIONS.publishedAt;
 
   // Mongo's ascending sort puts null/missing scheduledFor FIRST, so without this,
   // every draft/published post (scheduledFor: null) would bury the actually-scheduled

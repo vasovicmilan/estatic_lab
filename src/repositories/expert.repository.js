@@ -21,6 +21,7 @@ export async function findExperts({
   page = 1,
   filters = {},
   populateFields = [{ path: "services", select: "name slug" }],
+  sort = { order: 1, createdAt: -1, _id: -1 },
   session,
 } = {}) {
   const filter = buildExpertFilter({ search, ...filters });
@@ -28,7 +29,7 @@ export async function findExperts({
   const skip = resolveSkip(page, resolvedLimit);
 
   let query = Expert.find(filter)
-    .sort({ order: 1, createdAt: -1, _id: -1 })
+    .sort(sort)
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);

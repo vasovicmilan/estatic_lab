@@ -12,8 +12,8 @@ import { logInfo } from "../utils/logger.util.js";
 
 const populate = [{ path: "services", select: "name slug" }];
 
-export async function listExperts({ search = "", limit = 10, page = 1, filters = {} } = {}) {
-  const result = await expertRepo.findExperts({ search, limit, page, filters, populateFields: populate });
+export async function listExperts({ search = "", limit = 10, page = 1, filters = {}, sort } = {}) {
+  const result = await expertRepo.findExperts({ search, limit, page, filters, populateFields: populate, ...(sort ? { sort } : {}) });
   return { data: mapExpertsForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

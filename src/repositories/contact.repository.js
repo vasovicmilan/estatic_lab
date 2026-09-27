@@ -11,14 +11,14 @@ export async function findContactById(id, { session } = {}) {
   return Contact.findById(id).session(session || null).lean();
 }
 
-export async function findContacts({ search = "", limit = 20, page = 1, filters = {}, session } = {}) {
+export async function findContacts({ search = "", limit = 20, page = 1, filters = {}, sort = { createdAt: -1, _id: -1 }, session } = {}) {
   const filter = buildContactFilter({ search, ...filters });
   const resolvedLimit = resolveLimit(limit);
   const skip = resolveSkip(page, resolvedLimit);
 
   const [data, total] = await Promise.all([
     Contact.find(filter)
-      .sort({ createdAt: -1, _id: -1 })
+      .sort(sort)
       .skip(skip)
       .limit(resolvedLimit)
       .session(session || null)

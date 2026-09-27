@@ -30,8 +30,8 @@ const defaultPopulate = [
   { path: "services", select: "name" },
 ];
 
-export async function listEmployees({ limit = 10, page = 1, filters = {}, role = "admin" } = {}) {
-  const result = await employeeRepo.findEmployees({ limit, page, filters, populateFields: defaultPopulate });
+export async function listEmployees({ limit = 10, page = 1, filters = {}, role = "admin", sort = undefined } = {}) {
+  const result = await employeeRepo.findEmployees({ limit, page, filters, populateFields: defaultPopulate, ...(sort ? { sort } : {}) });
   return {
     data: role === "admin" ?
       mapEmployeesForAdminList(result.data) : result.data.map((e) => mapEmployee(e, role, "short")),

@@ -20,12 +20,12 @@ export async function findSummariesBetween(startDate, endDate) {
 }
 
 // most-recent-first, paginated - for an admin browse view of past daily summaries
-export async function findLogSummaries({ limit = 20, page = 1 } = {}) {
+export async function findLogSummaries({ limit = 20, page = 1, sort = { date: -1 } } = {}) {
   const resolvedLimit = resolveLimit(limit);
   const skip = resolveSkip(page, resolvedLimit);
 
   const [data, total] = await Promise.all([
-    LogSummary.find({}).sort({ date: -1 }).skip(skip).limit(resolvedLimit).lean(),
+    LogSummary.find({}).sort(sort).skip(skip).limit(resolvedLimit).lean(),
     LogSummary.countDocuments({}),
   ]);
 

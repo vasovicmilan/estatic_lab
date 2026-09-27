@@ -161,10 +161,10 @@ export async function findSummary(periodType, periodKey) {
   return BusinessReportSummary.findOne({ periodType, periodKey }).lean();
 }
 
-export async function listSummaries(periodType, { limit = 20, page = 1 } = {}) {
+export async function listSummaries(periodType, { limit = 20, page = 1, sort = { periodKey: -1 } } = {}) {
   const skip = (page - 1) * limit;
   const [data, total] = await Promise.all([
-    BusinessReportSummary.find({ periodType }).sort({ periodKey: -1 }).skip(skip).limit(limit).lean(),
+    BusinessReportSummary.find({ periodType }).sort(sort).skip(skip).limit(limit).lean(),
     BusinessReportSummary.countDocuments({ periodType }),
   ]);
   return { data, total, page, limit, totalPages: Math.ceil(total / limit) };

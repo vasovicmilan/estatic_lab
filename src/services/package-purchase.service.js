@@ -159,8 +159,8 @@ export async function listPurchasesForUser(userId) {
   return mapPackagePurchasesForAdminList(purchases);
 }
 
-export async function listPurchases({ filters = {}, limit = 10, page = 1 } = {}) {
-  const result = await packagePurchaseRepo.findPackagePurchases({ filters, limit, page, populateFields: adminPopulate });
+export async function listPurchases({ filters = {}, limit = 10, page = 1, sort } = {}) {
+  const result = await packagePurchaseRepo.findPackagePurchases({ filters, limit, page, sort, populateFields: adminPopulate });
   return { data: mapPackagePurchasesForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

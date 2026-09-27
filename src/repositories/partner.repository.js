@@ -35,6 +35,7 @@ export async function findPartners({
   limit = 20,
   page = 1,
   filters = {},
+  sort = { createdAt: -1, _id: -1 },
   populateFields = [{ path: "userId", select: "firstName lastName email phone" }],
   session,
 } = {}) {
@@ -43,7 +44,7 @@ export async function findPartners({
   const skip = resolveSkip(page, resolvedLimit);
 
   let query = Partner.find(filter)
-    .sort({ createdAt: -1, _id: -1 })
+    .sort(sort)
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);

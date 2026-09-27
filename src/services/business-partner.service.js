@@ -11,8 +11,8 @@ import { validationError, notFound, conflict } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 import { buildPageSeo } from "../seo/index.js";
 
-export async function listBusinessPartners({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
-  const result = await businessPartnerRepo.findBusinessPartners({ search, limit, page, filters });
+export async function listBusinessPartners({ search = "", filters = {}, limit = 10, page = 1, sort } = {}) {
+  const result = await businessPartnerRepo.findBusinessPartners({ search, limit, page, filters, sort });
   return { data: mapBusinessPartnersForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

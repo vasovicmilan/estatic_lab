@@ -10,9 +10,16 @@ import { createEntityActionFactory } from "../../../utils/admin-entity-action.ut
 // Mirrors controllers/web/admin/order/{order,manual-order,temporary-order}
 // .controller.js - same services, same audit log entries.
 
+// Same whitelist pattern as admin-catalog.controller.js's PRODUCT_SORT_FIELDS -
+// `datum`/`ukupnaCena`/`status` are plain scalar columns (createdAt, totalPrice,
+// status) on the Order schema. `korisnik` (populated user name) and `brojStavki`
+// (items.length, computed in JS) are NOT included - neither is a sortable DB column.
+const ORDER_SORT_FIELDS = { datum: "createdAt", ukupnaCena: "totalPrice", status: "status" };
+
 export async function listOrders(req, res, next) {
   try {
-    const { search, status, dateFrom, dateTo, page = 1, limit = 10 } = req.query;
+    const { search, status, dateFrom, dateTo, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = ORDER_SORT_FIELDS[sort];
     const result = await orderService.findOrders({
       search: search || "",
       role: "admin",
@@ -23,6 +30,7 @@ export async function listOrders(req, res, next) {
       },
       page: resolvePage(page),
       limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
     });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
@@ -104,10 +112,30 @@ export async function createManualOrder(req, res, next) {
 
 // ---- Temporary orders (awaiting the customer's own email confirmation) ----
 
+// Same whitelist pattern as ORDER_SORT_FIELDS above - `email`/`ukupnaCena`/
+// `zahtevaProceenuDostave`/`istice`/`kreirano` map to plain scalar columns
+// (contactSnapshot.email, totalPrice, requiresShippingQuote, tokenExpiration,
+// createdAt) on the TemporaryOrder schema. `korisnik` (contactSnapshot
+// firstName+lastName, concatenated) is NOT included - not a scalar column a
+// repository can sort on directly.
+const TEMP_ORDER_SORT_FIELDS = {
+  email: "contactSnapshot.email",
+  ukupnaCena: "totalPrice",
+  zahtevaProceenuDostave: "requiresShippingQuote",
+  istice: "tokenExpiration",
+  kreirano: "createdAt",
+};
+
 export async function listTemporaryOrders(req, res, next) {
   try {
-    const { search, page = 1, limit = 10 } = req.query;
-    const result = await tempOrderService.listTemporaryOrders({ search: search || "", page: resolvePage(page), limit: resolveLimit(limit) });
+    const { search, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = TEMP_ORDER_SORT_FIELDS[sort];
+    const result = await tempOrderService.listTemporaryOrders({
+      search: search || "",
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
+    });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listTemporaryOrders] Greška", error, { query: req.query });

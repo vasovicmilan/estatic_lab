@@ -21,8 +21,8 @@ function ensureValidDomain(domain) {
   if (!CATEGORY_DOMAINS.includes(domain)) badRequest(`Domen mora biti jedan od: ${CATEGORY_DOMAINS.join(", ")}`);
 }
 
-export async function listCategories({ search = "", domain, parent, isActive, limit = 10, page = 1 } = {}) {
-  const result = await categoryRepo.findCategories({ search, limit, page, filters: { domain, parent, isActive } });
+export async function listCategories({ search = "", domain, parent, isActive, limit = 10, page = 1, sort = undefined } = {}) {
+  const result = await categoryRepo.findCategories({ search, limit, page, filters: { domain, parent, isActive }, ...(sort ? { sort } : {}) });
   return { data: mapCategoriesForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

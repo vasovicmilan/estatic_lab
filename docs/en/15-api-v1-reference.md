@@ -167,6 +167,8 @@ Whole router behind `manage_orders`. `GET /orders`, `POST /orders/manual`, `GET 
 | GET | `/logs`, `/logs/history`, `/logs/history/:date` | `view_logs` |
 | GET | `/business-reports`, `/business-reports/history/...` | `view_business_reports` |
 | GET/PUT | `/site-settings` | `manage_site_content` |
+| PUT | `/site-settings/radno-vreme` | `manage_site_content` |
+| PUT | `/site-settings/neradni-dani` | `manage_site_content` |
 | GET/PUT | `/profile` | just `access_admin_panel` (always the caller's own admin profile) |
 
 ## What's NOT covered by the API yet

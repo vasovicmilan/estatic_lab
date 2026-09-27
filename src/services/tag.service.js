@@ -20,8 +20,8 @@ function ensureValidDomain(domain) {
   if (!CATEGORY_DOMAINS.includes(domain)) badRequest(`Domen mora biti jedan od: ${CATEGORY_DOMAINS.join(", ")}`);
 }
 
-export async function listTags({ search = "", domain, isActive, limit = 10, page = 1 } = {}) {
-  const result = await tagRepo.findTags({ search, limit, page, filters: { domain, isActive } });
+export async function listTags({ search = "", domain, isActive, limit = 10, page = 1, sort = undefined } = {}) {
+  const result = await tagRepo.findTags({ search, limit, page, filters: { domain, isActive }, ...(sort ? { sort } : {}) });
   return { data: mapTagsForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

@@ -42,7 +42,7 @@ export async function updatePackagePurchaseById(id, updateData, { session } = {}
   return PackagePurchase.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
-export async function findPackagePurchases({ filters = {}, limit = 20, page = 1, populateFields = [], session } = {}) {
+export async function findPackagePurchases({ filters = {}, limit = 20, page = 1, sort = { purchasedAt: -1, _id: -1 }, populateFields = [], session } = {}) {
   const filter = {};
   if (filters.userId) filter.user = filters.userId;
   if (filters.status) filter.status = filters.status;
@@ -50,7 +50,7 @@ export async function findPackagePurchases({ filters = {}, limit = 20, page = 1,
   const resolvedLimit = resolveLimit(limit);
   const skip = resolveSkip(page, resolvedLimit);
 
-  let query = PackagePurchase.find(filter).sort({ purchasedAt: -1, _id: -1 }).skip(skip).limit(resolvedLimit).session(session || null);
+  let query = PackagePurchase.find(filter).sort(sort).skip(skip).limit(resolvedLimit).session(session || null);
   populateFields.forEach((p) => (query = query.populate(p)));
 
   const [data, total] = await Promise.all([query.lean(), PackagePurchase.countDocuments(filter).session(session || null)]);

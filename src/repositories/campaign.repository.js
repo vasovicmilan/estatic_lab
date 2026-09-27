@@ -18,7 +18,7 @@ export async function findCampaignDocById(id, { session } = {}) {
   return Campaign.findById(id).session(session || null);
 }
 
-export async function findCampaigns({ search = "", limit = 20, page = 1, filters = {}, session } = {}) {
+export async function findCampaigns({ search = "", limit = 20, page = 1, filters = {}, sort = { createdAt: -1, _id: -1 }, session } = {}) {
   const filter = { ...filters };
   if (search) filter.$or = [{ title: { $regex: search, $options: "i" } }, { subject: { $regex: search, $options: "i" } }];
 
@@ -26,7 +26,7 @@ export async function findCampaigns({ search = "", limit = 20, page = 1, filters
   const skip = resolveSkip(page, resolvedLimit);
 
   const [data, total] = await Promise.all([
-    Campaign.find(filter).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(resolvedLimit).session(session || null).lean(),
+    Campaign.find(filter).sort(sort).skip(skip).limit(resolvedLimit).session(session || null).lean(),
     Campaign.countDocuments(filter).session(session || null),
   ]);
 

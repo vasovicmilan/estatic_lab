@@ -145,8 +145,8 @@ export async function getTodaySummary() {
  * admin list view, distinct from aggregateRange which combines multiple days
  * into one merged report.
  */
-export async function listLogSummaries({ limit = 20, page = 1 } = {}) {
-  return logSummaryRepo.findLogSummaries({ limit, page });
+export async function listLogSummaries({ limit = 20, page = 1, sort } = {}) {
+  return logSummaryRepo.findLogSummaries({ limit, page, ...(sort ? { sort } : {}) });
 }
 
 export async function getLogSummaryByDate(dateStr) {

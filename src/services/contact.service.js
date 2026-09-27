@@ -5,8 +5,8 @@ import { validationError, notFound, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 import { encryptField } from "../utils/encrypted-field.util.js";
 
-export async function listContacts({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
-  const result = await contactRepo.findContacts({ search, limit, page, filters });
+export async function listContacts({ search = "", filters = {}, limit = 10, page = 1, sort } = {}) {
+  const result = await contactRepo.findContacts({ search, limit, page, filters, ...(sort ? { sort } : {}) });
   return { data: mapContactsForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

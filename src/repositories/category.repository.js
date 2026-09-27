@@ -56,6 +56,7 @@ export async function findCategories({
   limit = 20,
   page = 1,
   filters = {},
+  sort = { "meta.priority": -1, name: 1, _id: -1 },
   session,
 } = {}) {
   const filter = buildCategoryFilter({ search, ...filters });
@@ -64,7 +65,7 @@ export async function findCategories({
 
   const [data, total] = await Promise.all([
     Category.find(filter)
-      .sort({ "meta.priority": -1, name: 1, _id: -1 })
+      .sort(sort)
       .skip(skip)
       .limit(resolvedLimit)
       .session(session || null)

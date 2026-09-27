@@ -97,13 +97,22 @@ export async function dashboard(req, res, next) {
 
 // ================== Payout requests ==================
 
+// Same whitelist pattern as admin-catalog.controller.js's PRODUCT_SORT_FIELDS -
+// `earnerType`/`status` are plain scalar columns, `iznos`/`zatrazeno` map to the
+// scalar `amount`/`requestedAt` fields on the PayoutRequest schema. `earnerName`
+// (resolved from employeeSnapshot or a populated employee/partner->userId name)
+// is NOT included - not a scalar column a repository can sort on directly.
+const PAYOUT_SORT_FIELDS = { earnerType: "earnerType", iznos: "amount", status: "status", zatrazeno: "requestedAt" };
+
 export async function listPayoutRequests(req, res, next) {
   try {
-    const { status, earnerType, partnerId, employeeId, page = 1, limit = 10 } = req.query;
+    const { status, earnerType, partnerId, employeeId, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = PAYOUT_SORT_FIELDS[sort];
     const result = await payoutRequestService.listPayoutRequests({
       filters: { status: status || undefined, earnerType: earnerType || undefined, partner: partnerId || undefined, employee: employeeId || undefined },
       page: resolvePage(page),
       limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
     });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
@@ -222,10 +231,22 @@ export async function getLogDashboard(req, res, next) {
   }
 }
 
+// Same whitelist pattern as PRODUCT_SORT_FIELDS - `total`/`errors`/`avgMs` map to
+// plain nested-but-scalar fields already stored on each LogSummary doc
+// (requests.total/logs.errorCount/perf.avgResponseTimeMs are computed once at
+// generateDailySummary time and persisted, not computed at query time), same
+// dot-path pattern as admin-taxonomy.controller.js's CATEGORY_SORT_FIELDS.
+const LOG_SUMMARY_SORT_FIELDS = { date: "date", total: "requests.total", errors: "logs.errorCount", avgMs: "perf.avgResponseTimeMs" };
+
 export async function listLogSummaries(req, res, next) {
   try {
-    const { page = 1, limit = 20 } = req.query;
-    const result = await logReportService.listLogSummaries({ page: resolvePage(page), limit: resolveLimit(limit) });
+    const { page = 1, limit = 20, sort, order } = req.query;
+    const sortField = LOG_SUMMARY_SORT_FIELDS[sort];
+    const result = await logReportService.listLogSummaries({
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
+    });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listLogSummaries] Greška", error, { query: req.query });
@@ -258,13 +279,25 @@ export async function getBusinessReportDashboard(req, res, next) {
   }
 }
 
+// Same whitelist pattern as PRODUCT_SORT_FIELDS - `periodKey` is a plain scalar
+// column; `appointmentsRevenue`/`ordersRevenue` map to nested-but-scalar fields
+// already stored on each BusinessReportSummary doc (computed once at
+// generateSummary time and persisted, not aggregated at read time), same
+// dot-path pattern as admin-taxonomy.controller.js's CATEGORY_SORT_FIELDS.
+const BUSINESS_REPORT_SORT_FIELDS = { periodKey: "periodKey", appointmentsRevenue: "appointments.revenue", ordersRevenue: "orders.revenue" };
+
 export async function listBusinessReports(req, res, next) {
   try {
     const { periodType } = req.params;
     if (!REPORT_PERIOD_TYPES.includes(periodType)) return next(new AppError("Nepoznat tip perioda", 400));
 
-    const { page = 1, limit = 20 } = req.query;
-    const result = await businessReportService.listSummaries(periodType, { page: resolvePage(page), limit: resolveLimit(limit) });
+    const { page = 1, limit = 20, sort, order } = req.query;
+    const sortField = BUSINESS_REPORT_SORT_FIELDS[sort];
+    const result = await businessReportService.listSummaries(periodType, {
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
+    });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listBusinessReports] Greška", error, { periodType: req.params.periodType, query: req.query });

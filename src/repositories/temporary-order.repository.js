@@ -15,13 +15,13 @@ export async function findTemporaryOrderByToken(token, { session } = {}) {
   return TemporaryOrder.findOne({ verificationToken: token }).session(session || null).lean();
 }
 
-export async function findTemporaryOrders({ search = "", limit = 20, page = 1, filters = {}, session } = {}) {
+export async function findTemporaryOrders({ search = "", limit = 20, page = 1, filters = {}, sort = { createdAt: -1, _id: -1 }, session } = {}) {
   const filter = buildTemporaryOrderFilter({ search, ...filters });
   const resolvedLimit = resolveLimit(limit);
   const skip = resolveSkip(page, resolvedLimit);
 
   const [data, total] = await Promise.all([
-    TemporaryOrder.find(filter).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(resolvedLimit).session(session || null).lean(),
+    TemporaryOrder.find(filter).sort(sort).skip(skip).limit(resolvedLimit).session(session || null).lean(),
     TemporaryOrder.countDocuments(filter).session(session || null),
   ]);
 

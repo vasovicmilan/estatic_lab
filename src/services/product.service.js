@@ -62,8 +62,8 @@ function findVariation(product, variantId) {
 
 // ==================== ADMIN CRUD ====================
 
-export async function listProducts({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
-  const result = await productRepo.findProducts({ search, limit, page, filters });
+export async function listProducts({ search = "", filters = {}, limit = 10, page = 1, sort } = {}) {
+  const result = await productRepo.findProducts({ search, limit, page, filters, ...(sort ? { sort } : {}) });
   return { data: mapProductsForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

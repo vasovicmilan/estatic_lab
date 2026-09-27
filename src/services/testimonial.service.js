@@ -16,8 +16,8 @@ import { logInfo } from "../utils/logger.util.js";
 // so existing consent records still tell you what someone actually agreed to.
 const CONSENT_TEXT_VERSION = "v1-2026-09";
 
-export async function listTestimonials({ filters = {}, limit = 10, page = 1 } = {}) {
-  const result = await testimonialRepo.findTestimonials({ limit, page, filters });
+export async function listTestimonials({ filters = {}, limit = 10, page = 1, sort } = {}) {
+  const result = await testimonialRepo.findTestimonials({ limit, page, filters, ...(sort ? { sort } : {}) });
   return { data: mapTestimonialsForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

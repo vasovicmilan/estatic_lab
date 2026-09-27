@@ -214,8 +214,8 @@ export async function getTemporaryOrderById(orderId) {
   return mapTemporaryOrderForAdminDetail(order);
 }
 
-export async function listTemporaryOrders({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
-  const result = await tempOrderRepo.findTemporaryOrders({ search, limit, page, filters });
+export async function listTemporaryOrders({ search = "", filters = {}, limit = 10, page = 1, sort } = {}) {
+  const result = await tempOrderRepo.findTemporaryOrders({ search, limit, page, filters, ...(sort ? { sort } : {}) });
   return { data: mapTemporaryOrdersForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

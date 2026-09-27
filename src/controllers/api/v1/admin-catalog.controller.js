@@ -23,14 +23,22 @@ import { buildAuditActor } from "../../../utils/audit-actor.util.js";
 
 // ---- Services ----
 
+// Same whitelist pattern as PRODUCT_SORT_FIELDS below - `naziv`/`aktivna` are
+// plain scalar columns (name, isActive) on the Service schema. `kategorije`
+// (populated category names) and `brojVarijanti` (packages.length, computed in
+// JS) are NOT included - neither is a sortable DB column.
+const SERVICE_SORT_FIELDS = { naziv: "name", aktivna: "isActive" };
+
 export async function listServices(req, res, next) {
   try {
-    const { search, isActive, page = 1, limit = 10 } = req.query;
+    const { search, isActive, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = SERVICE_SORT_FIELDS[sort];
     const result = await serviceService.listServices({
       search: search || "",
       filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined },
       page: resolvePage(page),
       limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
     });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
@@ -154,12 +162,23 @@ export async function deleteService(req, res, next) {
 // mention it - omitting it throws a raw Mongoose validation error, not a clean
 // badRequest, so it's worth remembering as a genuinely required field.
 
+// Same whitelist pattern as PRODUCT_SORT_FIELDS below - `naziv`/`cena`/
+// `najbolji`/`aktivan` are plain scalar columns (name, totalPrice, isBest,
+// isActive) on the Package schema. `stavke` (populated item names) is NOT
+// included. packageRepo.findPackages's default sort ({ order: 1, createdAt: -1,
+// _id: -1 }) is primarily the manual `order` field, which has no column in
+// the admin list, so no defaultSort indicator is configured on the frontend
+// even once this whitelist exists (see admin-package-list.ts's own comment).
+const PACKAGE_SORT_FIELDS = { naziv: "name", cena: "totalPrice", najbolji: "isBest", aktivan: "isActive" };
+
 export async function listPackages(req, res, next) {
   try {
-    const { search, isActive, page = 1, limit = 10 } = req.query;
+    const { search, isActive, sort, order, page = 1, limit = 10 } = req.query;
+    const sortField = PACKAGE_SORT_FIELDS[sort];
     const result = await packageService.listPackages({
       search: search || "",
       filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined },
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
       page: resolvePage(page),
       limit: resolveLimit(limit),
     });
@@ -243,14 +262,28 @@ export async function deletePackage(req, res, next) {
 
 // ---- Products ----
 
+// Admin product list's DataTable migration added sortable "Naziv"/"Kreiran"
+// columns - name/createdAt are plain scalar fields on the Product schema, so
+// productRepo.findProducts's existing `sort` option (default { createdAt: -1 })
+// already handles them with no repository change needed. Whitelisted here
+// (never pass req.query.sort straight through) since it becomes a Mongoose
+// sort object. `cena`/price is NOT in this whitelist - it's computed across a
+// product's `variations` sub-documents, not a scalar column, so a real
+// DB-level sort would need an aggregation-pipeline change rather than this
+// trivial addition. `aktivan` (isActive) WAS added below - it's a plain
+// indexed boolean column on the schema, same trivial case as name/createdAt.
+const PRODUCT_SORT_FIELDS = { naziv: "name", kreiran: "createdAt", aktivan: "isActive" };
+
 export async function listProducts(req, res, next) {
   try {
-    const { search, isActive, page = 1, limit = 10 } = req.query;
+    const { search, isActive, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = PRODUCT_SORT_FIELDS[sort];
     const result = await productService.listProducts({
       search: search || "",
       filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined },
       page: resolvePage(page),
       limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
     });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {

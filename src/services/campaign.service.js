@@ -11,8 +11,8 @@ import { BUSINESS } from "../config/business.config.js";
 // fallback (see business.config.js comment for why this was centralized).
 const BASE_URL = BUSINESS.siteUrl;
 
-export async function listCampaigns({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
-  const result = await campaignRepo.findCampaigns({ search, limit, page, filters });
+export async function listCampaigns({ search = "", filters = {}, limit = 10, page = 1, sort } = {}) {
+  const result = await campaignRepo.findCampaigns({ search, limit, page, filters, sort });
   return { data: mapCampaignsForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

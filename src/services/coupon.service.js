@@ -8,8 +8,8 @@ import { logInfo } from "../utils/logger.util.js";
 import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE, CART_ABANDONMENT_COUPON_CODE, CART_ABANDONMENT_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
 import { formatMoney } from "../utils/price.util.js";
 
-export async function listCoupons({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
-  const result = await couponRepo.findCoupons({ search, limit, page, filters });
+export async function listCoupons({ search = "", filters = {}, limit = 10, page = 1, sort } = {}) {
+  const result = await couponRepo.findCoupons({ search, limit, page, filters, sort });
   return { data: mapCouponsForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

@@ -11,13 +11,13 @@ export async function findResourceById(id, { session } = {}) {
   return Resource.findById(id).session(session || null).lean();
 }
 
-export async function findResources({ search = "", limit = 20, page = 1, filters = {}, session } = {}) {
+export async function findResources({ search = "", limit = 20, page = 1, filters = {}, sort = { name: 1, _id: -1 }, session } = {}) {
   const filter = buildResourceFilter({ search, ...filters });
   const resolvedLimit = resolveLimit(limit);
   const skip = resolveSkip(page, resolvedLimit);
 
   const [data, total] = await Promise.all([
-    Resource.find(filter).sort({ name: 1, _id: -1 }).skip(skip).limit(resolvedLimit).session(session || null).lean(),
+    Resource.find(filter).sort(sort).skip(skip).limit(resolvedLimit).session(session || null).lean(),
     Resource.countDocuments(filter).session(session || null),
   ]);
 

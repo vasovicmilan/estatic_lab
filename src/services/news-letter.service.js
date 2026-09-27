@@ -5,8 +5,8 @@ import { generateRandomToken } from "./crypto.service.js";
 import { validationError, notFound, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 
-export async function listSubscribers({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
-  const result = await newsLetterRepo.findSubscribers({ search, limit, page, filters });
+export async function listSubscribers({ search = "", filters = {}, limit = 10, page = 1, sort } = {}) {
+  const result = await newsLetterRepo.findSubscribers({ search, limit, page, filters, sort });
   return { data: mapSubscribersForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

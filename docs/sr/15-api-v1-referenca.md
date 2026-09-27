@@ -167,6 +167,8 @@ Ceo router iza `manage_orders`. `GET /orders`, `POST /orders/manual`, `GET /orde
 | GET | `/logs`, `/logs/history`, `/logs/history/:date` | `view_logs` |
 | GET | `/business-reports`, `/business-reports/history/...` | `view_business_reports` |
 | GET/PUT | `/site-settings` | `manage_site_content` |
+| PUT | `/site-settings/radno-vreme` | `manage_site_content` |
+| PUT | `/site-settings/neradni-dani` | `manage_site_content` |
 | GET/PUT | `/profile` | samo `access_admin_panel` (uvek sopstveni admin profil) |
 
 ## Šta trenutno NIJE pokriveno API-jem

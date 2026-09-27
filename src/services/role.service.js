@@ -9,8 +9,8 @@ import {
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 
-export async function listRoles({ search = "", limit = 10, page = 1 } = {}) {
-  const result = await roleRepo.findRoles({ search, limit, page });
+export async function listRoles({ search = "", limit = 10, page = 1, sort = undefined } = {}) {
+  const result = await roleRepo.findRoles({ search, limit, page, ...(sort ? { sort } : {}) });
   return { data: mapRolesForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

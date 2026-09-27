@@ -19,10 +19,22 @@ import { buildAuditActor } from "../../../utils/audit-actor.util.js";
 
 // ---- Roles ----
 
+// Same whitelist pattern as CATEGORY_SORT_FIELDS above - `naziv`/`opis`/
+// `podrazumevana`/`prioritet` are plain scalar columns (name, description,
+// isDefault, priority) on the Role schema. `brojPermisija` (permissions.length,
+// computed in JS) is NOT included - not a sortable DB column.
+const ROLE_SORT_FIELDS = { naziv: "name", opis: "description", podrazumevana: "isDefault", prioritet: "priority" };
+
 export async function listRoles(req, res, next) {
   try {
-    const { search, page = 1, limit = 10 } = req.query;
-    const result = await roleService.listRoles({ search: search || "", page: resolvePage(page), limit: resolveLimit(limit) });
+    const { search, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = ROLE_SORT_FIELDS[sort];
+    const result = await roleService.listRoles({
+      search: search || "",
+      page: resolvePage(page),
+      limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
+    });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/admin/listRoles] Greška", error, { query: req.query });
@@ -108,9 +120,17 @@ function buildCategoryData(body) {
   return data;
 }
 
+// Same whitelist pattern as admin-catalog.controller.js's PRODUCT_SORT_FIELDS -
+// `naziv`/`domen`/`prioritet`/`aktivna` are plain scalar columns (name, domain,
+// meta.priority, meta.isActive - nested but still direct schema fields, not
+// computed) on the Category schema. `roditelj` (populated parent name) is NOT
+// included - it's not a sortable DB column.
+const CATEGORY_SORT_FIELDS = { naziv: "name", domen: "domain", prioritet: "meta.priority", aktivna: "meta.isActive" };
+
 export async function listCategories(req, res, next) {
   try {
-    const { search, domain, parent, isActive, page = 1, limit = 10 } = req.query;
+    const { search, domain, parent, isActive, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = CATEGORY_SORT_FIELDS[sort];
     const result = await categoryService.listCategories({
       search: search || "",
       domain: domain || undefined,
@@ -118,6 +138,7 @@ export async function listCategories(req, res, next) {
       isActive: isActive === "true" ? true : isActive === "false" ? false : undefined,
       page: resolvePage(page),
       limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
     });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
@@ -198,15 +219,21 @@ export async function deleteCategory(req, res, next) {
 
 // ---- Tags ----
 
+// Same whitelist pattern as CATEGORY_SORT_FIELDS above - `naziv`/`domen`/`aktivan`
+// are plain scalar columns (name, domain, isActive) on the Tag schema.
+const TAG_SORT_FIELDS = { naziv: "name", domen: "domain", aktivan: "isActive" };
+
 export async function listTags(req, res, next) {
   try {
-    const { search, domain, isActive, page = 1, limit = 10 } = req.query;
+    const { search, domain, isActive, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = TAG_SORT_FIELDS[sort];
     const result = await tagService.listTags({
       search: search || "",
       domain: domain || undefined,
       isActive: isActive === "true" ? true : isActive === "false" ? false : undefined,
       page: resolvePage(page),
       limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
     });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
@@ -285,14 +312,21 @@ export async function deleteTag(req, res, next) {
 
 // ---- Resources (equipment/rooms/tables the booking system tracks capacity for) ----
 
+// Same whitelist pattern as CATEGORY_SORT_FIELDS above - `naziv`/`kapacitet`/
+// `aktivan` are plain scalar columns (name, capacity, isActive) on the Resource
+// schema.
+const RESOURCE_SORT_FIELDS = { naziv: "name", kapacitet: "capacity", aktivan: "isActive" };
+
 export async function listResources(req, res, next) {
   try {
-    const { search, isActive, page = 1, limit = 10 } = req.query;
+    const { search, isActive, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = RESOURCE_SORT_FIELDS[sort];
     const result = await resourceService.listResources({
       search: search || "",
       isActive: isActive === "true" ? true : isActive === "false" ? false : undefined,
       page: resolvePage(page),
       limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
     });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {

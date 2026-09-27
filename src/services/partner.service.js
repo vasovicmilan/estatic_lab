@@ -11,8 +11,8 @@ import { logInfo } from "../utils/logger.util.js";
 
 const defaultPopulate = [{ path: "userId", select: "firstName lastName email phone" }];
 
-export async function listPartners({ limit = 10, page = 1, filters = {}, role = "admin" } = {}) {
-  const result = await partnerRepo.findPartners({ limit, page, filters, populateFields: defaultPopulate });
+export async function listPartners({ limit = 10, page = 1, filters = {}, sort, role = "admin" } = {}) {
+  const result = await partnerRepo.findPartners({ limit, page, filters, sort, populateFields: defaultPopulate });
   return {
     data: role === "admin" ? mapPartnersForAdminList(result.data) : result.data.map((p) => mapPartner(p, role, "short")),
     total: result.total,

@@ -161,8 +161,8 @@ export async function rejectPayoutRequest(requestId, adminNote = "") {
   return updated;
 }
 
-export async function listPayoutRequests({ limit = 20, page = 1, filters = {} } = {}) {
-  const result = await payoutRepo.findPayoutRequests({ limit, page, filters });
+export async function listPayoutRequests({ limit = 20, page = 1, filters = {}, sort } = {}) {
+  const result = await payoutRepo.findPayoutRequests({ limit, page, filters, ...(sort ? { sort } : {}) });
   return { data: mapPayoutRequestsForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

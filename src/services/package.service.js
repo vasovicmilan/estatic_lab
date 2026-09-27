@@ -33,8 +33,8 @@ async function validateItems(items = []) {
   }
 }
 
-export async function listPackages({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
-  const result = await packageRepo.findPackages({ search, limit, page, filters, populateFields: populate });
+export async function listPackages({ search = "", filters = {}, limit = 10, page = 1, sort } = {}) {
+  const result = await packageRepo.findPackages({ search, limit, page, filters, sort, populateFields: populate });
   return { data: mapPackagesForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

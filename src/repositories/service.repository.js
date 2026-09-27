@@ -43,6 +43,7 @@ export async function findServices({
     { path: "categories", select: "name slug" },
     { path: "tags", select: "name slug" },
   ],
+  sort = { highlight: -1, createdAt: -1, _id: -1 },
   session,
 } = {}) {
   const filter = buildServiceFilter({ search, ...filters });
@@ -50,7 +51,7 @@ export async function findServices({
   const skip = resolveSkip(page, resolvedLimit);
 
   let query = Service.find(filter)
-    .sort({ highlight: -1, createdAt: -1, _id: -1 })
+    .sort(sort)
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);

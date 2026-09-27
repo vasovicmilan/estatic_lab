@@ -19,13 +19,13 @@ export async function findDefaultRole({ session } = {}) {
   return Role.findOne({ isDefault: true }).session(session || null).lean();
 }
 
-export async function findRoles({ search = "", limit = 20, page = 1, session } = {}) {
+export async function findRoles({ search = "", limit = 20, page = 1, sort = { priority: -1, name: 1, _id: -1 }, session } = {}) {
   const filter = buildRoleFilter({ search });
   const resolvedLimit = resolveLimit(limit);
   const skip = resolveSkip(page, resolvedLimit);
 
   const [data, total] = await Promise.all([
-    Role.find(filter).sort({ priority: -1, name: 1, _id: -1 }).skip(skip).limit(resolvedLimit).session(session || null).lean(),
+    Role.find(filter).sort(sort).skip(skip).limit(resolvedLimit).session(session || null).lean(),
     Role.countDocuments(filter).session(session || null),
   ]);
 

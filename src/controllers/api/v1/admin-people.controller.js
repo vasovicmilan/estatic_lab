@@ -19,9 +19,17 @@ import { buildAuditActor } from "../../../utils/audit-actor.util.js";
 
 // ---- Users ----
 
+// Same whitelist pattern as admin-catalog.controller.js's PRODUCT_SORT_FIELDS -
+// `email`/`status`/`poslednjiLogin` are plain scalar columns (email, status,
+// lastLogin) on the User schema. `imePrezime` is a concatenated firstName+lastName
+// display string (getFullName) and `uloga` is a populated role name - neither is
+// a sortable DB column, so both are left out.
+const USER_SORT_FIELDS = { email: "email", status: "status", poslednjiLogin: "lastLogin" };
+
 export async function listUsers(req, res, next) {
   try {
-    const { search, status, role, provider, page = 1, limit = 10 } = req.query;
+    const { search, status, role, provider, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = USER_SORT_FIELDS[sort];
     const result = await userService.listUsers({
       search: search || "",
       status: status || undefined,
@@ -30,6 +38,7 @@ export async function listUsers(req, res, next) {
       excludeUserId: req.user.id,
       page: resolvePage(page),
       limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
     });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
@@ -153,13 +162,21 @@ export async function deleteUser(req, res, next) {
 
 // ---- Employees ----
 
+// Same whitelist pattern as admin-catalog.controller.js's PRODUCT_SORT_FIELDS -
+// `aktivan`/`kreiran` are plain scalar columns (isActive, createdAt) on the
+// Employee schema. `imePrezime`/`email` (populated userId names) and `brojUsluga`
+// (services.length, computed in JS) are NOT included - none is a sortable DB column.
+const EMPLOYEE_SORT_FIELDS = { aktivan: "isActive", kreiran: "createdAt" };
+
 export async function listEmployees(req, res, next) {
   try {
-    const { isActive, page = 1, limit = 10 } = req.query;
+    const { isActive, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = EMPLOYEE_SORT_FIELDS[sort];
     const result = await employeeService.listEmployees({
       filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined },
       page: resolvePage(page),
       limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
     });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
@@ -262,14 +279,23 @@ export async function deleteEmployee(req, res, next) {
 
 // ---- Experts ----
 
+// Same whitelist pattern as EMPLOYEE_SORT_FIELDS above - `titula`/`aktivan` are
+// plain scalar columns (title, isActive) on the Expert schema. `imePrezime`
+// (firstName + lastName, concatenated) and `brojUsluga` (services.length,
+// computed in JS from the populated services array) are NOT included - neither
+// is a sortable DB column.
+const EXPERT_SORT_FIELDS = { titula: "title", aktivan: "isActive" };
+
 export async function listExperts(req, res, next) {
   try {
-    const { search, isActive, page = 1, limit = 10 } = req.query;
+    const { search, isActive, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = EXPERT_SORT_FIELDS[sort];
     const result = await expertService.listExperts({
       search: search || "",
       filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined },
       page: resolvePage(page),
       limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
     });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
@@ -358,11 +384,25 @@ export async function deleteExpert(req, res, next) {
 
 // ---- Partners ----
 
+// Same whitelist pattern as USER_SORT_FIELDS/EMPLOYEE_SORT_FIELDS above -
+// `procenatProvizijeUsluge`/`procenatProvizijeArtikli`/`aktivan`/`kreiran` are
+// plain scalar columns (commissionRateServices, commissionRateProducts,
+// isActive, createdAt) on the Partner schema. `imePrezime`/`email` (populated
+// User fields) are NOT included - neither is a sortable DB column here.
+const PARTNER_SORT_FIELDS = {
+  procenatProvizijeUsluge: "commissionRateServices",
+  procenatProvizijeArtikli: "commissionRateProducts",
+  aktivan: "isActive",
+  kreiran: "createdAt",
+};
+
 export async function listPartners(req, res, next) {
   try {
-    const { isActive, page = 1, limit = 10 } = req.query;
+    const { isActive, sort, order, page = 1, limit = 10 } = req.query;
+    const sortField = PARTNER_SORT_FIELDS[sort];
     const result = await partnerService.listPartners({
       filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined },
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
       page: resolvePage(page),
       limit: resolveLimit(limit),
     });

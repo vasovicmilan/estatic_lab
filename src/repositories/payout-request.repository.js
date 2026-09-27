@@ -16,7 +16,7 @@ export async function findPayoutRequestById(id, { session } = {}) {
     .lean();
 }
 
-export async function findPayoutRequests({ limit = 20, page = 1, filters = {}, session } = {}) {
+export async function findPayoutRequests({ limit = 20, page = 1, filters = {}, sort = { createdAt: -1, _id: -1 }, session } = {}) {
   const filter = buildPayoutRequestFilter(filters);
   const resolvedLimit = resolveLimit(limit);
   const skip = resolveSkip(page, resolvedLimit);
@@ -25,7 +25,7 @@ export async function findPayoutRequests({ limit = 20, page = 1, filters = {}, s
     PayoutRequest.find(filter)
       .populate({ path: "employee", populate: { path: "userId", select: "firstName lastName email" } })
       .populate({ path: "partner", populate: { path: "userId", select: "firstName lastName email" } })
-      .sort({ createdAt: -1, _id: -1 })
+      .sort(sort)
       .skip(skip)
       .limit(resolvedLimit)
       .session(session || null)

@@ -50,13 +50,22 @@ function buildPostPayload(req, existing = {}) {
   return data;
 }
 
+// Same whitelist pattern as admin-catalog.controller.js's PRODUCT_SORT_FIELDS -
+// `naslov`/`status`/`pregledi`/`istaknut`/`kreiran` are plain scalar columns
+// (title, status, views, isFeatured, createdAt) on the Post schema.
+// `autor` (populated author name) and `kategorije` (populated category names)
+// are NOT included - neither is a sortable DB column.
+const BLOG_SORT_FIELDS = { naslov: "title", status: "status", pregledi: "views", istaknut: "isFeatured", kreiran: "createdAt" };
+
 export async function listPosts(req, res, next) {
   try {
-    const { search, status, sortBy, page = 1, limit = 10 } = req.query;
+    const { search, status, sortBy, sort, order, page = 1, limit = 10 } = req.query;
+    const sortField = BLOG_SORT_FIELDS[sort];
     const result = await postService.listPosts({
       search: search || "",
       filters: { status: status || undefined },
       sortBy: sortBy || undefined,
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
       page: resolvePage(page),
       limit: resolveLimit(limit),
     });
@@ -207,12 +216,27 @@ function buildCouponPayload(req) {
   return data;
 }
 
+// Same whitelist pattern as PRODUCT_SORT_FIELDS. `popust` (discount formatted
+// across discountType+discountValue) is NOT included - a concatenated display
+// string, not a scalar column.
+const COUPON_SORT_FIELDS = {
+  kod: "code",
+  tip: "discountType",
+  maxUpotreba: "maxUses",
+  iskorisceno: "usedCount",
+  aktivnost: "isActive",
+  vaziDo: "validUntil",
+  kreiran: "createdAt",
+};
+
 export async function listCoupons(req, res, next) {
   try {
-    const { search, isActive, page = 1, limit = 10 } = req.query;
+    const { search, isActive, sort, order, page = 1, limit = 10 } = req.query;
+    const sortField = COUPON_SORT_FIELDS[sort];
     const result = await couponService.listCoupons({
       search: search || "",
       filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined },
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
       page: resolvePage(page),
       limit: resolveLimit(limit),
     });
@@ -306,12 +330,23 @@ export async function deleteCoupon(req, res, next) {
 
 // ================== Newsletter subscribers ==================
 
+// Same whitelist pattern as PRODUCT_SORT_FIELDS - `email`/`status`/`prijavljen`
+// are plain scalar columns (email, status, subscribedAt) on the NewsLetter
+// schema. `interesovanja` (formatted from interests[]) is NOT included - the
+// repository's own default sort is createdAt, which subscribedAt does not
+// necessarily match (subscribedAt is bumped on re-subscribe), so it's kept out
+// of the whitelist's default-sort mapping too - see admin-subscriber-list.ts's
+// own comment on why no defaultSort is configured there.
+const SUBSCRIBER_SORT_FIELDS = { email: "email", status: "status", prijavljen: "subscribedAt" };
+
 export async function listSubscribers(req, res, next) {
   try {
-    const { search, status, page = 1, limit = 10 } = req.query;
+    const { search, status, sort, order, page = 1, limit = 10 } = req.query;
+    const sortField = SUBSCRIBER_SORT_FIELDS[sort];
     const result = await newsletterService.listSubscribers({
       search: search || "",
       filters: { status: status || undefined },
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
       page: resolvePage(page),
       limit: resolveLimit(limit),
     });
@@ -359,13 +394,24 @@ export async function deleteSubscriber(req, res, next) {
 
 // ================== Testimonials ==================
 
+// Same whitelist pattern as PRODUCT_SORT_FIELDS - `ime`/`ocena`/`komentar`/
+// `status`/`istaknut`/`kreiran` map to plain scalar columns (name, rating,
+// message, status, isFeatured, createdAt) on the Testimonial schema (`name` is
+// required at submission, so it's always what `ime`'s display fallback to a
+// populated user's name would otherwise be masking). `usluga` (the linked
+// service/package/product's populated name) is NOT included - not a scalar
+// column a repository can sort on directly.
+const TESTIMONIAL_SORT_FIELDS = { ime: "name", ocena: "rating", komentar: "message", status: "status", istaknut: "isFeatured", kreiran: "createdAt" };
+
 export async function listTestimonials(req, res, next) {
   try {
-    const { status, isFeatured, page = 1, limit = 10 } = req.query;
+    const { status, isFeatured, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = TESTIMONIAL_SORT_FIELDS[sort];
     const result = await testimonialService.listTestimonials({
       filters: { status: status || undefined, isFeatured: isFeatured === "true" ? true : isFeatured === "false" ? false : undefined },
       page: resolvePage(page),
       limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
     });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
@@ -474,11 +520,17 @@ function buildBusinessPartnerPayload(req, existing = {}) {
   return data;
 }
 
+// Same whitelist pattern as PRODUCT_SORT_FIELDS - `naziv`/`aktivan`/`kreirano`
+// are plain scalar columns (name, isActive, createdAt) on the BusinessPartner schema.
+const BUSINESS_PARTNER_SORT_FIELDS = { naziv: "name", aktivan: "isActive", kreirano: "createdAt" };
+
 export async function listBusinessPartners(req, res, next) {
   try {
-    const { search, page = 1, limit = 10 } = req.query;
+    const { search, sort, order, page = 1, limit = 10 } = req.query;
+    const sortField = BUSINESS_PARTNER_SORT_FIELDS[sort];
     const result = await businessPartnerService.listBusinessPartners({
       search: search || "",
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
       page: resolvePage(page),
       limit: resolveLimit(limit),
     });
@@ -570,14 +622,22 @@ export async function deleteBusinessPartner(req, res, next) {
 
 // ================== Contact messages ==================
 
+// Same whitelist pattern as PRODUCT_SORT_FIELDS - `email`/`tema`/`status`/`datum`
+// are plain scalar columns (email, topic, status, createdAt) on the Contact
+// schema. `imePrezime` (firstName + decrypted lastName, concatenated) is NOT
+// included - not a scalar column a repository can sort on directly.
+const CONTACT_SORT_FIELDS = { email: "email", tema: "topic", status: "status", datum: "createdAt" };
+
 export async function listContacts(req, res, next) {
   try {
-    const { search, status, page = 1, limit = 10 } = req.query;
+    const { search, status, page = 1, limit = 10, sort, order } = req.query;
+    const sortField = CONTACT_SORT_FIELDS[sort];
     const result = await contactService.listContacts({
       search: search || "",
       filters: { status: status || undefined },
       page: resolvePage(page),
       limit: resolveLimit(limit),
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
     });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
@@ -628,12 +688,28 @@ function buildCampaignPayload(req) {
   };
 }
 
+// Same whitelist pattern as PRODUCT_SORT_FIELDS - `naslov`/`predmet`/`status`/
+// `zakazanoZa`/`poslatoZa`/`kreirano` are plain scalar columns (title, subject,
+// status, scheduledFor, sentAt, createdAt) on the Campaign schema. `segment`
+// (formatted from targetInterests[]) and `poslato` (a combined sentCount /
+// failedCount display, not a single column) are NOT included.
+const CAMPAIGN_SORT_FIELDS = {
+  naslov: "title",
+  predmet: "subject",
+  status: "status",
+  zakazanoZa: "scheduledFor",
+  poslatoZa: "sentAt",
+  kreirano: "createdAt",
+};
+
 export async function listCampaigns(req, res, next) {
   try {
-    const { search, status, page = 1, limit = 10 } = req.query;
+    const { search, status, sort, order, page = 1, limit = 10 } = req.query;
+    const sortField = CAMPAIGN_SORT_FIELDS[sort];
     const result = await campaignService.listCampaigns({
       search: search || "",
       filters: { status: status || undefined },
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
       page: resolvePage(page),
       limit: resolveLimit(limit),
     });

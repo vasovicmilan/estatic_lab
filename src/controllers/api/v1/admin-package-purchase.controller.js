@@ -12,11 +12,20 @@ import { buildAuditActor } from "../../../utils/audit-actor.util.js";
 // than routing through the HTML presenters, same reasoning as the other API v1
 // admin controllers.
 
+// Same whitelist pattern as PRODUCT_SORT_FIELDS - `cena`/`status`/`kupljeno`/
+// `istice` are plain scalar columns (pricePaid, status, purchasedAt,
+// expiresAt) on the PackagePurchase schema. `paket` (populated Package name)
+// and `stavke` (populated item names) are NOT included - neither is a
+// sortable DB column.
+const PACKAGE_PURCHASE_SORT_FIELDS = { cena: "pricePaid", status: "status", kupljeno: "purchasedAt", istice: "expiresAt" };
+
 export async function listPackagePurchases(req, res, next) {
   try {
-    const { userId, status, page = 1, limit = 10 } = req.query;
+    const { userId, status, sort, order, page = 1, limit = 10 } = req.query;
+    const sortField = PACKAGE_PURCHASE_SORT_FIELDS[sort];
     const result = await packagePurchaseService.listPurchases({
       filters: { userId: userId || undefined, status: status || undefined },
+      sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
       page: resolvePage(page),
       limit: resolveLimit(limit),
     });

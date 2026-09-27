@@ -26,8 +26,8 @@ function validateBasicData(data) {
   if (data.status === "scheduled" && !data.scheduledFor) validationError("scheduledFor");
 }
 
-export async function listPosts({ search = "", filters = {}, limit = 10, page = 1, sortBy } = {}) {
-  const result = await postRepo.findPosts({ search, limit, page, filters, sortBy, populateFields: populate });
+export async function listPosts({ search = "", filters = {}, limit = 10, page = 1, sortBy, sort } = {}) {
+  const result = await postRepo.findPosts({ search, limit, page, filters, sortBy, sort, populateFields: populate });
   return { data: mapPostsForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

@@ -277,11 +277,11 @@ export async function confirmOrderByAdmin(orderId, adminId) {
 
 // ==================== READ ====================
 
-export async function findOrders({ search = "", limit = 20, page = 1, requesterId = null, role = "user", filters = {} } = {}) {
+export async function findOrders({ search = "", limit = 20, page = 1, requesterId = null, role = "user", filters = {}, sort = undefined } = {}) {
   const scopedFilters = { ...filters };
   if (role === "user") scopedFilters.user = requesterId;
 
-  const result = await orderRepo.findOrders({ search, limit, page, filters: scopedFilters });
+  const result = await orderRepo.findOrders({ search, limit, page, filters: scopedFilters, ...(sort ? { sort } : {}) });
 
   return {
     data: role === "admin" ? mapOrdersForAdminList(result.data) : result.data.map((o) => mapOrder(o, role, "short")),

@@ -25,6 +25,7 @@ export async function findTestimonials({
   page = 1,
   filters = {},
   populateFields = TESTIMONIAL_POPULATE,
+  sort = { isFeatured: -1, createdAt: -1, _id: -1 },
   session,
 } = {}) {
   const filter = buildTestimonialFilter(filters);
@@ -32,7 +33,7 @@ export async function findTestimonials({
   const skip = resolveSkip(page, resolvedLimit);
 
   let query = Testimonial.find(filter)
-    .sort({ isFeatured: -1, createdAt: -1, _id: -1 })
+    .sort(sort)
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);

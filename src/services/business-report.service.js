@@ -120,8 +120,8 @@ export async function getSummary(periodType, periodKey) {
   return businessReportRepo.findSummary(periodType, periodKey);
 }
 
-export async function listSummaries(periodType, options) {
-  return businessReportRepo.listSummaries(periodType, options);
+export async function listSummaries(periodType, { sort, ...options } = {}) {
+  return businessReportRepo.listSummaries(periodType, { ...options, ...(sort ? { sort } : {}) });
 }
 
 /**

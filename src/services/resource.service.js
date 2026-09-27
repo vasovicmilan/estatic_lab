@@ -9,8 +9,8 @@ import {
 import { validationError, notFound, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 
-export async function listResources({ search = "", isActive, limit = 10, page = 1 } = {}) {
-  const result = await resourceRepo.findResources({ search, limit, page, filters: { isActive } });
+export async function listResources({ search = "", isActive, limit = 10, page = 1, sort } = {}) {
+  const result = await resourceRepo.findResources({ search, limit, page, filters: { isActive }, ...(sort ? { sort } : {}) });
   return { data: mapResourcesForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 

@@ -14,7 +14,7 @@ export async function findBusinessPartnerBySlug(slug, { session } = {}) {
   return BusinessPartner.findOne({ slug }).session(session || null).lean();
 }
 
-export async function findBusinessPartners({ search = "", limit = 20, page = 1, filters = {}, session } = {}) {
+export async function findBusinessPartners({ search = "", limit = 20, page = 1, filters = {}, sort = { createdAt: -1, _id: -1 }, session } = {}) {
   const filter = { ...filters };
   if (search) filter.name = { $regex: search, $options: "i" };
 
@@ -22,7 +22,7 @@ export async function findBusinessPartners({ search = "", limit = 20, page = 1, 
   const skip = resolveSkip(page, resolvedLimit);
 
   const [data, total] = await Promise.all([
-    BusinessPartner.find(filter).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(resolvedLimit).session(session || null).lean(),
+    BusinessPartner.find(filter).sort(sort).skip(skip).limit(resolvedLimit).session(session || null).lean(),
     BusinessPartner.countDocuments(filter).session(session || null),
   ]);
 

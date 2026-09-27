@@ -69,6 +69,7 @@ export async function findUsers({
   page = 1,
   filters = {},
   populateFields = [{ path: "role", select: "name permissions" }],
+  sort = { createdAt: -1, _id: -1 },
   session,
 } = {}) {
   const filter = buildUserFilter({ search, ...filters });
@@ -76,7 +77,7 @@ export async function findUsers({
   const skip = resolveSkip(page, resolvedLimit);
 
   let query = User.find(filter)
-    .sort({ createdAt: -1, _id: -1 })
+    .sort(sort)
     .skip(skip)
     .limit(resolvedLimit)
     .session(session || null);

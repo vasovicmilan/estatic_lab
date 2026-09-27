@@ -78,8 +78,8 @@ function assertPublishable(service) {
   validatePackages(service.packages || []);
 }
 
-export async function listServices({ search = "", filters = {}, limit = 10, page = 1 } = {}) {
-  const result = await serviceRepo.findServices({ search, limit, page, filters, populateFields: adminPopulate });
+export async function listServices({ search = "", filters = {}, limit = 10, page = 1, sort = undefined } = {}) {
+  const result = await serviceRepo.findServices({ search, limit, page, filters, populateFields: adminPopulate, ...(sort ? { sort } : {}) });
   return { data: mapServicesForAdminList(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 
