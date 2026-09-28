@@ -48,6 +48,11 @@
                   <% }) %>
                 </ul>
               <% } %>
+              <% if (sub.closingParagraphs) { %>
+                <% sub.closingParagraphs.forEach(function(paragraph) { %>
+                  <p class="text-secondary mb-2"><%- paragraph %></p>
+                <% }) %>
+              <% } %>
             </div>
           <% }) %>
         <% } %>

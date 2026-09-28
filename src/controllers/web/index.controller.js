@@ -1,4 +1,5 @@
 import * as indexService from "../../services/index.service.js";
+import siteContentService from "../../services/site-content.service.js";
 import {
   prepareHomeData,
   preparePrivacyPolicyData,
@@ -16,8 +17,12 @@ import { toIdArray } from "../../utils/form-array.util.js";
 
 export async function homePage(req, res, next) {
   try {
-    const serviceData = await indexService.getLandingPageData();
-    const viewData = prepareHomeData(serviceData);
+    const [serviceData, homeIntro, whyUs] = await Promise.all([
+      indexService.getLandingPageData(),
+      siteContentService.getHomeIntro(),
+      siteContentService.getWhyUs(),
+    ]);
+    const viewData = prepareHomeData({ ...serviceData, homeIntro, whyUs });
     serviceData.seo.jsonLd = [...(serviceData.seo.jsonLd || []), buildWebsiteJsonLd(req)];
 
     return res.render("landing/home", {
@@ -34,14 +39,14 @@ export async function homePage(req, res, next) {
 
 export async function aboutPage(req, res, next) {
   try {
-    const serviceData = await indexService.getAboutPageData();
+    const [serviceData, content] = await Promise.all([indexService.getAboutPageData(), siteContentService.getAbout()]);
     return res.render("public/_page", {
       pageTitle: serviceData.seo.pageTitle,
       pageHeading: "O nama",
       pageDescription: serviceData.seo.pageDescription,
       seo: serviceData.seo,
       showLegalContent: true,
-      data: prepareAboutPageData(),
+      data: prepareAboutPageData(content),
     });
   } catch (error) {
     logError("[aboutPage] Greška pri učitavanju stranice o nama", error);
@@ -51,12 +56,12 @@ export async function aboutPage(req, res, next) {
 
 export async function partnershipPage(req, res, next) {
   try {
-    const serviceData = await indexService.getPartnershipPageData();
+    const [serviceData, content] = await Promise.all([indexService.getPartnershipPageData(), siteContentService.getPartnership()]);
     return res.render("landing/partnership", {
       pageTitle: serviceData.seo.pageTitle,
       pageDescription: serviceData.seo.pageDescription,
       seo: serviceData.seo,
-      data: preparePartnershipPageData(),
+      data: preparePartnershipPageData(content),
     });
   } catch (error) {
     logError("[partnershipPage] Greška pri učitavanju stranice partnerskog programa", error);
@@ -66,14 +71,14 @@ export async function partnershipPage(req, res, next) {
 
 export async function privacyPage(req, res, next) {
   try {
-    const serviceData = await indexService.getPrivacyPolicyPageData();
+    const [serviceData, content] = await Promise.all([indexService.getPrivacyPolicyPageData(), siteContentService.getPrivacyPolicy()]);
     return res.render("public/_page", {
       pageTitle: serviceData.seo.pageTitle,
       pageHeading: "Politika privatnosti",
       pageDescription: serviceData.seo.pageDescription,
       seo: serviceData.seo,
       showLegalContent: true,
-      data: preparePrivacyPolicyData(),
+      data: preparePrivacyPolicyData(content),
     });
   } catch (error) {
     logError("[privacyPage] Greška pri učitavanju politike privatnosti", error);
@@ -83,14 +88,14 @@ export async function privacyPage(req, res, next) {
 
 export async function termsPage(req, res, next) {
   try {
-    const serviceData = await indexService.getTermsAndConditionsPageData();
+    const [serviceData, content] = await Promise.all([indexService.getTermsAndConditionsPageData(), siteContentService.getTermsAndConditions()]);
     return res.render("public/_page", {
       pageTitle: serviceData.seo.pageTitle,
       pageHeading: "Uslovi korišćenja",
       pageDescription: serviceData.seo.pageDescription,
       seo: serviceData.seo,
       showLegalContent: true,
-      data: prepareTermsAndConditionsData(),
+      data: prepareTermsAndConditionsData(content),
     });
   } catch (error) {
     logError("[termsPage] Greška pri učitavanju uslova korišćenja", error);
@@ -100,8 +105,8 @@ export async function termsPage(req, res, next) {
 
 export async function faqPage(req, res, next) {
   try {
-    const serviceData = await indexService.getFaqPageData();
-    const faqData = prepareFaqPageData();
+    const [serviceData, content] = await Promise.all([indexService.getFaqPageData(), siteContentService.getFaq()]);
+    const faqData = prepareFaqPageData(content);
     // FAQPage rich-result eligibility - built here (controller layer) rather
     // than in the service, since getFaqPageData() intentionally stays
     // presentation-agnostic (SEO metadata only) and prepareFaqPageData()'s

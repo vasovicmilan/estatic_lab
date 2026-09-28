@@ -4,6 +4,8 @@ import * as productService from "../../../services/product.service.js";
 import * as expertService from "../../../services/expert.service.js";
 import * as postService from "../../../services/post.service.js";
 import * as businessPartnerService from "../../../services/business-partner.service.js";
+import { BUSINESS } from "../../../config/business.config.js";
+import siteContentService from "../../../services/site-content.service.js";
 import * as categoryService from "../../../services/category.service.js";
 import * as tagService from "../../../services/tag.service.js";
 import { generateSeo } from "../../../seo/index.js";
@@ -153,7 +155,7 @@ export async function getTeamMember(req, res, next) {
 
 export async function listPosts(req, res, next) {
   try {
-    const { category, tag, search, page = 1 } = req.query;
+    const { category, tag, search, page = 1, limit } = req.query;
     const filters = {};
 
     if (category) {
@@ -165,10 +167,45 @@ export async function listPosts(req, res, next) {
       filters.tag = tagDoc._id;
     }
 
-    const result = await postService.findPublishedPosts({ page: resolvePage(page), filters, search: search || "" });
+    // limit is optional and left out unless the caller asks for a specific
+    // page size - findPublishedPosts defaults to 10 (and resolveLimit clamps
+    // whatever comes through to [1, 100] regardless), same as every other
+    // public listing route here (services/products/packages).
+    const result = await postService.findPublishedPosts({
+      page: resolvePage(page),
+      filters,
+      search: search || "",
+      ...(limit ? { limit } : {}),
+    });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/listPosts] Greška", error, { query: req.query });
+    next(error);
+  }
+}
+
+// Blog "chrome" (category filter pills + tag chips), the exact data
+// prepareBlogListData's buildCategoryTabs/buildTagChips (see
+// presenters/blog/blog.presenter.js - only ever used by the old EJS site
+// until now) needs to render itself. Deliberately its OWN endpoint rather
+// than folded into listPosts above: this data (all post categories with
+// their live post counts, all post tags) doesn't depend on the requested
+// page/search/category/tag at all, so bundling it into every paginated
+// listPosts call would mean recomputing category counts on every single
+// page flip for data that's the same every time - one extra parallel
+// request (not a waterfall - the frontend fires this alongside its posts
+// request) instead of redundant work on every list call.
+export async function getBlogFilters(req, res, next) {
+  try {
+    const [categoriesRaw, tags, totalCount] = await Promise.all([
+      categoryService.getPublicCategories("post"),
+      tagService.getPublicTags("post"),
+      postService.countAllPublishedPosts(),
+    ]);
+    const categories = await postService.attachPostCountsToCategories(categoriesRaw);
+    return res.json({ success: true, data: { categories, tags, totalCount } });
+  } catch (error) {
+    logError("[api/getBlogFilters] Greška", error);
     next(error);
   }
 }
@@ -206,11 +243,102 @@ export async function getBusinessPartner(req, res, next) {
   }
 }
 
+// ---- Business contact info (footer, contact page) ----
+// BUSINESS (business.config.js) is already public: it's rendered into the
+// EJS footer/contact page and into the site-wide Organization JSON-LD on
+// every public page, so serving it as JSON here is not a new disclosure -
+// just the first time the SPA can read it without duplicating it by hand.
+// Serbian field names to match every other public mapper's convention.
+export async function getBusinessInfo(req, res) {
+  return res.json({
+    success: true,
+    data: {
+      naziv: BUSINESS.name,
+      email: BUSINESS.email,
+      telefon: BUSINESS.phone,
+      telefonHref: BUSINESS.phoneHref,
+      adresa: BUSINESS.address?.full || null,
+      drustveneMreze: BUSINESS.sameAs || [],
+    },
+  });
+}
+
+// DB-backed marketing/legal content (see site-content.service.js's header
+// comment for why this now lives in the database instead of hardcoded
+// presenter constants) - one thin passthrough per public page, same shape
+// the admin edit screen reads/writes (site-content.service.js returns the
+// same shape to both, see that file's own comment on why).
+export async function getAboutPage(req, res, next) {
+  try {
+    return res.json({ success: true, data: await siteContentService.getAbout() });
+  } catch (error) {
+    logError("[api/getAboutPage] Greška", error);
+    next(error);
+  }
+}
+
+export async function getFaqPage(req, res, next) {
+  try {
+    return res.json({ success: true, data: await siteContentService.getFaq() });
+  } catch (error) {
+    logError("[api/getFaqPage] Greška", error);
+    next(error);
+  }
+}
+
+export async function getPrivacyPolicyPage(req, res, next) {
+  try {
+    return res.json({ success: true, data: await siteContentService.getPrivacyPolicy() });
+  } catch (error) {
+    logError("[api/getPrivacyPolicyPage] Greška", error);
+    next(error);
+  }
+}
+
+export async function getTermsPage(req, res, next) {
+  try {
+    return res.json({ success: true, data: await siteContentService.getTermsAndConditions() });
+  } catch (error) {
+    logError("[api/getTermsPage] Greška", error);
+    next(error);
+  }
+}
+
+export async function getPartnershipPage(req, res, next) {
+  try {
+    return res.json({ success: true, data: await siteContentService.getPartnership() });
+  } catch (error) {
+    logError("[api/getPartnershipPage] Greška", error);
+    next(error);
+  }
+}
+
+export async function getHomeIntro(req, res, next) {
+  try {
+    const [homeIntro, whyUs] = await Promise.all([siteContentService.getHomeIntro(), siteContentService.getWhyUs()]);
+    return res.json({ success: true, data: { ...homeIntro, whyUs } });
+  } catch (error) {
+    logError("[api/getHomeIntro] Greška", error);
+    next(error);
+  }
+}
+
+export async function getTeamIntro(req, res, next) {
+  try {
+    return res.json({ success: true, data: await siteContentService.getTeamIntro() });
+  } catch (error) {
+    logError("[api/getTeamIntro] Greška", error);
+    next(error);
+  }
+}
+
 export default {
   listServices, getService,
   listPackages, getPackage,
   listProducts, getProduct,
   listTeam, getTeamMember,
-  listPosts, getPost,
+  listPosts, getPost, getBlogFilters,
   listBusinessPartners, getBusinessPartner,
+  getBusinessInfo,
+  getAboutPage, getFaqPage, getPrivacyPolicyPage, getTermsPage, getPartnershipPage, getHomeIntro, getTeamIntro,
 };

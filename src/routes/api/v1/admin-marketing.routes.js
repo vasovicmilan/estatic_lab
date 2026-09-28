@@ -19,6 +19,7 @@ router.use(apiAuthMiddleware);
 // ---- Blog posts ----
 router.get("/posts", requireModule("blog"), requirePermission(PERMISSION.MANAGE_BLOG), AdminMarketingController.listPosts);
 router.get("/posts/:postId", requireModule("blog"), requirePermission(PERMISSION.MANAGE_BLOG), validatePostId, handleApiValidationErrors, AdminMarketingController.getPost);
+router.get("/posts/:postId/edit", requireModule("blog"), requirePermission(PERMISSION.MANAGE_BLOG), validatePostId, handleApiValidationErrors, AdminMarketingController.getPostForEdit);
 router.post("/posts", requireModule("blog"), requirePermission(PERMISSION.MANAGE_BLOG), validatePostCreate, handleApiValidationErrors, AdminMarketingController.createPost);
 router.put("/posts/:postId", requireModule("blog"), requirePermission(PERMISSION.MANAGE_BLOG), validatePostId, validatePostUpdate, handleApiValidationErrors, AdminMarketingController.updatePost);
 router.put("/posts/:postId/status", requireModule("blog"), requirePermission(PERMISSION.MANAGE_BLOG), validatePostId, validatePostStatus, handleApiValidationErrors, AdminMarketingController.updatePostStatus);

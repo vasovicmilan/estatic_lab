@@ -13,20 +13,24 @@ import auditLogService from "../../../services/audit-log.service.js";
 import logReportService from "../../../services/log-report.service.js";
 import businessReportService from "../../../services/business-report.service.js";
 import siteSettingsService from "../../../services/site-settings.service.js";
+import siteContentService from "../../../services/site-content.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
 import { AppError } from "../../../utils/error.util.js";
 import { getStartOfDayInZone, getEndOfDayInZone } from "../../../utils/date.time.util.js";
 import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
 import { buildAuditActor } from "../../../utils/audit-actor.util.js";
+import { generateBusinessReportPdf } from "../../../utils/business-report-pdf.util.js";
 
 // Mirrors controllers/web/admin/{dashboard,marketing/payout-request,logs/*,
 // reports/business-report,marketing/site-settings,profile}.controller.js - same
 // services, same audit log entries. Returns the raw service data (counts, lists)
 // rather than routing it through the HTML presenters (prepareDashboardData etc.) -
-// those add icons/labels/HTML-table shape a JSON client has no use for. PDF
-// download (businessReportDownloadPdf) is deliberately not exposed here - it's a
-// binary file response, not a JSON endpoint; same reasoning as image upload being
-// out of scope elsewhere in this API.
+// those add icons/labels/HTML-table shape a JSON client has no use for.
+// downloadBusinessReportPdf below is the one deliberate exception - a binary
+// file response rather than JSON, exposed anyway because the Angular admin
+// panel (unlike a JSON API consumer) needs a way to actually download the PDF
+// (see business-report.controller.js's web-only businessReportDownloadPdf,
+// which this mirrors) - image upload stays genuinely out of scope elsewhere.
 
 // ================== Dashboard ==================
 
@@ -268,6 +272,13 @@ export async function getLogSummary(req, res, next) {
 // ================== Business reports ==================
 
 const REPORT_PERIOD_TYPES = ["daily", "weekly", "monthly", "quarterly", "yearly"];
+const REPORT_PERIOD_LABELS = {
+  daily: "Dnevni poslovni izveštaj",
+  weekly: "Nedeljni poslovni izveštaj",
+  monthly: "Mesečni poslovni izveštaj",
+  quarterly: "Kvartalni poslovni izveštaj",
+  yearly: "Godišnji poslovni izveštaj",
+};
 
 export async function getBusinessReportDashboard(req, res, next) {
   try {
@@ -315,6 +326,33 @@ export async function getBusinessReport(req, res, next) {
     return res.json({ success: true, data: summary });
   } catch (error) {
     logError("[api/admin/getBusinessReport] Greška", error, { periodType: req.params.periodType, periodKey: req.params.periodKey });
+    next(error);
+  }
+}
+
+/** GET /admin/business-reports/:periodType/:periodKey/pdf - binary response,
+ * see this file's header comment for why it's the one exception to the
+ * JSON-only convention here. Mirrors businessReportDownloadPdf in
+ * controllers/web/admin/reports/business-report.controller.js exactly (same
+ * raw, unformatted summary fed to generateBusinessReportPdf, which formats
+ * every number itself - feeding it pre-formatted strings would double-format
+ * them). */
+export async function downloadBusinessReportPdf(req, res, next) {
+  try {
+    const { periodType, periodKey } = req.params;
+    if (!REPORT_PERIOD_TYPES.includes(periodType)) return next(new AppError("Nepoznat tip perioda", 400));
+
+    const summary = await businessReportService.getSummary(periodType, periodKey);
+    if (!summary) return next(new AppError(`Nema sačuvanog izveštaja za ${periodKey}`, 404));
+
+    const rangeLabel = `${new Date(summary.periodStart).toLocaleDateString("sr-RS")} - ${new Date(summary.periodEnd.getTime() - 1).toLocaleDateString("sr-RS")}`;
+    const pdfBuffer = await generateBusinessReportPdf(REPORT_PERIOD_LABELS[periodType], rangeLabel, summary);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="poslovni-izvestaj-${periodKey}.pdf"`);
+    return res.send(pdfBuffer);
+  } catch (error) {
+    logError("[api/admin/downloadBusinessReportPdf] Greška", error, { periodType: req.params.periodType, periodKey: req.params.periodKey });
     next(error);
   }
 }
@@ -442,6 +480,82 @@ export async function updateClosedDates(req, res, next) {
   }
 }
 
+// ================== Site content (About/FAQ/Privacy/Terms/Partnership/home intro/"why us"/team intro) ==================
+// Mirrors the site-settings block above: one GET returning everything (the
+// admin edit screen loads all sections in one call, same reasoning as
+// getSiteSettingsForEdit), one PUT per section so a save only ever touches
+// the section it's editing and can't accidentally clobber another one.
+// Every update function writes an audit log entry the same shape as
+// SITE_SETTINGS_*_UPDATED above, using the section name as the action so the
+// audit trail says exactly which page's copy changed.
+
+export async function getSiteContent(req, res, next) {
+  try {
+    const content = await siteContentService.getSiteContent();
+    return res.json({ success: true, data: content });
+  } catch (error) {
+    logError("[api/admin/getSiteContent] Greška", error);
+    next(error);
+  }
+}
+
+function makeSiteContentUpdateHandler(sectionKey, serviceFn, auditAction) {
+  return async function updateSiteContentSection(req, res, next) {
+    try {
+      const updated = await serviceFn(req.body);
+      logInfo(`[api/admin/updateSiteContent:${sectionKey}] Sadržaj ažuriran`, { adminId: req.user.id });
+      await auditLogService.recordAuditLog({
+        ...buildAuditActor(req),
+        action: auditAction,
+        entity: { type: "SiteContent", id: "singleton" },
+        changes: { [sectionKey]: { after: updated } },
+      });
+      return res.json({ success: true, data: updated });
+    } catch (error) {
+      logError(`[api/admin/updateSiteContent:${sectionKey}] Greška`, error, { body: req.body });
+      next(error);
+    }
+  };
+}
+
+export const updateAbout = makeSiteContentUpdateHandler("about", siteContentService.updateAbout, "SITE_CONTENT_ABOUT_UPDATED");
+export const updateFaq = makeSiteContentUpdateHandler("faq", siteContentService.updateFaq, "SITE_CONTENT_FAQ_UPDATED");
+export const updatePrivacyPolicy = makeSiteContentUpdateHandler(
+  "privacyPolicy",
+  siteContentService.updatePrivacyPolicy,
+  "SITE_CONTENT_PRIVACY_POLICY_UPDATED"
+);
+export const updateTermsAndConditions = makeSiteContentUpdateHandler(
+  "termsAndConditions",
+  siteContentService.updateTermsAndConditions,
+  "SITE_CONTENT_TERMS_UPDATED"
+);
+export const updatePartnership = makeSiteContentUpdateHandler("partnership", siteContentService.updatePartnership, "SITE_CONTENT_PARTNERSHIP_UPDATED");
+export const updateHomeIntro = makeSiteContentUpdateHandler("homeIntro", siteContentService.updateHomeIntro, "SITE_CONTENT_HOME_INTRO_UPDATED");
+export const updateTeamIntro = makeSiteContentUpdateHandler("teamIntro", siteContentService.updateTeamIntro, "SITE_CONTENT_TEAM_INTRO_UPDATED");
+
+// whyUs's service function takes the array directly (req.body.whyUs), not
+// req.body itself, unlike every other section above (whose service functions
+// take a {field, field, ...} object matching req.body 1:1) - kept as its own
+// small wrapper rather than forcing whyUs into the same {whyUs: [...]}
+// envelope shape just to reuse makeSiteContentUpdateHandler.
+export async function updateWhyUs(req, res, next) {
+  try {
+    const updated = await siteContentService.updateWhyUs(req.body.whyUs);
+    logInfo("[api/admin/updateSiteContent:whyUs] Sadržaj ažuriran", { adminId: req.user.id });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "SITE_CONTENT_WHY_US_UPDATED",
+      entity: { type: "SiteContent", id: "singleton" },
+      changes: { whyUs: { after: updated } },
+    });
+    return res.json({ success: true, data: updated });
+  } catch (error) {
+    logError("[api/admin/updateSiteContent:whyUs] Greška", error, { body: req.body });
+    next(error);
+  }
+}
+
 // ================== Admin's own profile ==================
 
 export async function getProfile(req, res, next) {
@@ -470,7 +584,8 @@ export default {
   listPayoutRequests, getPayoutRequest, approvePayoutRequest, markPayoutRequestPaid, rejectPayoutRequest, recordPayoutDirectly,
   listAuditLogs,
   getLogDashboard, listLogSummaries, getLogSummary,
-  getBusinessReportDashboard, listBusinessReports, getBusinessReport,
+  getBusinessReportDashboard, listBusinessReports, getBusinessReport, downloadBusinessReportPdf,
   getSiteSettings, updateSiteSettings, updateWorkingHours, updateClosedDates,
+  getSiteContent, updateAbout, updateFaq, updatePrivacyPolicy, updateTermsAndConditions, updatePartnership, updateHomeIntro, updateWhyUs, updateTeamIntro,
   getProfile, updateProfile,
 };

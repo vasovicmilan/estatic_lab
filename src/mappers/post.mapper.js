@@ -34,14 +34,23 @@ function getCategoryNames(post) {
   return post.categories.filter((c) => c && typeof c === "object" && c.name).map((c) => c.name);
 }
 
-function getCategorySlugs(post) {
-  if (!post.categories || !Array.isArray(post.categories)) return [];
-  return post.categories.filter((c) => c && typeof c === "object" && c.slug).map((c) => c.slug);
-}
-
 function getTagNames(post) {
   if (!post.tags || !Array.isArray(post.tags)) return [];
   return post.tags.filter((t) => t && typeof t === "object" && t.name).map((t) => t.name);
+}
+
+// {naziv, slug} pairs alongside the plain-name arrays above - lets the public
+// frontend link a category/tag chip to its archive page (/blog/kategorija/:slug,
+// /blog/tag/:slug) without breaking existing consumers of the plain string[]
+// `kategorije`/`tagovi` fields.
+function getCategoryRefs(post) {
+  if (!post.categories || !Array.isArray(post.categories)) return [];
+  return post.categories.filter((c) => c && typeof c === "object" && c.name).map((c) => ({ naziv: c.name, slug: c.slug || null }));
+}
+
+function getTagRefs(post) {
+  if (!post.tags || !Array.isArray(post.tags)) return [];
+  return post.tags.filter((t) => t && typeof t === "object" && t.name).map((t) => ({ naziv: t.name, slug: t.slug || null }));
 }
 
 export function mapPostsForAdminList(posts = []) {
@@ -92,6 +101,8 @@ export function mapPostForAdminDetail(post) {
       kljucneReci: post.seo?.keywords || [],
     },
     indeksiranje: post.isIndexable ? "Dozvoljeno" : "Zabranjeno",
+    istaknut: post.isFeatured ? "Da" : "Ne",
+    redosledIstaknutog: post.featuredOrder ?? 0,
     vremeCitanja: `${post.readingTimeMinutes} min`,
     pregledi: post.views || 0,
     datumObjave: post.publishedAt ? formatDateTime(post.publishedAt) : null,
@@ -142,9 +153,11 @@ export function mapPostsForCards(posts = []) {
         kratakOpis: post.excerpt,
         slika: formatCoverImage(post.coverImage),
         kategorije: getCategoryNames(post),
+        kategorijeRefs: getCategoryRefs(post),
         autor: getAuthorName(post),
         datumObjave: formatDate(post.publishedAt),
         vremeCitanja: `${post.readingTimeMinutes} min`,
+        istaknut: !!post.isFeatured,
       };
     })
     .filter(Boolean);
@@ -165,8 +178,10 @@ export function mapPostForPublicDetail(post) {
       ime: getAuthorName(post),
       avatar: getAuthorAvatar(post),
     },
-    kategorije: getCategorySlugs(post),
+    kategorije: getCategoryNames(post),
+    kategorijeRefs: getCategoryRefs(post),
     tagovi: getTagNames(post),
+    tagoviRefs: getTagRefs(post),
     seoKljucneReci: post.seo?.keywords || [],
     datumObjave: formatDate(post.publishedAt),
     poslednjeAzuriranje: formatDate(post.updatedAt),

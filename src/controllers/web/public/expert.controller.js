@@ -1,12 +1,13 @@
 import * as expertService from "../../../services/expert.service.js";
+import siteContentService from "../../../services/site-content.service.js";
 import { prepareExpertListData, prepareExpertDetailData } from "../../../presenters/public/expert.presenter.js";
 import { generateSeo } from "../../../seo/index.js";
 import { logError } from "../../../utils/logger.util.js";
 
 export async function expertList(req, res, next) {
   try {
-    const experts = await expertService.getActiveExperts();
-    const viewData = prepareExpertListData(experts);
+    const [experts, teamIntro] = await Promise.all([expertService.getActiveExperts(), siteContentService.getTeamIntro()]);
+    const viewData = prepareExpertListData(experts, teamIntro);
     // Dok tim nije okačen (experts prazno), stranica nema realan sadržaj za crawler -
     // noindex privremeno; čim se doda prvi aktivan terapeut, automatski postaje index, follow.
     const seo = await generateSeo(

@@ -1,4 +1,5 @@
 import Employee from "../models/employee.model.js";
+import User from "../models/user.model.js";
 import { buildEmployeeFilter } from "./filters/employee.filter.js";
 import { resolveLimit, resolveSkip, buildPaginationMeta } from "../utils/pagination.util.js";
 
@@ -50,7 +51,26 @@ export async function findEmployees({
   sort = { createdAt: -1, _id: -1 },
   session,
 } = {}) {
-  const filter = buildEmployeeFilter(filters);
+  // `search` isn't a field on Employee itself - name/email live on the
+  // populated User (see userId ref above) - so resolve it to a set of
+  // matching userIds first, then filter Employee by that set.
+  const { search, ...restFilters } = filters;
+  let resolvedFilters = restFilters;
+  if (search) {
+    const matchingUsers = await User.find({
+      $or: [
+        { firstName: { $regex: search, $options: "i" } },
+        { lastName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ],
+    })
+      .select("_id")
+      .session(session || null)
+      .lean();
+    resolvedFilters = { ...restFilters, userId: { $in: matchingUsers.map((u) => u._id) } };
+  }
+
+  const filter = buildEmployeeFilter(resolvedFilters);
   const resolvedLimit = resolveLimit(limit);
   const skip = resolveSkip(page, resolvedLimit);
 

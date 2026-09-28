@@ -1,28 +1,25 @@
 import BUSINESS from "../../config/business.config.js";
 import { getResponsiveImageUrls } from "../../utils/image-format.util.js";
+import {
+  DEFAULT_ABOUT,
+  DEFAULT_FAQ,
+  DEFAULT_PRIVACY_POLICY,
+  DEFAULT_TERMS_AND_CONDITIONS,
+  DEFAULT_PARTNERSHIP,
+  DEFAULT_HOME_INTRO,
+  DEFAULT_WHY_US,
+} from "../../config/site-content-defaults.js";
 
-const WHY_US = [
-  {
-    icon: "bi-cpu",
-    title: "Profesionalna ESMA oprema",
-    text: "Tretmani na ESMA Favorit aparatu - miostimulacija, limfna drenaža, mikrostrujni lifting i laserska biorevitalizacija u jednom mestu.",
-  },
-  {
-    icon: "bi-patch-check",
-    title: "Sertifikovani terapeuti",
-    text: "Naš tim čine obučeni terapeuti sa iskustvom u masaži i estetskim tretmanima tela i lica.",
-  },
-  {
-    icon: "bi-person-heart",
-    title: "Individualni pristup",
-    text: "Svaki tretman prilagođavamo vašoj koži, telu i cilju - bez univerzalnih rešenja.",
-  },
-  {
-    icon: "bi-flower1",
-    title: "Opuštajući ambijent",
-    text: "Mirna, čista i negovana atmosfera osmišljena da vam pruži pravi predah od svakodnevice.",
-  },
-];
+// About/FAQ/Privacy/Terms/Partnership/home-intro/"why us" copy used to be
+// hardcoded literal constants right here - it now lives in the DB (see
+// models/site-content.model.js, services/site-content.service.js) so an
+// admin can edit it without a code deploy. Every prepareXxxData() below takes
+// that content as a parameter instead of reading a module-level constant; the
+// DEFAULT_* imports above are ONLY a fallback for a caller that doesn't pass
+// content (there shouldn't be one left after this change - both
+// controllers/web/index.controller.js and the /api/v1 public controller now
+// fetch from siteContentService first), so this presenter never crashes into
+// undefined content if a caller is ever added that forgets to.
 
 const LEGAL_CONTACT = {
   company: BUSINESS.legalName,
@@ -49,582 +46,39 @@ const GOOGLE_DATA_NOTICE = {
   privacyUrl: "/politika-privatnosti",
 };
 
-export function prepareAboutPageData() {
+export function prepareAboutPageData(content = DEFAULT_ABOUT) {
   return {
-    intro:
-      "Estetik Lab je kozmetički i wellness centar u Novom Sadu, u širem centru grada u blizini Spensa - koji spaja stručne tretmane, prodaju profesionalne opreme i uređaja, i pažljiv, individualni pristup svakom klijentu.",
+    intro: content.intro,
     contact: LEGAL_CONTACT,
-    sections: [
-      {
-        title: "Naša priča",
-        paragraphs: [
-          "Estetik Lab je nastao iz želje da opuštanje i nega tela ne budu luksuz rezervisan za posebne prilike, već deo redovne rutine brige o sebi. Od osnivanja gradimo prostor u kojem se prepliću stručnost, mirna atmosfera i pažnja posvećena svakom detalju.",
-          "Danas naš tim čine obučeni terapeuti koji svakodnevno rade na tome da svaki tretman bude prilagođen potrebama klijenta - bez univerzalnih rešenja i na brzinu odrađenih usluga.",
-        ],
-      },
-      {
-        // Restructured around three explicit pillars instead of just listing
-        // treatments - "wellness centar" undersells what's actually here once
-        // equipment/device sales and (eventually) other product lines are part
-        // of the business, not just in-salon services.
-        title: "Čime se bavimo",
-        paragraphs: [
-          "Estetik Lab danas stoji na tri noge, ne samo na tretmanima:",
-        ],
-        list: [
-          "<strong>Tretmani u salonu</strong> - masaže i estetski tretmani na profesionalnoj ESMA Favorit opremi (miostimulacija, limfna drenaža, mikrostrujni lifting, laserska biorevitalizacija) za negu lica i tela. Ponudu smo proširili i na HIFU lifting lica i tela, na novom profesionalnom uređaju u našem centru.",
-          "<strong>Prodaja profesionalne opreme i uređaja</strong> - kroz naš Fotromed brend nudimo salonima i klinikama profesionalnu estetsku opremu (uključujući HIFU sisteme, laser i druge tehnologije), rezervne delove i potrošni materijal iz naše <a href=\"/prodavnica\">prodavnice</a>, nezavisno od tretmana koje izvodimo klijentima u našem centru.",
-          "<strong>Proizvodi za negu</strong> - u prodavnici nudimo i HL/Skin, liniju za kućnu negu kože inspirisanu korejskom naukom o nezi kože (čišćenje, tretman, hidratacija u nekoliko jednostavnih koraka), kao dopunu tretmanima u salonu",
-        ],
-      },
-      {
-        title: "Gde se nalazimo",
-        paragraphs: [
-          "Nalazimo se na adresi Maksima Gorkog 6b, u širem centru Novog Sada - u neposrednoj blizini Spensa, Promenade i zgrade suda (Palate pravde), pa nam lako pristupite bilo da dolazite iz centra grada ili okolnih naselja.",
-          "Parking je dostupan sa svih strana zgrade - u plavoj i crvenoj zoni neposredno ispred ulaza, kao i u plavoj zoni kod Spensa u blizini Promenade. Radno vreme: 10:00 - 22:00.",
-        ],
-      },
-      {
-        title: "Kako radimo",
-        paragraphs: [
-          "Pre svakog tretmana razgovaramo sa klijentom o cilju, koži, telu i eventualnim zdravstvenim napomenama - tretman biramo i prilagođavamo na osnovu toga, ne po unapred fiksnom šablonu.",
-          "Isti princip primenjujemo i kada nam se obratite za opremu ili uređaje iz naše ponude - pomažemo da izaberete rešenje koje realno odgovara vašim potrebama, uz jasne informacije o nameni i pravilnoj upotrebi.",
-        ],
-      },
-      {
-        title: "Zašto Estetik Lab",
-        list: [
-          "Profesionalna ESMA oprema - miostimulacija, limfna drenaža, mikrostrujni lifting i laserska biorevitalizacija u jednom mestu",
-          "Sertifikovani terapeuti sa iskustvom u masaži i estetskim tretmanima",
-          "Individualni pristup - svaki tretman prilagođavamo vašoj koži, telu i cilju",
-          "Opuštajući, miran i negovan ambijent osmišljen za pravi predah od svakodnevice",
-          "Lokacija u širem centru Novog Sada, blizu Spensa i Promenade - lako dostupna bez obzira odakle dolazite",
-          "Ista pažnja i kada kupujete opremu ili uređaje iz naše prodavnice, ne samo kada zakazujete tretman",
-        ],
-      },
-      {
-        title: "Upoznajte naš tim",
-        paragraphs: [
-          "Iza svakog tretmana stoji tim ljudi koji svoj posao radi sa pažnjom i posvećenošću. Pogledajte ko čini <a href=\"/nas-tim\">naš tim</a> i upoznajte se sa njihovim iskustvom i specijalnostima.",
-        ],
-      },
-    ],
+    sections: content.sections,
   };
 }
 
-export function prepareFaqPageData() {
+export function prepareFaqPageData(content = DEFAULT_FAQ) {
   return {
-    items: [
-      {
-        pitanje: "Kako mogu da zakažem termin?",
-        odgovor:
-          "Izaberite uslugu na stranici \"Usluge\", zatim varijantu i termin koji vam odgovara. Nije potrebno da imate nalog - dovoljno je da unesete vaše podatke za kontakt, a nalog se automatski kreira nakon potvrde radi lakšeg praćenja termina.",
-      },
-      {
-        pitanje: "Da li mogu da otkažem ili pomerim termin?",
-        odgovor:
-          "Da, termin možete otkazati ili pomeriti iz vašeg naloga, u skladu sa rokom za otkazivanje navedenim prilikom zakazivanja. Ako znate da ćete zakasniti ili morate da otkažete u poslednji čas, javite nam se telefonom što pre.",
-      },
-      {
-        pitanje: "Da li je potrebna registracija za zakazivanje?",
-        odgovor:
-          "Ne - termin možete zakazati i kao gost. Ako se vaš email već koristi za postojeći nalog, termin će automatski biti povezan sa tim nalogom.",
-      },
-      {
-        pitanje: "Šta je ESMA Favorit i po čemu se razlikuje od klasičnih tretmana?",
-        odgovor:
-          "ESMA Favorit je profesionalni aparat koji u jednom uređaju kombinuje miostimulaciju, mikrostrujnu terapiju, limfnu drenažu, ultrazvuk i svetlosnu terapiju. Za razliku od jednostavnijih aparata, omogućava terapeutu da kombinuje više modalnosti u okviru istog tretmana, prilagođeno konkretnom cilju.",
-      },
-      {
-        pitanje: "Da li ESMA tretmani i masaže imaju kontraindikacije?",
-        odgovor:
-          "Da - kao i kod svakog estetskog tretmana, postoje stanja kod kojih je potreban oprez ili prethodna konsultacija sa lekarom (trudnoća, srčani pejsmejker, akutne upale, skorašnje operacije i slično). Kontraindikacije za svaki tretman posebno navedene su na stranici te usluge.",
-      },
-      {
-        pitanje: "Koliko tretmana je obično potrebno za vidljiv rezultat?",
-        odgovor:
-          "Zavisi od cilja i tipa tretmana - kod pojedinih (npr. relaks masaža) efekat je vidljiv odmah, dok kod drugih (anticelulit, oblikovanje tela, lifting lica) rezultati dolaze kroz seriju od nekoliko do desetak tretmana. Preporučen broj naveden je na stranici svake usluge.",
-      },
-      {
-        pitanje: "Isplati li se kupiti paket umesto pojedinačnih termina?",
-        odgovor:
-          "Ako planirate da tretman ponavljate, da - paket uvek donosi nižu cenu po seansi u odnosu na pojedinačno zakazivanje, uz fleksibilno zakazivanje termina kad god vama odgovara. Ako niste sigurni da vam tretman odgovara, pojedinačna poseta je bezbedniji prvi korak.",
-      },
-      {
-        pitanje: "Kako se plaćaju porudžbine iz prodavnice?",
-        odgovor:
-          "Online plaćanje karticom trenutno nije dostupno - način plaćanja (uplata na račun, pouzećem i slično) dogovara se prilikom potvrde porudžbine. Porudžbinu možete napraviti i kao gost, bez prethodne registracije.",
-      },
-      {
-        pitanje: "Mogu li da vratim kupljeni proizvod?",
-        odgovor:
-          "Da - imate pravo da odustanete od porudžbine u roku od 14 dana od prijema, bez navođenja razloga, u skladu sa Zakonom o zaštiti potrošača. Detalji su opisani u Uslovima korišćenja.",
-      },
-      {
-        pitanje: "Da li radite HIFU tretmane?",
-        odgovor:
-          "Da - HIFU lifting lica i tela je deo naše ponude, na profesionalnom uređaju u našem centru. Pogledajte stranicu Usluga za detalje, cene i zakazivanje.",
-      },
-      {
-        pitanje: "Prodajete li opremu i uređaje drugim salonima i klinikama?",
-        odgovor:
-          "Da - kroz naš Fotromed brend nudimo profesionalnu estetsku opremu (uključujući HIFU sisteme, laserske i druge uređaje) vlasnicima salona i klinika, nezavisno od tretmana koje izvodimo našim klijentima u Estetik Lab centru.",
-      },
-      {
-        pitanje: "Gde se tačno nalazite i ima li parkinga?",
-        odgovor:
-          "Na adresi Maksima Gorkog 6b, u širem centru Novog Sada, blizu Spensa, Promenade i zgrade suda. Parking je dostupan sa svih strana zgrade - plava i crvena zona ispred ulaza, kao i plava zona kod Spensa.",
-      },
-      {
-        pitanje: "Kako funkcioniše partnerski program?",
-        odgovor:
-          "Ako imate publiku kojoj verujete, možete zarađivati proviziju deleći svoj referalni link - svaka rezervacija termina, kupljeni paket ili porudžbina napravljena preko vašeg linka u naredna 30 dana beleži se kao vaša provizija. Detalje pogledajte na stranici Partnerskog programa.",
-      },
-    ],
+    items: content.items,
   };
 }
 
-export function preparePrivacyPolicyData() {
+export function preparePrivacyPolicyData(content = DEFAULT_PRIVACY_POLICY) {
   return {
-    lastUpdated: "8. septembar 2026.",
-    intro:
-      "Ova Politika privatnosti objašnjava kako Estetik Lab prikuplja, koristi, čuva i štiti vaše podatke prilikom korišćenja našeg sajta, online zakazivanja termina, kupovine proizvoda iz naše prodavnice i drugih usluga koje pružamo u našem wellness centru u Novom Sadu.",
+    lastUpdated: content.lastUpdated,
+    intro: content.intro,
     contact: LEGAL_CONTACT,
-    sections: [
-      {
-        title: "1. Ko je rukovalac podacima",
-        paragraphs: [
-          "Rukovalac podataka o ličnosti je <strong>Estetik Lab wellness centar</strong>, sa sedištem na adresi Maksima Gorkog 6b, 21120 Novi Sad, Republika Srbija.",
-          "Za sva pitanja u vezi sa zaštitom podataka možete nas kontaktirati putem email adrese <a href=\"mailto:estetik.lab.ns@gmail.com\">estetik.lab.ns@gmail.com</a>.",
-        ],
-      },
-      {
-        title: "2. Koje podatke prikupljamo",
-        paragraphs: [
-          "U zavisnosti od načina na koji koristite naš sajt i usluge, možemo obraditi sledeće kategorije podataka:",
-        ],
-        subsections: [
-          {
-            title: "Podaci o identitetu i kontaktu",
-            list: [
-              "ime i prezime",
-              "email adresa",
-              "broj telefona",
-              "podaci koje nam dobrovoljno pošaljete putem kontakt forme, forme za utisak klijenata ili prijave na newsletter",
-            ],
-          },
-          {
-            title: "Podaci o nalogu",
-            list: [
-              "lozinka u heširanom obliku (nikada u čistom tekstu)",
-              "status naloga, datum poslednje prijave i informacije o načinu registracije (email ili Google nalog)",
-              "podaci profila, uključujući avatar ako ga postavite",
-              "sadržaj korpe (proizvodi i količine) - čuva se na vašem nalogu radi lakšeg nastavka kupovine",
-            ],
-          },
-          {
-            title: "Podaci o terminima i kupovini paketa",
-            list: [
-              "izabrana usluga, varijanta tretmana, trajanje i cena",
-              "datum i vreme termina, status termina i istorija promena",
-              "informacije o kuponu ili korišćenju sesija iz paketa",
-              "napomene koje unesete prilikom zakazivanja",
-              "podaci o kupljenim paketima tretmana povezanim sa vašim nalogom",
-            ],
-          },
-          {
-            title: "Zdravstveni i medicinski podaci - ne prikupljamo ih",
-            paragraphs: [
-              "<strong>Estetik Lab platforma (sajt, korisnički nalog, obrasci za zakazivanje) ne sadrži nijedno polje namenjeno unosu zdravstvenih ili medicinskih podataka, i takve podatke ne prikupljamo niti čuvamo u digitalnom obliku.</strong> Razgovor o zdravstvenom stanju, alergijama, trudnoći, kontraindikacijama ili drugim okolnostima relevantnim za tretman vodi se isključivo usmeno, uživo sa terapeutom pre samog tretmana - ovi podaci se ne zapisuju niti unose u našu bazu podataka.",
-              "Polje za napomenu prilikom online zakazivanja namenjeno je opštim komentarima (npr. „prvi put dolazim”, „kasnim par minuta”), ne zdravstvenim informacijama - molimo vas da osetljive zdravstvene detalje ostavite za razgovor uživo sa terapeutom, a ne za pisani unos na sajtu.",
-            ],
-          },
-          {
-            title: "Podaci o porudžbinama i dostavi",
-            list: [
-              "adresa za dostavu (ulica i broj čuvaju se u šifrovanom obliku; grad i poštanski broj u čitljivom obliku radi obračuna dostave)",
-              "broj telefona za dostavu (čuva se u šifrovanom obliku)",
-              "sadržaj porudžbine - izabrani proizvodi, varijante, količine i cene",
-              "status porudžbine i istorija promena statusa (na čekanju, u obradi, poslato, dostavljeno, otkazano, vraćeno)",
-              "informacije o primenjenom kuponu i ostvarenom popustu",
-              "napomena koju unesete prilikom naručivanja",
-            ],
-          },
-          {
-            title: "Tehnički podaci",
-            list: [
-              "IP adresa, tip pregledača i operativnog sistema",
-              "podaci o sesiji (kolačići neophodni za prijavu, korpu gosta i bezbednost)",
-              "podaci o pristupu sajtu u svrhu bezbednosti i sprečavanja zloupotrebe",
-            ],
-          },
-        ],
-      },
-      {
-        title: "3. Kako prikupljamo podatke",
-        paragraphs: [
-          "Podatke dobijamo direktno od vas kada se registrujete, prijavite, zakažete termin, naručite proizvod, pošaljete kontakt poruku, ostavite utisak, prijavite se na newsletter ili ažurirate profil.",
-          "Termin ili porudžbinu možete napraviti i kao gost, bez prethodne registracije - u tom slučaju koristimo podatke koje unesete u formi za zakazivanje, odnosno naplatu. Ako email adresa već postoji u našem sistemu, termin ili porudžbina biće povezani sa postojećim nalogom; ako ne postoji, nalog se automatski kreira kako biste kasnije mogli da pratite status porudžbine ili termina, o čemu ćete biti obavešteni email porukom.",
-          "Ako se registrujete ili prijavite putem Google naloga, od Google-a primamo osnovne podatke profila (email, ime, prezime i identifikator naloga) u skladu sa vašim dozvolama.",
-        ],
-      },
-      {
-        title: "4. Svrha i pravni osnov obrade",
-        paragraphs: [
-          "Vaše podatke obrađujemo isključivo u sledeće svrhe:",
-        ],
-        list: [
-          "zakazivanje, potvrđivanje, izmenu i otkazivanje termina",
-          "obradu, potvrđivanje, pripremu, isporuku i eventualno otkazivanje ili vraćanje porudžbina proizvoda",
-          "vođenje korisničkog naloga i pružanje pristupa istoriji termina i porudžbina",
-          "čuvanje korpe i sačuvanih adresa radi lakšeg nastavka i ponavljanja kupovine",
-          "evidenciju kupljenih paketa tretmana i korišćenih sesija",
-          "slanje servisnih obaveštenja (potvrda termina ili porudžbine, promena statusa, otkazivanje, reset lozinke, aktivacija naloga)",
-          "odgovaranje na vaše upite poslate putem kontakt forme",
-          "slanje newsletter-a, ukoliko ste se na njega prijavili",
-          "moderaciju i objavljivanje utisaka klijenata koje pošaljete",
-          "obezbeđivanje bezbednosti sajta, sprečavanje zloupotrebe i poštovanje pravnih (uključujući računovodstvenih i poreskih) obaveza",
-        ],
-        closingParagraphs: [
-          "Pravni osnov obrade obuhvata: izvršenje ugovora ili prethodne radnje na vaš zahtev (zakazivanje termina, naručivanje proizvoda), vašu saglasnost (newsletter, kontakt forma, objava utiska), legitimni interes (bezbednost sajta i sprečavanje zloupotrebe) i ispunjenje zakonskih obaveza (npr. čuvanje računovodstvene dokumentacije o izvršenim porudžbinama).",
-        ],
-      },
-      {
-        title: "5. Kolačići i sesije",
-        paragraphs: [
-          "Naš sajt koristi neophodne kolačiće za rad sesije, CSRF zaštitu i bezbednu prijavu korisnika. Sesije se čuvaju u bazi podataka i ističu nakon 14 dana neaktivnosti.",
-          "Ako niste prijavljeni, sadržaj korpe privremeno se čuva u vašoj sesiji (kolačić) dok ne završite ili napustite kupovinu, odnosno dok sesija ne istekne. Ako se prijavite ili registrujete, sadržaj korpe iz sesije prenosi se na vaš nalog.",
-          "Ako na sajt dođete putem linka jednog od naših partnera (sadrži parametar <code>?code=</code>), čuvamo kolačić koji beleži taj kod u trajanju od 30 dana, kako bismo eventualnu kasniju kupovinu ili zakazan termin mogli pripisati tom partneru radi obračuna provizije. Ovaj kolačić ne prati vašu aktivnost van našeg sajta i ne koristi se ni za šta osim za taj obračun.",
-          "Ne koristimo kolačiće za oglašavanje trećih strana. Analitički ili marketing kolačići ne koriste se u trenutnoj verziji sajta, osim ako to posebno ne obavestimo i ne zatražimo vašu saglasnost.",
-        ],
-      },
-      {
-        title: "6. Deljenje podataka sa trećim licima",
-        paragraphs: [
-          "Vaše podatke ne prodajemo i ne iznajmljujemo. Deljenje podataka vršimo samo u neophodnoj meri, i to sa:",
-        ],
-        list: [
-          "<strong>Google LLC</strong> - ako koristite prijavu putem Google naloga",
-          "<strong>pružaocem email usluge</strong> - za slanje transakcionih poruka (potvrde termina i porudžbina, reset lozinke i sl.)",
-          "<strong>kurirskom službom ili dostavljačem</strong> - kada naručite proizvod, ime, adresa za dostavu i telefon prosleđuju se dostavljaču isključivo radi izvršenja isporuke",
-          "<strong>pružaocem hostinga i baze podataka</strong> - za tehničko skladištenje i rad aplikacije",
-          "<strong>našim partnerima u okviru partnerskog programa</strong> - ako ste do nas došli putem partnerovog linka, partner u svom nalogu vidi da je do termina/kupovine došlo preko njegovog referalnog koda i osnovne podatke o vrednosti transakcije, isključivo radi obračuna provizije - ne i vaše lične kontakt podatke",
-        ],
-        closingParagraphs: [
-          "Vaše podatke ne prodajemo i ne iznajmljujemo trećim licima u marketinške svrhe.",
-          "Interne obaveštenja našem timu (o novim terminima, porudžbinama i porukama klijenata) mogu se slati putem Telegram servisa u svrhu operativnog praćenja rada. Ovi podaci se koriste isključivo u poslovne svrhe Estetik Lab-a.",
-          "Pojedini osetljivi podaci (adresa za dostavu, broj telefona, tekst kontakt poruke) čuvaju se u šifrovanom obliku radi dodatne zaštite.",
-        ],
-      },
-      {
-        title: "7. Period čuvanja podataka",
-        list: [
-          "podaci o nalogu - dok nalog postoji, odnosno dok ne zatražite brisanje",
-          "podaci o terminima i porudžbinama - u periodu neophodnom za poslovanje, knjigovodstvo i rešavanje eventualnih reklamacija, a u skladu sa važećim računovodstvenim i poreskim propisima",
-          "sačuvane adrese za dostavu - dok ih ne uklonite sa naloga ili dok nalog postoji",
-          "kontakt poruke - dok je potrebno da odgovorimo i rešimo vaš upit",
-          "newsletter pretplata - dok ste prijavljeni; nakon odjave podaci se arhiviraju ili brišu u razumnom roku",
-          "tehnički logovi - u ograničenom periodu radi bezbednosti i dijagnostike",
-        ],
-      },
-      {
-        title: "8. Vaša prava",
-        paragraphs: [
-          "U skladu sa Zakonom o zaštiti podataka o ličnosti Republike Srbije imate pravo da:",
-        ],
-        list: [
-          "zatražite pristup svojim podacima",
-          "zatražite ispravku netačnih ili nepotpunih podataka",
-          "zatražite brisanje podataka, kada je to primenjivo",
-          "zatražite ograničenje obrade",
-          "povučete saglasnost (npr. za newsletter), bez uticaja na ranije zakonitu obradu",
-          "podnesete pritužbu Povereniku za informacije od javnog značaja i zaštitu podataka o ličnosti",
-        ],
-        closingParagraphs: [
-          "Za ostvarivanje prava pošaljite zahtev na <a href=\"mailto:estetik.lab.ns@gmail.com\">estetik.lab.ns@gmail.com</a>. Odgovorićemo u roku propisanom zakonom.",
-        ],
-      },
-      {
-        title: "9. Bezbednost podataka",
-        paragraphs: [
-          "Primenjujemo odgovarajuće tehničke i organizacione mere zaštite, uključujući heširanje lozinki, šifrovanje osetljivih podataka (adresa za dostavu, brojevi telefona), CSRF zaštitu, ograničenje broja zahteva (rate limiting), sanitizaciju unosa, bezbedne sesije i kontrolu pristupa u admin delu sajta.",
-          "Iako ulažemo napor da vaše podatke zaštitimo, nijedan prenos podataka putem interneta nije u potpunosti bez rizika. Preporučujemo da koristite jaku lozinku i da je ne delite sa drugima.",
-        ],
-      },
-      {
-        title: "10. Deca",
-        paragraphs: [
-          "Naše usluge nisu namenjene licima mlađim od 16 godina. Svesno ne prikupljamo podatke o maloletnim licima bez saglasnosti roditelja ili staratelja. Ako smatrate da smo prikupili podatke deteta, kontaktirajte nas radi brisanja.",
-        ],
-      },
-      {
-        title: "11. Izmene politike privatnosti",
-        paragraphs: [
-          "Ovu politiku možemo povremeno ažurirati kako bismo odražavali promene u našim uslugama ili propisima. Ažurirana verzija biće objavljena na ovoj stranici sa naznačenim datumom poslednje izmene.",
-        ],
-      },
-    ],
+    sections: content.sections,
   };
 }
 
-export function prepareTermsAndConditionsData() {
+// The literal sections/subsections array below is now unreachable (kept
+// nowhere - see DEFAULT_PRIVACY_POLICY in site-content-defaults.js for the
+// live copy of this same content) and is removed; preparePrivacyPolicyData
+// above now takes its `sections` from whatever is passed in.
+export function prepareTermsAndConditionsData(content = DEFAULT_TERMS_AND_CONDITIONS) {
   return {
-    lastUpdated: "9. septembar 2026.",
-    intro:
-      "Korišćenjem sajta Estetik Lab, online zakazivanja termina, kupovine proizvoda iz naše prodavnice i drugih usluga našeg wellness centra, prihvatate sledeće Uslove korišćenja. Molimo vas da ih pažljivo pročitate pre registracije, zakazivanja termina, naručivanja proizvoda ili slanja poruke putem sajta.",
+    lastUpdated: content.lastUpdated,
+    intro: content.intro,
     contact: LEGAL_CONTACT,
-    sections: [
-      {
-        title: "1. Opšte odredbe",
-        paragraphs: [
-          "Ovi Uslovi korišćenja regulišu korišćenje web sajta i online usluga koje pruža <strong>Estetik Lab wellness centar</strong>, Maksima Gorkog 6b, 21120 Novi Sad.",
-          "Sajt omogućava pregled usluga, paketa tretmana i proizvoda, blog sadržaja, informacija o timu, online zakazivanje termina, kupovinu proizvoda, registraciju korisničkog naloga i komunikaciju sa našim timom.",
-          "Korišćenjem sajta potvrđujete da imate punu poslovnu sposobnost ili da delujete u ime lica koje je ovlašćeno da prihvati ove uslove.",
-        ],
-      },
-      {
-        title: "2. Usluge i proizvodi Estetik Lab-a",
-        paragraphs: [
-          "Estetik Lab pruža usluge nege tela i lica, masaže i estetske tretmane, uključujući tretmane na ESMA opremi (miostimulacija, limfna drenaža, mikrostrujni lifting, laserska biorevitalizacija i slično), u skladu sa aktuelnom ponudom objavljenom na sajtu.",
-          "Pored usluga, putem naše prodavnice (<a href=\"/prodavnica\">/prodavnica</a>) prodajemo kozmetičku opremu, uređaje, rezervne delove i potrošni materijal vezan za našu delatnost.",
-          "Opis, trajanje i cena usluga, kao i opis, slike i cena proizvoda prikazani na sajtu su informativnog karaktera i ne predstavljaju obavezujuću ponudu do trenutka prihvatanja porudžbine sa naše strane, u skladu sa članom 8. ovih uslova. Pre samog tretmana, naš stručni tim može dati preporuku prilagođenu vašem stanju, uz vašu saglasnost.",
-          "Sajt služi za informisanje, zakazivanje i naručivanje. Sam tretman obavlja se u našem objektu, pod nadzorom sertifikovanih terapeuta; proizvodi se šalju na adresu koju navedete prilikom naručivanja.",
-        ],
-      },
-      {
-        title: "3. Registracija i korisnički nalog",
-        list: [
-          "Nalog možete kreirati putem email adrese i lozinke ili prijavom putem Google naloga.",
-          "Dužni ste da prilikom registracije unesete tačne i ažurne podatke.",
-          "Lozinka mora imati najmanje 8 karaktera. Odgovorni ste za čuvanje pristupnih podataka i sve aktivnosti na vašem nalogu.",
-          "Nalog može biti privremeno onemogućen ili suspendovan u slučaju kršenja ovih uslova ili zloupotrebe sistema.",
-          "Registracija nije obavezna za zakazivanje termina ili naručivanje proizvoda - oba je moguće obaviti i kao gost.",
-          "Ako naručite ili zakažete termin kao gost sa email adresom koja ne postoji u našem sistemu, nalog vam se automatski kreira kako biste mogli da pratite status vaše porudžbine ili termina. O tome ćete biti obavešteni email porukom sa uputstvom za postavljanje lozinke; sama porudžbina ili termin ostaju važeći bez obzira da li preuzmete nalog.",
-        ],
-      },
-      {
-        title: "4. Online zakazivanje termina",
-        paragraphs: [
-          "Termin možete zakazati putem stranice <a href=\"/zakazivanje\">/zakazivanje</a>, izborom usluge, varijante tretmana, datuma, vremena i - po potrebi - terapeuta.",
-        ],
-        subsections: [
-          {
-            title: "Potvrda termina",
-            list: [
-              "Nakon slanja zahteva, termin dobija status „u obradi” (pending) dok ga naš tim ne potvrdi ili dodeli terapeuta.",
-              "Potvrđeni termin biće vam dostavljen putem email obaveštenja, ukoliko ste ostavili validnu email adresu.",
-              "Prikazani slobodni termini zavise od rasporeda zaposlenih i trajanja tretmana, uključujući tehnički buffer između termina.",
-            ],
-          },
-          {
-            title: "Otkazivanje termina",
-            list: [
-              "Korisnik može samostalno otkazati termin iz svog naloga, najkasnije <strong>24 sata pre</strong> zakazanog vremena - sistem ovo proverava automatski u trenutku otkazivanja, ne samo kao preporuku.",
-              "Otkazivanje nakon isteka roka od 24 sata nije moguće samostalno kroz nalog - u tom slučaju kontaktirajte naš tim, koji može otkazati termin u vaše ime u zavisnosti od okolnosti.",
-              "Ako je termin plaćen iz paketa tretmana, otkazivanje u dozvoljenom roku vraća seansu na raspolaganje za naredno zakazivanje.",
-              "Estetik Lab zadržava pravo da otkaže termin u slučaju više sile, bolesti terapeuta, tehničkih problema ili drugih opravdanih razloga, uz obaveštenje klijenta.",
-            ],
-          },
-          {
-            title: "Promena termina (pomeranje na drugi datum ili vreme)",
-            paragraphs: [
-              "Osim otkazivanja, termin možete i samostalno pomeriti na drugi datum ili vreme iz svog naloga, bez potrebe da ga prvo otkažete pa ponovo zakazujete. Koliko fleksibilnosti imate zavisi od toga koliko je vremena preostalo do trenutno zakazanog termina:",
-            ],
-            list: [
-              "<strong>Više od 24 sata unapred</strong> - potpuna fleksibilnost, termin možete pomeriti na bilo koji dostupan datum i vreme.",
-              "<strong>Između 4 i 24 sata unapred</strong> - termin i dalje možete pomeriti, ali samo na drugo slobodno vreme <strong>istog dana</strong>.",
-              "<strong>Manje od 4 sata unapred</strong> - termin se više ne može samostalno pomeriti kroz nalog; kontaktirajte naš tim.",
-              "Novo vreme koje birate mora biti udaljeno najmanje 30 minuta od trenutka kada pravite izmenu, kako bi naš tim imao minimalno vreme za pripremu.",
-            ],
-            closingParagraphs: [
-              "Ova pravila (24h, 4h i 30 minuta) su podrazumevana i mogu biti izmenjena od strane Estetik Lab-a - trenutno važeće vrednosti uvek se primenjuju automatski u trenutku pokušaja izmene termina.",
-            ],
-          },
-          {
-            title: "Nedolazak (no-show)",
-            paragraphs: [
-              "Ako se ne pojavite na potvrđeni termin bez prethodnog otkazivanja, termin biva označen kao nedolazak (no-show) u vašoj istoriji termina.",
-              "Za razliku od blagovremenog otkazivanja (koje seansu vraća na raspolaganje - videti iznad), neblagovremen, nenajavljen nedolazak <strong>troši rezervisanu seansu iz paketa tretmana</strong> - terapeut je rezervisao termin, došao i čekao vas, pa se seansa smatra iskorišćenom na isti način kao da je tretman obavljen. Ova razlika postoji upravo zato da bi otkazivanje u dozvoljenom roku ostalo bez posledica, dok nedolazak bez ikakve najave nosi realnu posledicu.",
-              "Učestali neopravdani nedolasci mogu uticati na mogućnost budućeg online zakazivanja, u razumnoj meri i uz prethodno obaveštenje.",
-            ],
-          },
-        ],
-      },
-      {
-        title: "5. Cene, plaćanje i paketi tretmana",
-        paragraphs: [
-          "Cene usluga i paketa prikazane na sajtu izražene su u dinarima (RSD), osim ako nije drugačije naznačeno.",
-          "Online plaćanje usluga putem sajta trenutno <strong>nije dostupno</strong>. Plaćanje se vrši u našem objektu (gotovina, platna kartica ili drugi dogovoreni način) ili se evidentira administrativno nakon dogovora sa našim timom.",
-        ],
-        list: [
-          "Kupovina paketa tretmana evidentira se na vašem nalogu nakon plaćanja u centru ili po dogovoru sa administracijom.",
-          "Sesije iz paketa mogu se koristiti za online zakazivanje, isključivo ako ste prijavljeni na nalog povezan sa paketom.",
-          "Rezervacija sesije iz paketa vrši se u trenutku zakazivanja; sesija se definitivno iskorišćava tek nakon obavljenog tretmana.",
-          "Ako otkažete termin rezervisan iz paketa u dozvoljenom roku, rezervisana sesija se vraća na raspolaganje.",
-          "Paketi mogu imati rok važenja - proverite uslove konkretnog paketa prilikom kupovine.",
-        ],
-      },
-      {
-        title: "6. Kupovina proizvoda - korpa i naručivanje",
-        paragraphs: [
-          "Proizvode dodajete u korpu (<a href=\"/korpa\">/korpa</a>) sa stranice konkretnog proizvoda, izborom varijante (npr. zapremine ili tipa dela) i količine.",
-          "Ako niste prijavljeni, sadržaj korpe čuva se privremeno u vašoj sesiji. Ako se prijavite, korpa se čuva na vašem nalogu, a sadržaj eventualne korpe gosta se prenosi na nalog.",
-        ],
-        subsections: [
-          {
-            title: "Proces naručivanja",
-            list: [
-              "U koraku naplate unosite kontakt podatke, adresu za dostavu i, po želji, kod kupona.",
-              "Nakon slanja porudžbine, ista se ne smatra konačnom - dobijate email sa linkom za potvrdu porudžbine.",
-              "Porudžbina se konačno kreira i dobija status „na čekanju” tek nakon što kliknete na link za potvrdu iz emaila. Link i rezervacija zaliha po pravilu važe ograničeno vreme; ako ne potvrdite porudžbinu u tom roku, rezervacija se automatski oslobađa i porudžbinu je potrebno ponoviti.",
-              "Zalihe se rezervišu u trenutku slanja porudžbine (pre potvrde), kako bi se sprečila prodaja istog proizvoda većem broju kupaca istovremeno - to ne predstavlja konačnu prodaju niti obavezu Estetik Lab-a da isporuči proizvod pre potvrde porudžbine.",
-            ],
-          },
-          {
-            title: "Dostupnost i tačnost podataka",
-            paragraphs: [
-              "Trudimo se da podaci o cenama i dostupnosti proizvoda budu ažurni. U slučaju očigledne greške u ceni ili opisu proizvoda, ili ako naručeni proizvod više nije dostupan, zadržavamo pravo da vas obavestimo i ponudimo otkazivanje ili izmenu porudžbine pre nego što je pošaljemo.",
-            ],
-          },
-        ],
-      },
-      {
-        title: "7. Plaćanje i dostava",
-        list: [
-          "Cene proizvoda prikazane su u dinarima (RSD) i ne uključuju trošak dostave, koji se posebno prikazuje pre slanja porudžbine.",
-          "Online plaćanje karticom putem sajta trenutno <strong>nije dostupno</strong>. Plaćanje se vrši uplatom na račun, pouzećem ili na drugi način naznačen prilikom potvrde porudžbine.",
-          "Rok isporuke zavisi od dostupnosti proizvoda i izabrane dostave; okvirni rok saopštava se prilikom potvrde porudžbine ili naknadno putem email obaveštenja.",
-          "Dostavu vrši kurirska služba ili drugi dostavljač sa kojim sarađujemo; podaci potrebni za isporuku (ime, adresa, telefon) prosleđuju se isključivo u tu svrhu.",
-          "Rizik slučajne propasti ili oštećenja proizvoda prelazi na vas u trenutku prijema pošiljke.",
-        ],
-      },
-      {
-        title: "8. Status i otkazivanje porudžbine",
-        paragraphs: [
-          "Nakon potvrde, porudžbina prolazi kroz sledeće statuse: na čekanju, u obradi, poslato, dostavljeno, završeno - ili, u zavisnosti od situacije, otkazano ili vraćeno. Status porudžbine možete pratiti u svom nalogu.",
-        ],
-        list: [
-          "Porudžbinu možete samostalno otkazati iz svog naloga dok je u statusu „na čekanju”, odnosno dok njena obrada nije započeta.",
-          "Nakon što porudžbina uđe u obradu ili bude poslata, samostalno otkazivanje više nije moguće - u tom slučaju kontaktirajte naš tim, a primenjuju se pravila o pravu na odustanak iz člana 9. ovih uslova.",
-          "Estetik Lab zadržava pravo da otkaže porudžbinu u slučaju nedostupnosti proizvoda, sumnje na zloupotrebu ili nemogućnosti dostave, uz obaveštenje i povraćaj eventualno već uplaćenih sredstava.",
-        ],
-      },
-      {
-        title: "9. Pravo na odustanak od ugovora (povraćaj proizvoda)",
-        paragraphs: [
-          "U skladu sa Zakonom o zaštiti potrošača Republike Srbije, kao potrošač imate pravo da odustanete od ugovora zaključenog na daljinu (online porudžbine) u roku od <strong>14 dana</strong> od dana kada vam je, odnosno trećem licu koje vi odredite, proizvod predat u državinu, bez navođenja razloga.",
-        ],
-        list: [
-          "Odustanak prijavljujete pisanom izjavom poslatom na <a href=\"mailto:estetik.lab.ns@gmail.com\">estetik.lab.ns@gmail.com</a> pre isteka roka od 14 dana, uz navođenje broja porudžbine.",
-          "Proizvod ste dužni da nam vratite bez odlaganja, a najkasnije u roku od 14 dana od dana kada ste poslali izjavu o odustanku, u ispravnom stanju i po mogućstvu u originalnom pakovanju, sa svom pratećom dokumentacijom.",
-          "Direktne troškove vraćanja proizvoda snosite vi, osim ako se drugačije dogovorimo ili ako je proizvod stigao oštećen ili pogrešan.",
-          "Nakon prijema vraćenog proizvoda, izvršićemo povraćaj svih primljenih uplata (uključujući osnovne troškove dostave) najkasnije u roku od 14 dana od dana prijema izjave o odustanku, istim sredstvom plaćanja koje ste koristili, osim ako se izričito ne dogovorimo drugačije.",
-          "Pravo na odustanak ne odnosi se na proizvode izrađene po specifikaciji potrošača ili jasno personalizovane, kao ni na proizvode koji su, iz higijenskih ili srodnih razloga, raspakovani i nepodobni za vraćanje nakon isporuke, u meri u kojoj je to predviđeno zakonom.",
-        ],
-      },
-      {
-        title: "10. Reklamacije na proizvode i saobraznost",
-        paragraphs: [
-          "Estetik Lab odgovara za nesaobraznost proizvoda ugovoru u skladu sa Zakonom o zaštiti potrošača. Ako primljeni proizvod ima nedostatak, oštećen je u transportu ili ne odgovara porudžbini, imate pravo da podnesete reklamaciju.",
-        ],
-        list: [
-          "Reklamaciju možete podneti putem <a href=\"mailto:estetik.lab.ns@gmail.com\">estetik.lab.ns@gmail.com</a> ili <a href=\"/kontakt\">kontakt stranice</a>, uz opis problema, broj porudžbine i, po mogućstvu, fotografiju proizvoda.",
-          "Potvrdu prijema reklamacije šaljemo vam bez odlaganja, a odgovor na reklamaciju dajemo u zakonskom roku od najviše 8 dana od dana prijema.",
-          "U zavisnosti od prirode nedostatka, rešavanje reklamacije može podrazumevati opravku, zamenu, umanjenje cene ili raskid ugovora i povraćaj sredstava, u skladu sa zakonom.",
-          "Troškove opravdane reklamacije (uključujući povratnu dostavu neispravnog proizvoda) snosi Estetik Lab.",
-        ],
-      },
-      {
-        title: "11. Kuponi za popust",
-        paragraphs: [
-          "Na sajtu možete primeniti kupon prilikom zakazivanja termina, kupovine paketa ili naručivanja proizvoda, ukoliko je kupon aktivan i ispunjava uslove korišćenja (npr. ograničenje na određene proizvode, usluge ili minimalnu vrednost porudžbine).",
-          "Kupon se ne može kombinovati sa plaćanjem putem paketa sesija za isti termin, niti sa drugim kuponom za istu porudžbinu ili termin.",
-          "Estetik Lab zadržava pravo da odbije, izmeni ili povuče kupon u slučaju zloupotrebe ili greške u sistemu.",
-        ],
-      },
-      {
-        title: "12. Newsletter, kontakt forma i utisci klijenata",
-        subsections: [
-          {
-            title: "Newsletter",
-            paragraphs: [
-              "Prijavom na newsletter dajete saglasnost da vam povremeno šaljemo informacije o novostima, ponudama i savetima. Odjava je moguća u svakom trenutku putem linka u email poruci.",
-            ],
-          },
-          {
-            title: "Kontakt forma",
-            paragraphs: [
-              "Slanjem poruke putem kontakt forme potvrđujete da su uneti podaci tačni i da ste saglasni sa Politikom privatnosti. Obavezno je označiti saglasnost pre slanja poruke.",
-            ],
-          },
-          {
-            title: "Utisci klijenata",
-            paragraphs: [
-              "Utisci koje pošaljete prolaze moderaciju pre objave. Zadržavamo pravo da ne objavimo utisak koji sadrži uvredljiv, neistinit, reklamni ili na drugi način neprimeren sadržaj.",
-              "Slanjem utiska dajete Estetik Lab-u dozvolu da vaš komentar, ocenu i ime (ili inicijale) objavi na sajtu, ukoliko bude odobren.",
-            ],
-          },
-        ],
-      },
-      {
-        title: "13. Zdravstvene napomene i odgovornost klijenta",
-        paragraphs: [
-          "Pre tretmana dužni ste da naš tim obavestite o postojećim zdravstvenim stanjima, alergijama, trudnoći, implantima, pejsmejkerima, upotrebi lekova ili drugim okolnostima koje mogu uticati na tretman.",
-          "<strong>Ove informacije se razmenjuju isključivo usmenim putem</strong>, u razgovoru sa terapeutom pre tretmana - Estetik Lab platforma (sajt, nalog, obrasci za zakazivanje) nema poseban obrazac niti polje namenjeno unosu zdravstvenih ili medicinskih podataka, i mi takve podatke ne evidentiramo niti čuvamo u digitalnom obliku. Napomena koju ostavite prilikom online zakazivanja je opšteg karaktera (npr. „prvi put dolazim”) - molimo vas da u to polje ne unosite osetljive zdravstvene detalje, već ih ostavite za razgovor uživo sa terapeutom.",
-          "Estetik Lab ne snosi odgovornost za posledice ukoliko ste dali nepotpune ili netačne zdravstvene informacije.",
-          "Tretmani estetske i wellness prirode ne zamenjuju lekarsku dijagnostiku ili medicinski tretman. Kozmetička oprema i uređaji iz naše prodavnice namenjeni su profesionalnoj upotrebi - pre korišćenja upoznajte se sa priloženim uputstvom i bezbednosnim napomenama proizvođača.",
-        ],
-      },
-      {
-        title: "14. Intelektualna svojina",
-        paragraphs: [
-          "Sav sadržaj na sajtu - tekstovi, fotografije, grafike, logo, dizajn, video materijali i softverski kod - zaštićen je autorskim pravom i pripada Estetik Lab-u ili odgovarajućim nosiocima prava.",
-          "Zabranjeno je kopiranje, distribucija ili komercijalna upotreba sadržaja bez prethodne pisane saglasnosti.",
-        ],
-      },
-      {
-        title: "15. Zabranjeno ponašanje",
-        list: [
-          "lažno predstavljanje ili korišćenje tuđih podataka",
-          "pokušaj neovlašćenog pristupa sistemu, nalozima drugih korisnika ili admin delu sajta",
-          "slanje spam poruka, zloupotreba kontakt forme ili automatsko zakazivanje termina ili naručivanje proizvoda",
-          "objavljivanje uvredljivih, nezakonitih ili obmanjujućih utisaka",
-          "bilo kakva radnja koja ometa rad sajta ili ugrožava bezbednost drugih korisnika",
-        ],
-      },
-      {
-        title: "16. Ograničenje odgovornosti",
-        paragraphs: [
-          "Estetik Lab ulaže razumne napore da sajt bude dostupan i da informacije budu tačne, ali ne garantujemo da sajt u svakom trenutku radi bez prekida ili grešaka.",
-          "Nismo odgovorni za indirektnu štetu, gubitak podataka ili propuštene koristi nastale korišćenjem sajta, osim u meri propisanoj primenjivim zakonima. Ovim se ne ograničava vaša zakonska prava po osnovu saobraznosti proizvoda i prava na odustanak, opisana u članovima 9. i 10.",
-          "Spoljni linkovi (npr. Google Maps) vode ka servisima trećih strana čiji uslovi važe nezavisno od naših.",
-        ],
-      },
-      {
-        title: "17. Zaštita podataka",
-        paragraphs: [
-          "Obrada ličnih podataka opisana je u našoj <a href=\"/politika-privatnosti\">Politici privatnosti</a>, koja čini sastavni deo ovih uslova.",
-        ],
-      },
-      {
-        title: "18. Reklamacije na usluge i rad sajta",
-        paragraphs: [
-          "Za pritužbe u vezi sa terminima, tretmanima, paketima ili radom sajta, kontaktirajte nas na <a href=\"mailto:estetik.lab.ns@gmail.com\">estetik.lab.ns@gmail.com</a> ili putem <a href=\"/kontakt\">kontakt stranice</a>. Potrudićemo se da odgovorimo u razumnom roku. Za reklamacije na proizvode iz prodavnice važi poseban postupak opisan u članu 10.",
-        ],
-      },
-      {
-        title: "19. Izmene uslova",
-        paragraphs: [
-          "Estetik Lab zadržava pravo da izmeni ove Uslove korišćenja. Ažurirana verzija stupa na snagu objavljivanjem na ovoj stranici. Nastavak korišćenja sajta nakon izmene podrazumeva prihvatanje novih uslova; porudžbine i termini poslati pre izmene regulisani su uslovima koji su važili u trenutku slanja.",
-        ],
-      },
-      {
-        title: "20. Merodavno pravo",
-        paragraphs: [
-          "Na ove Uslove primenjuje se pravo Republike Srbije. Za sporove je nadležan sud u Novom Sadu, osim ako imperativnim propisima nije drugačije određeno.",
-        ],
-      },
-    ],
+    sections: content.sections,
   };
 }
 
@@ -635,6 +89,8 @@ export function prepareHomeData({
   latestPosts = [],
   bestPackages = [],
   heroContent = null,
+  homeIntro = DEFAULT_HOME_INTRO,
+  whyUs = DEFAULT_WHY_US,
 } = {}) {
   return {
     hero: {
@@ -660,25 +116,13 @@ export function prepareHomeData({
           imageVariants: heroContent?.imageVariants || getResponsiveImageUrls(heroContent?.image || "/images/site/hero-medium.webp"),
         },
 
-    intro: {
-      title: "Šta je Estetik Lab",
-      lead:
-        "Estetik Lab je kozmetički salon u Novom Sadu posvećen estetskim tretmanima lica i tela. Naš rad se oslanja na profesionalni ESMA aparat koji kombinuje tretmane strujom, laser i ultrazvuk, kako bismo na jednom mestu ponudili sveobuhvatnu negu prilagođenu potrebama svakog klijenta.",
-      who:
-        "Ovi tretmani su namenjeni svima koji žele da poboljšaju izgled i elastičnost kože, smanje celulit, zategnu telo ili ubrzaju regeneraciju - bez obzira da li se prvi put upoznajete sa estetskim tretmanima ili već imate iskustva sa negom ovog tipa.",
-      massages: [
-        { title: "Relax masaža", text: "Za opuštanje tela i uma nakon napornog perioda.", href: "/usluge/relaks-masaza" },
-        { title: "Anticelulit masaža", text: "Za modelovanje tela i zatezanje kože.", href: "/usluge/anticelulit-masaza" },
-        { title: "Terapeutska masaža", text: "Za ublažavanje napetosti, bolova i ukočenosti.", href: "/usluge/terapeutska-masaza" },
-        { title: "Sportska masaža", text: "Za regeneraciju i pripremu mišića.", href: "/usluge/sportska-masaza" },
-      ],
-      packages:
-        "Sve tretmane i masaže možete kombinovati kroz naše pakete usluga, prilagođene vašim ciljevima i dinamici poseta, čime ostvarujete bolju vrednost i kontinuitet nege.",
-      closing:
-        "Naš cilj je da svakom klijentu pomognemo da prevaziđe izazove sa kojima se suočava i postigne željeni izgled i osećaj u sopstvenom telu - uz stručnost, pažnju i individualan pristup.",
-    },
+    // intro/whyUs are now DB-backed content (site-content.service.js's
+    // getHomeIntro/getWhyUs) instead of literal constants here - see this
+    // file's header comment. Defaults above are only a fallback for a caller
+    // that doesn't pass them.
+    intro: homeIntro,
 
-    whyUs: WHY_US,
+    whyUs,
     highlightedServices,
     featuredExperts,
     testimonials,
@@ -712,54 +156,11 @@ export function prepareContactPageData() {
   };
 }
 
-export function preparePartnershipPageData() {
+export function preparePartnershipPageData(content = DEFAULT_PARTNERSHIP) {
   return {
-    intro:
-      "Ako imate publiku kojoj verujete - klijente, pratioce, zajednicu - partnerski program vam omogućava da zarađujete proviziju svaki put kad neko preko vas rezerviše termin, kupi paket ili naruči proizvod iz naše prodavnice.",
-    steps: [
-      {
-        number: 1,
-        title: "Javite nam se",
-        description:
-          "Partnerski nalozi se trenutno otvaraju ručno, ne postoji javna prijava - pošaljite nam poruku preko <a href=\"/kontakt\">kontakt stranice</a> i dogovorićemo detalje i vašu proviziju.",
-      },
-      {
-        number: 2,
-        title: "Dobijate svoj jedinstveni link",
-        description:
-          "Nakon otvaranja naloga dobijate sopstveni referalni kod i link koji možete deliti - vodi na bilo koju stranicu sajta (početnu, konkretnu uslugu, paket ili proizvod), kod se automatski prenosi sa njim.",
-      },
-      {
-        number: 3,
-        title: "Delite ga svojoj publici",
-        description:
-          "Podelite link na način koji vama najviše odgovara - na društvenim mrežama, u razgovoru, u opisu profila. Svako ko klikne na njega dobija kolačić koji pamti da je došao preko vas narednih 30 dana.",
-      },
-      {
-        number: 4,
-        title: "Zarađujete proviziju",
-        description:
-          "Ako neko ko je došao preko vašeg linka zakaže termin, kupi paket tretmana ili naruči proizvod iz prodavnice u tih 30 dana, transakcija se automatski povezuje sa vama i beleži se provizija po unapred dogovorenoj stopi.",
-      },
-      {
-        number: 5,
-        title: "Pratite zaradu u realnom vremenu",
-        description:
-          "U svom partnerskom nalogu vidite pregled zarađene, isplaćene i rezervisane provizije, kao i istoriju svake transakcije koja vam je pripisana - bez ličnih podataka klijenta, samo vrsta transakcije i iznos.",
-      },
-      {
-        number: 6,
-        title: "Zatražite isplatu",
-        description:
-          "Kad se sakupi iznos koji vam odgovara, iz istog naloga podnosite zahtev za isplatu - mi ga pregledamo i obrađujemo.",
-      },
-    ],
-    highlights: [
-      "Provizija se računa na termine, kupljene pakete tretmana i porudžbine iz prodavnice - ne samo na jednu vrstu transakcije",
-      "Period praćenja od 30 dana - klijent ne mora da kupi istog trenutka da bi se transakcija povezala sa vama",
-      "Potpuna transparentnost - u svakom trenutku vidite tačno šta je zarađeno, šta je isplaćeno i šta je na čekanju",
-      "Nema tehničkih prepreka - jedan link, bez potrebe za dodatnim alatima ili nalozima",
-    ],
+    intro: content.intro,
+    steps: content.steps,
+    highlights: content.highlights,
     contact: LEGAL_CONTACT,
   };
 }

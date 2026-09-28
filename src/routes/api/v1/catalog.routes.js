@@ -18,14 +18,37 @@ router.get("/products/:slug", requireModule("shop"), CatalogController.getProduc
 // that's deliberately independent of Employee/booking (see expert.model.js's
 // own comment: works with zero login accounts behind it).
 router.get("/team", CatalogController.listTeam);
+// Must be registered BEFORE /team/:slug below - otherwise Express would match
+// this path as a slug lookup for a team member literally named "intro".
+router.get("/team/intro", CatalogController.getTeamIntro);
 router.get("/team/:slug", CatalogController.getTeamMember);
 
 router.get("/blog/posts", requireModule("blog"), CatalogController.listPosts);
+// Category-pills-with-counts + tag chips for the blog list/category/tag pages
+// - see getBlogFilters's own comment for why this is separate from /blog/posts.
+router.get("/blog/filters", requireModule("blog"), CatalogController.getBlogFilters);
 router.get("/blog/posts/:slug", requireModule("blog"), CatalogController.getPost);
 
 // NOT module-gated - general marketing content ("our collaborators/sponsors"),
 // independent of blog/shop/booking - same reasoning as /saradnici on the web side.
 router.get("/business-partners", CatalogController.listBusinessPartners);
 router.get("/business-partners/:slug", CatalogController.getBusinessPartner);
+
+// NOT module-gated - static contact/social info (email, phone, address,
+// social links), used by the public footer/contact page. Already public
+// data (rendered in the EJS footer and site-wide Organization JSON-LD).
+router.get("/business-info", CatalogController.getBusinessInfo);
+
+// NOT module-gated - DB-backed marketing/legal CONTENT (see
+// site-content.service.js), one endpoint per public page so a page only
+// fetches the copy it actually needs. Same public data the old EJS site
+// already rendered for anyone who requested those routes; this just makes it
+// readable by the SPA too.
+router.get("/about", CatalogController.getAboutPage);
+router.get("/faq", CatalogController.getFaqPage);
+router.get("/privacy-policy", CatalogController.getPrivacyPolicyPage);
+router.get("/terms", CatalogController.getTermsPage);
+router.get("/partnership-program", CatalogController.getPartnershipPage);
+router.get("/home-intro", CatalogController.getHomeIntro);
 
 export default router;

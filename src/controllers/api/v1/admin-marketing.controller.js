@@ -76,12 +76,31 @@ export async function listPosts(req, res, next) {
   }
 }
 
+// Display/read-only shape (mapPostForAdminDetail via postService.getPostById) -
+// matches every other admin entity's GET /:id convention (getService/getProduct/
+// getPackage/... all return the Serbian-mapped detail shape at the bare :id route).
+// Post used to be the one exception, returning the raw edit shape here with no
+// separate /:postId/edit route at all - that meant the admin-blog-detail page's
+// Serbian field bindings (naslov, kratakOpis, kategorije, autor.ime...) matched
+// nothing in the response and rendered blank. Fixed by adding getPostForEdit
+// below for the actual edit form, and pointing this route at the detail mapper.
 export async function getPost(req, res, next) {
+  try {
+    const post = await postService.getPostById(req.params.postId);
+    return res.json({ success: true, data: post });
+  } catch (error) {
+    logError("[api/admin/getPost] Greška", error, { postId: req.params.postId });
+    next(error);
+  }
+}
+
+// Raw/edit shape (mapPostForEdit) - for the admin form to load a post for editing.
+export async function getPostForEdit(req, res, next) {
   try {
     const post = await postService.getPostForEdit(req.params.postId);
     return res.json({ success: true, data: post });
   } catch (error) {
-    logError("[api/admin/getPost] Greška", error, { postId: req.params.postId });
+    logError("[api/admin/getPostForEdit] Greška", error, { postId: req.params.postId });
     next(error);
   }
 }
@@ -799,7 +818,7 @@ export async function deleteCampaign(req, res, next) {
 }
 
 export default {
-  listPosts, getPost, createPost, updatePost, updatePostStatus, updatePostSeo, deletePost,
+  listPosts, getPost, getPostForEdit, createPost, updatePost, updatePostStatus, updatePostSeo, deletePost,
   listCoupons, getCoupon, getCouponForEdit, createCoupon, updateCoupon, deleteCoupon,
   listSubscribers, getSubscriber, deleteSubscriber,
   listTestimonials, getTestimonial, approveTestimonial, rejectTestimonial, deleteTestimonial,

@@ -170,10 +170,13 @@ const EMPLOYEE_SORT_FIELDS = { aktivan: "isActive", kreiran: "createdAt" };
 
 export async function listEmployees(req, res, next) {
   try {
-    const { isActive, page = 1, limit = 10, sort, order } = req.query;
+    const { search, isActive, page = 1, limit = 10, sort, order } = req.query;
     const sortField = EMPLOYEE_SORT_FIELDS[sort];
     const result = await employeeService.listEmployees({
-      filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined },
+      filters: {
+        search: search || "",
+        isActive: isActive === "true" ? true : isActive === "false" ? false : undefined,
+      },
       page: resolvePage(page),
       limit: resolveLimit(limit),
       sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,

@@ -39,6 +39,11 @@ router.get("/logs/history/:date", requirePermission(PERMISSION.VIEW_LOGS), Admin
 router.get("/business-reports", requirePermission(PERMISSION.VIEW_BUSINESS_REPORTS), AdminOpsController.getBusinessReportDashboard);
 router.get("/business-reports/history/:periodType", requirePermission(PERMISSION.VIEW_BUSINESS_REPORTS), AdminOpsController.listBusinessReports);
 router.get("/business-reports/history/:periodType/:periodKey", requirePermission(PERMISSION.VIEW_BUSINESS_REPORTS), AdminOpsController.getBusinessReport);
+router.get(
+  "/business-reports/history/:periodType/:periodKey/pdf",
+  requirePermission(PERMISSION.VIEW_BUSINESS_REPORTS),
+  AdminOpsController.downloadBusinessReportPdf,
+);
 
 // ---- Site settings ----
 router.get("/site-settings", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.getSiteSettings);
@@ -57,6 +62,21 @@ router.put(
   handleApiValidationErrors,
   AdminOpsController.updateClosedDates
 );
+
+// ---- Site content (About/FAQ/Privacy/Terms/Partnership/home intro/"why us"/team intro) ----
+// Same permission as site-settings above (MANAGE_SITE_CONTENT) - this is the
+// other half of "site content" the permission's name already implied before
+// this content had anywhere to live (see site-content.model.js's header
+// comment for why it's a separate document from SiteSettings).
+router.get("/site-content", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.getSiteContent);
+router.put("/site-content/o-nama", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updateAbout);
+router.put("/site-content/faq", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updateFaq);
+router.put("/site-content/politika-privatnosti", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updatePrivacyPolicy);
+router.put("/site-content/uslovi-koriscenja", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updateTermsAndConditions);
+router.put("/site-content/partnerski-program", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updatePartnership);
+router.put("/site-content/pocetna-uvod", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updateHomeIntro);
+router.put("/site-content/zasto-mi", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updateWhyUs);
+router.put("/site-content/tim-uvod", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updateTeamIntro);
 
 // ---- Admin's own profile (just access_admin_panel, already required by the whole router) ----
 router.get("/profile", AdminOpsController.getProfile);

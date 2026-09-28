@@ -124,11 +124,11 @@ describe("post.mapper", () => {
     });
   });
 
-  describe("public detail (uses slugs, not names, for categories - links vs display)", () => {
-    it("mapPostForPublicDetail returns category slugs, not names", () => {
+  describe("public detail (uses names, not slugs, for categories - shown as plain chips)", () => {
+    it("mapPostForPublicDetail returns category names", () => {
       const post = buildPost({ categories: [{ name: "Nega lica", slug: "nega-lica" }] });
       const mapped = mapPostForPublicDetail(post);
-      assert.deepEqual(mapped.kategorije, ["nega-lica"]);
+      assert.deepEqual(mapped.kategorije, ["Nega lica"]);
     });
   });
 
