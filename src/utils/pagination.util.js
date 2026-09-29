@@ -47,3 +47,17 @@ export function buildPaginationMeta({ total, page, limit }) {
 export function pickPaginationMeta(result) {
   return { page: result.page, limit: result.limit, total: result.total, totalPages: result.totalPages };
 }
+
+/**
+ * Page sizes a PUBLIC listing (services, packages, products, blog) lets the
+ * visitor pick from - used by both the EJS pagination include and the
+ * /api/v1 list endpoints, so the site and the Angular app offer the same
+ * choices. Anything else in ?limit= falls back to the page's own default
+ * instead of being passed through (no ?limit=100 scraping via the UI).
+ */
+export const PUBLIC_PAGE_SIZES = [6, 9, 12, 24, 48];
+
+export function resolvePublicLimit(raw, defaultLimit = 12) {
+  const parsed = parseInt(raw, 10);
+  return PUBLIC_PAGE_SIZES.includes(parsed) ? parsed : defaultLimit;
+}

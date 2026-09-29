@@ -1,0 +1,112 @@
+<%
+/**
+ * /admin/sajt/sadrzaj/:section - forma za izmenu jedne sekcije SiteContent-a.
+ *
+ * Zašto poseban view, a ne admin/_form.ejs: sekcije pravnih stranica su
+ * ugnežđene strukture (sekcija -> pod-sekcije, svaka sa nizovima paragrafa),
+ * što generički _form.ejs "repeater" ne podržava. Umesto da se menja _form.ejs
+ * (koji koristi ~40 drugih kontrolera), ovde se koristi mali graditelj
+ * public/js/admin-site-content.js.
+ *
+ * Polja: text | textarea | lines | items | sections (vidi
+ * presenters/admin/marketing/site-content.presenter.js). Složena polja (items,
+ * sections) se šalju kao JSON u skrivenom input-u istog imena.
+ */
+%>
+<%- include("../../includes/head") %>
+<%- include("../../includes/navigation") %>
+
+<main class="container-fluid py-4">
+  <%- include("../../includes/breadcrumbs") %>
+  <%- include("../../includes/flash-messages") %>
+
+  <div class="row">
+    <div class="col-xl-9">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+          <h1 class="h3 mb-1"><%= pageTitle %></h1>
+          <p class="text-muted mb-0"><%= data.sectionDescription %></p>
+        </div>
+        <a href="<%= data.publicUrl %>" class="btn btn-outline-secondary btn-sm" target="_blank" rel="noopener">
+          <i class="bi bi-box-arrow-up-right"></i> Pogledaj na sajtu
+        </a>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-body">
+          <form method="POST" action="<%= data.formAction %>?_method=PUT" novalidate data-form>
+            <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+            <input type="hidden" name="_method" value="PUT">
+
+            <% if (data.errors && data.errors.general) { %>
+              <div class="alert alert-danger" role="alert"><%= data.errors.general %></div>
+            <% } %>
+
+            <div class="row g-3">
+              <% data.fields.forEach(function(field) { %>
+                <div class="col-md-<%= field.width || 12 %>" data-field-wrapper="<%= field.name %>">
+
+                  <% if (field.type === 'text') { %>
+                    <label for="<%= field.name %>" class="form-label">
+                      <%= field.label %><% if (field.required) { %> <span class="text-danger" aria-hidden="true">*</span><% } %>
+                    </label>
+                    <input type="text" class="form-control" id="<%= field.name %>" name="<%= field.name %>"
+                           value="<%= field.value %>" <% if (field.required) { %>required<% } %>>
+
+                  <% } else if (field.type === 'textarea' || field.type === 'lines') { %>
+                    <label for="<%= field.name %>" class="form-label">
+                      <%= field.label %><% if (field.required) { %> <span class="text-danger" aria-hidden="true">*</span><% } %>
+                    </label>
+                    <textarea class="form-control" id="<%= field.name %>" name="<%= field.name %>"
+                              rows="<%= field.rows || 3 %>" <% if (field.required) { %>required<% } %>><%= field.value %></textarea>
+
+                  <% } else if (field.type === 'items') { %>
+                    <div class="form-label fw-semibold"><%= field.label %></div>
+                    <input type="hidden" name="<%= field.name %>" value="<%= JSON.stringify(field.value) %>" data-sc-input="<%= field.name %>">
+                    <div data-sc-items="<%= field.name %>"
+                         data-sc-schema="<%= JSON.stringify(field.itemFields || []) %>"
+                         data-sc-value="<%= JSON.stringify(field.value) %>">
+                      <div data-sc-rows></div>
+                      <p class="text-muted small mb-2" data-sc-empty>Nijedna stavka nije dodata.</p>
+                      <button type="button" class="btn btn-sm btn-outline-primary" data-sc-add>
+                        <i class="bi bi-plus-lg"></i> <%= field.addLabel || 'Dodaj stavku' %>
+                      </button>
+                    </div>
+
+                  <% } else if (field.type === 'sections') { %>
+                    <div class="form-label fw-semibold"><%= field.label %></div>
+                    <input type="hidden" name="<%= field.name %>" value="<%= JSON.stringify(field.value) %>" data-sc-input="<%= field.name %>">
+                    <div data-sc-sections="<%= field.name %>" data-sc-value="<%= JSON.stringify(field.value) %>">
+                      <div data-sc-rows></div>
+                      <p class="text-muted small mb-2" data-sc-empty>Nijedna sekcija nije dodata.</p>
+                      <button type="button" class="btn btn-sm btn-outline-primary" data-sc-add>
+                        <i class="bi bi-plus-lg"></i> <%= field.addLabel || 'Dodaj sekciju' %>
+                      </button>
+                    </div>
+                  <% } %>
+
+                  <% if (field.help) { %>
+                    <small class="text-muted d-block mt-1"><%= field.help %></small>
+                  <% } %>
+                </div>
+              <% }) %>
+            </div>
+
+            <div class="d-flex gap-2 pt-3 mt-3 border-top">
+              <button type="submit" class="btn btn-primary" data-submit-btn>
+                <i class="bi bi-check-lg"></i> <span data-submit-label><%= data.submitLabel || 'Sačuvaj' %></span>
+                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" data-submit-spinner></span>
+              </button>
+              <a href="<%= data.cancelUrl %>" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg"></i> Odustani
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="/js/admin-site-content.js"></script>
+<%- include("../../includes/footer") %>

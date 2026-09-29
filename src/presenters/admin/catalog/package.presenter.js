@@ -14,6 +14,7 @@ export function preparePackageListData(result, query = {}) {
     actions: [
       { type: "view", url: "/admin/paketi/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/paketi/izmena/", icon: "pencil" },
+      { type: "custom", url: "/admin/paketi/", idKey: "id", subPath: "seo", icon: "search", label: "SEO" },
       { type: "delete", url: "/admin/paketi/", icon: "trash" },
     ],
     pagination: {
@@ -40,6 +41,7 @@ export function preparePackageDetailsData(pkg) {
     backUrl: "/admin/paketi",
     editUrl: `/admin/paketi/izmena/${pkg.id}`,
     galleryUrl: `/admin/paketi/${pkg.id}/galerija`,
+    seoUrl: `/admin/paketi/${pkg.id}/seo`,
     sections: [
       {
         title: "Osnovni podaci",
@@ -228,4 +230,35 @@ export function preparePackageFormData(pkg = null, { variantOptions = [], catego
   };
 }
 
-export default { preparePackageListData, preparePackageDetailsData, preparePackageFormData };
+/**
+ * SEO forma paketa (samo ključne reči) - generički admin/_form.ejs, isto kao
+ * prepareServiceSeoFormData / prepareProductSeoFormData.
+ * @param {object} pkg  sirov paket iz packageService.getPackageByIdRaw
+ */
+export function preparePackageSeoFormData(pkg) {
+  const id = String(pkg._id || pkg.id);
+  return {
+    formAction: `/admin/paketi/${id}/seo`,
+    isEdit: true,
+    fields: [
+      {
+        name: "seoKeywordsCsv",
+        label: "Ključne reči (odvojene zarezom)",
+        type: "text",
+        width: 12,
+        value: (pkg.seoKeywords || []).join(", "),
+        help: "Koriste se u meta tagovima za pretraživače; ne prikazuju se posetiocima.",
+      },
+    ],
+    submitLabel: "Sačuvaj SEO podatke",
+    cancelUrl: `/admin/paketi/detalji/${id}`,
+    breadcrumbs: [
+      { label: "Admin", url: "/admin" },
+      { label: "Paketi", url: "/admin/paketi" },
+      { label: pkg.name, url: `/admin/paketi/detalji/${id}` },
+      { label: "SEO", url: null },
+    ],
+  };
+}
+
+export default { preparePackageListData, preparePackageDetailsData, preparePackageFormData, preparePackageSeoFormData };

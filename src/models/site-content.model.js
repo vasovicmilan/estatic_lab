@@ -8,6 +8,15 @@ import {
   DEFAULT_HOME_INTRO,
   DEFAULT_WHY_US,
   DEFAULT_TEAM_INTRO,
+  DEFAULT_PAGE_SEO,
+  DEFAULT_HOME_HERO,
+  DEFAULT_CONTACT_PAGE,
+  DEFAULT_SERVICES_INTRO,
+  DEFAULT_PACKAGES_INTRO,
+  DEFAULT_BLOG_INTRO,
+  DEFAULT_SHOP_INTRO,
+  DEFAULT_SHOP_TRUST,
+  DEFAULT_SHOP_FAQ,
 } from "../config/site-content-defaults.js";
 
 // Singleton document (same pattern as SiteSettings - see site-settings.model.js's
@@ -77,6 +86,23 @@ const SiteContentSchema = new Schema(
       title: { type: String, default: DEFAULT_TEAM_INTRO.title },
       lead: { type: String, default: DEFAULT_TEAM_INTRO.lead },
       highlights: { type: [Schema.Types.Mixed], default: () => DEFAULT_TEAM_INTRO.highlights },
+    },
+    // { [pageKey]: { title, description, noIndex? } } - vidi PAGE_SEO_PAGES u
+    // site-content-defaults.js. Postojeći dokumenti bez ovog polja dobijaju
+    // default pri učitavanju; nedostajući ključevi se dopunjuju u servisu.
+    pageSeo: { type: Schema.Types.Mixed, default: () => DEFAULT_PAGE_SEO },
+
+    // Ranije literali u presenterima (EJS) - sada u bazi i u javnom API-ju, da EJS i
+    // Angular prikazuju isti sadržaj. Oblik: vidi *_INTRO / DEFAULT_HOME_HERO /
+    // DEFAULT_CONTACT_PAGE u site-content-defaults.js. Nedostajuća polja dopunjuje servis.
+    homeHero: { type: Schema.Types.Mixed, default: () => ({ ...DEFAULT_HOME_HERO }) },
+    contactPage: { type: Schema.Types.Mixed, default: () => ({ ...DEFAULT_CONTACT_PAGE }) },
+    servicesIntro: { type: Schema.Types.Mixed, default: () => JSON.parse(JSON.stringify(DEFAULT_SERVICES_INTRO)) },
+    packagesIntro: { type: Schema.Types.Mixed, default: () => JSON.parse(JSON.stringify(DEFAULT_PACKAGES_INTRO)) },
+    blogIntro: { type: Schema.Types.Mixed, default: () => JSON.parse(JSON.stringify(DEFAULT_BLOG_INTRO)) },
+    shopIntro: {
+      type: Schema.Types.Mixed,
+      default: () => JSON.parse(JSON.stringify({ ...DEFAULT_SHOP_INTRO, trust: DEFAULT_SHOP_TRUST, faq: DEFAULT_SHOP_FAQ })),
     },
   },
   { timestamps: true, minimize: false }

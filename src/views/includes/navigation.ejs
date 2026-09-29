@@ -211,7 +211,8 @@
         { href: "/admin/newsletter/kampanje", label: "Kampanje", icon: "bi-megaphone" },
         { href: "/admin/testimoniali", label: "Testimoniali", icon: "bi-star" },
         { href: "/admin/saradnici", label: "Saradnici", icon: "bi-shop" },
-        { href: "/admin/sajt", label: "Sadržaj sajta", icon: "bi-image" },
+        { href: "/admin/sajt", label: "Podešavanja sajta", icon: "bi-sliders", exact: true },
+        { href: "/admin/sajt/sadrzaj", label: "Tekstovi sajta", icon: "bi-file-earmark-richtext" },
       ],
     },
     {
@@ -237,7 +238,12 @@
   });
   const visibleAdminNavGroups = adminNavGroups.filter((group) => group.items.length > 0);
   function isGroupActive(group) {
-    return group.items.some((item) => currentPath.startsWith(item.href));
+    return group.items.some(isItemActive);
+  }
+  // `exact` stavke (npr. /admin/sajt) ne smeju da budu aktivne i na podstranicama
+  // koje imaju sopstvenu stavku (/admin/sajt/sadrzaj).
+  function isItemActive(item) {
+    return item.exact ? currentPath === item.href : currentPath.startsWith(item.href);
   }
 %>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -255,7 +261,7 @@
             </a>
             <ul class="dropdown-menu dropdown-menu-dark">
               <% group.items.forEach(function(item) { %>
-                <li><a class="dropdown-item <%= currentPath.startsWith(item.href) ? 'active' : '' %>" href="<%= item.href %>"><i class="bi <%= item.icon %> me-2"></i><%= item.label %></a></li>
+                <li><a class="dropdown-item <%= isItemActive(item) ? 'active' : '' %>" href="<%= item.href %>"><i class="bi <%= item.icon %> me-2"></i><%= item.label %></a></li>
               <% }) %>
             </ul>
           </li>

@@ -7,10 +7,17 @@ import * as businessPartnerService from "../../../services/business-partner.serv
 import { BUSINESS } from "../../../config/business.config.js";
 import siteContentService from "../../../services/site-content.service.js";
 import * as categoryService from "../../../services/category.service.js";
+import * as blogService from "../../../services/blog.service.js";
 import * as tagService from "../../../services/tag.service.js";
-import { generateSeo } from "../../../seo/index.js";
+import { generateSeo, buildApiPageSeo } from "../../../seo/index.js";
+import { buildOrganizationJsonLd } from "../../../seo/organization.builder.js";
+import { notFound } from "../../../utils/error.util.js";
+import { buildFaqPageJsonLd } from "../../../seo/utils.seo.js";
+import * as testimonialService from "../../../services/testimonial.service.js";
+import siteSettingsService from "../../../services/site-settings.service.js";
+import { getWorkingHours } from "../../../config/runtime-settings.cache.js";
 import { logError } from "../../../utils/logger.util.js";
-import { resolvePage, pickPaginationMeta } from "../../../utils/pagination.util.js";
+import { resolvePage, resolvePublicLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
 
 // Every function below calls the exact same service-layer functions the public web
 // pages call (controllers/web/catalog/*, controllers/web/public/*,
@@ -50,7 +57,7 @@ export async function listServices(req, res, next) {
       filters.tag = tagDoc._id;
     }
 
-    const result = await serviceService.findActiveServices({ page: resolvePage(page), filters });
+    const result = await serviceService.findActiveServices({ page: resolvePage(page), limit: resolvePublicLimit(req.query.limit, 12), filters });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/listServices] Greška", error, { query: req.query });
@@ -74,7 +81,7 @@ export async function getService(req, res, next) {
 export async function listPackages(req, res, next) {
   try {
     const { page = 1 } = req.query;
-    const result = await packageService.findActivePackages({ page: resolvePage(page), limit: 100 });
+    const result = await packageService.findActivePackages({ page: resolvePage(page), limit: resolvePublicLimit(req.query.limit, 12) });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/listPackages] Greška", error);
@@ -109,7 +116,7 @@ export async function listProducts(req, res, next) {
       filters.tag = tagDoc._id;
     }
 
-    const result = await productService.listPublicProducts({ search: search || "", filters, page: resolvePage(page) });
+    const result = await productService.listPublicProducts({ search: search || "", filters, page: resolvePage(page), limit: resolvePublicLimit(req.query.limit, 12) });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
     logError("[api/listProducts] Greška", error, { query: req.query });
@@ -175,7 +182,7 @@ export async function listPosts(req, res, next) {
       page: resolvePage(page),
       filters,
       search: search || "",
-      ...(limit ? { limit } : {}),
+      limit: resolvePublicLimit(limit, 9),
     });
     return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
   } catch (error) {
@@ -210,6 +217,27 @@ export async function getBlogFilters(req, res, next) {
   }
 }
 
+// Arhiva bloga (/blog/kategorija/:slug, /blog/tag/:slug): pravo ime + opis + SEO iz baze,
+// da Angular ne mora da "pogađa" naslov iz slug-a. Posts idu i dalje kroz listPosts.
+export async function getBlogArchive(req, res, next) {
+  try {
+    const { type, slug } = req.params;
+    if (type !== "kategorija" && type !== "tag") throw notFound("Arhiva");
+    const data = type === "kategorija" ? await blogService.getBlogCategoryData(slug, { limit: 1 }) : await blogService.getBlogTagData(slug, { limit: 1 });
+    const entity = type === "kategorija" ? data.category : data.tag;
+    const seo = buildApiPageSeo({
+      title: data.seo.pageTitle,
+      description: data.seo.pageDescription,
+      path: `/blog/${type}/${entity.slug}`,
+      noIndex: data.seo.robots.startsWith("noindex"),
+    });
+    return res.json({ success: true, data: { type, naziv: entity.naziv, slug: entity.slug, description: entity.description, total: data.total }, seo });
+  } catch (error) {
+    logError("[api/getBlogArchive] Greška", error, { params: req.params });
+    next(error);
+  }
+}
+
 export async function getPost(req, res, next) {
   try {
     const post = await postService.getPublicPostBySlug(req.params.slug);
@@ -235,8 +263,16 @@ export async function listBusinessPartners(req, res, next) {
 
 export async function getBusinessPartner(req, res, next) {
   try {
-    const partner = await businessPartnerService.getPublicBusinessPartnerBySlug(req.params.slug);
-    return res.json({ success: true, data: partner });
+    const { seo: pageSeo, ...partner } = await businessPartnerService.getPublicBusinessPartnerBySlug(req.params.slug);
+    // Servis vraća EJS oblik (pageTitle/pageDescription) - ovde ga pretvaramo u isti
+    // `seo` oblik kao ostali detalji (Angular Seo.apply()), sa top-level `seo` u odgovoru.
+    const seo = buildApiPageSeo({
+      title: pageSeo.pageTitle,
+      description: pageSeo.pageDescription,
+      path: `/saradnici/${partner.slug}`,
+      image: partner.slika?.url,
+    });
+    return res.json({ success: true, data: partner, seo });
   } catch (error) {
     logError("[api/getBusinessPartner] Greška", error, { slug: req.params.slug });
     next(error);
@@ -332,7 +368,135 @@ export async function getTeamIntro(req, res, next) {
   }
 }
 
+// SEO statičkih/listing stranica (home, usluge, paketi, ..., o-nama, faq...) - title i
+// description su u bazi (SiteContent.pageSeo, admin: /admin/sajt/sadrzaj/seo-stranica),
+// isti oblik kao `seo` uz detalj-stranice, pa Angular koristi isti Seo.apply().
+// Početna dodatno nosi Organization + WebSite JSON-LD (isti kao EJS sajt).
+export async function getPageSeo(req, res, next) {
+  try {
+    const { page } = req.params;
+    if (!siteContentService.isPageSeoKey(page)) throw notFound("Stranica");
+    const config = await siteContentService.getPageSeoConfig(page);
+
+    let jsonLd = [];
+    if (page === "home") {
+      const base = new URL(BUSINESS.siteUrl);
+      const org = await buildOrganizationJsonLd({ protocol: base.protocol.replace(":", ""), get: () => base.host });
+      jsonLd = [
+        org,
+        { "@context": "https://schema.org", "@type": "WebSite", name: BUSINESS.name, url: BUSINESS.siteUrl },
+      ];
+    }
+    // FAQPage strukturirani podaci iz istog sadržaja koji stranica prikazuje (FAQ i prodavnica).
+    if (page === "faq") jsonLd = [buildFaqPageJsonLd((await siteContentService.getFaq()).items)].filter(Boolean);
+    if (page === "products") jsonLd = [buildFaqPageJsonLd((await siteContentService.getShopIntro()).faq)].filter(Boolean);
+    const seo = buildApiPageSeo({ title: config.title, description: config.description, path: config.path, noIndex: config.noIndex, jsonLd });
+    return res.json({ success: true, data: seo });
+  } catch (error) {
+    logError("[api/getPageSeo] Greška", error);
+    next(error);
+  }
+}
+
+// ---- Javni sadržaj stranica koji je ranije živeo samo u EJS presenterima ----
+
+function buildWorkingHours() {
+  return (getWorkingHours() || []).map((wh) => ({ day: wh.day, isOpen: !!wh.isOpen, from: wh.from, to: wh.to }));
+}
+
+function buildLocation(contactPage) {
+  return {
+    address: contactPage.mapAddress,
+    mapEmbedUrl: contactPage.mapEmbedUrl || null,
+    googleDataNotice: contactPage.googleDataNotice,
+    privacyUrl: "/politika-privatnosti",
+    workingHours: buildWorkingHours(),
+  };
+}
+
+// Početna: hero (tekstovi iz baze + slika iz SiteSettings), utisci klijenata i lokacija.
+// Sve što EJS početna prikazuje, a nije vezano za usluge/pakete/tim/proizvode/blog
+// (te liste Angular već ima preko svojih endpointa).
+export async function getHomePage(req, res, next) {
+  try {
+    const [homeHero, heroImage, testimonials, contactPage] = await Promise.all([
+      siteContentService.getHomeHero(),
+      siteSettingsService.getHeroContent(),
+      testimonialService.getApprovedTestimonials({ limit: 6 }),
+      siteContentService.getContactPage(),
+    ]);
+    return res.json({
+      success: true,
+      data: {
+        hero: { ...homeHero, image: heroImage.image, imageAlt: heroImage.imageAlt, imageVariants: heroImage.imageVariants },
+        testimonials,
+        location: buildLocation(contactPage),
+      },
+    });
+  } catch (error) {
+    logError("[api/getHomePage] Greška", error);
+    next(error);
+  }
+}
+
+// Kontakt: uvod + adresa/mapa + kontakt podaci + radno vreme.
+export async function getContactPage(req, res, next) {
+  try {
+    const contactPage = await siteContentService.getContactPage();
+    return res.json({
+      success: true,
+      data: {
+        intro: { eyebrow: contactPage.eyebrow, title: contactPage.title, lead: contactPage.lead },
+        contact: {
+          company: BUSINESS.legalName,
+          address: BUSINESS.address?.full || null,
+          email: BUSINESS.email,
+          phone: BUSINESS.phone,
+          phoneHref: BUSINESS.phoneHref,
+          taxId: BUSINESS.taxId || null,
+          registrationNumber: BUSINESS.registrationNumber || null,
+        },
+        location: buildLocation(contactPage),
+      },
+    });
+  } catch (error) {
+    logError("[api/getContactPage] Greška", error);
+    next(error);
+  }
+}
+
+const LIST_INTRO_GETTERS = {
+  services: () => siteContentService.getServicesIntro(),
+  packages: () => siteContentService.getPackagesIntro(),
+  products: () => siteContentService.getShopIntro(),
+  blog: () => siteContentService.getBlogIntro(),
+};
+
+// Uvod listing stranica: { eyebrow, title, lead, paragraphs, highlights } (+ trust, faq za products).
+export async function getListIntro(req, res, next) {
+  try {
+    const getter = LIST_INTRO_GETTERS[req.params.page];
+    if (!getter) throw notFound("Stranica");
+    return res.json({ success: true, data: await getter() });
+  } catch (error) {
+    logError("[api/getListIntro] Greška", error);
+    next(error);
+  }
+}
+
+export async function listTestimonials(req, res, next) {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 6, 1), 24);
+    return res.json({ success: true, data: await testimonialService.getApprovedTestimonials({ limit }) });
+  } catch (error) {
+    logError("[api/listTestimonials] Greška", error);
+    next(error);
+  }
+}
+
 export default {
+  getBlogArchive, getHomePage, getContactPage, getListIntro, listTestimonials,
+  getPageSeo,
   listServices, getService,
   listPackages, getPackage,
   listProducts, getProduct,

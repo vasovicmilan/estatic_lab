@@ -75,6 +75,19 @@ export async function findActivePackages({ limit = 10, page = 1 } = {}) {
   return { data: mapPackagesForPublic(result.data), total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages };
 }
 
+// Every active package, fetched page by page (no fixed 100 cap) - the EJS list
+// groups tiers of the same treatment ACROSS the whole catalog before paginating
+// the resulting cards, so it needs all of them, however many there are.
+export async function findAllActivePackages() {
+  const pageSize = 100;
+  const first = await findActivePackages({ page: 1, limit: pageSize });
+  const all = [...first.data];
+  for (let page = 2; page <= first.totalPages; page += 1) {
+    all.push(...(await findActivePackages({ page, limit: pageSize })).data);
+  }
+  return { ...first, data: all, total: all.length };
+}
+
 export async function createPackage(data) {
   if (!data) validationError("data");
   if (!data.name) validationError("name");
@@ -106,6 +119,18 @@ export async function updatePackageById(packageId, data) {
 
   const updated = await packageRepo.updatePackageById(packageId, data);
   logInfo("Package updated", { packageId, updatedFields: Object.keys(data) });
+  return getPackageById(updated._id);
+}
+
+/**
+ * Ažurira samo SEO ključne reči paketa (posebna admin stranica, isto kao
+ * updateServiceSeo / updateProductSeo) - ne dira ostala polja paketa.
+ */
+export async function updatePackageSeo(packageId, seoKeywords) {
+  if (!packageId) validationError("packageId");
+  const updated = await packageRepo.updatePackageById(packageId, { seoKeywords: seoKeywords || [] });
+  if (!updated) notFound("Paket");
+  logInfo("Package SEO updated", { packageId, count: (seoKeywords || []).length });
   return getPackageById(updated._id);
 }
 
@@ -152,8 +177,10 @@ export default {
   getPackageForEdit,
   getPackageBySlug,
   findActivePackages,
+  findAllActivePackages,
   createPackage,
   updatePackageById,
+  updatePackageSeo,
   deletePackageById,
   listSlugsForSitemap,
 };

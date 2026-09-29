@@ -315,3 +315,35 @@ describe("site-settings.service", () => {
     });
   });
 });
+import siteSettingsServiceDefault from "../../../src/services/site-settings.service.js";
+import { describe as describeB, it as itB } from "node:test";
+import assertB from "node:assert/strict";
+
+describeB("site-settings.service updateBusiness / updateShopPolicy validation", () => {
+  const valid = {
+    name: "Salon", legalName: "Salon doo", email: "a@b.rs", phone: "+381 65 111 222",
+    streetAddress: "Ulica 1", addressLocality: "Novi Sad", postalCode: "21000", addressCountry: "rs",
+    sameAs: "https://instagram.com/a\nhttps://facebook.com/b",
+  };
+  const rejects = async (input, re) => assertB.rejects(() => siteSettingsServiceDefault.updateBusiness({ ...valid, ...input }), re);
+
+  itB("rejects bad email, PIB, registration number, links and coordinates", async () => {
+    await rejects({ email: "nope" }, /email/i);
+    await rejects({ taxId: "123" }, /PIB/);
+    await rejects({ registrationNumber: "12" }, /Matični/);
+    await rejects({ sameAs: "ftp://x" }, /link/i);
+    await rejects({ latitude: 200 }, /širina/);
+    await rejects({ name: "" }, /Naziv/);
+  });
+
+  itB("rejects invalid shop policy values", async () => {
+    await assertB.rejects(() => siteSettingsServiceDefault.updateShopPolicy({ defaultShippingPrice: -1, orderCommissionGraceDays: 14 }), /dostave/i);
+    await assertB.rejects(() => siteSettingsServiceDefault.updateShopPolicy({ defaultShippingPrice: 500, orderCommissionGraceDays: 1.5 }), /dana/);
+  });
+
+  itB("form body mappers return null when the body has no such fields", () => {
+    assertB.equal(siteSettingsServiceDefault.businessInputFromBody({}), null);
+    assertB.equal(siteSettingsServiceDefault.shopPolicyInputFromBody({}), null);
+    assertB.equal(siteSettingsServiceDefault.shopPolicyInputFromBody({ defaultShippingPrice: "500" }, { orderCommissionGraceDays: 14 }).orderCommissionGraceDays, 14);
+  });
+});

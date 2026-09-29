@@ -32,7 +32,9 @@ Kodovi za popust, kuponi povezani sa referalima, i strana isplata partnerskog pr
 
 ## Sadržaj sajta i podešavanja
 
-Iz admin panela (Sadržaj i marketing → Sadržaj sajta, `/admin/sajt`) se menja sve u jednom (singleton) `SiteSettings` dokumentu, bez potrebe za izmenom koda ili redeploy-om:
+Iz admin panela (Sadržaj i marketing → Podešavanja sajta, `/admin/sajt`) se menja sve u jednom (singleton) `SiteSettings` dokumentu, bez potrebe za izmenom koda ili redeploy-om:
+
+**Podaci o firmi** (naziv, pravni naziv, kontakt email, email za obaveštenja administratoru, telefon, PIB, matični broj, adresa, geo koordinate, društvene mreže) i **Dostava i provizije** (fiksna cena dostave, rok pre odobravanja provizije partnera) se takođe menjaju ovde i važe odmah, bez restarta. Prioritet: vrednosti iz admin panela > env (`SITE_NAME`, `SUPPORT_EMAIL`, `ADMIN_EMAIL`, `DEFAULT_SHIPPING_PRICE`, `ORDER_COMMISSION_GRACE_PERIOD_DAYS`) > podrazumevane vrednosti u kodu (`business.config.js`). API: `PUT /admin/site-settings` prihvata polja `businessName`, `businessLegalName`, `businessEmail`, `businessAdminEmail`, `businessPhone`, `businessTaxId`, `businessRegistrationNumber`, `businessStreetAddress`, `businessAddressLocality`, `businessPostalCode`, `businessAddressCountry`, `businessLatitude`, `businessLongitude`, `businessSameAs` (niz linkova), `defaultShippingPrice`, `orderCommissionGraceDays`.
 
 - **Hero slika** — naslovna slika početne strane. Ako nikad nije ručno postavljena, koristi se podrazumevana slika iz koda.
 - **Politika zakazivanja** — razmak između termina, korak ponuđenih termina, rok za samostalno otkazivanje, pragovi za pomeranje termina (videti `02-usluge-zakazivanje-termini.md`). Bilo hardkodovano u `booking.config.js`, sada admin-editable.
@@ -41,6 +43,23 @@ Iz admin panela (Sadržaj i marketing → Sadržaj sajta, `/admin/sajt`) se menj
 Izmene ovde su odmah aktivne, bez restart-a servera — sistem drži trenutne vrednosti u memoriji (`runtime-settings.cache.js`) i osvežava ih čim se sačuva izmena.
 
 Ovo je namerno odvojeno od `business.config.js`, koji ostaje statičan, kod-definisan izvor istine za identitet biznisa (naziv, adresa, radno vreme...) — `SiteSettings` je uređivan sadržaj koji se menja bez deploy-a, spreman da se u budućnosti proširi (npr. sadržaj stranice "O nama").
+
+### Tekstovi sajta
+
+Tekstovi na javnim stranicama (Sadržaj i marketing → Tekstovi sajta, `/admin/sajt/sadrzaj`) čuvaju se u drugom singleton dokumentu, `SiteContent`, i uređuju se u običnom web admin panelu (isti podaci su i dalje dostupni kroz API, `/api/v1/admin/site-content/*`). Svaka sekcija ima svoju stranicu za izmenu:
+
+- **O nama** (`/o-nama`), **Politika privatnosti**, **Uslovi korišćenja** — uvod plus lista sekcija; svaka sekcija ima naslov, paragrafe, listu, zaključne paragrafe i opcione pod-sekcije (jedan nivo). Paragrafi mogu sadržati HTML (npr. link).
+- **FAQ** — pitanja i odgovori.
+- **Partnerski program** — uvod, koraci (redni broj se dodeljuje po redosledu) i prednosti.
+- **Uvod na početnoj**, **Zašto mi**, **Uvod stranice Naš tim** — tekstovi i kartice na početnoj strani i strani tima.
+- **Hero početne**, **Uvod stranice Usluge / Paketi / Blog**, **Uvod prodavnice** (uvod + „zašto kod nas“ kartice + česta pitanja), **Kontakt stranica i lokacija** (uvod, adresa, Google Maps embed, napomena o Google prijavi) — ranije hardkodirano u presenterima; sada u bazi i u javnom API-ju (`GET /api/v1/home`, `/contact-page`, `/list-intro/:page`, `/testimonials`, `/blog/archive/:type/:slug`), pa EJS i Angular prikazuju isto.
+- **SEO stranica** (`/admin/sajt/sadrzaj/seo-stranica`) — SEO naslov i opis svih 13 statičkih/listing stranica (početna, usluge, paketi, prodavnica, blog, tim, saradnici, kontakt, O nama, FAQ, politika, uslovi, partnerski program). Backend je jedini izvor: isti podatak koristi EJS sajt i javni API `GET /api/v1/page-seo/:page` (title, description, canonical, robots, OG/Twitter, JSON-LD; početna nosi i Organization JSON-LD), a Angular frontend ga samo primenjuje.
+
+Izmena je odmah vidljiva na sajtu, a svako čuvanje ulazi u audit log (`SITE_CONTENT_*_UPDATED`). Potrebna je dozvola `manage_site_content`.
+
+### SEO ključne reči
+
+Usluge, paketi, proizvodi i blog imaju posebnu SEO stranicu (`/…/:id/seo`) za ključne reči; saradnici imaju SEO naslov, opis i ključne reči direktno u formi za izmenu.
 
 ## Nadzor i izveštavanje
 

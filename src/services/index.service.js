@@ -7,7 +7,7 @@ import productService from "./product.service.js";
 import contactService from "./contact.service.js";
 import newsLetterService from "./news-letter.service.js";
 import siteSettingsService from "./site-settings.service.js";
-import { buildPageSeo } from "../seo/index.js";
+import siteContentService from "./site-content.service.js";
 import { validationError } from "../utils/error.util.js";
 import { FEATURES } from "../config/features.config.js";
 
@@ -41,13 +41,7 @@ export async function getLandingPageData({
     FEATURES.shop ? productService.listPublicProducts({ filters: { badge: "featured" }, limit: featuredProductLimit }) : Promise.resolve({ data: [] }),
   ]);
 
-  const seo = buildPageSeo({
-    title: "Estetik Lab | Vaš prostor za opuštanje i negu",
-    description: "Zakažite termin za masažu, tretmane lica i tela u opuštajućem ambijentu Estetik Lab wellness centra.",
-    canonical: "/",
-    isIndexable: true,
-    type: "website",
-  });
+  const seo = await siteContentService.getStaticPageSeo("home");
 
   return {
     highlightedServices,
@@ -62,63 +56,27 @@ export async function getLandingPageData({
 }
 
 export async function getAboutPageData() {
-  const seo = buildPageSeo({
-    title: "O nama | Estetik Lab",
-    description: "Saznajte više o Estetik Lab wellness centru, našem timu i filozofiji nege.",
-    canonical: "/o-nama",
-    isIndexable: true,
-  });
-  return { seo };
+  return { seo: await siteContentService.getStaticPageSeo("about") };
 }
 
 export async function getPartnershipPageData() {
-  const seo = buildPageSeo({
-    title: "Partnerski program | Estetik Lab",
-    description: "Zarađujte proviziju deleći svoj link - saznajte kako funkcioniše partnerski program Estetik Lab-a.",
-    canonical: "/partnerski-program",
-    isIndexable: true,
-  });
-  return { seo };
+  return { seo: await siteContentService.getStaticPageSeo("partnership") };
 }
 
 export async function getPrivacyPolicyPageData() {
-  const seo = buildPageSeo({
-    title: "Politika privatnosti | Estetik Lab",
-    description: "Informacije o zaštiti podataka o ličnosti i privatnosti korisnika Estetik Lab sajta.",
-    canonical: "/politika-privatnosti",
-    isIndexable: true,
-  });
-  return { seo };
+  return { seo: await siteContentService.getStaticPageSeo("privacyPolicy") };
 }
 
 export async function getTermsAndConditionsPageData() {
-  const seo = buildPageSeo({
-    title: "Uslovi korišćenja | Estetik Lab",
-    description: "Uslovi korišćenja Estetik Lab sajta i pravila zakazivanja termina.",
-    canonical: "/uslovi-koriscenja",
-    isIndexable: true,
-  });
-  return { seo };
+  return { seo: await siteContentService.getStaticPageSeo("termsAndConditions") };
 }
 
 export async function getFaqPageData() {
-  const seo = buildPageSeo({
-    title: "Česta pitanja (FAQ) | Estetik Lab",
-    description: "Odgovori na najčešća pitanja o zakazivanju, uslugama, plaćanju i otkazivanju termina.",
-    canonical: "/faq",
-    isIndexable: true,
-  });
-  return { seo };
+  return { seo: await siteContentService.getStaticPageSeo("faq") };
 }
 
 export async function getContactPageData() {
-  const seo = buildPageSeo({
-    title: "Kontakt | Estetik Lab",
-    description: "Kontaktirajte Estetik Lab wellness centar u Novom Sadu - adresa, telefon, email i forma za brz odgovor na vaša pitanja.",
-    canonical: "/kontakt",
-    isIndexable: true,
-  });
-  return { seo };
+  return { seo: await siteContentService.getStaticPageSeo("contact") };
 }
 
 // ==================== PUBLIC SUBMISSION ENDPOINTS ====================

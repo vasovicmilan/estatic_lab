@@ -5,6 +5,7 @@ import { buildValidatorHarness } from "../../helpers/validator-harness.js";
 import {
   validatePackageCreate,
   validatePackageUpdate,
+  validatePackageSeo,
   validatePackageId,
 } from "../../../src/middlewares/validators/package.validator.js";
 
@@ -91,6 +92,21 @@ describe("package.validator", () => {
       const agent = buildValidatorHarness(validatePackageId, { method: "get", path: "/test/:packageId" });
       const res = await agent.get(`/test/${new Types.ObjectId().toString()}`);
       assert.equal(res.status, 200);
+    });
+  });
+  describe("validatePackageSeo", () => {
+    it("accepts a comma separated keyword string and an empty one (clear)", async () => {
+      const agent = buildValidatorHarness(validatePackageSeo);
+      assert.equal((await agent.post("/test").send({ seoKeywordsCsv: "masaža, relax" })).status, 200);
+      assert.equal((await agent.post("/test").send({ seoKeywordsCsv: "" })).status, 200);
+      assert.equal((await agent.post("/test").send({})).status, 200);
+    });
+
+    it("rejects keywords longer than 500 characters", async () => {
+      const agent = buildValidatorHarness(validatePackageSeo);
+      const res = await agent.post("/test").send({ seoKeywordsCsv: "x".repeat(501) });
+      assert.equal(res.status, 400);
+      assert.ok(res.body.errors.seoKeywordsCsv);
     });
   });
 });

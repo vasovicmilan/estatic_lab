@@ -154,7 +154,35 @@ export function prepareBusinessPartnerFormData(partner = null) {
     },
     { name: "outboundUrl", label: "Link ka prodavnici saradnika", type: "text", required: true, width: 8, value: values.outboundUrl || "", help: "Pun link, uključujući vaš referalni kod ako ga saradnik koristi." },
     { name: "ctaLabel", label: "Tekst dugmeta", type: "text", width: 4, value: values.ctaLabel || "Poseti prodavnicu" },
-    { name: "isActive", label: "Aktivan (vidljiv na sajtu)", type: "checkbox", width: 6, value: values.isActive }
+    { name: "isActive", label: "Aktivan (vidljiv na sajtu)", type: "checkbox", width: 6, value: values.isActive },
+
+    // ---- SEO ---- (javna stranica saradnika već čita partner.seo - vidi
+    // business-partner.service.js - ali do sada se nije moglo uneti iz admina)
+    {
+      sectionTitle: "SEO",
+      name: "seoTitle",
+      label: "SEO naslov",
+      type: "text",
+      width: 12,
+      value: values.seo?.title || "",
+      help: "Prikazuje se u rezultatima pretrage i na tabu pregledača. Najviše 70 karaktera. Ako je prazno, koristi se naziv saradnika.",
+    },
+    {
+      name: "seoDescription",
+      label: "SEO opis",
+      type: "textarea",
+      rows: 2,
+      width: 12,
+      value: values.seo?.description || "",
+      help: "Najviše 160 karaktera. Ako je prazno, koristi se kratak opis.",
+    },
+    {
+      name: "seoKeywordsCsv",
+      label: "SEO ključne reči (odvojene zarezom)",
+      type: "text",
+      width: 12,
+      value: (values.seo?.keywords || []).join(", "),
+    }
   );
 
   return {

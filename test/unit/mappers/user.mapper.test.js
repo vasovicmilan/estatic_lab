@@ -1,3 +1,4 @@
+import { getShopPolicy } from "../../../src/config/runtime-settings.cache.js";
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -169,7 +170,7 @@ describe("user.mapper", () => {
       // zahtevaProceenuDostave/postarina reflect "no freight items" - an empty
       // cart trivially has none, so this is the flat default shipping price, same
       // as any all-standard cart would show
-      assert.deepEqual(mapped, { stavke: [], brojStavki: 0, ukupnaCena: 0, zahtevaProceenuDostave: false, postarina: 350 });
+      assert.deepEqual(mapped, { stavke: [], brojStavki: 0, ukupnaCena: 0, zahtevaProceenuDostave: false, postarina: getShopPolicy().defaultShippingPrice });
     });
   });
 

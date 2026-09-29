@@ -1,3 +1,4 @@
+import { resolvePublicLimit } from "../../../utils/pagination.util.js";
 import * as productService from "../../../services/product.service.js";
 import * as categoryService from "../../../services/category.service.js";
 import * as tagService from "../../../services/tag.service.js";
@@ -9,6 +10,7 @@ import {
   prepareProductTagData,
   prepareProductDetailData,
 } from "../../../presenters/catalog/product.presenter.js";
+import siteContentService from "../../../services/site-content.service.js";
 import { generateSeo } from "../../../seo/index.js";
 import { buildItemListJsonLd } from "../../../seo/utils.seo.js";
 import { renderContentBlocks } from "../../../utils/content-blocks.util.js";
@@ -27,7 +29,7 @@ export async function productList(req, res, next) {
     const isLandingView = pageNum === 1 && !search && !badgeFilter;
 
     const [result, categoriesRaw, tags, totalCount, latestPostsResult] = await Promise.all([
-      productService.listPublicProducts({ page: pageNum, search, filters: badgeFilter ? { badge: badgeFilter } : {} }),
+      productService.listPublicProducts({ page: pageNum, limit: resolvePublicLimit(req.query.limit, 12), search, filters: badgeFilter ? { badge: badgeFilter } : {} }),
       categoryService.getPublicCategories("product"),
       tagService.getPublicTags("product"),
       productService.countAllActiveProducts(),
@@ -35,7 +37,9 @@ export async function productList(req, res, next) {
     ]);
     const categories = await productService.attachProductCountsToCategories(categoriesRaw);
 
+    const shopIntro = await siteContentService.getShopIntro();
     const viewData = prepareProductListData(result, {
+      shopIntro,
       query: req.query,
       categories,
       tags,
@@ -45,7 +49,8 @@ export async function productList(req, res, next) {
       badgeTitle: badgeFilter ? BADGE_LABELS[badgeFilter] : null,
     });
     const pageTitleBase = badgeFilter ? BADGE_LABELS[badgeFilter] : "Prodavnica";
-    const seo = await generateSeo("page", { title: pageTitleBase, description: "Oprema, delovi i potrošni materijal za profesionalnu kozmetičku negu.", slug: "/prodavnica", noIndex: !!badgeFilter }, req);
+    const pageSeo = await siteContentService.getPageSeoConfig("products");
+    const seo = await generateSeo("page", { title: badgeFilter ? pageTitleBase : pageSeo.title, description: pageSeo.description, slug: pageSeo.path, noIndex: !!badgeFilter || pageSeo.noIndex }, req);
     const itemList = buildItemListJsonLd(req, result.data.map((p) => ({ name: p.naziv, path: `/prodavnica/${p.slug}` })));
     if (itemList) seo.jsonLd = [...(seo.jsonLd || []), itemList];
 
@@ -74,7 +79,7 @@ export async function productCategory(req, res, next) {
     ]);
     const categories = await productService.attachProductCountsToCategories(categoriesRaw);
     const categoryIds = await categoryService.getCategoryAndDescendantIds(category._id, "product");
-    const result = await productService.listPublicProducts({ page: parseInt(page, 10) || 1, filters: { category: categoryIds } });
+    const result = await productService.listPublicProducts({ page: parseInt(page, 10) || 1, limit: resolvePublicLimit(req.query.limit, 12), filters: { category: categoryIds } });
 
     const viewData = prepareProductCategoryData(
       {
@@ -118,7 +123,7 @@ export async function productTag(req, res, next) {
       productService.countAllActiveProducts(),
     ]);
     const categories = await productService.attachProductCountsToCategories(categoriesRaw);
-    const result = await productService.listPublicProducts({ page: parseInt(page, 10) || 1, filters: { tag: tag._id } });
+    const result = await productService.listPublicProducts({ page: parseInt(page, 10) || 1, limit: resolvePublicLimit(req.query.limit, 12), filters: { tag: tag._id } });
 
     const viewData = prepareProductTagData(
       { id: tag._id.toString(), naziv: tag.name, slug: tag.slug, description: tag.description || "" },

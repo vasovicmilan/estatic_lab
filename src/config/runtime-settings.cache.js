@@ -2,6 +2,8 @@ import siteSettingsRepo from "../repositories/site-settings.repository.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 import { DAYS_OF_WEEK } from "../utils/working-hours.util.js";
 import { getZonedComponents } from "../utils/date.time.util.js";
+import { applyBusinessSettings } from "./business.config.js";
+import { DEFAULT_SHIPPING_PRICE, ORDER_COMMISSION_GRACE_PERIOD_DAYS } from "./shop.config.js";
 
 // Defaults mirror the schema defaults in site-settings.model.js exactly - this
 // is the fallback used only in the narrow window before the first
@@ -32,6 +34,11 @@ let cache = {
   // hours in exactly that case.
   workingHours: DAYS_OF_WEEK.map((day) => ({ day, isOpen: false, from: "09:00", to: "20:00" })),
   closedDates: [],
+  // env-derived defaults (shop.config.js) until an admin saves "Dostava i provizije"
+  shopPolicy: {
+    defaultShippingPrice: DEFAULT_SHIPPING_PRICE,
+    orderCommissionGraceDays: ORDER_COMMISSION_GRACE_PERIOD_DAYS,
+  },
 };
 
 /**
@@ -74,7 +81,13 @@ export async function loadRuntimeSettings() {
         reason: cd.reason || "",
         recurringYearly: !!cd.recurringYearly,
       })),
+      shopPolicy: {
+        defaultShippingPrice: settings.shopPolicy?.defaultShippingPrice ?? DEFAULT_SHIPPING_PRICE,
+        orderCommissionGraceDays: settings.shopPolicy?.orderCommissionGraceDays ?? ORDER_COMMISSION_GRACE_PERIOD_DAYS,
+      },
     };
+    // Business identity lives on the shared BUSINESS object (business.config.js), mutated in place.
+    applyBusinessSettings(settings.business);
     logInfo("Runtime settings loaded", cache);
   } catch (error) {
     logError("[loadRuntimeSettings] Failed to load - keeping previous/default values", error);
@@ -87,6 +100,11 @@ export function getBookingPolicy() {
 
 export function getCurrency() {
   return cache.currency;
+}
+
+/** Shop/commission business rules: { defaultShippingPrice, orderCommissionGraceDays }. */
+export function getShopPolicy() {
+  return cache.shopPolicy;
 }
 
 export function getCommissionPolicy() {
@@ -146,6 +164,7 @@ export default {
   getBookingPolicy,
   getCurrency,
   getCommissionPolicy,
+  getShopPolicy,
   getWorkingHours,
   getClosedDates,
   hasFixedWorkingHours,

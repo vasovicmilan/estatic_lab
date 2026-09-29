@@ -109,6 +109,29 @@
     </section>
   <% } %>
 
+  <%- include("../includes/components/ritual-divider") %>
+
+  <!-- Social proof: testimonials + leave-a-review form -->
+  <section class="container py-5">
+    <p class="section-eyebrow">Utisci klijenata</p>
+    <h2 class="h3 mb-4">Šta kažu naši klijenti</h2>
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <% if (data.testimonials && data.testimonials.length > 0) { %>
+          <div class="d-flex flex-column gap-3">
+            <% data.testimonials.forEach(function(t) { %>
+              <%- include("../includes/components/card-testimonial", { testimonial: t }) %>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+      <div class="col-lg-5">
+        <%- include("../includes/components/testimonial-form") %>
+      </div>
+    </div>
+  </section>
+
   <!-- Best packages -->
   <% if (data.bestPackages && data.bestPackages.length > 0) { %>
     <section class="section-dark py-5">
@@ -168,29 +191,6 @@
       </div>
     </section>
   <% } %>
-
-  <%- include("../includes/components/ritual-divider") %>
-
-  <!-- Social proof: testimonials + leave-a-review form -->
-  <section class="container py-5">
-    <p class="section-eyebrow">Utisci klijenata</p>
-    <h2 class="h3 mb-4">Šta kažu naši klijenti</h2>
-
-    <div class="row g-4">
-      <div class="col-lg-7">
-        <% if (data.testimonials && data.testimonials.length > 0) { %>
-          <div class="d-flex flex-column gap-3">
-            <% data.testimonials.forEach(function(t) { %>
-              <%- include("../includes/components/card-testimonial", { testimonial: t }) %>
-            <% }) %>
-          </div>
-        <% } %>
-      </div>
-      <div class="col-lg-5">
-        <%- include("../includes/components/testimonial-form") %>
-      </div>
-    </div>
-  </section>
 
   <!-- Blog -->
   <% if (data.latestPosts && data.latestPosts.length > 0) { %>

@@ -1,4 +1,5 @@
 import { describe, it } from "node:test";
+import siteContentRepo from "../../../src/repositories/site-content.repository.js";
 import assert from "node:assert/strict";
 import serviceService from "../../../src/services/service.service.js";
 import expertService from "../../../src/services/expert.service.js";
@@ -14,6 +15,7 @@ import * as indexService from "../../../src/services/index.service.js";
 describe("index.service", () => {
   describe("getLandingPageData", () => {
     it("aggregates all seven sources and trims featured experts to the requested limit", async (t) => {
+      t.mock.method(siteContentRepo, "findOrCreateSiteContent", async () => ({}));
       t.mock.method(serviceService, "findHighlightedServices", async () => [{ id: "s1" }]);
       t.mock.method(expertService, "getActiveExperts", async () => [{ id: "e1" }, { id: "e2" }, { id: "e3" }]);
       t.mock.method(testimonialService, "getApprovedTestimonials", async () => [{ id: "t1" }]);
@@ -38,6 +40,7 @@ describe("index.service", () => {
     });
 
     it("requests products filtered by the 'featured' badge specifically", async (t) => {
+      t.mock.method(siteContentRepo, "findOrCreateSiteContent", async () => ({}));
       t.mock.method(serviceService, "findHighlightedServices", async () => []);
       t.mock.method(expertService, "getActiveExperts", async () => []);
       t.mock.method(testimonialService, "getApprovedTestimonials", async () => []);

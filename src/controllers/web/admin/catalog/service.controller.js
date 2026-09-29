@@ -17,6 +17,7 @@ import { prepareMediaFormData } from "../../../../presenters/admin/media-form.pr
 import { buildGalleryPayload, buildVideosPayload } from "../../../../utils/media-form.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import { parseSeoKeywords } from "../../../../utils/seo-keywords.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 import { toIdArray } from "../../../../utils/form-array.util.js";
@@ -596,9 +597,7 @@ export async function editServiceSeoForm(req, res, next) {
 export async function updateServiceSeo(req, res, next) {
   try {
     const { serviceId } = req.params;
-    const keywords = Array.isArray(req.body.seoKeywords)
-      ? req.body.seoKeywords.filter(Boolean)
-      : (req.body.seoKeywords || "").split(",").map((k) => k.trim()).filter(Boolean);
+    const keywords = parseSeoKeywords(req.body);
 
     const updated = await serviceService.updateServiceSeo(serviceId, keywords);
     logInfo(`[updateServiceSeo] SEO usluge #${serviceId} ažuriran`, { serviceId, adminId: req.session?.user?.id });

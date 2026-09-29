@@ -17,6 +17,7 @@ import { buildGalleryPayload, buildVideosPayload } from "../../../../utils/media
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import { parseSeoKeywords } from "../../../../utils/seo-keywords.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 import { toIdArray } from "../../../../utils/form-array.util.js";
@@ -93,10 +94,7 @@ function buildPhase2Payload(req, existing = {}) {
 }
 
 function buildPhase3Payload(req) {
-  const seoKeywords = (req.body.seoKeywordsCsv || "")
-    .split(",")
-    .map((k) => k.trim())
-    .filter(Boolean);
+  const seoKeywords = parseSeoKeywords(req.body);
 
   return {
     seoKeywords,
@@ -586,9 +584,7 @@ export async function editProductSeoForm(req, res, next) {
 export async function updateProductSeo(req, res, next) {
   try {
     const { productId } = req.params;
-    const keywords = Array.isArray(req.body.seoKeywords)
-      ? req.body.seoKeywords.filter(Boolean)
-      : (req.body.seoKeywords || "").split(",").map((k) => k.trim()).filter(Boolean);
+    const keywords = parseSeoKeywords(req.body);
 
     const updated = await productService.updateProductSeo(productId, keywords);
     logInfo(`[updateProductSeo] SEO proizvoda #${productId} ažuriran`, { productId, adminId: req.session?.user?.id });

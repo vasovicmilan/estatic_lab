@@ -4,8 +4,8 @@ import { logError, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 
-const PAGE_TITLE = "Sadržaj sajta";
-const PAGE_DESCRIPTION = "Hero slika, politika zakazivanja i valuta";
+const PAGE_TITLE = "Podešavanja sajta";
+const PAGE_DESCRIPTION = "Hero slika, podaci o firmi, politika zakazivanja, dostava, provizije i valuta";
 
 export async function siteSettingsForm(req, res, next) {
   try {
@@ -70,6 +70,12 @@ export async function updateSiteSettings(req, res, next) {
       },
     });
 
+    // Podaci o firmi + Dostava i provizije (live: keš se osvežava u servisu)
+    const businessInput = siteSettingsService.businessInputFromBody(req.body, existing.business);
+    const afterBusiness = businessInput ? await siteSettingsService.updateBusiness(businessInput) : null;
+    const shopInput = siteSettingsService.shopPolicyInputFromBody(req.body, existing.shopPolicy);
+    const afterShop = shopInput ? await siteSettingsService.updateShopPolicy(shopInput) : null;
+
     logInfo("[updateSiteSettings] Podešavanja sajta ažurirana", { adminId: req.session?.user?.id, hasNewImage: !!req.uploadedFile });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
@@ -87,12 +93,19 @@ export async function updateSiteSettings(req, res, next) {
         ]),
         ...auditLogService.computeChanges(existing.currency, updated.currency, ["code", "symbol", "symbolPosition"]),
         ...auditLogService.computeChanges(existing.commissionPolicy, updated.commissionPolicy, ["minimumSessionCommission"]),
+        ...(afterBusiness
+          ? auditLogService.computeChanges(existing.business, afterBusiness.business, [
+              "name", "legalName", "alternateName", "email", "adminEmail", "phone", "taxId", "registrationNumber",
+              "streetAddress", "addressLocality", "postalCode", "addressCountry", "latitude", "longitude", "sameAs",
+            ])
+          : {}),
+        ...(afterShop ? auditLogService.computeChanges(existing.shopPolicy, afterShop.shopPolicy, ["defaultShippingPrice", "orderCommissionGraceDays"]) : {}),
       },
       req,
       success: true,
     });
 
-    return flashAndRedirect(req, res, "success", "Sadržaj sajta je uspešno ažuriran", "/admin/sajt");
+    return flashAndRedirect(req, res, "success", "Podešavanja sajta su uspešno ažurirana", "/admin/sajt");
   } catch (error) {
     logError("[updateSiteSettings] Greška pri ažuriranju podešavanja sajta", error, { userId: req.session?.user?.id, body: req.body });
 

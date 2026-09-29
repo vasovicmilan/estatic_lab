@@ -76,6 +76,13 @@ router.put("/site-content/uslovi-koriscenja", requirePermission(PERMISSION.MANAG
 router.put("/site-content/partnerski-program", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updatePartnership);
 router.put("/site-content/pocetna-uvod", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updateHomeIntro);
 router.put("/site-content/zasto-mi", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updateWhyUs);
+router.put("/site-content/pocetna-hero", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updateHomeHero);
+router.put("/site-content/usluge-uvod", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updateServicesIntro);
+router.put("/site-content/paketi-uvod", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updatePackagesIntro);
+router.put("/site-content/prodavnica-uvod", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updateShopIntro);
+router.put("/site-content/blog-uvod", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updateBlogIntro);
+router.put("/site-content/kontakt", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updateContactPage);
+router.put("/site-content/seo-stranica", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updatePageSeo);
 router.put("/site-content/tim-uvod", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), AdminOpsController.updateTeamIntro);
 
 // ---- Admin's own profile (just access_admin_panel, already required by the whole router) ----

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as PackageController from "../../../controllers/web/admin/catalog/package.controller.js";
-import { validatePackageCreate, validatePackageUpdate, validatePackageId } from "../../../middlewares/validators/package.validator.js";
+import { validatePackageCreate, validatePackageUpdate, validatePackageSeo, validatePackageId } from "../../../middlewares/validators/package.validator.js";
 import { validateSearch } from "../../../middlewares/validators/search.validator.js";
 import { validateMediaUpdate } from "../../../middlewares/validators/media.validator.js";
 import { parseJsonFields } from "../../../middlewares/parse-json-fields.middleware.js";
@@ -52,6 +52,10 @@ router.put(
   validateMediaUpdate,
   PackageController.updatePackageGallery
 );
+
+// --- SEO ključne reči (posebna stranica, kao kod usluga/proizvoda/bloga) ---
+router.get("/:packageId/seo", validatePackageId, PackageController.editPackageSeoForm);
+router.put("/:packageId/seo", validatePackageId, validatePackageSeo, PackageController.updatePackageSeo);
 
 router.delete("/:packageId", validatePackageId, PackageController.deletePackage);
 

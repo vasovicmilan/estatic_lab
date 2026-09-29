@@ -32,7 +32,7 @@ Discount codes, referral-linked coupons, and the payout side of the partner prog
 
 ## Site content and settings
 
-The admin panel (Content & Marketing > Site Content, `/admin/sajt`) edits everything in one singleton `SiteSettings` document, with no code change or redeploy needed:
+The admin panel (Content & Marketing > Site Settings, `/admin/sajt`) edits everything in one singleton `SiteSettings` document, with no code change or redeploy needed:
 
 - **Hero image** — the homepage's headline image. If it's never been set by hand, the code's default image is used instead.
 - **Booking policy** — the gap between appointments, the slot grid step, the self-cancellation cutoff, the reschedule thresholds (see `02-services-booking-appointments.md`). Used to be hardcoded in `booking.config.js`, now admin-editable.
@@ -41,6 +41,23 @@ The admin panel (Content & Marketing > Site Content, `/admin/sajt`) edits everyt
 Changes here take effect immediately, without a server restart - the app keeps the current values in memory (`runtime-settings.cache.js`) and refreshes them the moment a change is saved.
 
 This is deliberately separate from `business.config.js`, which stays a static, code-defined source of truth for the business's identity (name, address, hours...) — `SiteSettings` is editable content that changes without a deploy, and is meant to grow later (e.g. an "about us" page content block).
+
+### Site texts
+
+The texts on the public pages (Content & Marketing > Site Texts, `/admin/sajt/sadrzaj`) live in a second singleton document, `SiteContent`, and are edited in the regular web admin panel (the same data is still available through the API, `/api/v1/admin/site-content/*`). Each section has its own edit page:
+
+- **About** (`/o-nama`), **Privacy Policy**, **Terms and Conditions** — an intro plus a list of sections; each section has a title, paragraphs, a list, closing paragraphs and optional sub-sections (one level). Paragraphs may contain HTML (e.g. a link).
+- **FAQ** — questions and answers.
+- **Partnership program** — intro, steps (the step number is assigned from the order) and highlights.
+- **Home intro**, **Why us**, **Team page intro** — the texts and cards on the home page and the team page.
+- **Home hero**, **Services / Packages / Blog page intro**, **Shop intro** (intro + trust cards + FAQ), **Contact page & location** (intro, address, Google Maps embed, Google sign-in notice) — previously hardcoded in presenters; now in the database and the public API (`GET /api/v1/home`, `/contact-page`, `/list-intro/:page`, `/testimonials`, `/blog/archive/:type/:slug`), so the EJS site and Angular show the same thing.
+- **Page SEO** (`/admin/sajt/sadrzaj/seo-stranica`) — SEO title and description for all 13 static/listing pages (home, services, packages, shop, blog, team, partners, contact, About, FAQ, privacy, terms, partnership). The backend is the single source of truth: the EJS site and the public API `GET /api/v1/page-seo/:page` (title, description, canonical, robots, OG/Twitter, JSON-LD; home also carries Organization JSON-LD) read the same data, and the Angular frontend only applies it.
+
+A change is visible on the site immediately, and every save is written to the audit log (`SITE_CONTENT_*_UPDATED`). Requires the `manage_site_content` permission.
+
+### SEO keywords
+
+Services, packages, products and blog posts have a dedicated SEO page (`/…/:id/seo`) for keywords; business partners have an SEO title, description and keywords directly in their edit form.
 
 ## Oversight and reporting
 

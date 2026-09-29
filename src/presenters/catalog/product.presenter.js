@@ -1,43 +1,9 @@
+import { PUBLIC_PAGE_SIZES } from "../../utils/pagination.util.js";
+import { DEFAULT_SHOP_INTRO, DEFAULT_SHOP_TRUST, DEFAULT_SHOP_FAQ } from "../../config/site-content-defaults.js";
 import { buildCategoryTabRows } from "../../utils/category-tabs.util.js";
 
-const SHOP_TRUST = [
-  { icon: "bi-truck", title: "Brza dostava", text: "Šaljemo širom Srbije, sa jasno naznačenim rokom isporuke pre potvrde porudžbine." },
-  { icon: "bi-patch-check", title: "Originalna oprema", text: "Prodajemo isključivo profesionalnu kozmetičku opremu i rezervne delove koje sami koristimo u radu." },
-  { icon: "bi-headset", title: "Podrška nakon kupovine", text: "Tu smo za pitanja o korišćenju uređaja i dostupnosti rezervnih delova i nakon isporuke." },
-  { icon: "bi-arrow-return-left", title: "Pravo na odustanak", text: "14 dana za odustanak od porudžbine, u skladu sa Zakonom o zaštiti potrošača." },
-];
 
-// Gives the /prodavnica landing real, indexable body copy above the trust
-// badges - what's actually being sold here and why it's the same equipment
-// used in the studio, not just a generic marketplace.
-const SHOP_INTRO = {
-  eyebrow: "Prodavnica",
-  title: "Profesionalna kozmetička oprema i potrošni materijal",
-  lead:
-    "Ovde prodajemo istu opremu, delove i potrošni materijal koje sami koristimo na tretmanima u Estetik Lab centru - ne generičku kozmetiku, već ono što stoji iza rezultata koje vidite na tretmanu.",
-  paragraphs: [
-    "U ponudi su rezervni delovi i potrošni materijal za uređaje koje koristimo na ESMA tretmanima (elektrode, nastavci, gelovi za provodljivost), kao i profesionalna oprema za kućnu negu. Uz svaku porudžbinu ostaje podrška našeg tima - i posle isporuke, ako vam zatreba pomoć oko korišćenja ili dostupnosti delova.",
-  ],
-};
 
-const SHOP_FAQ = [
-  {
-    pitanje: "Kako se plaća porudžbina?",
-    odgovor: "Online plaćanje karticom trenutno nije dostupno. Način plaćanja (uplata na račun, pouzećem i sl.) dogovara se prilikom potvrde porudžbine.",
-  },
-  {
-    pitanje: "Koliko traje dostava?",
-    odgovor: "Rok isporuke zavisi od dostupnosti proizvoda i saopštava se prilikom potvrde porudžbine ili naknadno email porukom.",
-  },
-  {
-    pitanje: "Mogu li da vratim proizvod?",
-    odgovor: "Da - imate pravo da odustanete od porudžbine u roku od 14 dana od prijema, bez navođenja razloga. Detalji su opisani u Uslovima korišćenja.",
-  },
-  {
-    pitanje: "Da li mogu da naručim bez registracije?",
-    odgovor: "Da, porudžbinu možete napraviti i kao gost. Nakon potvrde emailom, automatski dobijate nalog kako biste mogli da pratite status porudžbine.",
-  },
-];
 
 // Builds the category filter bar shown at the top of every /prodavnica view
 // (plain list, category, and tag pages alike) - same pattern as /usluge:
@@ -64,7 +30,8 @@ function buildTagChips(tags = [], activeTagSlug = null) {
   }));
 }
 
-export function prepareProductListData(result, { query = {}, categories = [], tags = [], totalCount = 0, latestPosts = [], isLandingView = false, badgeTitle = null } = {}) {
+export function prepareProductListData(result, { query = {}, categories = [], tags = [], totalCount = 0, latestPosts = [], isLandingView = false, badgeTitle = null, shopIntro = null } = {}) {
+  const shopContent = shopIntro || { ...DEFAULT_SHOP_INTRO, trust: DEFAULT_SHOP_TRUST, faq: DEFAULT_SHOP_FAQ };
   return {
     products: result.data,
     subtitle: "Oprema, delovi i potrošni materijal za profesionalnu kozmetičku negu.",
@@ -74,15 +41,18 @@ export function prepareProductListData(result, { query = {}, categories = [], ta
     badgeTitle,
     search: query.search || "",
     resultCount: result.total,
-    intro: isLandingView ? SHOP_INTRO : null,
+    intro: isLandingView ? { eyebrow: shopContent.eyebrow, title: shopContent.title, lead: shopContent.lead, paragraphs: shopContent.paragraphs } : null,
     categoryTabRows: buildProductCategoryTabRows(categories, null, totalCount),
     tagChips: buildTagChips(tags, null),
-    trust: isLandingView ? SHOP_TRUST : [],
-    faq: isLandingView ? SHOP_FAQ : [],
+    trust: isLandingView ? shopContent.trust : [],
+    faq: isLandingView ? shopContent.faq : [],
     latestPosts,
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
+      limit: result.limit,
+      total: result.total,
+      pageSizeOptions: PUBLIC_PAGE_SIZES,
       basePath: "/prodavnica",
       query,
     },
@@ -100,6 +70,9 @@ export function prepareProductCategoryData(category, result, query = {}, { categ
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
+      limit: result.limit,
+      total: result.total,
+      pageSizeOptions: PUBLIC_PAGE_SIZES,
       basePath: `/prodavnica/kategorija/${category.slug}`,
       query,
     },
@@ -120,6 +93,9 @@ export function prepareProductTagData(tag, result, query = {}, { categories = []
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
+      limit: result.limit,
+      total: result.total,
+      pageSizeOptions: PUBLIC_PAGE_SIZES,
       basePath: `/prodavnica/tag/${tag.slug}`,
       query,
     },

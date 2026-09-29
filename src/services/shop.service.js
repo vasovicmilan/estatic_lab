@@ -3,7 +3,7 @@ import userService from "./user.service.js";
 import tempOrderService from "./temporary-order.service.js";
 import orderService from "./order.service.js";
 import { validationError, badRequest } from "../utils/error.util.js";
-import { DEFAULT_SHIPPING_PRICE } from "../config/shop.config.js";
+import { getShopPolicy } from "../config/runtime-settings.cache.js";
 
 // ==================== CART ====================
 // Two cart representations exist: a logged-in user's persisted `User.cart` (see
@@ -52,7 +52,7 @@ async function resolveGuestCart(guestCart = []) {
     ukupnaCena: lines.reduce((sum, l) => sum + l.ukupno, 0),
     // mirrors mapUserCart's identical computation (see that function's comment)
     zahtevaProceenuDostave: hasFreightItem,
-    postarina: hasFreightItem ? null : DEFAULT_SHIPPING_PRICE,
+    postarina: hasFreightItem ? null : getShopPolicy().defaultShippingPrice,
   };
 }
 

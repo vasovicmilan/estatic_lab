@@ -404,6 +404,12 @@ export async function updateSiteSettings(req, res, next) {
       commissionPolicy: { minimumSessionCommission: numberOr(req.body.minimumSessionCommission, existing.commissionPolicy.minimumSessionCommission) },
     });
 
+    const businessInput = siteSettingsService.businessInputFromBody(req.body, existing.business);
+    const afterBusiness = businessInput ? await siteSettingsService.updateBusiness(businessInput) : null;
+    const shopInput = siteSettingsService.shopPolicyInputFromBody(req.body, existing.shopPolicy);
+    const afterShop = shopInput ? await siteSettingsService.updateShopPolicy(shopInput) : null;
+    const finalSettings = afterShop || afterBusiness || updated;
+
     logInfo("[api/admin/updateSiteSettings] Podešavanja sajta ažurirana", { adminId: req.user.id });
     await auditLogService.recordAuditLog({
       ...buildAuditActor(req),
@@ -416,10 +422,17 @@ export async function updateSiteSettings(req, res, next) {
         ]),
         ...auditLogService.computeChanges(existing.currency, updated.currency, ["code", "symbol", "symbolPosition"]),
         ...auditLogService.computeChanges(existing.commissionPolicy, updated.commissionPolicy, ["minimumSessionCommission"]),
+        ...(afterBusiness
+          ? auditLogService.computeChanges(existing.business, afterBusiness.business, [
+              "name", "legalName", "alternateName", "email", "adminEmail", "phone", "taxId", "registrationNumber",
+              "streetAddress", "addressLocality", "postalCode", "addressCountry", "latitude", "longitude", "sameAs",
+            ])
+          : {}),
+        ...(afterShop ? auditLogService.computeChanges(existing.shopPolicy, afterShop.shopPolicy, ["defaultShippingPrice", "orderCommissionGraceDays"]) : {}),
       },
     });
 
-    return res.json({ success: true, data: updated });
+    return res.json({ success: true, data: finalSettings });
   } catch (error) {
     logError("[api/admin/updateSiteSettings] Greška", error, { body: req.body });
     next(error);
@@ -534,6 +547,31 @@ export const updatePartnership = makeSiteContentUpdateHandler("partnership", sit
 export const updateHomeIntro = makeSiteContentUpdateHandler("homeIntro", siteContentService.updateHomeIntro, "SITE_CONTENT_HOME_INTRO_UPDATED");
 export const updateTeamIntro = makeSiteContentUpdateHandler("teamIntro", siteContentService.updateTeamIntro, "SITE_CONTENT_TEAM_INTRO_UPDATED");
 
+export const updateHomeHero = makeSiteContentUpdateHandler("homeHero", siteContentService.updateHomeHero, "SITE_CONTENT_HOME_HERO_UPDATED");
+export const updateServicesIntro = makeSiteContentUpdateHandler("servicesIntro", siteContentService.updateServicesIntro, "SITE_CONTENT_SERVICES_INTRO_UPDATED");
+export const updatePackagesIntro = makeSiteContentUpdateHandler("packagesIntro", siteContentService.updatePackagesIntro, "SITE_CONTENT_PACKAGES_INTRO_UPDATED");
+export const updateShopIntro = makeSiteContentUpdateHandler("shopIntro", siteContentService.updateShopIntro, "SITE_CONTENT_SHOP_INTRO_UPDATED");
+export const updateBlogIntro = makeSiteContentUpdateHandler("blogIntro", siteContentService.updateBlogIntro, "SITE_CONTENT_BLOG_INTRO_UPDATED");
+export const updateContactPage = makeSiteContentUpdateHandler("contactPage", siteContentService.updateContactPage, "SITE_CONTENT_CONTACT_PAGE_UPDATED");
+
+// pageSeo: telo je { pages: { home: {title, description}, ... } } - šalju se samo stranice koje se menjaju.
+export async function updatePageSeo(req, res, next) {
+  try {
+    const updated = await siteContentService.updatePageSeo(req.body?.pages);
+    logInfo("[api/admin/updateSiteContent:pageSeo] SEO ažuriran", { adminId: req.user.id });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "SITE_CONTENT_PAGE_SEO_UPDATED",
+      entity: { type: "SiteContent", id: "singleton" },
+      changes: { pageSeo: { after: updated } },
+    });
+    return res.json({ success: true, data: updated });
+  } catch (error) {
+    logError("[api/admin/updateSiteContent:pageSeo] Greška", error, { body: req.body });
+    next(error);
+  }
+}
+
 // whyUs's service function takes the array directly (req.body.whyUs), not
 // req.body itself, unlike every other section above (whose service functions
 // take a {field, field, ...} object matching req.body 1:1) - kept as its own
@@ -586,6 +624,7 @@ export default {
   getLogDashboard, listLogSummaries, getLogSummary,
   getBusinessReportDashboard, listBusinessReports, getBusinessReport, downloadBusinessReportPdf,
   getSiteSettings, updateSiteSettings, updateWorkingHours, updateClosedDates,
-  getSiteContent, updateAbout, updateFaq, updatePrivacyPolicy, updateTermsAndConditions, updatePartnership, updateHomeIntro, updateWhyUs, updateTeamIntro,
+  getSiteContent, updateAbout, updateFaq, updatePrivacyPolicy, updateTermsAndConditions, updatePartnership, updateHomeIntro, updateWhyUs, updateTeamIntro, updatePageSeo,
+  updateHomeHero, updateServicesIntro, updatePackagesIntro, updateShopIntro, updateBlogIntro, updateContactPage,
   getProfile, updateProfile,
 };

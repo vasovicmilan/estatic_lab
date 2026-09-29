@@ -7,7 +7,8 @@ import couponService from "./coupon.service.js";
 import { buildPhoneRecord } from "../utils/phone.util.js";
 import { buildAddressRecord } from "../utils/address.util.js";
 import { generateRandomToken } from "./crypto.service.js";
-import { DEFAULT_SHIPPING_PRICE, TEMP_ORDER_TOKEN_TTL_MINUTES, TEMP_ORDER_RETENTION_HOURS } from "../config/shop.config.js";
+import { TEMP_ORDER_TOKEN_TTL_MINUTES, TEMP_ORDER_RETENTION_HOURS } from "../config/shop.config.js";
+import { getShopPolicy } from "../config/runtime-settings.cache.js";
 import {
   mapTemporaryOrdersForAdminList,
   mapTemporaryOrderForAdminDetail,
@@ -88,7 +89,7 @@ export async function createTemporaryOrder(input) {
   // stays 0 as a placeholder and requiresShippingQuote flags it for an admin to
   // fill in by hand - see order.service.js's confirmOrder, which refuses to
   // confirm while this is still true.
-  const shipping = hasFreightItem ? 0 : DEFAULT_SHIPPING_PRICE;
+  const shipping = hasFreightItem ? 0 : getShopPolicy().defaultShippingPrice;
 
   // ---- transaction ----
   const session = await mongoose.startSession();

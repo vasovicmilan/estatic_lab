@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import siteContentRepo from "../../../src/repositories/site-content.repository.js";
 import businessPartnerRepo from "../../../src/repositories/business-partner.repository.js";
 import * as businessPartnerService from "../../../src/services/business-partner.service.js";
 import { buildBusinessPartner, id } from "../../helpers/factories.js";
@@ -113,6 +114,7 @@ describe("business-partner.service", () => {
 
   describe("listPublicBusinessPartners", () => {
     it("only returns active partners (delegates to findActiveBusinessPartners) with SEO attached", async (t) => {
+      t.mock.method(siteContentRepo, "findOrCreateSiteContent", async () => ({}));
       t.mock.method(businessPartnerRepo, "findActiveBusinessPartners", async () => [buildBusinessPartner()]);
       const result = await businessPartnerService.listPublicBusinessPartners();
       assert.equal(result.data.length, 1);

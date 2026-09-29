@@ -32,6 +32,7 @@ import productRoutes from "./admin/product.routes.js";
 import orderRoutes from "./admin/order.routes.js";
 import temporaryOrderRoutes from "./admin/temporary-order.routes.js";
 import siteSettingsRoutes from "./admin/site-settings.routes.js";
+import siteContentRoutes from "./admin/site-content.routes.js";
 
 const router = Router();
 
@@ -72,6 +73,7 @@ router.use("/saradnici", requirePermission(PERMISSION.MANAGE_MARKETING), busines
 router.use("/proizvodi", requirePermission(PERMISSION.MANAGE_PRODUCTS), productRoutes);
 router.use("/porudzbine", requirePermission(PERMISSION.MANAGE_ORDERS), orderRoutes);
 router.use("/privremene-porudzbine", requirePermission(PERMISSION.MANAGE_ORDERS), temporaryOrderRoutes);
+router.use("/sajt/sadrzaj", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), siteContentRoutes);
 router.use("/sajt", requirePermission(PERMISSION.MANAGE_SITE_CONTENT), siteSettingsRoutes);
 
 export default router;

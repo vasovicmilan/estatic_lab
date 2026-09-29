@@ -1,7 +1,7 @@
 import { formatDateTime, formatDate } from "../utils/date.time.util.js";
 import { decryptPhone } from "../utils/phone.util.js";
 import { decryptAddress } from "../utils/address.util.js";
-import { DEFAULT_SHIPPING_PRICE } from "../config/shop.config.js";
+import { getShopPolicy } from "../config/runtime-settings.cache.js";
 import { formatImage } from "../utils/image-format.util.js";
 
 function getFullName(user) {
@@ -203,7 +203,7 @@ export function mapUserCart(user) {
     // show the real shipping cost/status BEFORE the customer ever submits,
     // instead of only finding out afterward (see order-pending.ejs).
     zahtevaProceenuDostave: hasFreightItem,
-    postarina: hasFreightItem ? null : DEFAULT_SHIPPING_PRICE,
+    postarina: hasFreightItem ? null : getShopPolicy().defaultShippingPrice,
   };
 }
 

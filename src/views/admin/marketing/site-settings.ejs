@@ -92,6 +92,14 @@
                          <% if (field.step !== undefined) { %>step="<%- field.step %>"<% } %>
                          data-field="<%= field.name %>">
 
+                <% } else if (field.type === 'textarea') { %>
+                  <textarea class="form-control <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'is-invalid' : '' %>"
+                            id="<%= field.name %>"
+                            name="<%= field.name %>"
+                            rows="<%= field.rows || 3 %>"
+                            <% if (field.required) { %>required<% } %>
+                            data-field="<%= field.name %>"><%= (typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined) ? data.formData[field.name] : (field.value || '') %></textarea>
+
                 <% } else if (field.type === 'select') { %>
                   <select class="form-select <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'is-invalid' : '' %>"
                           id="<%= field.name %>"

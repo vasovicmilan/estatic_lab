@@ -7,6 +7,7 @@ import { buildPageSeoWithReq } from "./builders/page.builder.js";
 import { buildProductSeo } from "./builders/product.builder.js";
 import { buildPackageSeo } from "./builders/package.builder.js";
 import { BUSINESS } from "../config/business.config.js";
+import { buildBreadcrumbJsonLd } from "./utils.seo.js";
 
 const builders = {
   service: buildServiceSeo,
@@ -94,3 +95,29 @@ export function buildPageSeo({ title, description, canonical, isIndexable = true
 }
 
 export default { generateSeo, buildPageSeo };
+
+/**
+ * SEO objekat za statičke/listing stranice u istom obliku koji API vraća uz
+ * detalj-stranice (title, description, canonical, robots, jsonLd, meta, og,
+ * twitter) - to je ono što Angular `Seo.apply()` očekuje. Canonical je uvek
+ * čista putanja (bez query stringa) na BUSINESS.siteUrl. `title` je već pun
+ * naslov (sa "| Estetik Lab") kako je sačuvan u bazi.
+ */
+export function buildApiPageSeo({ title, description, path = "/", noIndex = false, jsonLd = [], image, siteName = "Estetik Lab" } = {}) {
+  const canonical = toAbsoluteUrl(path);
+  const imageUrl = toAbsoluteUrl(image || BUSINESS.logo || "/images/site/default-og.webp");
+  const breadcrumb =
+    path && path !== "/"
+      ? [buildBreadcrumbJsonLd([{ name: "Početna", url: toAbsoluteUrl("/") }, { name: title.split("|")[0].trim(), url: canonical }])]
+      : [];
+  return {
+    title,
+    description,
+    canonical,
+    robots: noIndex ? "noindex, follow" : "index, follow",
+    jsonLd: [...jsonLd, ...breadcrumb].filter(Boolean),
+    meta: {},
+    og: { title, description, url: canonical, type: "website", image: imageUrl, site_name: siteName },
+    twitter: { card: "summary_large_image", title, description, image: imageUrl },
+  };
+}

@@ -17,12 +17,14 @@ import { toIdArray } from "../../utils/form-array.util.js";
 
 export async function homePage(req, res, next) {
   try {
-    const [serviceData, homeIntro, whyUs] = await Promise.all([
+    const [serviceData, homeIntro, whyUs, homeHero, contactPage] = await Promise.all([
       indexService.getLandingPageData(),
       siteContentService.getHomeIntro(),
       siteContentService.getWhyUs(),
+      siteContentService.getHomeHero(),
+      siteContentService.getContactPage(),
     ]);
-    const viewData = prepareHomeData({ ...serviceData, homeIntro, whyUs });
+    const viewData = prepareHomeData({ ...serviceData, homeIntro, whyUs, homeHero, contactPage });
     serviceData.seo.jsonLd = [...(serviceData.seo.jsonLd || []), buildWebsiteJsonLd(req)];
 
     return res.render("landing/home", {
@@ -130,13 +132,13 @@ export async function faqPage(req, res, next) {
 
 export async function contactPage(req, res, next) {
   try {
-    const serviceData = await indexService.getContactPageData();
+    const [serviceData, contactContent] = await Promise.all([indexService.getContactPageData(), siteContentService.getContactPage()]);
     return res.render("public/contact", {
       pageTitle: serviceData.seo.pageTitle,
       pageDescription: serviceData.seo.pageDescription,
       seo: serviceData.seo,
       data: {
-        ...prepareContactPageData(),
+        ...prepareContactPageData(contactContent),
         formData: { topic: req.query.tema || "", arrivedWithTema: req.query.tema ? "1" : "" },
         errors: {},
         csrfToken: res.locals.csrfToken,
@@ -152,13 +154,13 @@ export async function submitContact(req, res, next) {
   try {
     if (req.validationErrors) {
       logWarn("[submitContact] Validacione greške u kontakt formi", { validationErrors: req.validationErrors, email: req.body.email });
-      const serviceData = await indexService.getContactPageData();
+      const [serviceData, contactContent] = await Promise.all([indexService.getContactPageData(), siteContentService.getContactPage()]);
       return res.status(400).render("public/contact", {
         pageTitle: serviceData.seo.pageTitle,
         pageDescription: serviceData.seo.pageDescription,
         seo: serviceData.seo,
         data: {
-          ...prepareContactPageData(),
+          ...prepareContactPageData(contactContent),
           formData: req.body,
           errors: req.validationErrors,
           csrfToken: res.locals.csrfToken,
@@ -181,13 +183,13 @@ export async function submitContact(req, res, next) {
     logError("[submitContact] Greška pri slanju kontakt poruke", error, { body: req.body });
 
     if (error.statusCode === 400) {
-      const serviceData = await indexService.getContactPageData();
+      const [serviceData, contactContent] = await Promise.all([indexService.getContactPageData(), siteContentService.getContactPage()]);
       return res.status(400).render("public/contact", {
         pageTitle: serviceData.seo.pageTitle,
         pageDescription: serviceData.seo.pageDescription,
         seo: serviceData.seo,
         data: {
-          ...prepareContactPageData(),
+          ...prepareContactPageData(contactContent),
           formData: req.body,
           errors: { general: error.message },
           csrfToken: res.locals.csrfToken,

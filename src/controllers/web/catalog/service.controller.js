@@ -1,8 +1,10 @@
+import { resolvePublicLimit } from "../../../utils/pagination.util.js";
 import * as serviceService from "../../../services/service.service.js";
 import * as categoryService from "../../../services/category.service.js";
 import * as tagService from "../../../services/tag.service.js";
 import * as testimonialService from "../../../services/testimonial.service.js";
 import { prepareServiceListData, prepareServiceCategoryData, prepareServiceTagData, prepareServiceDetailData } from "../../../presenters/catalog/service.presenter.js";
+import siteContentService from "../../../services/site-content.service.js";
 import { generateSeo } from "../../../seo/index.js";
 import { buildItemListJsonLd } from "../../../seo/utils.seo.js";
 import { logError } from "../../../utils/logger.util.js";
@@ -12,15 +14,17 @@ export async function serviceList(req, res, next) {
     const { page = 1 } = req.query;
 
     const [result, categoriesRaw, tags, totalCount] = await Promise.all([
-      serviceService.findActiveServices({ page: parseInt(page, 10) || 1 }),
+      serviceService.findActiveServices({ page: parseInt(page, 10) || 1, limit: resolvePublicLimit(req.query.limit, 12) }),
       categoryService.getPublicCategories("service"),
       tagService.getPublicTags("service"),
       serviceService.countAllActiveServices(),
     ]);
     const categories = await serviceService.attachServiceCountsToCategories(categoriesRaw);
 
-    const viewData = prepareServiceListData(result, { query: req.query, categories, tags, totalCount });
-    const seo = await generateSeo("page", { title: "Usluge", description: "Pregledajte sve usluge Estetik Lab wellness centra.", slug: "/usluge" }, req);
+    const intro = await siteContentService.getServicesIntro();
+    const viewData = prepareServiceListData(result, { query: req.query, categories, tags, totalCount, intro });
+    const pageSeo = await siteContentService.getPageSeoConfig("services");
+    const seo = await generateSeo("page", { title: pageSeo.title, description: pageSeo.description, slug: pageSeo.path, noIndex: pageSeo.noIndex }, req);
     const itemList = buildItemListJsonLd(req, result.data.map((s) => ({ name: s.naziv, path: `/usluge/${s.slug}` })));
     if (itemList) seo.jsonLd = [...(seo.jsonLd || []), itemList];
 
@@ -51,7 +55,7 @@ export async function serviceCategory(req, res, next) {
     ]);
     const categories = await serviceService.attachServiceCountsToCategories(categoriesRaw);
     const categoryIds = await categoryService.getCategoryAndDescendantIds(category._id, "service");
-    const result = await serviceService.findActiveServices({ page: parseInt(page, 10) || 1, filters: { category: categoryIds } });
+    const result = await serviceService.findActiveServices({ page: parseInt(page, 10) || 1, limit: resolvePublicLimit(req.query.limit, 12), filters: { category: categoryIds } });
 
     const viewData = prepareServiceCategoryData(
       {
@@ -95,7 +99,7 @@ export async function serviceTag(req, res, next) {
       serviceService.countAllActiveServices(),
     ]);
     const categories = await serviceService.attachServiceCountsToCategories(categoriesRaw);
-    const result = await serviceService.findActiveServices({ page: parseInt(page, 10) || 1, filters: { tag: tag._id } });
+    const result = await serviceService.findActiveServices({ page: parseInt(page, 10) || 1, limit: resolvePublicLimit(req.query.limit, 12), filters: { tag: tag._id } });
 
     const viewData = prepareServiceTagData({ id: tag._id.toString(), naziv: tag.name, slug: tag.slug, description: tag.description || "" }, result, req.query, { categories, tags, totalCount });
     const seo = await generateSeo("page", { title: tag.name, description: `Usluge sa tagom ${tag.name}.`, slug: `/usluge/tag/${tag.slug}` }, req);

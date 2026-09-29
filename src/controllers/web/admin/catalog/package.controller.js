@@ -3,13 +3,19 @@ import * as packageService from "../../../../services/package.service.js";
 import * as serviceService from "../../../../services/service.service.js";
 import * as categoryService from "../../../../services/category.service.js";
 import * as tagService from "../../../../services/tag.service.js";
-import { preparePackageListData, preparePackageDetailsData, preparePackageFormData } from "../../../../presenters/admin/catalog/package.presenter.js";
+import {
+  preparePackageListData,
+  preparePackageDetailsData,
+  preparePackageFormData,
+  preparePackageSeoFormData,
+} from "../../../../presenters/admin/catalog/package.presenter.js";
 import { prepareMediaFormData } from "../../../../presenters/admin/media-form.presenter.js";
 import { buildGalleryPayload, buildVideosPayload } from "../../../../utils/media-form.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
-import { normalizeError } from "../../../../utils/error.util.js";
+import { normalizeError, notFound } from "../../../../utils/error.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
+import { parseSeoKeywords } from "../../../../utils/seo-keywords.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 
 function parseJsonField(value, fallback = []) {
@@ -348,6 +354,73 @@ export async function updatePackageGallery(req, res, next) {
   }
 }
 
+export async function editPackageSeoForm(req, res, next) {
+  try {
+    const { packageId } = req.params;
+    const pkg = await packageService.getPackageByIdRaw(packageId);
+    if (!pkg) notFound("Paket");
+
+    return res.render("admin/_form", {
+      pageTitle: `SEO - ${pkg.name}`,
+      pageDescription: pkg.name,
+      data: { ...preparePackageSeoFormData(pkg), errors: {}, csrfToken: res.locals.csrfToken },
+    });
+  } catch (error) {
+    logError("[editPackageSeoForm] Greška pri učitavanju SEO forme", error, { packageId: req.params.packageId, userId: req.session?.user?.id });
+    next(error);
+  }
+}
+
+export async function updatePackageSeo(req, res, next) {
+  try {
+    const { packageId } = req.params;
+    const existing = await packageService.getPackageByIdRaw(packageId);
+
+    if (req.validationErrors) {
+      logWarn(`[updatePackageSeo] Validacione greške za packageId=${packageId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
+      if (!existing) notFound("Paket");
+      const firstError = Object.values(req.validationErrors)[0];
+      return res.status(400).render("admin/_form", {
+        pageTitle: `SEO - ${existing.name}`,
+        pageDescription: existing.name,
+        data: {
+          ...preparePackageSeoFormData(existing),
+          errors: { general: Array.isArray(firstError) ? firstError[0] : firstError },
+          csrfToken: res.locals.csrfToken,
+        },
+      });
+    }
+
+    const keywords = parseSeoKeywords(req.body);
+
+    const updated = await packageService.updatePackageSeo(packageId, keywords);
+    logInfo(`[updatePackageSeo] SEO paketa #${packageId} ažuriran`, { packageId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PACKAGE_SEO_UPDATED",
+      entity: { type: "Package", id: packageId },
+      changes: { seoKeywords: { old: existing?.seoKeywords || [], new: keywords } },
+      req,
+      success: true,
+    });
+
+    return flashAndRedirect(req, res, "success", "SEO podaci su uspešno ažurirani", `/admin/paketi/detalji/${updated.id}`);
+  } catch (error) {
+    logError("[updatePackageSeo] Greška pri ažuriranju SEO podataka", error, { packageId: req.params.packageId, userId: req.session?.user?.id });
+    if (error.statusCode) {
+      const pkg = await packageService.getPackageByIdRaw(req.params.packageId).catch(() => null);
+      if (pkg) {
+        return res.status(error.statusCode).render("admin/_form", {
+          pageTitle: `SEO - ${pkg.name}`,
+          pageDescription: pkg.name,
+          data: { ...preparePackageSeoFormData(pkg), errors: { general: error.message }, csrfToken: res.locals.csrfToken },
+        });
+      }
+    }
+    next(error);
+  }
+}
+
 export async function deletePackage(req, res, next) {
   try {
     const { packageId } = req.params;
@@ -383,5 +456,7 @@ export default {
   updatePackage,
   editPackageGalleryForm,
   updatePackageGallery,
+  editPackageSeoForm,
+  updatePackageSeo,
   deletePackage,
 };

@@ -10,9 +10,10 @@ export async function expertList(req, res, next) {
     const viewData = prepareExpertListData(experts, teamIntro);
     // Dok tim nije okačen (experts prazno), stranica nema realan sadržaj za crawler -
     // noindex privremeno; čim se doda prvi aktivan terapeut, automatski postaje index, follow.
+    const pageSeo = await siteContentService.getPageSeoConfig("team");
     const seo = await generateSeo(
       "page",
-      { title: "Naš tim", description: "Upoznajte stručnjake Estetik Lab wellness centra.", slug: "/nas-tim", noIndex: experts.length === 0 },
+      { title: pageSeo.title, description: pageSeo.description, slug: pageSeo.path, noIndex: experts.length === 0 || pageSeo.noIndex },
       req
     );
 

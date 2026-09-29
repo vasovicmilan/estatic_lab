@@ -4,14 +4,22 @@
 // JSON-LD (seo/organization.builder.js), so a future address/phone change
 // only needs updating here once instead of drifting between the two.
 export const BUSINESS = {
-  name: "Estetik Lab",
+  // name / email / adminEmail / phone / address / geo / taxId / registrationNumber / sameAs and the
+  // rest of the fields below are only the CODE DEFAULTS: once an admin saves "Podaci o firmi" in
+  // Podešavanja sajta (SiteSettings.business), those values override them live - see
+  // resolveBusiness()/applyBusinessSettings() at the bottom of this file and
+  // config/runtime-settings.cache.js. SITE_NAME / SUPPORT_EMAIL / ADMIN_EMAIL env vars are honoured
+  // as defaults for name / email / adminEmail (precedence: admin settings > env > this file).
+  name: process.env.SITE_NAME || "Estetik Lab",
   legalName: "Estetik Lab wellness centar",
   // Schema.org's correct field for a trading/AKA name distinct from the legal
   // name - the domain is beautymedica.rs, but "Beauty Medica" appeared nowhere
   // in the site's own content or structured data before this, so a search for
   // that name had nothing on-site to match against.
   alternateName: "Beauty Medica",
-  email: "estetik.lab.ns@gmail.com",
+  email: process.env.SUPPORT_EMAIL || "estetik.lab.ns@gmail.com",
+  // where admin notifications (new appointment / order / contact...) are mailed
+  adminEmail: process.env.ADMIN_EMAIL || process.env.SUPPORT_EMAIL || "estetik.lab.ns@gmail.com",
   phone: "+381 65 977 4000",
   // Bug fix: this was missing the trailing "0" ("+38165977400", 11 digits)
   // against the 12-digit displayed number above - every tel: link on the site
@@ -85,5 +93,63 @@ export const BUSINESS = {
   // derives real "hours when at least one active employee is here" dynamically
   // via employeeService.getAggregateBusinessHours() instead.
 };
+
+// Snapshot of the code/env defaults, taken before any admin override is applied.
+export const DEFAULT_BUSINESS = JSON.parse(JSON.stringify(BUSINESS));
+
+const isFilled = (v) => typeof v === "string" && v.trim() !== "";
+
+/** "+381 65 977 4000" / "065 977 4000" / "00381659774000" -> "+381659774000" (tel: href). */
+export function toPhoneHref(phone) {
+  let digits = String(phone || "").replace(/[^\d+]/g, "");
+  if (digits.startsWith("00")) digits = `+${digits.slice(2)}`;
+  else if (digits.startsWith("0")) digits = `+381${digits.slice(1)}`;
+  return digits;
+}
+
+export function buildFullAddress({ streetAddress, postalCode, addressLocality, addressCountry }) {
+  const country = !addressCountry || addressCountry === "RS" ? "Republika Srbija" : addressCountry;
+  return `${streetAddress}, ${[postalCode, addressLocality].filter(Boolean).join(" ")}, ${country}`;
+}
+
+/**
+ * Effective business identity = code/env defaults overlaid with whatever an admin stored in
+ * SiteSettings.business. Pure (returns a new plain object, touches nothing) so the admin form
+ * can show the current effective values too. Derived fields (phoneHref, address.full) are
+ * always recomputed, never stored.
+ */
+export function resolveBusiness(stored) {
+  const base = JSON.parse(JSON.stringify(DEFAULT_BUSINESS));
+  if (!stored) return base;
+  const out = { ...base };
+  for (const key of ["name", "legalName", "alternateName", "email", "adminEmail", "phone", "taxId", "registrationNumber"]) {
+    if (isFilled(stored[key])) out[key] = stored[key].trim();
+  }
+  // optional identifiers may be cleared on purpose (not yet registered) - an explicit "" stored wins
+  for (const key of ["taxId", "registrationNumber", "alternateName"]) {
+    if (typeof stored[key] === "string" && stored[key].trim() === "") out[key] = null;
+  }
+  out.address = { ...base.address };
+  for (const key of ["streetAddress", "addressLocality", "postalCode", "addressCountry"]) {
+    if (isFilled(stored.address?.[key])) out.address[key] = stored.address[key].trim();
+  }
+  out.address.full = buildFullAddress(out.address);
+  out.geo = { ...base.geo };
+  for (const key of ["latitude", "longitude"]) {
+    const n = stored.geo?.[key];
+    if (typeof n === "number" && Number.isFinite(n)) out.geo[key] = n;
+  }
+  if (Array.isArray(stored.sameAs)) out.sameAs = stored.sameAs.filter(isFilled).map((u) => u.trim());
+  // no dedicated notification address saved -> follow the (possibly edited) public contact email
+  if (!isFilled(stored.adminEmail) && isFilled(stored.email)) out.adminEmail = out.email;
+  out.phoneHref = toPhoneHref(out.phone);
+  return out;
+}
+
+/** Mutates the shared BUSINESS object in place, so every module holding a reference sees the change. */
+export function applyBusinessSettings(stored) {
+  Object.assign(BUSINESS, resolveBusiness(stored));
+  return BUSINESS;
+}
 
 export default BUSINESS;

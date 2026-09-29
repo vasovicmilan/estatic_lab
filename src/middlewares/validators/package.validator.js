@@ -61,6 +61,13 @@ export const validatePackageUpdate = [
   collectValidationErrors,
 ];
 
+// SEO forma šalje jedno tekstualno polje (ključne reči odvojene zarezom);
+// parsiranje/čišćenje radi utils/seo-keywords.util.js u kontroleru.
+export const validatePackageSeo = [
+  body("seoKeywordsCsv").optional().isString().withMessage("Ključne reči nisu u ispravnom formatu").isLength({ max: 500 }).withMessage("Ključne reči mogu imati najviše 500 karaktera"),
+  collectValidationErrors,
+];
+
 export const validatePackageId = mongoIdParamValidator("packageId", "paketa");
 
-export default { validatePackageCreate, validatePackageUpdate, validatePackageId };
+export default { validatePackageCreate, validatePackageUpdate, validatePackageSeo, validatePackageId };

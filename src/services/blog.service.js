@@ -2,6 +2,7 @@ import postService from "./post.service.js";
 import categoryService from "./category.service.js";
 import tagService from "./tag.service.js";
 import { buildPageSeo } from "../seo/index.js";
+import siteContentService from "./site-content.service.js";
 import { validationError } from "../utils/error.util.js";
 
 export async function getBlogLandingData({ limit = 9, page = 1, search = "" } = {}) {
@@ -13,12 +14,7 @@ export async function getBlogLandingData({ limit = 9, page = 1, search = "" } = 
   ]);
   const categories = await postService.attachPostCountsToCategories(categoriesRaw);
 
-  const seo = buildPageSeo({
-    title: "Blog | Estetik Lab",
-    description: "Saveti o nezi, wellness rutinama i tretmanima - pratite Estetik Lab blog.",
-    canonical: page > 1 ? `/blog?page=${page}` : "/blog",
-    isIndexable: true,
-  });
+  const seo = await siteContentService.getStaticPageSeo("blog", { canonical: page > 1 ? `/blog?page=${page}` : "/blog" });
 
   return { ...posts, categories, tags, totalCount, seo };
 }

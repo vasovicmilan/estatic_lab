@@ -72,9 +72,9 @@
 
   <div class="container py-5">
     <% if (data.products && data.products.length > 0) { %>
-      <div class="row g-4">
+      <div class="row g-3 g-md-4">
         <% data.products.forEach(function(product) { %>
-          <div class="col-md-4">
+          <div class="col-6 col-lg-4 col-xl-3">
             <%- include("../includes/components/card-product", { product: product }) %>
           </div>
         <% }) %>
@@ -124,19 +124,6 @@
     </section>
   <% } %>
 
-  <% if (data.isLandingView && data.faq && data.faq.length > 0) { %>
-    <section class="bg-white border-top py-5">
-      <div class="container">
-        <h2 class="h4 mb-4 text-center">Česta pitanja o kupovini</h2>
-        <div class="row justify-content-center">
-          <div class="col-lg-8">
-            <%- include("../includes/components/faq", { faq: data.faq }) %>
-          </div>
-        </div>
-      </div>
-    </section>
-  <% } %>
-
   <% if (data.isLandingView && data.latestPosts && data.latestPosts.length > 0) { %>
     <section class="border-top py-5">
       <div class="container">
@@ -153,6 +140,18 @@
               <%- include("../includes/components/card-post", { post: post }) %>
             </div>
           <% }) %>
+        </div>
+      </div>
+    </section>
+  <% } %>
+  <% if (data.isLandingView && data.faq && data.faq.length > 0) { %>
+    <section class="bg-white border-top py-5">
+      <div class="container">
+        <h2 class="h4 mb-4 text-center">Česta pitanja o kupovini</h2>
+        <div class="row justify-content-center">
+          <div class="col-lg-8">
+            <%- include("../includes/components/faq", { faq: data.faq }) %>
+          </div>
         </div>
       </div>
     </section>

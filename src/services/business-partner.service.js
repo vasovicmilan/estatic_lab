@@ -10,6 +10,7 @@ import { generateUniqueSlug } from "../utils/slug.util.js";
 import { validationError, notFound, conflict } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 import { buildPageSeo } from "../seo/index.js";
+import siteContentService from "./site-content.service.js";
 
 export async function listBusinessPartners({ search = "", filters = {}, limit = 10, page = 1, sort } = {}) {
   const result = await businessPartnerRepo.findBusinessPartners({ search, limit, page, filters, sort });
@@ -76,13 +77,8 @@ export async function listPublicBusinessPartners() {
   const partners = await businessPartnerRepo.findActiveBusinessPartners();
   // Dok nema okačenih saradnika, stranica nema realan sadržaj za crawler - noindex
   // privremeno; čim se doda prvi aktivan saradnik, automatski postaje index, follow.
-  const seo = buildPageSeo({
-    title: "Naši saradnici | Estetik Lab",
-    description: "Upoznajte poslovne saradnike i partnere sa kojima sarađujemo.",
-    canonical: "/saradnici",
-    isIndexable: partners.length > 0,
-    type: "website",
-  });
+  const pageSeo = await siteContentService.getPageSeoConfig("partners");
+  const seo = await siteContentService.getStaticPageSeo("partners", { isIndexable: partners.length > 0 && !pageSeo.noIndex });
   return { data: mapBusinessPartnersForPublicList(partners), seo };
 }
 

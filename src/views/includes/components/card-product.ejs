@@ -1,5 +1,5 @@
-<a href="/prodavnica/<%= product.slug %>" class="card h-100 shadow-sm text-decoration-none text-dark hover-lift">
-  <div class="position-relative">
+<a href="/prodavnica/<%= product.slug %>" class="card product-card h-100 text-decoration-none text-dark hover-lift">
+  <div class="position-relative product-card-media">
     <% if (product.slika && product.slika.url) {
          const v = product.slika.variants || {};
          const srcsetParts = [];
@@ -8,18 +8,22 @@
     %>
       <img
         src="<%= product.slika.url %>"
-        <% if (srcsetParts.length > 1) { %>srcset="<%= srcsetParts.join(', ') %>" sizes="(min-width: 768px) 33vw, 100vw"<% } %>
-        class="card-img-top product-card-img" alt="<%= product.slika.alt || product.naziv %>" loading="lazy" decoding="async">
+        <% if (srcsetParts.length > 1) { %>srcset="<%= srcsetParts.join(', ') %>" sizes="(min-width: 1200px) 25vw, (min-width: 992px) 33vw, 50vw"<% } %>
+        class="product-card-img <%= product.naStanju ? '' : 'is-sold-out' %>" alt="<%= product.slika.alt || product.naziv %>" loading="lazy" decoding="async">
+    <% } else { %>
+      <div class="product-card-img product-card-img--empty d-flex align-items-center justify-content-center text-muted"><i class="bi bi-bag fs-1" aria-hidden="true"></i></div>
     <% } %>
     <% if (product.oznaka) { %>
       <span class="position-absolute top-0 start-0 m-2 badge <%= product.oznakaRaw === 'sale' ? 'bg-danger' : 'bg-primary' %>"><%= product.oznaka %></span>
     <% } %>
+    <% if (!product.naStanju) { %>
+      <span class="position-absolute top-0 end-0 m-2 badge bg-secondary">Nema na stanju</span>
+    <% } %>
   </div>
-  <div class="card-body d-flex flex-column">
-    <% if (!product.naStanju) { %><span class="badge bg-secondary mb-2 align-self-start">Nema na stanju</span><% } %>
-    <h3 class="h5"><%= product.naziv %></h3>
-    <p class="text-muted small flex-grow-1"><%= product.kratakOpis %></p>
-    <div class="d-flex justify-content-between align-items-center mt-2">
+  <div class="card-body d-flex flex-column p-3">
+    <h3 class="h6 product-card-title mb-1"><%= product.naziv %></h3>
+    <p class="text-muted small product-card-desc flex-grow-1 mb-3"><%= product.kratakOpis %></p>
+    <div class="d-flex justify-content-between align-items-center gap-2 pt-2 border-top">
       <strong class="price-mono"><%= product.cena %></strong>
       <span class="btn btn-outline-primary btn-sm">Detalji</span>
     </div>

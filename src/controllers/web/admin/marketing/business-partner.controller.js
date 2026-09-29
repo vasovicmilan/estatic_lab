@@ -9,6 +9,7 @@ import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
+import { parseSeoKeywords } from "../../../../utils/seo-keywords.util.js";
 
 // content blocks are submitted as JSON from the dynamic form-builder widget
 // rather than a flat form field, same as post.controller.js/product.controller.js
@@ -39,6 +40,21 @@ function buildBusinessPartnerPayload(req, existing = {}) {
   delete data.latitude;
   delete data.longitude;
   delete data.coverImageDesc;
+
+  // SEO polja se u formi šalju ravno (seoTitle/seoDescription/seoKeywordsCsv), a u
+  // modelu žive u ugnježđenom `seo` objektu koji javna stranica već čita
+  // (business-partner.service.js -> mapped.seo.title/description).
+  const existingSeo = existing.seo || {};
+  data.seo = {
+    title: req.body.seoTitle !== undefined ? String(req.body.seoTitle).trim() : existingSeo.title || "",
+    description: req.body.seoDescription !== undefined ? String(req.body.seoDescription).trim() : existingSeo.description || "",
+    keywords:
+      req.body.seoKeywordsCsv !== undefined || req.body.seoKeywords !== undefined ? parseSeoKeywords(req.body) : existingSeo.keywords || [],
+  };
+  delete data.seoTitle;
+  delete data.seoDescription;
+  delete data.seoKeywordsCsv;
+  delete data.seoKeywords;
 
   return data;
 }

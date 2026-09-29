@@ -27,6 +27,7 @@ router.get("/blog/posts", requireModule("blog"), CatalogController.listPosts);
 // Category-pills-with-counts + tag chips for the blog list/category/tag pages
 // - see getBlogFilters's own comment for why this is separate from /blog/posts.
 router.get("/blog/filters", requireModule("blog"), CatalogController.getBlogFilters);
+router.get("/blog/archive/:type/:slug", requireModule("blog"), CatalogController.getBlogArchive);
 router.get("/blog/posts/:slug", requireModule("blog"), CatalogController.getPost);
 
 // NOT module-gated - general marketing content ("our collaborators/sponsors"),
@@ -50,5 +51,12 @@ router.get("/privacy-policy", CatalogController.getPrivacyPolicyPage);
 router.get("/terms", CatalogController.getTermsPage);
 router.get("/partnership-program", CatalogController.getPartnershipPage);
 router.get("/home-intro", CatalogController.getHomeIntro);
+
+// SEO (title/description/canonical/OG/JSON-LD) statičkih stranica iz baze - vidi getPageSeo.
+router.get("/home", CatalogController.getHomePage);
+router.get("/contact-page", CatalogController.getContactPage);
+router.get("/list-intro/:page", CatalogController.getListIntro);
+router.get("/testimonials", CatalogController.listTestimonials);
+router.get("/page-seo/:page", CatalogController.getPageSeo);
 
 export default router;

@@ -19,9 +19,11 @@ const __dirname = path.dirname(__filename);
 const TEMPLATES_PATH = path.join(__dirname, "..", "views", "emails");
 
 const BASE_URL = BUSINESS.siteUrl; // static assets/logo only - action links go through link.builder.js
-const SITE_NAME = process.env.SITE_NAME || "Estetik Lab";
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "estetik.lab.ns@gmail.com";
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || SUPPORT_EMAIL;
+// Read per call (not captured at import): name / contact e-mail / admin-notification e-mail are
+// editable in Podešavanja sajta -> Podaci o firmi and applied live to the shared BUSINESS object.
+const siteName = () => BUSINESS.name;
+const supportEmail = () => BUSINESS.email;
+const adminEmail = () => BUSINESS.adminEmail || BUSINESS.email;
 
 // Exported (unlike this file's other internal helpers) specifically so tests
 // can render a real template through the exact same locals every actual
@@ -40,8 +42,8 @@ export async function renderTemplate(templateName, data) {
       {
         ...data,
         BASE_URL,
-        SITE_NAME,
-        SUPPORT_EMAIL,
+        SITE_NAME: siteName(),
+        SUPPORT_EMAIL: supportEmail(),
         // Cosmetic (copyright footer year), but same principle as everywhere else -
         // was server-local (UTC) getFullYear(), which only ever disagrees with
         // Belgrade in the ~1-2h window around New Year's - cheap to just get right.
@@ -68,7 +70,7 @@ export async function renderTemplate(templateName, data) {
 // free-form sentence, so a Gmail filter matching subject:"[TERMIN]" (etc.) can
 // auto-label/auto-file them - one filter per category instead of guessing at wording.
 function adminSubject(tag, summary) {
-  return `[${SITE_NAME}] [${tag}] ${summary}`;
+  return `[${siteName()}] [${tag}] ${summary}`;
 }
 
 // ==================== ACCOUNT ====================
@@ -89,7 +91,7 @@ export async function sendAccountConfirmationEmail({ email, firstName }, confirm
     couponCode: WELCOME_COUPON_CODE,
     couponDiscount: WELCOME_COUPON_DISCOUNT_VALUE,
   });
-  return emailProvider.sendEmail({ to: email, subject: `Dobrodošli u ${SITE_NAME} - potvrdite vaš nalog`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Dobrodošli u ${siteName()} - potvrdite vaš nalog`, html });
 }
 
 // Google sign-ins skip account confirmation entirely (their email is already
@@ -103,7 +105,7 @@ export async function sendWelcomeEmail({ email, firstName }) {
     couponCode: WELCOME_COUPON_CODE,
     couponDiscount: WELCOME_COUPON_DISCOUNT_VALUE,
   });
-  return emailProvider.sendEmail({ to: email, subject: `Dobrodošli u ${SITE_NAME}!`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Dobrodošli u ${siteName()}!`, html });
 }
 
 // sent when a guest booking auto-creates a lightweight account - invites them to set a
@@ -114,7 +116,7 @@ export async function sendClaimAccountEmail({ email, firstName }, resetToken) {
     resetUrl: buildLink("claimAccount", { token: resetToken }),
     isAccountClaim: true,
   });
-  return emailProvider.sendEmail({ to: email, subject: `Vaš termin je zakazan - preuzmite vaš ${SITE_NAME} nalog`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Vaš termin je zakazan - preuzmite vaš ${siteName()} nalog`, html });
 }
 
 // isPasswordSetup: forgot-password used on a Google-only account (no local password
@@ -128,7 +130,7 @@ export async function sendPasswordResetEmail({ email, firstName }, resetToken, {
     isAccountClaim: false,
     isPasswordSetup,
   });
-  const subject = isPasswordSetup ? `Podesite lozinku za nalog - ${SITE_NAME}` : `Reset lozinke - ${SITE_NAME}`;
+  const subject = isPasswordSetup ? `Podesite lozinku za nalog - ${siteName()}` : `Reset lozinke - ${siteName()}`;
   return emailProvider.sendEmail({ to: email, subject, html });
 }
 
@@ -137,30 +139,30 @@ export async function sendPasswordResetEmail({ email, firstName }, resetToken, {
 // being claimed) - copy reads "password set" instead of "password changed".
 export async function sendPasswordChangedEmail({ email, firstName }, { wasPasswordSetup = false } = {}) {
   const html = await renderTemplate("password-changed", { firstName, wasPasswordSetup });
-  const subject = wasPasswordSetup ? `Lozinka je podešena - ${SITE_NAME}` : `Vaša lozinka je promenjena - ${SITE_NAME}`;
+  const subject = wasPasswordSetup ? `Lozinka je podešena - ${siteName()}` : `Vaša lozinka je promenjena - ${siteName()}`;
   return emailProvider.sendEmail({ to: email, subject, html });
 }
 
 export async function sendAccountDeactivatedEmail({ email, firstName }) {
   const html = await renderTemplate("account-deactivated", { firstName });
-  return emailProvider.sendEmail({ to: email, subject: `Nalog deaktiviran - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Nalog deaktiviran - ${siteName()}`, html });
 }
 
 // ==================== APPOINTMENTS ====================
 
 export async function sendAppointmentReceivedEmail({ email, firstName }, appointment) {
   const html = await renderTemplate("appointment-received", { firstName, appointment, manageUrl: buildLink("accountAppointments") });
-  return emailProvider.sendEmail({ to: email, subject: `Zahtev za termin primljen - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Zahtev za termin primljen - ${siteName()}`, html });
 }
 
 export async function sendAppointmentConfirmedEmail({ email, firstName }, appointment) {
   const html = await renderTemplate("appointment-confirmation", { firstName, appointment });
-  return emailProvider.sendEmail({ to: email, subject: `Termin potvrđen - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Termin potvrđen - ${siteName()}`, html });
 }
 
 export async function sendAppointmentCancelledEmail({ email, firstName }, appointment) {
   const html = await renderTemplate("appointment-cancelled", { firstName, appointment });
-  return emailProvider.sendEmail({ to: email, subject: `Termin otkazan - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Termin otkazan - ${siteName()}`, html });
 }
 
 // One template, reused for both the 24h and 4h reminder (see
@@ -171,7 +173,7 @@ export async function sendAppointmentCancelledEmail({ email, firstName }, appoin
 // see appointment.repository.js's findAppointmentsDueForReminder).
 export async function sendAppointmentReminderEmail({ email, firstName }, appointment, hoursBefore) {
   const html = await renderTemplate("appointment-reminder", { firstName, appointment });
-  const subject = hoursBefore >= 24 ? `Podsetnik: termin sutra - ${SITE_NAME}` : `Podsetnik: termin danas - ${SITE_NAME}`;
+  const subject = hoursBefore >= 24 ? `Podsetnik: termin sutra - ${siteName()}` : `Podsetnik: termin danas - ${siteName()}`;
   return emailProvider.sendEmail({ to: email, subject, html });
 }
 
@@ -189,38 +191,38 @@ export async function sendAppointmentReminderEmail({ email, firstName }, appoint
 // not something this function needs to special-case.
 export async function sendEmployeeDailyDigestEmail({ email, firstName }, appointments, { when } = {}) {
   const html = await renderTemplate("employee-daily-digest", { firstName, appointments, when });
-  const subject = when === "sutra" ? `Vaši termini za sutra - ${SITE_NAME}` : `Vaši termini za danas - ${SITE_NAME}`;
+  const subject = when === "sutra" ? `Vaši termini za sutra - ${siteName()}` : `Vaši termini za danas - ${siteName()}`;
   return emailProvider.sendEmail({ to: email, subject, html });
 }
 
 // generic fallback for rejected/completed/no_show status changes
 export async function sendAppointmentStatusUpdateEmail({ email, firstName }, appointment, status) {
   const html = await renderTemplate("appointment-status-update", { firstName, appointment, status });
-  return emailProvider.sendEmail({ to: email, subject: `Status termina ažuriran - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Status termina ažuriran - ${siteName()}`, html });
 }
 
 // covers approved/paid/rejected - one partner or commission-employee at a time
 export async function sendPayoutStatusUpdateEmail({ email, firstName }, payoutRequest, status) {
   const html = await renderTemplate("payout-status-update", { firstName, payoutRequest, status });
-  return emailProvider.sendEmail({ to: email, subject: `Status zahteva za isplatu ažuriran - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Status zahteva za isplatu ažuriran - ${siteName()}`, html });
 }
 
 // sent to the EMPLOYEE when an appointment is (re)assigned to them by an admin
 export async function sendAppointmentReassignedEmail({ email, firstName }, appointment) {
   const html = await renderTemplate("appointment-reassigned-employee", { firstName, appointment, manageUrl: buildLink("employeeAppointments") });
-  return emailProvider.sendEmail({ to: email, subject: `Novi termin dodeljen - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Novi termin dodeljen - ${siteName()}`, html });
 }
 
 export async function notifyAdminNewAppointment(appointment) {
   const html = await renderTemplate("admin-new-appointment", { appointment, adminUrl: buildLink("adminAppointment", { id: appointment.id }) });
   const summary = `${appointment.korisnik?.ime || "Klijent"} - ${appointment.usluga?.naziv || "usluga"} (${appointment.termin?.pocetak || ""})`;
-  return emailProvider.sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("TERMIN", summary), html });
+  return emailProvider.sendEmail({ to: adminEmail(), subject: adminSubject("TERMIN", summary), html });
 }
 
 export async function notifyAdminAppointmentCancelled(appointment) {
   const html = await renderTemplate("admin-appointment-cancelled", { appointment });
   const summary = `Otkazan - ${appointment.korisnik?.ime || "Klijent"} (${appointment.usluga?.naziv || "usluga"})`;
-  return emailProvider.sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("TERMIN", summary), html });
+  return emailProvider.sendEmail({ to: adminEmail(), subject: adminSubject("TERMIN", summary), html });
 }
 
 // ==================== ORDERS ====================
@@ -231,7 +233,7 @@ export async function sendOrderConfirmationRequestEmail({ email, firstName }, { 
     confirmUrl: buildLink("orderConfirm", { orderId: temporaryOrderId, token: verificationToken }),
     tokenExpiration: formatDateTime(tokenExpiration),
   });
-  return emailProvider.sendEmail({ to: email, subject: `Potvrdite porudžbinu - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Potvrdite porudžbinu - ${siteName()}`, html });
 }
 
 // Sent instead of sendOrderConfirmationRequestEmail above when the order needs a
@@ -240,7 +242,7 @@ export async function sendOrderConfirmationRequestEmail({ email, firstName }, { 
 // sendShippingQuoteReadyEmail below for the actual actionable follow-up.
 export async function sendOrderPendingQuoteEmail({ email, firstName }) {
   const html = await renderTemplate("order-pending-shipping-quote", { firstName });
-  return emailProvider.sendEmail({ to: email, subject: `Vaša porudžbina je primljena - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Vaša porudžbina je primljena - ${siteName()}`, html });
 }
 
 // The real, actionable confirm-request email for a freight order - sent once an
@@ -255,7 +257,7 @@ export async function sendShippingQuoteReadyEmail({ email, firstName }, { tempor
     shippingAmount: formatMoney(shippingAmount),
     totalPrice: formatMoney(totalPrice),
   });
-  return emailProvider.sendEmail({ to: email, subject: `Cena dostave je spremna - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Cena dostave je spremna - ${siteName()}`, html });
 }
 
 export async function sendOrderReceivedEmail({ email, firstName }, order) {
@@ -269,19 +271,19 @@ export async function sendOrderReceivedEmail({ email, firstName }, order) {
     logError("[EMAIL] Failed to generate order invoice PDF - sending confirmation without it", error, { orderId: order.id });
   }
 
-  return emailProvider.sendEmail({ to: email, subject: `Porudžbina potvrđena - ${SITE_NAME}`, html, attachments });
+  return emailProvider.sendEmail({ to: email, subject: `Porudžbina potvrđena - ${siteName()}`, html, attachments });
 }
 
 // generic fallback for processing/shipped/delivered/completed/cancelled/returned/refunded
 export async function sendOrderStatusUpdateEmail({ email, firstName }, order, status) {
   const html = await renderTemplate("order-status-update", { firstName, order, status });
-  return emailProvider.sendEmail({ to: email, subject: `Status porudžbine ažuriran - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Status porudžbine ažuriran - ${siteName()}`, html });
 }
 
 export async function notifyAdminNewOrder(order) {
   const html = await renderTemplate("admin-new-order", { order, adminUrl: buildLink("adminOrder", { id: order.id }) });
   const summary = `${order.korisnik?.ime || "Klijent"} - ${order.ukupnaCena || ""}`;
-  return emailProvider.sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("PORUDŽBINA", summary), html });
+  return emailProvider.sendEmail({ to: adminEmail(), subject: adminSubject("PORUDŽBINA", summary), html });
 }
 
 // only fired when the CUSTOMER cancels their own order - admin already knows about
@@ -289,7 +291,7 @@ export async function notifyAdminNewOrder(order) {
 export async function notifyAdminOrderCancelled(order) {
   const html = await renderTemplate("admin-order-cancelled", { order, adminUrl: buildLink("adminOrder", { id: order.id }) });
   const summary = `Otkazano od kupca - ${order.korisnik?.ime || "Klijent"} (${order.ukupnaCena || ""})`;
-  return emailProvider.sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("PORUDŽBINA", summary), html });
+  return emailProvider.sendEmail({ to: adminEmail(), subject: adminSubject("PORUDŽBINA", summary), html });
 }
 
 // ==================== PRODUCTS ====================
@@ -304,19 +306,19 @@ export async function notifyAdminStockAlert({ productId, productName, sku, varia
     adminUrl: buildLink("adminProductEdit", { id: productId }),
   });
   const label = isOutOfStock ? "RASPRODATO" : "NISKO STANJE";
-  return emailProvider.sendEmail({ to: ADMIN_EMAIL, subject: adminSubject(label, `${productName} - ${variantLabel}`), html });
+  return emailProvider.sendEmail({ to: adminEmail(), subject: adminSubject(label, `${productName} - ${variantLabel}`), html });
 }
 
 // ==================== PACKAGES ====================
 
 export async function sendPackagePurchaseCreatedEmail({ email, firstName }, purchase) {
   const html = await renderTemplate("package-purchase-created", { firstName, purchase, manageUrl: buildLink("accountPackages") });
-  return emailProvider.sendEmail({ to: email, subject: `Vaš paket je aktiviran - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Vaš paket je aktiviran - ${siteName()}`, html });
 }
 
 export async function sendPackagePurchaseCancelledEmail({ email, firstName }, purchase) {
   const html = await renderTemplate("package-purchase-cancelled", { firstName, purchase });
-  return emailProvider.sendEmail({ to: email, subject: `Paket otkazan - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Paket otkazan - ${siteName()}`, html });
 }
 
 // ==================== MARKETING ====================
@@ -325,19 +327,19 @@ export async function notifyAdminNewContact(contact) {
   const html = await renderTemplate("admin-new-contact", { contact, adminUrl: buildLink("adminContact", { id: contact.contactId }) });
   const fullName = `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "Nepoznat pošiljalac";
   const summary = contact.topic ? `${fullName} - ${contact.topic}` : fullName;
-  return emailProvider.sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("KONTAKT", summary), html });
+  return emailProvider.sendEmail({ to: adminEmail(), subject: adminSubject("KONTAKT", summary), html });
 }
 
 export async function notifyAdminNewTestimonial(testimonial) {
   const html = await renderTemplate("admin-new-testimonial", { testimonial });
   const stars = "★".repeat(testimonial.rating || 0);
   const summary = testimonial.subject ? `${testimonial.name || "Anonimno"} - ${testimonial.subject} (${stars})` : `${testimonial.name || "Anonimno"} (${stars})`;
-  return emailProvider.sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("TESTIMONIJAL", summary), html });
+  return emailProvider.sendEmail({ to: adminEmail(), subject: adminSubject("TESTIMONIJAL", summary), html });
 }
 
 export async function sendCartReminderEmail({ email, firstName }, cart) {
   const html = await renderTemplate("cart-reminder", { firstName, stavke: cart.stavke, cartUrl: buildLink("cart") });
-  return emailProvider.sendEmail({ to: email, subject: `Zaboravili ste nešto u korpi - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Zaboravili ste nešto u korpi - ${siteName()}`, html });
 }
 
 export async function sendCartDiscountEmail({ email, firstName }, cart) {
@@ -348,12 +350,12 @@ export async function sendCartDiscountEmail({ email, firstName }, cart) {
     couponCode: CART_ABANDONMENT_COUPON_CODE,
     couponDiscount: CART_ABANDONMENT_COUPON_DISCOUNT_VALUE,
   });
-  return emailProvider.sendEmail({ to: email, subject: `Poklon kod za vašu korpu - ${SITE_NAME}`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Poklon kod za vašu korpu - ${siteName()}`, html });
 }
 
 export async function sendNewsletterWelcomeEmail({ email }, unsubscribeToken) {
   const html = await renderTemplate("newsletter-welcome", { unsubscribeUrl: buildLink("newsletterUnsubscribe", { token: unsubscribeToken }) });
-  return emailProvider.sendEmail({ to: email, subject: `Dobrodošli u ${SITE_NAME} newsletter`, html });
+  return emailProvider.sendEmail({ to: email, subject: `Dobrodošli u ${siteName()} newsletter`, html });
 }
 
 export async function sendNewsletterCampaign(subscribers, campaign) {
@@ -378,7 +380,7 @@ export async function sendNewsletterCampaign(subscribers, campaign) {
 
 export async function sendLogReportEmail(periodLabel, dateRangeLabel, summary, attachments = []) {
   const html = await renderTemplate("admin-log-report", { periodLabel, dateRangeLabel, ...summary });
-  return emailProvider.sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("IZVEŠTAJ", `${periodLabel} (${dateRangeLabel})`), html, attachments });
+  return emailProvider.sendEmail({ to: adminEmail(), subject: adminSubject("IZVEŠTAJ", `${periodLabel} (${dateRangeLabel})`), html, attachments });
 }
 
 // Business metrics (bookings, sales, commissions...) - a genuinely different
@@ -401,7 +403,7 @@ export async function sendBusinessReportEmail(periodLabel, dateRangeLabel, summa
     logError("[EMAIL] Failed to generate business report PDF - sending report without it", error, { periodLabel, periodKey: summary.periodKey });
   }
 
-  return emailProvider.sendEmail({ to: ADMIN_EMAIL, subject: adminSubject("POSLOVNI IZVEŠTAJ", `${periodLabel} (${dateRangeLabel})`), html, attachments });
+  return emailProvider.sendEmail({ to: adminEmail(), subject: adminSubject("POSLOVNI IZVEŠTAJ", `${periodLabel} (${dateRangeLabel})`), html, attachments });
 }
 
 export default {

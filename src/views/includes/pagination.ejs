@@ -1,9 +1,34 @@
 <%
   const p = typeof pagination !== 'undefined' ? pagination : (typeof data !== 'undefined' ? data.pagination : null);
 %>
-<% if (p && p.totalPages > 1) { %>
-<nav aria-label="Paginacija" class="d-flex justify-content-center mt-4">
-  <ul class="pagination flex-wrap justify-content-center">
+<%
+  const sizes = p && Array.isArray(p.pageSizeOptions) ? p.pageSizeOptions : null;
+  const showSizes = !!(sizes && p.total > sizes[0]);
+  const showPages = !!(p && p.totalPages > 1);
+%>
+<% if (p && (showPages || showSizes)) { %>
+<div class="list-pagination d-flex flex-column flex-md-row align-items-center <%= showSizes ? 'justify-content-between' : 'justify-content-center' %> gap-3 mt-4">
+<% if (showSizes) { %>
+  <%
+    const sizeUrl = function(size) {
+      const params = new URLSearchParams({ ...(p.query || {}), limit: size });
+      params.delete(p.pageParam || "page");
+      return `${p.basePath}?${params.toString()}`;
+    };
+    const from = (p.currentPage - 1) * p.limit + 1;
+    const to = Math.min(p.currentPage * p.limit, p.total);
+  %>
+  <div class="d-flex align-items-center flex-wrap gap-2 small text-muted" role="group" aria-label="Broj prikaza po strani">
+    <span>Prikazano <%= from %>–<%= to %> od <%= p.total %></span>
+    <span class="ms-md-3">Po strani:</span>
+    <% sizes.forEach(function(size) { %>
+      <a href="<%= sizeUrl(size) %>" class="filter-pill <%= size === p.limit ? 'active' : '' %>" <%= size === p.limit ? 'aria-current=true' : '' %>><%= size %></a>
+    <% }) %>
+  </div>
+<% } %>
+<% if (showPages) { %>
+<nav aria-label="Paginacija" class="d-flex justify-content-center">
+  <ul class="pagination flex-wrap justify-content-center mb-0">
     <%
       const qs = { ...(p.query || {}) };
       const pageParam = p.pageParam || "page";
@@ -47,4 +72,6 @@
     </li>
   </ul>
 </nav>
+<% } %>
+</div>
 <% } %>

@@ -1,3 +1,4 @@
+import { resolvePublicLimit } from "../../../utils/pagination.util.js";
 import * as blogService from "../../../services/blog.service.js";
 import {
   prepareBlogListData,
@@ -5,6 +6,7 @@ import {
   prepareBlogTagData,
   prepareBlogPostData,
 } from "../../../presenters/blog/blog.presenter.js";
+import siteContentService from "../../../services/site-content.service.js";
 import { generateSeo } from "../../../seo/index.js";
 import { buildItemListJsonLd } from "../../../seo/utils.seo.js";
 import { logError } from "../../../utils/logger.util.js";
@@ -12,8 +14,9 @@ import { logError } from "../../../utils/logger.util.js";
 export async function blogHome(req, res, next) {
   try {
     const { page = 1, search } = req.query;
-    const data = await blogService.getBlogLandingData({ page: parseInt(page, 10) || 1, search: search || "" });
-    const viewData = prepareBlogListData(data, { query: req.query, categories: data.categories, tags: data.tags, totalCount: data.totalCount });
+    const data = await blogService.getBlogLandingData({ page: parseInt(page, 10) || 1, limit: resolvePublicLimit(req.query.limit, 9), search: search || "" });
+    const intro = await siteContentService.getBlogIntro();
+    const viewData = prepareBlogListData(data, { query: req.query, categories: data.categories, tags: data.tags, totalCount: data.totalCount, intro });
     const itemList = buildItemListJsonLd(req, data.data.map((p) => ({ name: p.naslov, path: `/blog/${p.slug}` })));
     if (itemList) data.seo.jsonLd = [...(data.seo.jsonLd || []), itemList];
 
@@ -34,7 +37,7 @@ export async function blogCategory(req, res, next) {
     const { categorySlug } = req.params;
     const { page = 1 } = req.query;
 
-    const data = await blogService.getBlogCategoryData(categorySlug, { page: parseInt(page, 10) || 1 });
+    const data = await blogService.getBlogCategoryData(categorySlug, { page: parseInt(page, 10) || 1, limit: resolvePublicLimit(req.query.limit, 9) });
     const viewData = prepareBlogCategoryData(data.category, data, req.query, { categories: data.categories, tags: data.tags, totalCount: data.totalCount });
     const itemList = buildItemListJsonLd(req, data.data.map((p) => ({ name: p.naslov, path: `/blog/${p.slug}` })));
     if (itemList) data.seo.jsonLd = [...(data.seo.jsonLd || []), itemList];
@@ -56,7 +59,7 @@ export async function blogTag(req, res, next) {
     const { tagSlug } = req.params;
     const { page = 1 } = req.query;
 
-    const data = await blogService.getBlogTagData(tagSlug, { page: parseInt(page, 10) || 1 });
+    const data = await blogService.getBlogTagData(tagSlug, { page: parseInt(page, 10) || 1, limit: resolvePublicLimit(req.query.limit, 9) });
     const viewData = prepareBlogTagData(data.tag, data, req.query, { categories: data.categories, tags: data.tags, totalCount: data.totalCount });
     const itemList = buildItemListJsonLd(req, data.data.map((p) => ({ name: p.naslov, path: `/blog/${p.slug}` })));
     if (itemList) data.seo.jsonLd = [...(data.seo.jsonLd || []), itemList];
@@ -97,8 +100,9 @@ export async function searchBlog(req, res, next) {
     const { q, page = 1 } = req.query;
     if (!q) return res.redirect("/blog");
 
-    const data = await blogService.searchBlogPosts(q, { page: parseInt(page, 10) || 1 });
-    const viewData = prepareBlogListData(data, { query: { ...req.query, search: q }, categories: data.categories, tags: data.tags, totalCount: data.totalCount });
+    const data = await blogService.searchBlogPosts(q, { page: parseInt(page, 10) || 1, limit: resolvePublicLimit(req.query.limit, 9) });
+    const intro = await siteContentService.getBlogIntro();
+    const viewData = prepareBlogListData(data, { query: { ...req.query, search: q }, categories: data.categories, tags: data.tags, totalCount: data.totalCount, intro });
 
     // No ItemList here deliberately - this page is noindex (data.seo.robots), and
     // search-result listings aren't meaningful as a schema.org ItemList since the

@@ -8,6 +8,8 @@ import {
   DEFAULT_PARTNERSHIP,
   DEFAULT_HOME_INTRO,
   DEFAULT_WHY_US,
+  DEFAULT_HOME_HERO,
+  DEFAULT_CONTACT_PAGE,
 } from "../../config/site-content-defaults.js";
 
 // About/FAQ/Privacy/Terms/Partnership/home-intro/"why us" copy used to be
@@ -21,7 +23,9 @@ import {
 // fetch from siteContentService first), so this presenter never crashes into
 // undefined content if a caller is ever added that forgets to.
 
-const LEGAL_CONTACT = {
+// A function, not a constant: business identity is admin-editable (Podešavanja sajta -> Podaci o
+// firmi) and BUSINESS is mutated live, so it has to be read per request, not once at import.
+const legalContact = () => ({
   company: BUSINESS.legalName,
   address: BUSINESS.address.full,
   email: BUSINESS.email,
@@ -31,25 +35,20 @@ const LEGAL_CONTACT = {
   // before rendering rather than assuming they're always present.
   taxId: BUSINESS.taxId,
   registrationNumber: BUSINESS.registrationNumber,
-};
+});
 
-// Shared with prepareHomeData below (home.ejs) and prepareContactPageData
-// (public/contact.ejs) - same physical location, so the address text and map
-// embed are only ever defined once.
-const MAP_ADDRESS = "Maksima Gorkog 6b, Novi Sad 21120";
-const MAP_EMBED_PARAM =
-  "!1m18!1m12!1m3!1d2808.909996570131!2d19.843611977018323!3d45.24961274772971!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x475b106c892d2953%3A0x78a7de03d4dbf444!2sMaksima%20Gorkog%206b%2C%20Novi%20Sad%2021120!5e0!3m2!1sen!2srs!4v1784121266023!5m2!1sen!2srs";
-const MAP_EMBED_URL = `https://www.google.com/maps/embed?pb=${MAP_EMBED_PARAM}`;
-const GOOGLE_DATA_NOTICE = {
-  text:
-    "Ukoliko se registrujete ili prijavite putem Google naloga, sa Google-a primamo samo osnovne podatke vašeg profila - ime, prezime i email adresu. Ove podatke koristimo isključivo za kreiranje i povezivanje vašeg korisničkog naloga na Estetik Lab platformi, kako biste mogli da zakazujete termine i pratite svoje rezervacije. Ne delimo ih sa trećim licima niti ih koristimo u druge svrhe bez vaše saglasnosti.",
-  privacyUrl: "/politika-privatnosti",
-};
+// Adresa / mapa / Google napomena su u SiteContent.contactPage (admin: Tekstovi sajta -> Kontakt).
+function buildMap(content) {
+  return { address: content.mapAddress, embedUrl: content.mapEmbedUrl };
+}
+function buildGoogleNotice(content) {
+  return { text: content.googleDataNotice, privacyUrl: "/politika-privatnosti" };
+}
 
 export function prepareAboutPageData(content = DEFAULT_ABOUT) {
   return {
     intro: content.intro,
-    contact: LEGAL_CONTACT,
+    contact: legalContact(),
     sections: content.sections,
   };
 }
@@ -64,7 +63,7 @@ export function preparePrivacyPolicyData(content = DEFAULT_PRIVACY_POLICY) {
   return {
     lastUpdated: content.lastUpdated,
     intro: content.intro,
-    contact: LEGAL_CONTACT,
+    contact: legalContact(),
     sections: content.sections,
   };
 }
@@ -77,7 +76,7 @@ export function prepareTermsAndConditionsData(content = DEFAULT_TERMS_AND_CONDIT
   return {
     lastUpdated: content.lastUpdated,
     intro: content.intro,
-    contact: LEGAL_CONTACT,
+    contact: legalContact(),
     sections: content.sections,
   };
 }
@@ -91,30 +90,17 @@ export function prepareHomeData({
   heroContent = null,
   homeIntro = DEFAULT_HOME_INTRO,
   whyUs = DEFAULT_WHY_US,
+  homeHero = DEFAULT_HOME_HERO,
+  contactPage = DEFAULT_CONTACT_PAGE,
 } = {}) {
   return {
     hero: {
-          eyebrow: "Estetik Lab wellness centar",
-          title: "Estetik Lab kozmetički salon za negu lica, tela i opuštanje",
-          subtitle:
-            "Masaže, ESMA tretmani i nega lica i tela u mirnom, opuštajućem ambijentu - uz stručan tim i individualan pristup svakom klijentu.",
-          ctaLabel: "Zakažite termin",
-          ctaUrl: "/usluge",
-          secondaryCtaLabel: "Pogledajte pakete",
-          secondaryCtaUrl: "/paketi",
-          // admin-editable via /admin/sajt (see site-settings.service.js's
-          // getHeroContent) - falls back to the original hardcoded image if
-          // heroContent wasn't passed in (e.g. a caller that skips
-          // index.service.js's getLandingPageData entirely)
-          image: heroContent?.image || "/images/site/hero-medium.webp",
-          imageAlt: heroContent?.imageAlt || "",
-          // {thumb, medium, original} for the <img srcset> in landing/home.ejs -
-          // heroContent already carries this when it comes through
-          // site-settings.service.js's getHeroContent, but re-derived here too
-          // so a caller that only passes {image, imageAlt} still gets a working
-          // srcset instead of silently losing it.
-          imageVariants: heroContent?.imageVariants || getResponsiveImageUrls(heroContent?.image || "/images/site/hero-medium.webp"),
-        },
+      ...homeHero,
+      // slika je u SiteSettings (admin: /admin/sajt) - vidi site-settings.service.js getHeroContent
+      image: heroContent?.image || "/images/site/hero-medium.webp",
+      imageAlt: heroContent?.imageAlt || "",
+      imageVariants: heroContent?.imageVariants || getResponsiveImageUrls(heroContent?.image || "/images/site/hero-medium.webp"),
+    },
 
     // intro/whyUs are now DB-backed content (site-content.service.js's
     // getHomeIntro/getWhyUs) instead of literal constants here - see this
@@ -130,28 +116,17 @@ export function prepareHomeData({
     latestPosts,
     testimonialFormAction: "/testimonials/posalji",
 
-    map: {
-      address: MAP_ADDRESS,
-      embedUrl: MAP_EMBED_URL,
-    },
-    googleDataNotice: GOOGLE_DATA_NOTICE,
+    map: buildMap(contactPage),
+    googleDataNotice: buildGoogleNotice(contactPage),
   };
 }
 
-export function prepareContactPageData() {
+export function prepareContactPageData(content = DEFAULT_CONTACT_PAGE) {
   return {
-    intro: {
-      eyebrow: "Kontakt",
-      title: "Zakažite termin ili nam pošaljite poruku",
-      lead:
-        "Tu smo za sva pitanja o tretmanima, terminima i paketima - javite nam se telefonom, mejlom ili putem forme ispod, a odgovaramo u najkraćem roku.",
-    },
-    contact: LEGAL_CONTACT,
-    map: {
-      address: MAP_ADDRESS,
-      embedUrl: MAP_EMBED_URL,
-    },
-    googleDataNotice: GOOGLE_DATA_NOTICE,
+    intro: { eyebrow: content.eyebrow, title: content.title, lead: content.lead },
+    contact: legalContact(),
+    map: buildMap(content),
+    googleDataNotice: buildGoogleNotice(content),
     breadcrumbs: [{ label: "Kontakt", url: null }],
   };
 }
@@ -161,7 +136,7 @@ export function preparePartnershipPageData(content = DEFAULT_PARTNERSHIP) {
     intro: content.intro,
     steps: content.steps,
     highlights: content.highlights,
-    contact: LEGAL_CONTACT,
+    contact: legalContact(),
   };
 }
 

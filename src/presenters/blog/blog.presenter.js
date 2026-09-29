@@ -1,37 +1,5 @@
-// Shown only on the plain /blog landing page (no active search) - gives the
-// page real, indexable body copy beyond just a grid of post cards, and frames
-// what the blog is for before a visitor starts browsing categories/tags.
-const BLOG_INTRO = {
-  eyebrow: "Sa bloga",
-  title: "Vodič kroz masaže, ESMA tretmane i negu lica i tela",
-  lead:
-    "Ovde objašnjavamo kako rade naši tretmani, čemu služe i kome su namenjeni - bez marketinških obećanja, već jasnim informacijama zasnovanim na iskustvu našeg tima terapeuta u Novom Sadu.",
-  paragraphs: [
-    "Estetski i wellness tretmani daju najbolje rezultate kada znate šta da očekujete - koliko traje tretman, da li postoje kontraindikacije i koliko poseta je potrebno da bi efekti bili vidljivi. Zato u svakom tekstu detaljno opisujemo tok tretmana, ko treba da bude oprezan i po čemu se pojedini pristupi razlikuju.",
-  ],
-  highlights: [
-    {
-      icon: "bi-journal-richtext",
-      title: "Objašnjenja tretmana",
-      text: "Kako funkcionišu ESMA tretmani, masaže i nega lica i tela - korak po korak, bez stručnog žargona.",
-    },
-    {
-      icon: "bi-shield-check",
-      title: "Bezbednost i kontraindikacije",
-      text: "Kada je tretman bezbedan, a kada je potrebno prethodno mišljenje lekara.",
-    },
-    {
-      icon: "bi-graph-up",
-      title: "Realna očekivanja",
-      text: "Koliko tretmana je obično potrebno i kada se mogu očekivati prvi vidljivi rezultati.",
-    },
-    {
-      icon: "bi-tags",
-      title: "Pregled po temama",
-      text: "Pronađite tekstove po vrsti tretmana ili konkretnoj temi koja vas trenutno zanima.",
-    },
-  ],
-};
+import { PUBLIC_PAGE_SIZES } from "../../utils/pagination.util.js";
+import { DEFAULT_BLOG_INTRO } from "../../config/site-content-defaults.js";
 
 // Builds the category filter bar shown at the top of every /blog view (plain
 // list, category, and tag pages alike) - same pattern as /usluge and
@@ -58,7 +26,7 @@ function buildTagChips(tags = [], activeTagSlug = null) {
   }));
 }
 
-export function prepareBlogListData(result, { query = {}, categories = [], tags = [], totalCount = 0 } = {}) {
+export function prepareBlogListData(result, { query = {}, categories = [], tags = [], totalCount = 0, intro = DEFAULT_BLOG_INTRO } = {}) {
   const search = query.search || "";
 
   return {
@@ -66,13 +34,16 @@ export function prepareBlogListData(result, { query = {}, categories = [], tags 
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
+      limit: result.limit,
+      total: result.total,
+      pageSizeOptions: PUBLIC_PAGE_SIZES,
       basePath: "/blog",
       query,
     },
     categoryTabs: buildCategoryTabs(categories, null, totalCount),
     tagChips: buildTagChips(tags, null),
     search,
-    intro: search ? null : BLOG_INTRO,
+    intro: search ? null : intro,
     breadcrumbs: [{ label: "Blog", url: null }],
   };
 }
@@ -86,6 +57,9 @@ export function prepareBlogCategoryData(category, result, query = {}, { categori
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
+      limit: result.limit,
+      total: result.total,
+      pageSizeOptions: PUBLIC_PAGE_SIZES,
       basePath: `/blog/kategorija/${category.slug}`,
       query,
     },
@@ -105,6 +79,9 @@ export function prepareBlogTagData(tag, result, query = {}, { categories = [], t
     pagination: {
       currentPage: result.page,
       totalPages: result.totalPages,
+      limit: result.limit,
+      total: result.total,
+      pageSizeOptions: PUBLIC_PAGE_SIZES,
       basePath: `/blog/tag/${tag.slug}`,
       query,
     },

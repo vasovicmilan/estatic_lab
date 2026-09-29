@@ -44,6 +44,21 @@ export const validateBusinessPartnerCreate = [
     .optional({ values: "falsy" })
     .isFloat({ min: -180, max: 180 }).withMessage("Geografska dužina mora biti između -180 i 180"),
 
+  body("seoTitle")
+    .optional()
+    .trim()
+    .isLength({ max: 70 }).withMessage("SEO naslov može imati najviše 70 karaktera"),
+
+  body("seoDescription")
+    .optional()
+    .trim()
+    .isLength({ max: 160 }).withMessage("SEO opis može imati najviše 160 karaktera"),
+
+  body("seoKeywordsCsv")
+    .optional()
+    .isString().withMessage("Ključne reči nisu u ispravnom formatu")
+    .isLength({ max: 500 }).withMessage("Ključne reči mogu imati najviše 500 karaktera"),
+
   booleanishField("isActive", true),
 
   body("coverImageDesc")
@@ -92,6 +107,21 @@ export const validateBusinessPartnerUpdate = [
   body("longitude")
     .optional({ values: "falsy" })
     .isFloat({ min: -180, max: 180 }).withMessage("Geografska dužina mora biti između -180 i 180"),
+
+  body("seoTitle")
+    .optional()
+    .trim()
+    .isLength({ max: 70 }).withMessage("SEO naslov može imati najviše 70 karaktera"),
+
+  body("seoDescription")
+    .optional()
+    .trim()
+    .isLength({ max: 160 }).withMessage("SEO opis može imati najviše 160 karaktera"),
+
+  body("seoKeywordsCsv")
+    .optional()
+    .isString().withMessage("Ključne reči nisu u ispravnom formatu")
+    .isLength({ max: 500 }).withMessage("Ključne reči mogu imati najviše 500 karaktera"),
 
   booleanishField("isActive", true),
 

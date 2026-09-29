@@ -44,6 +44,8 @@ export function prepareSiteSettingsFormData(settings) {
   const policy = values.bookingPolicy || {};
   const currency = values.currency || {};
   const commissionPolicy = values.commissionPolicy || {};
+  const business = values.business || {};
+  const shopPolicy = values.shopPolicy || {};
 
   const fields = [
     {
@@ -143,6 +145,67 @@ export function prepareSiteSettingsFormData(settings) {
       min: 0,
       value: commissionPolicy.minimumSessionCommission,
       help: "Garantovan minimum za zaposlenog na proviziji kada je termin plaćen iz paketa prodatog po sniženoj/promotivnoj ceni ili poklonjenog (0 RSD), ili kada je termin ručno kreiran sa ručno podešenom cenom (poklon, nagrada i slično) - štiti od toga da niska/nulta cena obračuna proviziju na skoro ništa.",
+    },
+
+
+    // ---- Podaci o firmi ----
+    // Footer, kontakt, e-mailovi, SEO (JSON-LD) i llms.txt - važe odmah po čuvanju (bez restarta).
+    // Ako se ništa nije menjalo, prikazane su vrednosti iz koda/env-a (business.config.js).
+    {
+      sectionTitle: "Podaci o firmi",
+      name: "businessName",
+      label: "Naziv sajta / salona",
+      type: "text",
+      width: 6,
+      required: true,
+      value: business.name || "",
+      help: "Prikazuje se u e-mailovima, naslovima i strukturiranim podacima.",
+    },
+    { name: "businessLegalName", label: "Pravni naziv firme", type: "text", width: 6, required: true, value: business.legalName || "" },
+    { name: "businessAlternateName", label: "Alternativni naziv (opciono)", type: "text", width: 6, required: false, value: business.alternateName || "", help: "Npr. drugi naziv pod kojim vas klijenti traže." },
+    { name: "businessEmail", label: "Kontakt email", type: "email", width: 6, required: true, value: business.email || "", help: "Javni email (footer, kontakt) i adresa za podršku u e-mailovima." },
+    { name: "businessAdminEmail", label: "Email za obaveštenja administratoru", type: "email", width: 6, required: false, value: business.adminEmail || "", help: "Na ovu adresu stižu obaveštenja o terminima, porudžbinama i porukama. Prazno = kontakt email." },
+    { name: "businessPhone", label: "Telefon", type: "tel", width: 6, required: true, value: business.phone || "", help: "Npr. +381 65 977 4000. Link za pozivanje se pravi automatski." },
+    { name: "businessTaxId", label: "PIB", type: "text", width: 3, required: false, value: business.taxId || "", help: "9 cifara. Prazno ako nije registrovano." },
+    { name: "businessRegistrationNumber", label: "Matični broj", type: "text", width: 3, required: false, value: business.registrationNumber || "", help: "8 cifara." },
+    { name: "businessStreetAddress", label: "Ulica i broj", type: "text", width: 6, required: true, value: business.streetAddress || "" },
+    { name: "businessAddressLocality", label: "Grad", type: "text", width: 3, required: true, value: business.addressLocality || "" },
+    { name: "businessPostalCode", label: "Poštanski broj", type: "text", width: 3, required: false, value: business.postalCode || "" },
+    { name: "businessAddressCountry", label: "Država (kod)", type: "text", width: 3, required: true, value: business.addressCountry || "RS", help: "Dvoslovni kod, npr. RS." },
+    { name: "businessLatitude", label: "Geografska širina", type: "number", width: 3, required: false, step: "any", value: business.latitude ?? "" },
+    { name: "businessLongitude", label: "Geografska dužina", type: "number", width: 3, required: false, step: "any", value: business.longitude ?? "" },
+    {
+      name: "businessSameAs",
+      label: "Društvene mreže (jedan link po redu)",
+      type: "textarea",
+      width: 12,
+      rows: 4,
+      required: false,
+      value: (business.sameAs || []).join("\n"),
+      help: "Instagram, Facebook, YouTube, TikTok... Linkovi moraju počinjati sa https://.",
+    },
+
+    // ---- Dostava i provizije ----
+    {
+      sectionTitle: "Dostava i provizije",
+      name: "defaultShippingPrice",
+      label: "Cena dostave (fiksna, standardna pošiljka)",
+      type: "number",
+      width: 6,
+      required: true,
+      min: 0,
+      value: shopPolicy.defaultShippingPrice,
+      help: "Primenjuje se na porudžbine bez glomaznih artikala (za njih se cena dostave dogovara).",
+    },
+    {
+      name: "orderCommissionGraceDays",
+      label: "Rok pre odobravanja provizije partnera (dani)",
+      type: "number",
+      width: 6,
+      required: true,
+      min: 0,
+      value: shopPolicy.orderCommissionGraceDays,
+      help: "Provizija za porudžbinu preko partnera ostaje na čekanju ovoliko dana (pravo na odustanak od 14 dana).",
     },
 
     // ---- Valuta ----
@@ -246,7 +309,7 @@ export function prepareSiteSettingsFormData(settings) {
     closedDatesFormAction: "/admin/sajt/neradni-dani",
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
-      { label: "Sadržaj sajta", url: null },
+      { label: "Podešavanja sajta", url: null },
     ],
   };
 }

@@ -51,7 +51,9 @@ describe("prepareSiteSettingsFormData", () => {
       currency: { code: "RSD", symbol: "RSD", symbolPosition: "after" },
     });
 
-    const policyAndCurrencyFields = view.fields.filter((f) => f.name !== "heroImage" && f.name !== "heroImageAlt");
+    const policyAndCurrencyFields = view.fields.filter(
+      (f) => f.name !== "heroImage" && f.name !== "heroImageAlt" && !f.name.startsWith("business") && f.name !== "defaultShippingPrice" && f.name !== "orderCommissionGraceDays"
+    );
     assert.ok(policyAndCurrencyFields.length > 0);
     assert.equal(policyAndCurrencyFields.every((f) => f.required === true), true);
   });
@@ -72,10 +74,25 @@ describe("prepareSiteSettingsFormData", () => {
     const view = prepareSiteSettingsFormData(undefined);
 
     const sectioned = view.fields.filter((f) => f.sectionTitle);
-    assert.equal(sectioned.length, 3);
-    assert.equal(sectioned[0].name, "bufferMinutes");
-    assert.equal(sectioned[1].name, "minimumSessionCommission");
-    assert.equal(sectioned[2].name, "currencyCode");
+    assert.deepEqual(
+      sectioned.map((f) => f.name),
+      ["bufferMinutes", "minimumSessionCommission", "businessName", "defaultShippingPrice", "currencyCode"]
+    );
+  });
+
+  it("exposes the business identity and shop policy fields with the stored values", () => {
+    const view = prepareSiteSettingsFormData({
+      business: { name: "Salon", email: "a@b.rs", sameAs: ["https://x.rs/1", "https://x.rs/2"], latitude: 45.2 },
+      shopPolicy: { defaultShippingPrice: 520, orderCommissionGraceDays: 14 },
+    });
+    const byName = Object.fromEntries(view.fields.map((f) => [f.name, f]));
+    assert.equal(byName.businessName.value, "Salon");
+    assert.equal(byName.businessEmail.value, "a@b.rs");
+    assert.equal(byName.businessSameAs.type, "textarea");
+    assert.equal(byName.businessSameAs.value, "https://x.rs/1\nhttps://x.rs/2");
+    assert.equal(byName.businessLatitude.value, 45.2);
+    assert.equal(byName.defaultShippingPrice.value, 520);
+    assert.equal(byName.orderCommissionGraceDays.value, 14);
   });
 
   it("posts to /admin/sajt as multipart, since the form can upload a file", () => {

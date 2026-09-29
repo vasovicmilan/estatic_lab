@@ -2,7 +2,7 @@ import commissionRepo from "../repositories/commission-entry.repository.js";
 import appointmentService from "./appointment.service.js";
 import orderService from "./order.service.js";
 import packagePurchaseService from "./package-purchase.service.js";
-import { ORDER_COMMISSION_GRACE_PERIOD_DAYS } from "../config/shop.config.js";
+import { getShopPolicy } from "../config/runtime-settings.cache.js";
 import runtimeSettingsCache from "../config/runtime-settings.cache.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 import { roundMoney } from "../utils/money.util.js";
@@ -315,7 +315,7 @@ export async function promoteOrderCommissionOnCompletion(orderId) {
 export async function processGracePeriodCommissions() {
   const pending = await commissionRepo.findPendingOrderCommissions();
   const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - ORDER_COMMISSION_GRACE_PERIOD_DAYS);
+  cutoff.setDate(cutoff.getDate() - getShopPolicy().orderCommissionGraceDays);
 
   let earned = 0;
   let reversed = 0;

@@ -678,3 +678,263 @@ export default {
   DEFAULT_WHY_US,
   DEFAULT_TEAM_INTRO,
 };
+
+// ---------------------------------------------------------------------------
+// SEO (title + meta description) statičkih / listing stranica.
+//
+// Ranije su ovi tekstovi bili hardkodirani na DVA mesta koja se nisu poklapala:
+// u backend kontrolerima/index.service.js (EJS sajt) i u svakoj Angular
+// komponenti (Seo.applyStatic). Sada je baza jedini izvor: admin ih menja na
+// /admin/sajt/sadrzaj/seo-stranica, a i EJS sajt i javni API
+// (GET /api/v1/page-seo/:page) čitaju odavde.
+//
+// `title` je PUN naslov (već sa "| Estetik Lab"), `path` je javna putanja
+// koja ide u canonical/og:url i ne menja se iz admina (rute su kod, ne sadržaj).
+// ---------------------------------------------------------------------------
+export const PAGE_SEO_PAGES = {
+  home: { path: "/", label: "Početna" },
+  services: { path: "/usluge", label: "Usluge" },
+  packages: { path: "/paketi", label: "Paketi" },
+  products: { path: "/prodavnica", label: "Prodavnica" },
+  blog: { path: "/blog", label: "Blog" },
+  team: { path: "/nas-tim", label: "Naš tim" },
+  partners: { path: "/saradnici", label: "Saradnici" },
+  contact: { path: "/kontakt", label: "Kontakt" },
+  about: { path: "/o-nama", label: "O nama" },
+  faq: { path: "/faq", label: "Česta pitanja (FAQ)" },
+  privacyPolicy: { path: "/politika-privatnosti", label: "Politika privatnosti" },
+  termsAndConditions: { path: "/uslovi-koriscenja", label: "Uslovi korišćenja" },
+  partnership: { path: "/partnerski-program", label: "Partnerski program" },
+};
+
+export const DEFAULT_PAGE_SEO = {
+  home: {
+    title: "Estetik Lab | Vaš prostor za opuštanje i negu",
+    description: "Zakažite termin za masažu, tretmane lica i tela u opuštajućem ambijentu Estetik Lab wellness centra u Novom Sadu.",
+  },
+  services: {
+    title: "Usluge | Estetik Lab",
+    description: "Pregled svih masaža, estetskih tretmana lica i tela koje nudi Estetik Lab wellness centar u Novom Sadu.",
+  },
+  packages: {
+    title: "Paketi i ponude | Estetik Lab",
+    description: "Kombinovani paketi tretmana po povoljnijoj ceni u Estetik Lab wellness centru.",
+  },
+  products: {
+    title: "Prodavnica | Estetik Lab",
+    description: "Kozmetički proizvodi, oprema i preparati za profesionalnu negu kože iz Estetik Lab prodavnice.",
+  },
+  blog: {
+    title: "Blog | Estetik Lab",
+    description: "Saveti, novosti i stručni tekstovi o nezi kože, masažama i tretmanima sa Estetik Lab bloga.",
+  },
+  team: {
+    title: "Naš tim | Estetik Lab",
+    description: "Upoznajte sertifikovane terapeute i stručnjake Estetik Lab wellness centra.",
+  },
+  partners: {
+    title: "Saradnici | Estetik Lab",
+    description: "Poslovni saradnici i partneri Estetik Lab wellness centra.",
+  },
+  contact: {
+    title: "Kontakt | Estetik Lab",
+    description: "Kontaktirajte Estetik Lab wellness centar u Novom Sadu - adresa, telefon, email i forma za brz odgovor na vaša pitanja.",
+  },
+  about: {
+    title: "O nama | Estetik Lab",
+    description: "Saznajte više o Estetik Lab wellness centru, našem timu i filozofiji nege.",
+  },
+  faq: {
+    title: "Česta pitanja (FAQ) | Estetik Lab",
+    description: "Odgovori na najčešća pitanja o zakazivanju, uslugama, plaćanju i otkazivanju termina.",
+  },
+  privacyPolicy: {
+    title: "Politika privatnosti | Estetik Lab",
+    description: "Informacije o zaštiti podataka o ličnosti i privatnosti korisnika Estetik Lab sajta.",
+  },
+  termsAndConditions: {
+    title: "Uslovi korišćenja | Estetik Lab",
+    description: "Uslovi korišćenja Estetik Lab sajta i pravila zakazivanja termina.",
+  },
+  partnership: {
+    title: "Partnerski program | Estetik Lab",
+    description: "Zarađujte proviziju deleći svoj link - saznajte kako funkcioniše partnerski program Estetik Lab-a.",
+  },
+};
+
+
+// ---------------------------------------------------------------------------
+// Uvodi listing stranica (usluge, paketi, prodavnica, blog) + hero početne +
+// kontakt/lokacija. Ranije su bili literali u presenterima (EJS sajt) i zato
+// ih Angular frontend nije mogao da dobije. Sada su u SiteContent, uređuju se
+// u adminu, a isti podatak čitaju EJS presenteri i javni API.
+// ---------------------------------------------------------------------------
+// Shown only on the plain /usluge listing (no active category/tag filter) -
+// gives the page real, indexable body copy that explains what the services
+// are and how to choose between them, before the visitor starts browsing.
+export const DEFAULT_SERVICES_INTRO = {
+  eyebrow: "Naše usluge",
+  title: "Masaže, ESMA tretmani i nega lica i tela u Novom Sadu",
+  lead:
+    "Svaki tretman kod nas ima jasnu svrhu - od opuštanja i ublažavanja bolova, do oblikovanja tela i nege kože. Ovde birate tretman prema cilju koji imate, a ne obrnuto.",
+  paragraphs: [
+    "ESMA tretmani (elektrostimulacija, ultrazvuk, mikrostruje i svetlosna terapija) kombinuju se prema potrebi - za jačanje mišićnog tonusa, smanjenje celulita, limfnu drenažu ili lifting lica bez igala. Klasične i sportske masaže rade naši sertifikovani terapeuti, ručno, prilagođeno svakom telu.",
+  ],
+  highlights: [
+    {
+      icon: "bi-heart-pulse",
+      title: "Prema cilju, ne prema modi",
+      text: "Birate tretman prema onome što želite da postignete - opuštanje, manje bolova, čvršću kožu ili bolji tonus.",
+    },
+    {
+      icon: "bi-award",
+      title: "Sertifikovani terapeuti",
+      text: "Svaki tretman izvodi obučen terapeut, uz opremu i protokole prilagođene vašem stanju.",
+    },
+    {
+      icon: "bi-clipboard-check",
+      title: "Jasne informacije pre zakazivanja",
+      text: "Cena, trajanje i eventualne kontraindikacije navedeni su na stranici svake usluge, bez iznenađenja.",
+    },
+    {
+      icon: "bi-collection",
+      title: "Uštedite uz pakete",
+      text: "Za tretmane koje ponavljate više puta, pogledajte naše pakete i platite manje po poseti.",
+    },
+  ],
+};
+
+// Gives the /paketi listing real, indexable body copy explaining what
+// packages are and why they're worth choosing over single-visit bookings,
+// before the visitor starts browsing the grid.
+export const DEFAULT_PACKAGES_INTRO = {
+  eyebrow: "Naši paketi",
+  title: "Paketi tretmana - više seansi, niža cena po poseti",
+  lead:
+    "Ako planirate da ponavljate isti tretman, paket vam donosi istu negu uz nižu cenu po poseti i jednostavnije zakazivanje unapred.",
+  paragraphs: [
+    "Svaki paket sadrži unapred definisan broj seansi jednog tretmana ili kombinacije tretmana, uz mogućnost da termine zakazujete kad god vama odgovara. Cena po paketu je uvek niža od zbira pojedinačnih poseta - razlika je vidljiva na svakoj kartici paketa.",
+  ],
+  highlights: [
+    {
+      icon: "bi-piggy-bank",
+      title: "Niža cena po seansi",
+      text: "Plaćate paket unapred i uštedite u odnosu na pojedinačno zakazivanje istog tretmana.",
+    },
+    {
+      icon: "bi-calendar2-week",
+      title: "Fleksibilno zakazivanje",
+      text: "Seanse iz paketa zakazujete kad vama odgovara, u dogovoru sa terapeutom.",
+    },
+    {
+      icon: "bi-graph-up-arrow",
+      title: "Vidljivi rezultati",
+      text: "Veći broj tretmana obično daje bolje i trajnije rezultate nego pojedinačna poseta.",
+    },
+    {
+      icon: "bi-gift",
+      title: "Idealno za poklon",
+      text: "Paket možete pokloniti nekome ko zaslužuje predah i negu.",
+    },
+  ],
+};
+
+// Shown only on the plain /blog landing page (no active search) - gives the
+// page real, indexable body copy beyond just a grid of post cards, and frames
+// what the blog is for before a visitor starts browsing categories/tags.
+export const DEFAULT_BLOG_INTRO = {
+  eyebrow: "Sa bloga",
+  title: "Vodič kroz masaže, ESMA tretmane i negu lica i tela",
+  lead:
+    "Ovde objašnjavamo kako rade naši tretmani, čemu služe i kome su namenjeni - bez marketinških obećanja, već jasnim informacijama zasnovanim na iskustvu našeg tima terapeuta u Novom Sadu.",
+  paragraphs: [
+    "Estetski i wellness tretmani daju najbolje rezultate kada znate šta da očekujete - koliko traje tretman, da li postoje kontraindikacije i koliko poseta je potrebno da bi efekti bili vidljivi. Zato u svakom tekstu detaljno opisujemo tok tretmana, ko treba da bude oprezan i po čemu se pojedini pristupi razlikuju.",
+  ],
+  highlights: [
+    {
+      icon: "bi-journal-richtext",
+      title: "Objašnjenja tretmana",
+      text: "Kako funkcionišu ESMA tretmani, masaže i nega lica i tela - korak po korak, bez stručnog žargona.",
+    },
+    {
+      icon: "bi-shield-check",
+      title: "Bezbednost i kontraindikacije",
+      text: "Kada je tretman bezbedan, a kada je potrebno prethodno mišljenje lekara.",
+    },
+    {
+      icon: "bi-graph-up",
+      title: "Realna očekivanja",
+      text: "Koliko tretmana je obično potrebno i kada se mogu očekivati prvi vidljivi rezultati.",
+    },
+    {
+      icon: "bi-tags",
+      title: "Pregled po temama",
+      text: "Pronađite tekstove po vrsti tretmana ili konkretnoj temi koja vas trenutno zanima.",
+    },
+  ],
+};
+
+// Gives the /prodavnica landing real, indexable body copy above the trust
+// badges - what's actually being sold here and why it's the same equipment
+// used in the studio, not just a generic marketplace.
+export const DEFAULT_SHOP_INTRO = {
+  eyebrow: "Prodavnica",
+  title: "Profesionalna kozmetička oprema i potrošni materijal",
+  lead:
+    "Ovde prodajemo istu opremu, delove i potrošni materijal koje sami koristimo na tretmanima u Estetik Lab centru - ne generičku kozmetiku, već ono što stoji iza rezultata koje vidite na tretmanu.",
+  paragraphs: [
+    "U ponudi su rezervni delovi i potrošni materijal za uređaje koje koristimo na ESMA tretmanima (elektrode, nastavci, gelovi za provodljivost), kao i profesionalna oprema za kućnu negu. Uz svaku porudžbinu ostaje podrška našeg tima - i posle isporuke, ako vam zatreba pomoć oko korišćenja ili dostupnosti delova.",
+  ],
+};
+
+
+export const DEFAULT_SHOP_TRUST = [
+  { icon: "bi-truck", title: "Brza dostava", text: "Šaljemo širom Srbije, sa jasno naznačenim rokom isporuke pre potvrde porudžbine." },
+  { icon: "bi-patch-check", title: "Originalna oprema", text: "Prodajemo isključivo profesionalnu kozmetičku opremu i rezervne delove koje sami koristimo u radu." },
+  { icon: "bi-headset", title: "Podrška nakon kupovine", text: "Tu smo za pitanja o korišćenju uređaja i dostupnosti rezervnih delova i nakon isporuke." },
+  { icon: "bi-arrow-return-left", title: "Pravo na odustanak", text: "14 dana za odustanak od porudžbine, u skladu sa Zakonom o zaštiti potrošača." },
+];
+
+
+export const DEFAULT_SHOP_FAQ = [
+  {
+    pitanje: "Kako se plaća porudžbina?",
+    odgovor: "Online plaćanje karticom trenutno nije dostupno. Način plaćanja (uplata na račun, pouzećem i sl.) dogovara se prilikom potvrde porudžbine.",
+  },
+  {
+    pitanje: "Koliko traje dostava?",
+    odgovor: "Rok isporuke zavisi od dostupnosti proizvoda i saopštava se prilikom potvrde porudžbine ili naknadno email porukom.",
+  },
+  {
+    pitanje: "Mogu li da vratim proizvod?",
+    odgovor: "Da - imate pravo da odustanete od porudžbine u roku od 14 dana od prijema, bez navođenja razloga. Detalji su opisani u Uslovima korišćenja.",
+  },
+  {
+    pitanje: "Da li mogu da naručim bez registracije?",
+    odgovor: "Da, porudžbinu možete napraviti i kao gost. Nakon potvrde emailom, automatski dobijate nalog kako biste mogli da pratite status porudžbine.",
+  },
+];
+
+
+export const DEFAULT_HOME_HERO = {
+  eyebrow: "Estetik Lab wellness centar",
+  title: "Estetik Lab kozmetički salon za negu lica, tela i opuštanje",
+  subtitle:
+    "Masaže, ESMA tretmani i nega lica i tela u mirnom, opuštajućem ambijentu - uz stručan tim i individualan pristup svakom klijentu.",
+  ctaLabel: "Zakažite termin",
+  ctaUrl: "/usluge",
+  secondaryCtaLabel: "Pogledajte pakete",
+  secondaryCtaUrl: "/paketi",
+};
+
+export const DEFAULT_CONTACT_PAGE = {
+  eyebrow: "Kontakt",
+  title: "Zakažite termin ili nam pošaljite poruku",
+  lead:
+    "Tu smo za sva pitanja o tretmanima, terminima i paketima - javite nam se telefonom, mejlom ili putem forme ispod, a odgovaramo u najkraćem roku.",
+  mapAddress: "Maksima Gorkog 6b, Novi Sad 21120",
+  mapEmbedUrl:
+    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2808.909996570131!2d19.843611977018323!3d45.24961274772971!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x475b106c892d2953%3A0x78a7de03d4dbf444!2sMaksima%20Gorkog%206b%2C%20Novi%20Sad%2021120!5e0!3m2!1sen!2srs!4v1784121266023!5m2!1sen!2srs",
+  googleDataNotice:
+    "Ukoliko se registrujete ili prijavite putem Google naloga, sa Google-a primamo samo osnovne podatke vašeg profila - ime, prezime i email adresu. Ove podatke koristimo isključivo za kreiranje i povezivanje vašeg korisničkog naloga na Estetik Lab platformi, kako biste mogli da zakazujete termine i pratite svoje rezervacije. Ne delimo ih sa trećim licima niti ih koristimo u druge svrhe bez vaše saglasnosti.",
+};

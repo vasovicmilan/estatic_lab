@@ -14,6 +14,9 @@
       <% if (data.galleryUrl) { %>
         <a href="<%= data.galleryUrl %>" class="btn btn-outline-primary btn-sm"><i class="bi bi-images"></i> Galerija i video</a>
       <% } %>
+      <% if (data.seoUrl) { %>
+        <a href="<%= data.seoUrl %>" class="btn btn-outline-primary btn-sm"><i class="bi bi-search"></i> SEO</a>
+      <% } %>
       <% if (data.backUrl) { %>
         <a href="<%= data.backUrl %>" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Nazad</a>
       <% } %>

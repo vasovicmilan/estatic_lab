@@ -1,4 +1,5 @@
 import { describe, it } from "node:test";
+import siteContentRepo from "../../../src/repositories/site-content.repository.js";
 import assert from "node:assert/strict";
 import postService from "../../../src/services/post.service.js";
 import categoryService from "../../../src/services/category.service.js";
@@ -9,6 +10,7 @@ import { id } from "../../helpers/factories.js";
 describe("blog.service", () => {
   describe("getBlogLandingData", () => {
     it("aggregates posts, categories, and tags in parallel", async (t) => {
+      t.mock.method(siteContentRepo, "findOrCreateSiteContent", async () => ({}));
       t.mock.method(postService, "findPublishedPosts", async () => ({ data: [{ id: "p1" }], total: 1, page: 1, limit: 9, totalPages: 1 }));
       t.mock.method(categoryService, "getPublicCategories", async () => [{ id: "c1" }]);
       t.mock.method(tagService, "getPublicTags", async () => [{ id: "t1" }]);

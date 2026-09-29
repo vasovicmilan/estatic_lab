@@ -128,12 +128,53 @@ function defaultWorkingHours() {
   return DAYS_OF_WEEK.map((day) => ({ day, isOpen: false, from: "09:00", to: "20:00" }));
 }
 
+// Business identity (footer, kontakt, e-mails, SEO JSON-LD) - was hardcoded in
+// business.config.js. `default: undefined` on the field below on purpose: until an admin saves
+// "Podaci o firmi" the document has NO business subdocument, and business.config.js's code/env
+// defaults stay in charge. Derived values (phoneHref, address.full) are never stored.
+const BusinessSchema = new Schema(
+  {
+    name: { type: String, trim: true, maxlength: 120 },
+    legalName: { type: String, trim: true, maxlength: 160 },
+    alternateName: { type: String, trim: true, maxlength: 120 },
+    email: { type: String, trim: true, lowercase: true, maxlength: 160 },
+    adminEmail: { type: String, trim: true, lowercase: true, maxlength: 160 },
+    phone: { type: String, trim: true, maxlength: 40 },
+    taxId: { type: String, trim: true, maxlength: 20 },
+    registrationNumber: { type: String, trim: true, maxlength: 20 },
+    address: {
+      streetAddress: { type: String, trim: true, maxlength: 160 },
+      addressLocality: { type: String, trim: true, maxlength: 100 },
+      postalCode: { type: String, trim: true, maxlength: 20 },
+      addressCountry: { type: String, trim: true, uppercase: true, maxlength: 2 },
+    },
+    geo: {
+      latitude: { type: Number, min: -90, max: 90 },
+      longitude: { type: Number, min: -180, max: 180 },
+    },
+    sameAs: { type: [String], default: [] },
+  },
+  { _id: false }
+);
+
+// Shop / commission business rules that used to be env-only (DEFAULT_SHIPPING_PRICE,
+// ORDER_COMMISSION_GRACE_PERIOD_DAYS). Same "absent until saved" rule as `business`.
+const ShopPolicySchema = new Schema(
+  {
+    defaultShippingPrice: { type: Number, min: 0 },
+    orderCommissionGraceDays: { type: Number, min: 0, max: 365 },
+  },
+  { _id: false }
+);
+
 const SiteSettingsSchema = new Schema(
   {
     hero: { type: HeroSchema, default: () => ({}) },
     bookingPolicy: { type: BookingPolicySchema, default: () => ({}) },
     currency: { type: CurrencySchema, default: () => ({}) },
     commissionPolicy: { type: CommissionPolicySchema, default: () => ({}) },
+    business: { type: BusinessSchema, default: undefined },
+    shopPolicy: { type: ShopPolicySchema, default: undefined },
     workingHours: { type: [WorkingHoursDaySchema], default: defaultWorkingHours },
     closedDates: { type: [ClosedDateSchema], default: () => [] },
     // Reserved for the "o nama" (about us) content block mentioned alongside

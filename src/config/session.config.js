@@ -6,7 +6,10 @@ if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) {
 }
 
 export function setupSession(app) {
-  app.set("trust proxy", process.env.NODE_ENV === "production" ? 1 : 0);
+  // Number of reverse proxies in front of the app (nginx = 1, Cloudflare + nginx = 2). Wrong value =
+  // every visitor looks like the proxy's IP and they all share one rate-limit bucket.
+  const proxyHops = parseInt(process.env.TRUST_PROXY_HOPS, 10);
+  app.set("trust proxy", Number.isFinite(proxyHops) && proxyHops >= 0 ? proxyHops : process.env.NODE_ENV === "production" ? 1 : 0);
 
   // MongoStore opens its OWN native MongoClient - entirely separate from the
   // app's mongoose connection - and keeps it open (driver heartbeats/keepalive)
