@@ -1,4 +1,5 @@
 import * as packagePurchaseService from "../../../../services/package-purchase.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import * as userService from "../../../../services/user.service.js";
 import * as packageService from "../../../../services/package.service.js";
 import couponService from "../../../../services/coupon.service.js";
@@ -27,12 +28,12 @@ async function loadFormOptions() {
 
 export async function listPackagePurchases(req, res, next) {
   try {
-    const { userId, status, page = 1, limit = 10 } = req.query;
+    const { userId, status, page = 1, limit } = req.query;
 
     const result = await packagePurchaseService.listPurchases({
       filters: { userId: userId || undefined, status: status || undefined },
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
     });
 
     const viewData = preparePackagePurchaseListData(result, req.query);

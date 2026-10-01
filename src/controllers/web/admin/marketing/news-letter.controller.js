@@ -1,4 +1,5 @@
 import * as newsLetterService from "../../../../services/news-letter.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import { prepareNewsletterListData, prepareNewsletterDetailsData } from "../../../../presenters/admin/marketing/news-letter.presenter.js";
 import { logError, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -6,13 +7,13 @@ import auditLogService from "../../../../services/audit-log.service.js";
 
 export async function listSubscribers(req, res, next) {
   try {
-    const { search, status, page = 1, limit = 10 } = req.query;
+    const { search, status, page = 1, limit } = req.query;
 
     const result = await newsLetterService.listSubscribers({
       search: search || "",
       filters: { status: status || undefined },
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
     });
 
     const viewData = prepareNewsletterListData(result, req.query);

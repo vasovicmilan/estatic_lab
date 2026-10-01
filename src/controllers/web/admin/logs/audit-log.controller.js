@@ -1,4 +1,5 @@
 import auditLogService from "../../../../services/audit-log.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import { prepareAuditLogListData } from "../../../../presenters/admin/logs/audit-log.presenter.js";
 import { logError } from "../../../../utils/logger.util.js";
 // dateFrom/dateTo arrive as plain "YYYY-MM-DD" <input type="date"> strings with
@@ -29,7 +30,7 @@ export async function auditLogList(req, res, next) {
           sortOrder: sortOrder === "asc" ? "asc" : "desc",
         },
         page: parseInt(page, 10) || 1,
-        limit: parseInt(limit, 10) || 25,
+        limit: resolveAdminLimit(limit, 25),
       }),
       auditLogService.listDistinctActions(),
     ]);

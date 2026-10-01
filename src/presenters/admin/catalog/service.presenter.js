@@ -1,7 +1,15 @@
-export function prepareServiceListData(result, query = {}) {
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  naziv: "name",
+  istaknuto: "highlight",
+  aktivna: "isActive",
+  kreirana: "createdAt",
+};
+
+export function prepareServiceListData(result, query = {}, { categoryOptions = [] } = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "slika", label: "Slika", type: "image" },
       { key: "naziv", label: "Naziv" },
       { key: "kategorije", label: "Kategorije" },
@@ -10,19 +18,15 @@ export function prepareServiceListData(result, query = {}) {
       { key: "istaknuto", label: "Istaknuto" },
       { key: "aktivna", label: "Aktivna" },
       { key: "kreirana", label: "Kreirana" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/usluge/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/usluge/izmena/", icon: "pencil" },
       { type: "custom", url: "/admin/usluge/", idKey: "id", subPath: "seo", icon: "search", label: "SEO" },
       { type: "delete", url: "/admin/usluge/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/usluge",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/usluge", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Usluge", url: null },
@@ -33,6 +37,13 @@ export function prepareServiceListData(result, query = {}) {
       searchUrl: "/admin/usluge/pretraga",
       search: query.search || "",
       filters: [
+        {
+          type: "select",
+          name: "category",
+          label: "Kategorija",
+          value: query.category || "",
+          options: [{ value: "", label: "Sve kategorije" }, ...categoryOptions.map((c) => ({ value: c.id, label: c.naziv }))],
+        },
         {
           type: "select",
           name: "isActive",

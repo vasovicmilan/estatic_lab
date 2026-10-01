@@ -1,4 +1,5 @@
 import { formatMoney } from "../../../utils/price.util.js";
+import { buildAdminPagination } from "../../../utils/admin-list.util.js";
 export function preparePackagePurchaseListData(result, query = {}) {
   return {
     items: result.data,
@@ -14,12 +15,7 @@ export function preparePackagePurchaseListData(result, query = {}) {
       { type: "edit", url: "/admin/kupljeni-paketi/izmena/", icon: "pencil" },
       { type: "delete", url: "/admin/kupljeni-paketi/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/kupljeni-paketi",
-      query,
-    },
+    pagination: buildAdminPagination(result, { basePath: "/admin/kupljeni-paketi", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Kupljeni paketi", url: null },

@@ -1,4 +1,6 @@
+import { isValidObjectId } from "mongoose";
 import { formatMoney } from "../../../../utils/price.util.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import * as packageService from "../../../../services/package.service.js";
 import * as serviceService from "../../../../services/service.service.js";
 import * as categoryService from "../../../../services/category.service.js";
@@ -9,6 +11,8 @@ import {
   preparePackageFormData,
   preparePackageSeoFormData,
 } from "../../../../presenters/admin/catalog/package.presenter.js";
+import { SORT_MAP } from "../../../../presenters/admin/catalog/package.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { prepareMediaFormData } from "../../../../presenters/admin/media-form.presenter.js";
 import { buildGalleryPayload, buildVideosPayload } from "../../../../utils/media-form.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
@@ -96,16 +100,20 @@ function buildPackagePayload(req, existing = {}) {
 
 export async function listPackages(req, res, next) {
   try {
-    const { search, isActive, page = 1, limit = 10 } = req.query;
+    const { search, isActive, category, page = 1, limit } = req.query;
+
+    const categoryIds = category && isValidObjectId(category) ? await categoryService.getCategoryAndDescendantIds(category, "service") : undefined;
+    const categoryOptions = await categoryService.getCategoriesForSelect("service");
 
     const result = await packageService.listPackages({
       search: search || "",
-      filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined },
+      filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined, category: categoryIds },
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
-    const viewData = preparePackageListData(result, req.query);
+    const viewData = preparePackageListData(result, req.query, { categoryOptions });
 
     return res.render("admin/_list", {
       pageTitle: search ? `Pretraga: ${search}` : "Paketi",

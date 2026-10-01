@@ -197,6 +197,7 @@ export function mapPackageForPublicCard(pkg) {
     trajanjePoSeansi: isSingleServiceRepeat ? getVariantDuration(firstItem) : null,
     naslovTretmana: isSingleServiceRepeat && isPopulatedService(firstItem.service) ? firstItem.service.name : pkg.name,
     grupa: buildGroupKey(pkg),
+    kategorije: (pkg.categories || []).map((c) => (c._id || c).toString()),
   };
 }
 

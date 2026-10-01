@@ -1,4 +1,5 @@
 import * as tempOrderService from "../../../../services/temporary-order.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import * as orderService from "../../../../services/order.service.js";
 import {
   prepareTempOrderListData,
@@ -10,12 +11,12 @@ import auditLogService from "../../../../services/audit-log.service.js";
 
 export async function listTemporaryOrders(req, res, next) {
   try {
-    const { search, page = 1, limit = 10 } = req.query;
+    const { search, page = 1, limit } = req.query;
 
     const result = await tempOrderService.listTemporaryOrders({
       search: search || "",
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
     });
 
     const viewData = prepareTempOrderListData(result, req.query);

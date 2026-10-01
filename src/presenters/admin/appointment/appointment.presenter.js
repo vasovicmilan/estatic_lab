@@ -1,4 +1,5 @@
 import { getAllowedStatuses } from "../../../models/appointment-status-transitions.js";
+import { buildAdminPagination } from "../../../utils/admin-list.util.js";
 
 export function prepareAppointmentListData(result, query = {}) {
   return {
@@ -14,12 +15,7 @@ export function prepareAppointmentListData(result, query = {}) {
       { type: "view", url: "/admin/termini/detalji/", icon: "eye" },
       { type: "delete", url: "/admin/termini/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/termini",
-      query,
-    },
+    pagination: buildAdminPagination(result, { basePath: "/admin/termini", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Termini", url: null },

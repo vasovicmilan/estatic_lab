@@ -1,3 +1,4 @@
+import { buildAdminPagination } from "../../../utils/admin-list.util.js";
 export function prepareNewsletterListData(result, query = {}) {
   return {
     items: result.data,
@@ -10,12 +11,7 @@ export function prepareNewsletterListData(result, query = {}) {
       { type: "view", url: "/admin/newsletter/detalji/", icon: "eye" },
       { type: "delete", url: "/admin/newsletter/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/newsletter",
-      query,
-    },
+    pagination: buildAdminPagination(result, { basePath: "/admin/newsletter", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Newsletter", url: null },

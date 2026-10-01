@@ -1,5 +1,13 @@
 import { formatPrice, formatMoney } from "../../../utils/price.util.js";
 import { translateCommissionSourceType, translateCommissionStatus } from "../../../utils/commission-display.util.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  procenatProvizijeUsluge: "commissionRateServices",
+  procenatProvizijeArtikli: "commissionRateProducts",
+  aktivan: "isActive",
+  kreiran: "createdAt",
+};
+
 
 // The coupon's main, always-required block (see coupon.model.js) - covers
 // services/packages. Every coupon has this, unlike the artikli block below.
@@ -32,25 +40,21 @@ function describeCouponProductDiscount(productDiscount, categoryNamesById = {}) 
 export function preparePartnerListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "imePrezime", label: "Ime i prezime" },
       { key: "email", label: "Email" },
       { key: "procenatProvizijeUsluge", label: "Provizija - usluge/paketi" },
       { key: "procenatProvizijeArtikli", label: "Provizija - artikli" },
       { key: "aktivan", label: "Aktivan" },
       { key: "kreiran", label: "Kreiran" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/partneri/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/partneri/izmena/", icon: "pencil" },
       { type: "delete", url: "/admin/partneri/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/partneri",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/partneri", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Partneri", url: null },

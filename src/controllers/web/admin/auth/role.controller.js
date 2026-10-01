@@ -1,4 +1,5 @@
 import * as roleService from "../../../../services/role.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import { PERMISSIONS } from "../../../../models/role.model.js";
 import { translatePermission } from "../../../../mappers/role.mapper.js";
 import { prepareRoleListData, prepareRoleDetailsData, prepareRoleFormData } from "../../../../presenters/admin/auth/role.presenter.js";
@@ -12,12 +13,12 @@ function getAvailablePermissions() {
 
 export async function listRoles(req, res, next) {
   try {
-    const { search, page = 1, limit = 10 } = req.query;
+    const { search, page = 1, limit } = req.query;
 
     const result = await roleService.listRoles({
       search: search || "",
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
     });
 
     const viewData = prepareRoleListData(result, req.query);

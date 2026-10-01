@@ -33,13 +33,30 @@
           </div>
         </div>
       <% } else { %>
-        <h1 class="h3 mb-2 text-center">Paketi</h1>
+        <h1 class="h3 mb-2 text-center"><%= data.category ? data.category.naziv : "Paketi" %></h1>
         <% if (data.subtitle) { %><p class="text-muted text-center mb-4"><%= data.subtitle %></p><% } %>
       <% } %>
     </div>
   </section>
 
   <%- include("../includes/components/ritual-divider") %>
+
+  <% if (data.categoryTabRows && data.categoryTabRows.length > 0) { %>
+    <nav class="service-filter-bar" aria-label="Filter paketa po kategoriji">
+      <div class="container d-flex flex-column gap-2 py-3">
+        <% data.categoryTabRows.forEach(function(row, rowIndex) { %>
+          <div class="service-filter-scroll <%= rowIndex > 0 ? 'ps-3 border-start' : '' %>">
+            <% row.forEach(function(tab) { %>
+              <a href="<%= tab.href %>" class="filter-pill <%= rowIndex > 0 ? 'filter-pill-sub' : '' %> <%= tab.active ? 'active' : '' %>">
+                <%= tab.label %>
+                <span class="filter-pill-count">(<%= tab.count %>)</span>
+              </a>
+            <% }) %>
+          </div>
+        <% }) %>
+      </div>
+    </nav>
+  <% } %>
 
   <div class="container py-5">
     <% if (data.packageGroups && data.packageGroups.length > 0) { %>
@@ -52,7 +69,7 @@
       </div>
       <%- include("../includes/pagination", { pagination: data.pagination }) %>
     <% } else { %>
-      <p class="text-center text-muted">Trenutno nema dostupnih paketa.</p>
+      <p class="text-center text-muted"><%= data.category ? "Trenutno nema paketa u ovoj kategoriji." : "Trenutno nema dostupnih paketa." %></p>
     <% } %>
   </div>
 

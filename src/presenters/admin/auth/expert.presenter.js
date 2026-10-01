@@ -1,7 +1,15 @@
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  imePrezime: "lastName",
+  redosled: "order",
+  aktivan: "isActive",
+  kreiran: "createdAt",
+};
+
 export function prepareExpertListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "slika", label: "Slika", type: "image" },
       { key: "imePrezime", label: "Ime i prezime" },
       { key: "titula", label: "Titula" },
@@ -9,18 +17,14 @@ export function prepareExpertListData(result, query = {}) {
       { key: "aktivan", label: "Aktivan" },
       { key: "redosled", label: "Redosled" },
       { key: "kreiran", label: "Kreiran" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/eksperti/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/eksperti/izmena/", icon: "pencil" },
       { type: "delete", url: "/admin/eksperti/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/eksperti",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/eksperti", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Eksperti", url: null },

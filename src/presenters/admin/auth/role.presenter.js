@@ -1,4 +1,5 @@
 import { RESERVED_ROLE_NAMES } from "../../../models/role.model.js";
+import { buildAdminPagination } from "../../../utils/admin-list.util.js";
 
 export function prepareRoleListData(result, query = {}) {
   return {
@@ -16,12 +17,7 @@ export function prepareRoleListData(result, query = {}) {
       { type: "edit", url: "/admin/role/izmena/", icon: "pencil" },
       { type: "delete", url: "/admin/role/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/role",
-      query,
-    },
+    pagination: buildAdminPagination(result, { basePath: "/admin/role", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Role", url: null },

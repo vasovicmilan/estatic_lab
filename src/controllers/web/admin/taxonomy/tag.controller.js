@@ -1,5 +1,8 @@
 import * as tagService from "../../../../services/tag.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import { prepareTagListData, prepareTagDetailsData, prepareTagFormData } from "../../../../presenters/admin/taxonomy/tag.presenter.js";
+import { SORT_MAP } from "../../../../presenters/admin/taxonomy/tag.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -7,14 +10,15 @@ import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
 export async function listTags(req, res, next) {
   try {
-    const { search, domain, isActive, page = 1, limit = 10 } = req.query;
+    const { search, domain, isActive, page = 1, limit } = req.query;
 
     const result = await tagService.listTags({
       search: search || "",
       domain: domain || undefined,
       isActive: isActive === "true" ? true : isActive === "false" ? false : undefined,
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = prepareTagListData(result, req.query);

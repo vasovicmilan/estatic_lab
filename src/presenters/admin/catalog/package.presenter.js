@@ -1,8 +1,17 @@
 import { formatMoney } from "../../../utils/price.util.js";
-export function preparePackageListData(result, query = {}) {
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  naziv: "name",
+  cena: "totalPrice",
+  najbolji: "isBest",
+  aktivan: "isActive",
+  kreiran: "createdAt",
+};
+
+export function preparePackageListData(result, query = {}, { categoryOptions = [] } = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "slika", label: "Slika", type: "image" },
       { key: "naziv", label: "Naziv" },
       { key: "stavke", label: "Usluge u paketu" },
@@ -10,19 +19,15 @@ export function preparePackageListData(result, query = {}) {
       { key: "najbolji", label: "Najbolji izbor" },
       { key: "aktivan", label: "Aktivan" },
       { key: "kreiran", label: "Kreiran" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/paketi/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/paketi/izmena/", icon: "pencil" },
       { type: "custom", url: "/admin/paketi/", idKey: "id", subPath: "seo", icon: "search", label: "SEO" },
       { type: "delete", url: "/admin/paketi/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/paketi",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/paketi", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Paketi", url: null },
@@ -32,6 +37,26 @@ export function preparePackageListData(result, query = {}) {
       createLabel: "Novi paket",
       searchUrl: "/admin/paketi/pretraga",
       search: query.search || "",
+      filters: [
+        {
+          type: "select",
+          name: "isActive",
+          label: "Status",
+          value: query.isActive || "",
+          options: [
+            { value: "", label: "Svi" },
+            { value: "true", label: "Aktivni" },
+            { value: "false", label: "Neaktivni" },
+          ],
+        },
+        {
+          type: "select",
+          name: "category",
+          label: "Kategorija",
+          value: query.category || "",
+          options: [{ value: "", label: "Sve kategorije" }, ...categoryOptions.map((c) => ({ value: c.id, label: c.naziv }))],
+        },
+      ],
     },
   };
 }

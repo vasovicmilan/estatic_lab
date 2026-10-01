@@ -1,4 +1,10 @@
 import { formatPrice, formatMoney } from "../../../utils/price.util.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  aktivan: "isActive",
+  kreiran: "createdAt",
+};
+
 
 const DAY_LABELS = {
   monday: "Ponedeljak",
@@ -17,24 +23,20 @@ function translateDay(day) {
 export function prepareEmployeeListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "imePrezime", label: "Ime i prezime" },
       { key: "email", label: "Email" },
       { key: "brojUsluga", label: "Broj usluga" },
       { key: "aktivan", label: "Aktivan" },
       { key: "kreiran", label: "Kreiran" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/zaposleni/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/zaposleni/izmena/", icon: "pencil" },
       { type: "delete", url: "/admin/zaposleni/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/zaposleni",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/zaposleni", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Zaposleni", url: null },

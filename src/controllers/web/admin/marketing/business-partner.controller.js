@@ -1,9 +1,12 @@
 import * as businessPartnerService from "../../../../services/business-partner.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import {
   prepareBusinessPartnerListData,
   prepareBusinessPartnerDetailsData,
   prepareBusinessPartnerFormData,
 } from "../../../../presenters/admin/marketing/business-partner.presenter.js";
+import { SORT_MAP } from "../../../../presenters/admin/marketing/business-partner.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -61,12 +64,13 @@ function buildBusinessPartnerPayload(req, existing = {}) {
 
 export async function listBusinessPartners(req, res, next) {
   try {
-    const { search, page = 1, limit = 10 } = req.query;
+    const { search, page = 1, limit } = req.query;
 
     const result = await businessPartnerService.listBusinessPartners({
       search: search || "",
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = prepareBusinessPartnerListData(result, req.query);

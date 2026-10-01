@@ -1,7 +1,16 @@
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  kod: "code",
+  popust: "discountValue",
+  iskorisceno: "usedCount",
+  vaziDo: "validUntil",
+  aktivnost: "isActive",
+};
+
 export function prepareCouponListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "kod", label: "Kod" },
       { key: "tip", label: "Tip popusta" },
       { key: "popust", label: "Popust" },
@@ -9,18 +18,14 @@ export function prepareCouponListData(result, query = {}) {
       { key: "iskorisceno", label: "Iskorišćeno" },
       { key: "aktivnost", label: "Status" },
       { key: "vaziDo", label: "Važi do" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/kuponi/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/kuponi/izmena/", icon: "pencil" },
       { type: "delete", url: "/admin/kuponi/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/kuponi",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/kuponi", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Kuponi", url: null },

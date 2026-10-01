@@ -1,4 +1,5 @@
 import businessReportService from "../../../../services/business-report.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import {
   prepareBusinessReportDashboardData,
   prepareBusinessReportHistoryData,
@@ -41,8 +42,8 @@ export async function businessReportHistoryList(req, res, next) {
       return flashAndRedirect(req, res, "error", "Nepoznat tip perioda", "/admin/poslovni-izvestaji");
     }
 
-    const { page = 1, limit = 20 } = req.query;
-    const result = await businessReportService.listSummaries(periodType, { page: parseInt(page, 10) || 1, limit: parseInt(limit, 10) || 20 });
+    const { page = 1, limit } = req.query;
+    const result = await businessReportService.listSummaries(periodType, { page: parseInt(page, 10) || 1, limit: resolveAdminLimit(limit, 25) });
     const viewData = prepareBusinessReportHistoryData(periodType, result, req.query);
 
     return res.render("admin/reports/history", {

@@ -1,9 +1,17 @@
 import { BLOG_BLOCK_TYPES } from "../../../models/schemas/content.blog.schema.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  naziv: "name",
+  sku: "sku",
+  aktivan: "isActive",
+  kreiran: "createdAt",
+};
+
 
 export function prepareProductListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "slika", label: "Slika", type: "image" },
       { key: "naziv", label: "Naziv" },
       { key: "sku", label: "SKU" },
@@ -13,19 +21,15 @@ export function prepareProductListData(result, query = {}) {
       { key: "oznaka", label: "Oznaka" },
       { key: "aktivan", label: "Aktivan" },
       { key: "kreiran", label: "Kreiran" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/proizvodi/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/proizvodi/izmena/", icon: "pencil" },
       { type: "custom", url: "/admin/proizvodi/", idKey: "id", subPath: "seo", icon: "search", label: "SEO" },
       { type: "delete", url: "/admin/proizvodi/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/proizvodi",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/proizvodi", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Proizvodi", url: null },

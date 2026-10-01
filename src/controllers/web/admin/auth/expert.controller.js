@@ -1,6 +1,9 @@
 import * as expertService from "../../../../services/expert.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import * as serviceService from "../../../../services/service.service.js";
 import { prepareExpertListData, prepareExpertDetailsData, prepareExpertFormData } from "../../../../presenters/admin/auth/expert.presenter.js";
+import { SORT_MAP } from "../../../../presenters/admin/auth/expert.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -13,12 +16,13 @@ async function loadServiceOptions() {
 
 export async function listExperts(req, res, next) {
   try {
-    const { search, page = 1, limit = 10 } = req.query;
+    const { search, page = 1, limit } = req.query;
 
     const result = await expertService.listExperts({
       search: search || "",
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = prepareExpertListData(result, req.query);

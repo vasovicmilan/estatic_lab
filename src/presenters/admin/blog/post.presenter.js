@@ -1,9 +1,19 @@
 import { BLOG_BLOCK_TYPES } from "../../../models/schemas/content.blog.schema.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  naslov: "title",
+  status: "status",
+  pregledi: "views",
+  datumObjave: "publishedAt",
+  zakazanoZa: "scheduledFor",
+  istaknut: "isFeatured",
+};
+
 
 export function preparePostListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "slika", label: "Slika", type: "image" },
       { key: "naslov", label: "Naslov" },
       { key: "status", label: "Status" },
@@ -13,19 +23,15 @@ export function preparePostListData(result, query = {}) {
       { key: "datumObjave", label: "Objavljeno" },
       { key: "zakazanoZa", label: "Zakazano za" },
       { key: "istaknut", label: "Istaknut" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/blog/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/blog/izmena/", icon: "pencil" },
       { type: "custom", url: "/admin/blog/", idKey: "id", subPath: "seo", icon: "search", label: "SEO" },
       { type: "delete", url: "/admin/blog/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/blog",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/blog", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Blog", url: null },
@@ -47,19 +53,6 @@ export function preparePostListData(result, query = {}) {
             { value: "scheduled", label: "Zakazano" },
             { value: "published", label: "Objavljeno" },
             { value: "archived", label: "Arhivirano" },
-          ],
-        },
-        {
-          type: "select",
-          name: "sortBy",
-          label: "Sortiraj po",
-          value: query.sortBy || "publishedAt",
-          options: [
-            { value: "publishedAt", label: "Datumu objavljivanja (najnovije prvo)" },
-            { value: "scheduledFor", label: "Datumu zakazivanja (najbliže prvo)" },
-            { value: "createdAt", label: "Datumu kreiranja (najnovije prvo)" },
-            { value: "views", label: "Broju pregleda (najviše prvo)" },
-            { value: "featured", label: "Istaknuti prvo" },
           ],
         },
       ],

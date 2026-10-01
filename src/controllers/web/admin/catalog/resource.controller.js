@@ -1,9 +1,12 @@
 import * as resourceService from "../../../../services/resource.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import {
   prepareResourceListData,
   prepareResourceDetailsData,
   prepareResourceFormData,
 } from "../../../../presenters/admin/catalog/resource.presenter.js";
+import { SORT_MAP } from "../../../../presenters/admin/catalog/resource.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -11,13 +14,14 @@ import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
 export async function listResources(req, res, next) {
   try {
-    const { search, isActive, page = 1, limit = 10 } = req.query;
+    const { search, isActive, page = 1, limit } = req.query;
 
     const result = await resourceService.listResources({
       search: search || "",
       isActive: isActive === "true" ? true : isActive === "false" ? false : undefined,
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = prepareResourceListData(result, req.query);

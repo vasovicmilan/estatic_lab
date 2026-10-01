@@ -1,20 +1,25 @@
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  imePrezime: "lastName",
+  email: "email",
+  tema: "topic",
+  status: "status",
+  datum: "createdAt",
+};
+
 export function prepareContactListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "imePrezime", label: "Ime i prezime" },
       { key: "email", label: "Email" },
       { key: "tema", label: "Tema" },
       { key: "status", label: "Status" },
       { key: "datum", label: "Datum" },
-    ],
+    ], SORT_MAP),
     actions: [{ type: "view", url: "/admin/kontakt/detalji/", icon: "eye" }],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/kontakt",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/kontakt", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Kontakt poruke", url: null },

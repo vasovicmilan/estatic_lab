@@ -1,4 +1,5 @@
 import payoutRequestService from "../../../../services/payout-request.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import {
   preparePayoutRequestListData,
   preparePayoutRequestDetailsData,
@@ -9,7 +10,7 @@ import auditLogService from "../../../../services/audit-log.service.js";
 
 export async function listPayoutRequests(req, res, next) {
   try {
-    const { status, earnerType, partnerId, employeeId, page = 1, limit = 10 } = req.query;
+    const { status, earnerType, partnerId, employeeId, page = 1, limit } = req.query;
 
     const result = await payoutRequestService.listPayoutRequests({
       filters: {
@@ -19,7 +20,7 @@ export async function listPayoutRequests(req, res, next) {
         employee: employeeId || undefined,
       },
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
     });
 
     const viewData = preparePayoutRequestListData(result, req.query);

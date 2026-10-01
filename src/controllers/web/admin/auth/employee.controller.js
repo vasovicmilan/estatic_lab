@@ -1,9 +1,12 @@
 import * as employeeService from "../../../../services/employee.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import * as userService from "../../../../services/user.service.js";
 import * as serviceService from "../../../../services/service.service.js";
 import * as expertService from "../../../../services/expert.service.js";
 import payoutRequestService from "../../../../services/payout-request.service.js";
 import { prepareEmployeeListData, prepareEmployeeDetailsData, prepareEmployeeFormData } from "../../../../presenters/admin/auth/employee.presenter.js";
+import { SORT_MAP } from "../../../../presenters/admin/auth/employee.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
@@ -33,12 +36,13 @@ async function loadFormOptions() {
 
 export async function listEmployees(req, res, next) {
   try {
-    const { search, isActive, page = 1, limit = 10 } = req.query;
+    const { search, isActive, page = 1, limit } = req.query;
 
     const result = await employeeService.listEmployees({
       filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined },
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = prepareEmployeeListData(result, req.query);

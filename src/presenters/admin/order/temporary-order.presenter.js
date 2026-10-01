@@ -1,4 +1,5 @@
 import { formatMoney } from "../../../utils/price.util.js";
+import { buildAdminPagination } from "../../../utils/admin-list.util.js";
 export function prepareTempOrderListData(result, query = {}) {
   return {
     items: result.data,
@@ -11,12 +12,7 @@ export function prepareTempOrderListData(result, query = {}) {
       { key: "kreirano", label: "Kreirano" },
     ],
     actions: [{ type: "view", url: "/admin/privremene-porudzbine/detalji/", icon: "eye" }],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/privremene-porudzbine",
-      query,
-    },
+    pagination: buildAdminPagination(result, { basePath: "/admin/privremene-porudzbine", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Privremene porudžbine", url: null },

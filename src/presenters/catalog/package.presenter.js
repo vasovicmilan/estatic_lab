@@ -1,5 +1,6 @@
 import { PUBLIC_PAGE_SIZES } from "../../utils/pagination.util.js";
 import { DEFAULT_PACKAGES_INTRO } from "../../config/site-content-defaults.js";
+import { buildCategoryTabRows } from "../../utils/category-tabs.util.js";
 
 // Groups the flat package list into per-treatment "tiers": packages sharing
 // the same grupa key (see package.mapper.js buildGroupKey) are the same
@@ -30,7 +31,53 @@ function groupPackagesByTreatment(packages = []) {
   });
 }
 
-export function preparePackageListData(packages, query = {}, { page = 1, perPage = 12, intro = DEFAULT_PACKAGES_INTRO } = {}) {
+// Package categories are the same "service"-domain categories services use. A
+// category's count is the number of display cards (treatment groups, see
+// groupPackagesByTreatment) that have at least one package in it or in any of
+// its descendants - counted in memory off the already-fetched full catalog, so
+// the tab bar costs no extra queries. Categories with no packages are dropped
+// (a package catalog is far smaller than the service one, most service
+// categories would otherwise show as empty tabs); the active one is always kept.
+export function attachPackageCountsToCategories(categories = [], packages = [], activeCategoryId = null) {
+  const childrenByParent = new Map();
+  categories.forEach((c) => {
+    if (!c.parent) return;
+    if (!childrenByParent.has(c.parent)) childrenByParent.set(c.parent, []);
+    childrenByParent.get(c.parent).push(c.id);
+  });
+
+  function descendantIds(rootId) {
+    const seen = new Set([rootId]);
+    const stack = [rootId];
+    while (stack.length) {
+      for (const child of childrenByParent.get(stack.pop()) || []) {
+        if (!seen.has(child)) {
+          seen.add(child);
+          stack.push(child);
+        }
+      }
+    }
+    return seen;
+  }
+
+  return categories
+    .map((cat) => {
+      const ids = descendantIds(cat.id);
+      const groups = new Set(packages.filter((p) => (p.kategorije || []).some((id) => ids.has(id))).map((p) => p.grupa));
+      return { ...cat, count: groups.size };
+    })
+    .filter((cat) => cat.count > 0 || cat.id === activeCategoryId);
+}
+
+export function countPackageGroups(packages = []) {
+  return new Set(packages.map((p) => p.grupa)).size;
+}
+
+export function preparePackageListData(
+  packages,
+  query = {},
+  { page = 1, perPage = 12, intro = DEFAULT_PACKAGES_INTRO, category = null, categories = [], totalCount = 0 } = {}
+) {
   // Grouping happens across the WHOLE catalog first, THEN the resulting
   // groups (display cards) are what gets paginated - not the raw Package
   // documents. Doing it the other way around (paginate raw documents, then
@@ -48,18 +95,30 @@ export function preparePackageListData(packages, query = {}, { page = 1, perPage
   return {
     packages,
     packageGroups: pageGroups,
-    subtitle: "Kombinacije tretmana osmišljene da vam donesu više za manje - bez žurbe, uz naš tim koji brine o detaljima.",
-    intro,
+    subtitle: category
+      ? category.description || ""
+      : "Kombinacije tretmana osmišljene da vam donesu više za manje - bez žurbe, uz naš tim koji brine o detaljima.",
+    intro: category ? null : intro,
+    category,
+    categoryTabRows:
+      categories.length > 0
+        ? buildCategoryTabRows(categories, category ? category.slug : null, totalCount, { basePath: "/paketi/kategorija", allLabel: "Svi paketi" })
+        : [],
     pagination: {
       currentPage,
       totalPages,
       limit: perPage,
       total: allGroups.length,
       pageSizeOptions: PUBLIC_PAGE_SIZES,
-      basePath: "/paketi",
+      basePath: category ? `/paketi/kategorija/${category.slug}` : "/paketi",
       query,
     },
-    breadcrumbs: [{ label: "Paketi", url: null }],
+    breadcrumbs: category
+      ? [
+          { label: "Paketi", url: "/paketi" },
+          { label: category.naziv, url: null },
+        ]
+      : [{ label: "Paketi", url: null }],
   };
 }
 

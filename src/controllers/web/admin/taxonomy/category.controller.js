@@ -1,5 +1,8 @@
 import * as categoryService from "../../../../services/category.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import { prepareCategoryListData, prepareCategoryDetailsData, prepareCategoryFormData } from "../../../../presenters/admin/taxonomy/category.presenter.js";
+import { SORT_MAP } from "../../../../presenters/admin/taxonomy/category.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -26,7 +29,7 @@ async function loadParentOptions(domain, excludeId = null) {
 
 export async function listCategories(req, res, next) {
   try {
-    const { search, domain, parent, isActive, page = 1, limit = 10 } = req.query;
+    const { search, domain, parent, isActive, page = 1, limit } = req.query;
 
     const result = await categoryService.listCategories({
       search: search || "",
@@ -34,7 +37,8 @@ export async function listCategories(req, res, next) {
       parent: parent || undefined,
       isActive: isActive === "true" ? true : isActive === "false" ? false : undefined,
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = prepareCategoryListData(result, req.query);

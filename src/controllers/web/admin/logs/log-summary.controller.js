@@ -1,4 +1,5 @@
 import logReportService from "../../../../services/log-report.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import {
   prepareLogDashboardData,
   prepareLogHistoryListData,
@@ -25,8 +26,8 @@ export async function logDashboard(req, res, next) {
 
 export async function logHistoryList(req, res, next) {
   try {
-    const { page = 1, limit = 20 } = req.query;
-    const result = await logReportService.listLogSummaries({ page: parseInt(page, 10) || 1, limit: parseInt(limit, 10) || 20 });
+    const { page = 1, limit } = req.query;
+    const result = await logReportService.listLogSummaries({ page: parseInt(page, 10) || 1, limit: resolveAdminLimit(limit, 25) });
     const viewData = prepareLogHistoryListData(result, req.query);
 
     return res.render("admin/logs/history", {

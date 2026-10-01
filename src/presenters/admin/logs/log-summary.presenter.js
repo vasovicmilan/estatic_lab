@@ -1,3 +1,4 @@
+import { buildAdminPagination } from "../../../utils/admin-list.util.js";
 function formatSummaryForDisplay(summary) {
   if (!summary) return null;
   return {
@@ -33,12 +34,7 @@ export function prepareLogHistoryListData(result, query = {}) {
       prosecnoVreme: s.perf?.avgResponseTimeMs != null ? `${s.perf.avgResponseTimeMs} ms` : "-",
       detailUrl: `/admin/logovi/istorija/${s.date}`,
     })),
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/logovi/istorija",
-      query,
-    },
+    pagination: buildAdminPagination(result, { basePath: "/admin/logovi/istorija", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Logovi", url: "/admin/logovi" },

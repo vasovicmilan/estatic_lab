@@ -61,3 +61,16 @@ export function resolvePublicLimit(raw, defaultLimit = 12) {
   const parsed = parseInt(raw, 10);
   return PUBLIC_PAGE_SIZES.includes(parsed) ? parsed : defaultLimit;
 }
+
+/**
+ * Page sizes the ADMIN list screens (views/admin/_list.ejs) let the operator
+ * pick from via the "Po strani:" pills in includes/pagination.ejs. Same rule
+ * as the public one: anything else in ?limit= falls back to the default
+ * instead of being passed through.
+ */
+export const ADMIN_PAGE_SIZES = [10, 25, 50, 100];
+
+export function resolveAdminLimit(raw, defaultLimit = 10) {
+  const parsed = parseInt(raw, 10);
+  return ADMIN_PAGE_SIZES.includes(parsed) ? parsed : defaultLimit;
+}

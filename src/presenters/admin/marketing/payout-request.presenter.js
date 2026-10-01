@@ -1,3 +1,4 @@
+import { buildAdminPagination } from "../../../utils/admin-list.util.js";
 export function preparePayoutRequestListData(result, query = {}) {
   return {
     items: result.data,
@@ -9,12 +10,7 @@ export function preparePayoutRequestListData(result, query = {}) {
       { key: "zatrazeno", label: "Zatraženo" },
     ],
     actions: [{ type: "view", url: "/admin/isplate/detalji/", icon: "eye" }],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/isplate",
-      query,
-    },
+    pagination: buildAdminPagination(result, { basePath: "/admin/isplate", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Isplate", url: null },

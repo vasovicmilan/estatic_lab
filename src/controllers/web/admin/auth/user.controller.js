@@ -1,14 +1,17 @@
 import * as userService from "../../../../services/user.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import * as authService from "../../../../services/auth.service.js";
 import * as roleService from "../../../../services/role.service.js";
 import { prepareUserListData, prepareUserDetailsData, prepareUserEditFormData } from "../../../../presenters/admin/auth/user.presenter.js";
+import { SORT_MAP } from "../../../../presenters/admin/auth/user.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 
 export async function listUsers(req, res, next) {
   try {
-    const { search, status, role, provider, page = 1, limit = 10 } = req.query;
+    const { search, status, role, provider, page = 1, limit } = req.query;
 
     const [result, roleOptions] = await Promise.all([
       userService.listUsers({
@@ -18,7 +21,8 @@ export async function listUsers(req, res, next) {
         provider: provider || undefined,
         excludeUserId: req.session?.user?.id,
         page: parseInt(page, 10) || 1,
-        limit: parseInt(limit, 10) || 10,
+        limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
       }),
       roleService.getRolesForSelect(),
     ]);

@@ -1,4 +1,5 @@
 import { formatMoney } from "../../../utils/price.util.js";
+import { buildAdminPagination } from "../../../utils/admin-list.util.js";
 
 const PERIOD_LABELS = {
   daily: "Dnevni",
@@ -83,12 +84,7 @@ export function prepareBusinessReportHistoryData(periodType, result, query = {})
       prihodPorudzbina: formatMoney(s.orders?.revenue ?? 0),
       detailUrl: `/admin/poslovni-izvestaji/istorija/${periodType}/${s.periodKey}`,
     })),
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: `/admin/poslovni-izvestaji/istorija/${periodType}`,
-      query,
-    },
+    pagination: buildAdminPagination(result, { basePath: `/admin/poslovni-izvestaji/istorija/${periodType}`, query }),
     dashboardUrl: "/admin/poslovni-izvestaji",
     breadcrumbs: [
       { label: "Admin", url: "/admin" },

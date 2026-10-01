@@ -11,7 +11,7 @@ export function buildPackageFilter({ search = "", category = null, tag = null, s
     ];
   }
 
-  if (category) filter.categories = category;
+  if (category) filter.categories = Array.isArray(category) ? { $in: category } : category;
   if (tag) filter.tags = tag;
   if (service) filter["items.service"] = service;
   if (isActive !== null && isActive !== undefined) filter.isActive = isActive;

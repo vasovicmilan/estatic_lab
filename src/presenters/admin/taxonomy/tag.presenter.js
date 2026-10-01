@@ -1,4 +1,13 @@
 import { CATEGORY_DOMAINS } from "../../../models/category.model.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  naziv: "name",
+  slug: "slug",
+  domen: "domain",
+  aktivan: "isActive",
+  kreiran: "createdAt",
+};
+
 
 const DOMAIN_LABELS = {
   post: "Blog",
@@ -13,24 +22,20 @@ function getDomainOptions() {
 export function prepareTagListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "naziv", label: "Naziv" },
       { key: "slug", label: "Slug" },
       { key: "domen", label: "Domen" },
       { key: "aktivan", label: "Aktivan" },
       { key: "kreiran", label: "Kreiran" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/tagovi/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/tagovi/izmena/", icon: "pencil" },
       { type: "delete", url: "/admin/tagovi/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/tagovi",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/tagovi", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Tagovi", url: null },

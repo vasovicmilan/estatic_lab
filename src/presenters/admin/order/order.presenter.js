@@ -1,23 +1,25 @@
 import { formatMoney } from "../../../utils/price.util.js";
 import { getAllowedStatuses } from "../../../models/order-status-transitions.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  status: "status",
+  datum: "createdAt",
+};
+
 
 export function prepareOrderListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "korisnik", label: "Korisnik" },
       { key: "brojStavki", label: "Stavki" },
       { key: "ukupnaCena", label: "Ukupno" },
       { key: "status", label: "Status" },
       { key: "datum", label: "Datum" },
-    ],
+    ], SORT_MAP),
     actions: [{ type: "view", url: "/admin/porudzbine/detalji/", icon: "eye" }],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/porudzbine",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/porudzbine", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Porudžbine", url: null },

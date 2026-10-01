@@ -1,4 +1,5 @@
 import * as appointmentService from "../../../../services/appointment.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import * as employeeService from "../../../../services/employee.service.js";
 import availabilityService from "../../../../services/availability.service.js";
 import { prepareAppointmentListData, prepareAppointmentDetailsData } from "../../../../presenters/admin/appointment/appointment.presenter.js";
@@ -19,7 +20,7 @@ function nextDayStartInZone(dateStr) {
 
 export async function listAppointments(req, res, next) {
   try {
-    const { search, status, dateFrom, dateTo, unassignedOnly, page = 1, limit = 10 } = req.query;
+    const { search, status, dateFrom, dateTo, unassignedOnly, page = 1, limit } = req.query;
 
     const result = await appointmentService.findAppointments({
       search: search || "",
@@ -31,7 +32,7 @@ export async function listAppointments(req, res, next) {
         unassignedOnly: unassignedOnly === "true",
       },
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
     });
 
     const viewData = prepareAppointmentListData(result, req.query);

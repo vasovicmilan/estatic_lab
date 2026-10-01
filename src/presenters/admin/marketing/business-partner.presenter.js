@@ -1,25 +1,28 @@
 import { BLOG_BLOCK_TYPES } from "../../../models/schemas/content.blog.schema.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  naziv: "name",
+  aktivan: "isActive",
+  kreirano: "createdAt",
+};
+
 
 export function prepareBusinessPartnerListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "slika", label: "Slika", type: "image" },
       { key: "naziv", label: "Naziv" },
       { key: "aktivan", label: "Aktivan" },
       { key: "kreirano", label: "Kreirano" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/saradnici/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/saradnici/izmena/", icon: "pencil" },
       { type: "delete", url: "/admin/saradnici/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/saradnici",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/saradnici", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Saradnici", url: null },

@@ -1,10 +1,13 @@
 import * as couponService from "../../../../services/coupon.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import * as serviceService from "../../../../services/service.service.js";
 import * as packageService from "../../../../services/package.service.js";
 import * as productService from "../../../../services/product.service.js";
 import * as categoryService from "../../../../services/category.service.js";
 import partnerService from "../../../../services/partner.service.js";
 import { prepareCouponListData, prepareCouponDetailsData, prepareCouponFormData } from "../../../../presenters/admin/marketing/coupon.presenter.js";
+import { SORT_MAP } from "../../../../presenters/admin/marketing/coupon.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -86,13 +89,14 @@ function buildCouponPayload(req) {
 
 export async function listCoupons(req, res, next) {
   try {
-    const { search, isActive, page = 1, limit = 10 } = req.query;
+    const { search, isActive, page = 1, limit } = req.query;
 
     const result = await couponService.listCoupons({
       search: search || "",
       filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined },
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = prepareCouponListData(result, req.query);

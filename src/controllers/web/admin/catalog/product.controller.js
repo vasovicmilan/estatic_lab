@@ -1,4 +1,5 @@
 import * as productService from "../../../../services/product.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import * as categoryService from "../../../../services/category.service.js";
 import * as tagService from "../../../../services/tag.service.js";
 import * as serviceService from "../../../../services/service.service.js";
@@ -12,6 +13,8 @@ import {
   prepareProductSeoPublishStepData,
   prepareProductSeoFormData,
 } from "../../../../presenters/admin/catalog/product.presenter.js";
+import { SORT_MAP } from "../../../../presenters/admin/catalog/product.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { prepareMediaFormData } from "../../../../presenters/admin/media-form.presenter.js";
 import { buildGalleryPayload, buildVideosPayload } from "../../../../utils/media-form.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
@@ -158,7 +161,7 @@ function buildProductPayload(req, existing = {}) {
 
 export async function listProducts(req, res, next) {
   try {
-    const { search, isActive, inStock, page = 1, limit = 10 } = req.query;
+    const { search, isActive, inStock, page = 1, limit } = req.query;
 
     const result = await productService.listProducts({
       search: search || "",
@@ -167,7 +170,8 @@ export async function listProducts(req, res, next) {
         inStock: inStock === "true" ? true : inStock === "false" ? false : undefined,
       },
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = prepareProductListData(result, req.query);

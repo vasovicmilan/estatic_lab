@@ -23,6 +23,12 @@
     <div class="card mb-4">
       <div class="card-body">
         <form method="GET" class="row g-3 align-items-end">
+          <% if (data.pagination && data.pagination.query) {
+               const filterNames = data.topbar.filters.map(function(f) { return f.name; });
+               ['limit', 'sortBy', 'sortDir'].forEach(function(keep) {
+                 if (data.pagination.query[keep] && !filterNames.includes(keep)) { %>
+            <input type="hidden" name="<%= keep %>" value="<%= data.pagination.query[keep] %>">
+          <% } }) } %>
           <% data.topbar.filters.forEach(function(filter) { %>
             <div class="col-auto">
               <label class="form-label small text-muted" for="filter-<%= filter.name %>"><%= filter.label %></label>
@@ -52,7 +58,21 @@
         <thead class="table-light">
           <tr>
             <% data.columns.forEach(function(col) { %>
-              <th<%= col.type === 'image' ? ' style="width: 64px;"' : '' %>><%= col.label %></th>
+              <% if (col.sortable) {
+                   const isActiveSort = data.sort && data.sort.by === col.key;
+                   const nextDir = isActiveSort && data.sort.dir === 'desc' ? 'asc' : 'desc';
+                   const sortParams = new URLSearchParams({ ...(data.pagination.query || {}), sortBy: col.key, sortDir: nextDir });
+                   sortParams.delete('page');
+              %>
+                <th scope="col" aria-sort="<%= isActiveSort ? (data.sort.dir === 'asc' ? 'ascending' : 'descending') : 'none' %>">
+                  <a href="<%= data.pagination.basePath %>?<%= sortParams.toString() %>" class="text-reset text-decoration-none text-nowrap" title="Sortiraj po: <%= col.label %>">
+                    <%= col.label %>
+                    <i class="bi <%= isActiveSort ? (data.sort.dir === 'asc' ? 'bi-sort-up' : 'bi-sort-down') : 'bi-arrow-down-up text-muted opacity-50' %>" aria-hidden="true"></i>
+                  </a>
+                </th>
+              <% } else { %>
+                <th<%= col.type === 'image' ? ' style="width: 64px;"' : '' %>><%= col.label %></th>
+              <% } %>
             <% }) %>
             <% if (data.actions && data.actions.length > 0) { %><th class="text-end">Akcije</th><% } %>
           </tr>

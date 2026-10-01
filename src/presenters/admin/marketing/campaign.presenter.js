@@ -1,4 +1,12 @@
 import { CAMPAIGN_BLOCK_TYPES } from "../../../models/campaign.model.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  naslov: "title",
+  status: "status",
+  zakazanoZa: "scheduledFor",
+  poslatoZa: "sentAt",
+};
+
 
 const INTEREST_OPTIONS = [
   { value: "general", label: "Opšte" },
@@ -9,7 +17,7 @@ const INTEREST_OPTIONS = [
 export function prepareCampaignListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "naslov", label: "Naslov" },
       { key: "predmet", label: "Predmet email-a" },
       { key: "status", label: "Status" },
@@ -17,18 +25,14 @@ export function prepareCampaignListData(result, query = {}) {
       { key: "zakazanoZa", label: "Zakazano za" },
       { key: "poslatoZa", label: "Poslato" },
       { key: "poslato", label: "Uspešno" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/newsletter/kampanje/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/newsletter/kampanje/izmena/", icon: "pencil" },
       { type: "delete", url: "/admin/newsletter/kampanje/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/newsletter/kampanje",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/newsletter/kampanje", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Newsletter", url: "/admin/newsletter" },

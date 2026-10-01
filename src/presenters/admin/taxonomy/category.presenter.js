@@ -1,6 +1,13 @@
 import { formatDateTime } from "../../../utils/date.time.util.js";
 import { CATEGORY_DOMAINS } from "../../../models/category.model.js";
 import { BLOG_BLOCK_TYPES } from "../../../models/schemas/content.blog.schema.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  naziv: "name",
+  domen: "domain",
+  kreirana: "createdAt",
+};
+
 
 // Labels only - the actual set of valid domains always comes from CATEGORY_DOMAINS,
 // so adding a new domain there is the only change needed; a domain missing from this
@@ -18,25 +25,21 @@ function getDomainOptions() {
 export function prepareCategoryListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "slika", label: "Slika", type: "image" },
       { key: "naziv", label: "Naziv" },
       { key: "domen", label: "Domen" },
       { key: "roditelj", label: "Roditelj" },
       { key: "aktivna", label: "Aktivna" },
       { key: "kreirana", label: "Kreirana" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/kategorije/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/kategorije/izmena/", icon: "pencil" },
       { type: "delete", url: "/admin/kategorije/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/kategorije",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/kategorije", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Kategorije", url: null },

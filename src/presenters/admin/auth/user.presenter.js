@@ -1,7 +1,17 @@
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  imePrezime: "lastName",
+  email: "email",
+  uloga: "role",
+  status: "status",
+  poslednjiLogin: "lastLogin",
+  registrovan: "createdAt",
+};
+
 export function prepareUserListData(result, query = {}, roleOptions = []) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "slika", label: "Slika", type: "image" },
       { key: "imePrezime", label: "Ime i prezime" },
       { key: "email", label: "Email" },
@@ -10,18 +20,14 @@ export function prepareUserListData(result, query = {}, roleOptions = []) {
       { key: "status", label: "Status" },
       { key: "poslednjiLogin", label: "Poslednji login" },
       { key: "registrovan", label: "Registrovan" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/korisnici/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/korisnici/izmena/", icon: "pencil" },
       { type: "delete", url: "/admin/korisnici/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/korisnici",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/korisnici", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Korisnici", url: null },

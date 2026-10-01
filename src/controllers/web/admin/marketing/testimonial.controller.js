@@ -1,5 +1,8 @@
 import * as testimonialService from "../../../../services/testimonial.service.js";
+import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import { prepareTestimonialListData, prepareTestimonialDetailsData } from "../../../../presenters/admin/marketing/testimonial.presenter.js";
+import { SORT_MAP } from "../../../../presenters/admin/marketing/testimonial.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -7,7 +10,7 @@ import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
 export async function listTestimonials(req, res, next) {
   try {
-    const { status, isFeatured, page = 1, limit = 10 } = req.query;
+    const { status, isFeatured, page = 1, limit } = req.query;
 
     const result = await testimonialService.listTestimonials({
       filters: {
@@ -15,7 +18,8 @@ export async function listTestimonials(req, res, next) {
         isFeatured: isFeatured === "true" ? true : isFeatured === "false" ? false : undefined,
       },
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = prepareTestimonialListData(result, req.query);

@@ -1,14 +1,10 @@
 import { formatDateTime } from "../../../utils/date.time.util.js";
+import { buildAdminPagination } from "../../../utils/admin-list.util.js";
 
 export function prepareAuditLogListData(result, query = {}, availableActions = []) {
   return {
     items: result.data.map(mapAuditLogRow),
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/logovi/audit",
-      query,
-    },
+    pagination: buildAdminPagination(result, { basePath: "/admin/logovi/audit", query }),
     filters: {
       action: {
         value: query.action || "",

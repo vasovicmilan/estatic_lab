@@ -1,23 +1,27 @@
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  naziv: "name",
+  kapacitet: "capacity",
+  aktivan: "isActive",
+  kreiran: "createdAt",
+};
+
 export function prepareResourceListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "naziv", label: "Naziv" },
       { key: "kapacitet", label: "Kapacitet" },
       { key: "aktivan", label: "Aktivan" },
       { key: "kreiran", label: "Kreiran" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/resursi/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/resursi/izmena/", icon: "pencil" },
       { type: "delete", url: "/admin/resursi/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/resursi",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/resursi", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Resursi", url: null },

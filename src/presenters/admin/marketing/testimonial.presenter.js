@@ -1,7 +1,16 @@
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+export const SORT_MAP = {
+  ime: "name",
+  ocena: "rating",
+  status: "status",
+  istaknut: "isFeatured",
+  kreiran: "createdAt",
+};
+
 export function prepareTestimonialListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
+    columns: markSortableColumns([
       { key: "slika", label: "Slika", type: "image" },
       { key: "ime", label: "Ime" },
       { key: "email", label: "Email" },
@@ -11,17 +20,13 @@ export function prepareTestimonialListData(result, query = {}) {
       { key: "saglasnost", label: "Saglasnost" },
       { key: "istaknut", label: "Istaknut" },
       { key: "kreiran", label: "Kreiran" },
-    ],
+    ], SORT_MAP),
     actions: [
       { type: "view", url: "/admin/testimoniali/detalji/", icon: "eye" },
       { type: "delete", url: "/admin/testimoniali/", icon: "trash" },
     ],
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/admin/testimoniali",
-      query,
-    },
+    sort: buildSortState(query, SORT_MAP),
+    pagination: buildAdminPagination(result, { basePath: "/admin/testimoniali", query }),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Testimoniali", url: null },
