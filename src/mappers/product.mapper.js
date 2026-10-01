@@ -41,6 +41,14 @@ function getPriceRange(product) {
   return min === max ? formatMoney(min) : `${formatPrice(min)} - ${formatMoney(max)}`;
 }
 
+// Same rule as the public post queries (status published + publishedAt not in the
+// future). A populated post without a `status` (e.g. a bare ObjectId-shaped stub) is
+// treated as not visible - better to hide a link than to leak a draft.
+function isPostPubliclyVisible(post) {
+  if (post.status !== "published") return false;
+  return !post.publishedAt || new Date(post.publishedAt) <= new Date();
+}
+
 function getTotalStock(product) {
   return (product.variations || []).reduce((sum, v) => sum + (v.stock || 0), 0);
 }
@@ -88,6 +96,7 @@ export function mapProductsForAdminList(products = []) {
         kategorije: getCategoryNames(product),
         cena: getPriceRange(product),
         naUpit: !!product.priceOnRequest,
+        poNarudzbini: !!product.madeToOrder,
         stanje: getTotalStock(product),
         brojVarijanti: product.variations?.length || 0,
         oznaka: translateBadge(product.badge),
@@ -117,10 +126,10 @@ export function mapProductForAdminDetail(product) {
     stanjeUkupno: getTotalStock(product),
     povezaniProizvodi: (product.relatedProducts || [])
       .filter((p) => p && typeof p === "object" && p.name)
-      .map((p) => ({ id: p._id?.toString(), naziv: p.name, slug: p.slug })),
+      .map((p) => ({ id: p._id?.toString(), naziv: p.name, slug: p.slug, slika: formatImage(p.image) })),
     povezaneUsluge: (product.relatedServices || [])
       .filter((s) => s && typeof s === "object" && s.name)
-      .map((s) => ({ id: s._id?.toString(), naziv: s.name, slug: s.slug })),
+      .map((s) => ({ id: s._id?.toString(), naziv: s.name, slug: s.slug, slika: formatImage(s.image) })),
     povezaniPostovi: (product.relatedPosts || [])
       .filter((p) => p && typeof p === "object" && p.title)
       .map((p) => ({ id: p._id?.toString(), naslov: p.title, slug: p.slug, slika: formatImage(p.coverImage) })),
@@ -131,6 +140,7 @@ export function mapProductForAdminDetail(product) {
     nacinDostave: translateShippingClass(product.shippingClass),
     nacinDostaveRaw: product.shippingClass || "standard",
     naUpit: !!product.priceOnRequest,
+    poNarudzbini: !!product.madeToOrder,
     aktivan: product.isActive,
     vreme: {
       kreiran: formatDateTime(product.createdAt),
@@ -165,6 +175,7 @@ export function mapProductForEdit(product) {
     badge: product.badge || "none",
     shippingClass: product.shippingClass || "standard",
     priceOnRequest: !!product.priceOnRequest,
+    madeToOrder: !!product.madeToOrder,
     isActive: product.isActive,
   };
 }
@@ -182,6 +193,7 @@ export function mapProductForPublicCard(product) {
     kategorije: getCategoryNames(product),
     cena: getPriceRange(product),
     naUpit: !!product.priceOnRequest,
+    poNarudzbini: !!product.madeToOrder,
     naStanju: getTotalStock(product) > 0,
     oznaka: translateBadge(product.badge),
     oznakaRaw: product.badge || "none",
@@ -208,18 +220,22 @@ export function mapProductForPublicDetail(product) {
     galerija: (product.gallery || []).map(formatImage),
     videi: product.videos || [],
     varijante: mapVariations((product.variations || []).filter((v) => v.isActive)),
+    // Only publicly visible related entities: an inactive product/service or a draft or
+    // scheduled post must never leak its name/slug onto a public page just because an
+    // admin linked it (populate pulls the raw document regardless of its state).
     povezaniProizvodi: (product.relatedProducts || [])
-      .filter((p) => p && typeof p === "object" && p.name)
+      .filter((p) => p && typeof p === "object" && p.name && p.isActive !== false)
       .map((p) => ({ id: p._id?.toString(), naziv: p.name, slug: p.slug, slika: formatImage(p.image) })),
     povezaneUsluge: (product.relatedServices || [])
-      .filter((s) => s && typeof s === "object" && s.name)
+      .filter((s) => s && typeof s === "object" && s.name && s.isActive !== false)
       .map((s) => ({ id: s._id?.toString(), naziv: s.name, slug: s.slug, slika: formatImage(s.image) })),
     povezaniPostovi: (product.relatedPosts || [])
-      .filter((p) => p && typeof p === "object" && p.title)
+      .filter((p) => p && typeof p === "object" && p.title && isPostPubliclyVisible(p))
       .map((p) => ({ id: p._id?.toString(), naslov: p.title, slug: p.slug, slika: formatImage(p.coverImage) })),
     faq: (product.faq || []).map((f) => ({ pitanje: f.question, odgovor: f.answer })),
     oznaka: translateBadge(product.badge),
     naUpit: !!product.priceOnRequest,
+    poNarudzbini: !!product.madeToOrder,
   };
 }
 

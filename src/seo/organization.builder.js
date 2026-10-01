@@ -1,6 +1,7 @@
 import BUSINESS from "../config/business.config.js";
 import employeeService from "../services/employee.service.js";
 import runtimeSettingsCache from "../config/runtime-settings.cache.js";
+import { FEATURES } from "../config/features.config.js";
 
 // Rendered once per request into every page via res.locals.orgJsonLd (set in
 // locals.config.js) - unlike generateSeo()'s per-type builders, this doesn't vary
@@ -32,7 +33,8 @@ async function resolveOpeningHours() {
         closes: wh.to,
       }));
   }
-  return employeeService.getAggregateBusinessHours();
+  // bez booking modula nema zaposlenih sa smenama - nema šta da se izvede
+  return FEATURES.booking ? employeeService.getAggregateBusinessHours() : [];
 }
 
 export async function buildOrganizationJsonLd(req) {
@@ -41,13 +43,13 @@ export async function buildOrganizationJsonLd(req) {
 
   return {
     "@context": "https://schema.org",
-    "@type": "HealthAndBeautyBusiness",
+    "@type": FEATURES.booking ? "HealthAndBeautyBusiness" : FEATURES.shop ? "Store" : "Organization",
     name: BUSINESS.name,
     legalName: BUSINESS.legalName,
-    alternateName: BUSINESS.alternateName,
+    ...(BUSINESS.alternateName ? { alternateName: BUSINESS.alternateName } : {}),
     url: base,
-    email: BUSINESS.email,
-    telephone: BUSINESS.phone,
+    ...(BUSINESS.email ? { email: BUSINESS.email } : {}),
+    ...(BUSINESS.phone ? { telephone: BUSINESS.phone } : {}),
     // PIB / matični broj aren't assigned yet (business registration pending),
     // so these are omitted entirely rather than emitted as null/empty -
     // schema.org validators flag empty required-looking fields, and an
@@ -68,18 +70,21 @@ export async function buildOrganizationJsonLd(req) {
       : {}),
     image: `${base}${BUSINESS.logo}`,
     logo: `${base}${BUSINESS.logo}`,
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: BUSINESS.address.streetAddress,
-      addressLocality: BUSINESS.address.addressLocality,
-      postalCode: BUSINESS.address.postalCode,
-      addressCountry: BUSINESS.address.addressCountry,
-    },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: BUSINESS.geo.latitude,
-      longitude: BUSINESS.geo.longitude,
-    },
+    // Nova (white-label) instanca može još da nema adresu/koordinate - prazna polja se izostavljaju.
+    ...(BUSINESS.address.streetAddress
+      ? {
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: BUSINESS.address.streetAddress,
+            addressLocality: BUSINESS.address.addressLocality,
+            postalCode: BUSINESS.address.postalCode,
+            addressCountry: BUSINESS.address.addressCountry,
+          },
+        }
+      : {}),
+    ...(Number.isFinite(BUSINESS.geo?.latitude) && Number.isFinite(BUSINESS.geo?.longitude)
+      ? { geo: { "@type": "GeoCoordinates", latitude: BUSINESS.geo.latitude, longitude: BUSINESS.geo.longitude } }
+      : {}),
     ...(BUSINESS.sameAs.length ? { sameAs: BUSINESS.sameAs } : {}),
     ...(hours.length
       ? {

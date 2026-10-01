@@ -1,3 +1,4 @@
+import { BUSINESS } from "../../config/business.config.js";
 import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd, buildFaqPageJsonLd } from "../utils.seo.js";
 import { getCurrency } from "../../config/runtime-settings.cache.js";
 
@@ -14,7 +15,7 @@ function buildProductOffers(product, canonical) {
     url: canonical,
     priceCurrency: getCurrency().code,
     price: v.cena,
-    availability: v.naStanju ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+    availability: v.naStanju ? "https://schema.org/InStock" : product.poNarudzbini ? "https://schema.org/BackOrder" : "https://schema.org/OutOfStock",
   }));
 }
 
@@ -39,7 +40,7 @@ function buildProductJsonLd(product, canonical, imageUrl, siteName) {
 }
 
 export async function buildProductSeo(product, req, siteConfig = {}) {
-  const siteName = siteConfig.siteName || "Estetik Lab";
+  const siteName = siteConfig.siteName || BUSINESS.name;
   const defaultImage = siteConfig.defaultImage || "/images/site/default-og.webp";
   const title = product.naziv ? `${escape(product.naziv)} | ${siteName}` : siteName;
   const description = truncate(product.kratakOpis || product.dugiOpisTekst || siteConfig.defaultDescription || "");

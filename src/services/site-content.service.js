@@ -1,3 +1,4 @@
+import { FEATURES } from "../config/features.config.js";
 import siteContentRepo from "../repositories/site-content.repository.js";
 import { badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
@@ -58,7 +59,7 @@ export async function getSiteContent() {
       lead: content.teamIntro.lead,
       highlights: content.teamIntro.highlights,
     },
-    pageSeo: mergePageSeo(content.pageSeo),
+    pageSeo: onlyAvailablePages(mergePageSeo(content.pageSeo)),
     homeHero: withDefaults(content.homeHero, DEFAULT_HOME_HERO),
     contactPage: withDefaults(content.contactPage, DEFAULT_CONTACT_PAGE),
     servicesIntro: withDefaults(content.servicesIntro, DEFAULT_SERVICES_INTRO),
@@ -100,6 +101,19 @@ function mergePageSeo(stored) {
     };
   }
   return result;
+}
+
+// Stranice koje pripadaju modulu - kad je modul isključen stranica ne postoji (404), pa se ne
+// nudi ni u adminu ni kroz javni API.
+export const PAGE_MODULES = { services: "booking", packages: "booking", products: "shop", blog: "blog", partnership: "partners" };
+
+export function isPageAvailable(key) {
+  const moduleName = PAGE_MODULES[key];
+  return !moduleName || !!FEATURES[moduleName];
+}
+
+function onlyAvailablePages(seo) {
+  return Object.fromEntries(Object.entries(seo).filter(([key]) => isPageAvailable(key)));
 }
 
 export function isPageSeoKey(key) {
@@ -335,8 +349,45 @@ export async function getStaticPageSeo(key, overrides = {}) {
   });
 }
 
+// Linkovi/dugmad hero-a koje je admin (ili stari default) usmerio na modul koji je u ovoj instanci
+// isključen ("/usluge", "/paketi", "/zakazivanje" bez booking-a, "/prodavnica" bez shop-a, "/blog"
+// bez bloga) vode na 404 - umesto toga se prikazuje prvi dostupan cilj, sa odgovarajućom oznakom.
+const MODULE_LINKS = [
+  { re: /^\/(usluge|paketi|zakazivanje)(\/|\?|$)/, module: "booking" },
+  { re: /^\/prodavnica(\/|\?|$)/, module: "shop" },
+  { re: /^\/blog(\/|\?|$)/, module: "blog" },
+];
+const LINK_FALLBACKS = [
+  { url: "/prodavnica", module: "shop", label: "Pogledajte ponudu" },
+  { url: "/blog", module: "blog", label: "Pročitajte blog" },
+  { url: "/kontakt", module: null, label: "Kontaktirajte nas" },
+];
+
+function isLinkAvailable(url) {
+  const hit = MODULE_LINKS.find((m) => m.re.test(String(url || "")));
+  return !hit || FEATURES[hit.module];
+}
+
+export function adaptHeroToModules(hero) {
+  const out = { ...hero };
+  const used = new Set();
+  for (const [urlKey, labelKey] of [["ctaUrl", "ctaLabel"], ["secondaryCtaUrl", "secondaryCtaLabel"]]) {
+    if (isLinkAvailable(out[urlKey]) && !used.has(out[urlKey])) {
+      used.add(out[urlKey]);
+      continue;
+    }
+    const next = LINK_FALLBACKS.find((f) => (!f.module || FEATURES[f.module]) && !used.has(f.url));
+    if (next) {
+      out[urlKey] = next.url;
+      out[labelKey] = next.label;
+      used.add(next.url);
+    }
+  }
+  return out;
+}
+
 export async function getHomeHero() {
-  return (await getSiteContent()).homeHero;
+  return adaptHeroToModules((await getSiteContent()).homeHero);
 }
 export async function getContactPage() {
   return (await getSiteContent()).contactPage;
@@ -463,6 +514,7 @@ export async function updatePageSeo(pages) {
   const next = { ...current };
   for (const [key, value] of Object.entries(pages)) {
     if (!isPageSeoKey(key)) badRequest(`Nepoznata stranica za SEO: ${key}`);
+    if (!isPageAvailable(key)) continue; // modul isključen - stranica ne postoji, ostaje netaknuta
     if (!value || typeof value !== "object") badRequest(`SEO podaci za "${PAGE_SEO_PAGES[key].label}" moraju biti objekat`);
     const label = PAGE_SEO_PAGES[key].label;
     const title = requireNonEmptyString(value.title, `SEO naslov (${label})`);
@@ -474,7 +526,7 @@ export async function updatePageSeo(pages) {
   }
   await siteContentRepo.updateSiteContent({ pageSeo: next });
   logInfo("SEO statičkih stranica ažuriran", { pages: Object.keys(pages) });
-  return getPageSeoAll();
+  return onlyAvailablePages(await getPageSeoAll());
 }
 
 export default {
@@ -485,6 +537,7 @@ export default {
   updateHomeHero, updateContactPage, updateServicesIntro, updatePackagesIntro, updateBlogIntro, updateShopIntro,
   getStaticPageSeo,
   isPageSeoKey,
+  isPageAvailable,
   updatePageSeo,
   getAbout,
   getFaq,

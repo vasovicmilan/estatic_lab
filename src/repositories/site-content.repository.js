@@ -1,3 +1,4 @@
+import { buildInitialSiteContent } from "../config/site-content-seed.js";
 import SiteContent from "../models/site-content.model.js";
 
 /**
@@ -11,7 +12,7 @@ import SiteContent from "../models/site-content.model.js";
 export async function findOrCreateSiteContent({ session } = {}) {
   const existing = await SiteContent.findOne().session(session || null);
   if (existing) return existing;
-  const [created] = await SiteContent.create([{}], { session });
+  const [created] = await SiteContent.create([buildInitialSiteContent()], { session });
   return created;
 }
 

@@ -316,6 +316,14 @@ export function prepareProductFormData(product, { categoryOptions = [], tagOptio
       value: values.priceOnRequest,
       help: "Za artikle čiju cenu ne možemo garantovati unapred (npr. jako promenljiv trošak transporta) - umesto cene i dugmeta 'Dodaj u korpu', sajt prikazuje 'Cena na upit' i vezu ka kontakt formi. Prodaja se onda evidentira ručno kroz Porudžbine → Ručno kreiranje, sa cenom koju uneseš u tom trenutku.",
     },
+    {
+      name: "madeToOrder",
+      label: "Dostupno po narudžbini",
+      type: "checkbox",
+      width: 6,
+      value: values.madeToOrder,
+      help: "Artikal se ne drži na lageru već se naručuje/pravi po zahtevu. Kad varijanta nema stanja, sajt umesto 'Nema na stanju' prikazuje 'Dostupno po narudžbini' i dugme 'Pošalji upit' (kontakt forma unapred popunjena nazivom artikla). Varijante koje imaju stanja i dalje se kupuju normalno kroz korpu.",
+    },
     { name: "isActive", label: "Aktivan", type: "checkbox", width: 6, value: values.isActive },
   ];
 
@@ -505,6 +513,14 @@ export function prepareProductSeoPublishStepData(product, { productOptions = [],
       width: 6,
       value: false,
       help: "Za artikle čiju cenu ne možemo garantovati unapred (npr. jako promenljiv trošak transporta) - umesto cene i dugmeta 'Dodaj u korpu', sajt prikazuje 'Cena na upit' i vezu ka kontakt formi. Prodaja se onda evidentira ručno kroz Porudžbine → Ručno kreiranje, sa cenom koju uneseš u tom trenutku.",
+    },
+    {
+      name: "madeToOrder",
+      label: "Dostupno po narudžbini",
+      type: "checkbox",
+      width: 6,
+      value: false,
+      help: "Artikal se ne drži na lageru već se naručuje/pravi po zahtevu. Kad varijanta nema stanja, sajt umesto 'Nema na stanju' prikazuje 'Dostupno po narudžbini' i dugme 'Pošalji upit' (kontakt forma unapred popunjena nazivom artikla). Varijante koje imaju stanja i dalje se kupuju normalno kroz korpu.",
     },
     {
       name: "isActive",

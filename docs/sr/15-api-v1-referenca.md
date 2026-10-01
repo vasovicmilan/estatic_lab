@@ -70,10 +70,13 @@ Linkovi ka nalogu, zaposlenom i adminu (`/moj-nalog/zakazivanja`, `/zaposleni-pa
 | `POST /api/v1/booking/confirm` | Zakazivanje termina kao gost ili prijavljen korisnik |
 | `GET /api/v1/booking/referral-code` | Referalni (partnerski) kod koji je već zabeležen za ovog posetioca, ako postoji |
 | `POST /api/v1/booking/coupon/check` | Pregled popusta kupona pre potvrde zakazivanja (`optionalApiAuth` - poštuju se limiti kupona po korisniku za prijavljenog pozivaoca) |
+| `GET /api/v1/testimonials?limit=` | Odobreni utisci (najviše 24). Opcioni `product=`, `service=` ili `package=` (ID) sužava listu na utiske za taj entitet i dodaje `meta.summary` (`{ average, count }`, zaokruženo na jednu decimalu) računat preko SVIH odobrenih utisaka tog entiteta, ne samo prikazanih. Neispravan ID je `400` |
 | `POST /api/v1/contact`, `/newsletter-subscribe`, `/testimonials` | Javna kontakt forma, prijava na newsletter i slanje testimonijala, sa istim honeypot-om i rate limitima kao web ekvivalenti |
 | `GET /api/v1/orders/:orderId/confirm/:token` | Potvrda porudžbine preko linka iz mejla (bez prijave) |
 | `POST /api/v1/newsletter/unsubscribe/:token` | Odjava preko linka iz newsletter mejla (namerno POST: mail skeneri koji GET-uju svaki link ne smeju nekoga slučajno da odjave) |
 | `POST /api/v1/auth/register`, `/login`, `/forgot-password`, `PUT /reset-password/:token`, `GET /verify/:token` | Standardan auth tok |
+
+Javni detalj proizvoda (`GET /api/v1/products/:slug`) i kartica (`/products`) imaju `poNarudzbini` (boolean, admin polje `madeToOrder`): artikal se ne drži na lageru, pa varijanta bez zaliha znači "dostupno po narudžbini" (upit preko kontakt forme), a ne "nema na stanju". `naStanju` se time ne menja. Povezani proizvodi, usluge i postovi u detalju prikazuju se samo ako su javno vidljivi (aktivni, odnosno objavljeni).
 
 ## Rute prijavljenog korisnika (bilo koja rola, samo `apiAuthMiddleware`)
 

@@ -1,3 +1,4 @@
+import { BUSINESS } from "../../config/business.config.js";
 import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd, buildFaqPageJsonLd } from "../utils.seo.js";
 import { getCurrency } from "../../config/runtime-settings.cache.js";
 
@@ -42,13 +43,13 @@ function buildServiceJsonLd(service, canonical, imageUrl, siteName) {
       ...(aggregateRating ? { aggregateRating } : {}),
       ...(review ? { review } : {}),
     },
-    areaServed: "Novi Sad",
+    ...(BUSINESS.address?.addressLocality ? { areaServed: BUSINESS.address.addressLocality } : {}),
     ...(offers ? { offers } : {}),
   };
 }
 
 export async function buildServiceSeo(service, req, siteConfig = {}) {
-  const siteName = siteConfig.siteName || "Estetik Lab";
+  const siteName = siteConfig.siteName || BUSINESS.name;
   const defaultImage = siteConfig.defaultImage || "/images/site/default-og.webp";
   const title = service.naziv ? `${escape(service.naziv)} | ${siteName}` : siteName;
   const description = truncate(service.kratakOpis || service.dugiOpis || siteConfig.defaultDescription || "");

@@ -1,3 +1,4 @@
+import { BUSINESS } from "../config/business.config.js";
 import postService from "./post.service.js";
 import categoryService from "./category.service.js";
 import tagService from "./tag.service.js";
@@ -32,7 +33,7 @@ export async function getBlogCategoryData(categorySlug, { limit = 9, page = 1 } 
   const posts = await postService.findPublishedPosts({ limit, page, filters: { category: category._id } });
 
   const seo = buildPageSeo({
-    title: `${category.name} | Blog | Estetik Lab`,
+    title: `${category.name} | Blog | ${BUSINESS.name}`,
     description: category.shortDescription || `Pročitajte sve blog objave iz kategorije ${category.name}.`,
     canonical: page > 1 ? `/blog/kategorija/${category.slug}?page=${page}` : `/blog/kategorija/${category.slug}`,
     // Prazna kategorija (0 objava) nema šta da ponudi crawleru - noindex dok se ne
@@ -63,7 +64,7 @@ export async function getBlogTagData(tagSlug, { limit = 9, page = 1 } = {}) {
   const posts = await postService.findPublishedPosts({ limit, page, filters: { tag: tag._id } });
 
   const seo = buildPageSeo({
-    title: `#${tag.name} | Blog | Estetik Lab`,
+    title: `#${tag.name} | Blog | ${BUSINESS.name}`,
     description: tag.description || `Blog objave označene sa ${tag.name}.`,
     canonical: page > 1 ? `/blog/tag/${tag.slug}?page=${page}` : `/blog/tag/${tag.slug}`,
     // Isti princip kao kod kategorija - prazan tag (0 objava) se ne indeksira.
@@ -107,8 +108,8 @@ export async function searchBlogPosts(search, { limit = 9, page = 1 } = {}) {
   const categories = await postService.attachPostCountsToCategories(categoriesRaw);
 
   const seo = buildPageSeo({
-    title: `Pretraga: ${search} | Blog | Estetik Lab`,
-    description: `Rezultati pretrage za "${search}" na Estetik Lab blogu.`,
+    title: `Pretraga: ${search} | Blog | ${BUSINESS.name}`,
+    description: `Rezultati pretrage za "${search}" na blogu ${BUSINESS.name}.`,
     canonical: `/blog/pretraga?q=${encodeURIComponent(search)}`,
     isIndexable: false,
   });

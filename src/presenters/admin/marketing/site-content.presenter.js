@@ -16,6 +16,7 @@
 //                     paragrafi, pod-sekcije jednog nivoa)
 
 import { PAGE_SEO_PAGES } from "../../../config/site-content-defaults.js";
+import { FEATURES } from "../../../config/features.config.js";
 
 export const SITE_CONTENT_SECTIONS = [
   {
@@ -140,8 +141,31 @@ export const SITE_CONTENT_SECTIONS = [
   },
 ];
 
+// Sekcije vezane za modul koji ovaj deployment nema (ENABLED_MODULES) se ne prikazuju u adminu
+// (kartica nestaje, direktan URL vraća 404) - nema smisla uređivati uvod stranice koja ne postoji.
+const SECTION_MODULE = {
+  servicesIntro: "booking",
+  packagesIntro: "booking",
+  shopIntro: "shop",
+  blogIntro: "blog",
+  partnership: "partners",
+};
+
+const SEO_PAGE_MODULE = { services: "booking", packages: "booking", products: "shop", blog: "blog", partnership: "partners" };
+
+function isSeoPageAvailable(pageKey) {
+  const moduleName = SEO_PAGE_MODULE[pageKey];
+  return !moduleName || !!FEATURES[moduleName];
+}
+
+export function isSectionAvailable(section) {
+  const moduleName = SECTION_MODULE[section.key];
+  return !moduleName || !!FEATURES[moduleName];
+}
+
 export function findSectionBySlug(slug) {
-  return SITE_CONTENT_SECTIONS.find((section) => section.slug === slug) || null;
+  const section = SITE_CONTENT_SECTIONS.find((item) => item.slug === slug);
+  return section && isSectionAvailable(section) ? section : null;
 }
 
 const ICON_HELP = "Naziv Bootstrap ikone, npr. bi-heart-pulse (pogledajte icons.getbootstrap.com).";
@@ -354,7 +378,7 @@ export function prepareSiteContentIndexData(content) {
     } else if (section.key === "homeHero" || section.key === "contactPage") {
       summary = value?.title || "";
     } else if (section.key === "pageSeo") {
-      summary = `${Object.keys(PAGE_SEO_PAGES).length} stranica`;
+      summary = `${Object.keys(PAGE_SEO_PAGES).filter(isSeoPageAvailable).length} stranica`;
     } else if (section.key === "teamIntro") {
       summary = `${Array.isArray(value?.highlights) ? value.highlights.length : 0} istaknutih stavki`;
     }
@@ -373,7 +397,7 @@ export function prepareSiteContentIndexData(content) {
       { label: "Admin", url: "/admin" },
       { label: "Tekstovi sajta", url: null },
     ],
-    cards: SITE_CONTENT_SECTIONS.map(summarize),
+    cards: SITE_CONTENT_SECTIONS.filter(isSectionAvailable).map(summarize),
     settingsUrl: "/admin/sajt",
   };
 }
@@ -396,7 +420,10 @@ export function prepareSiteContentFormData(sectionKey, sectionContent) {
     isEdit: true,
     cancelUrl: "/admin/sajt/sadrzaj",
     submitLabel: "Sačuvaj",
-    fields: schema.map((field) => fieldWithValue(sectionKey, field, sectionContent)),
+    fields: schema
+      // SEO forma: stranice modula koji nije uključen se ne nude
+      .filter((field) => sectionKey !== "pageSeo" || isSeoPageAvailable(field.name.split("__")[0]))
+      .map((field) => fieldWithValue(sectionKey, field, sectionContent)),
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Tekstovi sajta", url: "/admin/sajt/sadrzaj" },

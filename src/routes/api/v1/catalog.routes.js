@@ -49,7 +49,7 @@ router.get("/about", CatalogController.getAboutPage);
 router.get("/faq", CatalogController.getFaqPage);
 router.get("/privacy-policy", CatalogController.getPrivacyPolicyPage);
 router.get("/terms", CatalogController.getTermsPage);
-router.get("/partnership-program", CatalogController.getPartnershipPage);
+router.get("/partnership-program", requireModule("partners"), CatalogController.getPartnershipPage);
 router.get("/home-intro", CatalogController.getHomeIntro);
 
 // SEO (title/description/canonical/OG/JSON-LD) statičkih stranica iz baze - vidi getPageSeo.

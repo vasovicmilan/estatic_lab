@@ -1,11 +1,14 @@
+import { FEATURES } from "../config/features.config.js";
+import { BUSINESS } from "../config/business.config.js";
 import PDFDocument from "pdfkit";
 import { formatMoney } from "./price.util.js";
 import { registerReportFonts } from "./pdf-fonts.util.js";
 
+// Živi podaci firme (Podešavanja sajta > Podaci o firmi), ne zamrznuta kopija.
 const COMPANY = {
-  name: "Estetik Lab wellness centar",
-  address: "Maksima Gorkog 6b, 21120 Novi Sad, Republika Srbija",
-  email: "estetik.lab.ns@gmail.com",
+  get name() { return BUSINESS.legalName; },
+  get address() { return BUSINESS.address.full; },
+  get email() { return BUSINESS.email; },
 };
 
 // Same labels as admin-business-report.ejs's statusLabels - kept as a separate
@@ -120,6 +123,7 @@ export function generateBusinessReportPdf(periodLabel, dateRangeLabel, summary) 
 
     const { appointments, orders, packages, commissions, coupons } = summary;
 
+    if (FEATURES.booking) {
     // ---- Zakazivanja ----
     sectionHeading("Zakazivanja");
     statLine("Ukupno termina", appointments.total);
@@ -129,7 +133,9 @@ export function generateBusinessReportPdf(periodLabel, dateRangeLabel, summary) 
     doc.fontSize(10).font("Body-Bold").fillColor("#000").text("Po zaposlenom");
     doc.font("Body");
     breakdownTable(appointments.byEmployee, "Nema završenih termina u ovom periodu.", true);
+    }
 
+    if (FEATURES.shop) {
     // ---- Prodavnica ----
     sectionHeading("Prodavnica");
     statLine("Ukupno porudžbina", orders.total);
@@ -139,24 +145,33 @@ export function generateBusinessReportPdf(periodLabel, dateRangeLabel, summary) 
     doc.fontSize(10).font("Body-Bold").fillColor("#000").text("Po proizvodu");
     doc.font("Body");
     breakdownTable(orders.byProduct, "Nema završenih porudžbina u ovom periodu.", true);
+    }
 
+    if (FEATURES.booking) {
     // ---- Paketi ----
     sectionHeading("Paketi");
     statLine("Prodato paketa", packages.totalPurchased);
     statLine("Prihod od paketa", formatMoney(packages.revenue));
+    }
 
     // ---- Provizije ----
-    sectionHeading("Provizije");
-    statLine("Zaposleni - zarađeno", formatMoney(commissions.employeeEarned));
-    statLine("Zaposleni - isplaćeno", formatMoney(commissions.employeePaid));
-    statLine("Partneri - zarađeno", formatMoney(commissions.partnerEarned));
-    statLine("Partneri - isplaćeno", formatMoney(commissions.partnerPaid));
+    if (FEATURES.employees || FEATURES.partners) sectionHeading("Provizije");
+    if (FEATURES.employees) {
+      statLine("Zaposleni - zarađeno", formatMoney(commissions.employeeEarned));
+      statLine("Zaposleni - isplaćeno", formatMoney(commissions.employeePaid));
+    }
+    if (FEATURES.partners) {
+      statLine("Partneri - zarađeno", formatMoney(commissions.partnerEarned));
+      statLine("Partneri - isplaćeno", formatMoney(commissions.partnerPaid));
+    }
 
+    if (FEATURES.coupons) {
     // ---- Kuponi ----
     sectionHeading("Kuponi");
     statLine("Ukupno iskorišćeno", coupons.totalRedemptions);
     statLine("Ukupan dat popust", formatMoney(coupons.totalDiscountGiven));
     breakdownTable(coupons.byCoupon, "Nijedan kupon nije iskorišćen u ovom periodu.", true);
+    }
 
     doc.moveDown(1.5);
     ensureSpace(24);

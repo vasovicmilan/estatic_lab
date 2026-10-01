@@ -73,6 +73,37 @@ API v1, **po pojedinačnoj ruti** unutar fajlova koji mešaju module:
 - `admin-people.routes.js` — zaposleni → `employees`, partneri → `partners`; korisnici i eksperti NISU gejtovani (korisnici su opšti, eksperti su namerno nezavisni od booking-a, isto kao `/nas-tim`)
 - `admin-uploads.routes.js` — gejtovano po `:type` iz URL-a: `services`/`packages` → `booking`, `products` → `shop`, `posts` → `blog`, `partners` → `partners`; ostali tipovi NISU gejtovani
 
+## Nova klijentska instanca (npr. samo prodavnica + blog): `WHITE_LABEL=true`
+
+Za novog klijenta (recimo `ENABLED_MODULES=shop,blog`) u `.env` se pored modula postavlja i:
+
+```
+WHITE_LABEL=true
+SITE_NAME="Naziv firme"
+BASE_URL=https://domen-klijenta.rs
+SUPPORT_EMAIL=info@domen-klijenta.rs
+```
+
+Šta `WHITE_LABEL=true` menja:
+- **Poslovni podaci** (`business.config.js`): umesto Estetik Lab podataka (PIB, matični broj, adresa, telefon, koordinate, društvene mreže, "Beauty Medica") koriste se neutralne prazne vrednosti; admin ih popunjava u *Podešavanja sajta → Podaci o firmi*. Prazna polja se izostavljaju iz Organization JSON-LD-a, footer-a i kontakta.
+- **Početni sadržaj** (`config/site-content-seed.js`): kad se `SiteContent` singleton prvi put kreira u bazi, umesto Estetik Lab tekstova upisuje se neutralan sadržaj – hero sa dugmadima ka uključenim modulima, prazni "Zašto mi"/"O nama", FAQ samo za prodavnicu, SEO naslovi sa nazivom firme, a **Politika privatnosti i Uslovi korišćenja** dobijaju sekcije samo za uključene module (booking/shop). Važi samo za PRVO kreiranje; postojeća baza se ne dira.
+- Estetik Lab instanca (bez `WHITE_LABEL`) ostaje potpuno nepromenjena.
+
+> **Pravni tekstovi su polazna tačka, ne pravni savet.** U sekcijama koje pominju i uključen i isključen modul mogu ostati pominjanja termina/paketa – prekontrolišite ih u *Tekstovi sajta* i dajte ih pravniku pre puštanja u rad.
+
+Dodatno ponašanje po modulima (pored ruta iz spiska iznad):
+- **Cron**: podsetnici za termine, digest za zaposlene i SrediMe sync rade samo uz `booking`/`employees`; podsetnici korpe i čišćenje privremenih porudžbina samo uz `shop`; objava zakazanih postova samo uz `blog`; provizije uz `shop` ili `booking`.
+- **API**: `/list-intro/:page` i `/page-seo/:page` za `services`/`packages`/`products`/`blog`/`partnership` vraćaju 404 kad je modul isključen; `/partnership-program` traži `partners`; `/business-info` vraća `moduli` i `slogan` da frontend zna šta da prikaže.
+- **Hero početne**: linkovi ka isključenom modulu (`/usluge`, `/paketi`, `/prodavnica`, `/blog`) automatski se zamenjuju prvim dostupnim ciljem (`getHomeHero`).
+- **Admin**: kartice *Tekstovi sajta* za isključene module (uvod usluga/paketa/prodavnice/bloga, partnerski program) i grupe u *Podešavanjima sajta* (politika zakazivanja, provizija, dostava, neradni dani) se ne prikazuju; dashboard prikazuje samo pločice uključenih modula.
+- **Nalog korisnika** (`/nalog/termini`, `/nalog/porudzbine`, `/nalog/adrese`) – rute i tabovi prate module.
+- **Angular**: `SiteInfo` servis učitava `/business-info` pre prvog rendera; header, footer, početna i admin meni prate module, a rute imaju `moduleGuard` (`canMatch`) koji vraća na početnu.
+- Ime brenda u `<title>`, footer-u, mejlovima (`EMAIL_FROM_NAME`/`EMAIL_FROM` default), PDF fakturama/izveštajima i SEO builderima dolazi iz `BUSINESS` (nema više hardkodiranog "Estetik Lab").
+
+- **Poslovni izveštaji** (admin stranica, mejl, PDF, Angular pregled) prikazuju samo sekcije uključenih modula (zakazivanja/paketi → booking, prodavnica → shop, provizije → employees/partners, kuponi → coupons). SEO forma u adminu nudi samo stranice uključenih modula.
+
+**Šta i dalje ostaje po klijentu (nije kod):** `environment.ts` u frontendu (`apiUrl`), `index.html` `<title>`, favicon/logo/`default-og.webp`, Telegram/SMTP/Google promenljive, i lokalno pravni tekstovi.
+
 ## Šta NIJE gejtovano — stvaran, imenovan posao koji ostaje
 
 **Admin bočni meni** — već gejtovano, videti iznad.

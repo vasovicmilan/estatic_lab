@@ -1,3 +1,4 @@
+import { FEATURES } from "../config/features.config.js";
 import ejs from "ejs";
 import fs from "fs";
 import path from "path";
@@ -40,6 +41,8 @@ export async function renderTemplate(templateName, data) {
     return ejs.render(
       templateContent,
       {
+        // uključeni moduli su dostupni svakom mejl šablonu (npr. izveštaj krije sekcije isključenih modula)
+        features: FEATURES,
         ...data,
         BASE_URL,
         SITE_NAME: siteName(),

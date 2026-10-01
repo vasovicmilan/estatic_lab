@@ -117,9 +117,19 @@
 
   <section class="cta-section py-5 text-white text-center">
     <div class="container">
-      <h2 class="h4 fw-bold mb-3">Spremni da zakažete tretman?</h2>
-      <p class="mb-4">Pregledajte našu ponudu usluga i pronađite tretman koji odgovara vašim ciljevima.</p>
-      <a href="/usluge" class="btn btn-light rounded-pill px-4 fw-semibold">Pogledajte usluge</a>
+      <% if (features.booking) { %>
+        <h2 class="h4 fw-bold mb-3">Spremni da zakažete tretman?</h2>
+        <p class="mb-4">Pregledajte našu ponudu usluga i pronađite tretman koji odgovara vašim ciljevima.</p>
+        <a href="/usluge" class="btn btn-light rounded-pill px-4 fw-semibold">Pogledajte usluge</a>
+      <% } else if (features.shop) { %>
+        <h2 class="h4 fw-bold mb-3">Pogledajte našu ponudu</h2>
+        <p class="mb-4">Pronađite proizvode koji odgovaraju vašim potrebama.</p>
+        <a href="/prodavnica" class="btn btn-light rounded-pill px-4 fw-semibold">Idite u prodavnicu</a>
+      <% } else { %>
+        <h2 class="h4 fw-bold mb-3">Imate pitanje?</h2>
+        <p class="mb-4">Javite nam se - rado ćemo vam pomoći.</p>
+        <a href="/kontakt" class="btn btn-light rounded-pill px-4 fw-semibold">Kontaktirajte nas</a>
+      <% } %>
     </div>
   </section>
 </main>

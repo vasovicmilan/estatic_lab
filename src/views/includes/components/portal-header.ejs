@@ -17,7 +17,7 @@
   <div class="container-fluid">
     <a class="navbar-brand fst-italic d-flex align-items-center gap-2 mb-0 fs-6" href="/">
       <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 1C10 6 15 8 19 8C15 8 10 10 10 19C10 10 5 8 1 8C5 8 10 6 10 1Z" fill="var(--bs-primary)"/></svg>
-      Estetik Lab
+      <%= typeof business !== 'undefined' ? business.name : '' %>
     </a>
 
     <div class="dropdown">

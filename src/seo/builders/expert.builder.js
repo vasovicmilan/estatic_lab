@@ -1,7 +1,8 @@
+import { BUSINESS } from "../../config/business.config.js";
 import { truncate, escape, buildCanonical } from "../utils.seo.js";
 
 export async function buildExpertSeo(expert, req, siteConfig = {}) {
-  const siteName = siteConfig.siteName || "Estetik Lab";
+  const siteName = siteConfig.siteName || BUSINESS.name;
   const defaultImage = siteConfig.defaultImage || "/images/site/default-og.webp";
   const fullName = expert.imePrezime || `${expert.firstName || ""} ${expert.lastName || ""}`.trim();
   const title = fullName ? `${escape(fullName)} | ${siteName}` : siteName;

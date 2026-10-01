@@ -1,10 +1,12 @@
+import { BUSINESS } from "../config/business.config.js";
 import PDFDocument from "pdfkit";
 import { registerReportFonts } from "./pdf-fonts.util.js";
 
+// Živi podaci firme (Podešavanja sajta > Podaci o firmi), ne zamrznuta kopija.
 const COMPANY = {
-  name: "Estetik Lab wellness centar",
-  address: "Maksima Gorkog 6b, 21120 Novi Sad, Republika Srbija",
-  email: "estetik.lab.ns@gmail.com",
+  get name() { return BUSINESS.legalName; },
+  get address() { return BUSINESS.address.full; },
+  get email() { return BUSINESS.email; },
 };
 
 /**

@@ -1,3 +1,4 @@
+import { BUSINESS } from "../../config/business.config.js";
 import nodemailer from "nodemailer";
 import { logInfo, logWarn, logError } from "../../utils/logger.util.js";
 import { alertError } from "../../utils/telegram-alert.util.js";
@@ -43,7 +44,7 @@ function delay(ms) {
 
 export async function sendEmail({ to, subject, html, attachments = [] }) {
   const mailOptions = {
-    from: `"${process.env.EMAIL_FROM_NAME || "Estetik Lab"}" <${process.env.EMAIL_FROM || "estetik.lab.ns@gmail.com"}>`,
+    from: `"${process.env.EMAIL_FROM_NAME || BUSINESS.name}" <${process.env.EMAIL_FROM || BUSINESS.email}>`,
     to,
     subject,
     html,

@@ -1,7 +1,8 @@
+import { BUSINESS } from "../../config/business.config.js";
 import { truncate, escape, buildCanonical, appendPageParam } from "../utils.seo.js";
 
 export async function buildTagSeo(tag, req, siteConfig = {}) {
-  const siteName = siteConfig.siteName || "Estetik Lab";
+  const siteName = siteConfig.siteName || BUSINESS.name;
   const title = tag.name ? `#${escape(tag.name)} | ${siteName}` : siteName;
   const description = truncate(tag.description || siteConfig.defaultDescription || `Sadržaj označen sa "${tag.name}".`);
   // isActive governs whether the tag appears as a filter chip at all; isIndexable is

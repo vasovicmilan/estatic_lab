@@ -3,7 +3,14 @@
 // public contact page (index.presenter.js) and the site-wide Organization
 // JSON-LD (seo/organization.builder.js), so a future address/phone change
 // only needs updating here once instead of drifting between the two.
-export const BUSINESS = {
+// WHITE_LABEL=true: nova klijentska instanca (npr. samo prodavnica + blog). Kodni default-i
+// ispod (naziv, PIB, adresa, telefon, društvene mreže, domen...) pripadaju Estetik Lab-u i NE
+// smeju da procure na tuđ sajt (Organization JSON-LD, footer, pravne stranice, canonical), pa se
+// u tom režimu zamenjuju neutralnim vrednostima - naziv iz SITE_NAME, ostalo prazno dok admin ne
+// popuni "Podaci o firmi" u Podešavanjima sajta.
+export const WHITE_LABEL = /^(1|true|yes)$/i.test(String(process.env.WHITE_LABEL || "").trim());
+
+const ESTETIK_BUSINESS = {
   // name / email / adminEmail / phone / address / geo / taxId / registrationNumber / sameAs and the
   // rest of the fields below are only the CODE DEFAULTS: once an admin saves "Podaci o firmi" in
   // Podešavanja sajta (SiteSettings.business), those values override them live - see
@@ -12,6 +19,8 @@ export const BUSINESS = {
   // as defaults for name / email / adminEmail (precedence: admin settings > env > this file).
   name: process.env.SITE_NAME || "Estetik Lab",
   legalName: "Estetik Lab wellness centar",
+  // kratki slogan u footer-u; prazno = ne prikazuje se
+  tagline: "Vaš prostor za opuštanje i negu.",
   // Schema.org's correct field for a trading/AKA name distinct from the legal
   // name - the domain is beautymedica.rs, but "Beauty Medica" appeared nowhere
   // in the site's own content or structured data before this, so a search for
@@ -94,6 +103,27 @@ export const BUSINESS = {
   // via employeeService.getAggregateBusinessHours() instead.
 };
 
+const NEUTRAL_NAME = process.env.SITE_NAME || "Moja firma";
+const NEUTRAL_BUSINESS = {
+  name: NEUTRAL_NAME,
+  legalName: NEUTRAL_NAME,
+  alternateName: null,
+  tagline: "",
+  email: process.env.SUPPORT_EMAIL || "",
+  adminEmail: process.env.ADMIN_EMAIL || process.env.SUPPORT_EMAIL || "",
+  phone: "",
+  phoneHref: "",
+  siteUrl: process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`,
+  taxId: null,
+  registrationNumber: null,
+  address: { streetAddress: "", addressLocality: "", postalCode: "", addressCountry: "RS", full: "" },
+  geo: { latitude: null, longitude: null },
+  logo: "/images/site/default-og.webp",
+  sameAs: [],
+};
+
+export const BUSINESS = WHITE_LABEL ? { ...NEUTRAL_BUSINESS } : { ...ESTETIK_BUSINESS };
+
 // Snapshot of the code/env defaults, taken before any admin override is applied.
 export const DEFAULT_BUSINESS = JSON.parse(JSON.stringify(BUSINESS));
 
@@ -108,6 +138,7 @@ export function toPhoneHref(phone) {
 }
 
 export function buildFullAddress({ streetAddress, postalCode, addressLocality, addressCountry }) {
+  if (!isFilled(streetAddress)) return "";
   const country = !addressCountry || addressCountry === "RS" ? "Republika Srbija" : addressCountry;
   return `${streetAddress}, ${[postalCode, addressLocality].filter(Boolean).join(" ")}, ${country}`;
 }

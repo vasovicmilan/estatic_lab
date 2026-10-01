@@ -80,3 +80,13 @@ API v1, **per-route** inside files that mix modules:
 **Structured data / SEO metadata** - `organization.builder.js` (the site-wide JSON-LD injected on every page via `locals.config.js`'s `orgJsonLd`) hasn't been checked for module-specific schema.org fields (e.g. an `Offer`/`Product` block); worth a look if a disabled module's structured data is still being emitted.
 
 **robots.txt** - not reviewed for module-specific `Disallow` rules; currently just has the general disallow list from earlier work (booking-flow state pages, admin, etc.), nothing module-aware yet.
+
+
+## New client instance (e.g. shop + blog only): `WHITE_LABEL=true`
+
+For a new client set alongside `ENABLED_MODULES` (e.g. `shop,blog`): `WHITE_LABEL=true`, `SITE_NAME`, `BASE_URL`, `SUPPORT_EMAIL`.
+
+- **Business identity** (`business.config.js`) falls back to neutral empty values instead of Estetik Lab's tax id, address, phone, geo, socials; admin fills them in *Site settings → Business*. Empty fields are omitted from JSON-LD/footer/contact.
+- **Initial content** (`config/site-content-seed.js`): on the FIRST creation of the `SiteContent` singleton, neutral content is written instead of Estetik Lab copy (hero CTAs pointing at enabled modules, empty "why us"/"about", shop-only FAQ, SEO titles with the site name, privacy policy/terms with sections only for enabled modules). Existing databases are untouched. Legal texts are a starting point – have them reviewed.
+- Cron jobs, API list-intro/page-seo/partnership endpoints, the home hero links, admin content cards, site-settings groups, the admin dashboard, account tabs, and the Angular header/footer/home/admin menu + `moduleGuard` all follow the enabled modules. `/business-info` exposes `moduli` and `slogan`.
+- Estetik Lab itself (no `WHITE_LABEL`) is unchanged.

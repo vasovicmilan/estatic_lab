@@ -42,6 +42,16 @@ function categoryLine(base, path, category) {
   return `- [${category.naziv}](${base}${path}/${category.slug})`;
 }
 
+// Opis firme prati uključene module (shop/blog-only instanca ne sme da tvrdi "online zakazivanje").
+function describeBusiness() {
+  const offers = [];
+  if (FEATURES.booking) offers.push("online zakazivanje tretmana", "paketi seansi po povoljnijoj ceni");
+  if (FEATURES.shop) offers.push("online prodavnica");
+  if (FEATURES.blog) offers.push("blog sa stručnim tekstovima");
+  const where = BUSINESS.address.addressLocality ? ` (${BUSINESS.address.addressLocality}, Srbija)` : "";
+  return `${BUSINESS.legalName}${where}.${offers.length ? ` ${offers[0].charAt(0).toUpperCase()}${offers[0].slice(1)}${offers.length > 1 ? `, ${offers.slice(1).join(", ")}` : ""}.` : ""}`;
+}
+
 export async function generateLlmsTxt(base) {
   // Same reasoning as sitemap.service.js/index.service.js - a disabled
   // module's data isn't fetched at all, and (for "Prodavnica" specifically,
@@ -62,9 +72,9 @@ export async function generateLlmsTxt(base) {
   const lines = [
     `# ${BUSINESS.name}`,
     "",
-    `> ${BUSINESS.legalName} - estetski i wellness centar u Novom Sadu (${BUSINESS.address.addressLocality}, Srbija). Online zakazivanje tretmana, paketi seansi po povoljnijoj ceni, i prodavnica profesionalne kozmetičke opreme i preparata.`,
+    `> ${describeBusiness()}`,
     "",
-    `Kontakt: ${BUSINESS.email} | ${BUSINESS.phone} | ${BUSINESS.address.full}`,
+    `Kontakt: ${[BUSINESS.email, BUSINESS.phone, BUSINESS.address.full].filter(Boolean).join(" | ")}`,
     "",
   ];
 

@@ -70,10 +70,13 @@ Account, employee and admin links (`/moj-nalog/zakazivanja`, `/zaposleni-panel/t
 | `POST /api/v1/booking/confirm` | Book an appointment as a guest or a logged-in user |
 | `GET /api/v1/booking/referral-code` | The referral (partner) code already captured for this visitor, if any |
 | `POST /api/v1/booking/coupon/check` | Preview a coupon's discount before confirming a booking (`optionalApiAuth` - a logged-in caller's per-user coupon limits are honored) |
+| `GET /api/v1/testimonials?limit=` | Approved testimonials (max 24). Optional `product=`, `service=` or `package=` (id) narrows the list to that entity and adds `meta.summary` (`{ average, count }`, rounded to one decimal) computed over ALL approved testimonials for it, not just the ones returned. A malformed id is a `400` |
 | `POST /api/v1/contact`, `/newsletter-subscribe`, `/testimonials` | The public contact form, newsletter sign-up and testimonial submission, with the same honeypot and rate limits as their web equivalents |
 | `GET /api/v1/orders/:orderId/confirm/:token` | Order confirmation via the link in the confirmation email (no login) |
 | `POST /api/v1/newsletter/unsubscribe/:token` | Unsubscribe via the link in a newsletter email (POST on purpose: mail scanners that GET every link must not be able to unsubscribe someone) |
 | `POST /api/v1/auth/register`, `/login`, `/forgot-password`, `PUT /reset-password/:token`, `GET /verify/:token` | Standard auth flow |
+
+The public product detail (`GET /api/v1/products/:slug`) and card (`/products`) carry `poNarudzbini` (boolean, admin field `madeToOrder`): the product is not kept in stock, so a variation with no stock means "available to order" (inquiry via the contact form) rather than "out of stock". `naStanju` is unchanged. Related products, services and posts in the detail are only included when publicly visible (active / published).
 
 ## Logged-in-user routes (any role, just `apiAuthMiddleware`)
 

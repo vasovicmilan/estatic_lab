@@ -13,6 +13,21 @@ function fakeReq() {
 }
 
 describe("seo builders", () => {
+  describe("product offer availability", () => {
+    const variant = (overrides) => ({ naziv: "Standard", cena: 1000, aktivna: true, naStanju: true, ...overrides });
+    const offersOf = (seo) => (seo.jsonLd || []).find((node) => node["@type"] === "Product")?.offers;
+
+    it("reports InStock / OutOfStock per variation for an ordinary product", async () => {
+      const seo = await buildProductSeo({ naziv: "X", slug: "x", varijante: [variant(), variant({ naziv: "B", naStanju: false })] }, fakeReq());
+      assert.deepEqual(offersOf(seo).map((o) => o.availability), ["https://schema.org/InStock", "https://schema.org/OutOfStock"]);
+    });
+
+    it("reports BackOrder instead of OutOfStock for a made-to-order product", async () => {
+      const seo = await buildProductSeo({ naziv: "X", slug: "x", poNarudzbini: true, varijante: [variant(), variant({ naziv: "B", naStanju: false })] }, fakeReq());
+      assert.deepEqual(offersOf(seo).map((o) => o.availability), ["https://schema.org/InStock", "https://schema.org/BackOrder"]);
+    });
+  });
+
   describe("category/tag canonical routing by domain - regression test for the /usluge vs /prodavnica bug", () => {
     it("buildCategorySeo routes a 'product' domain category to /prodavnica/kategorija/, not /usluge/kategorija/", async () => {
       const seo = await buildCategorySeo({ name: "Elektronika", slug: "elektronika", domain: "product" }, fakeReq());

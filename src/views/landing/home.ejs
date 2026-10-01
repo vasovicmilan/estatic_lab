@@ -33,7 +33,9 @@
   </div>
 </header>
 
+<% if (features.booking) { %>
 <%- include("../includes/components/ritual-divider", { ticks: ["Priprema", "Tretman", "Opuštanje"] }) %>
+<% } %>
 
 <main>
   <%- include("../includes/flash-messages") %>
@@ -56,17 +58,18 @@
   <% } %>
 
   <!-- About -->
-  <% if (data.intro) { %>
+  <% if (data.intro && (data.intro.lead || data.intro.who || data.intro.closing)) { %>
     <section class="bg-white border-top border-bottom py-5">
       <div class="container">
         <div class="row g-5">
           <div class="col-lg-7">
             <p class="section-eyebrow">O nama</p>
             <h2 class="h3 mb-4"><%= data.intro.title %></h2>
-            <p class="text-muted"><%= data.intro.lead %></p>
-            <p class="text-muted"><%= data.intro.who %></p>
-            <p class="text-muted mb-0"><%= data.intro.closing %></p>
+            <% if (data.intro.lead) { %><p class="text-muted"><%= data.intro.lead %></p><% } %>
+            <% if (data.intro.who) { %><p class="text-muted"><%= data.intro.who %></p><% } %>
+            <% if (data.intro.closing) { %><p class="text-muted mb-0"><%= data.intro.closing %></p><% } %>
           </div>
+          <% if (features.booking && data.intro.massages && data.intro.massages.length > 0) { %>
           <div class="col-lg-5">
             <div class="bg-light border rounded-4 p-4">
               <h3 class="h6 text-primary-emphasis mb-3">Naše masaže</h3>
@@ -83,8 +86,9 @@
               </div>
             </div>
           </div>
+          <% } %>
         </div>
-        <p class="text-muted mt-4 mb-0"><%= data.intro.packages %></p>
+        <% if (features.booking && data.intro.packages) { %><p class="text-muted mt-4 mb-0"><%= data.intro.packages %></p><% } %>
       </div>
     </section>
   <% } %>
@@ -217,8 +221,13 @@
   <!-- Closing CTA -->
   <section class="cta-section py-5 text-white text-center">
     <div class="container">
-      <h2 class="h3 fw-bold mb-3">Spremni za trenutak opuštanja?</h2>
-      <p class="mb-4">Zakažite svoj termin danas i prepustite se nezi koju zaslužujete.</p>
+      <% if (features.booking) { %>
+        <h2 class="h3 fw-bold mb-3">Spremni za trenutak opuštanja?</h2>
+        <p class="mb-4">Zakažite svoj termin danas i prepustite se nezi koju zaslužujete.</p>
+      <% } else { %>
+        <h2 class="h3 fw-bold mb-3">Imate pitanje ili želite da naručite?</h2>
+        <p class="mb-4">Pogledajte našu ponudu ili nam se javite - rado ćemo vam pomoći.</p>
+      <% } %>
       <a href="<%= data.hero.ctaUrl %>" class="btn btn-light btn-lg rounded-pill px-4"><%= data.hero.ctaLabel %></a>
     </div>
   </section>

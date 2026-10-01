@@ -161,7 +161,7 @@ export function buildSectionPayload(sectionKey, body) {
     case "pageSeo":
       // polja su `${stranica}__title` / `${stranica}__description` (vidi presenter)
       return Object.fromEntries(
-        Object.keys(PAGE_SEO_PAGES).map((key) => [key, { title: str(body[`${key}__title`]), description: str(body[`${key}__description`]) }])
+        Object.keys(PAGE_SEO_PAGES).filter((key) => siteContentService.isPageAvailable(key)).map((key) => [key, { title: str(body[`${key}__title`]), description: str(body[`${key}__description`]) }])
       );
     default:
       return {};

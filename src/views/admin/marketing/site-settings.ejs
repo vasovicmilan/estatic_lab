@@ -226,6 +226,7 @@
       <!-- Reuses the existing generic "repeater" widget/admin-repeater.js -->
       <!-- as-is, exactly like admin/_form.ejs's own 'repeater' branch  -->
       <!-- ============================================================ -->
+      <% if (data.closedDatesField) { %>
       <div class="card mb-4">
         <div class="card-header">
           <h6 class="card-title mb-0">Neradni dani / praznici</h6>
@@ -267,6 +268,7 @@
           </form>
         </div>
       </div>
+      <% } %>
 
     </div>
 

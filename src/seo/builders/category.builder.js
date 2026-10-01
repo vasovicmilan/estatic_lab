@@ -1,8 +1,9 @@
+import { BUSINESS } from "../../config/business.config.js";
 import { truncate, escape, buildCanonical, appendPageParam, buildBreadcrumbJsonLd, buildFaqPageJsonLd, collectFaqItemsFromContentBlocks } from "../utils.seo.js";
 import { renderContentBlocks } from "../../utils/content-blocks.util.js";
 
 export async function buildCategorySeo(category, req, siteConfig = {}) {
-  const siteName = siteConfig.siteName || "Estetik Lab";
+  const siteName = siteConfig.siteName || BUSINESS.name;
   const title = category.name ? `${escape(category.name)} | ${siteName}` : siteName;
   const description = truncate(category.shortDescription || category.longDescription || siteConfig.defaultDescription || "");
   // itemCount je opciono polje koje kontroler dopisuje pre poziva generateSeo("category", ...)

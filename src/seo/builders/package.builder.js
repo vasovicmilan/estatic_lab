@@ -1,3 +1,4 @@
+import { BUSINESS } from "../../config/business.config.js";
 import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildAggregateRatingJsonLd, buildReviewJsonLd } from "../utils.seo.js";
 import { getCurrency } from "../../config/runtime-settings.cache.js";
 
@@ -51,7 +52,7 @@ function buildProductJsonLd(pkg, canonical, imageUrl, siteName) {
 }
 
 export async function buildPackageSeo(pkg, req, siteConfig = {}) {
-  const siteName = siteConfig.siteName || "Estetik Lab";
+  const siteName = siteConfig.siteName || BUSINESS.name;
   const defaultImage = siteConfig.defaultImage || "/images/site/default-og.webp";
   const title = pkg.naziv ? `${escape(pkg.naziv)} | ${siteName}` : siteName;
   const description = truncate(pkg.kratakOpis || pkg.opis || siteConfig.defaultDescription || "");

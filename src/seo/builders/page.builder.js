@@ -1,7 +1,8 @@
+import { BUSINESS } from "../../config/business.config.js";
 import { escape, buildCanonical, appendPageParam } from "../utils.seo.js";
 
 export async function buildPageSeoWithReq(pageConfig, req, siteConfig = {}) {
-  const siteName = siteConfig.siteName || "Estetik Lab";
+  const siteName = siteConfig.siteName || BUSINESS.name;
   // Naslovi iz baze već sadrže "| Estetik Lab"; ne dupliramo sufiks.
   const rawTitle = pageConfig.title ? escape(pageConfig.title) : "";
   const title = rawTitle ? (rawTitle.includes(siteName) ? rawTitle : `${rawTitle} | ${siteName}`) : siteName;

@@ -1,3 +1,4 @@
+import { FEATURES } from "../../../config/features.config.js";
 import * as serviceService from "../../../services/service.service.js";
 import * as packageService from "../../../services/package.service.js";
 import * as productService from "../../../services/product.service.js";
@@ -11,7 +12,7 @@ import * as blogService from "../../../services/blog.service.js";
 import * as tagService from "../../../services/tag.service.js";
 import { generateSeo, buildApiPageSeo } from "../../../seo/index.js";
 import { buildOrganizationJsonLd } from "../../../seo/organization.builder.js";
-import { notFound } from "../../../utils/error.util.js";
+import { notFound, badRequest } from "../../../utils/error.util.js";
 import { buildFaqPageJsonLd } from "../../../seo/utils.seo.js";
 import * as testimonialService from "../../../services/testimonial.service.js";
 import siteSettingsService from "../../../services/site-settings.service.js";
@@ -295,6 +296,16 @@ export async function getBusinessInfo(req, res) {
       telefonHref: BUSINESS.phoneHref,
       adresa: BUSINESS.address?.full || null,
       drustveneMreze: BUSINESS.sameAs || [],
+      slogan: BUSINESS.tagline || null,
+      // Koji moduli postoje u ovoj instanci - frontend po tome skriva linkove/sekcije/rute.
+      moduli: {
+        blog: FEATURES.blog,
+        shop: FEATURES.shop,
+        booking: FEATURES.booking,
+        coupons: FEATURES.coupons,
+        partners: FEATURES.partners,
+        employees: FEATURES.employees,
+      },
     },
   });
 }
@@ -372,10 +383,15 @@ export async function getTeamIntro(req, res, next) {
 // description su u bazi (SiteContent.pageSeo, admin: /admin/sajt/sadrzaj/seo-stranica),
 // isti oblik kao `seo` uz detalj-stranice, pa Angular koristi isti Seo.apply().
 // Početna dodatno nosi Organization + WebSite JSON-LD (isti kao EJS sajt).
+function assertPageModule(page) {
+  if (!siteContentService.isPageAvailable(page)) throw notFound("Stranica");
+}
+
 export async function getPageSeo(req, res, next) {
   try {
     const { page } = req.params;
     if (!siteContentService.isPageSeoKey(page)) throw notFound("Stranica");
+    assertPageModule(page);
     const config = await siteContentService.getPageSeoConfig(page);
 
     let jsonLd = [];
@@ -477,6 +493,7 @@ export async function getListIntro(req, res, next) {
   try {
     const getter = LIST_INTRO_GETTERS[req.params.page];
     if (!getter) throw notFound("Stranica");
+    assertPageModule(req.params.page);
     return res.json({ success: true, data: await getter() });
   } catch (error) {
     logError("[api/getListIntro] Greška", error);
@@ -484,10 +501,33 @@ export async function getListIntro(req, res, next) {
   }
 }
 
+const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
+
+// Optional ?product= / ?service= / ?package= (id) narrows the list to reviews written for
+// that one entity, and adds meta.summary ({ average, count }) over ALL approved reviews for
+// it - not just the `limit` shown - so a detail page can render "4.8 (23)" next to the list.
+// An invalid id is a 400 rather than a Mongoose CastError surfacing as a 500.
 export async function listTestimonials(req, res, next) {
   try {
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 6, 1), 24);
-    return res.json({ success: true, data: await testimonialService.getApprovedTestimonials({ limit }) });
+
+    const filters = {};
+    for (const key of ["service", "package", "product"]) {
+      const value = req.query[key];
+      if (value === undefined || value === "") continue;
+      if (typeof value !== "string" || !OBJECT_ID_PATTERN.test(value)) badRequest(`Neispravan identifikator: ${key}`);
+      filters[key] = value;
+    }
+
+    const data = await testimonialService.getApprovedTestimonials({ limit, ...filters });
+    if (!Object.keys(filters).length) return res.json({ success: true, data });
+
+    const summary = await testimonialService.getRatingSummary(filters);
+    return res.json({
+      success: true,
+      data,
+      meta: { summary: { average: Math.round(summary.average * 10) / 10, count: summary.count } },
+    });
   } catch (error) {
     logError("[api/listTestimonials] Greška", error);
     next(error);

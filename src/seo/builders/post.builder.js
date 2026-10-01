@@ -1,3 +1,4 @@
+import { BUSINESS } from "../../config/business.config.js";
 import { truncate, escape, buildCanonical, buildBreadcrumbJsonLd, buildFaqPageJsonLd, collectFaqItemsFromContentBlocks } from "../utils.seo.js";
 
 
@@ -18,7 +19,7 @@ function buildBlogPostingJsonLd(post, canonical, imageUrl, siteName) {
 }
 
 export async function buildPostSeo(post, req, siteConfig = {}) {
-  const siteName = siteConfig.siteName || "Estetik Lab";
+  const siteName = siteConfig.siteName || BUSINESS.name;
   const defaultImage = siteConfig.defaultImage || "/images/site/default-og.webp";
   const title = post.naslov ? `${escape(post.naslov)} | ${siteName}` : siteName;
   const description = truncate(post.seo?.opis || post.kratakOpis || siteConfig.defaultDescription || "");

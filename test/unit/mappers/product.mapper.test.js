@@ -300,6 +300,65 @@ describe("product.mapper", () => {
     });
   });
 
+  describe("madeToOrder (dostupno po narudžbini)", () => {
+    it("defaults to false everywhere for an ordinary product", () => {
+      const product = buildProduct();
+      assert.equal(mapProductForPublicCard(product).poNarudzbini, false);
+      assert.equal(mapProductForPublicDetail(product).poNarudzbini, false);
+      assert.equal(mapProductForAdminDetail(product).poNarudzbini, false);
+      assert.equal(mapProductForEdit(product).madeToOrder, false);
+    });
+
+    it("is exposed as poNarudzbini on the public card, public detail, admin list and admin detail, and as madeToOrder on the edit shape", () => {
+      const product = buildProduct({ madeToOrder: true });
+      assert.equal(mapProductForPublicCard(product).poNarudzbini, true);
+      assert.equal(mapProductForPublicDetail(product).poNarudzbini, true);
+      assert.equal(mapProductsForAdminList([product])[0].poNarudzbini, true);
+      assert.equal(mapProductForAdminDetail(product).poNarudzbini, true);
+      assert.equal(mapProductForEdit(product).madeToOrder, true);
+    });
+
+    it("does not change naStanju - an out-of-stock variation is still reported as out of stock", () => {
+      const product = buildProduct({ madeToOrder: true, variations: [buildProductVariation({ stock: 0 })] });
+      assert.equal(mapProductForPublicCard(product).naStanju, false);
+      assert.equal(mapProductForPublicDetail(product).varijante[0].naStanju, false);
+    });
+  });
+
+  describe("public detail hides related entities that are not publicly visible", () => {
+    const now = Date.now();
+    const post = (overrides) => ({ _id: id(), title: "Post", slug: "post", coverImage: null, status: "published", publishedAt: new Date(now - 1000), ...overrides });
+
+    it("drops draft, scheduled and status-less posts, keeps published ones", () => {
+      const product = buildProduct({
+        relatedPosts: [
+          post({ title: "Objavljen", slug: "objavljen" }),
+          post({ title: "Nacrt", slug: "nacrt", status: "draft" }),
+          post({ title: "Zakazan", slug: "zakazan", status: "scheduled" }),
+          post({ title: "Buducnost", slug: "buducnost", publishedAt: new Date(now + 86400000) }),
+          post({ title: "Bez statusa", slug: "bez-statusa", status: undefined }),
+        ],
+      });
+      assert.deepEqual(mapProductForPublicDetail(product).povezaniPostovi.map((p) => p.slug), ["objavljen"]);
+    });
+
+    it("drops inactive related products and services", () => {
+      const product = buildProduct({
+        relatedProducts: [
+          { _id: id(), name: "Aktivan", slug: "aktivan", image: null, isActive: true },
+          { _id: id(), name: "Neaktivan", slug: "neaktivan", image: null, isActive: false },
+        ],
+        relatedServices: [
+          { _id: id(), name: "Usluga aktivna", slug: "usluga-aktivna", image: null, isActive: true },
+          { _id: id(), name: "Usluga neaktivna", slug: "usluga-neaktivna", image: null, isActive: false },
+        ],
+      });
+      const mapped = mapProductForPublicDetail(product);
+      assert.deepEqual(mapped.povezaniProizvodi.map((p) => p.slug), ["aktivan"]);
+      assert.deepEqual(mapped.povezaneUsluge.map((p) => p.slug), ["usluga-aktivna"]);
+    });
+  });
+
   describe("null safety", () => {
     it("every mapper function returns null for a null/undefined input instead of throwing", () => {
       assert.equal(mapProductForAdminDetail(null), null);

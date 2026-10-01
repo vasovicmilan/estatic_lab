@@ -19,6 +19,7 @@
     <div class="alert alert-warning">Nema podataka za prikaz.</div>
   <% } else { %>
 
+    <% if (features.booking) { %>
     <h2 class="h6 text-uppercase text-muted mb-3">Zakazivanja</h2>
     <div class="row g-3 mb-4">
       <div class="col-md-3">
@@ -94,6 +95,8 @@
       </div>
     </div>
 
+    <% } %>
+    <% if (features.shop) { %>
     <h2 class="h6 text-uppercase text-muted mb-3">Prodavnica</h2>
     <div class="row g-3 mb-4">
       <div class="col-md-4">
@@ -134,6 +137,8 @@
       </div>
     </div>
 
+    <% } %>
+    <% if (features.booking) { %>
     <h2 class="h6 text-uppercase text-muted mb-3">Paketi</h2>
     <div class="row g-3 mb-4">
       <div class="col-md-6">
@@ -150,8 +155,11 @@
       </div>
     </div>
 
+    <% } %>
+    <% if (features.employees || features.partners) { %>
     <h2 class="h6 text-uppercase text-muted mb-3">Provizije</h2>
     <div class="row g-3 mb-4">
+      <% if (features.employees) { %>
       <div class="col-md-3">
         <div class="card h-100"><div class="card-body">
           <p class="text-muted small mb-1">Zaposleni - zarađeno</p>
@@ -164,6 +172,8 @@
           <p class="h5 mb-0"><%= data.summary.commissions.employeePaid %></p>
         </div></div>
       </div>
+      <% } %>
+      <% if (features.partners) { %>
       <div class="col-md-3">
         <div class="card h-100"><div class="card-body">
           <p class="text-muted small mb-1">Partneri - zarađeno</p>
@@ -176,8 +186,11 @@
           <p class="h5 mb-0"><%= data.summary.commissions.partnerPaid %></p>
         </div></div>
       </div>
+      <% } %>
     </div>
 
+    <% } %>
+    <% if (features.coupons) { %>
     <h2 class="h6 text-uppercase text-muted mb-3">Kuponi</h2>
     <div class="row g-3 mb-3">
       <div class="col-md-6">
@@ -212,6 +225,7 @@
       </div>
     </div>
 
+    <% } %>
   <% } %>
 </main>
 

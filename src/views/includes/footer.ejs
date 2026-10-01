@@ -2,11 +2,11 @@
   <div class="container">
     <div class="row g-4 g-lg-5">
       <div class="col-12 col-md-6 col-lg-4">
-        <h5 class="fst-italic">Estetik Lab</h5>
+        <h5 class="fst-italic"><%= business.name %></h5>
         <!-- .text-secondary (solid #6b5b4d) measured only 2.19:1 against this dark
              background, a real WCAG AA failure - .text-white + .text-opacity-75
              (native Bootstrap utilities, no custom CSS needed) measures 7.77:1. -->
-        <p class="text-white text-opacity-75 small">Vaš prostor za opuštanje i negu.</p>
+        <% if (business.tagline) { %><p class="text-white text-opacity-75 small"><%= business.tagline %></p><% } %>
         <% if (typeof business !== "undefined" && business) { %>
           <ul class="list-unstyled small mb-3">
             <% if (business.address && business.address.full) { %><li class="mb-2 d-flex gap-2 text-white text-opacity-75"><i class="bi bi-geo-alt" aria-hidden="true"></i><span><%= business.address.full %></span></li><% } %>
@@ -122,7 +122,7 @@
         <% if (business.registrationNumber) { %> · MB: <%= business.registrationNumber %><% } %>
       </p>
     <% } %>
-    <p class="text-white text-opacity-75 small mb-1">&copy; <%= new Date().getFullYear() %> Estetik Lab. Sva prava zadržana.</p>
+    <p class="text-white text-opacity-75 small mb-1">&copy; <%= new Date().getFullYear() %> <%= business.name %>. Sva prava zadržana.</p>
     <p class="text-white text-opacity-75 small mb-0">Napravio Arius Systems</p>
   </div>
 </footer>

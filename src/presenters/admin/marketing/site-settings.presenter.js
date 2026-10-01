@@ -1,3 +1,4 @@
+import { FEATURES } from "../../../config/features.config.js";
 import { DAYS_OF_WEEK } from "../../../utils/working-hours.util.js";
 
 const DAY_LABELS = {
@@ -296,16 +297,27 @@ export function prepareSiteSettingsFormData(settings) {
     help: "Ovi datumi blokiraju ZAKAZIVANJE za sve zaposlene (praznik, kolektivni godišnji odmor...), bez obzira na nečije lično radno vreme.",
   };
 
+  // Grupe polja vezane za modul koji ovaj deployment nema se ne prikazuju (i ne šalju se nazad
+  // u formi, pa ostaju netaknute u bazi).
+  const GROUP_MODULE = { "Politika zakazivanja": "booking", "Provizija": "booking", "Dostava i provizije": "shop" };
+  let currentGroup = null;
+  const visibleFields = fields.filter((field) => {
+    if (field.sectionTitle) currentGroup = field.sectionTitle;
+    const moduleName = GROUP_MODULE[currentGroup];
+    return !moduleName || FEATURES[moduleName];
+  });
+
   return {
     formAction: "/admin/sajt",
     formEnctype: "multipart/form-data",
     isEdit: true,
-    fields,
+    fields: visibleFields,
     submitLabel: "Sačuvaj izmene",
     cancelUrl: "/admin",
     workingHoursField,
     workingHoursFormAction: "/admin/sajt/radno-vreme",
-    closedDatesField,
+    // blokira samo ZAKAZIVANJE - bez booking modula nema čemu
+    closedDatesField: FEATURES.booking ? closedDatesField : null,
     closedDatesFormAction: "/admin/sajt/neradni-dani",
     breadcrumbs: [
       { label: "Admin", url: "/admin" },

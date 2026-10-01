@@ -25,6 +25,7 @@
   body: `
     <p style="font-size:13px; color:#9b9490; margin:0 0 20px;">Period: ${dateRangeLabel}</p>
 
+    ${features.booking ? `
     <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Zakazivanja</h2>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf8f6; border-radius:8px; margin:0 0 12px;">
       <tr>
@@ -39,7 +40,9 @@
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px; border:1px solid #ece7e2; border-radius:8px; overflow:hidden;">
       ${breakdownRows(appointments.byEmployee, "Nema završenih termina u ovom periodu.", true)}
     </table>
+    ` : ""}
 
+    ${features.shop ? `
     <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Prodavnica</h2>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf8f6; border-radius:8px; margin:0 0 12px;">
       <tr>
@@ -54,7 +57,9 @@
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px; border:1px solid #ece7e2; border-radius:8px; overflow:hidden;">
       ${breakdownRows(orders.byProduct, "Nema završenih porudžbina u ovom periodu.", true)}
     </table>
+    ` : ""}
 
+    ${features.booking ? `
     <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Paketi</h2>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf8f6; border-radius:8px; margin:0 0 24px;">
       <tr>
@@ -62,19 +67,23 @@
         ${statBlock("Prihod od paketa", formatMoney(packages.revenue))}
       </tr>
     </table>
+    ` : ""}
 
+    ${(features.employees || features.partners) ? `
     <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Provizije</h2>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf8f6; border-radius:8px; margin:0 0 24px;">
-      <tr>
+      ${features.employees ? `      <tr>
         ${statBlock("Zaposleni - zarađeno", formatMoney(commissions.employeeEarned))}
         ${statBlock("Zaposleni - isplaćeno", formatMoney(commissions.employeePaid))}
-      </tr>
-      <tr>
+      </tr>` : ""}
+      ${features.partners ? `      <tr>
         ${statBlock("Partneri - zarađeno", formatMoney(commissions.partnerEarned))}
         ${statBlock("Partneri - isplaćeno", formatMoney(commissions.partnerPaid))}
-      </tr>
+      </tr>` : ""}
     </table>
+    ` : ""}
 
+    ${features.coupons ? `
     <h2 style="font-size:14px; color:#2d2a26; margin:0 0 10px; font-weight:700;">Kuponi</h2>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#faf8f6; border-radius:8px; margin:0 0 12px;">
       <tr>
@@ -85,5 +94,6 @@
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px; border:1px solid #ece7e2; border-radius:8px; overflow:hidden;">
       ${breakdownRows(coupons.byCoupon, "Nijedan kupon nije iskorišćen u ovom periodu.", true)}
     </table>
+    ` : ""}
   `
 }) %>

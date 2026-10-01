@@ -1,3 +1,4 @@
+import { BUSINESS } from "../config/business.config.js";
 import businessPartnerRepo from "../repositories/business-partner.repository.js";
 import {
   mapBusinessPartnersForAdminList,
@@ -88,7 +89,7 @@ export async function getPublicBusinessPartnerBySlug(slug) {
   if (!partner || !partner.isActive) notFound("Saradnik");
   const mapped = mapBusinessPartnerForPublicDetail(partner);
   const seo = buildPageSeo({
-    title: mapped.seo?.title || `${mapped.naziv} | Estetik Lab`,
+    title: mapped.seo?.title || `${mapped.naziv} | ${BUSINESS.name}`,
     description: mapped.seo?.description || mapped.kratakOpis,
     canonical: `/saradnici/${mapped.slug}`,
     isIndexable: true,

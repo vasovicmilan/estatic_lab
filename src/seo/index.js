@@ -66,7 +66,7 @@ function toAbsoluteUrl(pathOrUrl) {
  * - previously these were passed straight through as relative paths, which produced
  * an invalid canonical tag and OG/Twitter tags social platforms can't resolve at all.
  */
-export function buildPageSeo({ title, description, canonical, isIndexable = true, type = "website", image, siteName = "Estetik Lab" } = {}) {
+export function buildPageSeo({ title, description, canonical, isIndexable = true, type = "website", image, siteName = BUSINESS.name } = {}) {
   const pageTitle = title || siteName;
   const pageDescription = description || "";
   const absoluteCanonical = toAbsoluteUrl(canonical || "/");
@@ -103,7 +103,7 @@ export default { generateSeo, buildPageSeo };
  * čista putanja (bez query stringa) na BUSINESS.siteUrl. `title` je već pun
  * naslov (sa "| Estetik Lab") kako je sačuvan u bazi.
  */
-export function buildApiPageSeo({ title, description, path = "/", noIndex = false, jsonLd = [], image, siteName = "Estetik Lab" } = {}) {
+export function buildApiPageSeo({ title, description, path = "/", noIndex = false, jsonLd = [], image, siteName = BUSINESS.name } = {}) {
   const canonical = toAbsoluteUrl(path);
   const imageUrl = toAbsoluteUrl(image || BUSINESS.logo || "/images/site/default-og.webp");
   const breadcrumb =

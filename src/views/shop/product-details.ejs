@@ -128,7 +128,7 @@
     <%- include("../includes/components/gallery-video", { galerija: data.product.galerija, videi: data.product.videi }) %>
   </div>
 
-  <% if (data.relatedServices && data.relatedServices.length > 0) { %>
+  <% if (features.booking && data.relatedServices && data.relatedServices.length > 0) { %>
     <section class="border-top border-bottom py-5">
       <div class="container">
         <p class="section-eyebrow">Koristimo u praksi</p>

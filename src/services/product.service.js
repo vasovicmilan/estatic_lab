@@ -43,9 +43,9 @@ const descendantIdsCache = createTtlCache(3 * 60 * 1000);
 const adminPopulate = [
   { path: "categories", select: "name slug" },
   { path: "tags", select: "name slug" },
-  { path: "relatedProducts", select: "name slug image" },
-  { path: "relatedServices", select: "name slug image" },
-  { path: "relatedPosts", select: "title slug coverImage" },
+  { path: "relatedProducts", select: "name slug image isActive" },
+  { path: "relatedServices", select: "name slug image isActive" },
+  { path: "relatedPosts", select: "title slug coverImage status publishedAt" },
 ];
 
 function validateVariations(variations = []) {
@@ -155,9 +155,12 @@ export async function addSeoAndPublish(productId, data) {
     seoKeywords: data.seoKeywords ?? existing.seoKeywords ?? [],
     relatedProducts: data.relatedProducts ?? existing.relatedProducts ?? [],
     relatedServices: data.relatedServices ?? existing.relatedServices ?? [],
+    relatedPosts: data.relatedPosts ?? existing.relatedPosts ?? [],
     faq: data.faq ?? existing.faq ?? [],
     badge: data.badge ?? existing.badge ?? "none",
     shippingClass: data.shippingClass ?? existing.shippingClass ?? "standard",
+    priceOnRequest: data.priceOnRequest ?? existing.priceOnRequest ?? false,
+    madeToOrder: data.madeToOrder ?? existing.madeToOrder ?? false,
     isActive: data.isActive ?? true,
   };
 

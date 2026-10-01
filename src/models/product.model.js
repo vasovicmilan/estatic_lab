@@ -127,6 +127,16 @@ const ProductSchema = new Schema(
       default: false,
     },
 
+    // The product is made/ordered on demand rather than kept in stock. When a variation
+    // has no stock the public page shows "Dostupno po narudžbini" with an "Pošalji upit"
+    // link to the contact form (pre-filled with the product) instead of a dead-end
+    // "Nema na stanju". Variations that DO have stock are still bought normally through
+    // the cart - this flag only changes what an out-of-stock variation means.
+    madeToOrder: {
+      type: Boolean,
+      default: false,
+    },
+
     isActive: {
       type: Boolean,
       default: false,
