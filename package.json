@@ -52,7 +52,6 @@
     "googleapis": "^174.0.0",
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
-    "mongo-sanitize": "^1.1.0",
     "mongoose": "^9.7.3",
     "morgan": "^1.11.0",
     "multer": "^2.4.0",
