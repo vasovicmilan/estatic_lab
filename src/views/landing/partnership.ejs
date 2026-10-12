@@ -41,7 +41,7 @@
                 <%= step.number %>
               </div>
               <h3 class="h5 fw-bold mb-2"><%= step.title %></h3>
-              <p class="text-muted mb-0"><%- step.description %></p>
+              <p class="text-muted mb-0"><%- richText(step.description) %></p>
             </div>
           </div>
         </div>
@@ -63,7 +63,7 @@
           <div class="col-md-6">
             <div class="d-flex gap-3">
               <i class="bi bi-check-circle-fill text-primary fs-4 flex-shrink-0"></i>
-              <p class="mb-0"><%- text %></p>
+              <p class="mb-0"><%- richText(text) %></p>
             </div>
           </div>
         <% }) %>

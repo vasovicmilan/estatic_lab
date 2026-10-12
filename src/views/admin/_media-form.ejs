@@ -83,11 +83,11 @@
                 { name: "isExternal", label: "Eksterni?", type: "select", options: [{ value: "false", label: "Ne (sopstveni video)" }, { value: "true", label: "Da (YouTube/Vimeo/...)" }] },
               ];
             %>
-            <input type="hidden" name="videos" value='<%- JSON.stringify(videosValue) %>' data-repeater-input="videos">
+            <input type="hidden" name="videos" value="<%= JSON.stringify(videosValue) %>" data-repeater-input="videos">
             <div class="border rounded p-3"
                  data-repeater="videos"
-                 data-repeater-schema='<%- JSON.stringify(videoSchema) %>'
-                 data-repeater-value='<%- JSON.stringify(videosValue) %>'>
+                 data-repeater-schema="<%= JSON.stringify(videoSchema) %>"
+                 data-repeater-value="<%= JSON.stringify(videosValue) %>">
               <div data-repeater-rows></div>
               <button type="button" class="btn btn-sm btn-outline-primary mt-2" data-repeater-add>
                 <i class="bi bi-plus-lg"></i> Dodaj eksterni video (URL)

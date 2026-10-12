@@ -86,10 +86,10 @@
                          value="<%= (typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined) ? data.formData[field.name] : (field.value !== undefined && field.value !== null ? field.value : '') %>"
                          <% if (field.required) { %>required<% } %>
                          <% if (field.disabled) { %>disabled<% } %>
-                         <% if (field.placeholder) { %>placeholder="<%- field.placeholder %>"<% } %>
-                         <% if (field.min !== undefined) { %>min="<%- field.min %>"<% } %>
-                         <% if (field.max !== undefined) { %>max="<%- field.max %>"<% } %>
-                         <% if (field.step !== undefined) { %>step="<%- field.step %>"<% } %>
+                         <% if (field.placeholder) { %>placeholder="<%= field.placeholder %>"<% } %>
+                         <% if (field.min !== undefined) { %>min="<%= field.min %>"<% } %>
+                         <% if (field.max !== undefined) { %>max="<%= field.max %>"<% } %>
+                         <% if (field.step !== undefined) { %>step="<%= field.step %>"<% } %>
                          data-field="<%= field.name %>">
 
                 <% } else if (field.type === 'textarea') { %>
@@ -109,7 +109,7 @@
                           data-field="<%= field.name %>">
                     <option value="">Izaberite...</option>
                     <% field.options.forEach(function(opt) { %>
-                      <option value="<%- opt.value %>" <%= (function() {
+                      <option value="<%= opt.value %>" <%= (function() {
                         const selected = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
                         return selected === opt.value ? 'selected' : '';
                       })() %>>
@@ -198,11 +198,11 @@
             <div class="mb-3" data-field-wrapper="workingHours">
               <div class="form-label" id="workingHours_label"><%= data.workingHoursField.label %></div>
 
-              <input type="hidden" name="workingHours" value='<%- JSON.stringify(data.workingHoursField.value) %>' data-repeater-input="workingHours">
+              <input type="hidden" name="workingHours" value="<%= JSON.stringify(data.workingHoursField.value) %>" data-repeater-input="workingHours">
               <div class="border rounded p-3"
                    data-day-hours="workingHours"
-                   data-day-hours-days='<%- JSON.stringify(data.workingHoursField.days || []) %>'
-                   data-day-hours-value='<%- JSON.stringify(data.workingHoursField.value || []) %>'>
+                   data-day-hours-days="<%= JSON.stringify(data.workingHoursField.days || []) %>"
+                   data-day-hours-value="<%= JSON.stringify(data.workingHoursField.value || []) %>">
                 <div data-day-hours-rows></div>
               </div>
 
@@ -243,11 +243,11 @@
             <div class="mb-3" data-field-wrapper="closedDates">
               <div class="form-label" id="closedDates_label"><%= data.closedDatesField.label %></div>
 
-              <input type="hidden" name="closedDates" value='<%- JSON.stringify(closedDatesValue) %>' data-repeater-input="closedDates">
+              <input type="hidden" name="closedDates" value="<%= JSON.stringify(closedDatesValue) %>" data-repeater-input="closedDates">
               <div class="border rounded p-3"
                    data-repeater="closedDates"
-                   data-repeater-schema='<%- JSON.stringify(data.closedDatesField.itemFields || []) %>'
-                   data-repeater-value='<%- JSON.stringify(closedDatesValue) %>'>
+                   data-repeater-schema="<%= JSON.stringify(data.closedDatesField.itemFields || []) %>"
+                   data-repeater-value="<%= JSON.stringify(closedDatesValue) %>">
                 <div data-repeater-rows></div>
                 <button type="button" class="btn btn-sm btn-outline-primary mt-2" data-repeater-add>
                   <i class="bi bi-plus-lg"></i> <%= data.closedDatesField.addLabel || "Dodaj stavku" %>

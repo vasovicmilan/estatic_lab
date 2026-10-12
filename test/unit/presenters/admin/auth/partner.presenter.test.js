@@ -85,7 +85,7 @@ describe("preparePartnerDetailsData", () => {
     const couponsSection = view.sections.find((s) => s.title === "Referalni kodovi");
 
     assert.equal(couponsSection.rows.length, 1);
-    assert.match(couponsSection.rows[0].value, /Kreiraj kupon/);
+    assert.match(couponsSection.rows[0].html, /Kreiraj kupon/);
   });
 
   it("lists each referral coupon with its discount and active status", () => {
@@ -94,7 +94,7 @@ describe("preparePartnerDetailsData", () => {
     const couponsSection = view.sections.find((s) => s.title === "Referalni kodovi");
 
     assert.equal(couponsSection.rows[0].label, "PETAR10");
-    assert.match(couponsSection.rows[0].value, /10%/);
+    assert.match(couponsSection.rows[0].html, /10%/);
   });
 
   it("shows 'Ne važi za artikle' when a coupon has no productDiscount block at all", () => {
@@ -102,7 +102,7 @@ describe("preparePartnerDetailsData", () => {
     const view = preparePartnerDetailsData(buildMappedPartner(), null, coupons);
     const couponsSection = view.sections.find((s) => s.title === "Referalni kodovi");
 
-    assert.match(couponsSection.rows[0].value, /Ne važi za artikle/);
+    assert.match(couponsSection.rows[0].html, /Ne važi za artikle/);
   });
 
   it("shows the artikli discount alongside the usluge/paketi discount when the coupon has both", () => {
@@ -119,8 +119,8 @@ describe("preparePartnerDetailsData", () => {
     const view = preparePartnerDetailsData(buildMappedPartner(), null, coupons);
     const couponsSection = view.sections.find((s) => s.title === "Referalni kodovi");
 
-    assert.match(couponsSection.rows[0].value, /Usluge\/paketi: 15%/);
-    assert.match(couponsSection.rows[0].value, /Artikli: 20%/);
+    assert.match(couponsSection.rows[0].html, /Usluge\/paketi: 15%/);
+    assert.match(couponsSection.rows[0].html, /Artikli: 20%/);
   });
 
   it("names the excluded category by resolving it through the categoryNamesById map", () => {
@@ -137,7 +137,7 @@ describe("preparePartnerDetailsData", () => {
     const view = preparePartnerDetailsData(buildMappedPartner(), null, coupons, [], { "cat-1": "Aparati i oprema" });
     const couponsSection = view.sections.find((s) => s.title === "Referalni kodovi");
 
-    assert.match(couponsSection.rows[0].value, /osim: Aparati i oprema/);
+    assert.match(couponsSection.rows[0].html, /osim: Aparati i oprema/);
   });
 
   it("translates each commission entry's source type and status for display", () => {

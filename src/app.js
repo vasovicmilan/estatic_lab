@@ -14,6 +14,7 @@ import { setupViewEngine } from "./config/view-engine.config.js";
 import localsMiddleware from "./config/locals.config.js";
 import { csrfLocals, csrfWebProtection } from "./config/csrf.config.js";
 import { globalLimiter } from "./middlewares/rate-limiter.middleware.js";
+import { sessionRevalidation } from "./middlewares/auth.middleware.js";
 import { couponCaptureMiddleware } from "./middlewares/coupon-capture.middleware.js";
 import { requestIdMiddleware } from "./middlewares/request-id.middleware.js";
 import { linkContextMiddleware } from "./middlewares/link-context.middleware.js";
@@ -51,6 +52,7 @@ setupSanitize(app);
 // see test-app.js's closeTestApp for why that matters.
 app.set("sessionStore", setupSession(app));
 setupFlash(app); 
+app.use(sessionRevalidation);
 app.use(localsMiddleware);
 app.use(csrfLocals);
 app.use(csrfWebProtection);

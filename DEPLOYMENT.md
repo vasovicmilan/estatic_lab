@@ -119,6 +119,21 @@ pm2 restart <ime-procesa>
 
 `npm run build:css`/`build:icons` su bezopasni da se pokrenu i kad ništa nije promenjeno (samo ponovo generišu iste fajlove) - u slučaju sumnje, pokreni oba. Preskačeš ih jedino ako si siguran da izmena ne dodiruje CSS/ikonice.
 
+## Server: nginx, Cloudflare, ufw, fail2ban
+
+Podešavanje produkcionog servera (beautymedica.rs: nginx + Cloudflare ispred PM2 procesa). Aplikacija sama ne može da zaštiti server od skeniranja, pa su slojevi ovakvi:
+
+- **Aplikacija sluša samo lokalno.** `BIND_HOST=127.0.0.1` u `.env` (kad nije postavljeno, sluša na `0.0.0.0`), tako da port aplikacije nije dostupan sa interneta, samo preko nginx-a.
+- **`TRUST_PROXY_HOPS=2`** kad su ispred Cloudflare **i** nginx (samo nginx = `1`). Bez toga `req.ip` je IP proxy-ja i rate limiteri broje sve posetioce kao jednog.
+- **nginx `real_ip`**: `set_real_ip_from` za svaki Cloudflare opseg (`https://www.cloudflare.com/ips-v4` i `ips-v6`) i `real_ip_header CF-Connecting-IP;`. Opsege povremeno osvežavati.
+- **Rate limiteri** (po minutu po klijentu): `RATE_LIMIT_GLOBAL_MAX=100`, `RATE_LIMIT_API_MAX=120`, `RATE_LIMIT_ADMIN_MAX=300` (podrazumevano u kodu). Statički fajlovi se ne broje. Podizanje limita nije rešenje za Cloudflare izazov - to je posebno Cloudflare pravilo.
+- **ufw**: SSH, a 80/443 samo sa Cloudflare opsega; ostalo `deny incoming`. Port aplikacije se ne otvara.
+- **fail2ban**: filter nad nginx access logom; jail ne koristi ufw (iza Cloudflare-a ufw vidi samo Cloudflare IP) nego nginx `deny` listu (include u `server` bloku) i `nginx -s reload`.
+- **Dnevni logovi**: aplikacija piše dnevno rotirane fajlove (`pino-roll`). fail2ban razvija glob putanje samo pri startu, pa novi dnevni fajl ostaje neprimećen - potreban je mali čuvar (cron/systemd timer) koji pri promeni imena današnjeg fajla radi `fail2ban-client reload`.
+- **Cloudflare**: skeniranje za `.php`/`wp-*`/`.env` i sl. blokirati posebnim custom pravilom (Block), ne u pravilu za izazov.
+
+Provera: `sudo ufw status verbose`, `sudo fail2ban-client status`, `sudo fail2ban-client status <jail>`, `sudo nginx -t`.
+
 ## Provera pre lansiranja
 
 ```bash

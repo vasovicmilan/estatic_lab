@@ -64,7 +64,7 @@ describe("prepareUserDetailsData", () => {
     const view = prepareUserDetailsData(buildMappedUser({ id: "u1" }));
     const section = view.sections.find((s) => s.title === "Osnovni podaci");
 
-    assert.match(section.rows.find((r) => r.label === "Kupljeni paketi").value, /userId=u1/);
+    assert.match(section.rows.find((r) => r.label === "Kupljeni paketi").html, /userId=u1/);
   });
 
   it("omits the avatar section entirely when the user has none", () => {

@@ -81,10 +81,10 @@
                          value="<%= (typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined) ? data.formData[field.name] : (field.value !== undefined && field.value !== null ? field.value : '') %>"
                          <% if (field.required) { %>required<% } %>
                          <% if (field.disabled) { %>disabled<% } %>
-                         <% if (field.placeholder) { %>placeholder="<%- field.placeholder %>"<% } %>
-                         <% if (field.min !== undefined) { %>min="<%- field.min %>"<% } %>
-                         <% if (field.max !== undefined) { %>max="<%- field.max %>"<% } %>
-                         <% if (field.step !== undefined) { %>step="<%- field.step %>"<% } %>
+                         <% if (field.placeholder) { %>placeholder="<%= field.placeholder %>"<% } %>
+                         <% if (field.min !== undefined) { %>min="<%= field.min %>"<% } %>
+                         <% if (field.max !== undefined) { %>max="<%= field.max %>"<% } %>
+                         <% if (field.step !== undefined) { %>step="<%= field.step %>"<% } %>
                          data-field="<%= field.name %>">
 
                 <% } else if (field.type === 'textarea') { %>
@@ -105,7 +105,7 @@
                           data-field="<%= field.name %>">
                     <option value="">Izaberite...</option>
                     <% field.options.forEach(function(opt) { %>
-                      <option value="<%- opt.value %>" <%= (function() {
+                      <option value="<%= opt.value %>" <%= (function() {
                         const selected = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
                         return selected === opt.value ? 'selected' : '';
                       })() %>>
@@ -123,7 +123,7 @@
                           data-field="<%= field.name %>">
                     <option value="">Izaberite...</option>
                     <% field.options.forEach(function(opt) { %>
-                      <option value="<%- opt.value %>" <%= (function() {
+                      <option value="<%= opt.value %>" <%= (function() {
                         const selected = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
                         return selected === opt.value ? 'selected' : '';
                       })() %>>
@@ -133,7 +133,7 @@
                   </select>
                   <div class="border rounded p-2 mt-2 bg-light small"
                        data-select-preview-panel="<%= field.name %>"
-                       data-select-preview-data='<%- JSON.stringify(field.previewData || {}) %>'>
+                       data-select-preview-data="<%= JSON.stringify(field.previewData || {}) %>">
                     <span class="text-muted">Izaberite paket da vidite šta sadrži.</span>
                   </div>
 
@@ -149,7 +149,7 @@
                       <select class="form-select" data-multiselect-source>
                         <option value="">-- Izaberite da dodate --</option>
                         <% field.options.forEach(function(opt) { %>
-                          <option value="<%- opt.value %>"><%= opt.label %></option>
+                          <option value="<%= opt.value %>"><%= opt.label %></option>
                         <% }) %>
                       </select>
                       <button type="button" class="btn btn-outline-primary" data-multiselect-add>
@@ -160,9 +160,9 @@
                       <% selectedValues.forEach(function(val) {
                            const opt = field.options.find(function(o) { return String(o.value) === String(val); });
                       %>
-                        <span class="badge text-bg-light border d-inline-flex align-items-center gap-1 py-2 px-2" data-multiselect-chip data-value="<%- val %>">
+                        <span class="badge text-bg-light border d-inline-flex align-items-center gap-1 py-2 px-2" data-multiselect-chip data-value="<%= val %>">
                           <%= opt ? opt.label : val %>
-                          <input type="hidden" name="<%= field.name %>[]" value="<%- val %>">
+                          <input type="hidden" name="<%= field.name %>[]" value="<%= val %>">
                           <button type="button" class="btn-close" style="font-size: 0.6rem;" aria-label="Ukloni" data-multiselect-remove></button>
                         </span>
                       <% }) %>
@@ -178,11 +178,11 @@
                     }
                     if (!Array.isArray(repeaterValue)) repeaterValue = [];
                   %>
-                  <input type="hidden" name="<%= field.name %>" value='<%- JSON.stringify(repeaterValue) %>' data-repeater-input="<%= field.name %>">
+                  <input type="hidden" name="<%= field.name %>" value="<%= JSON.stringify(repeaterValue) %>" data-repeater-input="<%= field.name %>">
                   <div class="border rounded p-3 <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'border-danger' : '' %>"
                        data-repeater="<%= field.name %>"
-                       data-repeater-schema='<%- JSON.stringify(field.itemFields || []) %>'
-                       data-repeater-value='<%- JSON.stringify(repeaterValue) %>'>
+                       data-repeater-schema="<%= JSON.stringify(field.itemFields || []) %>"
+                       data-repeater-value="<%= JSON.stringify(repeaterValue) %>">
                     <div data-repeater-rows></div>
                     <button type="button" class="btn btn-sm btn-outline-primary mt-2" data-repeater-add>
                       <i class="bi bi-plus-lg"></i> <%= field.addLabel || "Dodaj stavku" %>
@@ -198,11 +198,11 @@
                     }
                     if (!Array.isArray(comparisonValue)) comparisonValue = [];
                   %>
-                  <input type="hidden" name="<%= field.name %>" value='<%- JSON.stringify(comparisonValue) %>' data-repeater-input="<%= field.name %>">
+                  <input type="hidden" name="<%= field.name %>" value="<%= JSON.stringify(comparisonValue) %>" data-repeater-input="<%= field.name %>">
                   <div class="border rounded p-3 <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'border-danger' : '' %>"
                        data-comparison-table="<%= field.name %>"
                        data-comparison-columns-field="<%= field.columnsFieldName %>"
-                       data-comparison-value='<%- JSON.stringify(comparisonValue) %>'>
+                       data-comparison-value="<%= JSON.stringify(comparisonValue) %>">
                     <small class="text-muted d-block mb-2">Broj kolona i njihovi nazivi se preuzimaju iz polja "Kolone tabele poređenja" iznad.</small>
                     <div data-comparison-rows></div>
                     <button type="button" class="btn btn-sm btn-outline-primary mt-2" data-comparison-add>
@@ -218,10 +218,10 @@
                     }
                     if (!Array.isArray(blocksValue)) blocksValue = [];
                   %>
-                  <input type="hidden" name="<%= field.name %>" value='<%- JSON.stringify(blocksValue) %>' data-repeater-input="<%= field.name %>">
+                  <input type="hidden" name="<%= field.name %>" value="<%= JSON.stringify(blocksValue) %>" data-repeater-input="<%= field.name %>">
                   <div class="border rounded p-3 <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'border-danger' : '' %>"
                        data-content-blocks="<%= field.name %>"
-                       data-content-blocks-value='<%- JSON.stringify(blocksValue) %>'>
+                       data-content-blocks-value="<%= JSON.stringify(blocksValue) %>">
                     <div class="input-group mb-2">
                       <select class="form-select" data-block-type-select>
                         <% (field.blockTypes || []).forEach(function(bt) { %>
@@ -242,11 +242,11 @@
                     }
                     if (!Array.isArray(scheduleValue)) scheduleValue = [];
                   %>
-                  <input type="hidden" name="<%= field.name %>" value='<%- JSON.stringify(scheduleValue) %>' data-repeater-input="<%= field.name %>">
+                  <input type="hidden" name="<%= field.name %>" value="<%= JSON.stringify(scheduleValue) %>" data-repeater-input="<%= field.name %>">
                   <div class="border rounded p-3 <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'border-danger' : '' %>"
                        data-schedule="<%= field.name %>"
-                       data-schedule-days='<%- JSON.stringify(field.days || []) %>'
-                       data-schedule-value='<%- JSON.stringify(scheduleValue) %>'>
+                       data-schedule-days="<%= JSON.stringify(field.days || []) %>"
+                       data-schedule-value="<%= JSON.stringify(scheduleValue) %>">
                     <div data-schedule-days-list></div>
                   </div>
                 <% } else if (field.type === 'checkbox') { %>
@@ -277,7 +277,7 @@
                                    class="form-check-input"
                                    id="<%= field.name %>_<%= opt.value %>"
                                    name="<%= field.name %>"
-                                   value="<%- opt.value %>"
+                                   value="<%= opt.value %>"
                                    <%= (function() {
                                      let selectedValues = typeof data.formData !== 'undefined' && data.formData[field.name] !== undefined ? data.formData[field.name] : field.value;
                                      if (!Array.isArray(selectedValues)) selectedValues = [];
@@ -301,7 +301,7 @@
                         data-file-preview="<%= field.name %>_preview">
                   <% if (field.previewHtml) { %>
                     <div id="<%= field.name %>_preview" class="mt-2">
-                      <%- field.previewHtml %>
+                      <%= field.previewHtml %>
                       <p class="text-muted small mt-1">Trenutni video</p>
                     </div>
                   <% } else if (field.preview) { %>

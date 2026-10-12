@@ -64,6 +64,7 @@ describe("Google OAuth callback (HTTP)", () => {
           json: async () => ({
             id: "google-123",
             email: "google-user@example.com",
+            verified_email: true,
             given_name: "Gugl",
             family_name: "Korisnik",
             picture: "",
@@ -84,5 +85,24 @@ describe("Google OAuth callback (HTTP)", () => {
 
     const adminCheck = await agent.get("/admin");
     assert.notEqual(adminCheck.status, 302);
+  });
+
+  it("refuses to sign in when Google does not vouch for the email address", async () => {
+    await Role.create({ name: "admin", isDefault: false, priority: 100 });
+
+    global.fetch = mock.fn(async (url) => {
+      if (String(url).includes("oauth2.googleapis.com/token")) {
+        return { ok: true, json: async () => ({ access_token: "fake-access-token" }) };
+      }
+      return { ok: true, json: async () => ({ id: "google-456", email: "unverified@example.com", verified_email: false, given_name: "X" }) };
+    });
+
+    const agent = request.agent(app);
+    const initial = await agent.get("/prijava/google");
+    const state = new URL(initial.headers.location).searchParams.get("state");
+    const res = await agent.get(`/prijava/google/callback?code=real-code&state=${state}`);
+
+    assert.equal(res.status, 302);
+    assert.equal(res.headers.location, "/prijava");
   });
 });

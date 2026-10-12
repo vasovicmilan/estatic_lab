@@ -27,3 +27,8 @@ Rola je definisana listom konkretnih **dozvola** — pojedinačnih mogućnosti k
 Kada neko bude unapređen u profil Zaposlenog ili Partnera, sistem mora da odluči da li Rola njegovog naloga treba da se promeni da odgovara tome. Svaka rola nosi rangiranje po **prioritetu** (Admin najviši, zatim Zaposleni, zatim Partner, zatim podrazumevana Korisnik rola najniža). Pravilo: unapređenje menja nečiju rolu samo ako nova rola ima *viši* rang od one koju osoba već ima.
 
 Ovo postoji tako da unapređenje, recimo, Admina da bude i Partner (da bi testirao partnerski program, ili zato što je zaista i poslovni partner) nikada slučajno ne *degradira* njegov pristup — on zadržava svoju Admin rolu, dok istovremeno dobija Partner profil ispod nje sa sopstvenim referalnim linkom i praćenjem zarade.
+## Web sesije: kada prestaju da važe
+
+Web sesija (14 dana) čuva kopiju role i dozvola iz trenutka prijave. Da ta kopija ne bi preživela promenu naloga, `sessionRevalidation` (`auth.middleware.js`) najviše jednom u 60 sekundi po sesiji proverava status naloga i `tokenValidAfter` (ista polja kao za Bearer token). Sesija se odjavljuje ako je nalog suspendovan/neaktivan/obrisan ili je `tokenValidAfter` noviji od trenutka prijave. `tokenValidAfter` se pomera pri suspendovanju/deaktivaciji, **promeni role** (korisnik mora ponovo da se prijavi da bi dobio nove dozvole) i **resetu lozinke**. Ako provera ne uspe (baza nedostupna), sesija se ne prekida.
+
+Pri prijavi (lozinka i Google) sesija dobija nov identifikator (`session.regenerate`), a `redirect` parametar prihvata samo putanju na istom sajtu (`/...`). Google prijava odbija suspendovane i nepotvrđene naloge, a postojeći lokalni nalog povezuje po email-u samo ako Google vrati `verified_email: true`.

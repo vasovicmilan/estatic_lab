@@ -112,21 +112,41 @@ export async function registerUser(data) {
   return { id: created._id.toString(), email: created.email, firstName: created.firstName, lastName: created.lastName, confirmToken: isFirstUser ? null : confirmToken, isFirstUser };
 }
 
+// Same account-state rules login() applies to password sign-in: a suspended or
+// not-yet-confirmed account must not get in through the Google door either.
+function assertGoogleLoginAllowed(user) {
+  if (user.status === "suspended") unauthorized("Vaš nalog je suspendovan");
+  if (user.status === "pending") unauthorized("Nalog nije potvrđen. Proverite vaš email.");
+}
+
 export async function findOrCreateGoogleUser(googleData) {
   if (!googleData?.email) validationError("email");
   if (!googleData?.googleId) validationError("googleId");
 
   let user = await userRepo.findUserByGoogleId(googleData.googleId);
-  if (user) return user;
+  if (user) {
+    assertGoogleLoginAllowed(user);
+    return user;
+  }
 
   // an account may already exist locally under the same email - link the Google id
-  // instead of creating a duplicate account
+  // instead of creating a duplicate account. Only when Google itself says the address
+  // is verified: otherwise whoever controls an unverified Google-side address could
+  // attach their Google id to somebody else's local account and sign in as them.
   user = await userRepo.findUserByEmail(googleData.email);
   if (user) {
+    assertGoogleLoginAllowed(user);
+    if (googleData.emailVerified !== true) {
+      unauthorized("Google nalog nema potvrđenu email adresu");
+    }
     return userRepo.updateUserById(user._id, {
       googleId: googleData.googleId,
       avatar: user.avatar || googleData.avatar || "",
     });
+  }
+
+  if (googleData.emailVerified !== true) {
+    unauthorized("Google nalog nema potvrđenu email adresu");
   }
 
   const { role, isFirstUser } = await resolveRegistrationRole();
@@ -232,6 +252,8 @@ export async function resetPassword(token, newPassword) {
     password: passwordHash,
     resetToken: null,
     resetTokenExpiration: null,
+    // a reset means the old credentials may be compromised - drop every session/token issued before it
+    tokenValidAfter: new Date(),
     // claiming a guest account also confirms it, since they proved control of the inbox
     ...(wasGuest ? { status: "active", confirmed: true } : {}),
   });
@@ -383,7 +405,9 @@ export async function updateUserStatus(userId, status) {
 export async function updateUserRole(userId, roleId) {
   if (!userId) validationError("userId");
   if (!roleId) validationError("roleId");
-  const updated = await userRepo.updateUserById(userId, { role: roleId });
+  // tokenValidAfter also ends web sessions started earlier (sessionRevalidation in
+  // auth.middleware.js) - their permission snapshot was taken with the old role.
+  const updated = await userRepo.updateUserById(userId, { role: roleId, tokenValidAfter: new Date() });
   if (!updated) notFound("Korisnik");
   logInfo("User role changed", { userId, roleId });
   return mapUserForAdminDetail(updated);

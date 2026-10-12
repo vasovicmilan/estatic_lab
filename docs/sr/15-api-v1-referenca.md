@@ -76,6 +76,10 @@ Linkovi ka nalogu, zaposlenom i adminu (`/moj-nalog/zakazivanja`, `/zaposleni-pa
 | `POST /api/v1/newsletter/unsubscribe/:token` | Odjava preko linka iz newsletter mejla (namerno POST: mail skeneri koji GET-uju svaki link ne smeju nekoga slučajno da odjave) |
 | `POST /api/v1/auth/register`, `/login`, `/forgot-password`, `PUT /reset-password/:token`, `GET /verify/:token` | Standardan auth tok |
 
+### Stranice sadržaja i uvodi (javno, bez tokena)
+
+`GET /api/v1/about`, `/faq`, `/privacy-policy`, `/terms`, `/partnership-program` (modul partnera), `/home`, `/home-intro`, `/team/intro`, `/contact-page`, `/list-intro/:page`, `/page-seo/:page`, `/business-info`, `/blog/filters` i `/blog/archive/:type/:slug` (modul bloga). Vraćaju sadržaj koji admin uređuje kroz `site-content`; tekstovi mogu sadržati osnovne oznake (`<strong>`, `<a>`), pa ih frontend mora prikazivati kroz sanitizaciju (web strana koristi `richText` iz `rich-text.util.js`).
+
 Javni detalj proizvoda (`GET /api/v1/products/:slug`) i kartica (`/products`) imaju `poNarudzbini` (boolean, admin polje `madeToOrder`): artikal se ne drži na lageru, pa varijanta bez zaliha znači "dostupno po narudžbini" (upit preko kontakt forme), a ne "nema na stanju". `naStanju` se time ne menja. Povezani proizvodi, usluge i postovi u detalju prikazuju se samo ako su javno vidljivi (aktivni, odnosno objavljeni).
 
 ## Rute prijavljenog korisnika (bilo koja rola, samo `apiAuthMiddleware`)
@@ -169,6 +173,8 @@ Ceo router iza `manage_orders`. `GET /orders`, `POST /orders/manual`, `GET /orde
 | GET | `/audit-log` | `view_logs` |
 | GET | `/logs`, `/logs/history`, `/logs/history/:date` | `view_logs` |
 | GET | `/business-reports`, `/business-reports/history/...` | `view_business_reports` |
+| GET/PUT | `/site-content`, `/site-content/{o-nama,faq,politika-privatnosti,uslovi-koriscenja,partnerski-program,pocetna-uvod,zasto-mi,pocetna-hero,usluge-uvod,paketi-uvod,prodavnica-uvod,blog-uvod,kontakt,seo-stranica,tim-uvod}` | `manage_site_content` (`GET` čita sve, svaki `PUT` menja jedan blok) |
+| GET | `/business-reports/history/:periodType/:periodKey/pdf` | `view_business_reports` |
 | GET/PUT | `/site-settings` | `manage_site_content` |
 | PUT | `/site-settings/radno-vreme` | `manage_site_content` |
 | PUT | `/site-settings/neradni-dani` | `manage_site_content` |

@@ -154,16 +154,16 @@
 
 <script>
   window.__manualAppointmentData = {
-    services: <%- JSON.stringify(data.services) %>,
-    employeesByService: <%- JSON.stringify(data.employeesByService) %>,
+    services: <%- jsonForScript(data.services) %>,
+    employeesByService: <%- jsonForScript(data.employeesByService) %>,
     // only present after a failed submit - lets the client JS re-select what was
     // already picked in the two cascading dropdowns it owns (services.varijante/
     // employeesByService aren't known server-side per-request, so this can't just
     // be a plain "selected" attribute like the static <select>s above)
     submitted: {
-      servicePackageId: <%- JSON.stringify(submitted.servicePackageId || "") %>,
-      employeeId: <%- JSON.stringify(submitted.employeeId || "") %>,
-      packagePurchaseId: <%- JSON.stringify(submitted.packagePurchaseId || "") %>,
+      servicePackageId: <%- jsonForScript(submitted.servicePackageId || "") %>,
+      employeeId: <%- jsonForScript(submitted.employeeId || "") %>,
+      packagePurchaseId: <%- jsonForScript(submitted.packagePurchaseId || "") %>,
     },
   };
 </script>

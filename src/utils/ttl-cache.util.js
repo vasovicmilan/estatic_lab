@@ -5,7 +5,9 @@
 // tradeoff is deliberate here - see product.service.js/service.service.js's
 // attachProductCountsToCategories/attachServiceCountsToCategories, which are
 // display-only sidebar counters, not anything transactional.
-export function createTtlCache(ttlMs) {
+// maxEntries bounds memory: keys can come from request paths (scanners probe thousands
+// of distinct URLs), so when full the oldest entry is evicted (Map keeps insertion order).
+export function createTtlCache(ttlMs, maxEntries = 1000) {
   const store = new Map();
 
   return {
@@ -20,7 +22,13 @@ export function createTtlCache(ttlMs) {
     },
 
     set(key, value) {
+      if (store.has(key)) store.delete(key);
+      else if (store.size >= maxEntries) store.delete(store.keys().next().value);
       store.set(key, { value, expiresAt: Date.now() + ttlMs });
+    },
+
+    size() {
+      return store.size;
     },
 
     clear() {

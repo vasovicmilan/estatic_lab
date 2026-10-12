@@ -15,6 +15,7 @@ import { logInfo, logError } from "./utils/logger.util.js";
 import { alertError } from "./utils/telegram-alert.util.js";
 
 const PORT = process.env.PORT || 3000;
+const BIND_HOST = process.env.BIND_HOST || "0.0.0.0";
 
 // In PM2 cluster mode, every worker imports and runs this same file - without
 // this guard, N workers means N independent cron schedulers and N Telegram
@@ -56,8 +57,8 @@ async function start() {
     }
     initGoogleCalendarClient();
 
-    const server = app.listen(PORT, "0.0.0.0", () => {
-      logInfo(`Server running on port ${PORT}`);
+    const server = app.listen(PORT, BIND_HOST, () => {
+      logInfo(`Server running on ${BIND_HOST}:${PORT}`);
     });
 
     const shutdown = async (signal) => {

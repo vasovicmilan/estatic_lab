@@ -1,4 +1,5 @@
 import { BLOG_BLOCK_TYPES } from "../../../models/schemas/content.blog.schema.js";
+import { renderImage } from "../../../utils/html.util.js";
 import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
 export const SORT_MAP = {
   naslov: "title",
@@ -79,7 +80,7 @@ export function preparePostDetailsData(post) {
       {
         title: "Naslovna slika",
         type: "custom",
-        content: post.slika ? `<img src="${post.slika.url}" alt="${post.slika.alt || ""}" width="200" class="img-fluid rounded">` : "Nema slike",
+        content: post.slika ? renderImage(post.slika.url, post.slika.alt, { width: 200, className: "img-fluid rounded" }) : "Nema slike",
       },
       ...(post.galerija && post.galerija.length > 0
         ? [
@@ -87,7 +88,7 @@ export function preparePostDetailsData(post) {
               title: "Galerija",
               type: "custom",
               content: post.galerija
-                .map((img) => `<img src="${img.url}" alt="${img.alt || ""}" width="120" class="img-fluid rounded me-2 mb-2">`)
+                .map((img) => renderImage(img.url, img.alt, { width: 120, className: "img-fluid rounded me-2 mb-2" }))
                 .join(""),
             },
           ]

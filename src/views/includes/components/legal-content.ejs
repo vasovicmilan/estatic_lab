@@ -14,21 +14,21 @@
 
         <% if (section.paragraphs) { %>
           <% section.paragraphs.forEach(function(paragraph) { %>
-            <p class="text-secondary"><%- paragraph %></p>
+            <p class="text-secondary"><%- richText(paragraph) %></p>
           <% }) %>
         <% } %>
 
         <% if (section.list && section.list.length > 0) { %>
           <ul class="text-secondary">
             <% section.list.forEach(function(item) { %>
-              <li><%- item %></li>
+              <li><%- richText(item) %></li>
             <% }) %>
           </ul>
         <% } %>
 
         <% if (section.closingParagraphs) { %>
           <% section.closingParagraphs.forEach(function(paragraph) { %>
-            <p class="text-secondary"><%- paragraph %></p>
+            <p class="text-secondary"><%- richText(paragraph) %></p>
           <% }) %>
         <% } %>
 
@@ -38,19 +38,19 @@
               <h3 class="h6 mb-2"><%= sub.title %></h3>
               <% if (sub.paragraphs) { %>
                 <% sub.paragraphs.forEach(function(paragraph) { %>
-                  <p class="text-secondary mb-2"><%- paragraph %></p>
+                  <p class="text-secondary mb-2"><%- richText(paragraph) %></p>
                 <% }) %>
               <% } %>
               <% if (sub.list && sub.list.length > 0) { %>
                 <ul class="text-secondary mb-0">
                   <% sub.list.forEach(function(item) { %>
-                    <li><%- item %></li>
+                    <li><%- richText(item) %></li>
                   <% }) %>
                 </ul>
               <% } %>
               <% if (sub.closingParagraphs) { %>
                 <% sub.closingParagraphs.forEach(function(paragraph) { %>
-                  <p class="text-secondary mb-2"><%- paragraph %></p>
+                  <p class="text-secondary mb-2"><%- richText(paragraph) %></p>
                 <% }) %>
               <% } %>
             </div>

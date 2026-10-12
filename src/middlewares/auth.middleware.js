@@ -34,6 +34,42 @@ async function assertTokenStillValid(decoded) {
   }
 }
 
+// Web sessions live for days and carry a snapshot of role/permissions taken at
+// login, so on their own they would keep working after an admin suspends the
+// account, changes its role or a password reset revokes credentials. This runs
+// early on every request (mounted in app.js, before locals) and, at most once per
+// SESSION_RECHECK_MS per session, re-reads the account's auth state (status +
+// tokenValidAfter, the same fields the Bearer-token path checks). A session that
+// no longer qualifies is logged out in place. If the lookup itself fails the
+// session is left alone - an outage must not log everybody out.
+export const SESSION_RECHECK_MS = 60 * 1000;
+
+export async function sessionRevalidation(req, res, next) {
+  const session = req.session;
+  if (!session?.isLoggedIn || !session.user?.id) return next();
+
+  const now = Date.now();
+  if (session.authCheckedAt && now - session.authCheckedAt < SESSION_RECHECK_MS) return next();
+
+  try {
+    const authState = await userRepo.findAuthStateById(session.user.id);
+    const revokedAt = authState?.tokenValidAfter ? new Date(authState.tokenValidAfter).getTime() : 0;
+    // sessions created before loginAt existed are treated as stale only by status
+    const staleByTime = revokedAt && session.loginAt && session.loginAt < revokedAt;
+    if (!authState || !USABLE_STATUSES.has(authState.status) || staleByTime) {
+      session.isLoggedIn = false;
+      delete session.user;
+      delete session.loginAt;
+      delete session.authCheckedAt;
+      return next();
+    }
+    session.authCheckedAt = now;
+  } catch (error) {
+    // keep the session, retry on the next request
+  }
+  next();
+}
+
 export function webAuthMiddleware(req, res, next) {
   if (req.session?.isLoggedIn) {
     req.user = req.session.user;

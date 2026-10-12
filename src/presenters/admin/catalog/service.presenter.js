@@ -1,4 +1,5 @@
 import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+import { renderImage } from "../../../utils/html.util.js";
 export const SORT_MAP = {
   naziv: "name",
   istaknuto: "highlight",
@@ -82,7 +83,7 @@ export function prepareServiceDetailsData(service, { employeeCount = 0 } = {}) {
       {
         title: "Slika",
         type: "custom",
-        content: service.slika ? `<img src="${service.slika.url}" alt="${service.slika.alt || ""}" width="200" class="img-fluid rounded">` : "Nema slike",
+        content: service.slika ? renderImage(service.slika.url, service.slika.alt, { width: 200, className: "img-fluid rounded" }) : "Nema slike",
       },
       ...(service.galerija && service.galerija.length > 0
         ? [
@@ -90,7 +91,7 @@ export function prepareServiceDetailsData(service, { employeeCount = 0 } = {}) {
               title: "Galerija",
               type: "custom",
               content: service.galerija
-                .map((img) => `<img src="${img.url}" alt="${img.alt || ""}" width="120" class="img-fluid rounded me-2 mb-2">`)
+                .map((img) => renderImage(img.url, img.alt, { width: 120, className: "img-fluid rounded me-2 mb-2" }))
                 .join(""),
             },
           ]

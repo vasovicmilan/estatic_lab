@@ -33,7 +33,7 @@
               <dl class="row mb-0">
                 <% section.rows.forEach(function(row) { %>
                   <dt class="col-sm-4 text-muted"><%= row.label %></dt>
-                  <dd class="col-sm-8"><%- row.value %></dd>
+                  <dd class="col-sm-8"><% if (row.html !== undefined) { %><%- row.html %><% } else { %><%= row.value %><% } %></dd>
                 <% }) %>
               </dl>
             <% } else if (section.type === 'list') { %>
@@ -197,7 +197,7 @@
               <dl class="row mb-0">
                 <% section.rows.forEach(function(row) { %>
                   <dt class="col-sm-5 text-muted small"><%= row.label %></dt>
-                  <dd class="col-sm-7 small"><%- row.value %></dd>
+                  <dd class="col-sm-7 small"><% if (row.html !== undefined) { %><%- row.html %><% } else { %><%= row.value %><% } %></dd>
                 <% }) %>
               </dl>
             <% } else if (section.type === 'custom') { %>

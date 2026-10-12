@@ -1,4 +1,5 @@
 import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+import { renderImage } from "../../../utils/html.util.js";
 export const SORT_MAP = {
   imePrezime: "lastName",
   email: "email",
@@ -80,9 +81,9 @@ export function prepareUserDetailsData(user, roleOptions = []) {
           { label: "Email potvrđen", value: user.potvrdjenEmail },
           {
             label: "Kupljeni paketi",
-            // row.value is rendered unescaped (see admin/_details.ejs's <%- row.value %>),
-            // same pattern already used elsewhere for embedding real links in a details table
-            value: `<a href="/admin/kupljeni-paketi?userId=${user.id}">Pregled</a> &middot; <a href="/admin/kupljeni-paketi/dodavanje?userId=${user.id}">Dodeli paket</a>`,
+            // `html` (not `value`) is the only row field admin/_details.ejs prints unescaped -
+            // every interpolated piece has to be escaped by hand here
+            html: `<a href="/admin/kupljeni-paketi?userId=${encodeURIComponent(user.id)}">Pregled</a> &middot; <a href="/admin/kupljeni-paketi/dodavanje?userId=${encodeURIComponent(user.id)}">Dodeli paket</a>`,
           },
         ],
       },
@@ -91,7 +92,7 @@ export function prepareUserDetailsData(user, roleOptions = []) {
             {
               title: "Avatar",
               type: "custom",
-              content: `<img src="${user.avatar}" alt="${user.imePrezime}" width="80" class="img-fluid rounded-circle">`,
+              content: renderImage(user.avatar, user.imePrezime, { width: 80, className: "img-fluid rounded-circle" }),
             },
           ]
         : []),

@@ -1,4 +1,5 @@
 import { formatPrice, formatMoney } from "../../../utils/price.util.js";
+import { escapeHtml } from "../../../utils/html.util.js";
 import { translateCommissionSourceType, translateCommissionStatus } from "../../../utils/commission-display.util.js";
 import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
 export const SORT_MAP = {
@@ -102,13 +103,13 @@ export function preparePartnerDetailsData(partner, balance = null, coupons = [],
           coupons.length > 0
             ? coupons.map((c) => ({
                 label: c.code,
-                value: [
-                  `Usluge/paketi: ${describeServiceDiscount(c)}${c.isActive ? "" : " (neaktivan)"}`,
-                  `Artikli: ${describeCouponProductDiscount(c.productDiscount, categoryNamesById)}`,
-                  `<a href="/admin/kuponi/detalji/${c.id}">detalji</a>`,
+                html: [
+                  escapeHtml(`Usluge/paketi: ${describeServiceDiscount(c)}${c.isActive ? "" : " (neaktivan)"}`),
+                  escapeHtml(`Artikli: ${describeCouponProductDiscount(c.productDiscount, categoryNamesById)}`),
+                  `<a href="/admin/kuponi/detalji/${encodeURIComponent(c.id)}">detalji</a>`,
                 ].join("<br>"),
               }))
-            : [{ label: "Nema dodeljenih kodova", value: `<a href="/admin/kuponi/dodavanje">Kreiraj kupon za ovog partnera</a>` }],
+            : [{ label: "Nema dodeljenih kodova", html: `<a href="/admin/kuponi/dodavanje">Kreiraj kupon za ovog partnera</a>` }],
       },
       {
         title: "Poslednje provizije",
@@ -156,7 +157,7 @@ export function preparePartnerDetailsData(partner, balance = null, coupons = [],
             {
               title: "Sve isplate",
               type: "table",
-              rows: [{ label: "Istorija isplata", value: `<a href="/admin/isplate?partnerId=${partner.id}">Pogledaj sve isplate</a>` }],
+              rows: [{ label: "Istorija isplata", html: `<a href="/admin/isplate?partnerId=${encodeURIComponent(partner.id)}">Pogledaj sve isplate</a>` }],
             },
           ]
         : []),

@@ -78,6 +78,10 @@ Account, employee and admin links (`/moj-nalog/zakazivanja`, `/zaposleni-panel/t
 
 The public product detail (`GET /api/v1/products/:slug`) and card (`/products`) carry `poNarudzbini` (boolean, admin field `madeToOrder`): the product is not kept in stock, so a variation with no stock means "available to order" (inquiry via the contact form) rather than "out of stock". `naStanju` is unchanged. Related products, services and posts in the detail are only included when publicly visible (active / published).
 
+### Content pages and intros (public, no token)
+
+`GET /api/v1/about`, `/faq`, `/privacy-policy`, `/terms`, `/partnership-program` (partners module), `/home`, `/home-intro`, `/team/intro`, `/contact-page`, `/list-intro/:page`, `/page-seo/:page`, `/business-info`, `/blog/filters` and `/blog/archive/:type/:slug` (blog module). They return the content admins edit through `site-content`; texts may contain basic markup (`<strong>`, `<a>`), so a frontend must render them through a sanitizer (the web side uses `richText` from `rich-text.util.js`).
+
 ## Logged-in-user routes (any role, just `apiAuthMiddleware`)
 
 - **`/api/v1/me/*`** - the caller's own account: profile, password, account deletion, appointments (incl. cancel and reschedule), orders (incl. cancel), addresses (incl. default address). No `requirePermission` check since it's always "mine", never someone else's.
@@ -169,6 +173,8 @@ Whole router behind `manage_orders`. `GET /orders`, `POST /orders/manual`, `GET 
 | GET | `/audit-log` | `view_logs` |
 | GET | `/logs`, `/logs/history`, `/logs/history/:date` | `view_logs` |
 | GET | `/business-reports`, `/business-reports/history/...` | `view_business_reports` |
+| GET/PUT | `/site-content`, `/site-content/{o-nama,faq,politika-privatnosti,uslovi-koriscenja,partnerski-program,pocetna-uvod,zasto-mi,pocetna-hero,usluge-uvod,paketi-uvod,prodavnica-uvod,blog-uvod,kontakt,seo-stranica,tim-uvod}` | `manage_site_content` (`GET` reads all, each `PUT` changes one block) |
+| GET | `/business-reports/history/:periodType/:periodKey/pdf` | `view_business_reports` |
 | GET/PUT | `/site-settings` | `manage_site_content` |
 | PUT | `/site-settings/radno-vreme` | `manage_site_content` |
 | PUT | `/site-settings/neradni-dani` | `manage_site_content` |

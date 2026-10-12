@@ -1,4 +1,5 @@
 import { formatMoney } from "../../../utils/price.util.js";
+import { renderImage } from "../../../utils/html.util.js";
 import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
 export const SORT_MAP = {
   naziv: "name",
@@ -81,7 +82,7 @@ export function preparePackageDetailsData(pkg) {
       {
         title: "Slika",
         type: "custom",
-        content: pkg.slika ? `<img src="${pkg.slika.url}" alt="${pkg.slika.alt || ""}" width="200" class="img-fluid rounded">` : "Nema slike",
+        content: pkg.slika ? renderImage(pkg.slika.url, pkg.slika.alt, { width: 200, className: "img-fluid rounded" }) : "Nema slike",
       },
       ...(pkg.galerija && pkg.galerija.length > 0
         ? [
@@ -89,7 +90,7 @@ export function preparePackageDetailsData(pkg) {
               title: "Galerija",
               type: "custom",
               content: pkg.galerija
-                .map((img) => `<img src="${img.url}" alt="${img.alt || ""}" width="120" class="img-fluid rounded me-2 mb-2">`)
+                .map((img) => renderImage(img.url, img.alt, { width: 120, className: "img-fluid rounded me-2 mb-2" }))
                 .join(""),
             },
           ]

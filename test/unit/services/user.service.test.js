@@ -125,9 +125,25 @@ describe("user.service", () => {
       t.mock.method(userRepo, "findUserByEmail", async () => existing);
       t.mock.method(userRepo, "updateUserById", async (id_, patch) => ({ ...existing, ...patch }));
 
-      const result = await userService.findOrCreateGoogleUser({ googleId: "g-999", email: existing.email });
+      const result = await userService.findOrCreateGoogleUser({ googleId: "g-999", email: existing.email, emailVerified: true });
 
       assert.equal(result.googleId, "g-999");
+    });
+
+    it("refuses to link by email when Google does not vouch for the address", async (t) => {
+      const existing = buildUser({ provider: "local", googleId: null });
+      t.mock.method(userRepo, "findUserByGoogleId", async () => null);
+      t.mock.method(userRepo, "findUserByEmail", async () => existing);
+      const update = t.mock.method(userRepo, "updateUserById", async () => existing);
+
+      await assert.rejects(() => userService.findOrCreateGoogleUser({ googleId: "g-x", email: existing.email }), /potvrđenu/);
+      assert.equal(update.mock.callCount(), 0);
+    });
+
+    it("refuses suspended accounts, both by googleId and by email link", async (t) => {
+      const suspended = buildUser({ status: "suspended", googleId: "g-s" });
+      t.mock.method(userRepo, "findUserByGoogleId", async () => suspended);
+      await assert.rejects(() => userService.findOrCreateGoogleUser({ googleId: "g-s", email: suspended.email, emailVerified: true }), /suspendovan/);
     });
 
     it("promotes the first-ever Google sign-up to admin too", async (t) => {
@@ -143,7 +159,7 @@ describe("user.service", () => {
         return buildUser({ ...payload, _id: id() });
       });
 
-      await userService.findOrCreateGoogleUser({ googleId: "g-1", email: "prvi@example.com", firstName: "Prvi" });
+      await userService.findOrCreateGoogleUser({ googleId: "g-1", email: "prvi@example.com", firstName: "Prvi", emailVerified: true });
 
       assert.deepEqual(createPayload.role, adminRole._id);
     });

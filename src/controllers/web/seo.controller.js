@@ -1,30 +1,31 @@
 import * as sitemapService from "../../services/sitemap.service.js";
 import * as llmsTxtService from "../../services/llms-txt.service.js";
 import { logError } from "../../utils/logger.util.js";
+import { FEATURES } from "../../config/features.config.js";
+
+// Pure so it can be unit-tested; `features` is FEATURES from features.config.js.
+// The booking-flow rule only makes sense when the booking module is on - on a
+// shop/blog-only deployment /zakazivanje doesn't exist and listing it would just
+// advertise a path that 404s.
+export function buildRobotsTxt(base, features = FEATURES) {
+  const lines = ["User-agent: *", "Disallow: /admin", "Disallow: /nalog", "Disallow: /moj-nalog", "Disallow: /newsletter/odjava"];
+  if (features.booking) {
+    // Booking-flow state pages (/zakazivanje/:slug/podaci, /termin, ...) -
+    // per-visit availability/form state, not content: infinite crawlable
+    // variations via servicePackageId etc., nothing worth indexing, and
+    // crawlers were burning real crawl budget on them (~2000 hits/2mo in
+    // the access logs, mostly Amazonbot/MJ12bot/Claude-SearchBot).
+    lines.push("Disallow: /zakazivanje");
+  }
+  lines.push("Allow: /", "", `Sitemap: ${base}/sitemap.xml`, "");
+  return lines.join("\n");
+}
 
 export async function robotsTxt(req, res, next) {
   try {
     const base = `${req.protocol}://${req.get("host")}`;
     res.type("text/plain");
-    res.send(
-      [
-        "User-agent: *",
-        "Disallow: /admin",
-        "Disallow: /nalog",
-        "Disallow: /moj-nalog",
-        "Disallow: /newsletter/odjava",
-        // Booking-flow state pages (/zakazivanje/:slug/podaci, /termin, ...) -
-        // per-visit availability/form state, not content: infinite crawlable
-        // variations via servicePackageId etc., nothing worth indexing, and
-        // crawlers were burning real crawl budget on them (~2000 hits/2mo in
-        // the access logs, mostly Amazonbot/MJ12bot/Claude-SearchBot).
-        "Disallow: /zakazivanje",
-        "Allow: /",
-        "",
-        `Sitemap: ${base}/sitemap.xml`,
-        "",
-      ].join("\n")
-    );
+    res.send(buildRobotsTxt(base));
   } catch (error) {
     logError("[robotsTxt] Greška pri generisanju robots.txt", error);
     next(error);

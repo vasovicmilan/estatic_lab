@@ -29,11 +29,11 @@
             <input type="hidden" name="_method" value="PUT">
             <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
 
-            <input type="hidden" name="workingHours" value='<%- JSON.stringify(data.employee.workingHoursRaw || []) %>' data-repeater-input="workingHours">
+            <input type="hidden" name="workingHours" value="<%= JSON.stringify(data.employee.workingHoursRaw || []) %>" data-repeater-input="workingHours">
             <div class="border rounded p-3"
                  data-schedule="workingHours"
-                 data-schedule-days='<%- JSON.stringify(data.scheduleDays || []) %>'
-                 data-schedule-value='<%- JSON.stringify(data.employee.workingHoursRaw || []) %>'>
+                 data-schedule-days="<%= JSON.stringify(data.scheduleDays || []) %>"
+                 data-schedule-value="<%= JSON.stringify(data.employee.workingHoursRaw || []) %>">
               <div data-schedule-days-list></div>
             </div>
 

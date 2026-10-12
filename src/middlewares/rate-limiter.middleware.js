@@ -57,7 +57,7 @@ function handleRateLimitExceeded(message, statusCode = 429) {
 
 export const globalLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: envInt("RATE_LIMIT_GLOBAL_MAX", 600),
+  max: envInt("RATE_LIMIT_GLOBAL_MAX", 100),
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: clientKey,
@@ -169,7 +169,7 @@ export const availabilityLimiter = rateLimit({
 
 export const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: envInt("RATE_LIMIT_API_MAX", 600),
+  max: envInt("RATE_LIMIT_API_MAX", 120),
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: clientKey,
@@ -189,7 +189,7 @@ export const apiAuthLimiter = rateLimit({
 
 export const adminLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: envInt("RATE_LIMIT_ADMIN_MAX", 600),
+  max: envInt("RATE_LIMIT_ADMIN_MAX", 300),
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => skipInTest() || skipStatic(req),

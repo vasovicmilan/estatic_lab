@@ -1,4 +1,5 @@
 import { BLOG_BLOCK_TYPES } from "../../../models/schemas/content.blog.schema.js";
+import { escapeHtml, safeHref, renderImage } from "../../../utils/html.util.js";
 import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
 export const SORT_MAP = {
   naziv: "name",
@@ -50,21 +51,21 @@ export function prepareBusinessPartnerDetailsData(partner) {
           { label: "Kratak opis", value: partner.kratakOpis },
           { label: "Aktivan", value: partner.aktivan ? "Da" : "Ne" },
           { label: "Adresa", value: partner.adresa || "-" },
-          { label: "Link ka prodavnici", value: `<a href="${partner.outboundUrl}" target="_blank" rel="noopener">${partner.outboundUrl}</a>` },
+          { label: "Link ka prodavnici", html: partner.outboundUrl && safeHref(partner.outboundUrl) ? `<a href="${escapeHtml(safeHref(partner.outboundUrl))}" target="_blank" rel="noopener">${escapeHtml(partner.outboundUrl)}</a>` : escapeHtml(partner.outboundUrl || "-") },
           { label: "Tekst dugmeta", value: partner.ctaLabel },
         ],
       },
       {
         title: "Naslovna slika",
         type: "custom",
-        content: partner.slika ? `<img src="${partner.slika.url}" alt="${partner.slika.alt || ""}" width="200" class="img-fluid rounded">` : "Nema slike",
+        content: partner.slika ? renderImage(partner.slika.url, partner.slika.alt, { width: 200, className: "img-fluid rounded" }) : "Nema slike",
       },
       ...(partner.imaMapu
         ? [
             {
               title: "Lokacija",
               type: "custom",
-              content: `<iframe src="https://www.google.com/maps?q=${partner.geo.latitude},${partner.geo.longitude}&output=embed" width="100%" height="250" style="border:0" loading="lazy"></iframe>`,
+              content: `<iframe src="https://www.google.com/maps?q=${Number(partner.geo.latitude)},${Number(partner.geo.longitude)}&output=embed" width="100%" height="250" style="border:0" loading="lazy"></iframe>`,
             },
           ]
         : []),

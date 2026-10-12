@@ -10,6 +10,7 @@ import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 import { generateRandomToken } from "../../../services/crypto.service.js";
 import auditLogService from "../../../services/audit-log.service.js";
+import { safeRedirectPath } from "../../../utils/html.util.js";
 
 // Login/register/reset-password are all public (no auth wall - see auth.routes.js),
 // but none of them are content worth indexing, and the reset/claim-account links in
@@ -51,11 +52,29 @@ async function exchangeGoogleCodeForProfile(code) {
     firstName: profile.given_name || "Korisnik",
     lastName: profile.family_name || "",
     avatar: profile.picture || "",
+    // Google only vouches for the address when this is true; linking an existing
+    // local account by e-mail without it would let an unverified address take over
+    // someone else's account (see authService.googleAuth).
+    emailVerified: profile.verified_email === true,
   };
+}
+
+// Fresh session id on every successful login (session fixation): whatever id the
+// browser had before authenticating is discarded, so it can't be planted by an
+// attacker beforehand. Flash messages must be queued AFTER this call.
+function regenerateSession(req) {
+  return new Promise((resolve, reject) => {
+    if (typeof req.session?.regenerate !== "function") return resolve();
+    req.session.regenerate((err) => (err ? reject(err) : resolve()));
+  });
 }
 
 function setSessionUser(req, user) {
   req.session.isLoggedIn = true;
+  // loginAt / checkedAt drive sessionRevalidation (auth.middleware.js): the session
+  // is invalid once the account's tokenValidAfter moves past loginAt.
+  req.session.loginAt = Date.now();
+  req.session.authCheckedAt = Date.now();
   req.session.user = {
     id: user.id,
     email: user.email,
@@ -72,7 +91,7 @@ function setSessionUser(req, user) {
 export async function loginForm(req, res, next) {
   try {
     if (req.session?.isLoggedIn) return res.redirect("/");
-    const viewData = prepareLoginFormData({ redirectTo: req.query.redirect || "/" });
+    const viewData = prepareLoginFormData({ redirectTo: safeRedirectPath(req.query.redirect, "/") });
     const seo = await authSeo(req, { title: "Prijava", description: "Prijavite se na vaš nalog" });
     return res.render("auth/_auth-form", {
       pageTitle: seo.title,
@@ -88,7 +107,7 @@ export async function loginForm(req, res, next) {
 
 export async function login(req, res, next) {
   try {
-    const redirectTo = req.body.redirectTo || "/";
+    const redirectTo = safeRedirectPath(req.body.redirectTo, "/");
 
     if (req.validationErrors) {
       logWarn("[login] Validacione greške pri prijavi", { validationErrors: req.validationErrors, email: req.body.email });
@@ -102,6 +121,7 @@ export async function login(req, res, next) {
     }
 
     const user = await authService.login(req.body.email, req.body.password);
+    await regenerateSession(req);
     setSessionUser(req, user);
 
     logInfo(`[login] Korisnik "${user.email}" uspešno prijavljen`, { userId: user.id });
@@ -130,7 +150,7 @@ export async function login(req, res, next) {
     });
 
     if (error.statusCode === 401 || error.statusCode === 400) {
-      const viewData = prepareLoginFormData({ errors: { general: error.message }, formData: req.body, redirectTo: req.body.redirectTo });
+      const viewData = prepareLoginFormData({ errors: { general: error.message }, formData: req.body, redirectTo: safeRedirectPath(req.body.redirectTo, "/") });
       return res.status(error.statusCode).render("auth/_auth-form", {
         pageTitle: "Prijava",
         pageDescription: "Prijavite se na vaš nalog",
@@ -233,8 +253,10 @@ export async function googleCallback(req, res, next) {
       firstName: googleProfile.firstName,
       lastName: googleProfile.lastName,
       avatar: googleProfile.avatar,
+      emailVerified: googleProfile.emailVerified,
     });
 
+    await regenerateSession(req);
     setSessionUser(req, user);
 
     logInfo(`[googleCallback] Google prijava uspešna za "${user.email}"`, { userId: user.id, isNewUser });
