@@ -38,6 +38,15 @@ const ACTIVE_STATUSES = ["pending", "confirmed"];
 // either way, and leaving the event in place keeps it as a historical record
 // on the calendar without extra work.
 
+// Shared by status_changed (active statuses) and rescheduled: makes sure the
+// appointment has a live event in the employee's calendar, creating it when there is
+// none stored or the stored one no longer exists in Google, and persisting the id.
+async function ensureCalendarEvent(appointmentId, appointment, employee) {
+  const currentId = await appointmentService.getGoogleEventId(appointmentId);
+  const nextId = await googleCalendarService.upsertEventForAppointment(appointment, employee.googleCalendarId, currentId);
+  if (nextId && nextId !== currentId) await appointmentService.setGoogleEventId(appointmentId, nextId);
+}
+
 eventEmitter.on(
   "appointment:created",
   safe("appointment:created", async ({ appointmentId }) => {
@@ -62,16 +71,16 @@ eventEmitter.on(
     if (!employee?.googleCalendarId) return;
 
     const googleEventId = await appointmentService.getGoogleEventId(appointmentId);
-    if (!googleEventId) return;
 
     if (FREED_STATUSES.includes(status)) {
+      if (!googleEventId) return;
       await googleCalendarService.deleteEventForAppointment(employee.googleCalendarId, googleEventId);
       await appointmentService.setGoogleEventId(appointmentId, null);
       return;
     }
 
     if (ACTIVE_STATUSES.includes(status)) {
-      await googleCalendarService.updateEventForAppointment(appointment, employee.googleCalendarId, googleEventId);
+      await ensureCalendarEvent(appointmentId, appointment, employee);
     }
     // completed/no_show - leave the existing event untouched
   })
@@ -117,10 +126,7 @@ eventEmitter.on(
     const employee = await employeeService.getEmployeeByIdRaw(appointment.terapeutId);
     if (!employee?.googleCalendarId) return;
 
-    const googleEventId = await appointmentService.getGoogleEventId(appointmentId);
-    if (!googleEventId) return;
-
-    await googleCalendarService.updateEventForAppointment(appointment, employee.googleCalendarId, googleEventId);
+    await ensureCalendarEvent(appointmentId, appointment, employee);
   })
 );
 

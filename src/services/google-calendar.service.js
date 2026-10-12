@@ -104,6 +104,52 @@ export async function updateEventForAppointment(appointment, googleCalendarId, g
   }
 }
 
+// Update-or-create: keeps the calendar self-healing. Returns the googleEventId that
+// is now valid for this appointment (the same one after a normal patch, a NEW one if
+// there was none yet or the old event no longer exists in Google), or null when
+// nothing could be synced. Callers persist the returned id when it differs.
+//
+// Why this exists: updateEventForAppointment alone swallows a 404/410 (event deleted
+// by hand in Google Calendar) and the listeners skipped entirely when no
+// googleEventId was stored (first insert failed on a Google hiccup, or the employee's
+// googleCalendarId was filled in after the booking) - in both cases the appointment
+// then stayed invisible in the employee's calendar for good, and the slot was not
+// protected from outside double-booking.
+export async function upsertEventForAppointment(appointment, googleCalendarId, googleEventId) {
+  try {
+    if (!GOOGLE_CALENDAR_CONFIG.isEnabled() || !googleCalendarId) return googleEventId || null;
+    if (!googleEventId) return await createEventForAppointment(appointment, googleCalendarId);
+
+    const calendar = googleCalendarProvider.getGoogleCalendarClient();
+    if (!calendar) return googleEventId;
+
+    try {
+      const response = await calendar.events.patch({
+        calendarId: googleCalendarId,
+        eventId: googleEventId,
+        requestBody: buildEventPayload(appointment),
+      });
+      // A "deleted" event can still be patched in some cases and comes back with
+      // status "cancelled" - treat that the same as gone, otherwise it stays hidden.
+      if (response?.data?.status !== "cancelled") {
+        logInfo("Google Calendar event updated", { appointmentId: appointment.id, googleEventId });
+        return googleEventId;
+      }
+    } catch (error) {
+      if (error?.code !== 404 && error?.code !== 410) {
+        logError("Failed to update Google Calendar event", error, { appointmentId: appointment.id, googleEventId });
+        return googleEventId;
+      }
+    }
+
+    logInfo("Google Calendar event was missing - recreating", { appointmentId: appointment.id, oldGoogleEventId: googleEventId });
+    return (await createEventForAppointment(appointment, googleCalendarId)) || null;
+  } catch (error) {
+    logError("Failed to upsert Google Calendar event", error, { appointmentId: appointment.id, googleEventId });
+    return googleEventId || null;
+  }
+}
+
 export async function deleteEventForAppointment(googleCalendarId, googleEventId) {
   try {
     if (!GOOGLE_CALENDAR_CONFIG.isEnabled() || !googleCalendarId || !googleEventId) return false;
@@ -123,4 +169,4 @@ export async function deleteEventForAppointment(googleCalendarId, googleEventId)
   }
 }
 
-export default { createEventForAppointment, updateEventForAppointment, deleteEventForAppointment };
+export default { createEventForAppointment, updateEventForAppointment, upsertEventForAppointment, deleteEventForAppointment };

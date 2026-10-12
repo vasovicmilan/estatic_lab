@@ -1,3 +1,4 @@
+import { resolveBookingDate, getZonedDateKey } from "../../../utils/date.time.util.js";
 import * as serviceService from "../../../services/service.service.js";
 import * as employeeService from "../../../services/employee.service.js";
 import * as availabilityService from "../../../services/availability.service.js";
@@ -61,7 +62,7 @@ export async function slotsStep(req, res, next) {
       return flashAndRedirect(req, res, "error", "Izabrana varijanta nije pronađena", `/zakazivanje/${serviceSlug}`);
     }
 
-    const targetDate = date ? new Date(date) : new Date();
+    const targetDate = resolveBookingDate(date);
     const rawEmployees = await employeeService.findEmployeesByServiceRaw(service.id);
     const employees = rawEmployees.map((e) => employeeService.getEmployeeById(e._id, "user", "short"));
 
@@ -73,7 +74,8 @@ export async function slotsStep(req, res, next) {
     });
 
     const viewData = prepareBookingSlotsStepData(service, variant, {
-      date: targetDate.toISOString().slice(0, 10),
+      date: getZonedDateKey(targetDate),
+      minDate: getZonedDateKey(new Date()),
       employeeId: employeeId || "",
       employees: await Promise.all(employees),
       slots: slots.map((s) => ({

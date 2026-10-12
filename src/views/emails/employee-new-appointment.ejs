@@ -1,0 +1,16 @@
+<%- include("_layout", {
+  title: "Nova rezervacija",
+  eyebrow: "Termin",
+  heading: `Nova rezervacija${typeof firstName !== 'undefined' && firstName ? ', ' + firstName : ''}`,
+  preheader: "Imate novi zakazan termin",
+  body: `
+    <p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0 0 20px;">Klijent je zakazao termin kod vas. Detalji su ispod.</p>
+    ${infoTable(
+      infoRow("Klijent", appointment.korisnik?.ime || "-") +
+      infoRow("Usluga", appointment.usluga?.naziv || "-") +
+      infoRow("Termin", appointment.termin?.pocetak || "-") +
+      infoRow("Napomena", appointment.napomena || "-")
+    )}
+    ${ctaButton(manageUrl, "Pregledaj termin")}
+  `
+}) %>

@@ -1,0 +1,18 @@
+<%# Read-only list of bookings made on the external platform (SrediMe) for this employee. %>
+<% if (typeof externalBusy !== 'undefined' && externalBusy && externalBusy.length > 0) { %>
+  <section class="mt-5" aria-labelledby="external-busy-title">
+    <h2 class="h5 mb-1" id="external-busy-title">Termini sa SrediMe</h2>
+    <p class="text-muted small mb-3">Rezervacije napravljene preko SrediMe platforme. Prikazuju se samo za pregled i blokiraju vaše slobodno vreme - sve izmene i otkazivanja rade se na SrediMe.</p>
+    <div class="list-group">
+      <% externalBusy.forEach(function(item) { %>
+        <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
+          <div>
+            <div class="fw-semibold"><%= item.naslov %></div>
+            <div class="text-muted small mono"><%= item.pocetak %> &ndash; <%= item.kraj %></div>
+          </div>
+          <% if (item.referenca) { %><span class="badge bg-secondary mono">#<%= item.referenca %></span><% } %>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+<% } %>

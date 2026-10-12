@@ -6,6 +6,7 @@ import {
   createEventForAppointment,
   updateEventForAppointment,
   deleteEventForAppointment,
+  upsertEventForAppointment,
 } from "../../../src/services/google-calendar.service.js";
 
 function buildAppointment(overrides = {}) {
@@ -202,6 +203,55 @@ describe("google-calendar.service", () => {
       const result = await deleteEventForAppointment("calendar-abc", "event-1");
 
       assert.equal(result, false);
+    });
+  });
+  describe("upsertEventForAppointment", () => {
+    it("creates a new event when no googleEventId is stored yet", async (t) => {
+      t.mock.method(GOOGLE_CALENDAR_CONFIG, "isEnabled", () => true);
+      t.mock.method(googleCalendarProvider, "getGoogleCalendarClient", () => fakeCalendarClient());
+      assert.equal(await upsertEventForAppointment(buildAppointment(), "cal", null), "google-event-1");
+    });
+
+    it("patches and keeps the same id when the event still exists", async (t) => {
+      t.mock.method(GOOGLE_CALENDAR_CONFIG, "isEnabled", () => true);
+      const client = fakeCalendarClient({ patch: async () => ({ data: { status: "confirmed" } }) });
+      t.mock.method(googleCalendarProvider, "getGoogleCalendarClient", () => client);
+      assert.equal(await upsertEventForAppointment(buildAppointment(), "cal", "old-id"), "old-id");
+    });
+
+    it("recreates the event when Google answers 404/410 (deleted by hand)", async (t) => {
+      t.mock.method(GOOGLE_CALENDAR_CONFIG, "isEnabled", () => true);
+      const client = fakeCalendarClient({
+        patch: async () => {
+          const err = new Error("Gone");
+          err.code = 410;
+          throw err;
+        },
+        insert: async () => ({ data: { id: "fresh-id" } }),
+      });
+      t.mock.method(googleCalendarProvider, "getGoogleCalendarClient", () => client);
+      assert.equal(await upsertEventForAppointment(buildAppointment(), "cal", "old-id"), "fresh-id");
+    });
+
+    it("recreates the event when the patched event comes back as cancelled", async (t) => {
+      t.mock.method(GOOGLE_CALENDAR_CONFIG, "isEnabled", () => true);
+      const client = fakeCalendarClient({
+        patch: async () => ({ data: { status: "cancelled" } }),
+        insert: async () => ({ data: { id: "fresh-id" } }),
+      });
+      t.mock.method(googleCalendarProvider, "getGoogleCalendarClient", () => client);
+      assert.equal(await upsertEventForAppointment(buildAppointment(), "cal", "old-id"), "fresh-id");
+    });
+
+    it("keeps the stored id on a transient (non-404/410) error instead of duplicating the event", async (t) => {
+      t.mock.method(GOOGLE_CALENDAR_CONFIG, "isEnabled", () => true);
+      const client = fakeCalendarClient({
+        patch: async () => {
+          throw new Error("Rate limited");
+        },
+      });
+      t.mock.method(googleCalendarProvider, "getGoogleCalendarClient", () => client);
+      assert.equal(await upsertEventForAppointment(buildAppointment(), "cal", "old-id"), "old-id");
     });
   });
 });

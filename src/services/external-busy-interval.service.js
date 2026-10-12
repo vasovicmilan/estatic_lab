@@ -1,6 +1,7 @@
 import ical from "node-ical";
 import externalBusyIntervalRepo from "../repositories/external-busy-interval.repository.js";
 import { logInfo } from "../utils/logger.util.js";
+import { formatDateTime } from "../utils/date.time.util.js";
 
 // Used by availability.service.js exactly like appointmentService.getBusyIntervals -
 // same {startTime, endTime} shape, so the caller can concatenate both lists before
@@ -8,6 +9,41 @@ import { logInfo } from "../utils/logger.util.js";
 // from a cached external feed.
 export async function getExternalBusyIntervals(employeeId, dayStart, dayEnd) {
   return externalBusyIntervalRepo.findByEmployeeAndRange(employeeId, "sredime", dayStart, dayEnd);
+}
+
+// node-ical returns rich-text fields as either a string or { val, params } - normalize.
+function textOf(value) {
+  if (!value) return null;
+  const text = typeof value === "string" ? value : value.val;
+  return typeof text === "string" && text.trim() ? text.trim() : null;
+}
+
+// SrediMe's SUMMARY looks like "SrediMe #V2PPM69 (Relaks / antistres masaža)" - a booking
+// reference plus the service name. Its feed carries NO client name or phone (DESCRIPTION is
+// a fixed "make changes on SrediMe" notice, LOCATION always the salon address), so the
+// reference + service is all there is to show. Anything that doesn't match the pattern
+// falls back to the raw summary.
+export function parseSredimeSummary(summary) {
+  if (!summary) return { reference: null, service: null };
+  const match = /^SrediMe\s+#(\S+)\s*(?:\((.*)\))?\s*$/i.exec(summary.trim());
+  if (!match) return { reference: null, service: summary.trim() };
+  return { reference: match[1], service: match[2] ? match[2].trim() : null };
+}
+
+// Read-only list for the employee's own page: what SrediMe has booked for them
+// (our own appointments are listed separately - these never become Appointment docs).
+export async function getUpcomingForEmployee(employeeId, { limit = 50 } = {}) {
+  const rows = await externalBusyIntervalRepo.findUpcomingForEmployee(employeeId, "sredime", new Date(), limit);
+  return rows.map((r) => {
+    const { reference, service } = parseSredimeSummary(r.summary);
+    return {
+      id: r._id.toString(),
+      pocetak: formatDateTime(r.startTime),
+      kraj: formatDateTime(r.endTime),
+      naslov: service || "Zauzeto (SrediMe)",
+      referenca: reference,
+    };
+  });
 }
 
 // Used at actual booking/reassignment time - buffer padding is applied inside
@@ -62,6 +98,11 @@ export async function syncEmployeeFromIcs(employee) {
     if (entry.type !== "VEVENT") continue; // skip VTIMEZONE/VCALENDAR metadata entries node-ical also returns
     if (!entry.start || !entry.end || !entry.uid) continue; // malformed entry - nothing usable to store
 
+    // Some feeds keep a cancelled booking listed with STATUS:CANCELLED instead of dropping
+    // it. Skipping it here (without adding its UID to currentUids) means the stale-cleanup
+    // below removes any cached copy, so the slot is freed just like a disappeared event.
+    if (String(entry.status || "").toUpperCase() === "CANCELLED") continue;
+
     // Past events don't affect any future slot calculation, and would otherwise
     // accumulate here forever (the feed doesn't stop listing events that already
     // happened) - skipping them keeps this collection from growing unbounded.
@@ -71,7 +112,9 @@ export async function syncEmployeeFromIcs(employee) {
     await externalBusyIntervalRepo.upsertInterval(employeeId, "sredime", entry.uid, {
       startTime: new Date(entry.start),
       endTime: new Date(entry.end),
-      summary: entry.summary || null,
+      summary: textOf(entry.summary),
+      description: textOf(entry.description),
+      location: textOf(entry.location),
     });
     synced++;
   }
@@ -85,4 +128,4 @@ export async function syncEmployeeFromIcs(employee) {
   return { synced, removed };
 }
 
-export default { getExternalBusyIntervals, hasOverlappingExternalInterval, syncEmployeeFromIcs };
+export default { parseSredimeSummary, getUpcomingForEmployee, getExternalBusyIntervals, hasOverlappingExternalInterval, syncEmployeeFromIcs };

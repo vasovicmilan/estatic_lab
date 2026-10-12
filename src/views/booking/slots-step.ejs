@@ -16,7 +16,7 @@
             <div class="col-auto">
               <label class="form-label small text-muted" for="slots-date">Datum</label>
               <input type="date" id="slots-date" name="date" class="form-control" value="<%= data.date %>"
-                min="<%= new Date().toISOString().slice(0,10) %>" onchange="this.form.submit()">
+                min="<%= data.minDate %>" onchange="this.form.submit()">
             </div>
             <% if (data.employees && data.employees.length> 0) { %>
               <div class="col-auto">

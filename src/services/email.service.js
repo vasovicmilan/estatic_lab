@@ -216,6 +216,15 @@ export async function sendAppointmentReassignedEmail({ email, firstName }, appoi
   return emailProvider.sendEmail({ to: email, subject: `Novi termin dodeljen - ${siteName()}`, html });
 }
 
+// Sent to the employee the new booking landed on (explicitly chosen by the customer,
+// or auto-assigned because they were the only one free) - previously only the admin
+// and the customer were told, so the person who actually has to do the treatment
+// found out only from the daily digest / by opening their calendar.
+export async function sendEmployeeNewAppointmentEmail({ email, firstName }, appointment) {
+  const html = await renderTemplate("employee-new-appointment", { firstName, appointment, manageUrl: buildLink("employeeAppointments") });
+  return emailProvider.sendEmail({ to: email, subject: `Nova rezervacija - ${siteName()}`, html });
+}
+
 export async function notifyAdminNewAppointment(appointment) {
   const html = await renderTemplate("admin-new-appointment", { appointment, adminUrl: buildLink("adminAppointment", { id: appointment.id }) });
   const summary = `${appointment.korisnik?.ime || "Klijent"} - ${appointment.usluga?.naziv || "usluga"} (${appointment.termin?.pocetak || ""})`;
@@ -425,6 +434,7 @@ export default {
   sendPayoutStatusUpdateEmail,
   sendAppointmentReassignedEmail,
   notifyAdminNewAppointment,
+  sendEmployeeNewAppointmentEmail,
   notifyAdminAppointmentCancelled,
   sendOrderConfirmationRequestEmail,
   sendCartReminderEmail,

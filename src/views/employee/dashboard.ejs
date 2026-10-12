@@ -120,6 +120,7 @@
   <% } else { %>
     <p class="text-muted">Nemate zakazanih termina za danas.</p>
   <% } %>
+  <%- include("../includes/components/employee-external-busy", { externalBusy: data.externalBusy }) %>
 </main>
 
 <%- include("../includes/portal-footer") %>

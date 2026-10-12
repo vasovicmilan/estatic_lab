@@ -27,12 +27,25 @@ export async function findByEmployeeAndRange(employeeId, source, rangeStart, ran
 // One event from the parsed feed - matched by the (employee, source,
 // externalUid) unique index, so a reschedule on the external side updates the
 // same document's start/end instead of creating a duplicate.
-export async function upsertInterval(employeeId, source, externalUid, { startTime, endTime, summary }) {
+export async function upsertInterval(employeeId, source, externalUid, { startTime, endTime, summary, description, location }) {
   return ExternalBusyInterval.findOneAndUpdate(
     { employee: employeeId, source, externalUid },
-    { startTime, endTime, summary: summary || null },
+    { startTime, endTime, summary: summary || null, description: description || null, location: location || null },
     { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
   );
+}
+
+/**
+ * Upcoming (not yet finished) external intervals for one employee, soonest first -
+ * read-only display on the employee's own calendar page (unlike
+ * findByEmployeeAndRange, which selects only start/end for availability math).
+ */
+export async function findUpcomingForEmployee(employeeId, source, from = new Date(), limit = 50) {
+  return ExternalBusyInterval.find({ employee: employeeId, source, endTime: { $gt: from } })
+    .sort({ startTime: 1 })
+    .limit(limit)
+    .select("startTime endTime summary description location")
+    .lean();
 }
 
 // Removes every stored interval for this employee+source whose externalUid is
@@ -72,4 +85,4 @@ export async function existsOverlapping(employeeId, source, startTime, endTime) 
   return !!match;
 }
 
-export default { findByEmployeeAndRange, upsertInterval, deleteStaleIntervals, deleteAllForEmployee, existsOverlapping };
+export default { findUpcomingForEmployee, findByEmployeeAndRange, upsertInterval, deleteStaleIntervals, deleteAllForEmployee, existsOverlapping };

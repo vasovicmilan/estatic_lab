@@ -5,6 +5,7 @@ import * as appointmentService from "../../../services/appointment.service.js";
 import * as packagePurchaseService from "../../../services/package-purchase.service.js";
 import couponService from "../../../services/coupon.service.js";
 import { getCapturedReferralCode } from "../../../middlewares/coupon-capture.middleware.js";
+import { resolveBookingDate, getZonedDateKey } from "../../../utils/date.time.util.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
 import { AppError, badRequest } from "../../../utils/error.util.js";
 
@@ -26,7 +27,7 @@ export async function getSlots(req, res, next) {
     const variant = service.varijante.find((p) => p.id === servicePackageId);
     if (!variant) badRequest("Izabrana varijanta nije pronađena");
 
-    const targetDate = date ? new Date(date) : new Date();
+    const targetDate = resolveBookingDate(date);
     const rawEmployees = await employeeService.findEmployeesByServiceRaw(service.id);
     const employees = await Promise.all(rawEmployees.map((e) => employeeService.getEmployeeById(e._id, "user", "short")));
 
@@ -44,7 +45,7 @@ export async function getSlots(req, res, next) {
     const data = {
       service: { id: service.id, naziv: service.naziv, slug: service.slug },
       variant,
-      date: targetDate.toISOString().slice(0, 10),
+      date: getZonedDateKey(targetDate),
       employees,
       slots: slots.map((s) => ({ startTime: s.startTime, endTime: s.endTime, employeeId: s.employeeId || null })),
     };

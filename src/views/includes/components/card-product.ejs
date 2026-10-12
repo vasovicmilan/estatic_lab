@@ -1,5 +1,5 @@
 <a href="/prodavnica/<%= product.slug %>" class="card product-card h-100 text-decoration-none text-dark hover-lift">
-  <div class="position-relative product-card-media">
+  <div class="position-relative product-card-media" style="overflow:hidden;min-width:0;">
     <% if (product.slika && product.slika.url) {
          const v = product.slika.variants || {};
          const srcsetParts = [];
@@ -9,7 +9,7 @@
       <img
         src="<%= product.slika.url %>"
         <% if (srcsetParts.length > 1) { %>srcset="<%= srcsetParts.join(', ') %>" sizes="(min-width: 1200px) 25vw, (min-width: 992px) 33vw, 50vw"<% } %>
-        class="product-card-img <%= product.naStanju ? '' : 'is-sold-out' %>" alt="<%= product.slika.alt || product.naziv %>" loading="lazy" decoding="async">
+        style="display:block;width:100%;max-width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;" class="product-card-img <%= product.naStanju ? '' : 'is-sold-out' %>" alt="<%= product.slika.alt || product.naziv %>" loading="lazy" decoding="async">
     <% } else { %>
       <div class="product-card-img product-card-img--empty d-flex align-items-center justify-content-center text-muted"><i class="bi bi-bag fs-1" aria-hidden="true"></i></div>
     <% } %>

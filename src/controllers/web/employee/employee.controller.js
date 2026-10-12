@@ -1,5 +1,6 @@
 import * as employeeService from "../../../services/employee.service.js";
 import * as appointmentService from "../../../services/appointment.service.js";
+import externalBusyIntervalService from "../../../services/external-busy-interval.service.js";
 import payoutRequestService from "../../../services/payout-request.service.js";
 import commissionService from "../../../services/commission.service.js";
 import {
@@ -63,6 +64,8 @@ export async function dashboard(req, res, next) {
       appointmentService.findAppointments({ requesterId: employeeId, role: "employee", limit: 50 }),
     ]);
 
+    const externalBusy = await externalBusyIntervalService.getUpcomingForEmployee(employeeId, { limit: 30 });
+
     const pendingCount = week.data.filter((a) => a.status === "Na čekanju").length;
 
     let balance = null;
@@ -86,7 +89,7 @@ export async function dashboard(req, res, next) {
       pageTitle: "Moj kalendar",
       pageDescription: "Pregled vaših termina",
       seo: await employeeSeo(req, { title: "Moj kalendar", description: "Pregled vaših termina" }),
-      data: { ...viewData, csrfToken: res.locals.csrfToken },
+      data: { ...viewData, externalBusy, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[dashboard] Greška pri učitavanju dashboard-a zaposlenog", error, { userId: req.session?.user?.id });
@@ -109,12 +112,13 @@ export async function appointments(req, res, next) {
     });
 
     const viewData = prepareEmployeeAppointmentTabData(result, req.query);
+    const externalBusy = await externalBusyIntervalService.getUpcomingForEmployee(employeeId, { limit: 30 });
 
     return res.render("employee/appointments", {
       pageTitle: "Moji termini",
       pageDescription: "Pregled svih vaših termina",
       seo: await employeeSeo(req, { title: "Moji termini", description: "Pregled svih vaših termina" }),
-      data: { ...viewData, isCommissionBased: isCommissionBased(employee) },
+      data: { ...viewData, externalBusy, isCommissionBased: isCommissionBased(employee) },
     });
   } catch (error) {
     logError("[appointments] Greška pri učitavanju termina zaposlenog", error, { userId: req.session?.user?.id, ...req.query });

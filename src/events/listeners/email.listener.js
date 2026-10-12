@@ -96,6 +96,17 @@ eventEmitter.on(
 
 // ==================== APPOINTMENTS ====================
 
+// A booking with 2+ equally free employees is deliberately left unassigned (admin
+// picks later - see appointment.service.js resolveEmployeeAssignment); that employee
+// gets told by the "appointment:reassigned" handler below instead.
+async function notifyAssignedEmployee(appointment) {
+  if (!appointment.terapeutId) return;
+  const employee = await employeeService.getEmployeeById(appointment.terapeutId, "admin", "detail");
+  const to = employee?.korisnik?.email;
+  if (!to) return;
+  await emailService.sendEmployeeNewAppointmentEmail({ email: to, firstName: employee.korisnik.imePrezime }, appointment);
+}
+
 eventEmitter.on(
   "appointment:created",
   safe("appointment:created", async ({ appointmentId, email, firstName }) => {
@@ -103,8 +114,16 @@ eventEmitter.on(
     // usual requester ownership check (see appointment.service.js's canAccessAppointment),
     // which is fine here since this is a trusted, system-triggered read, not a user request
     const appointment = await appointmentService.getAppointmentById(appointmentId, null, "admin");
-    await emailService.sendAppointmentReceivedEmail({ email, firstName }, appointment);
-    await emailService.notifyAdminNewAppointment(appointment);
+    // Each recipient is attempted independently - one failing (e.g. the customer's
+    // mailbox rejecting) must not stop the admin or the employee from being told.
+    const results = await Promise.allSettled([
+      emailService.sendAppointmentReceivedEmail({ email, firstName }, appointment),
+      emailService.notifyAdminNewAppointment(appointment),
+      notifyAssignedEmployee(appointment),
+    ]);
+    results.forEach((r, i) => {
+      if (r.status === "rejected") logError(`[email listener] appointment:created recipient #${i} failed`, r.reason, { appointmentId });
+    });
   })
 );
 

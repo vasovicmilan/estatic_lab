@@ -252,7 +252,31 @@ export function nextDayStartInZone(date, timeZone = APP_TIMEZONE) {
   return new Date(getStartOfDayInZone(date, timeZone).getTime() + 24 * 60 * 60 * 1000);
 }
 
+// "YYYY-MM-DD" of the given instant as experienced in `timeZone` (default: the app's
+// business timezone). Unlike toDateKey (server-local) or toISOString().slice(0,10)
+// (always UTC), this is what an <input type="date"> should show as "today": at 00:54
+// Belgrade (CEST) the UTC date is still YESTERDAY, which made the booking page offer
+// yesterday and then reject every slot as "in the past".
+export function getZonedDateKey(date = new Date(), timeZone = APP_TIMEZONE) {
+  const { year, month, day } = getZonedComponents(date, timeZone);
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+// Turns a booking-date query value into a real Date that lies INSIDE the intended
+// calendar day in `timeZone`. A plain "YYYY-MM-DD" is read as that Belgrade day (noon,
+// so no offset/DST edge can push it into a neighbouring day) - NOT via new Date(str),
+// which means UTC midnight. No value -> now. Anything else falls back to new Date(input),
+// which may be Invalid Date; callers/validators reject that as before.
+export function resolveBookingDate(input, timeZone = APP_TIMEZONE) {
+  if (!input) return new Date();
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(input).trim());
+  if (match) return zonedComponentsToUtcDate(+match[1], +match[2], +match[3], 12, 0, 0, timeZone);
+  return new Date(input);
+}
+
 export default {
+  getZonedDateKey,
+  resolveBookingDate,
   formatDateTime,
   formatDate,
   formatTime,

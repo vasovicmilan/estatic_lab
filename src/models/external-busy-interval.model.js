@@ -48,6 +48,19 @@ const ExternalBusyIntervalSchema = new Schema(
       type: String,
       default: null,
     },
+
+    // raw VEVENT DESCRIPTION / LOCATION - whatever the external platform puts there
+    // (client name, phone, service, ...). Only shown to the employee the interval
+    // belongs to and to admins, as a read-only "what is this block" aid. Never
+    // exposed to customers and never used for availability math.
+    description: {
+      type: String,
+      default: null,
+    },
+    location: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true }
 );

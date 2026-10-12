@@ -16,12 +16,13 @@ export function prepareBookingServiceStepData(service) {
 
 // Step 2: date/employee selection + available slots (slots come pre-computed from the
 // availability service - this presenter only arranges them for the calendar widget)
-export function prepareBookingSlotsStepData(service, variant, { date, employeeId = "", employees = [], slots = [] } = {}) {
+export function prepareBookingSlotsStepData(service, variant, { date, minDate = null, employeeId = "", employees = [], slots = [] } = {}) {
   return {
     service,
     variant,
     step: 2,
     date,
+    minDate: minDate || date,
     employeeId,
     employees,
     slots: slots.map((s) => ({
