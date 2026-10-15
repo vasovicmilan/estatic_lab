@@ -5,6 +5,7 @@ import { SORT_MAP } from "../../../../presenters/admin/marketing/contact.present
 import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 
 export async function listContacts(req, res, next) {
   try {
@@ -62,8 +63,17 @@ export async function updateContactStatus(req, res, next) {
       return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), `/admin/kontakt/detalji/${contactId}`);
     }
 
+    const existing = await contactService.getContactById(contactId).catch(() => null);
     await contactService.updateContactStatus(contactId, req.body.status);
     logInfo(`[updateContactStatus] Status poruke #${contactId} promenjen na "${req.body.status}"`, { contactId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "CONTACT_STATUS_CHANGED",
+      entity: { type: "Contact", id: contactId },
+      changes: { status: { old: existing?.statusRaw || null, new: req.body.status } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Status poruke je uspešno promenjen", `/admin/kontakt/detalji/${contactId}`);
   } catch (error) {

@@ -97,4 +97,32 @@ describe("prepareAuditLogListData", () => {
     const view = prepareAuditLogListData({ data: [], page: 1, totalPages: 1 }, { sortOrder: "asc" });
     assert.equal(view.filters.sortOrder.value, "asc");
   });
+
+  it("shows just the label for singleton records and for entries without a document id", () => {
+    const settings = prepareAuditLogListData({ data: [buildRawEntry({ entity: { type: "SiteSettings", id: "singleton" } })], page: 1, totalPages: 1 });
+    assert.equal(settings.items[0].entitet, "Podešavanja sajta");
+    const route = prepareAuditLogListData({ data: [buildRawEntry({ entity: { type: "Route", id: null } })], page: 1, totalPages: 1 });
+    assert.equal(route.items[0].entitet, "Stranica");
+  });
+
+  it("translates the entity types added later (service, package, testimonial, campaign...)", () => {
+    const view = prepareAuditLogListData({ data: [buildRawEntry({ entity: { type: "Testimonial", id: "t1" } })], page: 1, totalPages: 1 });
+    assert.equal(view.items[0].entitet, "Utisak #t1");
+  });
+
+  it("still renders entries stored as { before, after } instead of 'undefined'", () => {
+    const view = prepareAuditLogListData({ data: [buildRawEntry({ changes: { closedDates: { before: ["a"], after: ["a", "b"] } } })], page: 1, totalPages: 1 });
+    assert.equal(view.items[0].izmene, 'closedDates: ["a"] → ["a","b"]');
+  });
+
+  it("cuts very long values so one entry (a whole page of site content) can't flood the table", () => {
+    const view = prepareAuditLogListData({ data: [buildRawEntry({ changes: { about: { old: null, new: "x".repeat(2000) } } })], page: 1, totalPages: 1 });
+    assert.ok(view.items[0].izmene.length < 400);
+    assert.ok(view.items[0].izmene.endsWith("…"));
+  });
+
+  it("offers the system role in the role filter", () => {
+    const view = prepareAuditLogListData({ data: [], page: 1, totalPages: 1 });
+    assert.ok(view.filters.actorRole.options.some((o) => o.value === "system"));
+  });
 });

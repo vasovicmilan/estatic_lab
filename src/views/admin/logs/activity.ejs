@@ -1,0 +1,148 @@
+<%- include("../../includes/head") %>
+<%- include("../../includes/navigation") %>
+
+<main class="container-fluid py-4">
+  <%- include("../../includes/breadcrumbs") %>
+
+  <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+    <h1 class="h3 mb-0">Aktivnost korisnika</h1>
+    <a href="/admin/logovi" class="btn btn-outline-secondary btn-sm">&larr; Logovi</a>
+  </div>
+  <p class="text-muted small">Šta posetioci i kupci rade na sajtu (korpa, kuponi, porudžbine, zakazivanje, forme). Lični podaci (ime, telefon, adresa, email, poruke) se ne beleže. Zapisi se brišu nakon 12 meseci.</p>
+
+  <% if (data.summary) { %>
+    <div class="row g-3 mb-4">
+      <div class="col-lg-4">
+        <div class="card h-100"><div class="card-body">
+          <h2 class="h6">Najviše dodavano u korpu (<%= data.summary.days %> dana)</h2>
+          <% if (data.summary.products.length === 0) { %><p class="text-muted small mb-0">Nema podataka.</p><% } else { %>
+            <ol class="small mb-0 ps-3">
+              <% data.summary.products.forEach(function(p) { %>
+                <li><%= p.name %> &mdash; <strong><%= p.count %></strong> <span class="text-muted">(<%= p.uniqueActors %> posetilaca)</span></li>
+              <% }) %>
+            </ol>
+          <% } %>
+        </div></div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card h-100"><div class="card-body">
+          <h2 class="h6">Najviše zakazivane usluge (<%= data.summary.days %> dana)</h2>
+          <% if (data.summary.services.length === 0) { %><p class="text-muted small mb-0">Nema podataka.</p><% } else { %>
+            <ol class="small mb-0 ps-3">
+              <% data.summary.services.forEach(function(s) { %>
+                <li><%= s.name %> &mdash; <strong><%= s.count %></strong> <span class="text-muted">(<%= s.uniqueActors %> posetilaca)</span></li>
+              <% }) %>
+            </ol>
+          <% } %>
+        </div></div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card h-100"><div class="card-body">
+          <h2 class="h6">Akcije po učestalosti (<%= data.summary.days %> dana)</h2>
+          <% if (data.summary.actionCounts.length === 0) { %><p class="text-muted small mb-0">Nema podataka.</p><% } else { %>
+            <ul class="list-unstyled small mb-0">
+              <% data.summary.actionCounts.forEach(function(a) { %>
+                <li><span class="mono"><%= a.action %></span> &mdash; <strong><%= a.count %></strong></li>
+              <% }) %>
+            </ul>
+          <% } %>
+        </div></div>
+      </div>
+    </div>
+  <% } %>
+
+  <form method="GET" action="/admin/logovi/aktivnost" class="row g-2 mb-3 align-items-end">
+    <div class="col-auto">
+      <label class="form-label small mb-1">Pretraga</label>
+      <input type="text" name="search" value="<%= data.filters.search.value %>" class="form-control form-control-sm" placeholder="Akcija ili IP..." style="min-width:200px;">
+    </div>
+    <div class="col-auto">
+      <label class="form-label small mb-1">Akcija</label>
+      <select name="action" class="form-select form-select-sm" style="max-width:280px;">
+        <% data.filters.action.options.forEach(function(opt) { %>
+          <option value="<%= opt.value %>" <%= opt.value === data.filters.action.value ? "selected" : "" %>><%= opt.label %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="col-auto">
+      <label class="form-label small mb-1">Rola</label>
+      <select name="role" class="form-select form-select-sm" style="max-width:200px;">
+        <% data.filters.role.options.forEach(function(opt) { %>
+          <option value="<%= opt.value %>" <%= opt.value === data.filters.role.value ? "selected" : "" %>><%= opt.label %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="col-auto">
+      <label class="form-label small mb-1">Status</label>
+      <select name="success" class="form-select form-select-sm" style="max-width:150px;">
+        <% data.filters.success.options.forEach(function(opt) { %>
+          <option value="<%= opt.value %>" <%= opt.value === data.filters.success.value ? "selected" : "" %>><%= opt.label %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="col-auto">
+      <label class="form-label small mb-1">ID korisnika</label>
+      <input type="text" name="userId" value="<%= data.filters.userId.value %>" class="form-control form-control-sm" style="max-width:220px;">
+    </div>
+    <div class="col-auto">
+      <label class="form-label small mb-1">Od datuma</label>
+      <input type="date" name="dateFrom" value="<%= data.filters.dateFrom.value %>" class="form-control form-control-sm">
+    </div>
+    <div class="col-auto">
+      <label class="form-label small mb-1">Do datuma</label>
+      <input type="date" name="dateTo" value="<%= data.filters.dateTo.value %>" class="form-control form-control-sm">
+    </div>
+    <div class="col-auto">
+      <label class="form-label small mb-1">Sortiranje</label>
+      <select name="sortOrder" class="form-select form-select-sm" style="max-width:170px;">
+        <option value="desc" <%= data.filters.sortOrder.value === "desc" ? "selected" : "" %>>Najnovije prvo</option>
+        <option value="asc" <%= data.filters.sortOrder.value === "asc" ? "selected" : "" %>>Najstarije prvo</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-sm btn-primary">Filtriraj</button>
+      <a href="/admin/logovi/aktivnost" class="btn btn-sm btn-outline-secondary">Resetuj</a>
+    </div>
+  </form>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <% if (data.items.length === 0) { %>
+        <p class="text-muted p-3 mb-0">Nema zabeležene aktivnosti.</p>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr><th>Vreme</th><th>Akcija</th><th>Korisnik</th><th>Rola</th><th>Entitet</th><th>Detalji</th><th>IP</th><th>Uspešno</th></tr>
+            </thead>
+            <tbody>
+              <% data.items.forEach(function(entry) { %>
+                <tr>
+                  <td class="text-nowrap"><%= entry.vreme %></td>
+                  <td class="text-break"><%= entry.opis %><div class="text-muted small mono"><%= entry.akcija %></div></td>
+                  <td class="text-break">
+                    <% if (entry.korisnikId) { %>
+                      <a href="/admin/korisnici/<%= entry.korisnikId %>/istorija">Istorija</a>
+                    <% } else { %>Gost<% } %>
+                  </td>
+                  <td><%= entry.rola %></td>
+                  <td class="text-break"><%= entry.entitet %></td>
+                  <td class="text-break small" style="white-space: pre-line; min-width: 180px;"><%= entry.detalji || "-" %></td>
+                  <td class="text-break"><%= entry.ip %></td>
+                  <td>
+                    <% if (entry.uspesno === "Da") { %><span class="badge bg-success">Da</span>
+                    <% } else { %><span class="badge bg-danger" title="<%= entry.greska || '' %>">Ne</span><% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <%- include("../../includes/pagination", { pagination: data.pagination }) %>
+</main>
+
+<%- include("../../includes/footer") %>

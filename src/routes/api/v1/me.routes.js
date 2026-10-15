@@ -24,6 +24,8 @@ router.get("/appointments/:appointmentId", validateAppointmentId, handleApiValid
 router.post("/appointments/:appointmentId/cancel", validateAppointmentId, validateAppointmentCancel, handleApiValidationErrors, MeController.cancelAppointment);
 router.post("/appointments/:appointmentId/reschedule", validateAppointmentId, validateAppointmentReschedule, handleApiValidationErrors, MeController.rescheduleAppointment);
 
+router.get("/activity", MeController.listActivity);
+
 router.get("/orders", MeController.listOrders);
 router.get("/orders/:orderId", validateOrderId, handleApiValidationErrors, MeController.getOrder);
 router.post("/orders/:orderId/cancel", validateOrderId, validateOrderCancel, handleApiValidationErrors, MeController.cancelOrder);

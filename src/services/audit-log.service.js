@@ -1,5 +1,43 @@
+import mongoose from "mongoose";
 import auditLogRepo from "../repositories/audit-log.repository.js";
 import { logError } from "../utils/logger.util.js";
+import { redactChanges, isRedactionExempt } from "../utils/audit-redaction.util.js";
+
+const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
+
+/**
+ * Real document ids (24-hex strings or ObjectIds) are stored as ObjectId so they keep
+ * matching older entries and `entity.id` filters; anything else (e.g. the "singleton"
+ * id of SiteSettings/SiteContent) is kept as a plain string instead of failing a cast.
+ */
+export function normalizeEntityId(id) {
+  if (id === null || id === undefined || id === "") return null;
+  if (id instanceof mongoose.Types.ObjectId) return id;
+  const asString = String(id);
+  return OBJECT_ID_PATTERN.test(asString) ? new mongoose.Types.ObjectId(asString) : asString;
+}
+
+/**
+ * `changes` is always per-field { old, new }. A few callers used { before, after } or
+ * { after } (site settings working hours/closed dates, site content) - the admin list
+ * only understands { old, new }, so those shapes are rewritten here, at the one place
+ * every entry passes through.
+ */
+export function normalizeChanges(changes) {
+  if (!changes || typeof changes !== "object") return changes ?? null;
+  const out = {};
+  for (const [field, value] of Object.entries(changes)) {
+    const isPair = value && typeof value === "object" && !Array.isArray(value);
+    if (isPair && ("old" in value || "new" in value)) {
+      out[field] = value;
+    } else if (isPair && ("before" in value || "after" in value)) {
+      out[field] = { old: value.before ?? null, new: value.after ?? null };
+    } else {
+      out[field] = { old: null, new: value ?? null };
+    }
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
 
 /**
  * Records one audit entry. Never throws - a failure here must not break the
@@ -40,8 +78,9 @@ export async function recordAuditLog({
         role: actor?.roleName || actor?.role || null,
       },
       action,
-      entity: entity ? { type: entity.type, id: entity.id } : null,
-      changes,
+      entity: entity ? { type: entity.type, id: normalizeEntityId(entity.id) } : null,
+      // personal/encrypted values never reach the trail - see audit-redaction.util.js
+      changes: isRedactionExempt(entity?.type) ? normalizeChanges(changes) : redactChanges(normalizeChanges(changes)),
       ip: req?.ip || ip,
       userAgent: req?.headers?.["user-agent"] || userAgent,
       requestId: req?.requestId || requestId,
@@ -78,6 +117,28 @@ export function computeChanges(oldObj, newObj, trackedFields) {
   return Object.keys(changes).length > 0 ? changes : null;
 }
 
+/**
+ * Before/after for a name/phone profile edit. The plain values are compared here, but
+ * recordAuditLog hides them before writing (firstName/lastName/telefon are all on the
+ * redaction list), so the trail only says which of them changed.
+ */
+export function computeProfileChanges(existing, updated) {
+  return computeChanges(existing, updated, ["firstName", "lastName", "telefon"]);
+}
+
+/**
+ * Removes the stored email from every entry written BY this user. Called when an
+ * account is anonymized/deleted, so the 2-year audit trail doesn't keep the very
+ * address that was just erased. The entries themselves (and actor.id) stay.
+ */
+export async function scrubActorEmail(userId) {
+  try {
+    await auditLogRepo.scrubActorEmail(userId);
+  } catch (error) {
+    logError("Failed to scrub actor email from audit log", error, { userId });
+  }
+}
+
 export async function listAuditLogs({ filters = {}, limit = 25, page = 1 } = {}) {
   return auditLogRepo.findAuditLogs({ filters, limit, page });
 }
@@ -90,4 +151,4 @@ export async function listDistinctActions() {
   return auditLogRepo.findDistinctActions();
 }
 
-export default { recordAuditLog, computeChanges, listAuditLogs, getAuditLogById, listDistinctActions };
+export default { recordAuditLog, computeChanges, computeProfileChanges, scrubActorEmail, normalizeEntityId, normalizeChanges, listAuditLogs, getAuditLogById, listDistinctActions };

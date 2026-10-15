@@ -1,0 +1,49 @@
+<%- include("../../includes/head") %>
+<%- include("../../includes/navigation") %>
+
+<main class="container-fluid py-4">
+  <%- include("../../includes/breadcrumbs") %>
+
+  <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+    <h1 class="h3 mb-0">Istorija: <%= data.user.ime %> <small class="text-muted fs-6"><%= data.user.email %></small></h1>
+    <a href="<%= data.backUrl %>" class="btn btn-outline-secondary btn-sm">&larr; Detalji korisnika</a>
+  </div>
+  <p class="text-muted small">Spojeno iz audit loga (akcije korisnika, akcije administracije nad njim i nad njegovim porudžbinama, terminima i paketima) i aktivnosti na sajtu. Lične vrednosti se ne čuvaju u zapisima.</p>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <% if (data.items.length === 0) { %>
+        <p class="text-muted p-3 mb-0">Nema zabeleženih događaja.</p>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr><th>Vreme</th><th>Izvor</th><th>Akcija</th><th>Izvršio</th><th>Entitet</th><th>Detalji</th><th>IP</th><th>Uspešno</th></tr>
+            </thead>
+            <tbody>
+              <% data.items.forEach(function(entry) { %>
+                <tr>
+                  <td class="text-nowrap"><%= entry.vreme %></td>
+                  <td><span class="badge <%= entry.izvor === 'Audit' ? 'bg-secondary' : 'bg-info text-dark' %>"><%= entry.izvor %></span></td>
+                  <td class="text-break"><%= entry.opis %><div class="text-muted small mono"><%= entry.akcija %></div></td>
+                  <td class="text-break"><%= entry.korisnik %><div class="text-muted small"><%= entry.rola %></div></td>
+                  <td class="text-break"><%= entry.entitet %></td>
+                  <td class="text-break small" style="white-space: pre-line; min-width: 180px;"><%= entry.detalji || "-" %></td>
+                  <td class="text-break"><%= entry.ip %></td>
+                  <td>
+                    <% if (entry.uspesno === "Da") { %><span class="badge bg-success">Da</span>
+                    <% } else { %><span class="badge bg-danger" title="<%= entry.greska || '' %>">Ne</span><% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <%- include("../../includes/pagination", { pagination: data.pagination }) %>
+</main>
+
+<%- include("../../includes/footer") %>

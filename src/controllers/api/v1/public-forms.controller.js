@@ -1,6 +1,7 @@
 import * as indexService from "../../../services/index.service.js";
 import { getCapturedReferralCode } from "../../../middlewares/coupon-capture.middleware.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
+import { recordActivity } from "../../../services/user-activity-log.service.js";
 
 // Gap fix: the web app has always had these three public submission forms
 // (kontakt, newsletter prijava, testimonial slanje - see web.routes.js and
@@ -29,6 +30,8 @@ export async function submitContact(req, res, next) {
     );
 
     logInfo("[api/submitContact] Kontakt poruka poslata", { email });
+    // name, email, phone and the message itself are deliberately not recorded
+    await recordActivity({ req, action: "CONTACT_SUBMITTED", meta: { topic: topic || null, withReferralCode: !!referralCode, source: "api" } });
     return res.status(201).json({ success: true, data: { message: "Vaša poruka je uspešno poslata. Odgovorićemo vam u najkraćem roku." } });
   } catch (error) {
     logError("[api/submitContact] Greška pri slanju kontakt poruke", error, { body: req.body });
@@ -43,6 +46,7 @@ export async function subscribeNewsletter(req, res, next) {
 
     const result = await indexService.submitNewsletterForm(email, interestList);
     logInfo("[api/subscribeNewsletter] Prijava na newsletter", { email, interests: interestList });
+    await recordActivity({ req, action: "NEWSLETTER_SUBSCRIBED", meta: { interests: interestList, source: "api" } });
     return res.status(201).json({ success: true, data: { message: result.message } });
   } catch (error) {
     logError("[api/subscribeNewsletter] Greška pri prijavi na newsletter", error, { email: req.body.email });
@@ -58,6 +62,7 @@ export async function unsubscribeNewsletter(req, res, next) {
   try {
     const result = await indexService.unsubscribeNewsletter(req.params.token);
     logInfo("[api/unsubscribeNewsletter] Odjava sa newslettera");
+    await recordActivity({ req, action: "NEWSLETTER_UNSUBSCRIBED", meta: { source: "api" } });
     return res.json({ success: true, data: { message: result.message } });
   } catch (error) {
     logError("[api/unsubscribeNewsletter] Greška pri odjavi sa newslettera", error);
@@ -79,6 +84,7 @@ export async function submitTestimonial(req, res, next) {
 
     const result = await indexService.submitTestimonialForm(data);
     logInfo("[api/submitTestimonial] Testimonijal poslat", { name: req.body.name });
+    await recordActivity({ req, action: "TESTIMONIAL_SUBMITTED", meta: { source: "api" } });
     return res.status(201).json({ success: true, data: { message: result.message } });
   } catch (error) {
     logError("[api/submitTestimonial] Greška pri slanju testimoniala", error, { body: req.body });

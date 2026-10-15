@@ -32,6 +32,12 @@ export function createEntityActionFactory({ logPrefix, entityType, entityLabel, 
         return res.json({ success: true, data: { message: successMessage } });
       } catch (error) {
         logError(`[${logPrefix}/${actionName}] Greška`, error, { [idParam]: entityId });
+        // a failed confirm/reject/cancel leaves a trace too - same action, success: false
+        await auditLogService.recordAuditLog({
+          ...buildAuditActor(req, { success: false, errorMessage: error.message }),
+          action: auditAction,
+          entity: { type: entityType, id: entityId },
+        });
         next(error);
       }
     };

@@ -194,6 +194,14 @@ export async function register(req, res, next) {
 
     const result = await authService.register(req.body);
     logInfo(`[register] Nalog kreiran: "${result.email}"`, { userId: result.id, isFirstUser: result.isFirstUser });
+    await auditLogService.recordAuditLog({
+      actor: { id: result.id, email: result.email, role: null },
+      action: "USER_REGISTERED",
+      entity: { type: "User", id: result.id },
+      changes: { method: { old: null, new: "password" } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(
       req,
@@ -237,6 +245,14 @@ export async function googleCallback(req, res, next) {
 
     if (!state || state !== expectedState) {
       logWarn("[googleCallback] State parametar se ne poklapa - moguć CSRF pokušaj");
+      await auditLogService.recordAuditLog({
+        actor: { id: null, email: null, role: null },
+        action: "LOGIN_FAILED",
+        changes: { method: { old: null, new: "google" } },
+        req,
+        success: false,
+        errorMessage: "Google OAuth state se ne poklapa",
+      });
       return flashAndRedirect(req, res, "error", "Sesija je istekla, pokušajte ponovo.", "/prijava");
     }
 
@@ -260,6 +276,12 @@ export async function googleCallback(req, res, next) {
     setSessionUser(req, user);
 
     logInfo(`[googleCallback] Google prijava uspešna za "${user.email}"`, { userId: user.id, isNewUser });
+    const googleActor = { id: user.id, email: user.email, role: user.roleName };
+    const googleMethod = { method: { old: null, new: "google" } };
+    if (isNewUser) {
+      await auditLogService.recordAuditLog({ actor: googleActor, action: "USER_REGISTERED", entity: { type: "User", id: user.id }, changes: googleMethod, req, success: true });
+    }
+    await auditLogService.recordAuditLog({ actor: googleActor, action: "LOGIN_SUCCEEDED", entity: { type: "User", id: user.id }, changes: googleMethod, req, success: true });
 
     return flashAndRedirect(
       req,
@@ -270,6 +292,14 @@ export async function googleCallback(req, res, next) {
     );
   } catch (error) {
     logError("[googleCallback] Greška pri Google prijavi", error);
+    await auditLogService.recordAuditLog({
+      actor: { id: null, email: null, role: null },
+      action: "LOGIN_FAILED",
+      changes: { method: { old: null, new: "google" } },
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
     return flashAndRedirect(req, res, "error", "Prijava preko Google-a nije uspela. Pokušajte ponovo.", "/prijava");
   }
 }
@@ -302,9 +332,24 @@ export async function logout(req, res, next) {
 export async function verifyAccount(req, res, next) {
   try {
     const result = await authService.verifyAccount(req.params.token);
+    await auditLogService.recordAuditLog({
+      actor: { id: null, email: result.email || null, role: null },
+      action: "ACCOUNT_VERIFIED",
+      entity: { type: "User", id: null },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", `Nalog je uspešno potvrđen, ${result.firstName}! Možete se prijaviti.`, "/prijava");
   } catch (error) {
     logError("[verifyAccount] Greška pri verifikaciji naloga", error, { token: req.params.token });
+    await auditLogService.recordAuditLog({
+      actor: { id: null, email: null, role: null },
+      action: "ACCOUNT_VERIFIED",
+      entity: { type: "User", id: null },
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
     return flashAndRedirect(req, res, "error", error.message || "Link za verifikaciju je nevažeći ili istekao.", "/prijava");
   }
 }
@@ -338,6 +383,14 @@ export async function requestPasswordReset(req, res, next) {
     }
 
     const result = await authService.requestPasswordReset(req.body.email);
+    // Same for existing and unknown emails (the service answers identically too) - the entry
+    // records only that a reset was asked for this address, never whether an account exists.
+    await auditLogService.recordAuditLog({
+      actor: { id: null, email: req.body.email || null, role: null },
+      action: "PASSWORD_RESET_REQUESTED",
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", result.message, "/prijava");
   } catch (error) {
     logError("[requestPasswordReset] Greška pri zahtevu za reset lozinke", error, { email: req.body.email });
@@ -375,10 +428,25 @@ export async function resetPassword(req, res, next) {
       });
     }
 
-    await authService.resetPassword(req.params.token, req.body.newPassword, req.body.confirmPassword);
+    const result = await authService.resetPassword(req.params.token, req.body.newPassword, req.body.confirmPassword);
+    await auditLogService.recordAuditLog({
+      actor: { id: null, email: result?.email || null, role: null },
+      action: result?.wasPasswordSetup ? "PASSWORD_SET" : "PASSWORD_RESET",
+      entity: { type: "User", id: null },
+      req,
+      success: true,
+    });
     return flashAndRedirect(req, res, "success", "Lozinka je uspešno promenjena. Možete se prijaviti.", "/prijava");
   } catch (error) {
     logError("[resetPassword] Greška pri resetovanju lozinke", error, { token: req.params.token });
+    await auditLogService.recordAuditLog({
+      actor: { id: null, email: null, role: null },
+      action: "PASSWORD_RESET",
+      entity: { type: "User", id: null },
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
 
     if (error.statusCode === 400) {
       const isAccountClaim = req.path.startsWith("/preuzmi-nalog");

@@ -1,6 +1,7 @@
 import couponService from "../../../services/coupon.service.js";
 import { logInfo, logWarn } from "../../../utils/logger.util.js";
 import { AppError, normalizeError } from "../../../utils/error.util.js";
+import { recordActivity } from "../../../services/user-activity-log.service.js";
 
 function getAuth(req) {
   const isLoggedIn = !!req.session?.isLoggedIn;
@@ -54,6 +55,14 @@ export async function tryApplyCoupon(req, { code, context, serviceId, appointmen
 export async function applyCoupon(req, res, next) {
   const { code, context, serviceId, appointmentValue, productIds, orderValue } = req.body;
   const result = await tryApplyCoupon(req, { code, context, serviceId, appointmentValue, productIds, orderValue });
+  // only the explicit click is recorded - the silent cookie auto-apply goes through tryApplyCoupon directly
+  await recordActivity({
+    req,
+    action: "COUPON_APPLIED",
+    success: !!result.success,
+    errorMessage: result.success ? null : result.message,
+    meta: { code: code ? String(code).slice(0, 40) : null, context: context || null, discountAmount: result.success ? result.discountAmount : null },
+  });
   // tryApplyCoupon deliberately returns { success:false, message } instead of throwing (the
   // cookie-based auto-apply must stay silent); the explicit HTTP endpoint turns that into
   // the app-wide error shape via globalErrorHandler.
@@ -62,6 +71,8 @@ export async function applyCoupon(req, res, next) {
 }
 
 export async function removeCoupon(req, res) {
+  const removed = req.session.activeCoupon;
   delete req.session.activeCoupon;
+  await recordActivity({ req, action: "COUPON_REMOVED", meta: { code: removed?.code || null, context: removed?.context || null } });
   return res.json({ success: true });
 }

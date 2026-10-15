@@ -14,6 +14,7 @@ import { logError, logWarn, logInfo } from "../../utils/logger.util.js";
 import { flashAndRedirect } from "../../utils/flash.util.js";
 import { getCapturedReferralCode } from "../../middlewares/coupon-capture.middleware.js";
 import { toIdArray } from "../../utils/form-array.util.js";
+import { recordActivity } from "../../services/user-activity-log.service.js";
 
 export async function homePage(req, res, next) {
   try {
@@ -177,6 +178,8 @@ export async function submitContact(req, res, next) {
 
     await indexService.submitContactForm(req.body, { ip: req.ip, userAgent: req.headers["user-agent"], referralCode });
     logInfo("[submitContact] Kontakt poruka poslata", { email: req.body.email, referralCode });
+    // name, email, phone and the message itself are deliberately not recorded
+    await recordActivity({ req, action: "CONTACT_SUBMITTED", meta: { topic: req.body.topic || null, withReferralCode: !!referralCode } });
 
     return flashAndRedirect(req, res, "success", "Vaša poruka je uspešno poslata. Odgovorićemo vam u najkraćem roku.", "/kontakt");
   } catch (error) {
@@ -213,6 +216,7 @@ export async function submitTestimonial(req, res, next) {
 
     const result = await indexService.submitTestimonialForm(data);
     logInfo("[submitTestimonial] Testimonijal poslat", { name: req.body.name });
+    await recordActivity({ req, action: "TESTIMONIAL_SUBMITTED" });
 
     return flashAndRedirect(req, res, "success", result.message, req.get("Referrer") || "/");
   } catch (error) {
@@ -232,6 +236,7 @@ export async function submitNewsletter(req, res, next) {
 
     const result = await indexService.submitNewsletterForm(req.body.email, toIdArray(req.body.interests));
     logInfo("[submitNewsletter] Prijava na newsletter", { email: req.body.email, interests: req.body.interests });
+    await recordActivity({ req, action: "NEWSLETTER_SUBSCRIBED", meta: { interests: toIdArray(req.body.interests) } });
 
     return flashAndRedirect(req, res, "success", result.message, req.get("Referrer") || "/");
   } catch (error) {
@@ -246,6 +251,7 @@ export async function submitNewsletter(req, res, next) {
 export async function unsubscribeNewsletter(req, res, next) {
   try {
     const result = await indexService.unsubscribeNewsletter(req.params.token);
+    await recordActivity({ req, action: "NEWSLETTER_UNSUBSCRIBED" });
     return flashAndRedirect(req, res, "success", result.message, "/");
   } catch (error) {
     logError("[unsubscribeNewsletter] Greška pri odjavi sa newsletter-a", error, { token: req.params.token });

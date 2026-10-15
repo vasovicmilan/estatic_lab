@@ -1,5 +1,10 @@
+import mongoose from "mongoose";
 import AuditLog from "../models/audit-log.model.js";
 import { resolveLimit, resolveSkip, buildPaginationMeta } from "../utils/pagination.util.js";
+
+// ids are stored as ObjectId when they are real document ids (see normalizeEntityId in
+// audit-log.service.js), so filters must cast the same way or a string id never matches
+const toStoredId = (value) => (/^[a-f\d]{24}$/i.test(String(value)) ? new mongoose.Types.ObjectId(String(value)) : String(value));
 
 export async function createAuditLog(data) {
   return AuditLog.create(data);
@@ -7,11 +12,11 @@ export async function createAuditLog(data) {
 
 export async function findAuditLogs({ filters = {}, limit = 25, page = 1 } = {}) {
   const query = {};
-  if (filters.actorId) query["actor.id"] = filters.actorId;
+  if (filters.actorId) query["actor.id"] = toStoredId(filters.actorId);
   if (filters.actorRole) query["actor.role"] = filters.actorRole;
   if (filters.action) query.action = filters.action;
   if (filters.entityType) query["entity.type"] = filters.entityType;
-  if (filters.entityId) query["entity.id"] = filters.entityId;
+  if (filters.entityId) query["entity.id"] = toStoredId(filters.entityId);
   if (filters.success !== undefined && filters.success !== null) query.success = filters.success;
   if (filters.dateFrom || filters.dateTo) {
     query.timestamp = {};
@@ -37,6 +42,19 @@ export async function findAuditLogs({ filters = {}, limit = 25, page = 1 } = {})
   return { data, ...buildPaginationMeta({ total, page, limit }) };
 }
 
+export async function scrubActorEmail(userId) {
+  return AuditLog.updateMany({ "actor.id": toStoredId(userId) }, { $set: { "actor.email": null } });
+}
+
+// raw query access for the merged per-user timeline (see user-history.service.js)
+export async function findByQuery(query, { limit }) {
+  return AuditLog.find(query).sort({ timestamp: -1 }).limit(limit).lean();
+}
+
+export async function countByQuery(query) {
+  return AuditLog.countDocuments(query);
+}
+
 export async function findAuditLogById(id) {
   return AuditLog.findById(id).lean();
 }
@@ -47,4 +65,4 @@ export async function findDistinctActions() {
   return AuditLog.distinct("action");
 }
 
-export default { createAuditLog, findAuditLogs, findAuditLogById, findDistinctActions };
+export default { createAuditLog, scrubActorEmail, findByQuery, countByQuery, findAuditLogs, findAuditLogById, findDistinctActions };

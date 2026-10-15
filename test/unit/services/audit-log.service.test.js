@@ -174,4 +174,134 @@ describe("audit-log.service", () => {
       assert.deepEqual(result, ["USER_LOGIN", "PRODUCT_UPDATED"]);
     });
   });
+
+  describe("normalizeEntityId", () => {
+    it("turns a 24-hex id string into an ObjectId so it keeps matching older entries", () => {
+      const out = auditLogService.normalizeEntityId("6ad11f919b5a514f904f6c18");
+      assert.equal(typeof out, "object");
+      assert.equal(String(out), "6ad11f919b5a514f904f6c18");
+    });
+
+    it("keeps non-ObjectId ids such as 'singleton' as plain strings and maps empty values to null", () => {
+      assert.equal(auditLogService.normalizeEntityId("singleton"), "singleton");
+      assert.equal(auditLogService.normalizeEntityId(null), null);
+      assert.equal(auditLogService.normalizeEntityId(undefined), null);
+      assert.equal(auditLogService.normalizeEntityId(""), null);
+    });
+  });
+
+  describe("normalizeChanges", () => {
+    it("leaves { old, new } pairs untouched", () => {
+      assert.deepEqual(auditLogService.normalizeChanges({ status: { old: "a", new: "b" } }), { status: { old: "a", new: "b" } });
+    });
+
+    it("rewrites { before, after } and { after } into { old, new }", () => {
+      assert.deepEqual(auditLogService.normalizeChanges({ workingHours: { before: [1], after: [2] }, whyUs: { after: { x: 1 } } }), {
+        workingHours: { old: [1], new: [2] },
+        whyUs: { old: null, new: { x: 1 } },
+      });
+    });
+
+    it("returns null for no changes", () => {
+      assert.equal(auditLogService.normalizeChanges(null), null);
+      assert.equal(auditLogService.normalizeChanges({}), null);
+    });
+  });
+
+  describe("recordAuditLog - entity ids and change shapes reach the repository normalized", () => {
+    it("passes the singleton id through as a string and unifies the changes shape", async (t) => {
+      let captured;
+      t.mock.method(auditLogRepo, "createAuditLog", async (data) => {
+        captured = data;
+      });
+      await auditLogService.recordAuditLog({
+        actor: { id: "u1" },
+        action: "SITE_SETTINGS_WORKING_HOURS_UPDATED",
+        entity: { type: "SiteSettings", id: "singleton" },
+        changes: { workingHours: { before: [1], after: [2] } },
+      });
+      assert.equal(captured.entity.id, "singleton");
+      assert.deepEqual(captured.changes, { workingHours: { old: [1], new: [2] } });
+    });
+  });
+
+  describe("computeProfileChanges", () => {
+    it("compares name and phone, so the caller learns which of them changed", () => {
+      const result = auditLogService.computeProfileChanges(
+        { firstName: "Ana", lastName: "Ilić", telefon: "+381601111111" },
+        { firstName: "Ana", lastName: "Petrović", telefon: "+381602222222" }
+      );
+      assert.deepEqual(Object.keys(result).sort(), ["lastName", "telefon"]);
+    });
+
+    it("returns null when nothing changed", () => {
+      const same = { firstName: "Ana", lastName: "Ilić", telefon: "+381601111111" };
+      assert.equal(auditLogService.computeProfileChanges(same, { ...same }), null);
+    });
+  });
+
+  describe("recordAuditLog - personal data is redacted before it is written", () => {
+    it("hides phone, address and names but keeps non-personal fields as they are", async (t) => {
+      let captured;
+      t.mock.method(auditLogRepo, "createAuditLog", async (data) => {
+        captured = data;
+      });
+      await auditLogService.recordAuditLog({
+        actor: { id: "u1" },
+        action: "ORDER_CONTACT_INFO_UPDATED",
+        entity: { type: "Order", id: "6ad11f919b5a514f904f6c18" },
+        changes: {
+          telefon: { old: "+381601111111", new: "+381602222222" },
+          adresa: { old: { city: "Novi Sad", street: "Bulevar 1" }, new: { city: "Beograd", street: "Knez 2" } },
+          lastName: { old: "Ilić", new: "Petrović" },
+          status: { old: "pending", new: "shipped" },
+        },
+      });
+      const text = JSON.stringify(captured.changes);
+      assert.ok(!text.includes("+3816"), "phone number leaked into the audit entry");
+      assert.ok(!text.includes("Bulevar") && !text.includes("Knez"), "street leaked into the audit entry");
+      assert.ok(!text.includes("Ilić") && !text.includes("Petrović"), "name leaked into the audit entry");
+      assert.deepEqual(captured.changes.telefon, { old: "[sakriveno]", new: "[sakriveno]" });
+      assert.deepEqual(captured.changes.status, { old: "pending", new: "shipped" });
+    });
+
+    it("keeps the direction of a change: a cleared value is [sakriveno] -> null", async (t) => {
+      let captured;
+      t.mock.method(auditLogRepo, "createAuditLog", async (data) => {
+        captured = data;
+      });
+      await auditLogService.recordAuditLog({ actor: { id: "u1" }, action: "EXPERT_DELETED", entity: { type: "Expert", id: "6ad11f919b5a514f904f6c18" }, changes: { imePrezime: { old: "Ana Ilić", new: null } } });
+      assert.deepEqual(captured.changes.imePrezime, { old: "[sakriveno]", new: null });
+    });
+
+    it("does not redact the salon's own contact data in site settings", async (t) => {
+      let captured;
+      t.mock.method(auditLogRepo, "createAuditLog", async (data) => {
+        captured = data;
+      });
+      await auditLogService.recordAuditLog({
+        actor: { id: "u1" },
+        action: "SITE_SETTINGS_UPDATED",
+        entity: { type: "SiteSettings", id: "singleton" },
+        changes: { email: { old: "a@salon.rs", new: "b@salon.rs" } },
+      });
+      assert.deepEqual(captured.changes.email, { old: "a@salon.rs", new: "b@salon.rs" });
+    });
+  });
+
+  describe("scrubActorEmail", () => {
+    it("delegates to the repository and swallows a failure", async (t) => {
+      const calls = [];
+      t.mock.method(auditLogRepo, "scrubActorEmail", async (id) => {
+        calls.push(id);
+      });
+      await auditLogService.scrubActorEmail("u1");
+      assert.deepEqual(calls, ["u1"]);
+
+      t.mock.method(auditLogRepo, "scrubActorEmail", async () => {
+        throw new Error("db down");
+      });
+      await auditLogService.scrubActorEmail("u1"); // must not throw
+    });
+  });
 });

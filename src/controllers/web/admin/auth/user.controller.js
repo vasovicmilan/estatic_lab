@@ -1,4 +1,5 @@
 import * as userService from "../../../../services/user.service.js";
+import userActivityLogService from "../../../../services/user-activity-log.service.js";
 import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import * as authService from "../../../../services/auth.service.js";
 import * as roleService from "../../../../services/role.service.js";
@@ -172,17 +173,18 @@ export async function verifyUser(req, res, next) {
 export async function deleteUser(req, res, next) {
   try {
     const { userId } = req.params;
-    const existing = await userService.getUserById(userId).catch(() => null);
     await userService.deleteUser(userId);
     logInfo(`[deleteUser] Korisnik #${userId} obrisan`, { userId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "USER_DELETED",
       entity: { type: "User", id: userId },
-      changes: { email: { old: existing?.email || null, new: null } },
       req,
       success: true,
     });
+    // the erased address must not live on in the 2-year audit trail (see scrubActorEmail)
+    await auditLogService.scrubActorEmail(userId);
+    await userActivityLogService.deleteForUser(userId);
     return flashAndRedirect(req, res, "success", "Korisnik je uspešno obrisan", "/admin/korisnici");
   } catch (error) {
     logError("[deleteUser] Greška pri brisanju korisnika", error, { userId: req.params.userId, adminId: req.session?.user?.id });
@@ -196,7 +198,6 @@ export async function deleteUser(req, res, next) {
 export async function anonymizeUser(req, res, next) {
   try {
     const { userId } = req.params;
-    const existing = await userService.getUserById(userId).catch(() => null);
     await userService.anonymizeUser(userId);
     logInfo(`[anonymizeUser] Korisnik #${userId} anonimizovan`, { userId, adminId: req.session?.user?.id });
     // Same audit action family as USER_DELETED, but distinct - the record still
@@ -207,10 +208,12 @@ export async function anonymizeUser(req, res, next) {
       actor: req.session?.user,
       action: "USER_ANONYMIZED",
       entity: { type: "User", id: userId },
-      changes: { email: { old: existing?.email || null, new: null } },
       req,
       success: true,
     });
+    // the audit entries only carried the email as free text - drop it from everything this user did
+    await auditLogService.scrubActorEmail(userId);
+    await userActivityLogService.deleteForUser(userId);
     return flashAndRedirect(req, res, "success", "Lični podaci korisnika su uklonjeni (nalog je anonimizovan)", "/admin/korisnici");
   } catch (error) {
     logError("[anonymizeUser] Greška pri anonimizaciji korisnika", error, { userId: req.params.userId, adminId: req.session?.user?.id });
@@ -253,8 +256,17 @@ export async function updateUser(req, res, next) {
       });
     }
 
+    const existing = await userService.findUserProfile(userId).catch(() => null);
     const updated = await userService.updateProfile(userId, req.body);
     logInfo(`[updateUser] Korisnik #${userId} ažuriran od strane admina`, { userId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "USER_UPDATED",
+      entity: { type: "User", id: userId },
+      changes: auditLogService.computeProfileChanges(existing, updated),
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Korisnik je uspešno ažuriran", `/admin/korisnici/detalji/${userId}`);
   } catch (error) {

@@ -12,6 +12,7 @@ import { flashAndRedirect } from "../../../utils/flash.util.js";
 import { normalizeError } from "../../../utils/error.util.js";
 import { getCapturedReferralCode } from "../../../middlewares/coupon-capture.middleware.js";
 import { tryApplyCoupon } from "./coupon.controller.js";
+import { recordActivity } from "../../../services/user-activity-log.service.js";
 
 // Cart/checkout/order-confirmation pages are all public (no auth wall - see
 // shop.routes.js), but every one of them is personal, session/token-specific
@@ -69,6 +70,12 @@ export async function addToCart(req, res, next) {
     req.session.cart = guestCart;
 
     logInfo("[addToCart] Proizvod dodat u korpu", { userId, productId: req.body.productId, brojStavki: cart.brojStavki });
+    await recordActivity({
+      req,
+      action: "CART_ITEM_ADDED",
+      entity: { type: "Product", id: req.body.productId },
+      meta: { variantId: req.body.variantId || null, quantity: parseInt(req.body.quantity, 10) || 1 },
+    });
     return flashAndRedirect(req, res, "success", "Proizvod je dodat u korpu", "/korpa");
   } catch (error) {
     logError("[addToCart] Greška pri dodavanju u korpu", error, { body: req.body, userId: req.session?.user?.id });
@@ -99,6 +106,12 @@ export async function updateCartItem(req, res, next) {
     });
     req.session.cart = guestCart;
 
+    await recordActivity({
+      req,
+      action: "CART_ITEM_UPDATED",
+      entity: req.body.productId ? { type: "Product", id: req.body.productId } : null,
+      meta: { variantId: req.body.variantId || null, cartItemId: req.body.cartItemId || null, quantity: parseInt(req.body.quantity, 10) },
+    });
     return flashAndRedirect(req, res, "success", "Korpa je ažurirana", "/korpa");
   } catch (error) {
     logError("[updateCartItem] Greška pri izmeni korpe", error, { body: req.body, userId: req.session?.user?.id });
@@ -122,6 +135,12 @@ export async function removeCartItem(req, res, next) {
     });
     req.session.cart = guestCart;
 
+    await recordActivity({
+      req,
+      action: "CART_ITEM_REMOVED",
+      entity: req.body.productId ? { type: "Product", id: req.body.productId } : null,
+      meta: { variantId: req.body.variantId || null, cartItemId: req.body.cartItemId || null },
+    });
     return flashAndRedirect(req, res, "success", "Stavka je uklonjena iz korpe", "/korpa");
   } catch (error) {
     logError("[removeCartItem] Greška pri uklanjanju iz korpe", error, { body: req.body, userId: req.session?.user?.id });
@@ -206,11 +225,21 @@ export async function submitCheckout(req, res, next) {
     logInfo(`[submitCheckout] Privremena porudžbina kreirana za "${email}"`, { temporaryOrderId: result.id, accountJustCreated: result.accountJustCreated });
 
     if (!isLoggedIn) req.session.cart = [];
+    // contact data (name, email, phone, address, note) is deliberately not recorded
+    await recordActivity({
+      req,
+      action: "CHECKOUT_SUBMITTED",
+      entity: { type: "TemporaryOrder", id: result.id },
+      meta: { couponCode: activeCoupon?.code || null, accountJustCreated: !!result.accountJustCreated, requiresShippingQuote: !!result.requiresShippingQuote },
+    });
     req.session.pendingCheckoutConfirmation = { orderId: result.id, email, tokenExpiration: result.tokenExpiration, requiresShippingQuote: result.requiresShippingQuote };
 
     return res.redirect("/korpa/potvrdite-porudzbinu");
   } catch (error) {
     logError("[submitCheckout] Greška pri naplati", error, { email, userId: req.session?.user?.id });
+    if (!req.validationErrors) {
+      await recordActivity({ req, action: "CHECKOUT_SUBMITTED", success: false, errorMessage: error.message });
+    }
 
     if (error.statusCode === 400) {
       try {
@@ -267,6 +296,7 @@ export async function confirmOrder(req, res, next) {
     const order = await shopService.confirmOrder(orderId, token);
 
     logInfo(`[confirmOrder] Porudžbina potvrđena`, { orderId: order.id });
+    await recordActivity({ req, action: "ORDER_CONFIRMED_BY_CUSTOMER", entity: { type: "Order", id: order.id } });
 
     const viewData = prepareOrderConfirmedData(order);
     const seo = await shopSeo(req, { title: "Porudžbina potvrđena", description: "Vaša porudžbina je uspešno potvrđena" });

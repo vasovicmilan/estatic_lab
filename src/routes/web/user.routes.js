@@ -24,6 +24,8 @@ router.post("/adrese", requireModule("shop"), validateAddressCreate, UserControl
 router.delete("/adrese/:addressId/ukloni", requireModule("shop"), validateAddressId, UserController.removeAddress);
 router.put("/adrese/:addressId/podrazumevana", requireModule("shop"), validateAddressId, UserController.setDefaultAddress);
 
+router.get("/aktivnost", UserController.activity);
+
 router.get("/podesavanja", UserController.settingsForm);
 router.put("/podesavanja", validateProfileUpdate, UserController.updateSettings);
 router.put("/podesavanja/lozinka", validateChangePassword, AuthController.changePassword);

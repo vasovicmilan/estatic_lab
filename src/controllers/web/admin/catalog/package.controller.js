@@ -331,6 +331,14 @@ export async function updatePackageGallery(req, res, next) {
 
     const updated = await packageService.updatePackageById(packageId, { gallery, videos });
     logInfo(`[updatePackageGallery] Galerija/video paketa #${packageId} ažurirani`, { packageId, adminId: req.session?.user?.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "PACKAGE_GALLERY_UPDATED",
+      entity: { type: "Package", id: packageId },
+      changes: { galleryCount: { old: null, new: gallery.length }, videoCount: { old: null, new: videos.length } },
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Galerija i video su uspešno ažurirani", `/admin/paketi/detalji/${updated.id}`);
   } catch (error) {

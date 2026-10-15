@@ -4,8 +4,8 @@ import auditLogService from "../../../services/audit-log.service.js";
 
 // This API surface is stateless JWT auth (see this file's header comment) - there
 // is no server-side session to destroy, so unlike the web controller there is no
-// LOGOUT or self-service changePassword/deactivateAccount endpoint here to audit.
-// LOGIN_SUCCEEDED/LOGIN_FAILED are the one pair that does apply, on login below.
+// LOGOUT here. Login, registration, verification and the password-reset flow are all
+// audited below; changePassword/deactivateAccount live in me.controller.js.
 
 // Every action here calls the exact same auth.service.js functions the web
 // controller (controllers/web/auth/auth.controller.js) calls - no business logic
@@ -20,6 +20,14 @@ export async function register(req, res, next) {
   try {
     const result = await authService.register(req.body);
     logInfo(`[api/register] Nalog kreiran: "${result.email}"`, { userId: result.id, isFirstUser: result.isFirstUser });
+    await auditLogService.recordAuditLog({
+      actor: { id: result.id, email: result.email, role: null },
+      action: "USER_REGISTERED",
+      entity: { type: "User", id: result.id },
+      changes: { method: { old: null, new: "password" } },
+      req,
+      success: true,
+    });
 
     return res.status(201).json({
       success: true,
@@ -86,6 +94,14 @@ export async function login(req, res, next) {
 export async function requestPasswordReset(req, res, next) {
   try {
     await authService.requestPasswordReset(req.body.email);
+    // Recorded identically whether or not the account exists (see the response below) -
+    // it only says a reset was requested for this address.
+    await auditLogService.recordAuditLog({
+      actor: { id: null, email: req.body.email || null, role: null },
+      action: "PASSWORD_RESET_REQUESTED",
+      req,
+      success: true,
+    });
     // Same non-committal response regardless of whether the email exists - avoids
     // leaking which emails are registered (identical reasoning to the web flow).
     return res.json({ success: true, data: { message: "Ako nalog postoji, poslat je email sa uputstvom za resetovanje lozinke." } });
@@ -97,10 +113,25 @@ export async function requestPasswordReset(req, res, next) {
 
 export async function resetPassword(req, res, next) {
   try {
-    await authService.resetPassword(req.params.token, req.body.newPassword, req.body.confirmPassword);
+    const result = await authService.resetPassword(req.params.token, req.body.newPassword, req.body.confirmPassword);
+    await auditLogService.recordAuditLog({
+      actor: { id: null, email: result?.email || null, role: null },
+      action: result?.wasPasswordSetup ? "PASSWORD_SET" : "PASSWORD_RESET",
+      entity: { type: "User", id: null },
+      req,
+      success: true,
+    });
     return res.json({ success: true, data: { message: "Lozinka je uspešno resetovana." } });
   } catch (error) {
     logError("[api/resetPassword] Greška", error, { token: req.params.token });
+    await auditLogService.recordAuditLog({
+      actor: { id: null, email: null, role: null },
+      action: "PASSWORD_RESET",
+      entity: { type: "User", id: null },
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
     next(error);
   }
 }
@@ -108,9 +139,24 @@ export async function resetPassword(req, res, next) {
 export async function verifyAccount(req, res, next) {
   try {
     const result = await authService.verifyAccount(req.params.token);
+    await auditLogService.recordAuditLog({
+      actor: { id: null, email: result.email || null, role: null },
+      action: "ACCOUNT_VERIFIED",
+      entity: { type: "User", id: null },
+      req,
+      success: true,
+    });
     return res.json({ success: true, data: { email: result.email, message: "Nalog je uspešno verifikovan." } });
   } catch (error) {
     logError("[api/verifyAccount] Greška", error, { token: req.params.token });
+    await auditLogService.recordAuditLog({
+      actor: { id: null, email: null, role: null },
+      action: "ACCOUNT_VERIFIED",
+      entity: { type: "User", id: null },
+      req,
+      success: false,
+      errorMessage: error.message,
+    });
     next(error);
   }
 }

@@ -21,4 +21,23 @@ describe("audit-log.model", () => {
     assert.ok(hasEntityIndex, "expected the entity.type+entity.id+timestamp compound index");
     assert.ok(hasActorIndex, "expected the actor.id+timestamp compound index");
   });
+
+  // These run the REAL schema (validateSync, no DB) - the repository-mocking service tests
+  // can't see a cast failure, which is how "singleton" entries were silently lost.
+  describe("entity.id", () => {
+    const base = { timestamp: new Date(), actor: { id: null, email: "a@b.c", role: "admin" }, action: "SITE_SETTINGS_UPDATED", success: true };
+
+    it("accepts the string id used for singleton records (SiteSettings / SiteContent)", () => {
+      const doc = new AuditLog({ ...base, entity: { type: "SiteSettings", id: "singleton" } });
+      assert.equal(doc.validateSync(), undefined);
+      assert.equal(doc.entity.id, "singleton");
+    });
+
+    it("accepts a real ObjectId and a null id", () => {
+      const withId = new AuditLog({ ...base, entity: { type: "Product", id: "6ad11f919b5a514f904f6c18" } });
+      assert.equal(withId.validateSync(), undefined);
+      const withoutId = new AuditLog({ ...base, entity: { type: "Route", id: null } });
+      assert.equal(withoutId.validateSync(), undefined);
+    });
+  });
 });

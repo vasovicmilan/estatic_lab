@@ -52,15 +52,12 @@ export async function subscriberDetails(req, res, next) {
 export async function deleteSubscriber(req, res, next) {
   try {
     const { subscriberId } = req.params;
-    // Snapshot before the delete - nothing left to read once deleteSubscriberById returns.
-    const existing = await newsLetterService.getSubscriberById(subscriberId).catch(() => null);
     await newsLetterService.deleteSubscriberById(subscriberId);
     logInfo(`[deleteSubscriber] Pretplatnik #${subscriberId} obrisan`, { subscriberId, adminId: req.session?.user?.id });
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "SUBSCRIBER_DELETED",
       entity: { type: "NewsletterSubscriber", id: subscriberId },
-      changes: { email: { old: existing?.osnovno?.email || existing?.email || null, new: null } },
       req,
       success: true,
     });

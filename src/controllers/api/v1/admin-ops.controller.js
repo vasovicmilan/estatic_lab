@@ -19,6 +19,8 @@ import { AppError } from "../../../utils/error.util.js";
 import { getStartOfDayInZone, getEndOfDayInZone } from "../../../utils/date.time.util.js";
 import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
 import { buildAuditActor } from "../../../utils/audit-actor.util.js";
+import userActivityLogService from "../../../services/user-activity-log.service.js";
+import userHistoryService from "../../../services/user-history.service.js";
 import { generateBusinessReportPdf } from "../../../utils/business-report-pdf.util.js";
 
 // Mirrors controllers/web/admin/{dashboard,marketing/payout-request,logs/*,
@@ -348,6 +350,13 @@ export async function downloadBusinessReportPdf(req, res, next) {
     const rangeLabel = `${new Date(summary.periodStart).toLocaleDateString("sr-RS")} - ${new Date(summary.periodEnd.getTime() - 1).toLocaleDateString("sr-RS")}`;
     const pdfBuffer = await generateBusinessReportPdf(REPORT_PERIOD_LABELS[periodType], rangeLabel, summary);
 
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "BUSINESS_REPORT_DOWNLOADED",
+      entity: { type: "BusinessReport", id: null },
+      changes: { period: { old: null, new: `${periodType}:${periodKey}` } },
+    });
+
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="poslovni-izvestaj-${periodKey}.pdf"`);
     return res.send(pdfBuffer);
@@ -608,8 +617,15 @@ export async function getProfile(req, res, next) {
 
 export async function updateProfile(req, res, next) {
   try {
+    const existing = await userService.findUserProfile(req.user.id).catch(() => null);
     const updated = await userService.updateProfile(req.user.id, req.body);
     logInfo(`[api/admin/updateProfile] Administrator #${req.user.id} ažurirao profil`, { userId: req.user.id });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "PROFILE_UPDATED",
+      entity: { type: "User", id: req.user.id },
+      changes: auditLogService.computeProfileChanges(existing, updated),
+    });
     return res.json({ success: true, data: updated });
   } catch (error) {
     logError("[api/admin/updateProfile] Greška", error, { userId: req.user.id, body: req.body });
@@ -617,7 +633,51 @@ export async function updateProfile(req, res, next) {
   }
 }
 
+// GET /api/v1/admin/user-activity - what visitors and customers did (+ 30-day interest summary)
+export async function listUserActivity(req, res, next) {
+  try {
+    const { page = 1, limit = 25, action, role, success, userId, entityType, entityId, search, dateFrom, dateTo, sortOrder } = req.query;
+    const [result, availableActions, interests] = await Promise.all([
+      userActivityLogService.listActivities({
+        filters: {
+          action: action || undefined,
+          role: role || undefined,
+          success: success === "" || success === undefined ? undefined : success === "true",
+          userId: userId || undefined,
+          entityType: entityType || undefined,
+          entityId: entityId || undefined,
+          search: search || undefined,
+          dateFrom: dateFrom ? getStartOfDayInZone(dateFrom) : undefined,
+          dateTo: dateTo ? getEndOfDayInZone(dateTo) : undefined,
+          sortOrder: sortOrder === "asc" ? "asc" : "desc",
+        },
+        page: resolvePage(page),
+        limit: resolveLimit(limit),
+      }),
+      userActivityLogService.listActionOptions(),
+      page === 1 || page === "1" ? userHistoryService.getInterestSummary({ days: 30 }) : null,
+    ]);
+    return res.json({ success: true, data: result.data, meta: { ...pickPaginationMeta(result), availableActions, interests } });
+  } catch (error) {
+    logError("[api/admin/listUserActivity] Greška", error, { query: req.query });
+    next(error);
+  }
+}
+
+// GET /api/v1/admin/users/:userId/history - audit + activity for one user, merged
+export async function getUserHistory(req, res, next) {
+  try {
+    const result = await userHistoryService.getAdminUserHistory(req.params.userId, { page: resolvePage(req.query.page), limit: resolveLimit(req.query.limit) });
+    return res.json({ success: true, data: result.data, meta: pickPaginationMeta(result) });
+  } catch (error) {
+    logError("[api/admin/getUserHistory] Greška", error, { userId: req.params.userId });
+    next(error);
+  }
+}
+
 export default {
+  listUserActivity,
+  getUserHistory,
   dashboard,
   listPayoutRequests, getPayoutRequest, approvePayoutRequest, markPayoutRequestPaid, rejectPayoutRequest, recordPayoutDirectly,
   listAuditLogs,

@@ -1,4 +1,5 @@
 import * as userService from "../../../services/user.service.js";
+import userActivityLogService from "../../../services/user-activity-log.service.js";
 import * as authService from "../../../services/auth.service.js";
 import * as roleService from "../../../services/role.service.js";
 import * as employeeService from "../../../services/employee.service.js";
@@ -60,8 +61,15 @@ export async function getUser(req, res, next) {
 export async function updateUser(req, res, next) {
   try {
     const { userId } = req.params;
+    const existing = await userService.findUserProfile(userId).catch(() => null);
     const updated = await userService.updateProfile(userId, req.body);
     logInfo(`[api/admin/updateUser] Korisnik #${userId} ažuriran od strane admina`, { userId, adminId: req.user.id });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "USER_UPDATED",
+      entity: { type: "User", id: userId },
+      changes: auditLogService.computeProfileChanges(existing, updated),
+    });
     return res.json({ success: true, data: updated });
   } catch (error) {
     logError("[api/admin/updateUser] Greška", error, { userId: req.params.userId, body: req.body });
@@ -125,15 +133,15 @@ export async function verifyUser(req, res, next) {
 export async function anonymizeUser(req, res, next) {
   try {
     const { userId } = req.params;
-    const existing = await userService.getUserById(userId).catch(() => null);
     await userService.anonymizeUser(userId);
     logInfo(`[api/admin/anonymizeUser] Korisnik #${userId} anonimizovan`, { userId, adminId: req.user.id });
     await auditLogService.recordAuditLog({
       ...buildAuditActor(req),
       action: "USER_ANONYMIZED",
       entity: { type: "User", id: userId },
-      changes: { email: { old: existing?.email || null, new: null } },
     });
+    await auditLogService.scrubActorEmail(userId);
+    await userActivityLogService.deleteForUser(userId);
     return res.json({ success: true, data: { message: "Nalog je anonimizovan." } });
   } catch (error) {
     logError("[api/admin/anonymizeUser] Greška", error, { userId: req.params.userId });
@@ -144,15 +152,15 @@ export async function anonymizeUser(req, res, next) {
 export async function deleteUser(req, res, next) {
   try {
     const { userId } = req.params;
-    const existing = await userService.getUserById(userId).catch(() => null);
     await userService.deleteUser(userId);
     logInfo(`[api/admin/deleteUser] Korisnik #${userId} obrisan`, { userId, adminId: req.user.id });
     await auditLogService.recordAuditLog({
       ...buildAuditActor(req),
       action: "USER_DELETED",
       entity: { type: "User", id: userId },
-      changes: { email: { old: existing?.email || null, new: null } },
     });
+    await auditLogService.scrubActorEmail(userId);
+    await userActivityLogService.deleteForUser(userId);
     return res.json({ success: true, data: { message: "Korisnik je obrisan." } });
   } catch (error) {
     logError("[api/admin/deleteUser] Greška", error, { userId: req.params.userId });

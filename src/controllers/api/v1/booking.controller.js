@@ -8,6 +8,7 @@ import { getCapturedReferralCode } from "../../../middlewares/coupon-capture.mid
 import { resolveBookingDate, getZonedDateKey } from "../../../utils/date.time.util.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
 import { AppError, badRequest } from "../../../utils/error.util.js";
+import { recordActivity } from "../../../services/user-activity-log.service.js";
 
 // The web booking flow is a 4-step wizard because a browser needs a page per step
 // (service -> slots -> contact form -> confirm), with session state carrying the
@@ -87,9 +88,31 @@ export async function confirmBooking(req, res, next) {
 
     logInfo(`[api/confirmBooking] Termin zakazan za "${email}"`, { appointmentId: appointment.id, accountJustCreated });
 
+    // contact data (name, email, phone, note) is deliberately not recorded
+    await recordActivity({
+      req,
+      action: "BOOKING_CREATED",
+      entity: { type: "Appointment", id: appointment.id },
+      meta: {
+        serviceId: serviceId || null,
+        servicePackageId: servicePackageId || null,
+        employeeId: employeeId || null,
+        couponUsed: !!couponCode,
+        packagePurchaseUsed: !!packagePurchaseId,
+        accountJustCreated: !!accountJustCreated,
+        source: "api",
+      },
+    });
     return res.status(201).json({ success: true, data: { appointment, accountJustCreated } });
   } catch (error) {
     logError("[api/confirmBooking] Greška pri zakazivanju termina", error, { serviceId, servicePackageId, startTime, email });
+    await recordActivity({
+      req,
+      action: "BOOKING_CREATED",
+      success: false,
+      errorMessage: error.message,
+      meta: { serviceId: serviceId || null, servicePackageId: servicePackageId || null, source: "api" },
+    });
     next(error);
   }
 }
@@ -133,11 +156,13 @@ export async function checkCoupon(req, res, next) {
       appointmentValue: variant.totalPrice,
     });
 
+    await recordActivity({ req, action: "COUPON_APPLIED", meta: { code: String(code).slice(0, 40), context: "booking", discountAmount, source: "api" } });
     return res.json({
       success: true,
       data: { originalPrice: variant.totalPrice, discountAmount, finalPrice: Math.max(0, variant.totalPrice - discountAmount) },
     });
   } catch (error) {
+    await recordActivity({ req, action: "COUPON_APPLIED", success: false, errorMessage: error.message, meta: { code: req.body?.code ? String(req.body.code).slice(0, 40) : null, context: "booking", source: "api" } });
     next(error);
   }
 }

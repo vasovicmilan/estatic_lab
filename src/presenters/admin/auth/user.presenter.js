@@ -80,6 +80,10 @@ export function prepareUserDetailsData(user, roleOptions = []) {
           { label: "Status", value: user.status },
           { label: "Email potvrđen", value: user.potvrdjenEmail },
           {
+            label: "Istorija",
+            html: `<a href="/admin/korisnici/${encodeURIComponent(user.id)}/istorija">Istorija aktivnosti</a>`,
+          },
+          {
             label: "Kupljeni paketi",
             // `html` (not `value`) is the only row field admin/_details.ejs prints unescaped -
             // every interpolated piece has to be escaped by hand here

@@ -10,6 +10,8 @@ import {
   prepareOrderDetailData,
   prepareAddressesTabData,
 } from "../../../presenters/user/user.presenter.js";
+import userHistoryService from "../../../services/user-history.service.js";
+import { prepareUserActivityTabData } from "../../../presenters/user/activity.presenter.js";
 import { generateSeo } from "../../../seo/index.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import auditLogService from "../../../services/audit-log.service.js";
@@ -242,6 +244,24 @@ export async function updateSettings(req, res, next) {
 
 // ==================== ORDERS ====================
 
+export async function activity(req, res, next) {
+  try {
+    const { page = 1 } = req.query;
+    const result = await userHistoryService.getOwnHistory(req.session.user.id, { page: parseInt(page, 10) || 1, limit: 20 });
+
+    const seo = await userSeo(req, { title: "Moja aktivnost", description: "Pregled vaših aktivnosti na sajtu" });
+    return res.render("user/_activity-tab", {
+      pageTitle: seo.title,
+      pageDescription: seo.description,
+      seo,
+      data: prepareUserActivityTabData(result, req.query),
+    });
+  } catch (error) {
+    logError("[activity] Greška pri učitavanju aktivnosti korisnika", error, { userId: req.session?.user?.id });
+    next(error);
+  }
+}
+
 export async function orders(req, res, next) {
   try {
     const { status, page = 1, limit = 10 } = req.query;
@@ -421,6 +441,7 @@ export async function setDefaultAddress(req, res, next) {
 
 export default {
   profile,
+  activity,
   appointments,
   appointmentDetails,
   cancelAppointment,

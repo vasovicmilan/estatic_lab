@@ -34,7 +34,12 @@ const AuditLogSchema = new Schema(
 
     entity: {
       type: { type: String, default: null }, // e.g. "Product", "Coupon", "Partner", "PayoutRequest"
-      id: { type: Schema.Types.ObjectId, default: null },
+      // Mixed, not ObjectId: most entities are real documents (stored as ObjectId - see
+      // normalizeEntityId in audit-log.service.js, which converts valid 24-hex ids), but
+      // singleton records (SiteSettings, SiteContent) have no document id of their own and
+      // are logged with the string "singleton". With a strict ObjectId path those writes
+      // failed the cast and recordAuditLog swallowed the error, so they were silently lost.
+      id: { type: Schema.Types.Mixed, default: null },
     },
 
     // per-field before/after pairs for whatever actually changed - e.g.

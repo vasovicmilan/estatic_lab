@@ -2,6 +2,7 @@ import * as userService from "../../../services/user.service.js";
 import { prepareAdminProfileFormData } from "../../../presenters/admin/profile.presenter.js";
 import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
+import auditLogService from "../../../services/audit-log.service.js";
 
 export async function profileForm(req, res, next) {
   try {
@@ -32,11 +33,20 @@ export async function updateProfile(req, res, next) {
       });
     }
 
+    const existing = await userService.findUserProfile(req.session.user.id).catch(() => null);
     const updated = await userService.updateProfile(req.session.user.id, req.body);
     req.session.user.firstName = updated.firstName;
     req.session.user.lastName = updated.lastName;
 
     logInfo(`[updateProfile] Administrator #${req.session.user.id} ažurirao profil`, { userId: req.session.user.id });
+    await auditLogService.recordAuditLog({
+      actor: req.session.user,
+      action: "PROFILE_UPDATED",
+      entity: { type: "User", id: req.session.user.id },
+      changes: auditLogService.computeProfileChanges(existing, updated),
+      req,
+      success: true,
+    });
 
     return flashAndRedirect(req, res, "success", "Profil je uspešno ažuriran", "/admin/profil");
   } catch (error) {

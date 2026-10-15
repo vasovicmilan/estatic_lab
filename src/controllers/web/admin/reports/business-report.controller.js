@@ -8,6 +8,7 @@ import {
 import { generateBusinessReportPdf } from "../../../../utils/business-report-pdf.util.js";
 import { logError } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
+import auditLogService from "../../../../services/audit-log.service.js";
 
 const PERIOD_TYPES = ["daily", "weekly", "monthly", "quarterly", "yearly"];
 const PERIOD_LABELS = {
@@ -101,6 +102,15 @@ export async function businessReportDownloadPdf(req, res, next) {
 
     const rangeLabel = `${new Date(summary.periodStart).toLocaleDateString("sr-RS")} - ${new Date(summary.periodEnd.getTime() - 1).toLocaleDateString("sr-RS")}`;
     const pdfBuffer = await generateBusinessReportPdf(PERIOD_LABELS[periodType], rangeLabel, summary);
+
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "BUSINESS_REPORT_DOWNLOADED",
+      entity: { type: "BusinessReport", id: null },
+      changes: { period: { old: null, new: `${periodType}:${periodKey}` } },
+      req,
+      success: true,
+    });
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="poslovni-izvestaj-${periodKey}.pdf"`);

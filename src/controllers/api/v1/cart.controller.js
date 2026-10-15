@@ -1,5 +1,6 @@
 import * as shopService from "../../../services/shop.service.js";
 import { logError, logInfo } from "../../../utils/logger.util.js";
+import { recordActivity } from "../../../services/user-activity-log.service.js";
 
 // Deliberately auth-only for API v1, unlike the web cart which also supports a
 // guest (session-cookie) cart - shopService.getCart/addToCart/etc already branch
@@ -30,6 +31,12 @@ export async function addItem(req, res, next) {
       quantity: parseInt(req.body.quantity, 10) || 1,
     });
     logInfo("[api/addItem] Proizvod dodat u korpu", { userId: req.user.id, productId: req.body.productId });
+    await recordActivity({
+      req,
+      action: "CART_ITEM_ADDED",
+      entity: { type: "Product", id: req.body.productId },
+      meta: { variantId: req.body.variantId || null, quantity: parseInt(req.body.quantity, 10) || 1, source: "api" },
+    });
     return res.status(201).json({ success: true, data: cart });
   } catch (error) {
     logError("[api/addItem] Greška", error, { body: req.body, userId: req.user.id });
@@ -45,6 +52,11 @@ export async function updateItem(req, res, next) {
       cartItemId: req.body.cartItemId,
       quantity: parseInt(req.body.quantity, 10),
     });
+    await recordActivity({
+      req,
+      action: "CART_ITEM_UPDATED",
+      meta: { cartItemId: req.body.cartItemId || null, quantity: parseInt(req.body.quantity, 10), source: "api" },
+    });
     return res.json({ success: true, data: cart });
   } catch (error) {
     logError("[api/updateItem] Greška", error, { body: req.body, userId: req.user.id });
@@ -55,6 +67,7 @@ export async function updateItem(req, res, next) {
 export async function removeItem(req, res, next) {
   try {
     const { cart } = await shopService.removeFromCart({ isLoggedIn: true, userId: req.user.id, cartItemId: req.body.cartItemId });
+    await recordActivity({ req, action: "CART_ITEM_REMOVED", meta: { cartItemId: req.body.cartItemId || null, source: "api" } });
     return res.json({ success: true, data: cart });
   } catch (error) {
     logError("[api/removeItem] Greška", error, { body: req.body, userId: req.user.id });
@@ -89,12 +102,20 @@ export async function checkout(req, res, next) {
 
     logInfo(`[api/checkout] Privremena porudžbina kreirana za "${email}"`, { temporaryOrderId: result.id, userId: req.user.id });
 
+    // contact data (name, email, phone, address, note) is deliberately not recorded
+    await recordActivity({
+      req,
+      action: "CHECKOUT_SUBMITTED",
+      entity: { type: "TemporaryOrder", id: result.id },
+      meta: { couponCode: couponCode || null, requiresShippingQuote: !!result.requiresShippingQuote, source: "api" },
+    });
     return res.status(201).json({
       success: true,
       data: { orderId: result.id, email, tokenExpiration: result.tokenExpiration, requiresShippingQuote: result.requiresShippingQuote },
     });
   } catch (error) {
     logError("[api/checkout] Greška", error, { email, userId: req.user.id });
+    await recordActivity({ req, action: "CHECKOUT_SUBMITTED", success: false, errorMessage: error.message, meta: { source: "api" } });
     next(error);
   }
 }
@@ -106,6 +127,7 @@ export async function confirmOrder(req, res, next) {
   try {
     const order = await shopService.confirmOrder(req.params.orderId, req.params.token);
     logInfo("[api/confirmOrder] Porudžbina potvrđena", { orderId: order.id });
+    await recordActivity({ req, action: "ORDER_CONFIRMED_BY_CUSTOMER", entity: { type: "Order", id: order.id }, meta: { source: "api" } });
     return res.json({ success: true, data: order });
   } catch (error) {
     logError("[api/confirmOrder] Greška", error, { orderId: req.params.orderId });

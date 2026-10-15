@@ -7,6 +7,8 @@ import { logError, logInfo } from "../../../utils/logger.util.js";
 import { getStartOfDayInZone, nextDayStartInZone } from "../../../utils/date.time.util.js";
 import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
 import { buildAuditActor } from "../../../utils/audit-actor.util.js";
+import userHistoryService from "../../../services/user-history.service.js";
+import { getUserActionLabel } from "../../../utils/activity-labels.util.js";
 
 // Every action here mirrors controllers/web/user/user.controller.js and
 // controllers/web/auth/auth.controller.js's changePassword/deactivateAccount -
@@ -49,9 +51,11 @@ export async function changePassword(req, res, next) {
   try {
     await authService.changePassword(req.user.id, req.body.oldPassword, req.body.newPassword, req.body.confirmPassword);
     logInfo(`[api/changePassword] Korisnik #${req.user.id} promenio lozinku`, { userId: req.user.id });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "PASSWORD_CHANGED", entity: { type: "User", id: req.user.id } });
     return res.json({ success: true, data: { message: "Lozinka je uspešno promenjena." } });
   } catch (error) {
     logError("[api/changePassword] Greška", error, { userId: req.user.id });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req, { success: false, errorMessage: error.message }), action: "PASSWORD_CHANGED", entity: { type: "User", id: req.user.id } });
     next(error);
   }
 }
@@ -80,9 +84,11 @@ export async function deactivateAccount(req, res, next) {
   try {
     await authService.deactivateAccount(req.user.id, req.body.password);
     logInfo(`[api/deactivateAccount] Korisnik #${req.user.id} deaktivirao nalog`, { userId: req.user.id });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req), action: "ACCOUNT_DEACTIVATED", entity: { type: "User", id: req.user.id } });
     return res.json({ success: true, data: { message: "Nalog je deaktiviran." } });
   } catch (error) {
     logError("[api/deactivateAccount] Greška", error, { userId: req.user.id });
+    await auditLogService.recordAuditLog({ ...buildAuditActor(req, { success: false, errorMessage: error.message }), action: "ACCOUNT_DEACTIVATED", entity: { type: "User", id: req.user.id } });
     next(error);
   }
 }
@@ -284,7 +290,28 @@ export async function setDefaultAddress(req, res, next) {
   }
 }
 
+// GET /api/v1/me/activity - the caller's own history: allow-listed actions only, no
+// `changes`, no other people's emails (see user-history.service.js getOwnHistory)
+export async function listActivity(req, res, next) {
+  try {
+    const result = await userHistoryService.getOwnHistory(req.user.id, { page: resolvePage(req.query.page), limit: resolveLimit(req.query.limit) });
+    const data = result.data.map((item) => ({
+      id: item.id,
+      timestamp: item.timestamp,
+      action: item.action,
+      label: getUserActionLabel(item.action),
+      success: item.success,
+      ip: item.ip,
+    }));
+    return res.json({ success: true, data, meta: pickPaginationMeta(result) });
+  } catch (error) {
+    logError("[api/me/listActivity] Greška", error, { userId: req.user.id });
+    next(error);
+  }
+}
+
 export default {
+  listActivity,
   getProfile, updateProfile, changePassword, setPassword, deactivateAccount,
   listAppointments, getAppointment, cancelAppointment, rescheduleAppointment,
   listOrders, getOrder, cancelOrder,

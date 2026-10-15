@@ -389,15 +389,12 @@ export async function getSubscriber(req, res, next) {
 export async function deleteSubscriber(req, res, next) {
   try {
     const { subscriberId } = req.params;
-    // Snapshot before the delete - nothing left to read once deleteSubscriberById returns.
-    const existing = await newsletterService.getSubscriberById(subscriberId).catch(() => null);
     await newsletterService.deleteSubscriberById(subscriberId);
     logInfo(`[api/admin/deleteSubscriber] Pretplatnik #${subscriberId} obrisan`, { subscriberId, adminId: req.user.id });
     await auditLogService.recordAuditLog({
       ...buildAuditActor(req),
       action: "SUBSCRIBER_DELETED",
       entity: { type: "NewsletterSubscriber", id: subscriberId },
-      changes: { email: { old: existing?.osnovno?.email || existing?.email || null, new: null } },
     });
     return res.json({ success: true, data: { message: "Pretplatnik je uspešno obrisan." } });
   } catch (error) {
@@ -685,8 +682,15 @@ export async function getContact(req, res, next) {
 export async function updateContactStatus(req, res, next) {
   try {
     const { contactId } = req.params;
+    const existing = await contactService.getContactById(contactId).catch(() => null);
     const updated = await contactService.updateContactStatus(contactId, req.body.status);
     logInfo(`[api/admin/updateContactStatus] Status poruke #${contactId} promenjen na "${req.body.status}"`, { contactId, adminId: req.user.id });
+    await auditLogService.recordAuditLog({
+      ...buildAuditActor(req),
+      action: "CONTACT_STATUS_CHANGED",
+      entity: { type: "Contact", id: contactId },
+      changes: { status: { old: existing?.statusRaw || null, new: req.body.status } },
+    });
     return res.json({ success: true, data: updated });
   } catch (error) {
     logError("[api/admin/updateContactStatus] Greška", error, { contactId: req.params.contactId, body: req.body });

@@ -10,6 +10,7 @@ import { requirePermission } from "../../../middlewares/permission.middleware.js
 import { PERMISSION } from "../../../models/role.model.js";
 
 const validateRequestId = mongoIdParamValidator("requestId", "zahteva");
+const validateUserHistoryId = mongoIdParamValidator("userId", "korisnika");
 
 const router = Router();
 router.use(apiAuthMiddleware, requirePermission(PERMISSION.ACCESS_ADMIN_PANEL));
@@ -29,6 +30,8 @@ router.put("/payout-requests/:requestId/reject", requirePermission(PERMISSION.MA
 
 // ---- Audit log ----
 router.get("/audit-log", requirePermission(PERMISSION.VIEW_LOGS), AdminOpsController.listAuditLogs);
+router.get("/user-activity", requirePermission(PERMISSION.VIEW_LOGS), AdminOpsController.listUserActivity);
+router.get("/users/:userId/history", requirePermission(PERMISSION.VIEW_LOGS), validateUserHistoryId, handleApiValidationErrors, AdminOpsController.getUserHistory);
 
 // ---- Log summaries ----
 router.get("/logs", requirePermission(PERMISSION.VIEW_LOGS), AdminOpsController.getLogDashboard);

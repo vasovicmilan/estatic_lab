@@ -15,6 +15,7 @@ import { logError, logWarn, logInfo } from "../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../utils/flash.util.js";
 import { getCapturedReferralCode } from "../../../middlewares/coupon-capture.middleware.js";
 import { tryApplyCoupon } from "./coupon.controller.js";
+import { recordActivity } from "../../../services/user-activity-log.service.js";
 
 // Every step of the booking flow is public (no auth wall - see booking.routes.js),
 // but each page is a personalized, single-use step of a multi-step form with no
@@ -219,10 +220,31 @@ export async function confirmBooking(req, res, next) {
 
     logInfo(`[confirmBooking] Termin zakazan za "${email}"`, { appointmentId: appointment.id, accountJustCreated });
 
+    // contact data (name, email, phone, note) is deliberately not recorded
+    await recordActivity({
+      req,
+      action: "BOOKING_CREATED",
+      entity: { type: "Appointment", id: appointment.id },
+      meta: {
+        serviceId: serviceId || null,
+        servicePackageId: servicePackageId || null,
+        employeeId: employeeId || null,
+        couponUsed: !!activeCoupon,
+        packagePurchaseUsed: !!packagePurchaseId,
+        accountJustCreated: !!accountJustCreated,
+      },
+    });
     req.session.pendingBookingConfirmation = { appointment, accountJustCreated };
     return res.redirect(`/zakazivanje/potvrda/${appointment.id}`);
   } catch (error) {
     logError("[confirmBooking] Greška pri zakazivanju termina", error, { serviceId, servicePackageId, startTime, email });
+    await recordActivity({
+      req,
+      action: "BOOKING_CREATED",
+      success: false,
+      errorMessage: error.message,
+      meta: { serviceId: serviceId || null, servicePackageId: servicePackageId || null },
+    });
 
     if (error.statusCode === 400) {
       // never lose what the visitor already typed - re-render the same step with their
