@@ -21,9 +21,11 @@ function buildBlogPostingJsonLd(post, canonical, imageUrl, siteName) {
 export async function buildPostSeo(post, req, siteConfig = {}) {
   const siteName = siteConfig.siteName || BUSINESS.name;
   const defaultImage = siteConfig.defaultImage || "/images/site/default-og.webp";
-  const title = post.naslov ? `${escape(post.naslov)} | ${siteName}` : siteName;
+  // SEO naslov iz baze ima prednost; ako već sadrži ime sajta, ne dupliramo sufiks.
+  const rawTitle = post.seo?.naslov || post.naslov;
+  const title = rawTitle ? (rawTitle.includes(siteName) ? escape(rawTitle) : `${escape(rawTitle)} | ${siteName}`) : siteName;
   const description = truncate(post.seo?.opis || post.kratakOpis || siteConfig.defaultDescription || "");
-  const robots = "index, follow";
+  const robots = post.isIndexable !== false ? "index, follow" : "noindex, follow";
   const canonical = buildCanonical(req, `/blog/${post.slug}`);
   const imageUrl = post.slika?.url || post.coverImage?.img || defaultImage;
 

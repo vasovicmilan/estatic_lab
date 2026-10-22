@@ -13,13 +13,21 @@
     <p><%= block.tekst %></p>
 
   <% } else if (block.tip === "image" && block.slika) { %>
-    <img src="<%= block.slika.url %>" alt="<%= block.slika.alt || "" %>" class="img-fluid rounded-4 mb-4">
+    <img src="<%= block.slika.url %>" alt="<%= block.slika.alt || "" %>" class="img-fluid rounded-4 mb-4 img-clickable"
+         data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
+         data-full-src="<%= (block.slika.variants && block.slika.variants.original) || block.slika.url %>" data-full-alt="<%= block.slika.alt || "" %>"
+         loading="lazy" decoding="async">
 
   <% } else if (block.tip === "gallery" && block.galerija && block.galerija.length > 0) { %>
     <div class="row g-2 mb-4">
       <% block.galerija.forEach(function(img) { %>
         <div class="col-4">
-          <img src="<%= img.url %>" alt="<%= img.alt || "" %>" class="img-fluid rounded-4">
+          <div class="gallery-thumb-wrap">
+            <img src="<%= img.url %>" alt="<%= img.alt || "" %>" class="gallery-thumb img-clickable"
+                 data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
+                 data-full-src="<%= (img.variants && img.variants.original) || img.url %>" data-full-alt="<%= img.alt || "" %>"
+                 loading="lazy" decoding="async">
+          </div>
         </div>
       <% }) %>
     </div>

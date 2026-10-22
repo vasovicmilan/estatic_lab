@@ -370,7 +370,20 @@ h1, h2, h3, h4, h5, h6,
 
 /* ---- Images that open the shared lightbox (main.js + includes/footer.ejs) ---- */
 .img-clickable {
-  cursor: pointer;
+  cursor: zoom-in;
+}
+
+/* Blog / content-block images: never wider than the article column, and the
+   whole image is always visible (the lightbox shows it full-size on click) */
+.article-body img.img-clickable {
+  max-width: 100%;
+  height: auto;
+}
+.article-hero-wrap .img-clickable {
+  transition: transform 0.25s ease;
+}
+.article-hero-wrap .img-clickable:hover {
+  transform: scale(1.01);
 }
 
 /* ---- Section eyebrow label (small line + uppercase kicker text above section
@@ -1471,11 +1484,27 @@ h1, h2, h3, h4, h5, h6,
    size and could look inconsistent (or, with object-fit: cover set anywhere
    else, cropped) as the lightbox now cycles between images of different
    shapes via prev/next instead of always being opened fresh on one image. */
+#imageLightboxModal .modal-dialog {
+  /* image is sized from the viewport, not the (xl) dialog width - keeps very
+     large/tall originals from overflowing and forcing the modal to scroll */
+  max-width: min(96vw, 1100px);
+}
 #imageLightboxModal .modal-body img {
-  max-height: 85vh;
-  max-width: 100%;
+  display: block;
+  margin: 0 auto;
   width: auto;
+  height: auto;
+  max-width: 100%;
+  /* reserves room for the close button, caption and counter under/over the image */
+  max-height: calc(100vh - 8.5rem);
+  max-height: calc(100dvh - 8.5rem);
   object-fit: contain;
+}
+@media (max-width: 575.98px) {
+  #imageLightboxModal .modal-body img {
+    max-height: calc(100vh - 10rem);
+    max-height: calc(100dvh - 10rem);
+  }
 }
 
 /* Same reasoning for gallery thumbnails - a fixed-ratio box so the grid

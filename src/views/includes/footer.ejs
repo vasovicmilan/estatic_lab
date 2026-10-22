@@ -152,7 +152,8 @@
     <div class="modal-content bg-transparent border-0">
       <button type="button" class="btn-close btn-close-white ms-auto m-2" data-bs-dismiss="modal" aria-label="Zatvori"></button>
       <div class="modal-body p-0 text-center">
-        <img id="imageLightboxImg" src="" alt="" class="rounded">
+        <%# inline size limits on purpose: keeps the overlay image inside the viewport even if app.min.css has not been rebuilt/cache-busted yet (see #imageLightboxModal in styles.css) %>
+        <img id="imageLightboxImg" src="" alt="" class="rounded" style="display:block;margin:0 auto;width:auto;height:auto;max-width:100%;max-height:calc(100vh - 8.5rem);max-height:calc(100dvh - 8.5rem);object-fit:contain;">
         <p id="imageLightboxCaption" class="text-white small mt-2 mb-0 px-3"></p>
         <p id="imageLightboxCounter" class="text-white-50 small mb-0"></p>
       </div>

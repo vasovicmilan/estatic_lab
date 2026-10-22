@@ -183,6 +183,14 @@ export function mapPostForPublicDetail(post) {
     tagovi: getTagNames(post),
     tagoviRefs: getTagRefs(post),
     seoKljucneReci: post.seo?.keywords || [],
+    // SEO naslov/opis koje admin upiše u post (post.seo.title / post.seo.description)
+    // moraju stići do seo/builders/post.builder.js - ranije se ovde nisu mapirali pa
+    // je javna stranica uvek koristila samo naslov i excerpt.
+    seo: {
+      naslov: post.seo?.title || null,
+      opis: post.seo?.description || null,
+    },
+    isIndexable: post.isIndexable !== false,
     datumObjave: formatDate(post.publishedAt),
     poslednjeAzuriranje: formatDate(post.updatedAt),
     // raw ISO strings alongside the display-formatted ones above - schema.org

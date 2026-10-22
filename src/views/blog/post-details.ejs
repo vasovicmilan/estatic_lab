@@ -31,7 +31,9 @@
   <% if (data.post.slika && data.post.slika.url) { %>
     <div class="container article-hero-wrap mb-5">
       <div class="ratio ratio-16x9 rounded-4 overflow-hidden">
-        <img src="<%= data.post.slika.url %>" alt="<%= data.post.slika.alt || data.post.naslov %>" class="w-100 h-100 object-fit-cover">
+        <img src="<%= data.post.slika.url %>" alt="<%= data.post.slika.alt || data.post.naslov %>" class="w-100 h-100 object-fit-cover img-clickable"
+             data-bs-toggle="modal" data-bs-target="#imageLightboxModal"
+             data-full-src="<%= (data.post.slika.variants && data.post.slika.variants.original) || data.post.slika.url %>" data-full-alt="<%= data.post.slika.alt || data.post.naslov %>">
       </div>
     </div>
   <% } %>
