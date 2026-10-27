@@ -112,6 +112,11 @@
                       <input type="number" name="quantity" value="1" min="1" max="<%= variant.stanje %>" class="form-control form-control-sm quantity-input">
                       <button type="submit" class="btn btn-primary rounded-pill flex-grow-1">Dodaj u korpu</button>
                     </form>
+                  <% } else if (data.product.poNarudzbini) { %>
+                    <div class="mt-auto">
+                      <div class="small text-muted mb-2">Dostupno po narudžbini</div>
+                      <a href="/kontakt?tema=<%= encodeURIComponent('Upit: ' + data.product.naziv + ' - ' + variant.naziv) %>" class="btn btn-primary rounded-pill w-100">Pošalji upit</a>
+                    </div>
                   <% } else { %>
                     <button type="button" class="btn btn-outline-secondary rounded-pill mt-auto" disabled>Nema na stanju</button>
                   <% } %>

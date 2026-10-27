@@ -5,7 +5,6 @@ import { prepareManualOrderFormData } from "../../../../presenters/admin/order/m
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
-import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
 /**
  * Loads everything the manual-creation form needs to build its client-side
@@ -39,6 +38,21 @@ async function loadFormOptions() {
   };
 }
 
+/**
+ * The form posts one row per product as items[0][productId], items[0][variantId], ... qs
+ * hands that back as an array (or, for a sparse/high index, a plain object) - either way it
+ * becomes a clean list here. An empty price field means "use the catalog price" (null).
+ */
+export function parseManualOrderItems(raw) {
+  const rows = Array.isArray(raw) ? raw : raw && typeof raw === "object" ? Object.values(raw) : [];
+  return rows.map((row) => ({
+    productId: row.productId,
+    variantId: row.variantId,
+    quantity: parseInt(row.quantity, 10),
+    priceOverride: row.price !== undefined && row.price !== "" ? parseFloat(row.price) : null,
+  }));
+}
+
 export async function newManualOrderForm(req, res, next) {
   try {
     const options = await loadFormOptions();
@@ -70,14 +84,15 @@ export async function createManualOrder(req, res, next) {
       });
     }
 
-    const { productId, variantId, quantity, existingUserId, firstName, lastName, email, phone, address, shipping, note, overridePrice, priceOverride } = req.body;
+    const { existingUserId, firstName, lastName, email, phone, address, shipping, note, finalTotal } = req.body;
 
-    const hasOverride = parseCheckbox(overridePrice, false);
-    const parsedOverride = hasOverride && priceOverride !== "" ? parseFloat(priceOverride) : null;
+    const items = parseManualOrderItems(req.body.items);
+    const parsedFinalTotal = finalTotal !== undefined && finalTotal !== "" ? parseFloat(finalTotal) : null;
 
     const order = await orderService.createManualOrder(
       {
-        items: [{ productId, variantId, quantity: parseInt(quantity, 10), priceOverride: parsedOverride }],
+        items,
+        finalTotal: parsedFinalTotal,
         existingUserId: existingUserId || null,
         contact: { firstName, lastName, email },
         phone,
@@ -94,9 +109,8 @@ export async function createManualOrder(req, res, next) {
       action: "ORDER_MANUALLY_CREATED",
       entity: { type: "Order", id: order.id },
       changes: {
-        productId: { old: null, new: productId },
-        variantId: { old: null, new: variantId },
-        priceOverride: { old: null, new: parsedOverride },
+        items: { old: null, new: items.map((i) => `${i.productId}/${i.variantId} x${i.quantity}${i.priceOverride != null ? ` @${i.priceOverride}` : ""}`).join(", ") },
+        finalTotal: { old: null, new: parsedFinalTotal },
       },
       req,
       success: true,

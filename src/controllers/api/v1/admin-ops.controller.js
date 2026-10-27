@@ -297,7 +297,13 @@ export async function getBusinessReportDashboard(req, res, next) {
 // already stored on each BusinessReportSummary doc (computed once at
 // generateSummary time and persisted, not aggregated at read time), same
 // dot-path pattern as admin-taxonomy.controller.js's CATEGORY_SORT_FIELDS.
-const BUSINESS_REPORT_SORT_FIELDS = { periodKey: "periodKey", appointmentsRevenue: "appointments.revenue", ordersRevenue: "orders.revenue" };
+const BUSINESS_REPORT_SORT_FIELDS = {
+  periodKey: "periodKey",
+  appointmentsRevenue: "appointments.revenue",
+  ordersRevenue: "orders.revenue",
+  packagesRevenue: "packages.revenue",
+  packagesSold: "packages.totalPurchased",
+};
 
 export async function listBusinessReports(req, res, next) {
   try {

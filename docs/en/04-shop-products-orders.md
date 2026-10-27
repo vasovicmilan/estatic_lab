@@ -20,6 +20,16 @@ Along the way, an order can instead be **cancelled** (before it ships), **return
 
 An order can carry a single discount code, applied at checkout, the same way a booking can. See `05-coupons-and-discounts.md` for how discount codes work and what they can be restricted to.
 
+## Creating an order manually
+
+An administrator can create an order directly (`/admin/porudzbine/rucno-kreiranje`) — for phone orders, gifts, product bundles and "price on request" items. The order skips the cart and the email confirmation, but from then on behaves like any other (same statuses, same customer email, same commission once completed).
+
+- **Several products** — the "Dodaj proizvod" button adds one row per product (product, variant, quantity), up to 20 lines. Stock is taken for every line inside one transaction: if any line is short, nothing is written.
+- **Price per product** — the field is empty by default, which means the variant's catalog price. If the customer didn't pay the regular price for one product, type the unit price in that row only; the others stay on the catalog price. A typed `0` is a real price (free), not "empty".
+- **Final price for the goods** — optional. When filled in it **overrides everything**, catalog and typed prices alike: the goods will total exactly that amount. Because an order stores a price per line (for display, the invoice and the per-product sales report), the final amount is spread over the lines in proportion to what each would have cost before the override, so the lines always add up to exactly the final amount (a cent or two of rounding goes to the last line). If every line was priced at 0 it is split by quantity. Shipping is entered separately and added on top of the final price.
+- **Price on request** — a "price on request" product needs either its own typed price in its row or a final price for the whole order; the system never charges its internal reference price.
+- The form shows the goods total, shipping and grand total live, and keeps everything entered after an error (e.g. out of stock). The audit log records which lines and which final price were entered.
+
 ## Shipping
 
 The product catalog ranges from small consumables to large/heavy devices that can't ship via regular post. Every product is tagged as either **standard** shipping (the usual flat, automatically-calculated rate) or **freight** (a large/heavy item).

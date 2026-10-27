@@ -3,6 +3,7 @@ import { BUSINESS } from "../config/business.config.js";
 import PDFDocument from "pdfkit";
 import { formatMoney } from "./price.util.js";
 import { registerReportFonts } from "./pdf-fonts.util.js";
+import { getReportTotals, getPackageBreakdown } from "./business-report-totals.util.js";
 
 // Živi podaci firme (Podešavanja sajta > Podaci o firmi), ne zamrznuta kopija.
 const COMPANY = {
@@ -122,6 +123,15 @@ export function generateBusinessReportPdf(periodLabel, dateRangeLabel, summary) 
     doc.moveDown(0.5);
 
     const { appointments, orders, packages, commissions, coupons } = summary;
+    const totals = getReportTotals(summary, FEATURES);
+    const pkg = getPackageBreakdown(packages);
+
+    // ---- Ukupan prihod ----
+    sectionHeading("Ukupan prihod");
+    statLine("Ukupan prihod", formatMoney(totals.total));
+    if (FEATURES.booking) statLine("Termini", formatMoney(totals.appointments));
+    if (FEATURES.shop) statLine("Prodavnica", formatMoney(totals.orders));
+    if (FEATURES.booking) statLine("Prodati paketi", formatMoney(totals.packages));
 
     if (FEATURES.booking) {
     // ---- Zakazivanja ----
@@ -130,6 +140,9 @@ export function generateBusinessReportPdf(periodLabel, dateRangeLabel, summary) 
     statLine("Prihod od termina", formatMoney(appointments.revenue));
     statLine("Stopa ne-pojavljivanja", `${appointments.noShowRate}%`);
     statLine("Po statusu", statusSummary(appointments.byStatus));
+    doc.fontSize(10).font("Body-Bold").fillColor("#000").text("Po usluzi");
+    doc.font("Body");
+    breakdownTable(appointments.byService, "Nema završenih termina u ovom periodu.", true);
     doc.fontSize(10).font("Body-Bold").fillColor("#000").text("Po zaposlenom");
     doc.font("Body");
     breakdownTable(appointments.byEmployee, "Nema završenih termina u ovom periodu.", true);
@@ -150,8 +163,21 @@ export function generateBusinessReportPdf(periodLabel, dateRangeLabel, summary) 
     if (FEATURES.booking) {
     // ---- Paketi ----
     sectionHeading("Paketi");
-    statLine("Prodato paketa", packages.totalPurchased);
-    statLine("Prihod od paketa", formatMoney(packages.revenue));
+    statLine("Prodato paketa", pkg.totalPurchased);
+    if (pkg.hasBreakdown) {
+      statLine("Vrednost po cenovniku (bruto)", formatMoney(pkg.grossValue));
+      statLine("Popusti", `- ${formatMoney(pkg.discountTotal)}`);
+    }
+    statLine("Prihod od paketa (naplaćeno)", formatMoney(pkg.revenue));
+    if (pkg.hasBreakdown) {
+      statLine("Prosečna cena paketa", formatMoney(pkg.avgPrice));
+      statLine("Seanse prodate / iskorišćene u periodu", `${pkg.sessionsSold} / ${pkg.sessionsRedeemed}`);
+      statLine("Paketa kupljeno uz kupon", pkg.couponPurchases);
+      statLine("Otkazano u periodu (nije uračunato)", `${pkg.cancelledCount} (${formatMoney(pkg.cancelledValue)})`);
+      doc.fontSize(10).font("Body-Bold").fillColor("#000").text("Po paketu");
+      doc.font("Body");
+      breakdownTable(pkg.byPackage, "Nijedan paket nije prodat u ovom periodu.", true);
+    }
     }
 
     // ---- Provizije ----

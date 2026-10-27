@@ -1,14 +1,28 @@
-import { buildAdminPagination } from "../../../utils/admin-list.util.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+
+// `earnerName` is resolved from the employee/partner record, not a column on
+// PayoutRequest, so it is not sortable (same as api/v1 PAYOUT_SORT_FIELDS).
+export const SORT_MAP = {
+  earnerType: "earnerType",
+  iznos: "amount",
+  status: "status",
+  zatrazeno: "requestedAt",
+};
+
 export function preparePayoutRequestListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
-      { key: "earnerType", label: "Tip" },
-      { key: "earnerName", label: "Ime" },
-      { key: "iznos", label: "Iznos" },
-      { key: "status", label: "Status" },
-      { key: "zatrazeno", label: "Zatraženo" },
-    ],
+    columns: markSortableColumns(
+      [
+        { key: "earnerType", label: "Tip" },
+        { key: "earnerName", label: "Ime" },
+        { key: "iznos", label: "Iznos" },
+        { key: "status", label: "Status" },
+        { key: "zatrazeno", label: "Zatraženo" },
+      ],
+      SORT_MAP
+    ),
+    sort: buildSortState(query, SORT_MAP),
     actions: [{ type: "view", url: "/admin/isplate/detalji/", icon: "eye" }],
     pagination: buildAdminPagination(result, { basePath: "/admin/isplate", query }),
     breadcrumbs: [

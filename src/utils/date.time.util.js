@@ -248,8 +248,14 @@ export function getEndOfDayInZone(date = new Date(), timeZone = APP_TIMEZONE) {
 // which is for `$lte` filters (audit log). Was redefined identically in every
 // admin controller that filters a date range this way (appointments, orders) -
 // centralized here alongside the other zone-aware date helpers.
+//
+// Steps one CALENDAR day, not 24 hours: on the two DST-change days a year the
+// local day is 23 or 25 hours long, and "start + 24h" lands an hour off
+// (e.g. 23:00 or 01:00 instead of midnight).
 export function nextDayStartInZone(date, timeZone = APP_TIMEZONE) {
-  return new Date(getStartOfDayInZone(date, timeZone).getTime() + 24 * 60 * 60 * 1000);
+  const { year, month, day } = getZonedComponents(getStartOfDayInZone(date, timeZone), timeZone);
+  const next = new Date(Date.UTC(year, month - 1, day + 1));
+  return zonedComponentsToUtcDate(next.getUTCFullYear(), next.getUTCMonth() + 1, next.getUTCDate(), 0, 0, 0, timeZone);
 }
 
 // "YYYY-MM-DD" of the given instant as experienced in `timeZone` (default: the app's

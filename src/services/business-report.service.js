@@ -6,6 +6,13 @@ function startOfDayUtc(year, month, day) {
   return zonedComponentsToUtcDate(year, month, day, 0, 0, 0);
 }
 
+// Local midnight `days` CALENDAR days after the given date. Adding 24h * days in UTC is wrong
+// across a DST change (the day is 23/25h long), which cut the last hour off the period.
+function startOfZonedDayOffset(year, month, day, days) {
+  const d = new Date(Date.UTC(year, month - 1, day + days));
+  return startOfDayUtc(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate());
+}
+
 function isoWeekInfo(year, month, day) {
   const date = new Date(Date.UTC(year, month - 1, day));
   const dayNum = date.getUTCDay() || 7;
@@ -19,8 +26,7 @@ function isoWeekInfo(year, month, day) {
 export function getDailyPeriod(now = new Date()) {
   const { year, month, day } = getZonedComponents(now);
   const periodStart = startOfDayUtc(year, month, day);
-  const periodEnd = new Date(periodStart);
-  periodEnd.setUTCDate(periodEnd.getUTCDate() + 1);
+  const periodEnd = startOfZonedDayOffset(year, month, day, 1);
   const periodKey = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   return { periodKey, periodStart, periodEnd };
 }
@@ -36,8 +42,7 @@ export function getWeeklyPeriod(now = new Date()) {
   mondayUtcCalendar.setUTCDate(mondayUtcCalendar.getUTCDate() - 3);
 
   const periodStart = startOfDayUtc(mondayUtcCalendar.getUTCFullYear(), mondayUtcCalendar.getUTCMonth() + 1, mondayUtcCalendar.getUTCDate());
-  const periodEnd = new Date(periodStart);
-  periodEnd.setUTCDate(periodEnd.getUTCDate() + 7);
+  const periodEnd = startOfZonedDayOffset(mondayUtcCalendar.getUTCFullYear(), mondayUtcCalendar.getUTCMonth() + 1, mondayUtcCalendar.getUTCDate(), 7);
 
   const periodKey = `${weekYear}-W${String(weekNumber).padStart(2, "0")}`;
   return { periodKey, periodStart, periodEnd };

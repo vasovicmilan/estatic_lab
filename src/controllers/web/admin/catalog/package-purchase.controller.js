@@ -8,7 +8,9 @@ import {
   preparePackagePurchaseDetailsData,
   preparePackagePurchaseFormData,
   preparePackagePurchaseEditFormData,
+  SORT_MAP,
 } from "../../../../presenters/admin/marketing/package-purchase.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import { AppError } from "../../../../utils/error.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -34,6 +36,7 @@ export async function listPackagePurchases(req, res, next) {
       filters: { userId: userId || undefined, status: status || undefined },
       page: parseInt(page, 10) || 1,
       limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = preparePackagePurchaseListData(result, req.query);

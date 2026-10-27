@@ -4,7 +4,9 @@ import {
   prepareBusinessReportDashboardData,
   prepareBusinessReportHistoryData,
   prepareBusinessReportDetailData,
+  SORT_MAP,
 } from "../../../../presenters/admin/reports/business-report.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { generateBusinessReportPdf } from "../../../../utils/business-report-pdf.util.js";
 import { logError } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -44,7 +46,11 @@ export async function businessReportHistoryList(req, res, next) {
     }
 
     const { page = 1, limit } = req.query;
-    const result = await businessReportService.listSummaries(periodType, { page: parseInt(page, 10) || 1, limit: resolveAdminLimit(limit, 25) });
+    const result = await businessReportService.listSummaries(periodType, {
+      page: parseInt(page, 10) || 1,
+      limit: resolveAdminLimit(limit, 25),
+      sort: resolveAdminSort(req.query, SORT_MAP),
+    });
     const viewData = prepareBusinessReportHistoryData(periodType, result, req.query);
 
     return res.render("admin/reports/history", {

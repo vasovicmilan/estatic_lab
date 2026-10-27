@@ -1,0 +1,20 @@
+<%
+  // One table header cell. For a column flagged `sortable` (see markSortableColumns in
+  // utils/admin-list.util.js) it renders the same clickable sort link + arrow icon that
+  // admin/_list.ejs uses, for the admin tables that are NOT built on _list.ejs (report /
+  // log history). Expects: col, sort ({ by, dir } | null), basePath, query.
+  const isActiveSort = !!col.sortable && sort && sort.by === col.key;
+  const nextDir = isActiveSort && sort.dir === 'desc' ? 'asc' : 'desc';
+  const sortParams = new URLSearchParams({ ...(query || {}), sortBy: col.key, sortDir: nextDir });
+  sortParams.delete('page');
+%>
+<% if (col.sortable) { %>
+  <th scope="col" aria-sort="<%= isActiveSort ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none' %>">
+    <a href="<%= basePath %>?<%= sortParams.toString() %>" class="text-reset text-decoration-none text-nowrap" title="Sortiraj po: <%= col.label %>">
+      <%= col.label %>
+      <i class="bi <%= isActiveSort ? (sort.dir === 'asc' ? 'bi-sort-up' : 'bi-sort-down') : 'bi-arrow-down-up text-muted opacity-50' %>" aria-hidden="true"></i>
+    </a>
+  </th>
+<% } else { %>
+  <th scope="col"><%= col.label %></th>
+<% } %>

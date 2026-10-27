@@ -1,0 +1,164 @@
+{
+  "title": {
+    "sr": "Partnerski nalog - pregled, kopiranje koda i katalog (telefon)",
+    "en": "Partner account - overview, copying your code and the catalog (phone)"
+  },
+  "intro": {
+    "sr": "Partner na svom nalogu vidi koliko je zaradio, kopira svoj referalni link, pregleda proviziju i uzima gotove linkove za svaku uslugu, paket i proizvod iz kataloga za deljenje. Svaki korak navigacije je pokazan - na telefonu.",
+    "en": "On their account a partner sees how much they've earned, copies their referral link, reviews their commission and grabs ready-made links for every service, package and product from the sharing catalog. Every navigation step is shown - on a phone."
+  },
+  "steps": {
+    "otvaranje-pocetne": {
+      "heading": {
+        "sr": "Početna stranica",
+        "en": "Home page"
+      },
+      "sr": "Počinjemo na početnoj stranici sajta.",
+      "en": "We start on the site's home page."
+    },
+    "login-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija",
+        "en": "Open the menu"
+      },
+      "sr": "Na telefonu je meni sakriven iza dugmeta sa tri crtice u gornjem desnom uglu. Dodirnemo ga.",
+      "en": "On a phone the menu is hidden behind the three-line button in the top right corner. We tap it."
+    },
+    "login-klik-prijava": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Log in"
+      },
+      "sr": "U meniju dodirnemo „Prijava“.",
+      "en": "In the menu we tap “Prijava”."
+    },
+    "unos-prijave": {
+      "heading": {
+        "sr": "Unos podataka za prijavu",
+        "en": "Enter your login details"
+      },
+      "sr": "Unosimo email i lozinku i prijavljujemo se.",
+      "en": "We enter the email and password and log in."
+    },
+    "portal-otvara-meni": {
+      "heading": {
+        "sr": "Meni naloga",
+        "en": "Account menu"
+      },
+      "sr": "Posle prijave ponovo otvaramo meni. Na dnu menu je odeljak sa našim imenom i linkovima ka nalogu - sam se pomera do njega.",
+      "en": "After logging in we open the menu again. At the bottom is a section with our name and account links - the page scrolls to it."
+    },
+    "portal-bira-stavku": {
+      "heading": {
+        "sr": "Partnerski nalog",
+        "en": "Partner account"
+      },
+      "sr": "Dodirnemo „Partnerski nalog“.",
+      "en": "We tap “Partnerski nalog”."
+    },
+    "otvaranje-partnerskog-naloga": {
+      "heading": {
+        "sr": "Partnerski nalog",
+        "en": "Partner account"
+      },
+      "sr": "Otvara se „Moj partnerski nalog“. Na vrhu piše koliki je procenat provizije na usluge i pakete, a koliki na artikle iz prodavnice.",
+      "en": "“Moj partnerski nalog” opens. At the top it shows the commission rate on services and packages, and the one on shop products."
+    },
+    "pregled-stanja": {
+      "heading": {
+        "sr": "Pregled stanja",
+        "en": "Balance overview"
+      },
+      "sr": "Četiri kartice: ukupno zarađeno, isplaćeno, rezervisano (provizija na čekanju, dok se termin ili porudžbina ne završe) i raspoloživo za isplatu. Samo zarađena provizija može da se isplati.",
+      "en": "Four cards: total earned, paid out, reserved (commission pending until the appointment or order is completed) and available for payout. Only earned commission can be paid out."
+    },
+    "referalni-link": {
+      "heading": {
+        "sr": "Referalni link",
+        "en": "Referral link"
+      },
+      "sr": "Ovde je partnerov referalni link sa kodom, uz opis popusta koji kupac dobija i na šta se kod odnosi. Ako partner ima više kodova, svaki ima svoj link.",
+      "en": "Here is the partner's referral link with their code, along with the discount the customer gets and what the code covers. If a partner has several codes, each has its own link."
+    },
+    "kopiranje-linka": {
+      "heading": {
+        "sr": "Kopiranje linka",
+        "en": "Copy the link"
+      },
+      "sr": "Dugme „Kopiraj“ kopira link i na trenutak pokaže „Kopirano!“. Kad god neko poseti sajt preko tog linka, kod se primenjuje automatski.",
+      "en": "The “Kopiraj” button copies the link and briefly shows “Kopirano!”. Whenever someone visits the site through that link, the code is applied automatically."
+    },
+    "tab-provizija": {
+      "heading": {
+        "sr": "Kartica Provizija",
+        "en": "Commission tab"
+      },
+      "sr": "Dodirom na „Provizija“ u donjoj traci prelazimo na tu karticu. Ovde je lista svih provizija.",
+      "en": "Tapping “Provizija” in the bottom bar switches to that tab. It lists every commission."
+    },
+    "pregled-provizije": {
+      "heading": {
+        "sr": "Pregled provizije",
+        "en": "Commission list"
+      },
+      "sr": "Za svaku proviziju vidimo izvor (termin, paket ili porudžbina), osnovnu vrednost, procenat, iznos i status. Na telefonu je svaka stavka kartica.",
+      "en": "For each commission we see the source (appointment, package or order), base value, rate, amount and status. On a phone each item is a card."
+    },
+    "filter-provizije": {
+      "heading": {
+        "sr": "Filtriranje",
+        "en": "Filtering"
+      },
+      "sr": "Filteri po statusu i izvoru menjaju listu čim se izabere vrednost. „Na čekanju“ pokazuje proviziju koja još nije zarađena.",
+      "en": "Filters by status and source update the list as soon as a value is chosen. “Na čekanju” shows commission that isn't earned yet."
+    },
+    "tab-katalog": {
+      "heading": {
+        "sr": "Katalog za deljenje",
+        "en": "Sharing catalog"
+      },
+      "sr": "Dodirom na „Katalog“ u donjoj traci prelazimo na tu karticu. Tu su usluge, paketi i proizvodi, svaki sa gotovim linkom u kom je partnerov kod već ugrađen.",
+      "en": "Tapping “Katalog” in the bottom bar switches to that tab. It lists services, packages and products, each with a ready link that already contains the partner's code."
+    },
+    "pretraga-kataloga": {
+      "heading": {
+        "sr": "Pretraga kataloga",
+        "en": "Searching the catalog"
+      },
+      "sr": "Pretraga pronalazi stavku po imenu u sve tri sekcije odjednom.",
+      "en": "Search finds an item by name across all three sections at once."
+    },
+    "kopiranje-iz-kataloga": {
+      "heading": {
+        "sr": "Kopiranje linka stavke",
+        "en": "Copy an item's link"
+      },
+      "sr": "Link vodi direktno na tu uslugu ili paket, sa već primenjenim kodom. Kopira se istim dugmetom kao i glavni link.",
+      "en": "The link goes straight to that service or package with the code already applied. It's copied with the same button as the main link."
+    },
+    "proizvodi-u-katalogu": {
+      "heading": {
+        "sr": "Proizvodi u katalogu",
+        "en": "Products in the catalog"
+      },
+      "sr": "Proizvodi se pojavljuju samo ako kod ima popust na artikle iz prodavnice, i to samo oni na koje kod stvarno važi. Tako partner nikad ne deli link koji ne bi dao popust.",
+      "en": "Products only appear if the code includes a shop-product discount, and only those the code actually applies to. That way a partner never shares a link that wouldn't give a discount."
+    },
+    "tab-isplate": {
+      "heading": {
+        "sr": "Kartica Isplate",
+        "en": "Payouts tab"
+      },
+      "sr": "Dodirom na „Isplate“ u donjoj traci prelazimo na tu karticu. Tu partner vidi sve svoje zahteve za isplatu. Ovde još nema nijednog.",
+      "en": "Tapping “Isplate” in the bottom bar switches to that tab. Here the partner sees all their payout requests. There are none yet."
+    },
+    "tab-pregled": {
+      "heading": {
+        "sr": "Povratak na pregled",
+        "en": "Back to overview"
+      },
+      "sr": "Dodirom na „Pregled“ u donjoj traci prelazimo na tu karticu. Tako se vraćamo na početni ekran naloga.",
+      "en": "Tapping “Pregled” in the bottom bar switches to that tab. That takes us back to the account's main screen."
+    }
+  }
+}

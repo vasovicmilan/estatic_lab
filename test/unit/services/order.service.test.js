@@ -448,6 +448,110 @@ describe("order.service", () => {
       assert.equal(created.subtotal, 3000);
     });
 
+    // helpers for the multi-product cases below
+    function setupCreate(t, products) {
+      mockSession(t);
+      const byId = new Map(products.map(({ product }) => [String(product._id), product]));
+      const decreased = [];
+      t.mock.method(productService, "decreaseVariationStock", async (pid, vid, qty) => {
+        decreased.push([String(pid), String(vid), qty]);
+        return byId.get(String(pid));
+      });
+      t.mock.method(userService, "findUserByEmail", async () => null);
+      t.mock.method(userService, "createGuestUser", async () => ({ _id: id() }));
+      const out = {};
+      t.mock.method(orderRepo, "createOrder", async (data) => {
+        out.created = { ...data, _id: id() };
+        return out.created;
+      });
+      t.mock.method(orderRepo, "findOrderById", async () => out.created);
+      out.decreased = decreased;
+      return out;
+    }
+    const baseInput = {
+      contact: { firstName: "Ana", email: "ana@example.com" },
+      phone: "0601234567",
+      address: { city: "Novi Sad", street: "Bulevar", number: "5", postalCode: "21000" },
+    };
+    const line = ({ product, variation }, extra = {}) => ({ productId: product._id.toString(), variantId: variation._id.toString(), quantity: 1, ...extra });
+
+    it("creates one order line per product, each at its own catalog price by default", async (t) => {
+      const a = buildProductWithVariation({ price: 2000 });
+      const b = buildProductWithVariation({ price: 500 });
+      const out = setupCreate(t, [a, b]);
+
+      await orderService.createManualOrder({ ...baseInput, items: [line(a, { quantity: 2 }), line(b, { quantity: 3 })] }, { actorId: "x", actorRole: "admin" });
+
+      assert.equal(out.created.items.length, 2);
+      assert.deepEqual(out.created.items.map((i) => [i.price, i.quantity]), [[2000, 2], [500, 3]]);
+      assert.equal(out.created.subtotal, 5500);
+      assert.equal(out.decreased.length, 2, "stock is taken for every line");
+    });
+
+    it("lets each product in a bundle have its own sold price, empty price falling back to the catalog one", async (t) => {
+      const a = buildProductWithVariation({ price: 2000 });
+      const b = buildProductWithVariation({ price: 500 });
+      const c = buildProductWithVariation({ price: 1000 });
+      const out = setupCreate(t, [a, b, c]);
+
+      await orderService.createManualOrder(
+        { ...baseInput, items: [line(a, { priceOverride: 1500 }), line(b, { priceOverride: null }), line(c, { quantity: 2, priceOverride: 0 })] },
+        { actorId: "x", actorRole: "admin" }
+      );
+
+      assert.deepEqual(out.created.items.map((i) => i.price), [1500, 500, 0]);
+      assert.equal(out.created.subtotal, 2000);
+    });
+
+    it("a final total replaces every product price and the stored lines add up to exactly it", async (t) => {
+      const a = buildProductWithVariation({ price: 3000 });
+      const b = buildProductWithVariation({ price: 1000 });
+      const out = setupCreate(t, [a, b]);
+
+      await orderService.createManualOrder(
+        { ...baseInput, items: [line(a, { priceOverride: 2500 }), line(b, { quantity: 2 })], finalTotal: 4000, shipping: 300 },
+        { actorId: "x", actorRole: "admin" }
+      );
+
+      const lines = out.created.items.map((i) => i.price * i.quantity);
+      assert.equal(Math.round(lines.reduce((x, y) => x + y, 0) * 100) / 100, 4000);
+      assert.equal(out.created.subtotal, 4000, "the order's subtotal is the final total, not the sum of the typed prices");
+      assert.equal(out.created.shipping, 300, "shipping is separate from the final total");
+    });
+
+    it("a final total makes a priceOnRequest product orderable without its own price", async (t) => {
+      const a = buildProductWithVariation({ price: 100 });
+      a.product.priceOnRequest = true;
+      const out = setupCreate(t, [a]);
+
+      await orderService.createManualOrder({ ...baseInput, items: [line(a)], finalTotal: 7500 }, { actorId: "x", actorRole: "admin" });
+
+      assert.equal(out.created.subtotal, 7500);
+      assert.equal(out.created.items[0].price, 7500);
+    });
+
+    it("still refuses a priceOnRequest product when neither its own price nor a final total was given, even among normal products", async (t) => {
+      const a = buildProductWithVariation({ price: 2000 });
+      const b = buildProductWithVariation({ price: 100 });
+      b.product.priceOnRequest = true;
+      setupCreate(t, [a, b]);
+
+      await assert.rejects(
+        () => orderService.createManualOrder({ ...baseInput, items: [line(a), line(b)] }, { actorId: "x", actorRole: "admin" }),
+        (err) => err.statusCode === 400
+      );
+    });
+
+    it("rejects an empty item list, a negative price, a negative final total and too many items", async () => {
+      const bad = (extra) => orderService.createManualOrder({ ...baseInput, ...extra }, { actorId: "x", actorRole: "admin" });
+      const one = { productId: id().toString(), variantId: id().toString(), quantity: 1 };
+
+      await assert.rejects(() => bad({ items: [] }));
+      await assert.rejects(() => bad({ items: [{ ...one, priceOverride: -1 }] }));
+      await assert.rejects(() => bad({ items: [one], finalTotal: -5 }));
+      await assert.rejects(() => bad({ items: Array.from({ length: orderService.MAX_MANUAL_ORDER_ITEMS + 1 }, () => one) }), (err) => err.statusCode === 400);
+    });
+
     it("requires an explicit priceOverride for a priceOnRequest product, refusing to silently fall back to its internal reference price", async (t) => {
       mockSession(t);
       const { product, variation } = buildProductWithVariation();

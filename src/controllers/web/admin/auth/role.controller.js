@@ -2,7 +2,8 @@ import * as roleService from "../../../../services/role.service.js";
 import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import { PERMISSIONS } from "../../../../models/role.model.js";
 import { translatePermission } from "../../../../mappers/role.mapper.js";
-import { prepareRoleListData, prepareRoleDetailsData, prepareRoleFormData } from "../../../../presenters/admin/auth/role.presenter.js";
+import { prepareRoleListData, prepareRoleDetailsData, prepareRoleFormData, SORT_MAP } from "../../../../presenters/admin/auth/role.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -19,6 +20,7 @@ export async function listRoles(req, res, next) {
       search: search || "",
       page: parseInt(page, 10) || 1,
       limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = prepareRoleListData(result, req.query);

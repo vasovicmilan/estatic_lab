@@ -10,6 +10,7 @@ import { mapOrder, mapOrdersForAdminList } from "../mappers/order.mapper.js";
 import { getAllowedStatuses, canUserCancelOrder, canEditContactInfo } from "../models/order-status-transitions.js";
 import { buildPhoneRecord } from "../utils/phone.util.js";
 import { buildAddressRecord } from "../utils/address.util.js";
+import { resolveManualOrderPrices } from "../utils/manual-order-pricing.util.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 
@@ -88,6 +89,8 @@ async function createOrderFromTemporaryOrder(tempOrder) {
 
 // ==================== MANUAL ORDER (admin-created, no checkout at all) ====================
 
+export const MAX_MANUAL_ORDER_ITEMS = 20; // also the form's row limit - qs only parses arrays up to index 20
+
 /**
  * Creates a real Order directly, bypassing checkout/TemporaryOrder/confirmation
  * entirely - for phone orders, gifts, and specifically "cena na upit" products
@@ -104,13 +107,17 @@ async function createOrderFromTemporaryOrder(tempOrder) {
  * (an existing user's own profile, or the freshly-typed contact fields).
  */
 export async function createManualOrder(input, { actorId, actorRole } = {}) {
-  const { items = [], existingUserId = null, contact = {}, phone, address, shipping = 0, note = "" } = input;
+  const { items = [], existingUserId = null, contact = {}, phone, address, shipping = 0, note = "", finalTotal = null } = input;
 
   if (!items.length) validationError("items");
-  const { productId, variantId, quantity, priceOverride } = items[0];
-  if (!productId) validationError("productId");
-  if (!variantId) validationError("variantId");
-  if (!quantity || quantity < 1) validationError("quantity");
+  if (items.length > MAX_MANUAL_ORDER_ITEMS) badRequest(`Porudžbina može imati najviše ${MAX_MANUAL_ORDER_ITEMS} stavki`);
+  for (const item of items) {
+    if (!item.productId) validationError("productId");
+    if (!item.variantId) validationError("variantId");
+    if (!item.quantity || item.quantity < 1) validationError("quantity");
+    if (item.priceOverride != null && !(item.priceOverride >= 0)) validationError("priceOverride");
+  }
+  if (finalTotal != null && !(finalTotal >= 0)) validationError("finalTotal");
   if (!phone) validationError("phone");
   if (!address?.city || !address?.street || !address?.number || !address?.postalCode) validationError("address");
 
@@ -147,20 +154,32 @@ export async function createManualOrder(input, { actorId, actorRole } = {}) {
         buyerId = guestUser._id;
       }
 
-      const product = await productService.decreaseVariationStock(productId, variantId, quantity, { session });
-      const variation = product.variations.id(variantId);
+      // Stock is taken line by line inside the one transaction: if any line is short
+      // on stock the whole order rolls back, nothing is half-reserved.
+      const resolved = [];
+      for (const item of items) {
+        const product = await productService.decreaseVariationStock(item.productId, item.variantId, item.quantity, { session });
+        const variation = product.variations.id(item.variantId);
 
-      // a priceOnRequest product's own `price` is an internal reference value
-      // never shown to the public (see product.model.js) - silently falling
-      // back to it here if the admin forgot to check "override cena" would
-      // create a real order at a price nobody actually agreed to, so this is
-      // the one case where a missing override is a hard error, not a fallback.
-      if (product.priceOnRequest && priceOverride == null) {
-        badRequest(`"${product.name}" je označen kao "cena na upit" - cena mora biti ručno uneta`);
+        // a priceOnRequest product's own `price` is an internal reference value
+        // never shown to the public (see product.model.js) - silently falling
+        // back to it here would create a real order at a price nobody actually
+        // agreed to, so a missing price is a hard error. A final total for the
+        // whole order counts as "a price was agreed" (the reference value is then
+        // only used to split that total between the lines, never charged as-is).
+        if (product.priceOnRequest && item.priceOverride == null && finalTotal == null) {
+          badRequest(`"${product.name}" je označen kao "cena na upit" - cena mora biti ručno uneta`);
+        }
+
+        resolved.push({ product, variation, item });
       }
 
-      const unitPrice = priceOverride != null ? priceOverride : variation.price;
-      const lineTotal = unitPrice * quantity;
+      // catalog price -> per-line price -> final total, each overriding the one before
+      // (see manual-order-pricing.util.js for why the lines are rescaled to the total)
+      const pricing = resolveManualOrderPrices(
+        resolved.map(({ variation, item }) => ({ quantity: item.quantity, catalogPrice: variation.price, priceOverride: item.priceOverride ?? null })),
+        finalTotal
+      );
 
       created = await orderRepo.createOrder(
         {
@@ -168,33 +187,22 @@ export async function createManualOrder(input, { actorId, actorRole } = {}) {
           contactSnapshot,
           phone: buildPhoneRecord(phone),
           address: buildAddressRecord(address),
-          items: [
-            {
-              product: product._id,
-              variant: variation._id,
-              title: product.name,
-              variantLabel: variation.label,
-              sku: variation.sku || product.sku,
-              // BUG FIX: this used to store lineTotal (unitPrice * quantity) here,
-              // while a normal checkout (temporary-order.service.js) stores the
-              // plain per-unit variation.price - order.mapper.js's
-              // `ukupno: item.price * item.quantity` assumes the latter
-              // (unit-price) meaning for every order regardless of how it was
-              // created, so a manual order with quantity > 1 displayed a
-              // per-item total multiplied by quantity a second time (e.g. 3x a
-              // 2000 RSD item showed "6000 x 3 = 18000" instead of "2000 x 3 =
-              // 6000") in both the admin order view and the invoice PDF - even
-              // though the order's own top-level `subtotal` below was already
-              // correct, since it was never re-multiplied. Storing the unit
-              // price here instead makes this item's semantics identical to a
-              // normal checkout's, with nothing downstream needing to know or
-              // care which path created the order.
-              price: unitPrice,
-              quantity,
-              image: product.image || null,
-            },
-          ],
-          subtotal: lineTotal,
+          items: resolved.map(({ product, variation, item }, i) => ({
+            product: product._id,
+            variant: variation._id,
+            title: product.name,
+            variantLabel: variation.label,
+            sku: variation.sku || product.sku,
+            // `price` is the plain per-UNIT price, same meaning as in a normal checkout
+            // (temporary-order.service.js) - order.mapper.js shows `price * quantity` per
+            // line for every order regardless of how it was created. It used to hold the
+            // line total here, which made a manual order with quantity > 1 show the
+            // quantity applied twice (e.g. "6000 x 3 = 18000").
+            price: pricing.unitPrices[i],
+            quantity: item.quantity,
+            image: product.image || null,
+          })),
+          subtotal: pricing.subtotal,
           shipping,
           note,
           status: "pending",
@@ -210,7 +218,7 @@ export async function createManualOrder(input, { actorId, actorRole } = {}) {
     await session.endSession();
   }
 
-  logInfo("Manual order created", { orderId: created._id, actorId, actorRole });
+  logInfo("Manual order created", { orderId: created._id, actorId, actorRole, itemCount: items.length, finalTotalApplied: finalTotal != null });
 
   // same event a normal checkout confirmation fires - the customer gets the
   // usual "order received" email + PDF (email.listener.js), and admin gets the

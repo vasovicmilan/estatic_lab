@@ -1,6 +1,7 @@
 import * as newsLetterService from "../../../../services/news-letter.service.js";
 import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
-import { prepareNewsletterListData, prepareNewsletterDetailsData } from "../../../../presenters/admin/marketing/news-letter.presenter.js";
+import { prepareNewsletterListData, prepareNewsletterDetailsData, SORT_MAP } from "../../../../presenters/admin/marketing/news-letter.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
@@ -14,6 +15,7 @@ export async function listSubscribers(req, res, next) {
       filters: { status: status || undefined },
       page: parseInt(page, 10) || 1,
       limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = prepareNewsletterListData(result, req.query);

@@ -9,14 +9,16 @@
       <img
         src="<%= product.slika.url %>"
         <% if (srcsetParts.length > 1) { %>srcset="<%= srcsetParts.join(', ') %>" sizes="(min-width: 1200px) 25vw, (min-width: 992px) 33vw, 50vw"<% } %>
-        style="display:block;width:100%;max-width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;" class="product-card-img <%= product.naStanju ? '' : 'is-sold-out' %>" alt="<%= product.slika.alt || product.naziv %>" loading="lazy" decoding="async">
+        style="display:block;width:100%;max-width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;" class="product-card-img <%= (product.naStanju || product.poNarudzbini) ? '' : 'is-sold-out' %>" alt="<%= product.slika.alt || product.naziv %>" loading="lazy" decoding="async">
     <% } else { %>
       <div class="product-card-img product-card-img--empty d-flex align-items-center justify-content-center text-muted"><i class="bi bi-bag fs-1" aria-hidden="true"></i></div>
     <% } %>
     <% if (product.oznaka) { %>
       <span class="position-absolute top-0 start-0 m-2 badge <%= product.oznakaRaw === 'sale' ? 'bg-danger' : 'bg-primary' %>"><%= product.oznaka %></span>
     <% } %>
-    <% if (!product.naStanju) { %>
+    <% if (!product.naStanju && product.poNarudzbini) { %>
+      <span class="position-absolute top-0 end-0 m-2 badge bg-info-subtle text-info-emphasis border border-info-subtle">Dostupno po narudžbini</span>
+    <% } else if (!product.naStanju) { %>
       <span class="position-absolute top-0 end-0 m-2 badge bg-secondary">Nema na stanju</span>
     <% } %>
   </div>

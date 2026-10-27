@@ -2,7 +2,8 @@ import * as appointmentService from "../../../../services/appointment.service.js
 import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import * as employeeService from "../../../../services/employee.service.js";
 import availabilityService from "../../../../services/availability.service.js";
-import { prepareAppointmentListData, prepareAppointmentDetailsData } from "../../../../presenters/admin/appointment/appointment.presenter.js";
+import { prepareAppointmentListData, prepareAppointmentDetailsData, SORT_MAP } from "../../../../presenters/admin/appointment/appointment.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logWarn, logInfo } from "../../../../utils/logger.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
@@ -12,11 +13,7 @@ import { flashAndRedirect } from "../../../../utils/flash.util.js";
 // (system time UTC). appointment.filter.js's dateTo is an EXCLUSIVE `$lt`
 // bound, so dateTo needs to become the start of the NEXT Belgrade day, not
 // just that day's own midnight - see date.time.util.js.
-import { getStartOfDayInZone } from "../../../../utils/date.time.util.js";
-
-function nextDayStartInZone(dateStr) {
-  return new Date(getStartOfDayInZone(dateStr).getTime() + 24 * 60 * 60 * 1000);
-}
+import { getStartOfDayInZone, nextDayStartInZone } from "../../../../utils/date.time.util.js";
 
 export async function listAppointments(req, res, next) {
   try {
@@ -33,6 +30,7 @@ export async function listAppointments(req, res, next) {
       },
       page: parseInt(page, 10) || 1,
       limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = prepareAppointmentListData(result, req.query);

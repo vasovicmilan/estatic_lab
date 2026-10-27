@@ -19,22 +19,18 @@
         <table class="table mb-0">
           <thead>
             <tr>
-              <th>Period</th>
-              <th>Termina</th>
-              <th>Prihod termina</th>
-              <th>Porudžbina</th>
-              <th>Prihod prodavnice</th>
+              <% data.columns.forEach(function(col) { %>
+                <%- include("../../includes/components/sortable-th", { col: col, sort: data.sort, basePath: data.pagination.basePath, query: data.pagination.query }) %>
+              <% }) %>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <% data.items.forEach(function(item) { %>
               <tr>
-                <td><%= item.periodKey %></td>
-                <td><%= item.terminaUkupno %></td>
-                <td><%= item.prihodTermina %></td>
-                <td><%= item.porudzbinaUkupno %></td>
-                <td><%= item.prihodPorudzbina %></td>
+                <% data.columns.forEach(function(col) { %>
+                  <td><%= col.key === 'period' ? item.periodKey : item[col.key] %></td>
+                <% }) %>
                 <td><a href="<%= item.detailUrl %>" class="btn btn-sm btn-outline-secondary">Detalji</a></td>
               </tr>
             <% }) %>

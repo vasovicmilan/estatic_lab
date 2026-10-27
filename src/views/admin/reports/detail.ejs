@@ -19,6 +19,41 @@
     <div class="alert alert-warning">Nema podataka za prikaz.</div>
   <% } else { %>
 
+    <h2 class="h6 text-uppercase text-muted mb-3">Ukupan prihod</h2>
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card h-100 border-primary"><div class="card-body">
+          <p class="text-muted small mb-1">Ukupan prihod</p>
+          <p class="h4 mb-0"><%= data.summary.totals.total %></p>
+        </div></div>
+      </div>
+      <% if (features.booking) { %>
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">Termini</p>
+          <p class="h5 mb-0"><%= data.summary.totals.appointments %></p>
+        </div></div>
+      </div>
+      <% } %>
+      <% if (features.shop) { %>
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">Prodavnica</p>
+          <p class="h5 mb-0"><%= data.summary.totals.orders %></p>
+        </div></div>
+      </div>
+      <% } %>
+      <% if (features.booking) { %>
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">Prodati paketi</p>
+          <p class="h5 mb-0"><%= data.summary.totals.packages %></p>
+        </div></div>
+      </div>
+      <% } %>
+    </div>
+    <p class="text-muted small mb-4">Zbir prihoda od završenih termina, završenih porudžbina i paketa prodatih u ovom periodu. Termini plaćeni iz paketa ne dodaju prihod (novac je knjižen pri prodaji paketa), pa se ništa ne računa dvaput.</p>
+
     <% if (features.booking) { %>
     <h2 class="h6 text-uppercase text-muted mb-3">Zakazivanja</h2>
     <div class="row g-3 mb-4">
@@ -140,20 +175,75 @@
     <% } %>
     <% if (features.booking) { %>
     <h2 class="h6 text-uppercase text-muted mb-3">Paketi</h2>
-    <div class="row g-3 mb-4">
-      <div class="col-md-6">
+    <div class="row g-3 mb-3">
+      <div class="col-md-3">
         <div class="card h-100"><div class="card-body">
           <p class="text-muted small mb-1">Prodato paketa</p>
           <p class="h4 mb-0"><%= data.summary.packages.totalPurchased %></p>
         </div></div>
       </div>
-      <div class="col-md-6">
+      <div class="col-md-3">
         <div class="card h-100"><div class="card-body">
-          <p class="text-muted small mb-1">Prihod</p>
+          <p class="text-muted small mb-1">Prihod (naplaćeno)</p>
           <p class="h4 mb-0"><%= data.summary.packages.revenue %></p>
         </div></div>
       </div>
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">Prosečna cena paketa</p>
+          <p class="h4 mb-0"><%= data.summary.packages.avgPrice %></p>
+        </div></div>
+      </div>
+      <div class="col-md-3">
+        <div class="card h-100"><div class="card-body">
+          <p class="text-muted small mb-1">Seanse prodate / iskorišćene</p>
+          <p class="h4 mb-0"><%= data.summary.packages.sessionsSold %> / <%= data.summary.packages.sessionsRedeemed %></p>
+        </div></div>
+      </div>
     </div>
+
+    <% if (data.summary.packages.hasBreakdown) { %>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-header">Obračun prodatih paketa</div>
+          <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+              <tbody>
+                <tr><td>Vrednost po cenovniku (bruto)</td><td class="text-end"><%= data.summary.packages.grossValue %></td></tr>
+                <tr><td>Popusti (kuponi / paket-popust)</td><td class="text-end">&minus; <%= data.summary.packages.discountTotal %></td></tr>
+                <tr class="fw-bold"><td>Naplaćeno (prihod)</td><td class="text-end"><%= data.summary.packages.revenue %></td></tr>
+                <tr class="text-muted"><td>Paketa kupljeno uz kupon</td><td class="text-end"><%= data.summary.packages.couponPurchases %></td></tr>
+                <tr class="text-muted"><td>Otkazano u periodu (nije uračunato)</td><td class="text-end"><%= data.summary.packages.cancelledCount %> (<%= data.summary.packages.cancelledValue %>)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-header">Po paketu</div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead><tr><th>Paket</th><th class="text-end">Prodato</th><th class="text-end">Prihod</th></tr></thead>
+              <tbody>
+                <% if (!data.summary.packages.byPackage.length) { %>
+                  <tr><td colspan="3" class="text-muted small">Nijedan paket nije prodat u ovom periodu.</td></tr>
+                <% } %>
+                <% data.summary.packages.byPackage.forEach(function(row) { %>
+                  <tr><td><%= row.label %></td><td class="text-end"><%= row.count %></td><td class="text-end"><%= row.value %></td></tr>
+                <% }) %>
+              </tbody>
+            </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <% } else { %>
+    <p class="text-muted small mb-4">Ovaj izveštaj je sačuvan pre uvođenja detaljnog obračuna paketa, pa su dostupni samo broj prodatih paketa i prihod.</p>
+    <% } %>
 
     <% } %>
     <% if (features.employees || features.partners) { %>

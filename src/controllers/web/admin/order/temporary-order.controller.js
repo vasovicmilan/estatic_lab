@@ -4,7 +4,9 @@ import * as orderService from "../../../../services/order.service.js";
 import {
   prepareTempOrderListData,
   prepareTempOrderDetailsData,
+  SORT_MAP,
 } from "../../../../presenters/admin/order/temporary-order.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logInfo } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
@@ -17,6 +19,7 @@ export async function listTemporaryOrders(req, res, next) {
       search: search || "",
       page: parseInt(page, 10) || 1,
       limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = prepareTempOrderListData(result, req.query);

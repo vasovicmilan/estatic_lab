@@ -505,7 +505,7 @@ const serviceDefs = [
     tagSlugs: ["terapeutska-masaza-tag", "masaza-za-bol-u-ledjima", "terapija-bola", "rucna-masaza"],
     shortDescription: "Ciljana masaža za hroničnu napetost, mišićne čvoriće i tegobe nastale usled dugog sedenja ili lošeg držanja tela.",
     longDescription:
-      "Terapeutska masaža koristi tehnike dubinskog rada na mišićima i rad na zategnutim zonama radi ublažavanja hronične napetosti u vratu, ramenima i leđima, kao i posledica dugotrajnog sedenja i lošeg držanja tela. Terapeut identifikuje zategnute zone i mišićne čvoriće i radi na njihovom postepenom otpuštanju kroz kombinaciju pritiska i istezanja. Ovaj tretman može biti koristan dodatak fizikalnoj terapiji, ali je ne zamenjuje niti predstavlja medicinsko lečenje. Dostupna je varijanta od 30 minuta (gornji ili donji deo tela) ili 60 minuta (celo telo). Pogledajte i naš tekst o izboru između masaže i aparaturnih tretmana: beautymedica.rs/blog/masaza-vs-aparaturni-tretmani.",
+      "Terapeutska masaža koristi tehnike dubinskog rada na mišićima i rad na zategnutim zonama radi ublažavanja hronične napetosti u vratu, ramenima i leđima, kao i posledica dugotrajnog sedenja i lošeg držanja tela. Terapeut identifikuje zategnute zone i mišićne čvoriće i radi na njihovom postepenom otpuštanju kroz kombinaciju pritiska i istezanja. Ovaj tretman može biti koristan dodatak fizikalnoj terapiji, ali je ne zamenjuje niti predstavlja medicinsko lečenje. Dostupna je varijanta od 45 minuta (ciljana zona) ili 60 minuta (celo telo). Pogledajte i naš tekst o izboru između masaže i aparaturnih tretmana: beautymedica.rs/blog/masaza-vs-aparaturni-tretmani.",
     defaultDuration: 60,
     image: { img: "https://placehold.co/800x600?text=Terapeutska%20masaza", imgDesc: "Terapeutska masaza - privremena placeholder slika, zameniti pravom fotografijom" },
     skipBundlePackages: true,
@@ -514,10 +514,10 @@ const serviceDefs = [
       { name: "🎯 Rad na zategnutim zonama", description: "Ciljano otpuštanje zategnutih mišićnih čvorića.", icon: "bi bi-bullseye", order: 1 },
       { name: "🧍 Podrška kod lošeg držanja", description: "Ublažava napetost nastalu usled dugog sedenja.", icon: "bi bi-activity", order: 2 },
       { name: "🩹 Ublažavanje napetosti", description: "Pomaže kod osećaja napetosti u vratu, ramenima i leđima.", icon: "bi bi-heart-pulse", order: 3 },
-      { name: "🕐 30 ili 60 minuta", description: "Prilagodite trajanje svojim potrebama.", icon: "bi bi-clock-history", order: 4 },
+      { name: "🕐 45 ili 60 minuta", description: "Prilagodite trajanje svojim potrebama.", icon: "bi bi-clock-history", order: 4 },
     ],
     packages: [
-      { name: "30 min (gornji ili donji deo tela)", slug: "30-min-gornji-ili-donji-deo-tela", sessions: 1, duration: 30, totalPrice: 3000, order: 1, isBest: false },
+      { name: "45 min (ciljana zona)", slug: "45-min-ciljana-zona", sessions: 1, duration: 45, totalPrice: 3200, order: 1, isBest: false },
       { name: "60 min (celo telo)", slug: "60-min-celo-telo", sessions: 1, duration: 60, totalPrice: 5000, order: 2, isBest: true },
     ],
     faq: [

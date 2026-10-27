@@ -28,6 +28,28 @@
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/partnerski-program') ? 'active' : '' %>" href="/partnerski-program">Partnerski program</a></li>
         <% } %>
         <li class="nav-item"><a class="nav-link <%= currentPath?.startsWith('/kontakt') ? 'active' : '' %>" href="/kontakt">Kontakt</a></li>
+        <%
+          // Secondary pages that used to be reachable only from the footer. On desktop they
+          // sit in a "Više" dropdown (the main row is already full at lg width); on mobile
+          // they are plain flat links in the open menu - same split as the account menu below.
+          const moreLinks = [
+            { href: "/o-nama", label: "O nama" },
+            { href: "/saradnici", label: "Naši saradnici" },
+            { href: "/faq", label: "Česta pitanja" },
+          ];
+          const moreActive = moreLinks.some((l) => currentPath?.startsWith(l.href));
+        %>
+        <li class="nav-item dropdown d-none d-lg-block">
+          <a class="nav-link dropdown-toggle <%= moreActive ? 'active' : '' %>" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Više</a>
+          <ul class="dropdown-menu">
+            <% moreLinks.forEach(function(l) { %>
+              <li><a class="dropdown-item <%= currentPath?.startsWith(l.href) ? 'active' : '' %>" href="<%= l.href %>"><%= l.label %></a></li>
+            <% }) %>
+          </ul>
+        </li>
+        <% moreLinks.forEach(function(l) { %>
+          <li class="nav-item d-lg-none"><a class="nav-link <%= currentPath?.startsWith(l.href) ? 'active' : '' %>" href="<%= l.href %>"><%= l.label %></a></li>
+        <% }) %>
       </ul>
 
       <% const isAdmin = user?.roleName === 'admin' || user?.permissions?.includes('access_admin_panel'); %>

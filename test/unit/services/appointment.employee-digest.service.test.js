@@ -31,7 +31,7 @@ describe("appointment.service - employee digest", () => {
       assert.equal(dayStart.getTime(), expectedStart.getTime());
       assert.equal(dayEnd.getTime(), expectedEnd.getTime());
       // exactly 24h apart - a real calendar day, not some other span
-      assert.equal(dayEnd.getTime() - dayStart.getTime(), 24 * 60 * 60 * 1000);
+      assert.equal(dayEnd.getTime(), nextDayStartInZone(dayStart).getTime()); // calendar day, not a fixed 24h (DST days are 23/25h)
     });
 
     it("REGRESSION: dayOffset 1 (the evening/'sutra' run) resolves to tomorrow's calendar day, not today's", async (t) => {

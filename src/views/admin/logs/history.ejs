@@ -13,14 +13,20 @@
       <% } else { %>
         <div class="table-responsive">
         <table class="table mb-0">
-          <thead><tr><th>Datum</th><th>Ukupno zahteva</th><th>Greške</th><th>Prosečno vreme</th><th></th></tr></thead>
+          <thead>
+            <tr>
+              <% data.columns.forEach(function(col) { %>
+                <%- include("../../includes/components/sortable-th", { col: col, sort: data.sort, basePath: data.pagination.basePath, query: data.pagination.query }) %>
+              <% }) %>
+              <th></th>
+            </tr>
+          </thead>
           <tbody>
             <% data.items.forEach(function(item) { %>
               <tr>
-                <td><%= item.date %></td>
-                <td><%= item.ukupnoZahteva %></td>
-                <td><%= item.greske %></td>
-                <td><%= item.prosecnoVreme %></td>
+                <% data.columns.forEach(function(col) { %>
+                  <td><%= item[col.key] %></td>
+                <% }) %>
                 <td><a href="<%= item.detailUrl %>" class="btn btn-sm btn-outline-secondary">Detalji</a></td>
               </tr>
             <% }) %>

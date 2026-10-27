@@ -52,9 +52,21 @@ const BusinessReportSummarySchema = new Schema(
       byProduct: [COUNT_SCHEMA], // top products by units sold, value = revenue
     },
 
+    // Packages SOLD in the period (cash basis - appointments later paid from a
+    // package carry finalPrice 0, so they never add to appointments.revenue).
+    // revenue = grossValue - discountTotal. Summaries saved before these fields
+    // existed only have totalPurchased + revenue; readers must treat the rest as 0.
     packages: {
-      totalPurchased: { type: Number, default: 0 },
+      totalPurchased: { type: Number, default: 0 }, // non-cancelled purchases
       revenue: { type: Number, default: 0 }, // sum of pricePaid
+      grossValue: { type: Number, default: 0 }, // sum of originalPrice (list value)
+      discountTotal: { type: Number, default: 0 }, // sum of discountApplied
+      couponPurchases: { type: Number, default: 0 }, // purchases that used a coupon
+      sessionsSold: { type: Number, default: 0 }, // sessions contained in the sold packages
+      sessionsRedeemed: { type: Number, default: 0 }, // completed appointments paid from a package in the period
+      cancelledCount: { type: Number, default: 0 }, // purchases sold in the period but cancelled (excluded above)
+      cancelledValue: { type: Number, default: 0 }, // their pricePaid
+      byPackage: [COUNT_SCHEMA], // label = package name, count = purchases, value = revenue
     },
 
     commissions: {

@@ -1,16 +1,30 @@
 import { getAllowedStatuses } from "../../../models/appointment-status-transitions.js";
-import { buildAdminPagination } from "../../../utils/admin-list.util.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+
+// Only scalar columns on the Appointment document are sortable - `korisnik` and
+// `usluga` are display strings assembled from populated/snapshot data, not a
+// single field a query can ORDER BY. Same field mapping as the api/v1
+// admin-appointment.controller's APPOINTMENT_SORT_FIELDS.
+export const SORT_MAP = {
+  datum: "startTime",
+  status: "status",
+  konacnaCena: "finalPrice",
+};
 
 export function prepareAppointmentListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
-      { key: "korisnik", label: "Korisnik" },
-      { key: "usluga", label: "Usluga" },
-      { key: "datum", label: "Termin" },
-      { key: "status", label: "Status" },
-      { key: "konacnaCena", label: "Cena" },
-    ],
+    columns: markSortableColumns(
+      [
+        { key: "korisnik", label: "Korisnik" },
+        { key: "usluga", label: "Usluga" },
+        { key: "datum", label: "Termin" },
+        { key: "status", label: "Status" },
+        { key: "konacnaCena", label: "Cena" },
+      ],
+      SORT_MAP
+    ),
+    sort: buildSortState(query, SORT_MAP),
     actions: [
       { type: "view", url: "/admin/termini/detalji/", icon: "eye" },
       { type: "delete", url: "/admin/termini/", icon: "trash" },

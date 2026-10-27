@@ -1,6 +1,16 @@
 <%- include("../../includes/head") %>
 <%- include("../../includes/navigation") %>
 
+<%
+  const fd = data.formData || {};
+  const fa = fd.address || {};
+  const fieldErrors = (typeof data.errors !== 'undefined' && data.errors) ? Object.values(data.errors).flat() : [];
+  const selectedItems = (function () {
+    const raw = fd.items;
+    const rows = Array.isArray(raw) ? raw : (raw && typeof raw === 'object' ? Object.values(raw) : []);
+    return rows.map(function (r) { return { productId: r.productId || '', variantId: r.variantId || '', quantity: r.quantity || '1', price: r.price || '' }; });
+  })();
+%>
 <main class="container-fluid py-4">
   <%- include("../../includes/breadcrumbs") %>
   <%- include("../../includes/flash-messages") %>
@@ -10,48 +20,47 @@
       <div class="card">
         <div class="card-body">
           <p class="text-muted small mb-3">
-            Za telefonske porudžbine, poklone, ili artikle sa "cenom na upit" nakon dogovora sa kupcem. Cena se po potrebi može ručno podesiti, nezavisno od kataloške cene proizvoda.
+            Za telefonske porudžbine, poklone, pakete proizvoda ili artikle sa "cenom na upit" nakon dogovora sa kupcem. Može se dodati više proizvoda. Cena svakog proizvoda je podrazumevano kataloška; po potrebi je upiši ručno, ili na kraju zadaj jednu finalnu cenu koja zamenjuje sve ostale.
           </p>
 
           <form method="POST" action="<%= data.formAction %>" novalidate data-manual-order-form>
             <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
 
-            <% if (typeof data.errors !== 'undefined' && data.errors.general) { %>
-              <div class="alert alert-danger" role="alert"><%= data.errors.general %></div>
+            <% if (fieldErrors.length) { %>
+              <div class="alert alert-danger" role="alert">
+                <% if (fieldErrors.length === 1) { %><%= fieldErrors[0] %><% } else { %>
+                  <ul class="mb-0">
+                    <% fieldErrors.forEach(function (msg) { %><li><%= msg %></li><% }) %>
+                  </ul>
+                <% } %>
+              </div>
             <% } %>
 
             <div class="row g-3">
-              <div class="col-md-6 mb-3">
-                <label for="productId" class="form-label">Proizvod</label>
-                <select class="form-select" id="productId" name="productId" required data-manual-product-select>
-                  <option value="">Izaberite...</option>
-                  <% data.products.forEach(function(p) { %>
-                    <option value="<%= p.id %>"<% if (p.priceOnRequest) { %> data-price-on-request="1"<% } %>><%= p.name %><%= p.priceOnRequest ? " (cena na upit)" : "" %></option>
-                  <% }) %>
-                </select>
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label for="variantId" class="form-label">Varijanta</label>
-                <select class="form-select" id="variantId" name="variantId" required data-manual-variant-select disabled>
-                  <option value="">Prvo izaberite proizvod</option>
-                </select>
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label for="quantity" class="form-label">Količina</label>
-                <input type="number" class="form-control" id="quantity" name="quantity" min="1" value="1" required>
+              <div class="col-12">
+                <h2 class="h6 mb-2">Proizvodi</h2>
+                <div class="d-none d-md-flex row g-2 small text-muted mb-1 px-1" aria-hidden="true">
+                  <div class="col-md-3">Proizvod</div>
+                  <div class="col-md-3">Varijanta</div>
+                  <div class="col-md-1">Količina</div>
+                  <div class="col-md-3">Cena po komadu (<%= currencySymbol %>)</div>
+                  <div class="col-md-2 text-end">Iznos</div>
+                </div>
+                <div data-manual-items></div>
+                <button type="button" class="btn btn-outline-primary btn-sm mt-2" data-manual-add-item>
+                  <i class="bi bi-plus-lg" aria-hidden="true"></i> Dodaj proizvod
+                </button>
               </div>
 
               <div class="col-md-6 mb-3">
                 <label for="shipping" class="form-label">Cena dostave (<%= currencySymbol %>, opciono)</label>
-                <input type="number" class="form-control" id="shipping" name="shipping" min="0" step="0.01" placeholder="0">
+                <input type="number" class="form-control" id="shipping" name="shipping" min="0" step="0.01" placeholder="0" value="<%= fd.shipping || '' %>" data-manual-shipping>
               </div>
 
               <div class="col-12">
                 <hr>
                 <div class="form-check mb-2">
-                  <input class="form-check-input" type="checkbox" id="useExistingUser" data-manual-existing-user-toggle>
+                  <input class="form-check-input" type="checkbox" id="useExistingUser" data-manual-existing-user-toggle<%= fd.existingUserId ? ' checked' : '' %>>
                   <label class="form-check-label" for="useExistingUser">Postojeći registrovani korisnik</label>
                 </div>
               </div>
@@ -61,7 +70,7 @@
                 <select class="form-select" id="existingUserId" name="existingUserId">
                   <option value="">Izaberite...</option>
                   <% data.userOptions.forEach(function(u) { %>
-                    <option value="<%= u.value %>"><%= u.label %></option>
+                    <option value="<%= u.value %>"<%= fd.existingUserId === u.value ? ' selected' : '' %>><%= u.label %></option>
                   <% }) %>
                 </select>
                 <div class="form-text">Ime i email preuzimaju se iz naloga korisnika, osim ako ih dole izričito unesete.</div>
@@ -69,19 +78,19 @@
 
               <div class="col-md-6 mb-3" data-manual-contact-field>
                 <label for="firstName" class="form-label">Ime</label>
-                <input type="text" class="form-control" id="firstName" name="firstName" required data-manual-contact-required>
+                <input type="text" class="form-control" id="firstName" name="firstName" value="<%= fd.firstName || '' %>" required data-manual-contact-required>
               </div>
               <div class="col-md-6 mb-3" data-manual-contact-field>
                 <label for="lastName" class="form-label">Prezime</label>
-                <input type="text" class="form-control" id="lastName" name="lastName">
+                <input type="text" class="form-control" id="lastName" name="lastName" value="<%= fd.lastName || '' %>">
               </div>
               <div class="col-md-6 mb-3" data-manual-contact-field>
                 <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" name="email" required data-manual-contact-required>
+                <input type="email" class="form-control" id="email" name="email" value="<%= fd.email || '' %>" required data-manual-contact-required>
               </div>
               <div class="col-md-6 mb-3">
                 <label for="phone" class="form-label">Telefon</label>
-                <input type="text" class="form-control" id="phone" name="phone" required>
+                <input type="text" class="form-control" id="phone" name="phone" value="<%= fd.phone || '' %>" required>
               </div>
 
               <div class="col-12">
@@ -91,38 +100,44 @@
 
               <div class="col-md-6 mb-3">
                 <label for="addressCity" class="form-label">Grad</label>
-                <input type="text" class="form-control" id="addressCity" name="address[city]" required>
+                <input type="text" class="form-control" id="addressCity" name="address[city]" value="<%= fa.city || '' %>" required>
               </div>
               <div class="col-md-6 mb-3">
                 <label for="addressPostalCode" class="form-label">Poštanski broj</label>
-                <input type="text" class="form-control" id="addressPostalCode" name="address[postalCode]" required>
+                <input type="text" class="form-control" id="addressPostalCode" name="address[postalCode]" value="<%= fa.postalCode || '' %>" required>
               </div>
               <div class="col-md-8 mb-3">
                 <label for="addressStreet" class="form-label">Ulica</label>
-                <input type="text" class="form-control" id="addressStreet" name="address[street]" required>
+                <input type="text" class="form-control" id="addressStreet" name="address[street]" value="<%= fa.street || '' %>" required>
               </div>
               <div class="col-md-4 mb-3">
                 <label for="addressNumber" class="form-label">Broj</label>
-                <input type="text" class="form-control" id="addressNumber" name="address[number]" required>
+                <input type="text" class="form-control" id="addressNumber" name="address[number]" value="<%= fa.number || '' %>" required>
               </div>
 
               <div class="col-12">
                 <hr>
-                <div class="form-check mb-2">
-                  <input class="form-check-input" type="checkbox" id="overridePrice" name="overridePrice" value="1" data-manual-override-toggle>
-                  <label class="form-check-label" for="overridePrice">Ručno podesi cenu artikla</label>
-                </div>
+                <h2 class="h6">Cena</h2>
               </div>
 
-              <div class="col-md-6 mb-3" data-manual-override-field style="display:none;">
-                <label for="priceOverride" class="form-label">Cena po komadu (<%= currencySymbol %>)</label>
-                <input type="number" class="form-control" id="priceOverride" name="priceOverride" min="0" step="0.01">
-                <div class="form-text">Ova cena u potpunosti zamenjuje kataloušku cenu varijante - koristi se za "cena na upit" artikle nakon dogovora sa kupcem.</div>
+              <div class="col-md-6 mb-3">
+                <label for="finalTotal" class="form-label">Finalna cena proizvoda (<%= currencySymbol %>, opciono)</label>
+                <input type="number" class="form-control" id="finalTotal" name="finalTotal" min="0" step="0.01" value="<%= fd.finalTotal || '' %>" placeholder="automatski" data-manual-final-total>
+                <div class="form-text">Ostavi prazno da se cena računa iz cena proizvoda iznad. Ako upišeš iznos, on <strong>zamenjuje</strong> sve cene proizvoda (i kataloške i ručno upisane): ukupno za proizvode biće tačno ovaj iznos, a pojedinačne cene se srazmerno usklade. Dostava se dodaje posebno.</div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <div class="border rounded p-3 bg-light" data-manual-summary aria-live="polite">
+                  <div class="d-flex justify-content-between"><span class="text-muted">Proizvodi</span><strong data-manual-summary-items>-</strong></div>
+                  <div class="d-flex justify-content-between"><span class="text-muted">Dostava</span><strong data-manual-summary-shipping>-</strong></div>
+                  <div class="d-flex justify-content-between border-top mt-2 pt-2"><span>Ukupno</span><strong data-manual-summary-total>-</strong></div>
+                  <div class="small text-muted mt-2" data-manual-summary-note hidden></div>
+                </div>
               </div>
 
               <div class="col-12 mb-3">
                 <label for="note" class="form-label">Napomena (opciono)</label>
-                <textarea class="form-control" id="note" name="note" rows="2" placeholder="npr. „dogovorena cena telefonom, pošiljka br. ...”"></textarea>
+                <textarea class="form-control" id="note" name="note" rows="2" placeholder="npr. „dogovorena cena telefonom, pošiljka br. ...”"><%= fd.note || '' %></textarea>
               </div>
             </div>
 
@@ -138,8 +153,10 @@
 </main>
 
 <script>
+  window.__currencySymbol = <%- jsonForScript(currencySymbol) %>;
   window.__manualOrderData = {
     products: <%- jsonForScript(data.products) %>,
+    initialItems: <%- jsonForScript(selectedItems) %>,
   };
 </script>
 <script src="/js/admin-manual-order.js"></script>

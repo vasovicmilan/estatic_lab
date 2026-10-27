@@ -6,6 +6,7 @@ import { getStartOfDayInZone, nextDayStartInZone } from "../../../utils/date.tim
 import { resolvePage, resolveLimit, pickPaginationMeta } from "../../../utils/pagination.util.js";
 import { buildAuditActor } from "../../../utils/audit-actor.util.js";
 import { createEntityActionFactory } from "../../../utils/admin-entity-action.util.js";
+import { parseManualOrderItems } from "../../web/admin/order/manual-order.controller.js";
 
 // Mirrors controllers/web/admin/order/{order,manual-order,temporary-order}
 // .controller.js - same services, same audit log entries.
@@ -78,13 +79,31 @@ export async function updateOrderContact(req, res, next) {
   }
 }
 
+/**
+ * The API accepts the multi-product shape (`items: [{ productId, variantId, quantity, price }]`,
+ * optional `finalTotal`) and, for backward compatibility, the original single-product shape
+ * (`productId`, `variantId`, `quantity`, `priceOverride`). Runs BEFORE the validator so both
+ * shapes are validated the same way.
+ */
+export function normalizeManualOrderBody(req, res, next) {
+  const body = req.body || {};
+  if (body.items === undefined && body.productId !== undefined) {
+    const { productId, variantId, quantity, priceOverride } = body;
+    body.items = [{ productId, variantId, quantity, price: priceOverride }];
+    req.body = body;
+  }
+  next();
+}
+
 export async function createManualOrder(req, res, next) {
-  const { productId, variantId, quantity, existingUserId, firstName, lastName, email, phone, address, shipping, note, priceOverride } = req.body;
+  const { existingUserId, firstName, lastName, email, phone, address, shipping, note, finalTotal } = req.body;
 
   try {
+    const items = parseManualOrderItems(req.body.items);
     const order = await orderService.createManualOrder(
       {
-        items: [{ productId, variantId, quantity: parseInt(quantity, 10), priceOverride: priceOverride != null ? parseFloat(priceOverride) : null }],
+        items,
+        finalTotal: finalTotal !== undefined && finalTotal !== null && finalTotal !== "" ? parseFloat(finalTotal) : null,
         existingUserId: existingUserId || null,
         contact: { firstName, lastName, email },
         phone,
@@ -100,7 +119,7 @@ export async function createManualOrder(req, res, next) {
       ...buildAuditActor(req),
       action: "ORDER_MANUALLY_CREATED",
       entity: { type: "Order", id: order.id },
-      changes: { productId: { old: null, new: productId }, variantId: { old: null, new: variantId } },
+      changes: { items: { old: null, new: items }, finalTotal: { old: null, new: finalTotal ?? null } },
     });
 
     return res.status(201).json({ success: true, data: order });
@@ -205,6 +224,6 @@ export async function setTemporaryOrderShipping(req, res, next) {
 export default {
   listOrders, getOrder,
   markProcessing, markShipped, markDelivered, markCompleted, markReturned, markRefunded, cancelOrder, reopenOrder,
-  updateOrderContact, createManualOrder,
+  updateOrderContact, createManualOrder, normalizeManualOrderBody,
   listTemporaryOrders, getTemporaryOrder, confirmTemporaryOrder, setTemporaryOrderShipping,
 };

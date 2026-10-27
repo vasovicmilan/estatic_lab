@@ -1,17 +1,30 @@
 import { RESERVED_ROLE_NAMES } from "../../../models/role.model.js";
-import { buildAdminPagination } from "../../../utils/admin-list.util.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+
+// `brojPermisija` is derived (permissions.length) and `opis` is free text, so
+// neither is offered as a sort column.
+export const SORT_MAP = {
+  naziv: "name",
+  podrazumevana: "isDefault",
+  prioritet: "priority",
+  kreirana: "createdAt",
+};
 
 export function prepareRoleListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
-      { key: "naziv", label: "Naziv" },
-      { key: "opis", label: "Opis" },
-      { key: "brojPermisija", label: "Broj permisija" },
-      { key: "podrazumevana", label: "Podrazumevana" },
-      { key: "prioritet", label: "Prioritet" },
-      { key: "kreirana", label: "Kreirana" },
-    ],
+    columns: markSortableColumns(
+      [
+        { key: "naziv", label: "Naziv" },
+        { key: "opis", label: "Opis" },
+        { key: "brojPermisija", label: "Broj permisija" },
+        { key: "podrazumevana", label: "Podrazumevana" },
+        { key: "prioritet", label: "Prioritet" },
+        { key: "kreirana", label: "Kreirana" },
+      ],
+      SORT_MAP
+    ),
+    sort: buildSortState(query, SORT_MAP),
     actions: [
       { type: "view", url: "/admin/role/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/role/izmena/", icon: "pencil" },

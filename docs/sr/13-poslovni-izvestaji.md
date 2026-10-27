@@ -8,7 +8,8 @@ Svaki poslovni izveštaj ima pet celina:
 
 - **Zakazivanja** — ukupan broj termina, prihod, stopa ne-pojavljivanja klijenata, raspodela po statusu termina, i razbijanje prihoda po usluzi i po terapeutu.
 - **Prodavnica** — ukupan broj porudžbina, prihod, prosečna vrednost porudžbine, i najprodavaniji proizvodi.
-- **Paketi** — koliko je paketa prodato u periodu i koliki je prihod od njih.
+- **Paketi** — koliko je paketa prodato u periodu i kako se došlo do prihoda od njih: vrednost po cenovniku (bruto) minus dati popusti (kuponi / popust paketa) jednako je naplaćenom iznosu. Uz to: prosečna cena paketa, razrada po pojedinačnom paketu, koliko je seansi prodato a koliko iskorišćeno u periodu, koliko je kupovina bilo uz kupon i koliko je kupovina otkazano (otkazane se ne uračunavaju u prihod, ali se prikazuju zasebno da se razlika vidi). Paket se knjiži u periodu u kom je **prodat**; termini plaćeni iz paketa nose cenu 0 i ne dodaju prihod, pa se ništa ne računa dvaput. Izveštaji sačuvani pre uvođenja ove razrade prikazuju samo broj paketa i prihod, uz napomenu o tome.
+- **Ukupan prihod** — zbir prihoda od završenih termina, završenih porudžbina i prodatih paketa (samo za uključene module), prikazan na vrhu izveštaja, u emailu, u PDF-u i na pregledu.
 - **Provizije** — koliko su zaposleni i partneri zaradili i koliko im je već isplaćeno u tom periodu (videti `07-naknade-zaposlenih.md` i `08-isplate-i-stanja.md` za kako se sami iznosi računaju).
 - **Kuponi** — koliko puta su kuponi iskorišćeni i koliki je ukupan dat popust, razloženo po pojedinačnom kuponu.
 
@@ -48,4 +49,4 @@ Svi PDF izveštaji na platformi (poslovni izveštaj i potvrda porudžbine) koris
 
 ## Gde se sve ovo vidi u administraciji
 
-Početna stranica poslovnih izveštaja (`/admin/poslovni-izvestaji`) prikazuje svih pet tipova perioda uživo, jasno obeleženih kao takvi. Svaki tip ima svoju istoriju (`/admin/poslovni-izvestaji/istorija/:tip`), a svaki sačuvan period svoju stranicu detalja sa punom raspodelom po kategorijama i dugmetom za PDF.
+Početna stranica poslovnih izveštaja (`/admin/poslovni-izvestaji`) prikazuje svih pet tipova perioda uživo, jasno obeleženih kao takvi. Svaki tip ima svoju istoriju (`/admin/poslovni-izvestaji/istorija/:tip`), a svaki sačuvan period svoju stranicu detalja sa punom raspodelom po kategorijama i dugmetom za PDF. U istoriji se tabela može sortirati klikom na zaglavlje kolone (period, broj i prihod termina, porudžbina i paketa); kolona „Ukupan prihod“ je izračunata pa nije sortabilna. Isto važi i za istoriju logova.

@@ -12,11 +12,7 @@ import { flashAndRedirect } from "../../../../utils/flash.util.js";
 // (system time UTC). order.filter.js's dateTo is an EXCLUSIVE `$lt` bound, so
 // dateTo needs to become the start of the NEXT Belgrade day, not just that
 // day's own midnight - see date.time.util.js.
-import { getStartOfDayInZone } from "../../../../utils/date.time.util.js";
-
-function nextDayStartInZone(dateStr) {
-  return new Date(getStartOfDayInZone(dateStr).getTime() + 24 * 60 * 60 * 1000);
-}
+import { getStartOfDayInZone, nextDayStartInZone } from "../../../../utils/date.time.util.js";
 
 export async function listOrders(req, res, next) {
   try {

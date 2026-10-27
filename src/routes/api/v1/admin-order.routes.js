@@ -10,7 +10,7 @@ const router = Router();
 router.use(apiAuthMiddleware, requirePermission(PERMISSION.MANAGE_ORDERS));
 
 router.get("/orders", AdminOrderController.listOrders);
-router.post("/orders/manual", validateManualOrderCreate, handleApiValidationErrors, AdminOrderController.createManualOrder);
+router.post("/orders/manual", AdminOrderController.normalizeManualOrderBody, validateManualOrderCreate, handleApiValidationErrors, AdminOrderController.createManualOrder);
 router.get("/orders/:orderId", validateOrderId, handleApiValidationErrors, AdminOrderController.getOrder);
 router.put("/orders/:orderId/process", validateOrderId, handleApiValidationErrors, AdminOrderController.markProcessing);
 router.put("/orders/:orderId/ship", validateOrderId, handleApiValidationErrors, AdminOrderController.markShipped);

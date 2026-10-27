@@ -177,6 +177,30 @@ Oba koraka su i dostupna kao npm skripte - videti `package.json`
    koji si upotrebio - na oba jezika.
 4. Pokreni oba koraka iz sekcije "Pokretanje" iznad, proveri generisani `.md`.
 
+## Mobilni tutorijali (telefon)
+
+Scenario se snima kao telefon (390x844, dodir, portret) tako što na vrhu `describe` bloka stoji:
+
+```js
+test.use({ tutorialDevice: "mobile" });
+```
+
+Video je tada 390x844 (veličina ekrana telefona; `burn-subtitles` ga uvećava 2x i prilagođava veličinu titla), a drugi akter (`newRecordedContext(..., { device: "mobile" })`) mora da bude takođe mobilni da bi `merge-video.mjs` spojio isti format. Navigacija se ne preskače adresom nego se klikće: `goToLoginViaNav`, `openAccountMenuItem`, `clickPortalTab`, `enterAdminPanel`, `navigateAdminViaMenu` (svi primaju `mobile: true`). Na telefonu to znači burger meni i donju traku kartica, na računaru padajući meni i gornje kartice.
+
+Mobilni scenariji imaju sufiks `-mobilni`: `partner-nalog-pregled-mobilni`, `isplata-partneru-mobilni`.
+
+```bash
+# jedan scenario (po putanji fajla)
+npx playwright test --config=playwright.tutorials.config.js e2e-tutorials/scenarios/partner-nalog-pregled-mobilni
+npx playwright test --config=playwright.tutorials.config.js e2e-tutorials/scenarios/isplata-partneru-mobilni
+
+# pa isti postupak kao za računar (titlovi, spajanje, doc):
+node e2e-tutorials/scripts/build-subtitles.mjs partner-nalog-pregled-mobilni
+node e2e-tutorials/scripts/merge-video.mjs partner-nalog-pregled-mobilni
+node e2e-tutorials/scripts/burn-subtitles.mjs partner-nalog-pregled-mobilni
+node e2e-tutorials/scripts/build-docs.mjs partner-nalog-pregled-mobilni
+```
+
 ## Git
 
 `manifest.json` i `screenshots/` su generisani i **ignorisani u git-u** (dodato u

@@ -91,7 +91,11 @@ async function handleImageUpload(file, destination, type) {
     const filename = `${baseFilename}-${config.suffix}.webp`;
     const outputPath = path.join(destination, filename);
 
+    // .rotate() with no args auto-orients from the EXIF Orientation tag. Phones store
+    // portrait photos as sideways pixels + an orientation flag; sharp drops EXIF when it
+    // re-encodes to webp, so without this step the flag is lost and the image shows rotated.
     await sharp(file.buffer)
+      .rotate()
       .resize({ width: config.width, withoutEnlargement: true })
       .webp({ quality: 82 })
       .toFile(outputPath);

@@ -1,16 +1,32 @@
 import { formatMoney } from "../../../utils/price.util.js";
-import { buildAdminPagination } from "../../../utils/admin-list.util.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+
+// `korisnik` is firstName + lastName concatenated for display - not a scalar
+// column - so only the email snapshot is offered for identity sorting.
+// Same mapping as api/v1 admin-order.controller's TEMP_ORDER_SORT_FIELDS.
+export const SORT_MAP = {
+  email: "contactSnapshot.email",
+  ukupnaCena: "totalPrice",
+  zahtevaProceenuDostave: "requiresShippingQuote",
+  istice: "tokenExpiration",
+  kreirano: "createdAt",
+};
+
 export function prepareTempOrderListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
-      { key: "korisnik", label: "Korisnik" },
-      { key: "email", label: "Email" },
-      { key: "ukupnaCena", label: "Ukupno" },
-      { key: "zahtevaProceenuDostave", label: "Čeka procenu dostave" },
-      { key: "istice", label: "Ističe" },
-      { key: "kreirano", label: "Kreirano" },
-    ],
+    columns: markSortableColumns(
+      [
+        { key: "korisnik", label: "Korisnik" },
+        { key: "email", label: "Email" },
+        { key: "ukupnaCena", label: "Ukupno" },
+        { key: "zahtevaProceenuDostave", label: "Čeka procenu dostave" },
+        { key: "istice", label: "Ističe" },
+        { key: "kreirano", label: "Kreirano" },
+      ],
+      SORT_MAP
+    ),
+    sort: buildSortState(query, SORT_MAP),
     actions: [{ type: "view", url: "/admin/privremene-porudzbine/detalji/", icon: "eye" }],
     pagination: buildAdminPagination(result, { basePath: "/admin/privremene-porudzbine", query }),
     breadcrumbs: [

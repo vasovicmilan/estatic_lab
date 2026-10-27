@@ -14,6 +14,30 @@ export const TUTORIALS_ROOT = path.resolve(__dirname, "..");
 // - if the two differ, that scaling step is where the blur comes from.
 export const VIDEO_SIZE = { width: 1920, height: 1080 };
 
+// Mobile ("telefon") recordings - portrait 390x844 CSS pixels (iPhone 12-15 class).
+// The recording size MUST equal the viewport in CSS pixels: Playwright's recorder
+// only scales a page DOWN to fit recordVideo.size, never up, so a bigger canvas
+// (the earlier 780x1688) left the phone screen in the top-left corner of an
+// otherwise empty frame. For a crisp final file, burn-subtitles.mjs upscales
+// portrait videos 2x (lanczos) when it renders the captions. A scenario opts in with `test.use({ tutorialDevice: "mobile" })`
+// (see tutorialDevice fixture below); newRecordedContext() takes the same choice
+// via its `device` option for a second actor.
+export const MOBILE_VIEWPORT = { width: 390, height: 844 };
+export const MOBILE_VIDEO_SIZE = { width: 390, height: 844 };
+
+export function contextOptionsFor(device) {
+  if (device === "mobile") {
+    return {
+      viewport: MOBILE_VIEWPORT,
+      deviceScaleFactor: 2,
+      isMobile: true,
+      hasTouch: true,
+      recordVideo: { size: MOBILE_VIDEO_SIZE },
+    };
+  }
+  return { recordVideo: { size: VIDEO_SIZE } };
+}
+
 // Matches playwright.tutorials.config.js's own PORT/BASE_URL derivation exactly -
 // duplicated rather than imported because that config file itself imports FROM
 // this module (VIDEO_SIZE), and importing back would create a circular import.
@@ -92,7 +116,7 @@ const CURSOR_INIT_SCRIPT = `(() => {
  * Same DOMContentLoaded/try-catch hardening as CURSOR_INIT_SCRIPT above, and for
  * the same reason - see that constant's comment.
  */
-function actorBadgeInitScript(label) {
+function actorBadgeInitScript(label, device = "desktop") {
   const escaped = label.replace(/"/g, '\\"').replace(/</g, "&lt;");
   return `(() => {
     function install() {
@@ -101,8 +125,8 @@ function actorBadgeInitScript(label) {
         if (document.getElementById(ID)) return;
         const style = document.createElement("style");
         style.textContent =
-          "#" + ID + " { position: fixed; top: 12px; left: 12px; z-index: 2147483647; " +
-          "font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600; " +
+          "#" + ID + " { position: fixed; ${device === "mobile" ? "top: 3px; left: 50%; transform: translateX(-50%); font-size: 11px;" : "top: 12px; left: 12px; font-size: 13px;"} z-index: 2147483647; " +
+          "font-family: system-ui, sans-serif; font-weight: 600; " +
           "color: white; background: rgba(30, 30, 30, 0.78); padding: 4px 10px; " +
           "border-radius: 4px; pointer-events: none; letter-spacing: 0.02em; }";
         (document.head || document.documentElement).appendChild(style);
@@ -177,22 +201,28 @@ async function preAcceptCookieConsent(context, baseURL) {
  * screenshot+manifest side effect.
  */
 export const test = base.extend({
+  // "desktop" (default, 1920x1080) or "mobile" (390x844 touch device) - set per
+  // scenario file with `test.use({ tutorialDevice: "mobile" })`.
+  tutorialDevice: ["desktop", { option: true }],
+
   // Overrides Playwright's built-in `context` fixture (not composed with it - the
   // default context has no video recording, and video can only be turned on at
   // context-creation time, not retrofitted onto an existing one) so every
   // scenario's default `page` fixture - which is built ON TOP of `context` - is
   // automatically video-recorded with zero changes needed in scenario.spec.js
   // files themselves.
-  context: async ({ browser }, use, testInfo) => {
+  context: async ({ browser, tutorialDevice }, use, testInfo) => {
     const scenarioId = path.basename(path.dirname(testInfo.file));
     const tmpDir = path.join(TUTORIALS_ROOT, ".video-tmp", `${scenarioId}-${Date.now()}`);
     await fs.ensureDir(tmpDir);
 
+    const deviceOptions = contextOptionsFor(tutorialDevice);
     const context = await browser.newContext({
-      recordVideo: { dir: tmpDir, size: VIDEO_SIZE },
+      ...deviceOptions,
+      recordVideo: { ...deviceOptions.recordVideo, dir: tmpDir },
     });
     await context.addInitScript({ content: CURSOR_INIT_SCRIPT });
-    await context.addInitScript({ content: actorBadgeInitScript("Klijent") });
+    await context.addInitScript({ content: actorBadgeInitScript("Klijent", tutorialDevice) });
     await preAcceptCookieConsent(context, BASE_URL);
     forwardPageDiagnostics(context, "Klijent");
 
@@ -344,14 +374,16 @@ export { expect } from "@playwright/test";
  * a display string with spaces/different casing never has to double as a
  * filesystem-safe identifier.
  */
-export async function newRecordedContext(browser, scenarioId, label, actorLabel = "Administrator") {
+export async function newRecordedContext(browser, scenarioId, label, actorLabel = "Administrator", { device = "desktop" } = {}) {
   const tmpDir = path.join(TUTORIALS_ROOT, ".video-tmp", `${scenarioId}-${label}-${Date.now()}`);
   await fs.ensureDir(tmpDir);
+  const deviceOptions = contextOptionsFor(device);
   const context = await browser.newContext({
-    recordVideo: { dir: tmpDir, size: VIDEO_SIZE },
+    ...deviceOptions,
+    recordVideo: { ...deviceOptions.recordVideo, dir: tmpDir },
   });
   await context.addInitScript({ content: CURSOR_INIT_SCRIPT });
-  await context.addInitScript({ content: actorBadgeInitScript(actorLabel) });
+  await context.addInitScript({ content: actorBadgeInitScript(actorLabel, device) });
   await preAcceptCookieConsent(context, BASE_URL);
   forwardPageDiagnostics(context, actorLabel);
   const startedAt = Date.now(); // see tut fixture's matching testInfo.__mainVideoStartedAt comment - same idea, own recording

@@ -4,7 +4,9 @@ import {
   prepareLogDashboardData,
   prepareLogHistoryListData,
   prepareLogSummaryDetailData,
+  SORT_MAP,
 } from "../../../../presenters/admin/logs/log-summary.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 
@@ -27,7 +29,11 @@ export async function logDashboard(req, res, next) {
 export async function logHistoryList(req, res, next) {
   try {
     const { page = 1, limit } = req.query;
-    const result = await logReportService.listLogSummaries({ page: parseInt(page, 10) || 1, limit: resolveAdminLimit(limit, 25) });
+    const result = await logReportService.listLogSummaries({
+      page: parseInt(page, 10) || 1,
+      limit: resolveAdminLimit(limit, 25),
+      sort: resolveAdminSort(req.query, SORT_MAP),
+    });
     const viewData = prepareLogHistoryListData(result, req.query);
 
     return res.render("admin/logs/history", {

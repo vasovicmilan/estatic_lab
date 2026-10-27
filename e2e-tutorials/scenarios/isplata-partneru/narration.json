@@ -1,0 +1,172 @@
+{
+  "title": {
+    "sr": "Isplata partneru",
+    "en": "Partner payout"
+  },
+  "intro": {
+    "sr": "Partner traži isplatu zarađene provizije sa svog naloga, administrator je odobrava i označava kao isplaćenu, a partner u istoriji vidi da je isplata izvršena. Prikazan je svaki klik kroz menije, i za partnera i za administratora.",
+    "en": "A partner requests a payout of earned commission from their account, an admin approves it and marks it paid, and the partner sees in their history that it's done. Every menu click is shown, for both the partner and the admin."
+  },
+  "steps": {
+    "otvaranje-pocetne": {
+      "heading": {
+        "sr": "Početna stranica",
+        "en": "Home page"
+      },
+      "sr": "Počinjemo na početnoj stranici sajta.",
+      "en": "We start on the site's home page."
+    },
+    "login-klik-prijava": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Log in"
+      },
+      "sr": "U gornjem desnom uglu klikćemo na „Prijava“.",
+      "en": "In the top right corner we click “Prijava”."
+    },
+    "unos-prijave": {
+      "heading": {
+        "sr": "Unos podataka za prijavu",
+        "en": "Enter your login details"
+      },
+      "sr": "Unosimo email i lozinku i prijavljujemo se.",
+      "en": "We enter the email and password and log in."
+    },
+    "portal-otvara-meni": {
+      "heading": {
+        "sr": "Meni naloga",
+        "en": "Account menu"
+      },
+      "sr": "Posle prijave, u gornjem desnom uglu se pojavljuje naše ime. Klikom na njega otvara se meni naloga.",
+      "en": "After logging in our name appears in the top right corner. Clicking it opens the account menu."
+    },
+    "portal-bira-stavku": {
+      "heading": {
+        "sr": "Partnerski nalog",
+        "en": "Partner account"
+      },
+      "sr": "U meniju biramo „Partnerski nalog“.",
+      "en": "In the menu we choose “Partnerski nalog”."
+    },
+    "pregled-stanja": {
+      "heading": {
+        "sr": "Raspoloživo za isplatu",
+        "en": "Available for payout"
+      },
+      "sr": "Na partnerskom nalogu je prikazano koliko je provizije zarađeno i koliko je raspoloživo za isplatu.",
+      "en": "The partner account shows how much commission is earned and how much is available for payout."
+    },
+    "zahtev-za-isplatu": {
+      "heading": {
+        "sr": "Zahtev za isplatu",
+        "en": "Request a payout"
+      },
+      "sr": "Partner unosi iznos i šalje zahtev. Ne može da traži više od raspoloživog.",
+      "en": "The partner enters an amount and submits a request. They can't request more than what's available."
+    },
+    "rezervisano-i-preostalo": {
+      "heading": {
+        "sr": "Rezervisano i preostalo",
+        "en": "Reserved and remaining"
+      },
+      "sr": "Zatraženi iznos prelazi u „Rezervisano“, a forma dozvoljava samo još preostali deo - isti iznos se ne može tražiti dvaput.",
+      "en": "The requested amount moves to “Rezervisano” and the form only allows what's left - the same amount can't be requested twice."
+    },
+    "tab-isplate": {
+      "heading": {
+        "sr": "Kartica Isplate",
+        "en": "Payouts tab"
+      },
+      "sr": "Klikom na „Isplate“ u gornjoj traci prelazimo na tu karticu. Tu su svi zahtevi za isplatu.",
+      "en": "Clicking “Isplate” in the top bar switches to that tab. It lists all payout requests."
+    },
+    "zahtev-na-cekanju": {
+      "heading": {
+        "sr": "Zahtev na čekanju",
+        "en": "Request pending"
+      },
+      "sr": "Zahtev ima status „Zatraženo“ dok ga administrator ne obradi.",
+      "en": "The request has status “Zatraženo” until the admin processes it."
+    },
+    "admin-prijava": {
+      "heading": {
+        "sr": "Prijava administratora",
+        "en": "Admin logs in"
+      },
+      "sr": "Administrator se prijavljuje.",
+      "en": "The administrator logs in."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": {
+        "sr": "Meni naloga",
+        "en": "Account menu"
+      },
+      "sr": "Administrator otvara meni naloga (njegovo ime u gornjem desnom uglu).",
+      "en": "The admin opens the account menu (their name in the top right corner)."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": {
+        "sr": "Admin panel",
+        "en": "Admin panel"
+      },
+      "sr": "Iz menija ulazi u admin panel.",
+      "en": "From the menu they enter the admin panel."
+    },
+    "admin-isplate-otvara-meni": {
+      "heading": {
+        "sr": "Partnerski program",
+        "en": "Partner program"
+      },
+      "sr": "U tamnom admin meniju otvara grupu „Partnerski program“.",
+      "en": "In the dark admin menu they open the “Partnerski program” group."
+    },
+    "admin-isplate-bira-stavku": {
+      "heading": {
+        "sr": "Isplate",
+        "en": "Payouts"
+      },
+      "sr": "Stavka „Isplate“ pokazuje zahteve i zaposlenih i partnera.",
+      "en": "The “Isplate” item lists requests from both employees and partners."
+    },
+    "admin-otvara-zahtev": {
+      "heading": {
+        "sr": "Detalji zahteva",
+        "en": "Request details"
+      },
+      "sr": "Otvaraju se detalji partnerovog zahteva sa iznosom i statusom.",
+      "en": "The details of the partner's request open, with the amount and status."
+    },
+    "admin-odobrava": {
+      "heading": {
+        "sr": "Odobravanje",
+        "en": "Approve"
+      },
+      "sr": "Administrator odobrava zahtev i potvrđuje u prozoru.",
+      "en": "The admin approves the request and confirms in the dialog."
+    },
+    "admin-oznacava-isplaceno": {
+      "heading": {
+        "sr": "Označavanje kao isplaćeno",
+        "en": "Mark as paid"
+      },
+      "sr": "Kad je novac stvarno isplaćen, zahtev se označava kao isplaćen.",
+      "en": "Once the money has actually been paid out, the request is marked as paid."
+    },
+    "istorija-isplata": {
+      "heading": {
+        "sr": "Istorija isplata",
+        "en": "Payout history"
+      },
+      "sr": "Partner ponovo otvara „Isplate“ i vidi status „Isplaćeno“.",
+      "en": "The partner opens “Isplate” again and sees the status “Isplaćeno”."
+    },
+    "stanje-posle-isplate": {
+      "heading": {
+        "sr": "Stanje posle isplate",
+        "en": "Balance after payout"
+      },
+      "sr": "Na pregledu se isplaćeni iznos sada vodi kao isplaćen.",
+      "en": "On the overview, the paid amount now counts as paid out."
+    }
+  }
+}

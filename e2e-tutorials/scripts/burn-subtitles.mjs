@@ -24,6 +24,12 @@ const LANGS = ["sr", "en"];
  * choice for anyone editing/reviewing in VS Code's Markdown preview, this one
  * is for "hand someone a video file that just works everywhere."
  */
+async function probeSize(file) {
+  const { stdout } = await execFileAsync("ffprobe", ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0:s=x", file]);
+  const [width, height] = stdout.trim().split("x").map(Number);
+  return { width, height };
+}
+
 async function burnScenario(scenarioId) {
   const videoDir = path.join(ROOT, "videos", scenarioId);
   const mergedPath = path.join(videoDir, "merged.webm");
@@ -48,11 +54,40 @@ async function burnScenario(scenarioId) {
     // path in principle) have to be escaped so the filter doesn't misparse them
     // as ITS option separators.
     const absoluteVttPath = path.resolve(vttPath).replace(/\\/g, "/").replace(/:/g, "\\:");
-    const style = "FontName=DejaVu Sans,FontSize=22,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=0,MarginV=40";
+    // Landscape (desktop) keeps the original look. Portrait (phone) videos are
+    // upscaled 2x first. libass sizes force_style values in "script units" - for
+    // converted .vtt that is a 288-unit-tall canvas (PlayResX follows the aspect
+    // ratio) - NOT pixels, so the same "22" that suits a 1080p frame would be
+    // about 13% of a 1688px-tall phone frame, i.e. huge. Values below are
+    // therefore converted from the wanted pixel size: font ~4.5% of the frame
+    // width, thin outline, side margins so long sentences wrap into a few short
+    // lines, and they sit in a black strip under the phone screen.
+    const { width: vw, height: vh } = await probeSize(mergedPath);
+    const portrait = vh > vw;
+    let vf;
+    if (portrait) {
+      const w = vw * 2;
+      const h = vh * 2;
+      // captions live in a black strip added BELOW the phone screen, so they never
+      // cover the page or its fixed bottom navigation bar
+      const strip = Math.round(h * 0.26);
+      const fullH = h + strip;
+      const unit = 288 / fullH; // pixels -> script units
+      const fontSize = (w * 0.045 * unit).toFixed(2);
+      const outline = (3 * unit).toFixed(2);
+      const playResX = Math.round(288 * (w / fullH));
+      const sideMargin = Math.round(w * 0.05 * (playResX / w));
+      const marginV = Math.round(strip * 0.12 * unit);
+      const style = `FontName=DejaVu Sans,FontSize=${fontSize},PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=${outline},Shadow=0,Alignment=2,MarginL=${sideMargin},MarginR=${sideMargin},MarginV=${marginV}`;
+      vf = `scale=${w}:${h}:flags=lanczos,pad=${w}:${fullH}:0:0:black,subtitles=${absoluteVttPath}:force_style='${style}'`;
+    } else {
+      const style = "FontName=DejaVu Sans,FontSize=22,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=0,MarginV=40";
+      vf = `subtitles=${absoluteVttPath}:force_style='${style}'`;
+    }
 
     await execFileAsync(
       "ffmpeg",
-      ["-y", "-i", mergedPath, "-vf", `subtitles=${absoluteVttPath}:force_style='${style}'`, "-c:v", "libvpx", "-b:v", "2M", "-crf", "10", outPath],
+      ["-y", "-i", mergedPath, "-vf", vf, "-c:v", "libvpx", "-b:v", "2M", "-crf", "10", outPath],
       { maxBuffer: 1024 * 1024 * 64 }
     );
     console.log(`  [ok] videos/${scenarioId}/merged.${lang}.burned.webm`);

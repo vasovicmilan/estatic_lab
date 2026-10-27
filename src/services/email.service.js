@@ -7,6 +7,7 @@ import emailProvider from "../integrations/email/email.provider.js";
 import { logError } from "../utils/logger.util.js";
 import { generateOrderInvoicePdf } from "../utils/invoice-pdf.util.js";
 import { generateBusinessReportPdf } from "../utils/business-report-pdf.util.js";
+import { getReportTotals, getPackageBreakdown } from "../utils/business-report-totals.util.js";
 import { infoRow, infoTable, statusTone, badge, ctaButton, linkFallback, couponBlock } from "../utils/email-content.util.js";
 import { formatDateTime, getZonedComponents } from "../utils/date.time.util.js";
 import { getCurrency } from "../config/runtime-settings.cache.js";
@@ -402,7 +403,15 @@ export async function sendLogReportEmail(periodLabel, dateRangeLabel, summary, a
 // template rather than folding into the same one, since the two answer
 // different questions for a different reason to care.
 export async function sendBusinessReportEmail(periodLabel, dateRangeLabel, summary) {
-  const html = await renderTemplate("admin-business-report", { periodLabel, dateRangeLabel, ...summary });
+  // totals/packageBreakdown come from the same util the admin page and PDF use,
+  // so the three can't disagree (and old summaries without the package breakdown still render)
+  const html = await renderTemplate("admin-business-report", {
+    periodLabel,
+    dateRangeLabel,
+    ...summary,
+    totals: getReportTotals(summary, FEATURES),
+    packageBreakdown: getPackageBreakdown(summary.packages),
+  });
 
   // Same "never let a PDF failure block the email itself" pattern as
   // sendOrderReceivedEmail's invoice attachment above - the HTML report is

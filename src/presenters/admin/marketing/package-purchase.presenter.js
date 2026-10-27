@@ -1,15 +1,29 @@
 import { formatMoney } from "../../../utils/price.util.js";
-import { buildAdminPagination } from "../../../utils/admin-list.util.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+
+// `paket` is the populated package's name, not a column on PackagePurchase, so
+// it stays unsortable. Same mapping as api/v1 admin-package-purchase.controller.
+export const SORT_MAP = {
+  cena: "pricePaid",
+  status: "status",
+  kupljeno: "purchasedAt",
+  istice: "expiresAt",
+};
+
 export function preparePackagePurchaseListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
-      { key: "paket", label: "Paket" },
-      { key: "cena", label: "Cena" },
-      { key: "status", label: "Status" },
-      { key: "kupljeno", label: "Kupljeno" },
-      { key: "istice", label: "Ističe" },
-    ],
+    columns: markSortableColumns(
+      [
+        { key: "paket", label: "Paket" },
+        { key: "cena", label: "Cena" },
+        { key: "status", label: "Status" },
+        { key: "kupljeno", label: "Kupljeno" },
+        { key: "istice", label: "Ističe" },
+      ],
+      SORT_MAP
+    ),
+    sort: buildSortState(query, SORT_MAP),
     actions: [
       { type: "view", url: "/admin/kupljeni-paketi/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/kupljeni-paketi/izmena/", icon: "pencil" },

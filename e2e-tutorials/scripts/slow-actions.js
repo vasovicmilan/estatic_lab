@@ -186,9 +186,15 @@ const NAV_ACTION_TIMEOUT = 10_000; // short and explicit on purpose - see commen
  * desktop-only wrapper avoids matching either the wrong button or the wrong
  * (hidden) duplicate link.
  */
-export async function enterAdminPanel(adminPage, tut, video, { stepIdPrefix }) {
-  const accountToggle = adminPage.locator(".dropdown.d-none.d-lg-block > button.dropdown-toggle");
-  const adminPanelLink = adminPage.locator(".dropdown.d-none.d-lg-block a.dropdown-item[href=\"/admin\"]");
+export async function enterAdminPanel(adminPage, tut, video, { stepIdPrefix, mobile = false }) {
+  // mobile: the same "Admin panel" entry lives in the burger menu's flat account
+  // section (navigation.ejs, `d-lg-none` block) instead of the desktop dropdown
+  const accountToggle = mobile
+    ? adminPage.locator('.navbar-toggler[data-bs-target="#mainNav"]')
+    : adminPage.locator(".dropdown.d-none.d-lg-block > button.dropdown-toggle");
+  const adminPanelLink = mobile
+    ? adminPage.locator('#mainNav a.nav-link[href="/admin"]')
+    : adminPage.locator(".dropdown.d-none.d-lg-block a.dropdown-item[href=\"/admin\"]");
 
   await tut.step(`${stepIdPrefix}-otvara-nalog-meni`, async () => {
     await accountToggle.click({ timeout: NAV_ACTION_TIMEOUT });
@@ -225,11 +231,16 @@ export async function enterAdminPanel(adminPage, tut, video, { stepIdPrefix }) {
  * against whatever the surrounding test's timeout is - which is exactly what
  * turned "a label doesn't match" into a multi-minute hang before this fix.
  */
-export async function navigateAdminViaMenu(adminPage, tut, video, { groupLabel, itemLabel, stepIdPrefix }) {
+export async function navigateAdminViaMenu(adminPage, tut, video, { groupLabel, itemLabel, stepIdPrefix, mobile = false }) {
   const groupToggle = adminPage.locator(".navbar-dark .dropdown-toggle", { hasText: groupLabel }).first();
   const itemLink = adminPage.locator(".navbar-dark .dropdown-item", { hasText: itemLabel }).first();
 
   await tut.step(`${stepIdPrefix}-otvara-meni`, async () => {
+    if (mobile) {
+      // the dark admin nav is collapsed behind its own burger button on a phone
+      await adminPage.locator('.navbar-toggler[data-bs-target="#adminNav"]').click({ timeout: NAV_ACTION_TIMEOUT });
+      await expect(groupToggle).toBeVisible({ timeout: NAV_ACTION_TIMEOUT });
+    }
     await groupToggle.click({ timeout: NAV_ACTION_TIMEOUT });
     await expect(itemLink).toBeVisible({ timeout: NAV_ACTION_TIMEOUT });
   }, { page: adminPage, video });
@@ -279,4 +290,96 @@ export async function clickAdminCreateButton(adminPage, tut, video, { createLabe
   await tut.step(`${stepIdPrefix}-klik-na-dodaj`, async () => {
     await adminPage.locator("a.btn-primary", { hasText: createLabel }).click({ timeout: NAV_ACTION_TIMEOUT });
   }, { page: adminPage, video });
+}
+
+
+// ---------------------------------------------------------------------------
+// Navigation helpers (desktop + mobile) - used by the partner scenarios so the
+// video shows EVERY menu click instead of jumping to a URL with page.goto().
+// `mobile` switches between the desktop header (dropdown, top pills) and the
+// phone layout (burger button, flat account section, bottom tab bar).
+// ---------------------------------------------------------------------------
+
+/**
+ * Scrolls an element to the middle of the screen smoothly and waits a beat, so on a
+ * phone (where most of a page is below the fold) the video visibly travels to the
+ * thing being narrated instead of the element just being there in a screenshot.
+ */
+export async function scrollToSmoothly(locator) {
+  await locator.first().evaluate((el) => el.scrollIntoView({ behavior: "smooth", block: "center" }));
+  await locator.first().page().waitForTimeout(900);
+}
+
+/** Scrolls back to the top of the page (so the next navigation click is visible). */
+export async function scrollToTop(page) {
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+  await page.waitForTimeout(700);
+}
+
+/** First VISIBLE match of some text - the responsive pages render both a table and a card list, one of them hidden. */
+export function visibleText(page, text) {
+  return page.getByText(text).locator("visible=true").first();
+}
+
+/** Status cell on desktop (<td>) / status badge on mobile (<span class="badge">). */
+export function visibleStatus(page, text) {
+  return page.locator("td, .badge", { hasText: text }).locator("visible=true").first();
+}
+
+/** The login FORM only (no page.goto) - for a scenario that already navigated to /prijava by clicking. */
+export async function fillLoginFormSlowly(page, { email, password = PASSWORD }) {
+  const main = page.locator("main");
+  await typeSlowly(main.locator('input[name="email"]'), email);
+  await typeSlowly(main.locator('input[name="password"]'), password);
+  await page.click('button[type="submit"]');
+  await page.waitForLoadState("networkidle");
+}
+
+/**
+ * From the homepage: (mobile) opens the burger menu, then clicks "Prijava".
+ * Steps: `${prefix}-otvara-meni` (mobile only), `${prefix}-klik-prijava`.
+ */
+export async function goToLoginViaNav(page, tut, { mobile = false, stepIdPrefix = "login" } = {}) {
+  if (mobile) {
+    await tut.step(`${stepIdPrefix}-otvara-meni`, async () => {
+      await page.locator('.navbar-toggler[data-bs-target="#mainNav"]').click({ timeout: NAV_ACTION_TIMEOUT });
+      await expect(page.locator('#mainNav a[href="/prijava"]')).toBeVisible({ timeout: NAV_ACTION_TIMEOUT });
+    });
+  }
+  await tut.step(`${stepIdPrefix}-klik-prijava`, async () => {
+    await page.locator('a[href="/prijava"]').locator("visible=true").first().click({ timeout: NAV_ACTION_TIMEOUT });
+    await page.waitForLoadState("networkidle");
+  });
+}
+
+/**
+ * Opens the logged-in account menu and clicks one entry (e.g. "Partnerski nalog").
+ * Desktop: account dropdown top-right -> item. Mobile: burger button -> flat
+ * account section at the bottom of the menu (scrolled into view first).
+ * Steps: `${prefix}-otvara-meni`, `${prefix}-bira-stavku`.
+ */
+export async function openAccountMenuItem(page, tut, { mobile = false, href, stepIdPrefix = "portal" }) {
+  const toggle = mobile
+    ? page.locator('.navbar-toggler[data-bs-target="#mainNav"]')
+    : page.locator(".dropdown.d-none.d-lg-block > button.dropdown-toggle");
+  const item = mobile
+    ? page.locator(`#mainNav .d-lg-none a.nav-link[href="${href}"]`)
+    : page.locator(`.dropdown.d-none.d-lg-block a.dropdown-item[href="${href}"]`);
+
+  await tut.step(`${stepIdPrefix}-otvara-meni`, async () => {
+    await toggle.click({ timeout: NAV_ACTION_TIMEOUT });
+    await expect(item).toBeVisible({ timeout: NAV_ACTION_TIMEOUT });
+    if (mobile) await scrollToSmoothly(item);
+  });
+  await tut.step(`${stepIdPrefix}-bira-stavku`, async () => {
+    await item.click({ timeout: NAV_ACTION_TIMEOUT });
+    await page.waitForLoadState("networkidle");
+  });
+}
+
+/** Clicks a tab of the self-service portal: top pills on desktop, fixed bottom bar on a phone. */
+export async function clickPortalTab(page, { mobile = false, label }) {
+  const bar = page.locator(mobile ? ".portal-bottom-nav" : ".portal-desktop-nav");
+  await bar.getByRole("link", { name: label, exact: true }).click({ timeout: NAV_ACTION_TIMEOUT });
+  await page.waitForLoadState("networkidle");
 }

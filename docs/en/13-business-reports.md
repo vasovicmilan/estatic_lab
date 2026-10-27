@@ -8,7 +8,8 @@ Every business report has five sections:
 
 - **Bookings** — total appointments, revenue, the no-show rate, a breakdown by appointment status, and revenue broken down by service and by employee.
 - **Shop** — total orders, revenue, average order value, and best-selling products.
-- **Packages** — how many packages were sold in the period and the revenue from them.
+- **Packages** — how many packages were sold in the period and how the revenue is arrived at: list value (gross) minus the discounts given (coupons / bundle discount) equals the amount collected. Also shown: average package price, a per-package breakdown, sessions sold vs. redeemed in the period, how many purchases used a coupon, and how many were cancelled (cancelled sales are excluded from revenue but listed separately so the difference is visible). A package is recognized in the period it was **sold**; appointments paid from a package carry a price of 0 and add no revenue, so nothing is counted twice. Reports saved before this breakdown existed show only the package count and revenue, with a note saying so.
+- **Total revenue** — the sum of revenue from completed appointments, completed orders and sold packages (enabled modules only), shown at the top of the report, in the email, in the PDF and on the overview.
 - **Commissions** — how much employees and partners earned and how much has already been paid out to them in that period (see `07-employee-compensation.md` and `08-payouts-and-balances.md` for how those figures themselves are calculated).
 - **Coupons** — how many times coupons were redeemed and the total discount given, broken down per coupon.
 
@@ -48,4 +49,4 @@ Every PDF report on the platform (business reports and order confirmations alike
 
 ## Where this all shows up in admin
 
-The business reports landing page (`/admin/poslovni-izvestaji`) shows all five period types live, clearly labeled as such. Each period type has its own history (`/admin/poslovni-izvestaji/istorija/:type`), and every saved period has its own detail page with the full category breakdown and a PDF download button.
+The business reports landing page (`/admin/poslovni-izvestaji`) shows all five period types live, clearly labeled as such. Each period type has its own history (`/admin/poslovni-izvestaji/istorija/:type`), and every saved period has its own detail page with the full category breakdown and a PDF download button. In the history tables you can sort by clicking a column header (period, count and revenue of appointments, orders and packages); the "Total revenue" column is computed, so it is not sortable. The same applies to the log history.

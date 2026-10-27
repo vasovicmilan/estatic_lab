@@ -1,12 +1,23 @@
-import { buildAdminPagination } from "../../../utils/admin-list.util.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+
+export const SORT_MAP = {
+  email: "email",
+  status: "status",
+  prijavljen: "subscribedAt",
+};
+
 export function prepareNewsletterListData(result, query = {}) {
   return {
     items: result.data,
-    columns: [
-      { key: "email", label: "Email" },
-      { key: "status", label: "Status" },
-      { key: "prijavljen", label: "Prijavljen" },
-    ],
+    columns: markSortableColumns(
+      [
+        { key: "email", label: "Email" },
+        { key: "status", label: "Status" },
+        { key: "prijavljen", label: "Prijavljen" },
+      ],
+      SORT_MAP
+    ),
+    sort: buildSortState(query, SORT_MAP),
     actions: [
       { type: "view", url: "/admin/newsletter/detalji/", icon: "eye" },
       { type: "delete", url: "/admin/newsletter/", icon: "trash" },

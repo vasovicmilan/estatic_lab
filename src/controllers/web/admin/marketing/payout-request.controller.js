@@ -3,7 +3,9 @@ import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import {
   preparePayoutRequestListData,
   preparePayoutRequestDetailsData,
+  SORT_MAP,
 } from "../../../../presenters/admin/marketing/payout-request.presenter.js";
+import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
 import { logError, logInfo, logWarn } from "../../../../utils/logger.util.js";
 import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import auditLogService from "../../../../services/audit-log.service.js";
@@ -21,6 +23,7 @@ export async function listPayoutRequests(req, res, next) {
       },
       page: parseInt(page, 10) || 1,
       limit: resolveAdminLimit(limit),
+      sort: resolveAdminSort(req.query, SORT_MAP),
     });
 
     const viewData = preparePayoutRequestListData(result, req.query);

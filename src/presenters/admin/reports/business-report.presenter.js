@@ -1,5 +1,21 @@
 import { formatMoney } from "../../../utils/price.util.js";
-import { buildAdminPagination } from "../../../utils/admin-list.util.js";
+import { buildAdminPagination, markSortableColumns, buildSortState } from "../../../utils/admin-list.util.js";
+import { getReportTotals, getPackageBreakdown } from "../../../utils/business-report-totals.util.js";
+import { FEATURES } from "../../../config/features.config.js";
+
+// History table columns -> stored scalar fields on BusinessReportSummary. The
+// combined "Ukupan prihod" column is derived (appointments + shop + packages),
+// not a stored field, so it is displayed but not sortable. Same fields as
+// api/v1 admin-ops.controller's BUSINESS_REPORT_SORT_FIELDS.
+export const SORT_MAP = {
+  period: "periodKey",
+  terminaUkupno: "appointments.total",
+  prihodTermina: "appointments.revenue",
+  porudzbinaUkupno: "orders.total",
+  prihodPorudzbina: "orders.revenue",
+  paketaUkupno: "packages.totalPurchased",
+  prihodPaketa: "packages.revenue",
+};
 
 const PERIOD_LABELS = {
   daily: "Dnevni",
@@ -10,6 +26,36 @@ const PERIOD_LABELS = {
 };
 
 const PERIOD_TYPES = ["daily", "weekly", "monthly", "quarterly", "yearly"];
+
+function formatPackagesForDisplay(packages) {
+  const p = getPackageBreakdown(packages);
+  return {
+    totalPurchased: p.totalPurchased,
+    revenue: formatMoney(p.revenue),
+    grossValue: formatMoney(p.grossValue),
+    discountTotal: formatMoney(p.discountTotal),
+    couponPurchases: p.couponPurchases,
+    sessionsSold: p.sessionsSold,
+    sessionsRedeemed: p.sessionsRedeemed,
+    cancelledCount: p.cancelledCount,
+    cancelledValue: formatMoney(p.cancelledValue),
+    avgPrice: formatMoney(p.avgPrice),
+    byPackage: p.byPackage.map((r) => ({ ...r, value: formatMoney(r.value) })),
+    // false for summaries saved before the breakdown existed - the view then says
+    // so instead of showing a misleading "0 discount" line
+    hasBreakdown: p.hasBreakdown,
+  };
+}
+
+function formatTotalsForDisplay(summary) {
+  const totals = getReportTotals(summary, FEATURES);
+  return {
+    appointments: formatMoney(totals.appointments),
+    orders: formatMoney(totals.orders),
+    packages: formatMoney(totals.packages),
+    total: formatMoney(totals.total),
+  };
+}
 
 function formatSummaryForDisplay(summary) {
   if (!summary) return null;
@@ -31,10 +77,8 @@ function formatSummaryForDisplay(summary) {
       avgOrderValue: formatMoney(summary.orders.avgOrderValue),
       byProduct: (summary.orders.byProduct || []).map((r) => ({ ...r, value: formatMoney(r.value) })),
     },
-    packages: {
-      ...summary.packages,
-      revenue: formatMoney(summary.packages.revenue),
-    },
+    packages: formatPackagesForDisplay(summary.packages),
+    totals: formatTotalsForDisplay(summary),
     commissions: {
       employeeEarned: formatMoney(summary.commissions.employeeEarned),
       employeePaid: formatMoney(summary.commissions.employeePaid),
@@ -72,16 +116,37 @@ export function prepareBusinessReportDashboardData(summariesByType) {
   };
 }
 
+// Which module each history column belongs to - a deployment without the shop
+// has no "Porudžbina" columns, one without booking has no appointments/packages
+// (same gating as the detail page and the email/PDF).
+const HISTORY_COLUMNS = [
+  { key: "period", label: "Period", feature: null },
+  { key: "terminaUkupno", label: "Termina", feature: "booking" },
+  { key: "prihodTermina", label: "Prihod termina", feature: "booking" },
+  { key: "porudzbinaUkupno", label: "Porudžbina", feature: "shop" },
+  { key: "prihodPorudzbina", label: "Prihod prodavnice", feature: "shop" },
+  { key: "paketaUkupno", label: "Prodato paketa", feature: "booking" },
+  { key: "prihodPaketa", label: "Prihod paketa", feature: "booking" },
+  { key: "ukupanPrihod", label: "Ukupan prihod", feature: null },
+];
+
 export function prepareBusinessReportHistoryData(periodType, result, query = {}) {
+  const visibleColumns = HISTORY_COLUMNS.filter((c) => !c.feature || FEATURES[c.feature]).map(({ key, label }) => ({ key, label }));
+
   return {
     periodType,
     periodLabel: PERIOD_LABELS[periodType] || periodType,
+    columns: markSortableColumns(visibleColumns, SORT_MAP),
+    sort: buildSortState(query, SORT_MAP),
     items: result.data.map((s) => ({
       periodKey: s.periodKey,
       terminaUkupno: s.appointments?.total ?? 0,
       prihodTermina: formatMoney(s.appointments?.revenue ?? 0),
       porudzbinaUkupno: s.orders?.total ?? 0,
       prihodPorudzbina: formatMoney(s.orders?.revenue ?? 0),
+      paketaUkupno: s.packages?.totalPurchased ?? 0,
+      prihodPaketa: formatMoney(s.packages?.revenue ?? 0),
+      ukupanPrihod: formatMoney(getReportTotals(s, FEATURES).total),
       detailUrl: `/admin/poslovni-izvestaji/istorija/${periodType}/${s.periodKey}`,
     })),
     pagination: buildAdminPagination(result, { basePath: `/admin/poslovni-izvestaji/istorija/${periodType}`, query }),

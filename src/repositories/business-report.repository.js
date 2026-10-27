@@ -9,10 +9,21 @@ import Coupon from "../models/coupon.model.js";
 const TOP_N = 10; // cap on byService/byEmployee/byProduct/byCoupon breakdown lists
 
 export async function aggregateAppointments(periodStart, periodEnd) {
-  const [byStatus, byService, byEmployee] = await Promise.all([
+  const [byStatus, revenueAgg, byService, byEmployee] = await Promise.all([
     Appointment.aggregate([
       { $match: { startTime: { $gte: periodStart, $lt: periodEnd } } },
       { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]),
+    // The period's TOTAL revenue has to come from its own un-limited sum. It used
+    // to be derived by adding up the byService rows below, but those are capped at
+    // TOP_N (10) - any period with more than 10 distinct service variants silently
+    // under-reported its revenue by whatever the 11th+ variants earned.
+    // Package-paid appointments are stored with finalPrice 0 (the money was booked
+    // when the package was sold - see aggregatePackages), so they add nothing here
+    // and nothing is counted twice.
+    Appointment.aggregate([
+      { $match: { startTime: { $gte: periodStart, $lt: periodEnd }, status: "completed" } },
+      { $group: { _id: null, revenue: { $sum: "$finalPrice" } } },
     ]),
     Appointment.aggregate([
       { $match: { startTime: { $gte: periodStart, $lt: periodEnd }, status: "completed" } },
@@ -43,7 +54,7 @@ export async function aggregateAppointments(periodStart, periodEnd) {
   const completedCount = byStatus.find((r) => r._id === "completed")?.count || 0;
   const noShowCount = byStatus.find((r) => r._id === "no_show")?.count || 0;
   const settledCount = completedCount + noShowCount; // no-show rate is meaningless against pending/future appointments
-  const revenue = byService.reduce((sum, row) => sum + (row.value || 0), 0);
+  const revenue = revenueAgg[0]?.revenue || 0;
 
   return {
     total,
@@ -85,12 +96,73 @@ export async function aggregateOrders(periodStart, periodEnd) {
   };
 }
 
+/**
+ * The package "calculation" for a period. A package is paid for up-front, so its
+ * money is recognized here, in the period it was SOLD (cash basis) - the
+ * appointments later booked against it are stored with finalPrice 0 and so never
+ * add to appointments.revenue (no double counting). What the report shows:
+ *
+ *   grossValue (sum of originalPrice - the list price of what was sold)
+ *   - discountTotal (sum of discountApplied - coupon / bundle discount given)
+ *   = revenue (sum of pricePaid - what was actually collected)
+ *
+ * Cancelled purchases are left out of all of the above (the sale was undone) and
+ * reported on their own (cancelledCount / cancelledValue) so the reduction is
+ * visible instead of silently missing. sessionsRedeemed is how many package
+ * sessions were actually delivered (completed appointments paid from a package)
+ * in the period - a different question from what was sold in it.
+ */
 export async function aggregatePackages(periodStart, periodEnd) {
-  const agg = await PackagePurchase.aggregate([
-    { $match: { createdAt: { $gte: periodStart, $lt: periodEnd }, status: { $ne: "cancelled" } } },
-    { $group: { _id: null, total: { $sum: 1 }, revenue: { $sum: "$pricePaid" } } },
+  const soldInPeriod = { createdAt: { $gte: periodStart, $lt: periodEnd } };
+
+  const [totalsAgg, cancelledAgg, byPackage, redeemedAgg] = await Promise.all([
+    PackagePurchase.aggregate([
+      { $match: { ...soldInPeriod, status: { $ne: "cancelled" } } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          revenue: { $sum: "$pricePaid" },
+          grossValue: { $sum: "$originalPrice" },
+          discountTotal: { $sum: "$discountApplied" },
+          // `$gt: [x, null]` is true only for a real value - it is false for both null and a missing field
+          couponPurchases: { $sum: { $cond: [{ $gt: ["$coupon", null] }, 1, 0] } },
+          sessionsSold: { $sum: { $sum: "$items.sessionsTotal" } },
+        },
+      },
+    ]),
+    PackagePurchase.aggregate([
+      { $match: { ...soldInPeriod, status: "cancelled" } },
+      { $group: { _id: null, count: { $sum: 1 }, value: { $sum: "$pricePaid" } } },
+    ]),
+    PackagePurchase.aggregate([
+      { $match: { ...soldInPeriod, status: { $ne: "cancelled" } } },
+      { $group: { _id: "$package", count: { $sum: 1 }, value: { $sum: "$pricePaid" } } },
+      { $sort: { value: -1, count: -1 } },
+      { $limit: TOP_N },
+      { $lookup: { from: "packages", localField: "_id", foreignField: "_id", as: "packageDoc" } },
+      { $unwind: { path: "$packageDoc", preserveNullAndEmptyArrays: true } },
+      { $project: { count: 1, value: 1, name: "$packageDoc.name" } },
+    ]),
+    Appointment.aggregate([
+      { $match: { startTime: { $gte: periodStart, $lt: periodEnd }, status: "completed", packagePurchase: { $ne: null } } },
+      { $group: { _id: null, count: { $sum: 1 } } },
+    ]),
   ]);
-  return { totalPurchased: agg[0]?.total || 0, revenue: agg[0]?.revenue || 0 };
+
+  const totals = totalsAgg[0] || {};
+  return {
+    totalPurchased: totals.total || 0,
+    revenue: totals.revenue || 0,
+    grossValue: totals.grossValue || 0,
+    discountTotal: totals.discountTotal || 0,
+    couponPurchases: totals.couponPurchases || 0,
+    sessionsSold: totals.sessionsSold || 0,
+    sessionsRedeemed: redeemedAgg[0]?.count || 0,
+    cancelledCount: cancelledAgg[0]?.count || 0,
+    cancelledValue: cancelledAgg[0]?.value || 0,
+    byPackage: byPackage.map((r) => ({ label: r.name || "Obrisan paket", count: r.count, value: r.value || 0 })),
+  };
 }
 
 export async function aggregateCommissions(periodStart, periodEnd) {

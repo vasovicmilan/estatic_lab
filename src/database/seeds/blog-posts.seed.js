@@ -1736,7 +1736,7 @@ const postDefs = [
       { type: "heading", level: 3, text: "Kako terapeut pristupa problemu" },
       {
         type: "paragraph",
-        text: "Terapeut identifikuje zategnute zone i mišićne čvoriće i radi na njihovom postepenom otpuštanju kroz kombinaciju pritiska i istezanja - tehnika dubinskog rada na mišićima, sporija i ciljanija od relaks masaže. Dostupna je varijanta od 30 minuta (gornji ili donji deo tela) ili 60 minuta (celo telo).",
+        text: "Terapeut identifikuje zategnute zone i mišićne čvoriće i radi na njihovom postepenom otpuštanju kroz kombinaciju pritiska i istezanja - tehnika dubinskog rada na mišićima, sporija i ciljanija od relaks masaže. Dostupna je varijanta od 45 minuta (ciljana zona) ili 60 minuta (celo telo).",
       },
       {
         type: "callout",
@@ -1752,7 +1752,7 @@ const postDefs = [
       {
         type: "serviceReference",
         title: "Terapeutska masaža",
-        text: "Ciljana masaža za hroničnu napetost i mišićne čvoriće - 30 minuta (gornji ili donji deo tela) ili 60 minuta (celo telo).",
+        text: "Ciljana masaža za hroničnu napetost i mišićne čvoriće - 45 minuta (ciljana zona) ili 60 minuta (celo telo).",
         button: { text: "Zakažite terapeutsku masažu", url: "/zakazivanje/terapeutska-masaza" },
       },
       {
@@ -2457,7 +2457,7 @@ const postDefs = [
       },
       {
         type: "paragraph",
-        text: "Sve četiri dolaze u varijanti od 30 minuta (gornji ili donji deo tela) ili 60 minuta (celo telo), tako da možete prilagoditi i vreme i fokus tretmana svom rasporedu.",
+        text: "Relaks, sportska i anticelulit masaža dolaze u varijanti od 30 minuta (gornji ili donji deo tela) ili 60 minuta (celo telo), a terapeutska u varijanti od 45 minuta (ciljana zona) ili 60 minuta (celo telo), tako da možete prilagoditi i vreme i fokus tretmana svom rasporedu.",
       },
       {
         type: "callout",
