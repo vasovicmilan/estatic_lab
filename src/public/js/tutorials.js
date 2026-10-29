@@ -13,6 +13,23 @@
 
   function save() { try { localStorage.setItem("tutorialsPrefs", JSON.stringify(state)); } catch (e) {} }
 
+  var posterObserver = null;
+  function loadPoster(btn) {
+    var url = btn.getAttribute("data-poster-url");
+    if (url) { btn.style.backgroundImage = "url(" + url + ")"; btn.removeAttribute("data-poster-url"); }
+  }
+  function watchPoster(btn) {
+    if (!("IntersectionObserver" in window)) { loadPoster(btn); return; }
+    if (!posterObserver) {
+      posterObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { posterObserver.unobserve(en.target); loadPoster(en.target); }
+        });
+      }, { rootMargin: "200px 0px" });
+    }
+    posterObserver.observe(btn);
+  }
+
   function render() {
     document.querySelectorAll("[data-device-choice]").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-device-choice") === state.device); });
     document.querySelectorAll("[data-lang-choice]").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-lang-choice") === state.lang); });
@@ -56,10 +73,13 @@
         btn.setAttribute("aria-label", "Pusti video");
         btn.innerHTML = '<i class="bi bi-play-circle fs-1" aria-hidden="true"></i>';
         if (card.getAttribute("data-poster-" + device)) {
-          btn.style.backgroundImage = "url(/uputstva/poster/" + encodeURIComponent(id) + "/" + device + ")";
           btn.style.backgroundSize = "contain";
           btn.style.backgroundRepeat = "no-repeat";
           btn.style.backgroundPosition = "center";
+          // the poster is fetched only when its card scrolls near the screen (24 cards must not
+          // fire 24 image requests at once - that trips the Cloudflare rate-limit rule)
+          btn.setAttribute("data-poster-url", "/uputstva/poster/" + encodeURIComponent(id) + "/" + device);
+          watchPoster(btn);
         }
         btn.addEventListener("click", function () {
           var v = document.createElement("video");

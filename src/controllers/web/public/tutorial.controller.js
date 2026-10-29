@@ -45,7 +45,9 @@ function sendTutorialFile(kind) {
 
       res.set("Content-Type", file.contentType);
       // public material may be cached by anyone; role-only material only by the viewer's own browser
-      res.set("Cache-Control", file.audience === "public" ? "public, max-age=3600" : "private, max-age=3600");
+      // posters are small and rarely change: a longer cache means a repeat visit costs no requests at all
+      const maxAge = kind === "poster" ? 86400 : 3600;
+      res.set("Cache-Control", file.audience === "public" ? `public, max-age=${maxAge}` : `private, max-age=${maxAge}`);
       res.set("X-Content-Type-Options", "nosniff");
       // sendFile answers HTTP Range requests, which is what makes seeking in <video> work
       return res.sendFile(file.absPath, { dotfiles: "deny", cacheControl: false }, (err) => {
