@@ -1,4 +1,4 @@
-# Estatic Lab — Indeks Dokumentacije
+# Estetik Lab — Indeks Dokumentacije
 
 Ova dokumentacija je podeljena na fokusirane fajlove, gde svaki pokriva jednu oblast poslovanja od početka do kraja: šta radi, zašto je tako osmišljeno, i kako se delovi uklapaju. Pogledajte indeks ispod da pronađete pravi fajl za ono što vam je potrebno.
 
@@ -21,5 +21,7 @@ Ova dokumentacija je podeljena na fokusirane fajlove, gde svaki pokriva jednu ob
 | `15-api-v1-referenca.md` | JSON API (`/api/v1`) — autentikacija (JWT), autorizacija, oblik odgovora, i kompletan spisak ruta po resursu, sa potrebnom dozvolom za svaku |
 | `16-modularni-feature-flagovi.md` | `ENABLED_MODULES` env promenljiva — kako se blog/shop/booking mogu nezavisno uključiti/isključiti po klijentu, izvedeni flagovi (kuponi/partneri/zaposleni), i šta još nije gejtovano |
 | `17-bekapi.md` | Dnevni lokalni bekap baze i uploadovanih slika/videa — šta je pokriveno, podešavanje servera (`mongodump`/cron), uputstvo za vraćanje, i šta još nedostaje (kopije van servera) |
+| `18-marketing-seo-blog-newsletter.md` | Marketing: SEO (meta, strukturirani podaci, sitemap, robots), AI optimizacija (`llms.txt`), blog i newsletter kampanje, automatski mejlovi, ograničenja |
+| `19-video-uputstva.md` | Video uputstva na `/uputstva`: snimanje, titlovi, objavljivanje, pristup po ulogama, `npm run tutorials:all` |
 
 Svaki fajl je samostalan — nije potrebno da ih čitate po redosledu, iako `06` (partnerski program) koristi pojmove iz `03`, `05` i `07`, `11` se nadovezuje na životni ciklus termina opisan u `02`, a `14` (brisanje) najviše koristi ako već poznajete entitete opisane u `02`, `03` i `04`.

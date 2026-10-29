@@ -104,10 +104,12 @@ Dodatno ponašanje po modulima (pored ruta iz spiska iznad):
 
 **Šta i dalje ostaje po klijentu (nije kod):** `environment.ts` u frontendu (`apiUrl`), `index.html` `<title>`, favicon/logo/`default-og.webp`, Telegram/SMTP/Google promenljive, i lokalno pravni tekstovi.
 
-## Šta NIJE gejtovano — stvaran, imenovan posao koji ostaje
+## Šta nije gejtovano, i SEO/robots provera
 
 **Admin bočni meni** — već gejtovano, videti iznad.
 
-**Strukturirani podaci / SEO metapodaci** — `organization.builder.js` (sajt-wide JSON-LD koji se ubacuje na svaku stranicu preko `locals.config.js`'s `orgJsonLd`) nije proveren za modul-specifična schema.org polja (npr. `Offer`/`Product` blok); vredi proveriti da li se strukturirani podaci za isključen modul i dalje emituju.
+**Strukturirani podaci / SEO metapodaci** — pregledano i usklađeno sa modulima. Podaci o firmi koji se ubacuju na svaku stranicu (`organization.builder.js`) biraju tip prema uključenim modulima (`HealthAndBeautyBusiness` uz zakazivanje, `Store` samo uz prodavnicu, inače `Organization`) i ne objavljuju radno vreme bez zakazivanja. Blokovi sa cenama (`Offer`, `Product`) nastaju tek na stranicama usluga, paketa i proizvoda, a one za isključen modul vraćaju 404, pa ne postoje. Detalji su u `18-marketing-seo-blog-newsletter.md`.
 
-**robots.txt** — nije pregledan za modul-specifična `Disallow` pravila; trenutno ima samo opštu listu iz ranijeg rada (booking-flow state stranice, admin, itd.), ništa još svesno modula.
+**robots.txt** — svestan modula (`buildRobotsTxt` u `seo.controller.js`, pokriven testom `test/unit/controllers/robots.test.js`): pravilo `Disallow: /zakazivanje` postoji samo kad je zakazivanje uključeno, jer na instanci bez njega ta putanja ne postoji i nema šta da se zabranjuje. Ostala pravila (`/admin`, `/nalog`, `/moj-nalog`, `/newsletter/odjava`) važe uvek.
+
+**Šta bi još vredelo (nije posao koji nedostaje, nego provera):** povremeno proveriti ključne stranice spoljnim alatom za strukturirane podatke posle većih izmena.

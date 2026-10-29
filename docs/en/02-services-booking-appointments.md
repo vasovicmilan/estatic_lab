@@ -59,6 +59,23 @@ Rescheduling is governed by how much notice there is before the appointment's *c
 
 Regardless of which tier applies, the newly chosen time always has to be at least 30 minutes from the moment the reschedule is requested — nobody can move an appointment to a time that's already effectively now.
 
+### What is checked at the moment of writing (free / busy)
+
+Rescheduling and reassigning do not trust the dropdown or the view the user saw: the check is repeated **at write time**, as in a new booking. The rows below are one set of rules; the difference is only in what changes.
+
+| Check | Reschedule | Reassign |
+|---|---|---|
+| Salon closed day (holiday, vacation) | yes, **even for an administrator** | not needed (the time does not change) |
+| The employee works at that time (working hours) | yes | yes (for the new employee) |
+| No clash with the employee's other appointments, with a 30-minute gap | yes | yes |
+| **No SrediMe block** at that time (see `11-external-integrations.md`) | **yes** | **yes** |
+| Resource capacity (device, table) | yes | not needed (resources stay the same) |
+| Last defence against simultaneous writes | unique (employee, start) index in the database | — |
+
+These checks apply to **every actor, including the administrator**: they protect data integrity (a double-booked employee or device), not only the customer. The administrator bypasses only the time rules from the table above (the 24h/4h tiers and the 30-minute minimum lead). An appointment that has no assigned employee yet skips the employee checks, but the closed day and resources are still checked.
+
+> **History:** until October 2026 neither rescheduling nor reassigning checked SrediMe blocks at write time (the selection list did), which was a known gap. It is closed and covered by tests (`appointment.service.test.js`).
+
 ## Staff-created appointments
 
 Besides a customer booking themselves through the public booking flow, an administrator (and an employee) can create an appointment directly from the admin panel (`/admin/termini/rucno-kreiranje`) — for walk-in customers who show up without a prior reservation, giveaway/contest prizes, and similar cases where the appointment isn't the result of the customer's own booking.

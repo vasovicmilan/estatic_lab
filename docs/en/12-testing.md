@@ -30,7 +30,13 @@ npx playwright test --list   # just lists which tests exist, doesn't run them
 ## What's covered
 
 ### Unit tests
-Over 2100 tests under `test/unit/`, organized by service/mapper/repository/validator. The most financially sensitive services — `commission.service.js`, `payout-request.service.js`, `resource.service.js` — are at 100% line and function coverage.
+Unit and integration tests together: **3,228 tests in 1,112 suites** (last known state; `npm test` gives the exact number). Unit tests live under `test/unit/`, organized by service/mapper/repository/validator. The most financially sensitive services — `commission.service.js`, `payout-request.service.js`, `resource.service.js` — are at 100% line and function coverage.
+
+### Free-slot check on change (SrediMe)
+`appointment.service.test.js` covers both rescheduling and reassigning: a SrediMe block, an overlap with the employee's own appointment, and a free slot that is written normally. See `02-services-booking-appointments.md`.
+
+### Tutorials (a separate Playwright suite)
+Besides the 25 E2E tests there is `playwright.tutorials.config.js` with 41 scenarios that record the video tutorials. It is not part of `npm test` or `npx playwright test`; it runs with `npm run tutorials:all`. See `19-video-tutorials.md`.
 
 ### E2E tests
 25 tests under `test/e2e/`, by business flow:

@@ -3,8 +3,8 @@
 This document explains exactly what happens when anything gets deleted in the
 system - what blocks a delete, what gets auto-cleaned, and what's deliberately
 left alone. Written directly from the source code (`src/services/*.service.js`),
-confirmed by unit and integration tests (`npm run test:coverage` - 2511 tests,
-901 suites, all passing).
+confirmed by unit and integration tests (`npm run test:coverage`, all passing; the current
+count is in `12-testing.md`).
 
 There's no single universal "delete and clean up everything" rule - every kind
 of relationship between entities belongs to one of four strictness tiers,
@@ -204,8 +204,8 @@ for financial/tax reasons).
 
 ## Test coverage
 
-From `npm run test:coverage` (unit + integration): **2511 tests, 901 suites, 0
-failures**, overall line coverage **82.21%**. Every scenario in this document
+From `npm run test:coverage` (unit + integration): **0 failures** (total count: `12-testing.md`),
+line coverage was last measured at about **82%**. Every scenario in this document
 has a corresponding service-level test (`*.service.test.js`) that verifies
 exactly the behavior described here, including the "aborts the whole
 transaction and never reaches the terminal delete when a cleanup step fails"

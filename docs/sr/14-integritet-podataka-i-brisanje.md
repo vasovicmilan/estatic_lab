@@ -3,8 +3,8 @@
 Ovaj dokument objašnjava šta se tačno dešava kada se bilo šta obriše u sistemu -
 šta blokira brisanje, šta se automatski čisti, i šta se namerno ne dira. Napisan
 je direktno iz izvornog koda (`src/services/*.service.js`), potvrđeno unit i
-integracionim testovima (`npm run test:coverage` - 2511 testova, 901 suite, svi
-prolaze).
+integracionim testovima (`npm run test:coverage`, svi testovi prolaze; trenutni broj
+vidi u `12-testiranje.md`).
 
 Ne postoji jedno univerzalno pravilo "briši i počisti sve" - svaki tip veze
 između entiteta pripada jednom od četiri nivoa strogosti, u zavisnosti od toga
@@ -195,8 +195,8 @@ poreskih razloga).
 
 ## Testna pokrivenost
 
-Iz `npm run test:coverage` (unit + integration): **2511 testova, 901 suite, 0
-neuspešnih**, ukupna pokrivenost linija **82.21%**. Svaki scenario u ovom
+Iz `npm run test:coverage` (unit + integration): **0 neuspešnih** (ukupan broj testova: `12-testiranje.md`),
+pokrivenost linija je poslednji put merena na oko **82%**. Svaki scenario u ovom
 dokumentu ima odgovarajući test na service nivou (`*.service.test.js`) koji
 proverava tačno ponašanje opisano ovde, uključujući i "aborts the whole
 transaction and never reaches the terminal delete when a cleanup step fails"

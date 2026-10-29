@@ -2,7 +2,7 @@
 
 This document systematically walks through every business domain of the platform: what the real business problem was, which approach was chosen (and why, including alternatives that were considered and rejected), and exactly how the solution was implemented. The goal is a reference you can come back to for any part of the system without having to reconstruct the reasoning from the code.
 
-The order follows the natural flow of the business: first who's allowed to do what (users and roles), then what's sold and how (services, appointments, packages, the shop), then how that gets paid for and discounted (coupons), then who earns from it besides the business itself (partners, employees, payouts), then how the system connects to the outside world (Google Calendar, SrediMe) and communicates with people (notifications), and finally how all of it stays visible, secure, and verified (admin, logs, tests).
+The order follows the natural flow of the business: first who's allowed to do what (users and roles), then what's sold and how (services, appointments, packages, the shop), then how that gets paid for and discounted (coupons), then who earns from it besides the business itself (partners, employees, payouts), then how the system connects to the outside world (Google Calendar, SrediMe) and communicates with people (notifications), and finally how all of it stays visible, secure, and verified (admin, logs, tests), how the business gets found and brings customers back (marketing), and how the system teaches itself (video tutorials).
 
 ---
 
@@ -248,7 +248,7 @@ Partner commission and employee commission on the same package stay completely i
 
 **Direction 2 (SrediMe → platform):** Every employee can have their own **SrediMe ICS URL** (a link SrediMe generates to export their bookings). A cron job checks that feed **every 15 minutes** and caches whatever appointments it finds as "busy" blocks, matched against previous checks (a reschedule updates the existing entry), automatically removed when a booking disappears from the feed (a cancellation on SrediMe's side). These cached blocks are treated **exactly the same** as the platform's own appointments in two places: when showing available slots to a customer, and again as a final check **at the moment** of actually confirming a new booking (since the view the customer saw could be a few minutes stale).
 
-A known, narrow limitation: when reassigning or rescheduling an **existing** appointment, the employee dropdown filters against the same SrediMe blocks, but the write itself for those two actions doesn't re-check them the same way a fresh booking does. Worth closing in the future.
+Both **rescheduling and reassigning** an existing appointment re-check the SrediMe blocks at the moment of writing, exactly as a fresh booking does (the employee dropdown is filtered by them too, but a list can be stale and an API call never sees it). This used to be a known gap and was closed in October 2026, with tests.
 
 Periodic checking (instead of an instant notification from SrediMe) is a deliberate tradeoff: a much simpler and more resilient implementation, at the cost of a window of up to 15 minutes of delay.
 
@@ -280,7 +280,7 @@ Periodic checking (instead of an instant notification from SrediMe) is a deliber
 
 **Business challenge.** The homepage's headline image (hero), the booking rules, and the currency were hardcoded in the code: every change required a code change and a redeploy, even though these are content and business decisions, not technical ones.
 
-**Approach.** A new, dedicated, admin-editable `SiteSettings` model (a singleton document), deliberately **separate** from `business.config.js`, which stays a static, code-defined source of truth for the business's identity (name, address, hours).
+**Approach.** A new, dedicated, admin-editable `SiteSettings` model (a singleton document), deliberately **separate** from `business.config.js`, which stays the code-defined default for the business's identity (name, address); once an admin saves the business data, the database values win.
 
 **Why this approach.** `business.config.js` is deliberately static, since a change to the business's identity (address, name) is rare and, by nature, closer to code and deployment. The hero image, booking policy, and currency, on the other hand, are content and business decisions that genuinely change without any technical intervention, and by an administrator with no technical background.
 
@@ -288,10 +288,14 @@ Periodic checking (instead of an instant notification from SrediMe) is a deliber
 - **Hero image**: the homepage's headline image, with an upload flow using the same mechanism as the rest of the catalog. If it's never been set by hand, the code's default image is used instead.
 - **Booking policy**: the gap between appointments, the slot grid step, the self-cancellation cutoff, the reschedule thresholds (see section 2). Used to be hardcoded, now admin-editable.
 - **Currency**: code, display symbol, and symbol position. Only controls how a price is displayed (e.g. "2500 RSD" vs. "€2500"); it doesn't change the underlying data or convert between currencies.
+- **Salon working hours and closed days**: a fixed weekly schedule (also published as opening hours in the structured data) and closed dates (holidays, vacations, optionally recurring yearly). A closed day blocks booking and rescheduling for everyone, administrators included.
+- **Commission policy**: the minimum commission per session (see section 9).
+- **Business data**: name, legal name, contact, tax id, registration number, address, social links.
+- **Shop policy**: the default shipping price and the commission grace period on orders.
+- **Site texts** (a second singleton, `SiteContent`, at `/admin/sajt/sadrzaj`): about, FAQ, privacy policy, terms, partner program, home hero and intro, contact page, page intros, and the SEO title/description of 13 pages (see section 18).
 
 Changes take effect immediately. The system keeps the current values in memory (`runtime-settings.cache.js`) and refreshes them the moment a change is saved, instead of reading the database on every single request.
 
-Built to grow later (e.g. an "about us" page's content) without needing a new model.
 
 ---
 
@@ -355,8 +359,42 @@ Built to grow later (e.g. an "about us" page's content) without needing a new mo
 **Why all three, not just one.** A unit test proves a commission calculation produces the right number. An integration test proves an HTTP request with bad data returns the right status code (not a 500 where a 400 belongs, or the reverse, a silently swallowed error). An E2E test proves a customer *can actually* complete a purchase start to finish through the real form, including things only a browser does (hidden fields, JS widgets, session cookies).
 
 **Current state (latest run, fully green):**
-- **2,224 of 2,224** unit and integration tests pass, with the most financially sensitive services (`commission.service.js`, `payout-request.service.js`, `resource.service.js`) at 100% line and function coverage.
+- **3,228 of 3,228** unit and integration tests pass (1,112 suites), with the most financially sensitive services (`commission.service.js`, `payout-request.service.js`, `resource.service.js`) at 100% line and function coverage. Line coverage overall was last measured at about 82% (`npm run test:coverage` gives the exact current figure).
 - **25 of 25** E2E tests pass, one or more per key business flow start to finish: booking with commission, a coupon with a distinct discount for items, cancellation with stock restored, a full payout cycle, and (added after the section 9 bug was found) an employee's commission on a package, both with and without a partner referral code, and so on.
+
+---
+
+## 18. Marketing: SEO, blog, AI optimization and email campaigns
+
+**Business challenge.** A booking and shop platform is worth little if nobody finds it, and a customer who bought once rarely comes back on their own. Visibility and return visits had to be built in, not bolted on, and without adding a person who maintains meta tags by hand.
+
+**Approach.** Everything marketing-related is **derived from the same data the site runs on**: titles, canonical addresses, structured data, `sitemap.xml`, `robots.txt` and `llms.txt` are generated from the catalog and the enabled modules; the blog and the newsletter use one block editor; and the emails that bring customers back are automatic jobs with explicit limits.
+
+**Why this approach.** Hand-written SEO goes stale the day the catalog changes. Generated SEO cannot disagree with the catalog, and a disabled module disappears from the sitemap, `llms.txt` and `robots.txt` by itself.
+
+**How it was solved.**
+- **SEO:** per-page title, description, canonical, Open Graph/Twitter cards and JSON-LD (business with opening hours, services with one offer per variant, products/packages, blog posts, FAQ, breadcrumbs). Ratings sit on the business inside the service because search only shows stars for certain types. Old addresses are kept alive with 301 redirects, or 410 for removed content. Pages with personal state (booking steps, search results) are `noindex` and disallowed in `robots.txt`.
+- **AI SEO:** a generated `/llms.txt`, the same structured data, FAQ in a quotable form and a `robots.txt` that blocks no crawler. Honest limit: nothing measures whether assistants cite the site.
+- **Blog:** draft/scheduled/published/archived with a 5-minute publishing job, block editor with FAQ blocks, automatic reading time, required cover image, per-post SEO fields.
+- **Newsletter:** interest segments, proof of consent (`consentedAt`, written once), one-click unsubscribe, scheduled campaigns with an atomic claim so nothing is sent twice, and no automatic retry of a failed send.
+- **Automatic emails:** a welcome coupon (`DOBRODOSLI10`) and a two-step cart reminder (24h plain, 72h with `VRATISE10`), with a 90-day pause between discount offers.
+- **Limits:** no open/click statistics, sending one by one, no double opt-in email, AI effect not measured.
+
+Full detail: `docs/en/18-marketing-seo-blog-newsletter.md`.
+
+---
+
+## 19. Video tutorials ("Educational corner")
+
+**Business challenge.** Staff, partners and customers need to learn where to click, and a written manual goes stale with every screen change.
+
+**Approach.** The system **records its own tutorials** through a real browser (Playwright), in a computer and a phone version, merges the actors' recordings, burns subtitles in and publishes only the finished videos. The application serves them on `/uputstva`, each visitor seeing only the audience they belong to (guest, user, partner, employee, administrator; the administrator sees all).
+
+**Why this approach.** Recorded by the system, a tutorial is rebuilt with one command when a screen changes. Served through role-checked routes instead of a static folder, an administrator tutorial cannot leak to someone who merely guesses the address.
+
+**How it was solved.** `npm run tutorials:all` (first full run: 1 h 38 min for 41 recordings), `e2e-tutorials/audience.json` for who sees what, a manifest and a service that checks access for every file, `Range` support for seeking, and `private` caching for role-only videos. Not yet done: phone versions for employees and administrators, and the remaining administrator scenarios.
+
+Full detail: `docs/en/19-video-tutorials.md` and `e2e-tutorials/README.md`.
 
 ---
 
@@ -383,7 +421,8 @@ Users/Roles (1)
 
 External integrations (11) <-- builds on the appointment lifecycle (2)
 Notifications (12) <-- follow nearly every event from (2)-(10)
-Site content (13), Admin/Logs (14), JSON API (15), Security (16), Testing (17): run through all of the above
+Marketing (18) <-- uses the catalog (2)/(5)/(6), coupons (7), notifications (12), site content (13)
+Site content (13), Admin/Logs (14), JSON API (15), Security (16), Testing (17), Video tutorials (19): run through all of the above
 ```
 
 ---

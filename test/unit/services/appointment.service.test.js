@@ -7,6 +7,7 @@ import serviceService from "../../../src/services/service.service.js";
 import availabilityService from "../../../src/services/availability.service.js";
 import couponService from "../../../src/services/coupon.service.js";
 import employeeService from "../../../src/services/employee.service.js";
+import externalBusyIntervalService from "../../../src/services/external-busy-interval.service.js";
 import packagePurchaseService from "../../../src/services/package-purchase.service.js";
 import * as appointmentService from "../../../src/services/appointment.service.js";
 import { zonedInputToUtcDate } from "../../../src/utils/date.time.util.js";
@@ -203,12 +204,29 @@ describe("appointment.service", () => {
       );
     });
 
+    it("refuses to reassign to an employee who has a SrediMe (external) block at that time, even though no appointment of ours overlaps", async (t) => {
+      const appointment = buildAppointment();
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      t.mock.method(employeeService, "getEmployeeByIdRaw", async () => buildEmployee({ workingHours: alwaysWorking }));
+      t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+      t.mock.method(externalBusyIntervalService, "hasOverlappingExternalInterval", async () => true);
+      t.mock.method(appointmentRepo, "updateAppointmentById", async () => {
+        throw new Error("must not write - the SrediMe check has to reject first");
+      });
+
+      await assert.rejects(
+        () => appointmentService.reassignAppointment(appointment._id.toString(), id().toString(), id().toString()),
+        (err) => err.statusCode === 400 && /SrediMe/.test(err.message)
+      );
+    });
+
     it("reassigns successfully when the new employee is free and on shift", async (t) => {
       const appointment = buildAppointment();
       const newEmployeeId = id();
       t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
       t.mock.method(employeeService, "getEmployeeByIdRaw", async () => buildEmployee({ _id: newEmployeeId, workingHours: alwaysWorking }));
       t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => []);
+      t.mock.method(externalBusyIntervalService, "hasOverlappingExternalInterval", async () => false);
       t.mock.method(employeeService, "getEmployeeNameById", async () => "Nova Terapeutkinja");
       let updatePayload;
       t.mock.method(appointmentRepo, "updateAppointmentById", async (appId, patch) => {
@@ -289,6 +307,50 @@ describe("appointment.service", () => {
         () => appointmentService.rescheduleAppointment(appointment._id.toString(), almostNow, employeeActorId, "employee"),
         (err) => err.statusCode === 400
       );
+    });
+
+    describe("with an assigned employee (availability of the NEW window)", () => {
+      function withEmployee(t, { external, own = [] }) {
+        const employeeId = id();
+        const appointment = buildAppointment({ employee: employeeId, resources: [], status: "pending", startTime: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
+        t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+        t.mock.method(employeeService, "getEmployeeByIdRaw", async () => buildEmployee({ _id: employeeId, workingHours: alwaysWorking }));
+        t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => own);
+        t.mock.method(externalBusyIntervalService, "hasOverlappingExternalInterval", async () => external);
+        return appointment;
+      }
+
+      it("rejects a move onto a window where the employee has a SrediMe (external) block", async (t) => {
+        const appointment = withEmployee(t, { external: true });
+        t.mock.method(appointmentRepo, "updateAppointmentById", async () => {
+          throw new Error("must not write - the SrediMe check has to reject first");
+        });
+
+        await assert.rejects(
+          () => appointmentService.rescheduleAppointment(appointment._id.toString(), "2027-06-15T14:00", id().toString(), "admin"),
+          (err) => err.statusCode === 400 && /SrediMe/.test(err.message)
+        );
+      });
+
+      it("rejects a move onto a window that overlaps another appointment of the same employee", async (t) => {
+        const appointment = withEmployee(t, { external: false, own: [buildAppointment()] });
+        await assert.rejects(
+          () => appointmentService.rescheduleAppointment(appointment._id.toString(), "2027-06-15T14:00", id().toString(), "admin"),
+          (err) => err.statusCode === 400
+        );
+      });
+
+      it("moves normally when the employee is working and free (no own overlap, no SrediMe block)", async (t) => {
+        const appointment = withEmployee(t, { external: false });
+        let updatePayload;
+        t.mock.method(appointmentRepo, "updateAppointmentById", async (appId, patch) => {
+          updatePayload = patch;
+          return { ...appointment, ...patch };
+        });
+
+        await appointmentService.rescheduleAppointment(appointment._id.toString(), "2027-06-15T14:00", id().toString(), "admin");
+        assert.equal(updatePayload.startTime.toISOString(), zonedInputToUtcDate("2027-06-15T14:00").toISOString());
+      });
     });
   });
 });

@@ -5,6 +5,7 @@ import userService from "./user.service.js";
 import serviceService from "./service.service.js";
 import couponService from "./coupon.service.js";
 import availabilityService from "./availability.service.js";
+import externalBusyIntervalService from "./external-busy-interval.service.js";
 import employeeService from "./employee.service.js";
 import resourceService from "./resource.service.js";
 import packagePurchaseService from "./package-purchase.service.js";
@@ -694,6 +695,14 @@ export async function reassignAppointment(appointmentId, newEmployeeId, actorId)
   const overlapping = await appointmentRepo.findOverlappingAppointments(newEmployeeId, appointment.startTime, appointment.endTime, appointmentId);
   if (overlapping.length > 0) badRequest("Izabrani terapeut nije dostupan u ovom terminu");
 
+  // The dropdown the admin picks from (availability.service.js's
+  // getEligibleEmployeeIdsForAppointment) already hides anyone with a SrediMe block at
+  // this time, but that list can be stale by the time the form is submitted and an API
+  // caller never sees it at all - so the write itself re-checks, same as a fresh booking does.
+  if (await externalBusyIntervalService.hasOverlappingExternalInterval(newEmployeeId, appointment.startTime, appointment.endTime)) {
+    badRequest("Izabrani terapeut ima zauzet termin u SrediMe kalendaru u ovom terminu");
+  }
+
   // Reassigning WHO performs the appointment doesn't change WHAT resources it
   // occupies (still the same appointment, same time, same service) - so no
   // resource-capacity re-check is needed here, only the employee-overlap one
@@ -808,6 +817,14 @@ export async function rescheduleAppointment(appointmentId, newStartTime, actorId
 
     const overlapping = await appointmentRepo.findOverlappingAppointments(appointment.employee, newStart, newEnd, appointmentId);
     if (overlapping.length > 0) badRequest("Izabrano novo vreme više nije dostupno, izaberite drugo");
+
+    // SrediMe (external marketplace) blocks are not appointments of ours, so the overlap
+    // query above can't see them - a fresh booking checks them (availability.service.js
+    // findAvailableEmployees) and so must a move, otherwise rescheduling is a way around
+    // the one check that protects against a SrediMe double-booking.
+    if (await externalBusyIntervalService.hasOverlappingExternalInterval(appointment.employee, newStart, newEnd)) {
+      badRequest("Izabrano novo vreme je zauzeto u SrediMe kalendaru zaposlenog, izaberite drugo");
+    }
   }
 
   for (const { resource } of appointment.resources || []) {

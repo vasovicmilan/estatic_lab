@@ -59,6 +59,23 @@ Pomeranje termina zavisi od toga koliko je vremena ostalo do *trenutnog* početk
 
 Bez obzira na to koji se prag primenjuje, novo izabrano vreme uvek mora biti bar 30 minuta od trenutka kada se pomeranje zahteva — niko ne može da pomeri termin na vreme koje je praktično već sada.
 
+### Šta se proverava pri samom upisu (slobodno/zauzeto)
+
+Pomeranje i preraspodela ne veruju padajućoj listi ni prikazu koji je korisnik video: provera se ponavlja **u trenutku upisa**, kao i pri novom zakazivanju. Redovi ispod su isti skup pravila, a razlika je samo u tome šta se menja.
+
+| Provera | Pomeranje | Preraspodela |
+|---|---|---|
+| Neradni dan salona (praznik, godišnji odmor) | da, **i za administratora** | nije potrebna (vreme se ne menja) |
+| Zaposleni radi u tom terminu (radno vreme) | da | da (za novog zaposlenog) |
+| Nema sudara sa drugim terminima zaposlenog, uz razmak od 30 minuta | da | da |
+| **Nema SrediMe bloka** u tom terminu (vidi `11-eksterne-integracije.md`) | **da** | **da** |
+| Kapacitet resursa (aparat, sto) | da | nije potrebna (resursi ostaju isti) |
+| Poslednja zaštita od istovremenog upisa | jedinstveni indeks (zaposleni, početak) u bazi | — |
+
+Ove provere važe za **sve aktere, uključujući administratora**: štite ispravnost podataka (dvostruko zauzet zaposleni ili aparat), a ne samo klijenta. Administrator zaobilazi samo vremenska pravila iz tabele iznad (prag od 24h/4h i minimum od 30 minuta unapred). Termin koji još nema dodeljenog zaposlenog preskače provere zaposlenog, ali neradni dan i resursi se proveravaju.
+
+> **Istorija:** do oktobra 2026. ni pomeranje ni preraspodela nisu na upisu proveravale SrediMe blokove (lista za izbor jeste), što je bio poznat propust. Zatvoreno je i pokriveno testovima (`appointment.service.test.js`).
+
 ## Ručno kreiranje termina od strane osoblja
 
 Osim što klijent sam zakazuje termin kroz javni tok zakazivanja, administrator (i zaposleni) mogu direktno kreirati termin iz admin panela (`/admin/termini/rucno-kreiranje`) — za walk-in klijente koji dođu bez prethodne rezervacije, poklone, nagrade sa nagradnih igara, i slične slučajeve gde termin nije rezultat klijentovog sopstvenog zakazivanja.

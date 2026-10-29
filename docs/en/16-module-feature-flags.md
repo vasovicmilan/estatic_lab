@@ -73,14 +73,15 @@ API v1, **per-route** inside files that mix modules:
 - `admin-people.routes.js` - employees → `employees`, partners → `partners`; users and experts NOT gated (users are general, experts are deliberately independent of booking, same as `/nas-tim`)
 - `admin-uploads.routes.js` - gated by the `:type` in the URL: `services`/`packages` → `booking`, `products` → `shop`, `posts` → `blog`, `partners` → `partners`; other types NOT gated
 
-## What is NOT gated - real, named work that remains
+## What is not gated, and the SEO/robots check
 
 **Admin panel nav** - already gated, see above.
 
-**Structured data / SEO metadata** - `organization.builder.js` (the site-wide JSON-LD injected on every page via `locals.config.js`'s `orgJsonLd`) hasn't been checked for module-specific schema.org fields (e.g. an `Offer`/`Product` block); worth a look if a disabled module's structured data is still being emitted.
+**Structured data / SEO metadata** - reviewed and aligned with the modules. The business data injected on every page (`organization.builder.js`) picks its type from the enabled modules (`HealthAndBeautyBusiness` with booking, `Store` with the shop only, otherwise `Organization`) and does not publish opening hours without booking. The blocks with prices (`Offer`, `Product`) only arise on service, package and product pages, and those return 404 for a disabled module, so they do not exist. Details are in `18-marketing-seo-blog-newsletter.md`.
 
-**robots.txt** - not reviewed for module-specific `Disallow` rules; currently just has the general disallow list from earlier work (booking-flow state pages, admin, etc.), nothing module-aware yet.
+**robots.txt** - module-aware (`buildRobotsTxt` in `seo.controller.js`, covered by `test/unit/controllers/robots.test.js`): the `Disallow: /zakazivanje` rule exists only when booking is enabled, since on an instance without it that path does not exist and there is nothing to disallow. The other rules (`/admin`, `/nalog`, `/moj-nalog`, `/newsletter/odjava`) always apply.
 
+**What would still be worth doing (not missing work, a check):** occasionally check key pages with an external structured-data tool after bigger changes.
 
 ## New client instance (e.g. shop + blog only): `WHITE_LABEL=true`
 

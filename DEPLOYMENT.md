@@ -52,6 +52,11 @@ Popuni `.env` - videti komentare u samom fajlu za objašnjenje svake promenljive
 - `MONGO_URI` - nova, prazna baza (nikad deljena sa drugim klijentom)
 - `BASE_URL`, `SITE_NAME` - domen i naziv ovog klijenta
 - `SESSION_SECRET`, `JWT_SECRET` - **generiši sveže** po deployment-u, nikad ponovo koristi (`openssl rand -hex 32`)
+- `AES_SECRET` - ključ za šifrovanje osetljivih polja; mora imati **tačno 32 karaktera** (`openssl rand -hex 16`). Ne menjati posle prvog pokretanja, inače se već šifrovani podaci ne mogu pročitati
+- `ENABLED_MODULES` - koji moduli postoje kod ovog klijenta (podskup `blog,shop,booking`; vidi `docs/sr/16-modularni-feature-flagovi.md`)
+- `WHITE_LABEL=true` - za **novog klijenta** (neutralan identitet i početni sadržaj umesto Estetik Lab tekstova); za sam Estetik Lab ostaviti `false`
+- `BIND_HOST=127.0.0.1` i `TRUST_PROXY_HOPS` - vidi odeljak o serveru ispod
+- `BACKUP_DIR` - folder za dnevne bekape (vidi korak 9)
 - SMTP podaci - mailbox ovog klijenta
 - `SUPPORT_EMAIL` - kontakt email ovog klijenta
 
@@ -86,6 +91,10 @@ Uloguj se kao admin i idi na **Admin → Sadržaj i marketing → Sadržaj sajta
 - **Hero slika** - naslovna slika početne strane
 - **Politika zakazivanja** - razmak između termina, korak ponuđenih termina, rok za samostalno otkazivanje, pragovi za pomeranje termina
 - **Valuta** - kod (RSD/EUR/USD...), simbol za prikaz, pozicija simbola
+- **Radno vreme salona i neradni dani** - bez toga je zakazivanje otvoreno po podrazumevanom rasporedu
+- **Provizija i prodavnica** - minimalna provizija, cena dostave, rok čekanja provizije
+- **Podaci o firmi** - naziv, PIB, matični broj, adresa, kontakt, društvene mreže (koriste se i u kontakt stranici i u strukturiranim podacima za pretragu)
+- **Tekstovi sajta** (`/admin/sajt/sadrzaj`) - O nama, FAQ, privatnost, uslovi, partnerski program i **SEO naslov/opis za 13 stranica** (vidi `docs/sr/18-marketing-seo-blog-newsletter.md`)
 
 Izmene ovde su odmah aktivne, bez restart-a servera.
 
@@ -95,14 +104,23 @@ Usluge, paketi, proizvodi, zaposleni, resursi (aparati/stolovi) - sve se unosi k
 
 **Seed skripte u `src/database/seeds/run-*.js` su Estetik Lab-ov sopstveni demo/referentni sadržaj** (blog objave, ESMA katalog usluga, itd.) - korisne kao primer strukture ili za lokalni development, ali se **ne pokreću** za novog klijenta osim ako svesno želiš da preneseš baš taj sadržaj.
 
-## 8. Pravno/sadržajno - ručna izmena (za sada)
+## 8. Pravno i sadržajno: white-label klijent
 
-Sledeće **trenutno zahteva ručnu izmenu koda** pre nego što ide u produkciju za novog klijenta - nije još izvučeno u admin panel (planirano za kasnije, videti internu belešku o white-label planu):
+Sa `WHITE_LABEL=true` aplikacija kreće sa **neutralnim identitetom i početnim tekstovima** (bez Estetik Lab naziva, PIB-a i adrese), a sve se menja kroz admin panel; ručna izmena koda više nije potrebna za tekstove. Šta ipak treba uraditi pre lansiranja:
 
-- Politika privatnosti i Uslovi korišćenja (`src/presenters/public/index.presenter.js`) - sadrže naziv firme, adresu, opis usluga specifičan za Estetik Lab
-- SEO naslovi/opisi razliveni po `index.service.js`, `blog.service.js`, i par kontrolera - svi sadrže "Estetik Lab" direktno u tekstu
-- `src/config/business.config.js` - naziv, adresa, telefon, društvene mreže (koristi se za kontakt stranicu i JSON-LD strukturirane podatke)
-- `BASE_URL` fallback stringovi u par fajlova (`cors.config.js`, `google-calendar.service.js`, `telegram.listener.js`, itd.) - ovo su samo fallback vrednosti ako `.env`-ov `BASE_URL` nedostaje, pa retko stvarno bitno ako je `.env` popunjen ispravno, ali vredi ih uskladiti
+- **Pravni tekstovi** (privatnost, uslovi) u `/admin/sajt/sadrzaj` su početni šabloni. Pre objave ih mora pregledati advokat klijenta; nisu pravni savet.
+- **Podaci o firmi** (naziv, PIB, matični broj, adresa) u `/admin/sajt`. Ako su prazni, strukturirani podaci i kontakt stranica ih izostavljaju.
+- **Slike brenda**: logo, favicon i `default-og.webp` (slika za deljenje na društvenim mrežama) zamene se fajlovima klijenta.
+- **SEO naslovi i opisi** za 13 stranica u `/admin/sajt/sadrzaj`.
+- **Frontend** (ako se koristi poseban Angular klijent): njegov env sa adresom API-ja ovog klijenta.
+- `BASE_URL` mora biti tačan javni domen: iz njega se prave canonical adrese, `sitemap.xml` i `llms.txt`.
+
+Seed skripte (`src/database/seeds/run-*.js`) sadrže Estetik Lab demo sadržaj i ne pokreću se za novog klijenta.
+
+## 9. Bekap i video uputstva
+
+- **Bekap:** podesi cron za `npm run backup:daily` (vidi `docs/sr/17-bekapi.md`). Bekap bez probe vraćanja nije bekap: bar jednom uradi probno vraćanje na drugoj bazi, i razmotri kopiju van servera.
+- **Video uputstva** (`/uputstva`): snimaju se i objavljuju na razvojnoj mašini (`npm run tutorials:all`), a gotovi fajlovi se kopiraju u `storage/tutorials` na serveru ili u folder iz `TUTORIALS_DIR`. Folder mora biti van `src/public` i ne ulazi u git. Bez njega stranica radi, samo su kartice označene kao nedostupne. Vidi `docs/sr/19-video-uputstva.md`.
 
 ## Ažuriranje postojeće produkcije (npr. beautymedica.rs)
 
@@ -143,4 +161,6 @@ npm test              # unit + integration testovi
 npx playwright test   # E2E testovi
 ```
 
-Sve četiri komande treba da prođu bez greške na svežem clone-u pre nego što se deployment smatra spremnim. Bez prve dve, sajt će raditi bez stilova (vidi korak 1.5).
+Sve četiri komande treba da prođu bez greške na svežem clone-u pre nego što se deployment smatra spremnim. Bez prve dve, sajt će raditi bez stilova (vidi korak 1.5). Brojeve testova ne pamti ova stranica: aktuelno stanje je u `docs/sr/12-testiranje.md`.
+
+Posle pokretanja proveri i: `/sitemap.xml`, `/robots.txt` i `/llms.txt` (moraju imati ispravan domen i samo uključene module), probni mejl (SMTP), i da `/admin` traži prijavu.

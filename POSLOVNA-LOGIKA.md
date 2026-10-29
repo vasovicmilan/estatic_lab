@@ -2,7 +2,7 @@
 
 Ovaj dokument sistematski prolazi kroz svaki poslovni domen platforme: koji je bio stvarni poslovni problem, koji pristup je izabran (i zašto, uključujući alternative koje su razmotrene i odbačene), i tačno kako je rešenje implementirano. Cilj je da bude referenca na koju se možeš vratiti za bilo koji deo sistema bez potrebe da rekonstruišeš rezonovanje iz koda.
 
-Redosled prati prirodan tok posla: prvo ko sme šta (korisnici i role), zatim šta se prodaje i kako (usluge, termini, paketi, prodavnica), zatim kako se to plaća i popust primenjuje (kuponi), zatim ko od toga zarađuje pored samog biznisa (partneri, zaposleni, isplate), zatim kako se sistem povezuje sa spoljnim svetom (Google Calendar, SrediMe) i komunicira sa ljudima (notifikacije), i na kraju kako sve to ostaje vidljivo, bezbedno i provereno (admin, logovi, testovi).
+Redosled prati prirodan tok posla: prvo ko sme šta (korisnici i role), zatim šta se prodaje i kako (usluge, termini, paketi, prodavnica), zatim kako se to plaća i popust primenjuje (kuponi), zatim ko od toga zarađuje pored samog biznisa (partneri, zaposleni, isplate), zatim kako se sistem povezuje sa spoljnim svetom (Google Calendar, SrediMe) i komunicira sa ljudima (notifikacije), i na kraju kako sve to ostaje vidljivo, bezbedno i provereno (admin, logovi, testovi), kako se poslovanje pronalazi i vraća klijente (marketing), i kako sistem sam sebe objašnjava (video uputstva).
 
 ---
 
@@ -248,7 +248,7 @@ Partnerska provizija i provizija zaposlenog na istom paketu ostaju potpuno nezav
 
 **Smer 2 (SrediMe → platforma):** Svaki zaposleni može imati poseban **SrediMe ICS URL** (link koji SrediMe generiše za izvoz njihovih zakazivanja). Cron zadatak proverava taj feed **svakih 15 minuta** i kešira pronađene termine kao "zauzete" blokove, uparene sa prethodnim proverama (pomeranje ažurira postojeći unos), automatski uklonjene kad zakazivanje nestane iz feed-a (otkazivanje na SrediMe strani). Ovi keširani blokovi se tretiraju **potpuno isto** kao sopstveni termini platforme na dva mesta: pri prikazu dostupnih termina klijentu, i ponovo kao poslednja provera **u trenutku** stvarnog potvrđivanja novog zakazivanja (jer prikaz koji je klijent video može biti zastareo par minuta).
 
-Poznato, uzano ograničenje: pri preraspodeli ili pomeranju **postojećeg** termina, padajuća lista zaposlenih filtrira po istim SrediMe blokovima, ali sam upis te dve akcije ih ponovo ne proverava na isti način kao novo zakazivanje. Vredi zatvoriti u budućnosti.
+I **pomeranje i preraspodela** postojećeg termina ponovo proveravaju SrediMe blokove u trenutku upisa, isto kao novo zakazivanje (padajuća lista zaposlenih je takođe filtrirana, ali lista može biti zastarela, a API poziv je uopšte ne vidi). Ovo je ranije bio poznat propust, zatvoren u oktobru 2026, uz testove.
 
 Periodična provera (umesto trenutne notifikacije od SrediMe-a) je namerni kompromis: mnogo jednostavnija i otpornija implementacija, po ceni prozora od najviše 15 minuta kašnjenja.
 
@@ -280,7 +280,7 @@ Periodična provera (umesto trenutne notifikacije od SrediMe-a) je namerni kompr
 
 **Poslovni izazov.** Naslovna slika početne strane (hero), pravila zakazivanja, i valuta su bili hardkodovani u kodu: svaka promena zahtevala je izmenu koda i redeploy, iako su to sadržajne i poslovne, ne tehničke odluke.
 
-**Pristup.** Novi, poseban, admin-uređiv `SiteSettings` model (singleton dokument), namerno **odvojen** od `business.config.js` koji ostaje statičan, kod-definisan izvor istine za identitet biznisa (naziv, adresa, radno vreme).
+**Pristup.** Novi, poseban, admin-uređiv `SiteSettings` model (singleton dokument), namerno **odvojen** od `business.config.js` koji ostaje kod-definisana podrazumevana vrednost za identitet biznisa (naziv, adresa); kad admin sačuva podatke o firmi, vrednosti iz baze imaju prednost.
 
 **Zašto ovaj pristup.** `business.config.js` je namerno statičan jer promena identiteta biznisa (adresa, naziv) je retka i po prirodi bliža kodu i deployu. Hero slika, politika zakazivanja, i valuta su, s druge strane, sadržaj i poslovne odluke koje se realno menjaju bez tehničke intervencije, i to od strane administratora bez tehničkog znanja.
 
@@ -288,10 +288,14 @@ Periodična provera (umesto trenutne notifikacije od SrediMe-a) je namerni kompr
 - **Hero slika**: naslovna slika početne strane, sa upload-om koji koristi isti mehanizam kao ostatak kataloga. Ako nikad nije ručno postavljena, koristi se podrazumevana slika iz koda.
 - **Politika zakazivanja**: razmak između termina, korak ponuđenih termina, rok za samostalno otkazivanje, pragovi za pomeranje termina (videti sekciju 2). Ranije hardkodovano, sada admin-uređivo.
 - **Valuta**: kod, simbol za prikaz, i pozicija simbola. Menja samo kako se cena prikazuje (npr. "2500 RSD" naspram "€2500"); ne menja same podatke u bazi niti vrši konverziju valuta.
+- **Radno vreme salona i neradni dani**: stalni nedeljni raspored (objavljuje se i kao radno vreme u strukturiranim podacima) i neradni datumi (praznici, godišnji odmor, opciono svake godine). Neradni dan blokira zakazivanje i pomeranje za sve, uključujući administratore.
+- **Politika provizije**: minimalna provizija po seansi (vidi sekciju 9).
+- **Podaci o firmi**: naziv, pun naziv, kontakt, PIB, matični broj, adresa, društvene mreže.
+- **Politika prodavnice**: podrazumevana cena dostave i rok čekanja provizije na porudžbinama.
+- **Tekstovi sajta** (drugi singleton, `SiteContent`, na `/admin/sajt/sadrzaj`): O nama, FAQ, politika privatnosti, uslovi, partnerski program, hero i uvod početne, kontakt stranica, uvodi stranica i SEO naslov/opis za 13 stranica (vidi sekciju 18).
 
 Izmene su odmah aktivne. Sistem drži trenutne vrednosti u memoriji (`runtime-settings.cache.js`) i osvežava ih čim se sačuva izmena, umesto da čita bazu na svaki pojedinačni zahtev.
 
-Spremno da se u budućnosti proširi (npr. sadržaj stranice "O nama") bez potrebe za novim modelom.
 
 ---
 
@@ -355,8 +359,42 @@ Spremno da se u budućnosti proširi (npr. sadržaj stranice "O nama") bez potre
 **Zašto sva tri, ne samo jedan.** Jedinični test dokazuje da obračun provizije daje tačan broj. Integracioni dokazuje da HTTP zahtev sa pogrešnim podacima vrati tačan status kod (a ne 500 gde treba 400, ili obrnuto, tiho progutana greška). E2E dokazuje da klijent *stvarno može* da završi kupovinu od početka do kraja kroz pravu formu, uključujući stvari koje samo pregledač radi (skrivena polja, JS vidžeti, sesijski kolačići).
 
 **Trenutno stanje (poslednje pokretanje, potpuno zeleno):**
-- **2224 od 2224** jedinična i integraciona testa prolaze, sa finansijski najosetljivijim servisima (`commission.service.js`, `payout-request.service.js`, `resource.service.js`) na 100% pokrivenosti linija i funkcija.
+- **3228 od 3228** jediničnih i integracionih testova prolazi (1112 grupa), sa finansijski najosetljivijim servisima (`commission.service.js`, `payout-request.service.js`, `resource.service.js`) na 100% pokrivenosti linija i funkcija. Ukupna pokrivenost linija je poslednji put merena na oko 82% (`npm run test:coverage` daje tačan trenutni broj).
 - **25 od 25** E2E testa prolaze, po jedan ili više po ključnom poslovnom toku od početka do kraja: zakazivanje sa provizijom, kupon sa posebnim popustom za artikle, otkazivanje sa vraćanjem zaliha, kompletan ciklus isplate, i (dodato posle otkrivanja bag-a iz sekcije 9) provizija zaposlenog na paketu, sa i bez partnerskog referalnog koda, i tako dalje.
+
+---
+
+## 18. Marketing: SEO, blog, AI optimizacija i email kampanje
+
+**Poslovni izazov.** Platforma za zakazivanje i prodaju malo vredi ako je niko ne nađe, a klijent koji je jednom kupio retko se sam vrati. Vidljivost i povratak klijenata moraju biti ugrađeni u sistem, a ne dodati kasnije, i to bez osobe koja ručno održava meta oznake.
+
+**Pristup.** Sve što je marketinško **izvodi se iz istih podataka na kojima sajt radi**: naslovi, canonical adrese, strukturirani podaci, `sitemap.xml`, `robots.txt` i `llms.txt` se generišu iz kataloga i uključenih modula; blog i newsletter koriste isti blokovski uređivač; a mejlovi koji vraćaju klijente su automatski poslovi sa jasnim granicama.
+
+**Zašto ovaj pristup.** Ručno pisan SEO zastari čim se katalog promeni. Generisan SEO ne može da se razlikuje od kataloga, a isključen modul sam nestaje iz sitemap-a, `llms.txt` i `robots.txt`.
+
+**Kako je rešeno.**
+- **SEO:** naslov, opis, canonical, Open Graph/Twitter kartice i JSON-LD po stranici (firma sa radnim vremenom, usluge sa po jednom ponudom za varijantu, proizvodi/paketi, blog objave, FAQ, putanja). Ocene su na firmi unutar usluge jer pretraga zvezdice prikazuje samo za određene tipove. Stare adrese se održavaju preusmerenjem 301, ili 410 za uklonjen sadržaj. Stranice sa ličnim stanjem (koraci zakazivanja, rezultati pretrage) su `noindex` i zabranjene u `robots.txt`.
+- **AI SEO:** generisan `/llms.txt`, isti strukturirani podaci, FAQ u formi koja se može citirati i `robots.txt` koji ne zabranjuje nijednog robota. Iskreno ograničenje: ništa ne meri da li asistenti citiraju sajt.
+- **Blog:** nacrt/zakazana/objavljena/arhivirana sa poslom koji objavljuje na svakih 5 minuta, blokovski uređivač sa FAQ blokovima, automatsko vreme čitanja, obavezna naslovna slika, SEO polja po objavi.
+- **Newsletter:** segmenti po interesovanju, dokaz pristanka (`consentedAt`, upisuje se jednom), odjava jednim klikom, zakazane kampanje sa atomskim preuzimanjem da se ništa ne pošalje dvaput i bez automatskog ponavljanja neuspelog slanja.
+- **Automatski mejlovi:** kupon dobrodošlice (`DOBRODOSLI10`) i podsetnik korpe u dva koraka (24h običan, 72h sa `VRATISE10`), uz pauzu od 90 dana između ponuda popusta.
+- **Ograničenja:** nema statistike otvaranja/klikova, slanje je jedan po jedan, nema mejl potvrde adrese (double opt-in), AI efekat nije meren.
+
+Detalji: `docs/sr/18-marketing-seo-blog-newsletter.md`.
+
+---
+
+## 19. Video uputstva ("Edukativni kutak")
+
+**Poslovni izazov.** Osoblje, partneri i klijenti moraju da nauče gde se klikće, a pisano uputstvo zastari sa svakom izmenom ekrana.
+
+**Pristup.** Sistem **sam snima svoja uputstva** kroz pravi pregledač (Playwright), u verziji za računar i za telefon, spaja snimke aktera, zapeče titlove i objavljuje samo gotove videe. Aplikacija ih služi na `/uputstva`, a svaki posetilac vidi samo publiku kojoj pripada (gost, korisnik, partner, zaposleni, administrator; administrator vidi sve).
+
+**Zašto ovaj pristup.** Kad ih snima sistem, uputstvo se jednom komandom ponovo pravi kad se ekran promeni. Kad se služe kroz rute sa proverom uloge, a ne statičkim folderom, administratorsko uputstvo ne može da procuri nekome ko samo pogodi adresu.
+
+**Kako je rešeno.** `npm run tutorials:all` (prvi pun prolaz: 1 h 38 min za 41 snimak), `e2e-tutorials/audience.json` za to ko šta vidi, manifest i servis koji proverava pristup za svaki fajl, podrška za `Range` (premotavanje) i `private` keš za videe rezervisane za uloge. Još nije urađeno: telefonske verzije za zaposlene i administratore, i preostali administratorski scenariji.
+
+Detalji: `docs/sr/19-video-uputstva.md` i `e2e-tutorials/README.md`.
 
 ---
 
@@ -383,7 +421,8 @@ Korisnici/Role (1)
 
 Eksterne integracije (11) <-- nadovezuje se na zivotni ciklus termina (2)
 Notifikacije (12) <-- prate skoro svaki dogadjaj iz (2)-(10)
-Sadrzaj sajta (13), Admin/Logovi (14), JSON API (15), Bezbednost (16), Testiranje (17): prozimaju sve gore navedeno
+Marketing (18) <-- koristi katalog (2)/(5)/(6), kupone (7), notifikacije (12), sadrzaj sajta (13)
+Sadrzaj sajta (13), Admin/Logovi (14), JSON API (15), Bezbednost (16), Testiranje (17), Video uputstva (19): prozimaju sve gore navedeno
 ```
 
 ---

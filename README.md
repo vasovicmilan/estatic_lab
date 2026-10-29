@@ -1,4 +1,4 @@
-# Estatic Lab
+# Estetik Lab
 
 Wellness studio booking and e-commerce platform: appointments, multi-session packages, shop orders, a full partner/affiliate referral program, and two-way calendar sync with Google Calendar and the SrediMe booking marketplace, built on Node.js/Express, MongoDB, and EJS.
 
@@ -32,6 +32,8 @@ Each set covers:
 | 15 | API v1 Reference |
 | 16 | Module Feature Flags |
 | 17 | Backups |
+| 18 | Marketing: SEO, Blog, AI Optimization & Email Campaigns |
+| 19 | Video Tutorials (`/uputstva`) |
 
 For a higher-level walkthrough of *why* each part of the system is built the way it is (business challenge, approach, solution, across every domain), see [`BUSINESS-LOGIC.md`](BUSINESS-LOGIC.md) (English) or [`POSLOVNA-LOGIKA.md`](POSLOVNA-LOGIKA.md) (Serbian).
 
@@ -47,7 +49,7 @@ CSS and icons are not served straight from `node_modules` - `npm run build:css` 
 
 ## Testing
 
-Three layers: unit (mocked dependencies), integration (real HTTP requests against an in-memory MongoDB), and E2E (Playwright, real browser against a real running server). Latest run: **2,742/2,742** unit and integration tests (81% line coverage), **25/25** E2E tests. See `docs/en/12-testing.md` / `docs/sr/12-testiranje.md`.
+Three layers: unit (mocked dependencies), integration (real HTTP requests against an in-memory MongoDB), and E2E (Playwright, real browser against a real running server). Latest run: **3,228/3,228** unit and integration tests (1,112 suites; line coverage about 82% at last measurement, `npm run test:coverage` gives the exact figure), **25/25** E2E tests. The video tutorials are a separate Playwright suite (see `docs/en/19-video-tutorials.md`). See `docs/en/12-testing.md` / `docs/sr/12-testiranje.md`.
 
 ```bash
 npm test              # unit + integration
