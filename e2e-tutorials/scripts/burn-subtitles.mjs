@@ -13,7 +13,7 @@ const LANGS = ["sr", "en"];
 
 /**
  * Renders captions PERMANENTLY into the video's pixels via ffmpeg's `subtitles`
- * filter (libass), producing merged.<lang>.burned.webm - unlike the
+ * filter (libass), producing merged.<lang>.burned.mp4 (H.264) - unlike the
  * merged.webm + <track> pair build-docs.mjs otherwise embeds, this needs no
  * external .vtt file and no player-side "load subtitle track" step at all: any
  * player just plays it, captions included, because they ARE the video now.
@@ -46,7 +46,7 @@ async function burnScenario(scenarioId) {
       continue;
     }
 
-    const outPath = path.join(videoDir, `merged.${lang}.burned.webm`);
+    const outPath = path.join(videoDir, `merged.${lang}.burned.mp4`);
     // ffmpeg's subtitles filter parses its argument as a mini filtergraph string,
     // where ":" separates the filter's own options - an absolute path is used (a
     // relative one would be resolved against ffmpeg's CWD, not this script's) and
@@ -59,7 +59,7 @@ async function burnScenario(scenarioId) {
     // converted .vtt that is a 288-unit-tall canvas (PlayResX follows the aspect
     // ratio) - NOT pixels, so the same "22" that suits a 1080p frame would be
     // about 13% of a 1688px-tall phone frame, i.e. huge. Values below are
-    // therefore converted from the wanted pixel size: font ~4.5% of the frame
+    // therefore converted from the wanted pixel size: font PHONE_FONT_RATIO of the frame
     // width, thin outline, side margins so long sentences wrap into a few short
     // lines, and they sit in a black strip under the phone screen.
     const { width: vw, height: vh } = await probeSize(mergedPath);
@@ -70,13 +70,23 @@ async function burnScenario(scenarioId) {
       const h = vh * 2;
       // captions live in a black strip added BELOW the phone screen, so they never
       // cover the page or its fixed bottom navigation bar
-      const strip = Math.round(h * 0.26);
+      const fontPx = w * PHONE_FONT_RATIO;
+      // the strip is as tall as the LONGEST caption of this video needs (a long sentence at
+      // this size wraps to ~10 short lines), never less than 30% / more than 42% of the phone
+      // frame height. A caption still taller than the strip grows upward over the page bottom
+      // rather than getting cut off.
+      const vttText = await fs.readFile(vttPath, "utf8");
+      const longest = Math.max(0, ...vttText.split(/\r?\n\r?\n/).map((cue) => cue.split(/\r?\n/).filter((l) => l && !l.includes("-->") && !/^\d+$/.test(l) && l !== "WEBVTT").join(" ").length));
+      const charsPerLine = (w * 0.84) / (fontPx * 0.6); // DejaVu Sans averages ~0.6 em per character
+      const neededLines = Math.ceil((longest / charsPerLine) * 1.15) + 1;
+      const needed = neededLines * fontPx * 1.2 + h * 0.04;
+      const strip = Math.round(Math.min(h * 0.42, Math.max(h * 0.3, needed)) / 2) * 2; // even: x264 needs even dimensions
       const fullH = h + strip;
       const unit = 288 / fullH; // pixels -> script units
-      const fontSize = (w * 0.045 * unit).toFixed(2);
+      const fontSize = (fontPx * unit).toFixed(2);
       const outline = (3 * unit).toFixed(2);
       const playResX = Math.round(288 * (w / fullH));
-      const sideMargin = Math.round(w * 0.05 * (playResX / w));
+      const sideMargin = Math.round(w * 0.08 * (playResX / w));
       const marginV = Math.round(strip * 0.12 * unit);
       const style = `FontName=DejaVu Sans,FontSize=${fontSize},PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=${outline},Shadow=0,Alignment=2,MarginL=${sideMargin},MarginR=${sideMargin},MarginV=${marginV}`;
       vf = `scale=${w}:${h}:flags=lanczos,pad=${w}:${fullH}:0:0:black,subtitles=${absoluteVttPath}:force_style='${style}'`;
@@ -85,14 +95,30 @@ async function burnScenario(scenarioId) {
       vf = `subtitles=${absoluteVttPath}:force_style='${style}'`;
     }
 
+    // H.264 + yuv420p + faststart (moov atom at the front): plays in every browser incl. iOS
+    // Safari, starts before the whole file is downloaded and supports seeking over HTTP Range -
+    // exactly what the in-app tutorial section (src/routes/web/tutorial.routes.js) needs.
+    // Also several times faster to encode than the VP8 the recorder produces. fps=30 forces a
+    // CONSTANT frame rate: the recorder writes a variable-rate stream, and re-encoding it as-is
+    // duplicates/drops frames unevenly, which shows up as stutter on phone videos.
     await execFileAsync(
       "ffmpeg",
-      ["-y", "-i", mergedPath, "-vf", vf, "-c:v", "libvpx", "-b:v", "2M", "-crf", "10", outPath],
+      ["-y", "-i", mergedPath, "-vf", `${vf},fps=30`, "-c:v", "libx264", "-preset", X264_PRESET, "-crf", X264_CRF,
+        "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-an", outPath],
       { maxBuffer: 1024 * 1024 * 64 }
     );
-    console.log(`  [ok] videos/${scenarioId}/merged.${lang}.burned.webm`);
+    console.log(`  [ok] videos/${scenarioId}/merged.${lang}.burned.mp4`);
   }
 }
+
+// Phone caption size as a share of the frame width. 0.045 and then 0.058 were still too small, the very first
+// version (a raw 22 script units) far too large - this sits between. Tune only this.
+// Override for a quick experiment: E2E_TUTORIAL_PHONE_FONT=0.08 npm run tutorials:burn
+// x264 quality/speed. crf 22 is visually clean for screen recordings; a slower preset only makes
+// files a little smaller. Override: E2E_TUTORIAL_X264_PRESET=medium E2E_TUTORIAL_X264_CRF=20
+const X264_PRESET = process.env.E2E_TUTORIAL_X264_PRESET || "veryfast";
+const X264_CRF = String(process.env.E2E_TUTORIAL_X264_CRF || 22);
+const PHONE_FONT_RATIO = Number(process.env.E2E_TUTORIAL_PHONE_FONT || 0.07);
 
 async function main() {
   try {

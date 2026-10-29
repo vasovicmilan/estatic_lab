@@ -1,0 +1,11 @@
+{
+  "extends": "otkazivanje-porudzbine",
+  "title": {
+    "sr": "Otkazivanje porudžbine (telefon)",
+    "en": "Cancelling an order (phone)"
+  },
+  "intro": {
+    "sr": "Za razliku od ostalih akcija u admin panelu (obično prosto „da li ste sigurni?”), otkazivanje porudžbine traži pisani razlog - i u pozadini automatski vraća zalihu proizvoda na stanje. Snimljeno na telefonu (390x844).",
+    "en": "Unlike most other admin actions (usually a plain \"are you sure?\"), cancelling an order asks for a written reason - and automatically restores the product's stock behind the scenes. Recorded on a phone (390x844)."
+  }
+}

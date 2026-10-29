@@ -49,3 +49,6 @@ src/public/css/app.min.css
 # public/js/main.js, never hand-edit.
 src/public/css/bootstrap-icons.subset.css
 src/public/fonts/bootstrap-icons.subset.woff2
+# Finished tutorial videos published by `npm run tutorials:publish` (served only through
+# the role-checked /uputstva routes, never as static files) - generated, do not commit.
+/storage/

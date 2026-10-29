@@ -1,0 +1,11 @@
+{
+  "extends": "kupovina-bez-naloga",
+  "title": {
+    "sr": "Kupovina bez naloga (gost) (telefon)",
+    "en": "Buying without an account (guest) (phone)"
+  },
+  "intro": {
+    "sr": "Klijent kupuje bez ikakve registracije: bira proizvod u prodavnici, upisuje podatke na naplati, a sistem sam pravi nalog u pozadini. Pokazane su dve kupovine (druga sa kuponom) - svaka sa novim gostom, pa se automatsko pravljenje naloga dešava oba puta. Snimljeno na telefonu (390x844).",
+    "en": "A customer buys with no registration at all: picks a product in the shop, enters their details at checkout and the system creates an account in the background. Two purchases are shown (the second with a coupon) - each with a new guest, so the automatic account creation happens both times. Recorded on a phone (390x844)."
+  }
+}

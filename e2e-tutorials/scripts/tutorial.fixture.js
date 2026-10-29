@@ -86,7 +86,11 @@ const CURSOR_INIT_SCRIPT = `(() => {
         "background: rgba(220, 38, 38, 0.85); border: 2px solid white; " +
         "box-shadow: 0 1px 4px rgba(0,0,0,0.4); pointer-events: none; z-index: 2147483647; " +
         "transform: rotate(-45deg); transition: left 0.15s ease-out, top 0.15s ease-out; } " +
-        "#" + ID + ".clicking { transform: rotate(-45deg) scale(0.75); }";
+        "#" + ID + ".clicking { transform: rotate(-45deg) scale(0.75); } " +
+        // Playwright scrolls an off-screen target into view with an instant jump, which in the
+        // recording reads as the picture "jumping". Smooth scrolling turns it into a glide
+        // (Playwright waits for the element to stop moving before it clicks).
+        "html { scroll-behavior: smooth !important; }";
       (document.head || document.documentElement).appendChild(style);
       const cursor = document.createElement("div");
       cursor.id = ID;
@@ -156,6 +160,11 @@ function forwardPageDiagnostics(context, actorLabel) {
   context.on("page", (page) => {
     page.on("pageerror", (err) => {
       console.error(`[tutorial:${actorLabel}] uncaught page error:`, err.message || err);
+    });
+    // "Failed to load resource ... 404" alone never says WHICH file - log the URL so the
+    // missing image/script can be found and fixed (or added to the test data)
+    page.on("response", (res) => {
+      if (res.status() >= 400) console.error(`[tutorial:${actorLabel}] HTTP ${res.status()} ${res.url()}`);
     });
     page.on("console", (msg) => {
       if (msg.type() === "error") {
@@ -249,7 +258,7 @@ export const test = base.extend({
     await fs.remove(tmpDir);
   },
 
-  tut: async ({ page }, use, testInfo) => {
+  tut: async ({ page, tutorialDevice }, use, testInfo) => {
     // testInfo.file is the scenario.spec.js path; its parent folder name is the
     // scenario id used throughout (screenshots/<id>/, scenarios/<id>/manifest.json,
     // generated/{sr,en}/<id>.md) - see e2e-tutorials/README.md.
@@ -270,7 +279,8 @@ export const test = base.extend({
     await fs.remove(path.join(TUTORIALS_ROOT, "videos", scenarioId, "merged.webm"));
     for (const lang of ["sr", "en"]) {
       await fs.remove(path.join(TUTORIALS_ROOT, "videos", scenarioId, `merged.${lang}.vtt`));
-      await fs.remove(path.join(TUTORIALS_ROOT, "videos", scenarioId, `merged.${lang}.burned.webm`));
+      await fs.remove(path.join(TUTORIALS_ROOT, "videos", scenarioId, `merged.${lang}.burned.mp4`));
+      await fs.remove(path.join(TUTORIALS_ROOT, "videos", scenarioId, `merged.${lang}.burned.webm`)); // older runs
     }
 
     let counter = 0;
@@ -324,7 +334,14 @@ export const test = base.extend({
 
         counter += 1;
         const filename = `${String(counter).padStart(2, "0")}-${id}.png`;
-        await targetPage.screenshot({ path: path.join(screenshotDir, filename), fullPage: true });
+        // A full-page capture makes Chromium temporarily re-layout the (emulated) phone page at
+        // its full height while the recorder is running - on a phone context that is the visible
+        // flicker / jump in the VIDEO at the end of every step. So on a phone the still image is
+        // the visible screen only (what the viewer sees in the video anyway); set
+        // E2E_TUTORIAL_FULLPAGE_MOBILE=1 to get full-page stills again and accept the flicker.
+        const phone = tutorialDevice === "mobile";
+        const fullPage = !phone || process.env.E2E_TUTORIAL_FULLPAGE_MOBILE === "1";
+        await targetPage.screenshot({ path: path.join(screenshotDir, filename), fullPage, timeout: 30_000 });
 
         // deliberately after the screenshot, not before - the screenshot itself
         // should reflect the step's end state as soon as it's settled; this pause

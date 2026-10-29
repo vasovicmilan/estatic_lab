@@ -2,7 +2,7 @@
 
 The admin writes and publishes a new blog post - a title, a short excerpt, body text through a block-based editor, and a required cover image.
 
-<video src="../../videos/kreiranje-blog-posta/merged.en.burned.webm" controls width="720"></video>
+<video src="../../videos/kreiranje-blog-posta/merged.en.burned.mp4" controls width="720"></video>
 
 _Subtitles are burned into the video - no external .vtt file needed_
 

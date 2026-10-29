@@ -2,7 +2,7 @@
 
 An employee requests a payout of their earned commission, an admin approves it and marks it paid. The same mechanism works identically for partners, through their own separate account.
 
-<video src="../../videos/isplata-zaposlenom/merged.en.burned.webm" controls width="720"></video>
+<video src="../../videos/isplata-zaposlenom/merged.en.burned.mp4" controls width="720"></video>
 
 _Subtitles are burned into the video - no external .vtt file needed_
 

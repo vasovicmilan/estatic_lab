@@ -1,77 +1,132 @@
 {
   "title": {
     "sr": "Kupovina bez naloga (gost)",
-    "en": "Checkout without an account (guest)"
+    "en": "Buying without an account (guest)"
   },
   "intro": {
-    "sr": "Klijent ne mora nikad da se registruje - dovoljno je da popuni podatke pri naplati, a nalog se automatski pravi u pozadini. Ovde se to pokazuje dva puta: jednom bez kupona, jednom sa kuponom, sa dva različita klijenta.",
-    "en": "A customer never has to register - filling in checkout details is enough, and an account gets created automatically behind the scenes. Shown here twice: once without a coupon, once with one, with two different customers."
+    "sr": "Klijent kupuje bez ikakve registracije: bira proizvod u prodavnici, upisuje podatke na naplati, a sistem sam pravi nalog u pozadini. Pokazane su dve kupovine (druga sa kuponom) - svaka sa novim gostom, pa se automatsko pravljenje naloga dešava oba puta.",
+    "en": "A customer buys with no registration at all: picks a product in the shop, enters their details at checkout and the system creates an account in the background. Two purchases are shown (the second with a coupon) - each with a new guest, so the automatic account creation happens both times."
   },
   "steps": {
     "otvaranje-prvog-proizvoda": {
-      "heading": { "sr": "Otvaranje prvog proizvoda", "en": "Open the first product" },
-      "sr": "Klijent (nije prijavljen) otvara proizvod i dodaje ga u korpu.",
-      "en": "The customer (not logged in) opens a product and adds it to the cart."
+      "heading": {
+        "sr": "Izbor prvog proizvoda",
+        "en": "Choosing the first product"
+      },
+      "sr": "U listi proizvoda {kliknemo} na prvi proizvod.",
+      "en": "In the product list we {click} the first product."
+    },
+    "dodavanje-u-korpu-1": {
+      "heading": {
+        "sr": "Dodavanje u korpu",
+        "en": "Add to cart"
+      },
+      "sr": "{Kliknemo} „Dodaj u korpu“ - sistem odmah otvara korpu.",
+      "en": "We {click} “Dodaj u korpu” - the system opens the cart straight away."
     },
     "prelazak-na-naplatu-1": {
-      "heading": { "sr": "Prelazak na naplatu", "en": "Proceed to checkout" },
-      "sr": "Na stranici za naplatu, sistem jasno objašnjava da će nalog biti automatski kreiran ako ga klijent nema.",
-      "en": "On the checkout page, the system clearly explains an account will be created automatically if the customer doesn't have one."
-    },
-    "unos-podataka-kao-gost-1": {
-      "heading": { "sr": "Unos podataka kao gost", "en": "Enter details as a guest" },
-      "sr": "Klijent unosi sve podatke od nule - ime, email, telefon, adresu - ništa nije unapred popunjeno.",
-      "en": "The customer enters everything from scratch - name, email, phone, address - nothing is pre-filled."
+      "heading": {
+        "sr": "Prelazak na naplatu",
+        "en": "Go to checkout"
+      },
+      "sr": "U korpi {kliknemo} „Nastavi na naplatu“. Nismo prijavljeni - sistem to naglašava i objašnjava da će nalog biti napravljen automatski.",
+      "en": "In the cart we {click} “Nastavi na naplatu”. We are not logged in - the system points that out and explains that an account will be created automatically."
     },
     "potvrda-porudzbine-1": {
-      "heading": { "sr": "Potvrda porudžbine", "en": "Confirm the order" },
-      "sr": "Klijent potvrđuje porudžbinu bez ikakvog kupona.",
-      "en": "The customer confirms the order with no coupon at all."
-    },
-    "nalog-automatski-kreiran-1": {
-      "heading": { "sr": "Nalog je automatski kreiran", "en": "The account was created automatically" },
-      "sr": "U pozadini je upravo napravljen pravi nalog za ovaj email - klijent to nije morao ni da traži.",
-      "en": "A real account was just created behind the scenes for this email - the customer never had to ask for it."
+      "heading": {
+        "sr": "Potvrda porudžbine",
+        "en": "Confirm the order"
+      },
+      "sr": "{Kliknemo} „Potvrdi porudžbinu“.",
+      "en": "We {click} “Potvrdi porudžbinu”."
     },
     "email-potvrde-1": {
-      "heading": { "sr": "Email potvrde", "en": "Confirmation email" },
-      "sr": "Klijent klikom na link iz emaila finalizuje prvu porudžbinu.",
-      "en": "The customer finalizes the first order by clicking the link from the email."
+      "heading": {
+        "sr": "Potvrda putem linka",
+        "en": "Confirm via the link"
+      },
+      "sr": "Link iz email poruke finalizuje porudžbinu (ovde simulirano direktnim otvaranjem linka).",
+      "en": "The link from the confirmation email finalizes the order (simulated here by opening the link directly)."
     },
     "otvaranje-drugog-proizvoda": {
-      "heading": { "sr": "Otvaranje drugog proizvoda", "en": "Open the second product" },
-      "sr": "Novi, potpuno drugi klijent otvara drugi proizvod - opet bez prijave.",
-      "en": "A new, completely different customer opens a second product - again without logging in."
+      "heading": {
+        "sr": "Izbor drugog proizvoda",
+        "en": "Choosing the second product"
+      },
+      "sr": "Za drugu kupovinu ponovo {kliknemo} „Prodavnica“ i biramo drugi proizvod iz liste.",
+      "en": "For the second purchase we {click} “Prodavnica” again and pick the second product from the list."
+    },
+    "dodavanje-u-korpu-2": {
+      "heading": {
+        "sr": "Dodavanje u korpu",
+        "en": "Add to cart"
+      },
+      "sr": "{Kliknemo} „Dodaj u korpu“ - sistem otvara korpu.",
+      "en": "We {click} “Dodaj u korpu” - the system opens the cart."
     },
     "prelazak-na-naplatu-2": {
-      "heading": { "sr": "Prelazak na naplatu", "en": "Proceed to checkout" },
-      "sr": "Ista poruka o automatskom nalogu se ponovo pojavljuje - ovo je zaista nov, prvi put viđen klijent.",
-      "en": "The same automatic-account message appears again - this really is a new, first-time customer."
-    },
-    "unos-podataka-kao-gost-2": {
-      "heading": { "sr": "Unos podataka kao gost", "en": "Enter details as a guest" },
-      "sr": "Klijent ponovo unosi sve podatke od nule.",
-      "en": "The customer enters everything from scratch again."
+      "heading": {
+        "sr": "Prelazak na naplatu",
+        "en": "Go to checkout"
+      },
+      "sr": "U korpi {kliknemo} „Nastavi na naplatu“.",
+      "en": "In the cart we {click} “Nastavi na naplatu”."
     },
     "primena-kupona-2": {
-      "heading": { "sr": "Primena kupona", "en": "Apply the coupon" },
-      "sr": "Za razliku od prve kupovine, ovaj klijent ima kod kupona i primenjuje ga.",
-      "en": "Unlike the first purchase, this customer has a coupon code and applies it."
+      "heading": {
+        "sr": "Primena kupona",
+        "en": "Apply the coupon"
+      },
+      "sr": "Upisujemo kod kupona i {kliknemo} dugme za primenu - odmah se vidi umanjen iznos.",
+      "en": "We type the coupon code and {click} the apply button - the reduced amount shows immediately."
     },
     "potvrda-porudzbine-2": {
-      "heading": { "sr": "Potvrda porudžbine", "en": "Confirm the order" },
-      "sr": "Klijent potvrđuje porudžbinu sa popustom iz kupona.",
-      "en": "The customer confirms the order with the coupon discount applied."
-    },
-    "nalog-automatski-kreiran-2": {
-      "heading": { "sr": "Nalog je automatski kreiran", "en": "The account was created automatically" },
-      "sr": "Isto se dešava i za ovog klijenta - potpuno nezavisno od prvog.",
-      "en": "The same thing happens for this customer too - completely independent of the first one."
+      "heading": {
+        "sr": "Potvrda porudžbine",
+        "en": "Confirm the order"
+      },
+      "sr": "{Kliknemo} „Potvrdi porudžbinu“.",
+      "en": "We {click} “Potvrdi porudžbinu”."
     },
     "email-potvrde-2": {
-      "heading": { "sr": "Email potvrde", "en": "Confirmation email" },
-      "sr": "I druga porudžbina se finalizuje istim putem.",
-      "en": "The second order is finalized the same way."
+      "heading": {
+        "sr": "Potvrda putem linka",
+        "en": "Confirm via the link"
+      },
+      "sr": "Link iz email poruke finalizuje i drugu porudžbinu.",
+      "en": "The email link finalizes the second order as well."
+    },
+    "unos-podataka-kao-gost-1": {
+      "heading": {
+        "sr": "Podaci gosta",
+        "en": "Guest details"
+      },
+      "sr": "Ništa nije unapred popunjeno - upisujemo ime, prezime, email, telefon i adresu dostave.",
+      "en": "Nothing is pre-filled - we type the first name, last name, email, phone and delivery address."
+    },
+    "nalog-automatski-kreiran-1": {
+      "heading": {
+        "sr": "Nalog je automatski napravljen",
+        "en": "Account created automatically"
+      },
+      "sr": "U pozadini je sistem napravio pravi korisnički nalog za ovaj email - klijent to nije morao da traži.",
+      "en": "In the background the system has created a real user account for this email - the customer did not have to ask for it."
+    },
+    "unos-podataka-kao-gost-2": {
+      "heading": {
+        "sr": "Podaci drugog gosta",
+        "en": "Second guest's details"
+      },
+      "sr": "Drugi gost, drugi email - upisujemo sve podatke ispočetka.",
+      "en": "A second guest with a different email - again we type all the details from scratch."
+    },
+    "nalog-automatski-kreiran-2": {
+      "heading": {
+        "sr": "Nalog je automatski napravljen",
+        "en": "Account created automatically"
+      },
+      "sr": "I za drugi email sistem sam pravi nalog.",
+      "en": "For the second email the system creates an account on its own too."
     }
   }
 }

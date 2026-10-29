@@ -1,0 +1,28 @@
+{
+  "title": {
+    "sr": "Pregled sajta - gde se šta nalazi",
+    "en": "Site tour - where everything is"
+  },
+  "intro": {
+    "sr": "Obilazak javnog dela sajta za nekoga ko ga prvi put vidi: sve stavke glavnog menija, grupa „Više“, jedna usluga i jedan proizvod otvoreni iz liste i povratak na početnu preko logoa. Pokazan je svaki klik - na računaru i na telefonu (gde je meni iza dugmeta sa tri crtice).",
+    "en": "A tour of the public site for someone seeing it for the first time: every item of the main menu, the “Više” group, one service and one product opened from their lists, and the logo as the way back home. Every click is shown - on a computer and on a phone (where the menu is behind the three-line button)."
+  },
+  "steps": {
+    "otvaranje-usluge-iz-liste": {
+      "heading": {
+        "sr": "Jedna usluga",
+        "en": "One service"
+      },
+      "sr": "U listi {kliknemo} na uslugu - otvara se njena stranica sa opisom i varijantama.",
+      "en": "In the list we {click} a service - its page opens with the description and variants."
+    },
+    "otvaranje-proizvoda-iz-liste": {
+      "heading": {
+        "sr": "Jedan proizvod",
+        "en": "One product"
+      },
+      "sr": "U prodavnici {kliknemo} na proizvod - otvara se stranica sa opisom, cenom i dugmetom „Dodaj u korpu“.",
+      "en": "In the shop we {click} a product - its page opens with the description, price and the “Dodaj u korpu” button."
+    }
+  }
+}

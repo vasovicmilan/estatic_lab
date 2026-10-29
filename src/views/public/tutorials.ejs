@@ -1,0 +1,66 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main>
+  <%- include("../includes/flash-messages") %>
+
+  <section class="bg-white py-5">
+    <div class="container">
+      <%- include("../includes/breadcrumbs") %>
+
+      <p class="section-eyebrow">Edukativni kutak</p>
+      <h1 class="h2 mb-3">Uputstva i video tutorijali</h1>
+      <p class="lead text-muted mb-4">Kratki video snimci koji korak po korak pokazuju gde se klikće. Svaki postoji u verziji za računar i za telefon, sa titlovima.</p>
+
+      <% if (!data.isLoggedInUser) { %>
+        <div class="alert alert-info">Prikazana su uputstva za sve posetioce. <a href="/prijava">Prijavite se</a> da vidite i uputstva za svoj nalog.</div>
+      <% } %>
+
+      <% if (data.catalog.total === 0) { %>
+        <p class="text-muted">Uputstva još nisu objavljena.</p>
+      <% } else { %>
+        <div class="d-flex flex-wrap gap-3 align-items-center mb-4" id="tutorialsControls">
+          <div class="btn-group" role="group" aria-label="Uređaj">
+            <button type="button" class="btn btn-outline-primary active" data-device-choice="desktop">Računar</button>
+            <button type="button" class="btn btn-outline-primary" data-device-choice="mobile">Telefon</button>
+          </div>
+          <div class="btn-group" role="group" aria-label="Jezik titlova">
+            <button type="button" class="btn btn-outline-secondary active" data-lang-choice="sr">Srpski</button>
+            <button type="button" class="btn btn-outline-secondary" data-lang-choice="en">English</button>
+          </div>
+        </div>
+
+        <% data.catalog.sections.forEach(function (section) { %>
+          <h2 class="h4 mt-5 mb-3"><%= section.label %></h2>
+          <div class="row g-4">
+            <% section.items.forEach(function (item) { %>
+              <div class="col-md-6 col-xl-4">
+                <div class="card h-100 shadow-sm tutorial-card"
+                     data-tutorial-id="<%= item.id %>"
+                     data-variants="<%= Object.keys(item.variants).join(',') %>"
+                     data-langs-desktop="<%= (item.variants.desktop ? item.variants.desktop.langs : []).join(',') %>"
+                     data-langs-mobile="<%= (item.variants.mobile ? item.variants.mobile.langs : []).join(',') %>"
+                     data-poster-desktop="<%= item.variants.desktop && item.variants.desktop.hasPoster ? '1' : '' %>"
+                     data-poster-mobile="<%= item.variants.mobile && item.variants.mobile.hasPoster ? '1' : '' %>">
+                  <div class="ratio ratio-16x9 bg-dark tutorial-player-box">
+                    <button type="button" class="btn btn-dark border-0 rounded-0 tutorial-play" aria-label="Pusti: <%= item.title.sr %>">
+                      <i class="bi bi-play-circle fs-1" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <div class="card-body">
+                    <h3 class="h6 card-title mb-2" data-title-sr="<%= item.title.sr %>" data-title-en="<%= item.title.en %>"><%= item.title.sr %></h3>
+                    <p class="small text-muted mb-0" data-intro-sr="<%= item.intro.sr %>" data-intro-en="<%= item.intro.en %>"><%= item.intro.sr %></p>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+  </section>
+</main>
+
+<script src="/js/tutorials.js?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>"></script>
+
+<%- include("../includes/footer") %>

@@ -2,102 +2,132 @@
 
 For large or heavy items the system can't calculate shipping automatically. The customer immediately gets only an informational email that the order is pending a quote - the real email with the price and a confirm link only arrives once an admin enters the actual shipping cost.
 
-<video src="../../videos/dostava-velikog-artikla/merged.en.burned.webm" controls width="720"></video>
+<video src="../../videos/dostava-velikog-artikla/merged.en.burned.mp4" controls width="720"></video>
 
 _Subtitles are burned into the video - no external .vtt file needed_
 
-## 1. Register
+## 1. Home page
+
+We start on the site's home page.
+
+![otvaranje-pocetne](../../screenshots/dostava-velikog-artikla/01-otvaranje-pocetne.png)
+
+## 2. Registration
+
+We click “Registracija” and the account form opens.
+
+![registracija-klik-registracija](../../screenshots/dostava-velikog-artikla/02-registracija-klik-registracija.png)
+
+## 3. Register
 
 The customer registers before purchasing.
 
-![registracija](../../screenshots/dostava-velikog-artikla/01-registracija.png)
+![registracija](../../screenshots/dostava-velikog-artikla/03-registracija.png)
 
-## 2. Log in
+## 4. Log in
 
 The customer logs into their account.
 
-![prijava](../../screenshots/dostava-velikog-artikla/02-prijava.png)
+![prijava](../../screenshots/dostava-velikog-artikla/04-prijava.png)
 
-## 3. Open the product page
+## 5. Shop
 
-The customer opens the page for a large/heavy item.
+In the menu we click “Prodavnica” - the products that can be ordered.
 
-![otvaranje-stranice-proizvoda](../../screenshots/dostava-velikog-artikla/03-otvaranje-stranice-proizvoda.png)
+![nav-prodavnica](../../screenshots/dostava-velikog-artikla/05-nav-prodavnica.png)
 
-## 4. Add to cart
+## 6. Open the product page
+
+In the product list we click the large/heavy item.
+
+![otvaranje-stranice-proizvoda](../../screenshots/dostava-velikog-artikla/06-otvaranje-stranice-proizvoda.png)
+
+## 7. Add to cart
 
 The product is added to the cart the usual way.
 
-![dodavanje-u-korpu](../../screenshots/dostava-velikog-artikla/04-dodavanje-u-korpu.png)
+![dodavanje-u-korpu](../../screenshots/dostava-velikog-artikla/07-dodavanje-u-korpu.png)
 
-## 5. Proceed to checkout
+## 8. Proceed to checkout
 
 The customer proceeds to checkout.
 
-![prelazak-na-naplatu](../../screenshots/dostava-velikog-artikla/05-prelazak-na-naplatu.png)
+![prelazak-na-naplatu](../../screenshots/dostava-velikog-artikla/08-prelazak-na-naplatu.png)
 
-## 6. Enter delivery details
+## 9. Enter delivery details
 
 The customer enters a phone number and address, same as an ordinary order.
 
-![unos-podataka-za-dostavu](../../screenshots/dostava-velikog-artikla/06-unos-podataka-za-dostavu.png)
+![unos-podataka-za-dostavu](../../screenshots/dostava-velikog-artikla/09-unos-podataka-za-dostavu.png)
 
-## 7. Order received
+## 10. Order received
 
 Unlike standard shipping, the customer doesn't get a confirm link here - just a notice that the shipping price is being calculated manually and a real email is coming soon.
 
-![porudzbina-primljena](../../screenshots/dostava-velikog-artikla/07-porudzbina-primljena.png)
+![porudzbina-primljena](../../screenshots/dostava-velikog-artikla/10-porudzbina-primljena.png)
 
-## 8. Admin logs in
+## 11. Home page
+
+The administrator starts on the site's home page.
+
+![admin-otvaranje-pocetne](../../screenshots/dostava-velikog-artikla/11-admin-otvaranje-pocetne.png)
+
+## 12. Log in
+
+We click “Prijava”.
+
+![admin-login-klik-prijava](../../screenshots/dostava-velikog-artikla/12-admin-login-klik-prijava.png)
+
+## 13. Admin logs in
 
 The admin logs in to process the order waiting on a quote.
 
-![admin-prijava](../../screenshots/dostava-velikog-artikla/08-admin-prijava.png)
+![admin-prijava](../../screenshots/dostava-velikog-artikla/13-admin-prijava.png)
 
-## 9. Open the account menu
+## 14. Open the account menu
 
-The admin clicks the dropdown showing their name in the top-right corner.
+The admin clicks the dropdown with their name in the top right corner.
 
-![admin-ulazak-otvara-nalog-meni](../../screenshots/dostava-velikog-artikla/09-admin-ulazak-otvara-nalog-meni.png)
+![admin-ulazak-otvara-nalog-meni](../../screenshots/dostava-velikog-artikla/14-admin-ulazak-otvara-nalog-meni.png)
 
-## 10. Enter the admin panel
+## 15. Enter the admin panel
 
-The admin picks "Admin panel" from the menu, opening the site's admin area.
+The admin chooses “Admin panel” from the menu, which opens the admin part of the site.
 
-![admin-ulazak-otvara-admin-panel](../../screenshots/dostava-velikog-artikla/10-admin-ulazak-otvara-admin-panel.png)
+![admin-ulazak-otvara-admin-panel](../../screenshots/dostava-velikog-artikla/15-admin-ulazak-otvara-admin-panel.png)
 
-## 11. Open the "Store" menu
+## 16. Open the "Store" menu
 
 The admin clicks the "Store" group in the admin menu.
 
-![admin-privremene-otvara-meni](../../screenshots/dostava-velikog-artikla/11-admin-privremene-otvara-meni.png)
+![admin-privremene-otvara-meni](../../screenshots/dostava-velikog-artikla/16-admin-privremene-otvara-meni.png)
 
-## 12. Open pending orders
+## 17. Open pending orders
 
 The admin picks "Pending orders" - the list of orders not yet confirmed.
 
-![admin-privremene-bira-stavku](../../screenshots/dostava-velikog-artikla/12-admin-privremene-bira-stavku.png)
+![admin-privremene-bira-stavku](../../screenshots/dostava-velikog-artikla/17-admin-privremene-bira-stavku.png)
 
-## 13. Search for the order
+## 18. Search for the order
 
 The admin searches by the customer's email.
 
-![admin-privremene-pretraga](../../screenshots/dostava-velikog-artikla/13-admin-privremene-pretraga.png)
+![admin-privremene-pretraga](../../screenshots/dostava-velikog-artikla/18-admin-privremene-pretraga.png)
 
-## 14. Open the order
+## 19. Open the order
 
 The admin opens the order and sees it's waiting on a shipping quote.
 
-![admin-privremene-otvaranje-rezultata](../../screenshots/dostava-velikog-artikla/14-admin-privremene-otvaranje-rezultata.png)
+![admin-privremene-otvaranje-rezultata](../../screenshots/dostava-velikog-artikla/19-admin-privremene-otvaranje-rezultata.png)
 
-## 15. Enter the shipping price
+## 20. Enter the shipping price
 
 The admin enters the real shipping price (e.g. based on a carrier's quote) and saves it. Only now does the customer get an email with the final price and a working confirm link.
 
-![admin-unosi-cenu-dostave](../../screenshots/dostava-velikog-artikla/15-admin-unosi-cenu-dostave.png)
+![admin-unosi-cenu-dostave](../../screenshots/dostava-velikog-artikla/20-admin-unosi-cenu-dostave.png)
 
-## 16. Confirmation email with the price
+## 21. Confirmation email with the price
 
 The customer clicks the link from the new email (simulated here by opening the link directly), sees the final price, and confirms the order.
 
-![email-potvrde-sa-cenom](../../screenshots/dostava-velikog-artikla/16-email-potvrde-sa-cenom.png)
+![email-potvrde-sa-cenom](../../screenshots/dostava-velikog-artikla/21-email-potvrde-sa-cenom.png)

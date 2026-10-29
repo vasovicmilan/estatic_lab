@@ -1,0 +1,11 @@
+{
+  "extends": "kupovina-sa-nalogom",
+  "title": {
+    "sr": "Kupovina sa nalogom (telefon)",
+    "en": "Buying with an account (phone)"
+  },
+  "intro": {
+    "sr": "Registrovan klijent: registracija uključuje i telefon, adresa se jednom sačuva na stranici „Moje adrese“, pa se pri kupovini ili koristi sačuvana ili se unosi nova. Do svake stranice se dolazi klikom kroz meni. Snimljeno na telefonu (390x844).",
+    "en": "A registered customer: registration also collects a phone number, an address is saved once on the “Moje adrese” page, and at checkout the customer either reuses it or types a new one. Every page is reached by clicking through the menu. Recorded on a phone (390x844)."
+  }
+}

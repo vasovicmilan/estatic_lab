@@ -208,10 +208,13 @@ h1, h2, h3, h4, h5, h6,
   color: var(--bs-emphasis-color) !important;
 }
 
+/* NOTE: the underline uses ::before, not ::after - Bootstrap draws the
+   dropdown caret ("Više") with .dropdown-toggle::after, and reusing ::after here
+   used to displace the caret into a stray red dash under the label. */
 /* underline-on-hover instead of a color-only active state - quieter than
    Bootstrap's default and matches the hairline-driven look used elsewhere */
 @media (min-width: 992px) {
-  .navbar-light .navbar-nav .nav-link::after {
+  .navbar-light .navbar-nav .nav-link::before {
     content: "";
     position: absolute;
     left: 0;
@@ -222,8 +225,8 @@ h1, h2, h3, h4, h5, h6,
     transition: width 0.2s ease;
   }
 
-  .navbar-light .navbar-nav .nav-link.active::after,
-  .navbar-light .navbar-nav .nav-link:hover::after {
+  .navbar-light .navbar-nav .nav-link.active::before,
+  .navbar-light .navbar-nav .nav-link:hover::before {
     width: 100%;
   }
 }
@@ -1575,3 +1578,9 @@ h1, h2, h3, h4, h5, h6,
 .text-pre-line {
   white-space: pre-line;
 }
+
+/* /uputstva - video tutorials */
+.tutorial-player-box { overflow: hidden; }
+.tutorial-player-box .tutorial-play { width: 100%; height: 100%; background-color: #212529; }
+.tutorial-player-box.tutorial-phone { width: 100%; max-width: 240px; aspect-ratio: 390 / 1100; margin: 0 auto; }
+.tutorial-player-box video { background: #000; object-fit: contain; }

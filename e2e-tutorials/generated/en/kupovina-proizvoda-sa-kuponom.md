@@ -1,67 +1,79 @@
 # Buying a product with a coupon
 
-The standard purchase flow: a customer picks a product, adds it to the cart, applies a coupon discount at checkout, and confirms the order.
+The standard purchase flow from the home page: a customer registers, picks a product in the shop, adds it to the cart, applies a coupon discount at checkout and confirms the order. Every click is shown.
 
-<video src="../../videos/kupovina-proizvoda-sa-kuponom/merged.en.burned.webm" controls width="720"></video>
+<video src="../../videos/kupovina-proizvoda-sa-kuponom/merged.en.burned.mp4" controls width="720"></video>
 
 _Subtitles are burned into the video - no external .vtt file needed_
 
-## 1. Register
+## 1. Home page
 
-The customer registers by filling in a form with their name, email, and password.
+We start on the site's home page.
 
-![registracija](../../screenshots/kupovina-proizvoda-sa-kuponom/01-registracija.png)
+![otvaranje-pocetne](../../screenshots/kupovina-proizvoda-sa-kuponom/01-otvaranje-pocetne.png)
 
-## 2. Log in
+## 2. Registration
 
-After registering, the customer logs into their new account.
+We click “Registracija” and the account form opens.
 
-![prijava](../../screenshots/kupovina-proizvoda-sa-kuponom/02-prijava.png)
+![registracija-klik-registracija](../../screenshots/kupovina-proizvoda-sa-kuponom/02-registracija-klik-registracija.png)
 
-## 3. Open the product page
+## 3. Fill in the form
 
-The customer opens the product page and sees the description, price, and available variants.
+We type the first name, last name, email and password (twice) and submit the form. The account is created.
 
-![otvaranje-stranice-proizvoda](../../screenshots/kupovina-proizvoda-sa-kuponom/03-otvaranje-stranice-proizvoda.png)
+![registracija](../../screenshots/kupovina-proizvoda-sa-kuponom/03-registracija.png)
 
-## 4. Add to cart
+## 4. Log in
 
-Clicking "Add to cart" adds the product to the customer's cart.
+After registering we are already on the login page. We type the email and password and log in.
 
-![dodavanje-u-korpu](../../screenshots/kupovina-proizvoda-sa-kuponom/04-dodavanje-u-korpu.png)
+![prijava](../../screenshots/kupovina-proizvoda-sa-kuponom/04-prijava.png)
 
-## 5. Review the cart
+## 5. Shop
 
-The customer opens the cart and reviews what's been added before proceeding to checkout.
+In the menu we click “Prodavnica” - the products that can be ordered.
 
-![otvaranje-korpe](../../screenshots/kupovina-proizvoda-sa-kuponom/05-otvaranje-korpe.png)
+![nav-prodavnica](../../screenshots/kupovina-proizvoda-sa-kuponom/05-nav-prodavnica.png)
 
-## 6. Proceed to checkout
+## 6. Choosing a product
 
-The customer moves to the checkout page, where they enter delivery details.
+In the product list we click the product we want. Its page shows the description, price and available variants.
 
-![prelazak-na-naplatu](../../screenshots/kupovina-proizvoda-sa-kuponom/06-prelazak-na-naplatu.png)
+![otvaranje-stranice-proizvoda](../../screenshots/kupovina-proizvoda-sa-kuponom/06-otvaranje-stranice-proizvoda.png)
 
-## 7. Enter delivery details
+## 7. Add to cart
 
-The customer enters a phone number and delivery address, required to process the order.
+We click “Dodaj u korpu”. The system adds the product and opens the cart straight away, showing what we picked.
 
-![unos-podataka-za-dostavu](../../screenshots/kupovina-proizvoda-sa-kuponom/07-unos-podataka-za-dostavu.png)
+![dodavanje-u-korpu](../../screenshots/kupovina-proizvoda-sa-kuponom/07-dodavanje-u-korpu.png)
 
-## 8. Apply the coupon
+## 8. Go to checkout
 
-The customer enters a coupon code and applies the discount - the system immediately shows the reduced amount.
+In the cart we click “Nastavi na naplatu” and the checkout page opens.
 
-![primena-kupona](../../screenshots/kupovina-proizvoda-sa-kuponom/08-primena-kupona.png)
+![prelazak-na-naplatu](../../screenshots/kupovina-proizvoda-sa-kuponom/08-prelazak-na-naplatu.png)
 
-## 9. Confirm the order
+## 9. Enter delivery details
 
-The customer confirms the order. For standard shipping, the price is calculated immediately - there's no shipping-quote waiting step like there is for large/heavy items.
+We enter the phone number and delivery address needed to process the order.
 
-![potvrda-porudzbine](../../screenshots/kupovina-proizvoda-sa-kuponom/09-potvrda-porudzbine.png)
+![unos-podataka-za-dostavu](../../screenshots/kupovina-proizvoda-sa-kuponom/09-unos-podataka-za-dostavu.png)
 
-## 10. Confirm via the link
+## 10. Apply the coupon
 
-The customer finalizes the order by clicking the link from the confirmation email (simulated here by opening the link directly).
+We type the coupon code and click the apply button - the system immediately shows the reduced amount.
 
-![potvrda-preko-linka](../../screenshots/kupovina-proizvoda-sa-kuponom/10-potvrda-preko-linka.png)
+![primena-kupona](../../screenshots/kupovina-proizvoda-sa-kuponom/10-primena-kupona.png)
+
+## 11. Confirm the order
+
+We click “Potvrdi porudžbinu”. For standard shipping the price is calculated immediately - there is no waiting for a quote as with large/heavy items.
+
+![potvrda-porudzbine](../../screenshots/kupovina-proizvoda-sa-kuponom/11-potvrda-porudzbine.png)
+
+## 12. Confirm via the link
+
+Clicking the link in the confirmation email (simulated here by opening the link directly) finalizes the order.
+
+![potvrda-preko-linka](../../screenshots/kupovina-proizvoda-sa-kuponom/12-potvrda-preko-linka.png)

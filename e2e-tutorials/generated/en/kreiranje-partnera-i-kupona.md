@@ -2,7 +2,7 @@
 
 The admin promotes an existing customer to a partner, sets their commission rates, and creates a referral coupon directly linked to them - every purchase through that coupon now generates commission.
 
-<video src="../../videos/kreiranje-partnera-i-kupona/merged.en.burned.webm" controls width="720"></video>
+<video src="../../videos/kreiranje-partnera-i-kupona/merged.en.burned.mp4" controls width="720"></video>
 
 _Subtitles are burned into the video - no external .vtt file needed_
 

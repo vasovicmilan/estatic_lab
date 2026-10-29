@@ -1,0 +1,11 @@
+{
+  "extends": "kupovina-paketa",
+  "title": {
+    "sr": "Kupovina paketa (telefon)",
+    "en": "Buying a session package (phone)"
+  },
+  "intro": {
+    "sr": "Paketi nemaju samostalnu naplatu na sajtu - administrator ručno dodeljuje paket klijentu, a klijent zatim iz njega troši seanse kroz običan tok zakazivanja, bez ikakve doplate. Snimljeno na telefonu (390x844).",
+    "en": "Packages have no self-checkout - an admin manually assigns one to a customer, who then spends sessions from it through the ordinary booking flow, at no extra charge. Recorded on a phone (390x844)."
+  }
+}

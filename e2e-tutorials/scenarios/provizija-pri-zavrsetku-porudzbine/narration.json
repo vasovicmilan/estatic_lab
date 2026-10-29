@@ -16,29 +16,17 @@
       "sr": "Administrator se prijavljuje na svoj nalog.",
       "en": "The admin logs into their account."
     },
-    "admin-ulazak-otvara-nalog-meni": {
-      "heading": {
-        "sr": "Otvaranje menija naloga",
-        "en": "Open the account menu"
-      },
-      "sr": "Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.",
-      "en": "The admin clicks the dropdown showing their name in the top-right corner."
-    },
-    "admin-ulazak-otvara-admin-panel": {
-      "heading": {
-        "sr": "Ulazak u admin panel",
-        "en": "Enter the admin panel"
-      },
-      "sr": "Administrator bira „Admin panel” iz menija, čime se otvara admin deo sajta.",
-      "en": "The admin picks \"Admin panel\" from the menu, opening the site's admin area."
-    },
     "admin-porudzbine-otvara-meni": {
       "heading": {
         "sr": "Otvaranje menija „Prodavnica”",
         "en": "Open the \"Store\" menu"
       },
-      "sr": "Administrator klikne na grupu „Prodavnica” u admin meniju.",
-      "en": "The admin clicks the \"Store\" group in the admin menu."
+      "sr": "Administrator {klikne} na grupu „Prodavnica” u admin meniju.",
+      "en": "The admin {clicks} the \"Store\" group in the admin menu.",
+      "mobile": {
+        "sr": "Admin panel ima sopstveni meni iza dugmeta sa tri crtice. Administrator ga otvara i bira grupu „Prodavnica“.",
+        "en": "The admin panel has its own menu behind a three-line button. The admin opens it and chooses the “Store” group."
+      }
     },
     "admin-porudzbine-bira-stavku": {
       "heading": {
@@ -62,7 +50,11 @@
         "en": "Open the order"
       },
       "sr": "Administrator otvara porudžbinu koja ima partnerovu proviziju na čekanju.",
-      "en": "The admin opens the order that has a partner commission pending on it."
+      "en": "The admin opens the order that has a partner commission pending on it.",
+      "mobile": {
+        "sr": "Na telefonu se tabela pomera u stranu - administrator dodiruje ikonicu za detalje na kraju reda.",
+        "en": "On a phone the table scrolls sideways - the admin taps the details icon at the end of the row."
+      }
     },
     "oznacavanje-u-obradi": {
       "heading": {

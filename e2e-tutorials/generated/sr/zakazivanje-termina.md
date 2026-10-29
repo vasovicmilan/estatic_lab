@@ -1,103 +1,139 @@
 # Zakazivanje termina
 
-Kompletan tok zakazivanja: klijent bira uslugu, termin i potvrđuje zakazivanje, a zatim administrator potvrđuje i završava termin.
+Kompletan tok zakazivanja: klijent se registruje, preko dugmeta „Zakažite termin“ bira uslugu, datum i vreme i potvrđuje, a zatim administrator potvrđuje i završava termin. Svaki klik je pokazan, na oba kraja.
 
-<video src="../../videos/zakazivanje-termina/merged.sr.burned.webm" controls width="720"></video>
+<video src="../../videos/zakazivanje-termina/merged.sr.burned.mp4" controls width="720"></video>
 
 _Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 
-## 1. Registracija
+## 1. Početna stranica
 
-Klijent se registruje popunjavanjem forme sa imenom, prezimenom, email adresom i lozinkom.
+Počinjemo na početnoj stranici sajta.
 
-![registracija](../../screenshots/zakazivanje-termina/01-registracija.png)
+![otvaranje-pocetne](../../screenshots/zakazivanje-termina/01-otvaranje-pocetne.png)
 
-## 2. Prijava
+## 2. Registracija
 
-Nakon registracije, klijent se prijavljuje na svoj novi nalog.
+Kliknemo „Registracija“ i otvara se forma za pravljenje naloga.
 
-![prijava](../../screenshots/zakazivanje-termina/02-prijava.png)
+![registracija-klik-registracija](../../screenshots/zakazivanje-termina/02-registracija-klik-registracija.png)
 
-## 3. Otvaranje stranice usluge
+## 3. Popunjavanje forme
 
-Klijent otvara stranicu izabrane usluge, gde vidi opis i dostupne varijante (npr. trajanje i cenu).
+Upisujemo ime, prezime, email adresu i lozinku (dva puta) i šaljemo formu. Nalog je napravljen.
 
-![otvaranje-stranice-usluge](../../screenshots/zakazivanje-termina/03-otvaranje-stranice-usluge.png)
+![registracija](../../screenshots/zakazivanje-termina/03-registracija.png)
 
-## 4. Izbor varijante usluge
+## 4. Prijava
 
-Klikom na „Izaberi” klijent bira konkretnu varijantu usluge i prelazi na izbor termina.
+Posle registracije odmah smo na stranici za prijavu. Upisujemo email i lozinku i prijavljujemo se.
 
-![izbor-varijante-usluge](../../screenshots/zakazivanje-termina/04-izbor-varijante-usluge.png)
+![prijava](../../screenshots/zakazivanje-termina/04-prijava.png)
 
-## 5. Izbor datuma i termina
+## 5. Zakažite termin
 
-Klijent bira datum, sistem prikazuje slobodne termine za taj dan na osnovu radnog vremena zaposlenih, a klijent klikne na željeni slot.
+Kliknemo dugme „Zakažite termin“ - vodi pravo na spisak usluga.
 
-![izbor-datuma-i-termina](../../screenshots/zakazivanje-termina/05-izbor-datuma-i-termina.png)
+![nav-zakazite-termin](../../screenshots/zakazivanje-termina/05-nav-zakazite-termin.png)
 
-## 6. Unos kontakt podataka
+## 6. Izbor usluge
 
-Klijent unosi broj telefona za kontakt pre nego što potvrdi zakazivanje.
+U listi usluga kliknemo na izabrani tretman. Na njegovoj stranici vidimo opis i varijante (trajanje i cenu).
 
-![unos-kontakt-podataka](../../screenshots/zakazivanje-termina/06-unos-kontakt-podataka.png)
+![otvaranje-stranice-usluge](../../screenshots/zakazivanje-termina/06-otvaranje-stranice-usluge.png)
 
-## 7. Potvrda zakazivanja
+## 7. Izbor varijante
 
-Klijent potvrđuje zakazivanje. Termin se kreira u statusu „na čekanju”, dok ga administrator ne potvrdi.
+Kliknemo „Zakaži“ na željenoj varijanti i prelazimo na izbor termina.
 
-![potvrda-zakazivanja](../../screenshots/zakazivanje-termina/07-potvrda-zakazivanja.png)
+![izbor-varijante-usluge](../../screenshots/zakazivanje-termina/07-izbor-varijante-usluge.png)
 
-## 8. Prijava administratora
+## 8. Izbor datuma
 
-Administrator se prijavljuje na svoj nalog kako bi obradio novi termin.
+Biramo datum - polje je istaknuto. Sistem prikazuje slobodne termine za taj dan, na osnovu radnog vremena zaposlenih.
 
-![admin-prijava](../../screenshots/zakazivanje-termina/08-admin-prijava.png)
+![izbor-datuma](../../screenshots/zakazivanje-termina/08-izbor-datuma.png)
 
-## 9. Otvaranje menija naloga
+## 9. Izbor termina
 
-Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.
+Kliknemo željeno vreme.
 
-![admin-ulazak-otvara-nalog-meni](../../screenshots/zakazivanje-termina/09-admin-ulazak-otvara-nalog-meni.png)
+![izbor-termina](../../screenshots/zakazivanje-termina/09-izbor-termina.png)
 
-## 10. Ulazak u admin panel
+## 10. Unos kontakt podataka
 
-Administrator bira „Admin panel” iz menija, čime se otvara admin deo sajta.
+Upisujemo broj telefona za kontakt pre potvrde zakazivanja.
 
-![admin-ulazak-otvara-admin-panel](../../screenshots/zakazivanje-termina/10-admin-ulazak-otvara-admin-panel.png)
+![unos-kontakt-podataka](../../screenshots/zakazivanje-termina/10-unos-kontakt-podataka.png)
 
-## 11. Otvaranje menija „Zakazivanje”
+## 11. Potvrda zakazivanja
 
-Administrator klikne na grupu „Zakazivanje” u admin meniju, gde vidi dostupne stavke.
+Kliknemo „Potvrdi zakazivanje“. Termin se pravi u statusu „na čekanju“ dok ga administrator ne potvrdi.
 
-![admin-termini-otvara-meni](../../screenshots/zakazivanje-termina/11-admin-termini-otvara-meni.png)
+![potvrda-zakazivanja](../../screenshots/zakazivanje-termina/11-potvrda-zakazivanja.png)
 
-## 12. Otvaranje liste termina
+## 12. Početna stranica
 
-Administrator bira „Termini” iz menija, čime se otvara lista svih termina.
+Administrator počinje na početnoj stranici sajta.
 
-![admin-termini-bira-stavku](../../screenshots/zakazivanje-termina/12-admin-termini-bira-stavku.png)
+![admin-otvaranje-pocetne](../../screenshots/zakazivanje-termina/12-admin-otvaranje-pocetne.png)
 
-## 13. Pretraga termina
+## 13. Prijava
 
-Administrator pretražuje listu po email adresi klijenta da bi brzo pronašao novi termin.
+Kliknemo „Prijava“.
 
-![admin-termini-pretraga](../../screenshots/zakazivanje-termina/13-admin-termini-pretraga.png)
+![admin-login-klik-prijava](../../screenshots/zakazivanje-termina/13-admin-login-klik-prijava.png)
 
-## 14. Otvaranje termina iz rezultata
+## 14. Prijava administratora
 
-Administrator otvara detalje termina klikom na ikonicu u redu tabele.
+Administrator upisuje email i lozinku i prijavljuje se.
 
-![admin-termini-otvaranje-rezultata](../../screenshots/zakazivanje-termina/14-admin-termini-otvaranje-rezultata.png)
+![admin-prijava](../../screenshots/zakazivanje-termina/14-admin-prijava.png)
 
-## 15. Admin potvrđuje termin
+## 15. Otvaranje menija naloga
+
+Administrator kliknemo na dropdown sa svojim imenom u gornjem desnom uglu.
+
+![admin-ulazak-otvara-nalog-meni](../../screenshots/zakazivanje-termina/15-admin-ulazak-otvara-nalog-meni.png)
+
+## 16. Ulazak u admin panel
+
+Administrator bira „Admin panel“ iz menija, čime se otvara admin deo sajta.
+
+![admin-ulazak-otvara-admin-panel](../../screenshots/zakazivanje-termina/16-admin-ulazak-otvara-admin-panel.png)
+
+## 17. Otvaranje menija „Zakazivanje“
+
+Administrator kliknemo na grupu „Zakazivanje“ u admin meniju, gde vidi dostupne stavke.
+
+![admin-termini-otvara-meni](../../screenshots/zakazivanje-termina/17-admin-termini-otvara-meni.png)
+
+## 18. Otvaranje liste termina
+
+Administrator bira „Termini“ - otvara se lista svih termina.
+
+![admin-termini-bira-stavku](../../screenshots/zakazivanje-termina/18-admin-termini-bira-stavku.png)
+
+## 19. Pretraga termina
+
+Administrator pretražuje listu po email adresi klijenta da bi brzo našao novi termin.
+
+![admin-termini-pretraga](../../screenshots/zakazivanje-termina/19-admin-termini-pretraga.png)
+
+## 20. Otvaranje termina iz rezultata
+
+Administrator otvara detalje termina ikonicom u redu tabele.
+
+![admin-termini-otvaranje-rezultata](../../screenshots/zakazivanje-termina/20-admin-termini-otvaranje-rezultata.png)
+
+## 21. Admin potvrđuje termin
 
 Administrator potvrđuje termin. Klijent tek sada ima siguran, potvrđen termin u kalendaru.
 
-![admin-potvrdjuje-termin](../../screenshots/zakazivanje-termina/15-admin-potvrdjuje-termin.png)
+![admin-potvrdjuje-termin](../../screenshots/zakazivanje-termina/21-admin-potvrdjuje-termin.png)
 
-## 16. Admin završava termin
+## 22. Admin završava termin
 
-Nakon što je usluga zaista pružena, administrator označava termin kao završen. Ovo je i trenutak kada se, ako je uključen partner/zaposleni sa provizijom, ona obračunava.
+Nakon što je usluga stvarno pružena, administrator označava termin kao završen. Tada se, ako je uključen partner/zaposleni sa provizijom, ona i obračunava.
 
-![admin-zavrsava-termin](../../screenshots/zakazivanje-termina/16-admin-zavrsava-termin.png)
+![admin-zavrsava-termin](../../screenshots/zakazivanje-termina/22-admin-zavrsava-termin.png)

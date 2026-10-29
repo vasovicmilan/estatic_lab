@@ -1,0 +1,11 @@
+{
+  "extends": "moj-nalog-pregled",
+  "title": {
+    "sr": "Moj nalog - pregled i odjava (telefon)",
+    "en": "My account - overview and logging out (phone)"
+  },
+  "intro": {
+    "sr": "Klijentov sopstveni nalog od registracije do odjave: meni naloga, „Moj profil“, svih šest kartica naloga (gornje kartice na računaru, donja traka na telefonu), povratak na sajt i „Odjava“. Nijednom se ne ukucava adresa. Snimljeno na telefonu (390x844).",
+    "en": "A customer's own account from registration to logging out: the account menu, “Moj profil”, all six account tabs (top pills on a computer, the bottom bar on a phone), the way back to the site and “Odjava”. No address is ever typed. Recorded on a phone (390x844)."
+  }
+}

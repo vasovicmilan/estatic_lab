@@ -2,7 +2,7 @@
 
 Kako zaposleni podešava svoje radno vreme, i kako se to odmah odražava na dostupne termine za zakazivanje.
 
-<video src="../../videos/radno-vreme-zaposlenog/merged.sr.burned.webm" controls width="720"></video>
+<video src="../../videos/radno-vreme-zaposlenog/merged.sr.burned.mp4" controls width="720"></video>
 
 _Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 

@@ -1,67 +1,79 @@
 # Kupovina proizvoda sa kuponom
 
-Standardan tok kupovine: klijent bira proizvod, dodaje ga u korpu, primenjuje popust kuponom na naplati i potvrđuje porudžbinu.
+Standardan tok kupovine od početne stranice: klijent se registruje, u prodavnici bira proizvod, dodaje ga u korpu, primenjuje popust kuponom na naplati i potvrđuje porudžbinu. Pokazan je svaki klik.
 
-<video src="../../videos/kupovina-proizvoda-sa-kuponom/merged.sr.burned.webm" controls width="720"></video>
+<video src="../../videos/kupovina-proizvoda-sa-kuponom/merged.sr.burned.mp4" controls width="720"></video>
 
 _Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 
-## 1. Registracija
+## 1. Početna stranica
 
-Klijent se registruje popunjavanjem forme sa imenom, prezimenom, email adresom i lozinkom.
+Počinjemo na početnoj stranici sajta.
 
-![registracija](../../screenshots/kupovina-proizvoda-sa-kuponom/01-registracija.png)
+![otvaranje-pocetne](../../screenshots/kupovina-proizvoda-sa-kuponom/01-otvaranje-pocetne.png)
 
-## 2. Prijava
+## 2. Registracija
 
-Nakon registracije, klijent se prijavljuje na svoj novi nalog.
+Kliknemo „Registracija“ i otvara se forma za pravljenje naloga.
 
-![prijava](../../screenshots/kupovina-proizvoda-sa-kuponom/02-prijava.png)
+![registracija-klik-registracija](../../screenshots/kupovina-proizvoda-sa-kuponom/02-registracija-klik-registracija.png)
 
-## 3. Otvaranje stranice proizvoda
+## 3. Popunjavanje forme
 
-Klijent otvara stranicu proizvoda i vidi opis, cenu i dostupne varijante.
+Upisujemo ime, prezime, email adresu i lozinku (dva puta) i šaljemo formu. Nalog je napravljen.
 
-![otvaranje-stranice-proizvoda](../../screenshots/kupovina-proizvoda-sa-kuponom/03-otvaranje-stranice-proizvoda.png)
+![registracija](../../screenshots/kupovina-proizvoda-sa-kuponom/03-registracija.png)
 
-## 4. Dodavanje u korpu
+## 4. Prijava
 
-Klikom na „Dodaj u korpu” proizvod se dodaje u korpu klijenta.
+Posle registracije odmah smo na stranici za prijavu. Upisujemo email i lozinku i prijavljujemo se.
 
-![dodavanje-u-korpu](../../screenshots/kupovina-proizvoda-sa-kuponom/04-dodavanje-u-korpu.png)
+![prijava](../../screenshots/kupovina-proizvoda-sa-kuponom/04-prijava.png)
 
-## 5. Pregled korpe
+## 5. Prodavnica
 
-Klijent otvara korpu i vidi šta je do sada dodao pre nego što nastavi na naplatu.
+U meniju kliknemo „Prodavnica“ - spisak proizvoda koji se mogu poručiti.
 
-![otvaranje-korpe](../../screenshots/kupovina-proizvoda-sa-kuponom/05-otvaranje-korpe.png)
+![nav-prodavnica](../../screenshots/kupovina-proizvoda-sa-kuponom/05-nav-prodavnica.png)
 
-## 6. Prelazak na naplatu
+## 6. Izbor proizvoda
 
-Klijent prelazi na stranicu za naplatu, gde unosi podatke za dostavu.
+U listi proizvoda kliknemo na izabrani proizvod. Na njegovoj stranici vidimo opis, cenu i dostupne varijante.
 
-![prelazak-na-naplatu](../../screenshots/kupovina-proizvoda-sa-kuponom/06-prelazak-na-naplatu.png)
+![otvaranje-stranice-proizvoda](../../screenshots/kupovina-proizvoda-sa-kuponom/06-otvaranje-stranice-proizvoda.png)
 
-## 7. Unos podataka za dostavu
+## 7. Dodavanje u korpu
 
-Klijent unosi telefon i adresu dostave, potrebne za obradu porudžbine.
+Kliknemo „Dodaj u korpu“. Sistem dodaje proizvod i odmah otvara korpu, gde vidimo šta smo izabrali.
 
-![unos-podataka-za-dostavu](../../screenshots/kupovina-proizvoda-sa-kuponom/07-unos-podataka-za-dostavu.png)
+![dodavanje-u-korpu](../../screenshots/kupovina-proizvoda-sa-kuponom/07-dodavanje-u-korpu.png)
 
-## 8. Primena kupona
+## 8. Prelazak na naplatu
 
-Klijent unosi kod kupona i primenjuje popust - sistem odmah prikazuje umanjen iznos.
+U korpi kliknemo „Nastavi na naplatu“ i otvara se stranica za naplatu.
 
-![primena-kupona](../../screenshots/kupovina-proizvoda-sa-kuponom/08-primena-kupona.png)
+![prelazak-na-naplatu](../../screenshots/kupovina-proizvoda-sa-kuponom/08-prelazak-na-naplatu.png)
 
-## 9. Potvrda porudžbine
+## 9. Unos podataka za dostavu
 
-Klijent potvrđuje porudžbinu. Za standardnu dostavu, cena se odmah izračunava - nema koraka čekanja procene kao kod velikih/teških artikala.
+Unosimo telefon i adresu dostave, potrebne za obradu porudžbine.
 
-![potvrda-porudzbine](../../screenshots/kupovina-proizvoda-sa-kuponom/09-potvrda-porudzbine.png)
+![unos-podataka-za-dostavu](../../screenshots/kupovina-proizvoda-sa-kuponom/09-unos-podataka-za-dostavu.png)
 
-## 10. Potvrda putem linka
+## 10. Primena kupona
 
-Klijent klikom na link iz email potvrde (ovde simulirano direktnim otvaranjem linka) finalizuje porudžbinu.
+Upisujemo kod kupona i kliknemo dugme za primenu - sistem odmah prikazuje umanjen iznos.
 
-![potvrda-preko-linka](../../screenshots/kupovina-proizvoda-sa-kuponom/10-potvrda-preko-linka.png)
+![primena-kupona](../../screenshots/kupovina-proizvoda-sa-kuponom/10-primena-kupona.png)
+
+## 11. Potvrda porudžbine
+
+Kliknemo „Potvrdi porudžbinu“. Za standardnu dostavu cena se izračunava odmah - nema čekanja na procenu kao kod velikih/teških artikala.
+
+![potvrda-porudzbine](../../screenshots/kupovina-proizvoda-sa-kuponom/11-potvrda-porudzbine.png)
+
+## 12. Potvrda putem linka
+
+Klikom na link iz email poruke (ovde simulirano direktnim otvaranjem linka) porudžbina se finalizuje.
+
+![potvrda-preko-linka](../../screenshots/kupovina-proizvoda-sa-kuponom/12-potvrda-preko-linka.png)

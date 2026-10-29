@@ -1,0 +1,11 @@
+{
+  "extends": "kupovina-proizvoda-sa-kuponom",
+  "title": {
+    "sr": "Kupovina proizvoda sa kuponom (telefon)",
+    "en": "Buying a product with a coupon (phone)"
+  },
+  "intro": {
+    "sr": "Standardan tok kupovine od početne stranice: klijent se registruje, u prodavnici bira proizvod, dodaje ga u korpu, primenjuje popust kuponom na naplati i potvrđuje porudžbinu. Pokazan je svaki klik. Snimljeno na telefonu (390x844).",
+    "en": "The standard purchase flow from the home page: a customer registers, picks a product in the shop, adds it to the cart, applies a coupon discount at checkout and confirms the order. Every click is shown. Recorded on a phone (390x844)."
+  }
+}

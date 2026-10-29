@@ -29,8 +29,8 @@
         "sr": "Otvaranje stranice proizvoda",
         "en": "Open the product page"
       },
-      "sr": "Klijent otvara stranicu velikog/teškog artikla.",
-      "en": "The customer opens the page for a large/heavy item."
+      "sr": "U listi proizvoda {kliknemo} na veliki/teški artikal.",
+      "en": "In the product list we {click} the large/heavy item."
     },
     "dodavanje-u-korpu": {
       "heading": {
@@ -72,29 +72,17 @@
       "sr": "Administrator se prijavljuje da bi obradio porudžbinu koja čeka procenu.",
       "en": "The admin logs in to process the order waiting on a quote."
     },
-    "admin-ulazak-otvara-nalog-meni": {
-      "heading": {
-        "sr": "Otvaranje menija naloga",
-        "en": "Open the account menu"
-      },
-      "sr": "Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.",
-      "en": "The admin clicks the dropdown showing their name in the top-right corner."
-    },
-    "admin-ulazak-otvara-admin-panel": {
-      "heading": {
-        "sr": "Ulazak u admin panel",
-        "en": "Enter the admin panel"
-      },
-      "sr": "Administrator bira „Admin panel” iz menija, čime se otvara admin deo sajta.",
-      "en": "The admin picks \"Admin panel\" from the menu, opening the site's admin area."
-    },
     "admin-privremene-otvara-meni": {
       "heading": {
         "sr": "Otvaranje menija „Prodavnica”",
         "en": "Open the \"Store\" menu"
       },
-      "sr": "Administrator klikne na grupu „Prodavnica” u admin meniju.",
-      "en": "The admin clicks the \"Store\" group in the admin menu."
+      "sr": "Administrator {klikne} na grupu „Prodavnica” u admin meniju.",
+      "en": "The admin {clicks} the \"Store\" group in the admin menu.",
+      "mobile": {
+        "sr": "Admin panel ima sopstveni meni iza dugmeta sa tri crtice. Administrator ga otvara i bira grupu „Prodavnica“.",
+        "en": "The admin panel has its own menu behind a three-line button. The admin opens it and chooses the “Store” group."
+      }
     },
     "admin-privremene-bira-stavku": {
       "heading": {
@@ -118,7 +106,11 @@
         "en": "Open the order"
       },
       "sr": "Administrator otvara porudžbinu i vidi da čeka procenu cene dostave.",
-      "en": "The admin opens the order and sees it's waiting on a shipping quote."
+      "en": "The admin opens the order and sees it's waiting on a shipping quote.",
+      "mobile": {
+        "sr": "Na telefonu se tabela pomera u stranu - administrator dodiruje ikonicu za detalje na kraju reda.",
+        "en": "On a phone the table scrolls sideways - the admin taps the details icon at the end of the row."
+      }
     },
     "admin-unosi-cenu-dostave": {
       "heading": {
@@ -134,7 +126,7 @@
         "en": "Confirmation email with the price"
       },
       "sr": "Klijent klikom na link iz novog emaila (ovde simulirano direktnim otvaranjem linka) vidi konačnu cenu i potvrđuje porudžbinu.",
-      "en": "The customer clicks the link from the new email (simulated here by opening the link directly), sees the final price, and confirms the order."
+      "en": "The customer {clicks} the link from the new email (simulated here by opening the link directly), sees the final price, and confirms the order."
     }
   }
 }

@@ -2,7 +2,7 @@
 
 Administrator kreira novi paket sesija - bira postojeću uslugu, unosi cenu i obavezno postavlja sliku, sve pre nego što paket bude spreman za dodelu klijentima.
 
-<video src="../../videos/kreiranje-paketa/merged.sr.burned.webm" controls width="720"></video>
+<video src="../../videos/kreiranje-paketa/merged.sr.burned.mp4" controls width="720"></video>
 
 _Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 

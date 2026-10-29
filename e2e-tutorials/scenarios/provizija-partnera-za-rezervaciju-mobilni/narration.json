@@ -1,0 +1,11 @@
+{
+  "extends": "provizija-partnera-za-rezervaciju",
+  "title": {
+    "sr": "Provizija partnera za rezervaciju termina (telefon)",
+    "en": "Partner commission on a booked appointment (phone)"
+  },
+  "intro": {
+    "sr": "Partner ima dve odvojene stope provizije - jednu za usluge, drugu za proizvode. Kad klijent zakaže termin preko partnerovog koda za preporuku, provizija se obračunava po stopi za usluge, nikad po stopi za proizvode, čak i kad su podešene na potpuno različite vrednosti. Snimljeno na telefonu (390x844).",
+    "en": "A partner has two separate commission rates - one for services, one for products. When a customer books an appointment through a partner's referral code, commission is calculated using the services rate, never the products rate, even when they're set to very different values. Recorded on a phone (390x844)."
+  }
+}

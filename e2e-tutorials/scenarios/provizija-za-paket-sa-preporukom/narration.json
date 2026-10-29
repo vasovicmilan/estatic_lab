@@ -32,29 +32,17 @@
       "sr": "Administrator se prijavljuje da bi dodelio paket.",
       "en": "The admin logs in to assign the package."
     },
-    "admin-ulazak-otvara-nalog-meni": {
-      "heading": {
-        "sr": "Otvaranje menija naloga",
-        "en": "Open the account menu"
-      },
-      "sr": "Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.",
-      "en": "The admin clicks the dropdown showing their name in the top-right corner."
-    },
-    "admin-ulazak-otvara-admin-panel": {
-      "heading": {
-        "sr": "Ulazak u admin panel",
-        "en": "Enter the admin panel"
-      },
-      "sr": "Administrator bira „Admin panel” iz menija, čime se otvara admin deo sajta.",
-      "en": "The admin picks \"Admin panel\" from the menu, opening the site's admin area."
-    },
     "admin-paketi-otvara-meni": {
       "heading": {
         "sr": "Otvaranje menija „Katalog”",
         "en": "Open the \"Catalog\" menu"
       },
-      "sr": "Administrator klikne na grupu „Katalog” u admin meniju.",
-      "en": "The admin clicks the \"Catalog\" group in the admin menu."
+      "sr": "Administrator {klikne} na grupu „Katalog” u admin meniju.",
+      "en": "The admin {clicks} the \"Catalog\" group in the admin menu.",
+      "mobile": {
+        "sr": "Admin panel ima sopstveni meni iza dugmeta sa tri crtice. Administrator ga otvara i bira grupu „Katalog“.",
+        "en": "The admin panel has its own menu behind a three-line button. The admin opens it and chooses the “Catalog” group."
+      }
     },
     "admin-paketi-bira-stavku": {
       "heading": {
@@ -69,8 +57,8 @@
         "sr": "Dodela novog paketa",
         "en": "Assign a new package"
       },
-      "sr": "Administrator klikne „Dodeli paket”.",
-      "en": "The admin clicks \"Assign package\"."
+      "sr": "Administrator {klikne} „Dodeli paket”.",
+      "en": "The admin {clicks} \"Assign package\"."
     },
     "admin-dodeljuje-paket-sa-kuponom": {
       "heading": {
@@ -93,8 +81,12 @@
         "sr": "Otvaranje menija „Zakazivanje”",
         "en": "Open the \"Scheduling\" menu"
       },
-      "sr": "Administrator klikne na grupu „Zakazivanje” u admin meniju.",
-      "en": "The admin clicks the \"Scheduling\" group in the admin menu."
+      "sr": "Administrator {klikne} na grupu „Zakazivanje” u admin meniju.",
+      "en": "The admin {clicks} the \"Scheduling\" group in the admin menu.",
+      "mobile": {
+        "sr": "Admin panel ima sopstveni meni iza dugmeta sa tri crtice. Administrator ga otvara i bira grupu „Zakazivanje“.",
+        "en": "The admin panel has its own menu behind a three-line button. The admin opens it and chooses the “Scheduling” group."
+      }
     },
     "admin-termini-bira-stavku": {
       "heading": {
@@ -118,15 +110,51 @@
         "en": "Open the appointment"
       },
       "sr": "Administrator otvara termin koji klijent zakazao iz paketa.",
-      "en": "The admin opens the appointment the customer booked from the package."
+      "en": "The admin opens the appointment the customer booked from the package.",
+      "mobile": {
+        "sr": "Na telefonu se tabela pomera u stranu - administrator dodiruje ikonicu za detalje na kraju reda.",
+        "en": "On a phone the table scrolls sideways - the admin taps the details icon at the end of the row."
+      }
     },
     "admin-zavrsava-termin": {
       "heading": {
         "sr": "Admin završava termin",
         "en": "Admin completes the appointment"
       },
-      "sr": "Administrator potvrđuje pa završava termin - ovo je trenutak kad se obračunava provizija zaposlenog, ispravno proporcionalna kombinovanom popustu.",
-      "en": "The admin confirms then completes the appointment - this is when the employee's commission is calculated, correctly proportional to the combined discount."
+      "sr": "Administrator potvrđuje pa završava termin - ovo je trenutak kad se obračunava provizija zaposlenog. Osnovica je ispravno proporcionalna kombinovanom popustu (2160), a po stopi od 10% to bi bilo 216. Pošto je termin plaćen iz paketa, zaposleni ima zagarantovan minimum po seansi (podrazumevano 500, podešava se u „Podešavanja sajta“), pa se upisuje veći iznos.",
+      "en": "The admin confirms then completes the appointment - this is when the employee's commission is calculated. The base is correctly proportional to the combined discount (2160); at a 10% rate that would be 216. Because the session was paid from a package, the employee has a guaranteed per-session minimum (500 by default, set in “Podešavanja sajta”), so the higher amount is recorded."
+    },
+    "otvaranje-stranice-usluge": {
+      "heading": {
+        "sr": "Izbor usluge",
+        "en": "Choosing a service"
+      },
+      "sr": "U listi usluga {kliknemo} na izabrani tretman. Na njegovoj stranici vidimo opis i varijante (trajanje i cenu).",
+      "en": "In the list of services we {click} the treatment we want. Its page shows the description and the variants (duration and price)."
+    },
+    "izbor-varijante-usluge": {
+      "heading": {
+        "sr": "Izbor varijante",
+        "en": "Choosing a variant"
+      },
+      "sr": "{Kliknemo} „Zakaži“ na željenoj varijanti i prelazimo na izbor termina.",
+      "en": "We {click} “Zakaži” on the variant we want and move on to choosing a time."
+    },
+    "izbor-datuma": {
+      "heading": {
+        "sr": "Izbor datuma",
+        "en": "Choosing a date"
+      },
+      "sr": "Biramo datum - polje je istaknuto. Sistem prikazuje slobodne termine za taj dan, na osnovu radnog vremena zaposlenih.",
+      "en": "We choose a date - the field is highlighted. The system shows the free slots for that day, based on the employees' working hours."
+    },
+    "izbor-termina": {
+      "heading": {
+        "sr": "Izbor termina",
+        "en": "Choosing a time slot"
+      },
+      "sr": "{Kliknemo} željeno vreme.",
+      "en": "We {click} the time we want."
     }
   }
 }

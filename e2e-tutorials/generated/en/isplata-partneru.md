@@ -1,97 +1,127 @@
 # Partner payout
 
-A partner requests a payout of earned commission from their account, an admin approves it and marks it paid, and the partner sees in their history that it's done.
+A partner requests a payout of earned commission from their account, an admin approves it and marks it paid, and the partner sees in their history that it's done. Every menu click is shown, for both the partner and the admin.
 
-<video src="../../videos/isplata-partneru/merged.en.burned.webm" controls width="720"></video>
+<video src="../../videos/isplata-partneru/merged.en.burned.mp4" controls width="720"></video>
 
 _Subtitles are burned into the video - no external .vtt file needed_
 
-## 1. Partner logs in
+## 1. Home page
 
-The partner logs into their account.
+We start on the site's home page.
 
-![prijava-partnera](../../screenshots/isplata-partneru/01-prijava-partnera.png)
+![otvaranje-pocetne](../../screenshots/isplata-partneru/01-otvaranje-pocetne.png)
 
-## 2. Available for payout
+## 2. Log in
+
+In the top right corner we click “Prijava”.
+
+![login-klik-prijava](../../screenshots/isplata-partneru/02-login-klik-prijava.png)
+
+## 3. Enter your login details
+
+We enter the email and password and log in.
+
+![unos-prijave](../../screenshots/isplata-partneru/03-unos-prijave.png)
+
+## 4. Account menu
+
+After logging in our name appears in the top right corner. Clicking it opens the account menu.
+
+![portal-otvara-meni](../../screenshots/isplata-partneru/04-portal-otvara-meni.png)
+
+## 5. Partner account
+
+In the menu we choose “Partnerski nalog”.
+
+![portal-bira-stavku](../../screenshots/isplata-partneru/05-portal-bira-stavku.png)
+
+## 6. Available for payout
 
 The partner account shows how much commission is earned and how much is available for payout.
 
-![pregled-stanja](../../screenshots/isplata-partneru/02-pregled-stanja.png)
+![pregled-stanja](../../screenshots/isplata-partneru/06-pregled-stanja.png)
 
-## 3. Request a payout
+## 7. Request a payout
 
 The partner enters an amount and submits a request. They can't request more than what's available.
 
-![zahtev-za-isplatu](../../screenshots/isplata-partneru/03-zahtev-za-isplatu.png)
+![zahtev-za-isplatu](../../screenshots/isplata-partneru/07-zahtev-za-isplatu.png)
 
-## 4. Reserved and remaining
+## 8. Reserved and remaining
 
 The requested amount moves to “Rezervisano” and the form only allows what's left - the same amount can't be requested twice.
 
-![rezervisano-i-preostalo](../../screenshots/isplata-partneru/04-rezervisano-i-preostalo.png)
+![rezervisano-i-preostalo](../../screenshots/isplata-partneru/08-rezervisano-i-preostalo.png)
 
-## 5. Request pending
+## 9. Payouts tab
 
-The “Isplate” tab shows the request with status “Zatraženo” until the admin processes it.
+Clicking “Isplate” in the top bar switches to that tab. It lists all payout requests.
 
-![zahtev-na-cekanju](../../screenshots/isplata-partneru/05-zahtev-na-cekanju.png)
+![tab-isplate](../../screenshots/isplata-partneru/09-tab-isplate.png)
 
-## 6. Admin logs in
+## 10. Request pending
 
-The admin logs in to process the payout request.
+The request has status “Zatraženo” until the admin processes it.
 
-![admin-prijava](../../screenshots/isplata-partneru/06-admin-prijava.png)
+![zahtev-na-cekanju](../../screenshots/isplata-partneru/10-zahtev-na-cekanju.png)
 
-## 7. Open the account menu
+## 11. Admin logs in
 
-The admin clicks the dropdown showing their name in the top-right corner.
+The administrator logs in.
 
-![admin-ulazak-otvara-nalog-meni](../../screenshots/isplata-partneru/07-admin-ulazak-otvara-nalog-meni.png)
+![admin-prijava](../../screenshots/isplata-partneru/11-admin-prijava.png)
 
-## 8. Enter the admin panel
+## 12. Account menu
 
-The admin picks "Admin panel" from the menu, opening the site's admin area.
+The admin opens the account menu (their name in the top right corner).
 
-![admin-ulazak-otvara-admin-panel](../../screenshots/isplata-partneru/08-admin-ulazak-otvara-admin-panel.png)
+![admin-ulazak-otvara-nalog-meni](../../screenshots/isplata-partneru/12-admin-ulazak-otvara-nalog-meni.png)
 
-## 9. Open the "Partner program" menu
+## 13. Admin panel
 
-The admin clicks the "Partner program" group in the admin menu.
+From the menu they enter the admin panel.
 
-![admin-isplate-otvara-meni](../../screenshots/isplata-partneru/09-admin-isplate-otvara-meni.png)
+![admin-ulazak-otvara-admin-panel](../../screenshots/isplata-partneru/13-admin-ulazak-otvara-admin-panel.png)
 
-## 10. Open payouts
+## 14. Partner program
 
-The admin picks "Payouts" from the menu.
+In the dark admin menu they open the “Partnerski program” group.
 
-![admin-isplate-bira-stavku](../../screenshots/isplata-partneru/10-admin-isplate-bira-stavku.png)
+![admin-isplate-otvara-meni](../../screenshots/isplata-partneru/14-admin-isplate-otvara-meni.png)
 
-## 11. Request details
+## 15. Payouts
 
-The admin opens the partner's request - the details show the amount and status. The payout list is shared between employees and partners.
+The “Isplate” item lists requests from both employees and partners.
 
-![admin-otvara-zahtev](../../screenshots/isplata-partneru/11-admin-otvara-zahtev.png)
+![admin-isplate-bira-stavku](../../screenshots/isplata-partneru/15-admin-isplate-bira-stavku.png)
 
-## 12. Approve the request
+## 16. Request details
 
-The admin approves the request.
+The details of the partner's request open, with the amount and status.
 
-![admin-odobrava](../../screenshots/isplata-partneru/12-admin-odobrava.png)
+![admin-otvara-zahtev](../../screenshots/isplata-partneru/16-admin-otvara-zahtev.png)
 
-## 13. Mark as paid
+## 17. Approve
 
-Once the money has actually been transferred (outside the system, e.g. via bank transfer), the admin marks the request as paid.
+The admin approves the request and confirms in the dialog.
 
-![admin-oznacava-isplaceno](../../screenshots/isplata-partneru/13-admin-oznacava-isplaceno.png)
+![admin-odobrava](../../screenshots/isplata-partneru/17-admin-odobrava.png)
 
-## 14. Payout history
+## 18. Mark as paid
 
-In their history the partner sees the status “Isplaćeno”.
+Once the money has actually been paid out, the request is marked as paid.
 
-![istorija-isplata](../../screenshots/isplata-partneru/14-istorija-isplata.png)
+![admin-oznacava-isplaceno](../../screenshots/isplata-partneru/18-admin-oznacava-isplaceno.png)
 
-## 15. Balance after payout
+## 19. Payout history
+
+The partner opens “Isplate” again and sees the status “Isplaćeno”.
+
+![istorija-isplata](../../screenshots/isplata-partneru/19-istorija-isplata.png)
+
+## 20. Balance after payout
 
 On the overview, the paid amount now counts as paid out.
 
-![stanje-posle-isplate](../../screenshots/isplata-partneru/15-stanje-posle-isplate.png)
+![stanje-posle-isplate](../../screenshots/isplata-partneru/20-stanje-posle-isplate.png)

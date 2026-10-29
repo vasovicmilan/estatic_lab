@@ -2,7 +2,7 @@
 
 Adding a product goes through three separate phases - basic details, then variations and images, then shipping and publishing. Each phase is its own page and its own save, not one long form.
 
-<video src="../../videos/kreiranje-proizvoda/merged.en.burned.webm" controls width="720"></video>
+<video src="../../videos/kreiranje-proizvoda/merged.en.burned.mp4" controls width="720"></video>
 
 _Subtitles are burned into the video - no external .vtt file needed_
 

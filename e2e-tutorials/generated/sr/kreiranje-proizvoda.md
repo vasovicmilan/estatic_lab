@@ -2,7 +2,7 @@
 
 Dodavanje proizvoda ide kroz tri odvojene faze - osnovni podaci, pa varijante i slike, pa dostava i objava. Svaka faza je svoja stranica i svoje čuvanje, ne jedna duga forma.
 
-<video src="../../videos/kreiranje-proizvoda/merged.sr.burned.webm" controls width="720"></video>
+<video src="../../videos/kreiranje-proizvoda/merged.sr.burned.mp4" controls width="720"></video>
 
 _Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 

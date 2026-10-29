@@ -1,0 +1,11 @@
+{
+  "extends": "provizija-pri-zavrsetku-porudzbine",
+  "title": {
+    "sr": "Provizija se obračunava tek pri završetku porudžbine (telefon)",
+    "en": "Commission only becomes earned when an order completes (phone)"
+  },
+  "intro": {
+    "sr": "Partnerova provizija za porudžbinu ostaje „na čekanju” kroz sve međukorake statusa i postaje „zarađena” (spremna za isplatu) tek kada admin porudžbinu označi kao potpuno završenu - ne kad je samo dostavljena. Snimljeno na telefonu (390x844).",
+    "en": "A partner's commission on an order stays \"pending\" through every intermediate status and only becomes \"earned\" (payout-eligible) once the admin marks the order fully completed - not merely delivered. Recorded on a phone (390x844)."
+  }
+}

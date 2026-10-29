@@ -2,7 +2,7 @@
 
 An employee has their own dedicated account area for their appointments - confirming, completing, and reviewing earned commission - entirely separate from the admin panel.
 
-<video src="../../videos/zaposleni-upravlja-terminima/merged.en.burned.webm" controls width="720"></video>
+<video src="../../videos/zaposleni-upravlja-terminima/merged.en.burned.mp4" controls width="720"></video>
 
 _Subtitles are burned into the video - no external .vtt file needed_
 

@@ -1,0 +1,33 @@
+{
+  "_comment": "Who a finished tutorial is FOR. scripts/publish-videos.mjs writes this into storage/tutorials/manifest.json and the app (src/services/tutorial-video.service.js) shows/streams it only to that audience (an administrator sees all; a logged-in user also sees 'public'). Allowed: public | user | partner | employee | admin. A scenario missing here is published as 'admin' (the most restrictive) and the publish script warns - nothing leaks by forgetting to list it. Order of the lines = order on the page. Names are scenario folder names WITHOUT the -mobilni suffix.",
+  "scenarios": {
+    "pregled-sajta": "public",
+    "kupovina-bez-naloga": "public",
+    "zakazivanje-termina": "public",
+
+    "kupovina-sa-nalogom": "user",
+    "kupovina-proizvoda-sa-kuponom": "user",
+    "kupovina-paketa": "user",
+    "cena-na-upit": "user",
+    "dostava-velikog-artikla": "user",
+    "otkazivanje-porudzbine": "user",
+    "otkazivanje-termina": "user",
+    "premestanje-termina": "user",
+    "moj-nalog-pregled": "user",
+
+    "partner-nalog-pregled": "partner",
+    "provizija-partnera-za-rezervaciju": "partner",
+    "provizija-pri-zavrsetku-porudzbine": "partner",
+    "provizija-za-paket-sa-preporukom": "partner",
+    "isplata-partneru": "partner",
+
+    "radno-vreme-zaposlenog": "employee",
+    "zaposleni-upravlja-terminima": "employee",
+    "isplata-zaposlenom": "employee",
+
+    "kreiranje-proizvoda": "admin",
+    "kreiranje-paketa": "admin",
+    "kreiranje-blog-posta": "admin",
+    "kreiranje-partnera-i-kupona": "admin"
+  }
+}

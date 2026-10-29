@@ -1,0 +1,317 @@
+{
+  "_comment": "Shared wording for steps that many scenarios have (menu clicks, registration/login, account menu). A scenario's own narration.json wins over this file. {klikcemo}/{kliknemo}/{click} etc. are swapped for click vs tap wording - see scripts/lib/narration.mjs.",
+  "steps": {
+    "otvaranje-pocetne": {
+      "heading": {
+        "sr": "Početna stranica",
+        "en": "Home page"
+      },
+      "sr": "Počinjemo na početnoj stranici sajta.",
+      "en": "We start on the site's home page."
+    },
+    "nav-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija",
+        "en": "Open the menu"
+      },
+      "sr": "Na telefonu je meni sakriven iza dugmeta sa tri crtice u gornjem desnom uglu. Dodirnemo ga.",
+      "en": "On a phone the menu is hidden behind the three-line button in the top right corner. We tap it."
+    },
+    "nav-vise-otvara": {
+      "heading": {
+        "sr": "Meni „Više“",
+        "en": "The “Više” menu"
+      },
+      "sr": "Ređe korišćene stranice su grupisane pod „Više“. Kliknemo na njega da se otvori lista.",
+      "en": "Less frequently used pages are grouped under “Više”. We click it to open the list."
+    },
+    "nav-usluge": {
+      "heading": {
+        "sr": "Usluge",
+        "en": "Services"
+      },
+      "sr": "U meniju {kliknemo} „Usluge“ - ovde je spisak svih tretmana.",
+      "en": "In the menu we {click} “Usluge” - the list of all treatments."
+    },
+    "nav-paketi": {
+      "heading": {
+        "sr": "Paketi",
+        "en": "Packages"
+      },
+      "sr": "{Kliknemo} „Paketi“ - paketi tretmana po povoljnijoj ceni.",
+      "en": "{Click} “Paketi” - treatment packages at a better price."
+    },
+    "nav-prodavnica": {
+      "heading": {
+        "sr": "Prodavnica",
+        "en": "Shop"
+      },
+      "sr": "U meniju {kliknemo} „Prodavnica“ - spisak proizvoda koji se mogu poručiti.",
+      "en": "In the menu we {click} “Prodavnica” - the products that can be ordered."
+    },
+    "nav-blog": {
+      "heading": {
+        "sr": "Blog",
+        "en": "Blog"
+      },
+      "sr": "{Kliknemo} „Blog“ - članci i saveti.",
+      "en": "{Click} “Blog” - articles and tips."
+    },
+    "nav-nas-tim": {
+      "heading": {
+        "sr": "Naš tim",
+        "en": "Our team"
+      },
+      "sr": "{Kliknemo} „Naš tim“ - ko radi u salonu.",
+      "en": "{Click} “Naš tim” - who works at the salon."
+    },
+    "nav-partnerski-program": {
+      "heading": {
+        "sr": "Partnerski program",
+        "en": "Partner program"
+      },
+      "sr": "{Kliknemo} „Partnerski program“ - kako partneri zarađuju proviziju preporukama.",
+      "en": "{Click} “Partnerski program” - how partners earn a commission by referring customers."
+    },
+    "nav-kontakt": {
+      "heading": {
+        "sr": "Kontakt",
+        "en": "Contact"
+      },
+      "sr": "{Kliknemo} „Kontakt“ - forma za poruku, adresa i radno vreme.",
+      "en": "{Click} “Kontakt” - the message form, address and opening hours."
+    },
+    "nav-o-nama": {
+      "heading": {
+        "sr": "O nama",
+        "en": "About us"
+      },
+      "sr": "U listi biramo „O nama“ - priča o salonu.",
+      "en": "From the list we pick “O nama” - the story of the salon."
+    },
+    "nav-faq": {
+      "heading": {
+        "sr": "Česta pitanja",
+        "en": "FAQ"
+      },
+      "sr": "Biramo „Česta pitanja“ - odgovori na ono što klijenti najčešće pitaju.",
+      "en": "We pick “Česta pitanja” - answers to what customers ask most often."
+    },
+    "nav-saradnici": {
+      "heading": {
+        "sr": "Naši saradnici",
+        "en": "Our collaborators"
+      },
+      "sr": "Biramo „Naši saradnici“ - firme i stručnjaci sa kojima salon sarađuje.",
+      "en": "We pick “Naši saradnici” - the companies and specialists the salon works with."
+    },
+    "nav-logo": {
+      "heading": {
+        "sr": "Povratak na početnu",
+        "en": "Back to the home page"
+      },
+      "sr": "{Kliknemo} na logo u gornjem levom uglu - uvek vodi na početnu stranicu.",
+      "en": "We {click} the logo in the top left corner - it always leads back to the home page."
+    },
+    "nav-zakazite-termin": {
+      "heading": {
+        "sr": "Zakažite termin",
+        "en": "Book an appointment"
+      },
+      "sr": "{Kliknemo} dugme „Zakažite termin“ - vodi pravo na spisak usluga.",
+      "en": "We {click} the “Zakažite termin” button - it leads straight to the list of services."
+    },
+    "registracija-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija",
+        "en": "Open the menu"
+      },
+      "sr": "Na telefonu je meni sakriven iza dugmeta sa tri crtice. Dodirnemo ga da bismo došli do dugmeta „Registracija“.",
+      "en": "On a phone the menu is hidden behind the three-line button. We tap it to reach the “Registracija” button."
+    },
+    "registracija-klik-registracija": {
+      "heading": {
+        "sr": "Registracija",
+        "en": "Registration"
+      },
+      "sr": "{Kliknemo} „Registracija“ i otvara se forma za pravljenje naloga.",
+      "en": "We {click} “Registracija” and the account form opens."
+    },
+    "registracija": {
+      "heading": {
+        "sr": "Popunjavanje forme",
+        "en": "Fill in the form"
+      },
+      "sr": "Upisujemo ime, prezime, email adresu i lozinku (dva puta) i šaljemo formu. Nalog je napravljen.",
+      "en": "We type the first name, last name, email and password (twice) and submit the form. The account is created."
+    },
+    "login-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija",
+        "en": "Open the menu"
+      },
+      "sr": "Na telefonu je meni sakriven iza dugmeta sa tri crtice u gornjem desnom uglu. Dodirnemo ga.",
+      "en": "On a phone the menu is hidden behind the three-line button in the top right corner. We tap it."
+    },
+    "login-klik-prijava": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Log in"
+      },
+      "sr": "{Kliknemo} „Prijava“ u gornjem delu stranice.",
+      "en": "We {click} “Prijava” at the top of the page."
+    },
+    "prijava": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Log in"
+      },
+      "sr": "Posle registracije odmah smo na stranici za prijavu. Upisujemo email i lozinku i prijavljujemo se.",
+      "en": "After registering we are already on the login page. We type the email and password and log in."
+    },
+    "portal-nazad-otvara-meni": {
+      "heading": {
+        "sr": "Meni naloga",
+        "en": "Account menu"
+      },
+      "sr": "Stranice naloga imaju svoje uže zaglavlje. {Kliknemo} na naše ime u gornjem desnom uglu da otvorimo meni.",
+      "en": "Account pages have their own slim header. We {click} our name in the top right corner to open the menu."
+    },
+    "portal-nazad-bira-stavku": {
+      "heading": {
+        "sr": "Nazad na sajt",
+        "en": "Back to the site"
+      },
+      "sr": "Biramo „Nazad na sajt“ i vraćamo se na početnu stranicu.",
+      "en": "We choose “Nazad na sajt” and return to the home page."
+    },
+    "nalog-profil-otvara-meni": {
+      "heading": {
+        "sr": "Meni naloga",
+        "en": "Account menu"
+      },
+      "sr": "Posle prijave se pojavljuje naše ime - {kliknemo} na njega (na telefonu: otvorimo meni i spustimo se do odeljka sa imenom).",
+      "en": "After logging in our name appears - we {click} it (on a phone: open the menu and scroll to the section with our name)."
+    },
+    "nalog-profil-bira-stavku": {
+      "heading": {
+        "sr": "Moj profil",
+        "en": "My profile"
+      },
+      "sr": "Biramo „Moj profil“.",
+      "en": "We choose “Moj profil”."
+    },
+    "nalog-termini-otvara-meni": {
+      "heading": {
+        "sr": "Meni naloga",
+        "en": "Account menu"
+      },
+      "sr": "{Kliknemo} na naše ime (na telefonu: otvorimo meni i spustimo se do odeljka sa imenom).",
+      "en": "We {click} our name (on a phone: open the menu and scroll to the section with our name)."
+    },
+    "nalog-termini-bira-stavku": {
+      "heading": {
+        "sr": "Moji termini",
+        "en": "My appointments"
+      },
+      "sr": "Biramo „Moji termini“.",
+      "en": "We choose “Moji termini”."
+    },
+    "nalog-adrese-otvara-meni": {
+      "heading": {
+        "sr": "Meni naloga",
+        "en": "Account menu"
+      },
+      "sr": "{Kliknemo} na naše ime (na telefonu: otvorimo meni i spustimo se do odeljka sa imenom).",
+      "en": "We {click} our name (on a phone: open the menu and scroll to the section with our name)."
+    },
+    "nalog-adrese-bira-stavku": {
+      "heading": {
+        "sr": "Moje adrese",
+        "en": "My addresses"
+      },
+      "sr": "Biramo „Moje adrese“ - ovde se čuvaju adrese za dostavu.",
+      "en": "We choose “Moje adrese” - this is where delivery addresses are saved."
+    },
+    "odjava-otvara-meni": {
+      "heading": {
+        "sr": "Meni naloga",
+        "en": "Account menu"
+      },
+      "sr": "Ponovo otvaramo meni naloga (na telefonu: meni, pa spustimo do odeljka sa imenom).",
+      "en": "We open the account menu again (on a phone: the menu, then scroll to the section with our name)."
+    },
+    "odjava-bira-stavku": {
+      "heading": {
+        "sr": "Odjava",
+        "en": "Log out"
+      },
+      "sr": "Biramo „Odjava“ - sesija se završava.",
+      "en": "We choose “Odjava” - the session ends."
+    },
+    "admin-otvaranje-pocetne": {
+      "heading": {
+        "sr": "Početna stranica",
+        "en": "Home page"
+      },
+      "sr": "Administrator počinje na početnoj stranici sajta.",
+      "en": "The administrator starts on the site's home page."
+    },
+    "admin-login-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija",
+        "en": "Open the menu"
+      },
+      "sr": "Na telefonu je meni sakriven iza dugmeta sa tri crtice u gornjem desnom uglu. Dodirnemo ga.",
+      "en": "On a phone the menu is hidden behind the three-line button in the top right corner. We tap it."
+    },
+    "admin-login-klik-prijava": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Log in"
+      },
+      "sr": "{Kliknemo} „Prijava“.",
+      "en": "We {click} “Prijava”."
+    },
+    "admin-prijava": {
+      "heading": {
+        "sr": "Prijava administratora",
+        "en": "Admin logs in"
+      },
+      "sr": "Administrator upisuje email i lozinku i prijavljuje se.",
+      "en": "The administrator types the email and password and logs in."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": {
+        "sr": "Otvaranje menija naloga",
+        "en": "Open the account menu"
+      },
+      "sr": "Administrator {kliknemo} na dropdown sa svojim imenom u gornjem desnom uglu.",
+      "en": "The admin clicks the dropdown with their name in the top right corner.",
+      "mobile": {
+        "sr": "Administrator na telefonu otvara glavni meni dugmetom sa tri crtice.",
+        "en": "On a phone the admin opens the main menu with the three-line button.",
+        "heading": {
+          "sr": "Meni",
+          "en": "Menu"
+        }
+      }
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": {
+        "sr": "Ulazak u admin panel",
+        "en": "Enter the admin panel"
+      },
+      "sr": "Administrator bira „Admin panel“ iz menija, čime se otvara admin deo sajta.",
+      "en": "The admin chooses “Admin panel” from the menu, which opens the admin part of the site.",
+      "mobile": {
+        "sr": "U odeljku „Admin“ dodiruje „Admin panel“.",
+        "en": "In the “Admin” section they tap “Admin panel”.",
+        "heading": {
+          "sr": "Admin panel",
+          "en": "Admin panel"
+        }
+      }
+    }
+  }
+}

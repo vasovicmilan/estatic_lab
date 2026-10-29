@@ -2,7 +2,7 @@
 
 How an employee sets their own working hours, and how that immediately affects which appointment slots are available for booking.
 
-<video src="../../videos/radno-vreme-zaposlenog/merged.en.burned.webm" controls width="720"></video>
+<video src="../../videos/radno-vreme-zaposlenog/merged.en.burned.mp4" controls width="720"></video>
 
 _Subtitles are burned into the video - no external .vtt file needed_
 

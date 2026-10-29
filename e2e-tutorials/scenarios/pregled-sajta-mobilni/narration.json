@@ -1,0 +1,11 @@
+{
+  "extends": "pregled-sajta",
+  "title": {
+    "sr": "Pregled sajta - gde se šta nalazi (telefon)",
+    "en": "Site tour - where everything is (phone)"
+  },
+  "intro": {
+    "sr": "Obilazak javnog dela sajta za nekoga ko ga prvi put vidi: sve stavke glavnog menija, grupa „Više“, jedna usluga i jedan proizvod otvoreni iz liste i povratak na početnu preko logoa. Pokazan je svaki klik - na računaru i na telefonu (gde je meni iza dugmeta sa tri crtice). Snimljeno na telefonu (390x844).",
+    "en": "A tour of the public site for someone seeing it for the first time: every item of the main menu, the “Više” group, one service and one product opened from their lists, and the logo as the way back home. Every click is shown - on a computer and on a phone (where the menu is behind the three-line button). Recorded on a phone (390x844)."
+  }
+}

@@ -2,7 +2,7 @@
 
 Zaposleni traži isplatu svoje zarađene provizije, administrator je odobrava i označava kao isplaćenu. Ista mehanika radi identično i za partnere, preko njihovog odvojenog naloga.
 
-<video src="../../videos/isplata-zaposlenom/merged.sr.burned.webm" controls width="720"></video>
+<video src="../../videos/isplata-zaposlenom/merged.sr.burned.mp4" controls width="720"></video>
 
 _Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 

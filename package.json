@@ -29,7 +29,10 @@
     "tutorials:merge": "node e2e-tutorials/scripts/merge-video.mjs",
     "tutorials:burn": "node e2e-tutorials/scripts/burn-subtitles.mjs",
     "tutorials:build": "node e2e-tutorials/scripts/build-docs.mjs",
-    "tutorials": "npm run tutorials:run && npm run tutorials:subtitles && npm run tutorials:build"
+    "tutorials:publish": "node e2e-tutorials/scripts/publish-videos.mjs",
+    "tutorials": "npm run tutorials:run && npm run tutorials:subtitles && npm run tutorials:build",
+    "tutorials:finish": "npm run tutorials:subtitles && npm run tutorials:merge && npm run tutorials:burn && npm run tutorials:build && npm run tutorials:publish",
+    "tutorials:all": "node e2e-tutorials/scripts/run-all.mjs"
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",

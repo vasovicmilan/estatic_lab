@@ -1,0 +1,11 @@
+{
+  "extends": "otkazivanje-termina",
+  "title": {
+    "sr": "Otkazivanje termina (telefon)",
+    "en": "Cancelling an appointment (phone)"
+  },
+  "intro": {
+    "sr": "Klijent sam pregleda i otkazuje svoj budući termin iz naloga, bez poziva ili poruke salonu: meni naloga, „Moji termini“, termin iz liste, „Otkaži termin“. Snimljeno na telefonu (390x844).",
+    "en": "A customer views and cancels their own upcoming appointment from their account, without calling or messaging the salon: account menu, “Moji termini”, the appointment from the list, “Otkaži termin”. Recorded on a phone (390x844)."
+  }
+}

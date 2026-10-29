@@ -136,7 +136,7 @@ export async function seedProduct({ shippingClass = "standard", price = 1000, st
     // validatePublishInvariants. Points at a placeholder path, not a real uploaded
     // file - fine here since the product-detail page only renders the URL string,
     // it never reads the file from disk during these tests.
-    image: { img: "/images/products/e2e-placeholder.webp", imgDesc: "E2E test placeholder slika" },
+    image: { img: "/images/site/default-og.webp", imgDesc: "E2E test placeholder slika" },
     variations: [
       {
         label: "Standard",
@@ -245,7 +245,7 @@ export async function seedService({ price = 3000, duration = 30 } = {}) {
     name: `E2E Test Usluga ${suffix}`,
     slug: `e2e-test-usluga-${suffix}`,
     shortDescription: "Test usluga za E2E scenario.",
-    image: { img: "/images/services/e2e-placeholder.webp", imgDesc: "E2E test placeholder slika" },
+    image: { img: "/images/site/default-og.webp", imgDesc: "E2E test placeholder slika" },
     isActive: true,
     packages: [
       {

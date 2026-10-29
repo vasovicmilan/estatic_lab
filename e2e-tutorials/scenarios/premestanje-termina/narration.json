@@ -16,29 +16,17 @@
       "sr": "Administrator se prijavljuje na svoj nalog.",
       "en": "The admin logs into their account."
     },
-    "admin-ulazak-otvara-nalog-meni": {
-      "heading": {
-        "sr": "Otvaranje menija naloga",
-        "en": "Open the account menu"
-      },
-      "sr": "Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.",
-      "en": "The admin clicks the dropdown showing their name in the top-right corner."
-    },
-    "admin-ulazak-otvara-admin-panel": {
-      "heading": {
-        "sr": "Ulazak u admin panel",
-        "en": "Enter the admin panel"
-      },
-      "sr": "Administrator bira „Admin panel” iz menija, čime se otvara admin deo sajta.",
-      "en": "The admin picks \"Admin panel\" from the menu, opening the site's admin area."
-    },
     "admin-termini-otvara-meni": {
       "heading": {
         "sr": "Otvaranje menija „Zakazivanje”",
         "en": "Open the \"Scheduling\" menu"
       },
-      "sr": "Administrator klikne na grupu „Zakazivanje” u admin meniju.",
-      "en": "The admin clicks the \"Scheduling\" group in the admin menu."
+      "sr": "Administrator {klikne} na grupu „Zakazivanje” u admin meniju.",
+      "en": "The admin {clicks} the \"Scheduling\" group in the admin menu.",
+      "mobile": {
+        "sr": "Admin panel ima sopstveni meni iza dugmeta sa tri crtice. Administrator ga otvara i bira grupu „Zakazivanje“.",
+        "en": "The admin panel has its own menu behind a three-line button. The admin opens it and chooses the “Scheduling” group."
+      }
     },
     "admin-termini-bira-stavku": {
       "heading": {
@@ -62,7 +50,11 @@
         "en": "Open the appointment"
       },
       "sr": "Administrator otvara detalje termina.",
-      "en": "The admin opens the appointment's details."
+      "en": "The admin opens the appointment's details.",
+      "mobile": {
+        "sr": "Na telefonu se tabela pomera u stranu - administrator dodiruje ikonicu za detalje na kraju reda.",
+        "en": "On a phone the table scrolls sideways - the admin taps the details icon at the end of the row."
+      }
     },
     "premestanje-na-slobodnog": {
       "heading": {
@@ -78,7 +70,11 @@
         "en": "Reopen the menu"
       },
       "sr": "Administrator se vraća u meni da još jednom proveri termin.",
-      "en": "The admin returns to the menu to check the appointment once more."
+      "en": "The admin returns to the menu to check the appointment once more.",
+      "mobile": {
+        "sr": "Admin panel ima sopstveni meni iza dugmeta sa tri crtice. Administrator ga otvara i bira grupu „Zakazivanje“.",
+        "en": "The admin panel has its own menu behind a three-line button. The admin opens it and chooses the “Scheduling” group."
+      }
     },
     "admin-ponovo-bira-stavku": {
       "heading": {
@@ -102,7 +98,11 @@
         "en": "Reopen the appointment"
       },
       "sr": "Administrator ponovo otvara isti termin, sada da proveri padajuću listu za dodelu.",
-      "en": "The admin reopens the same appointment, this time to check the assignment dropdown."
+      "en": "The admin reopens the same appointment, this time to check the assignment dropdown.",
+      "mobile": {
+        "sr": "Na telefonu se tabela pomera u stranu - administrator dodiruje ikonicu za detalje na kraju reda.",
+        "en": "On a phone the table scrolls sideways - the admin taps the details icon at the end of the row."
+      }
     },
     "zauzet-zaposleni-nije-ponudjen": {
       "heading": {

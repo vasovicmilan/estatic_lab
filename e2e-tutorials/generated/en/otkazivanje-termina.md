@@ -1,37 +1,61 @@
 # Cancelling an appointment
 
-A customer can view and cancel their own upcoming appointment from their account, without having to call or message the salon.
+A customer views and cancels their own upcoming appointment from their account, without calling or messaging the salon: account menu, “Moji termini”, the appointment from the list, “Otkaži termin”.
 
-<video src="../../videos/otkazivanje-termina/merged.en.burned.webm" controls width="720"></video>
+<video src="../../videos/otkazivanje-termina/merged.en.burned.mp4" controls width="720"></video>
 
 _Subtitles are burned into the video - no external .vtt file needed_
 
-## 1. Register
+## 1. Home page
 
-The customer registers.
+We start on the site's home page.
 
-![registracija](../../screenshots/otkazivanje-termina/01-registracija.png)
+![otvaranje-pocetne](../../screenshots/otkazivanje-termina/01-otvaranje-pocetne.png)
 
-## 2. Log in
+## 2. Registration
 
-The customer logs into their account.
+We click “Registracija” and the account form opens.
 
-![prijava](../../screenshots/otkazivanje-termina/02-prijava.png)
+![registracija-klik-registracija](../../screenshots/otkazivanje-termina/02-registracija-klik-registracija.png)
 
-## 3. View appointments
+## 3. Fill in the form
 
-In the "My appointments" section, the customer sees a list of their booked appointments.
+We type the first name, last name, email and password (twice) and submit the form. The account is created.
 
-![pregled-termina](../../screenshots/otkazivanje-termina/03-pregled-termina.png)
+![registracija](../../screenshots/otkazivanje-termina/03-registracija.png)
 
-## 4. Appointment details
+## 4. Log in
 
-Clicking the appointment opens its details - the cancel button is visible because the appointment is far enough in the future.
+After registering we are already on the login page. We type the email and password and log in.
 
-![otvaranje-detalja-termina](../../screenshots/otkazivanje-termina/04-otvaranje-detalja-termina.png)
+![prijava](../../screenshots/otkazivanje-termina/04-prijava.png)
 
-## 5. Cancel
+## 5. Account menu
 
-The customer clicks "Cancel appointment", confirms in the dialog, and the appointment is cancelled.
+We click our name (on a phone: open the menu and scroll to the section with our name).
 
-![otkazivanje-termina](../../screenshots/otkazivanje-termina/05-otkazivanje-termina.png)
+![nalog-termini-otvara-meni](../../screenshots/otkazivanje-termina/05-nalog-termini-otvara-meni.png)
+
+## 6. My appointments
+
+We choose “Moji termini”.
+
+![nalog-termini-bira-stavku](../../screenshots/otkazivanje-termina/06-nalog-termini-bira-stavku.png)
+
+## 7. The appointment list
+
+“Moji termini” shows the list of booked appointments.
+
+![pregled-termina](../../screenshots/otkazivanje-termina/07-pregled-termina.png)
+
+## 8. Appointment details
+
+We click the appointment in the list. The cancel button is visible because the appointment is far enough in the future.
+
+![otvaranje-detalja-termina](../../screenshots/otkazivanje-termina/08-otvaranje-detalja-termina.png)
+
+## 9. Cancelling
+
+We click “Otkaži termin”, confirm in the dialog and the appointment is cancelled.
+
+![otkazivanje-termina](../../screenshots/otkazivanje-termina/09-otkazivanje-termina.png)

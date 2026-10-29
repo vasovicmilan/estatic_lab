@@ -104,7 +104,7 @@ stvarno isporuči nekome (klijent, sajam), export-uj `generated/` + `videos/` +
   (podrazumevano 400ms po Playwright akciji - klik, fill, navigacija). Podesivo
   preko `E2E_TUTORIAL_SLOWMO_MS` env varijable za brz eksperiment bez menjanja
   fajla. Uz to, `tutorial.fixture.js` pravi pauzu (`STEP_PAUSE_MS`, podrazumevano
-  1.2s) posle svakog koraka, da video zastane na rezultatu pre nego što krene
+  2.5s) posle svakog koraka, da video zastane na rezultatu pre nego što krene
   sledeći korak - bez ovoga, korak koji je samo jedan klik prolazi kao trep u
   videu bez obzira na slowMo.
 - **"Poskakivanje" teksta.** Playwright `.fill()` upisuje vrednost trenutno, bez
@@ -133,6 +133,61 @@ Za stvarno profesionalan kvalitet (viši FPS, kontrola bitrate-a, eventualno
 zumiranje/isticanje kursora u post-produkciji) bilo bi potrebno snimanje ekrana
 spolja (OBS i sl.) dok se test pušta u `--headed` modu, umesto Playwright-ovog
 `recordVideo` - veća promena, javi ako je to zapravo cilj pa napravimo taj put.
+
+## Ceo postupak: od snimanja do gotovog videa sa titlovima
+
+Jedna komanda radi sve redom (traje dugo - pusti je preko noći):
+
+```bash
+npm run tutorials:all                          # sve, 6 koraka, na kraju ispiše koliko je koji trajao
+npm run tutorials:all -- --only kupovina       # samo scenariji čije ime sadrži "kupovina" (regex), pa ceo ostatak postupka
+npm run tutorials:all -- --skip-record         # bez snimanja (koraci 2-6), kad menjaš samo tekst ili veličinu titla
+```
+
+Scenario koji pukne **ne zaustavlja** postupak: ostalo se obradi i objavi, a na kraju dobiješ spisak pukih i izlazni kod 1.
+
+To su, redom, ovi koraci (svaki se može pokrenuti i zasebno):
+
+| # | Komanda | Šta radi | Šta nastaje |
+|---|---------|----------|-------------|
+| 1 | `npm run tutorials:run` | Playwright odvrti svaki `scenario.spec.js` u pravom browseru (računar 1920x1080, telefon 390x844) protiv aplikacije sa in-memory bazom. Posle svakog koraka pravi screenshot i beleži trenutak u videu. | `screenshots/<id>/`, `videos/<id>/full-flow.webm` (+ `admin-flow.webm`), `scenarios/<id>/manifest.json` |
+| 2 | `npm run tutorials:subtitles` | Spaja `manifest.json` sa tekstom iz `narration.json` (+ `common-narration.json`) u titl fajlove po snimku. | `videos/<id>/<snimak>.sr.vtt` / `.en.vtt` |
+| 3 | `npm run tutorials:merge` | Spaja snimke svih aktera (klijent, admin) u jedan video u pravom hronološkom redosledu (30 fps) i pravi titl za spojeni video. Traži `ffmpeg` i `ffprobe`. | `videos/<id>/merged.webm`, `merged.sr.vtt`, `merged.en.vtt` |
+| 4 | `npm run tutorials:burn` | Zapeče titlove u sliku (H.264, 30 fps), posebno za srpski i za engleski. Telefonski videi se udvostruče po rezoluciji i titlovi idu u crnu traku ispod ekrana telefona. | `videos/<id>/merged.sr.burned.mp4`, `merged.en.burned.mp4` |
+| 5 | `npm run tutorials:build` | Pravi markdown uputstvo sa slikama i videom (zapečen > spojen > pojedinačni). | `generated/sr/<id>.md`, `generated/en/<id>.md` |
+| 6 | `npm run tutorials:publish` | Kopira **samo gotove zapečene videe** (+ poster sličicu i `manifest.json`) u folder koji aplikacija servira kroz rute sa kontrolom pristupa. | `storage/tutorials/` |
+
+`npm run tutorials` (bez `:all`) radi samo korake 1, 2 i 5. `npm run tutorials:finish` radi korake 2 do 6.
+
+### Uputstva u aplikaciji (`/uputstva`)
+
+Koraci 6 puni folder `storage/tutorials` (ili `TUTORIALS_DIR` iz `.env`, isti folder čita i aplikacija). Folder je **namerno van `src/public`**: `express.static` bi svaki fajl dao svakome ko pogodi adresu. Zato se videi šalju samo kroz rute `/uputstva/video/...` i `/uputstva/poster/...` koje za svaki fajl proveravaju ko gleda (`src/services/tutorial-video.service.js`).
+
+Ko šta vidi određuje `e2e-tutorials/audience.json` (ime scenarija -> `public | user | partner | employee | admin`):
+
+| Posetilac | Vidi |
+|-----------|------|
+| gost | `public` |
+| prijavljen korisnik | `public` + `user` |
+| partner | `public` + `user` + `partner` |
+| zaposleni | `public` + `user` + `employee` |
+| administrator (`access_admin_panel`) | sve |
+
+Scenario koji nije naveden u `audience.json` objavi se kao `admin` (najstrože) uz upozorenje. Novi scenario = jedan red u tom fajlu. Na produkciji `TUTORIALS_DIR` treba da pokazuje na trajni disk koji preživljava deploy; videe generišeš lokalno i preneseš taj folder.
+
+**Treptanje i skakanje slike na telefonu.** Uzroci su rešeni u kodu: (1) screenshot cele stranice na telefonu je privremeno menjao raspored stranice usred snimanja, pa je sada na telefonu screenshot samo vidljivog ekrana (`E2E_TUTORIAL_FULLPAGE_MOBILE=1` vraća ceo; pretpostavka je da se treptanje vraća); (2) automatski skrol je bio trenutan, sada je `scroll-behavior: smooth`; (3) snimak ima promenljiv broj sličica u sekundi, sada se pre spajanja i pri zapeku svodi na stalnih 30 fps.
+
+Jedan scenario (primer, telefonska verzija):
+
+```bash
+npx playwright test --config=playwright.tutorials.config.js e2e-tutorials/scenarios/kupovina-paketa-mobilni --reporter=line
+node e2e-tutorials/scripts/build-subtitles.mjs kupovina-paketa-mobilni
+node e2e-tutorials/scripts/merge-video.mjs kupovina-paketa-mobilni
+node e2e-tutorials/scripts/burn-subtitles.mjs kupovina-paketa-mobilni
+node e2e-tutorials/scripts/build-docs.mjs kupovina-paketa-mobilni
+```
+
+**Veličina titlova na telefonu** je jedna konstanta, `PHONE_FONT_RATIO` u `scripts/burn-subtitles.mjs` (udeo širine slike, trenutno 0.07). Za brzu probu bez menjanja fajla: `E2E_TUTORIAL_PHONE_FONT=0.08 node e2e-tutorials/scripts/burn-subtitles.mjs <id>`. Titlovi se menjaju samo korakom 4, snimanje se ne ponavlja.
 
 ## Pokretanje
 
@@ -200,6 +255,53 @@ node e2e-tutorials/scripts/merge-video.mjs partner-nalog-pregled-mobilni
 node e2e-tutorials/scripts/burn-subtitles.mjs partner-nalog-pregled-mobilni
 node e2e-tutorials/scripts/build-docs.mjs partner-nalog-pregled-mobilni
 ```
+
+## Zajednički tokovi (`flows/`) - računar i telefon iz jednog izvora
+
+Javni deo (i svaki scenario koji treba da postoji u obe varijante) piše se **jednom**, u `flows/<id>.flow.js`:
+
+```js
+export async function run({ page, browser, tut, mobile, scenarioId }) { ... }
+```
+
+`scenarios/<id>/scenario.spec.js` i `scenarios/<id>-mobilni/scenario.spec.js` su tanki fajlovi koji samo biraju uređaj (`MOBILE = false/true`) i pozovu isti `run()`. Tok ne može da se razilazi između računara i telefona - menja se na jednom mestu. Ako telefon traži dodatni klik (burger meni), helper ga sam doda na osnovu `mobile` parametra.
+
+**Narracija se takođe piše jednom.** `scenarios/<id>-mobilni/narration.json` sadrži samo `title` i `intro` plus `"extends": "<id>"` - svi koraci se nasleđuju. U tekstu se koriste tokeni koji se menjaju po uređaju (`scripts/lib/narration.mjs`): `{klikcemo}`/`{kliknemo}`/`{Kliknemo}` -> klikćemo/kliknemo (računar) ili dodirujemo/dodirnemo (telefon); `{click}`/`{Click}`/`{clicking}` -> click/tap/tapping. Ako se tekst koraka stvarno razlikuje, koristi `"mobile": { "sr": ..., "en": ... }` unutar tog koraka.
+
+**`common-narration.json`** drži tekst koraka koje dele svi scenariji (klik na stavke menija `nav-*`, registracija, prijava, meni naloga, ulazak u admin panel). Scenario koji sam definiše isti `id` uvek pobeđuje. `build-docs`, `build-subtitles` i `merge-video` svi čitaju narraciju preko `loadNarration()` pa se ovo primenjuje svuda isto.
+
+### Helperi za navigaciju bez skakanja na URL (`scripts/slow-actions.js`)
+
+Svi primaju `mobile` i na telefonu sami otvore burger meni (korak `nav-otvara-meni`).
+
+| Helper | Šta radi | Koraci (id) |
+|---|---|---|
+| `clickMainNavLink` | stavka glavnog menija (Usluge, Paketi, Prodavnica, Blog, Naš tim, Partnerski program, Kontakt) | `nav-otvara-meni` (telefon), zadati `id` |
+| `openMoreMenuLink` | stavka iz „Više“ (O nama, Česta pitanja, Naši saradnici) | `nav-vise-otvara` (računar), zadati `id` |
+| `clickBookNowButton` | dugme „Zakažite termin“ u zaglavlju | `nav-zakazite-termin` |
+| `registerViaNavSlowly` / `goToRegisterViaNav` | „Registracija“ -> forma | `registracija-otvara-meni`, `registracija-klik-registracija`, `registracija` |
+| `loginViaNavSlowly` / `goToLoginViaNav` | „Prijava“ -> forma | `login-otvara-meni`, `login-klik-prijava`, `prijava` |
+| `openAccountMenuItem` | stavka iz menija naloga (Moj profil, Moji termini, Odjava...) | `<prefix>-otvara-meni`, `<prefix>-bira-stavku` |
+| `backToSiteFromPortal` | iz stranica naloga/portala nazad na sajt („Nazad na sajt“) | `portal-nazad-otvara-meni`, `portal-nazad-bira-stavku` |
+| `bookServiceViaNav` | put klijenta do stranice sa podacima za rezervaciju: „Zakažite termin“ → usluga → varijanta → datum → termin | `nav-zakazite-termin`, `otvaranje-stranice-usluge`, `izbor-varijante-usluge`, `izbor-datuma`, `izbor-termina` |
+| `openListedItem` | kartica usluge/proizvoda/termina iz liste | zadati `id` |
+| `adminSignInViaNav` | cela uvodna sekvenca administratora: početna → „Prijava“ → forma → meni naloga → „Admin panel“ | `admin-otvaranje-pocetne`, `admin-login-*`, `admin-prijava`, `admin-ulazak-*` |
+| `clickVisibly` | klik; na telefonu prethodno glatko skrola do elementa | - |
+| `tutFor(tut, page, video)` | `tut` vezan za drugog aktera (admin) da se isti helperi mogu koristiti i za njega | - |
+
+**Polja koja se ne vide u snimku** (nativni `<select>`, `<input type="date">`, upload fajla - OS prozor se nikad ne snima): `selectOptionVisibly`, `chooseDateVisibly`, `uploadFileVisibly` prvo glatko skroluju do polja i ističu ga crvenim okvirom, pa tek onda postave vrednost.
+
+**Napomene**
+- „Dodaj u korpu“ već sam preusmerava na `/korpa` - nema posebnog koraka „otvori korpu“.
+- Link iz email potvrde je jedino mesto gde se URL i dalje otvara direktno (u E2E nema sandučeta) - i narracija to kaže.
+- `openListedItem`: ako stavka nije vidljiva na trenutnoj strani liste (lista je stranična, sortirana od najnovijeg), korak otvara URL direktno i to ispiše u konzoli (`[tutorial] ... is not visible ...`). Svež seed je normalno na prvoj strani.
+- Admin lista na telefonu je tabela koja se horizontalno pomera: `searchAndOpenAdminRecord(..., { mobile: true })` glatko skroluje do ikonice „Detalji“ pre klika.
+
+### Scenariji napravljeni kao tokovi (svaki u obe varijante)
+
+`kupovina-proizvoda-sa-kuponom`, `kupovina-bez-naloga`, `kupovina-sa-nalogom`, `zakazivanje-termina` (klijent + admin), `kupovina-paketa` (admin dodeljuje paket, klijent rezerviše iz paketa, admin završava), `cena-na-upit` (upit + ručna porudžbina), `otkazivanje-porudzbine` (admin, modal sa razlogom), `otkazivanje-termina`, `dostava-velikog-artikla`, `provizija-partnera-za-rezervaciju`, `provizija-za-paket-sa-preporukom`, `provizija-pri-zavrsetku-porudzbine`, `premestanje-termina`, `pregled-sajta` (obilazak svih stavki javnog menija), `moj-nalog-pregled` (sve kartice naloga + odjava).
+
+**Pokretanje:** `npx playwright test --config=playwright.tutorials.config.js e2e-tutorials/scenarios/pregled-sajta-mobilni`, pa `tutorials:subtitles`, `tutorials:merge`, `tutorials:burn`, `tutorials:build` za taj scenario (isto kao u sekciji „Mobilni tutorijali“).
 
 ## Git
 

@@ -2,7 +2,7 @@
 
 Zaposleni ima svoj poseban deo naloga za rad sa sopstvenim terminima - potvrđivanje, završavanje i pregled zarađene provizije - potpuno odvojeno od admin panela.
 
-<video src="../../videos/zaposleni-upravlja-terminima/merged.sr.burned.webm" controls width="720"></video>
+<video src="../../videos/zaposleni-upravlja-terminima/merged.sr.burned.mp4" controls width="720"></video>
 
 _Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 

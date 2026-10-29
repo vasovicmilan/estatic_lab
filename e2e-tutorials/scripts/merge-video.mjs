@@ -5,6 +5,7 @@ import { execFile } from "child_process";
 import { promisify } from "util";
 import { fileURLToPath } from "url";
 import { formatVttTime } from "./lib/subtitle-utils.mjs";
+import { loadNarration } from "./lib/narration.mjs";
 
 const execFileAsync = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -117,7 +118,9 @@ async function mergeScenario(scenarioId) {
       const startSec = (startMs / 1000).toFixed(3);
       const endSec = (Math.max(endMs, startMs + 500) / 1000).toFixed(3); // guard against a zero/negative-length trim
       const seg = `s${i}`;
-      filterParts.push(`[${inputIndex}:v]trim=start=${startSec}:end=${endSec},setpts=PTS-STARTPTS[${seg}]`);
+      // fps=30: Playwright's recordings have a variable frame rate; normalising before the
+      // concat is part of what keeps the merged video from stuttering.
+      filterParts.push(`[${inputIndex}:v]trim=start=${startSec}:end=${endSec},setpts=PTS-STARTPTS,fps=30[${seg}]`);
       segmentNames.push(`[${seg}]`);
       run._trimStartMs = startMs; // stashed for the subtitle pass below
       run._trimEndMs = Number(endSec) * 1000;
@@ -126,7 +129,7 @@ async function mergeScenario(scenarioId) {
     const filter = filterParts.join(";");
 
     const outPath = path.join(videosDir, "merged.webm");
-    await execFileAsync("ffmpeg", ["-y", ...inputArgs, "-filter_complex", filter, "-map", "[outv]", "-c:v", "libvpx", "-b:v", "2M", "-crf", "10", outPath], { maxBuffer: 1024 * 1024 * 64 });
+    await execFileAsync("ffmpeg", ["-y", ...inputArgs, "-filter_complex", filter, "-map", "[outv]", "-c:v", "libvpx", "-b:v", "2M", "-crf", "10", "-deadline", "good", "-cpu-used", "5", outPath], { maxBuffer: 1024 * 1024 * 64 });
     console.log(`  [ok] videos/${scenarioId}/merged.webm`);
   }
 
@@ -136,7 +139,7 @@ async function mergeScenario(scenarioId) {
   // cumulative offset, which assumed each video contributed exactly one
   // contiguous block.
   const narrationPath = path.join(scenarioDir, "narration.json");
-  const narration = (await fs.pathExists(narrationPath)) ? await fs.readJson(narrationPath) : { steps: {} };
+  const narration = (await loadNarration(scenarioId)) || { steps: {} };
 
   if (runs.length === 1) {
     // single-actor case never went through the trim loop above, so _trimStartMs

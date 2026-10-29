@@ -2,6 +2,7 @@
 import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
+import { loadNarration } from "./lib/narration.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -54,7 +55,9 @@ async function buildScenario(scenarioId) {
   }
 
   const manifest = await fs.readJson(manifestPath);
-  const narration = await fs.readJson(narrationPath);
+  // loadNarration resolves `extends`, phone-only wording, click/tap tokens and the
+  // shared navigation fallback text (e2e-tutorials/common-narration.json)
+  const narration = await loadNarration(scenarioId);
 
   if (manifest.length === 0) {
     console.warn(`  [warn] ${scenarioId}: empty manifest.json (scenario likely failed before any tut.step() completed) - skipping`);
@@ -72,7 +75,7 @@ async function buildScenario(scenarioId) {
 
     // Video(s), if this scenario recorded any (see e2e-tutorials/scripts/tutorial.fixture.js's
     // context override + newRecordedContext). Priority order:
-    //   1. merged.<lang>.burned.webm (scripts/burn-subtitles.mjs) - captions are
+    //   1. merged.<lang>.burned.mp4 (scripts/burn-subtitles.mjs) - captions are
     //      permanently part of the video's pixels, so this needs NO <track>, no
     //      external .vtt, and no "load subtitle track" step in any player - the
     //      whole reason this exists is a real workflow complaint (having to
@@ -91,7 +94,7 @@ async function buildScenario(scenarioId) {
     // tutorial.fixture.js, or a scenario that failed before context.close() ran)
     // - silently omitted rather than a broken embed.
     const videoDir = path.join(ROOT, "videos", scenarioId);
-    const burnedPath = path.join(videoDir, `merged.${lang}.burned.webm`);
+    const burnedPath = path.join(videoDir, `merged.${lang}.burned.mp4`);
     const mergedPath = path.join(videoDir, "merged.webm");
     if (await fs.pathExists(burnedPath)) {
       const relPath = relativeLink(outDir, burnedPath);

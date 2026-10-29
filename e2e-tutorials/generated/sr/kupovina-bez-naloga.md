@@ -1,85 +1,115 @@
 # Kupovina bez naloga (gost)
 
-Klijent ne mora nikad da se registruje - dovoljno je da popuni podatke pri naplati, a nalog se automatski pravi u pozadini. Ovde se to pokazuje dva puta: jednom bez kupona, jednom sa kuponom, sa dva različita klijenta.
+Klijent kupuje bez ikakve registracije: bira proizvod u prodavnici, upisuje podatke na naplati, a sistem sam pravi nalog u pozadini. Pokazane su dve kupovine (druga sa kuponom) - svaka sa novim gostom, pa se automatsko pravljenje naloga dešava oba puta.
 
-<video src="../../videos/kupovina-bez-naloga/merged.sr.burned.webm" controls width="720"></video>
+<video src="../../videos/kupovina-bez-naloga/merged.sr.burned.mp4" controls width="720"></video>
 
 _Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 
-## 1. Otvaranje prvog proizvoda
+## 1. Početna stranica
 
-Klijent (nije prijavljen) otvara proizvod i dodaje ga u korpu.
+Počinjemo na početnoj stranici sajta.
 
-![otvaranje-prvog-proizvoda](../../screenshots/kupovina-bez-naloga/01-otvaranje-prvog-proizvoda.png)
+![otvaranje-pocetne](../../screenshots/kupovina-bez-naloga/01-otvaranje-pocetne.png)
 
-## 2. Prelazak na naplatu
+## 2. Prodavnica
 
-Na stranici za naplatu, sistem jasno objašnjava da će nalog biti automatski kreiran ako ga klijent nema.
+U meniju kliknemo „Prodavnica“ - spisak proizvoda koji se mogu poručiti.
 
-![prelazak-na-naplatu-1](../../screenshots/kupovina-bez-naloga/02-prelazak-na-naplatu-1.png)
+![nav-prodavnica](../../screenshots/kupovina-bez-naloga/02-nav-prodavnica.png)
 
-## 3. Unos podataka kao gost
+## 3. Izbor prvog proizvoda
 
-Klijent unosi sve podatke od nule - ime, email, telefon, adresu - ništa nije unapred popunjeno.
+U listi proizvoda kliknemo na prvi proizvod.
 
-![unos-podataka-kao-gost-1](../../screenshots/kupovina-bez-naloga/03-unos-podataka-kao-gost-1.png)
+![otvaranje-prvog-proizvoda](../../screenshots/kupovina-bez-naloga/03-otvaranje-prvog-proizvoda.png)
 
-## 4. Potvrda porudžbine
+## 4. Dodavanje u korpu
 
-Klijent potvrđuje porudžbinu bez ikakvog kupona.
+Kliknemo „Dodaj u korpu“ - sistem odmah otvara korpu.
 
-![potvrda-porudzbine-1](../../screenshots/kupovina-bez-naloga/04-potvrda-porudzbine-1.png)
+![dodavanje-u-korpu-1](../../screenshots/kupovina-bez-naloga/04-dodavanje-u-korpu-1.png)
 
-## 5. Nalog je automatski kreiran
+## 5. Prelazak na naplatu
 
-U pozadini je upravo napravljen pravi nalog za ovaj email - klijent to nije morao ni da traži.
+U korpi kliknemo „Nastavi na naplatu“. Nismo prijavljeni - sistem to naglašava i objašnjava da će nalog biti napravljen automatski.
 
-![nalog-automatski-kreiran-1](../../screenshots/kupovina-bez-naloga/05-nalog-automatski-kreiran-1.png)
+![prelazak-na-naplatu-1](../../screenshots/kupovina-bez-naloga/05-prelazak-na-naplatu-1.png)
 
-## 6. Email potvrde
+## 6. Podaci gosta
 
-Klijent klikom na link iz emaila finalizuje prvu porudžbinu.
+Ništa nije unapred popunjeno - upisujemo ime, prezime, email, telefon i adresu dostave.
 
-![email-potvrde-1](../../screenshots/kupovina-bez-naloga/06-email-potvrde-1.png)
+![unos-podataka-kao-gost-1](../../screenshots/kupovina-bez-naloga/06-unos-podataka-kao-gost-1.png)
 
-## 7. Otvaranje drugog proizvoda
+## 7. Potvrda porudžbine
 
-Novi, potpuno drugi klijent otvara drugi proizvod - opet bez prijave.
+Kliknemo „Potvrdi porudžbinu“.
 
-![otvaranje-drugog-proizvoda](../../screenshots/kupovina-bez-naloga/07-otvaranje-drugog-proizvoda.png)
+![potvrda-porudzbine-1](../../screenshots/kupovina-bez-naloga/07-potvrda-porudzbine-1.png)
 
-## 8. Prelazak na naplatu
+## 8. Nalog je automatski napravljen
 
-Ista poruka o automatskom nalogu se ponovo pojavljuje - ovo je zaista nov, prvi put viđen klijent.
+U pozadini je sistem napravio pravi korisnički nalog za ovaj email - klijent to nije morao da traži.
 
-![prelazak-na-naplatu-2](../../screenshots/kupovina-bez-naloga/08-prelazak-na-naplatu-2.png)
+![nalog-automatski-kreiran-1](../../screenshots/kupovina-bez-naloga/08-nalog-automatski-kreiran-1.png)
 
-## 9. Unos podataka kao gost
+## 9. Potvrda putem linka
 
-Klijent ponovo unosi sve podatke od nule.
+Link iz email poruke finalizuje porudžbinu (ovde simulirano direktnim otvaranjem linka).
 
-![unos-podataka-kao-gost-2](../../screenshots/kupovina-bez-naloga/09-unos-podataka-kao-gost-2.png)
+![email-potvrde-1](../../screenshots/kupovina-bez-naloga/09-email-potvrde-1.png)
 
-## 10. Primena kupona
+## 10. Prodavnica
 
-Za razliku od prve kupovine, ovaj klijent ima kod kupona i primenjuje ga.
+U meniju kliknemo „Prodavnica“ - spisak proizvoda koji se mogu poručiti.
 
-![primena-kupona-2](../../screenshots/kupovina-bez-naloga/10-primena-kupona-2.png)
+![nav-prodavnica](../../screenshots/kupovina-bez-naloga/10-nav-prodavnica.png)
 
-## 11. Potvrda porudžbine
+## 11. Izbor drugog proizvoda
 
-Klijent potvrđuje porudžbinu sa popustom iz kupona.
+Za drugu kupovinu ponovo kliknemo „Prodavnica“ i biramo drugi proizvod iz liste.
 
-![potvrda-porudzbine-2](../../screenshots/kupovina-bez-naloga/11-potvrda-porudzbine-2.png)
+![otvaranje-drugog-proizvoda](../../screenshots/kupovina-bez-naloga/11-otvaranje-drugog-proizvoda.png)
 
-## 12. Nalog je automatski kreiran
+## 12. Dodavanje u korpu
 
-Isto se dešava i za ovog klijenta - potpuno nezavisno od prvog.
+Kliknemo „Dodaj u korpu“ - sistem otvara korpu.
 
-![nalog-automatski-kreiran-2](../../screenshots/kupovina-bez-naloga/12-nalog-automatski-kreiran-2.png)
+![dodavanje-u-korpu-2](../../screenshots/kupovina-bez-naloga/12-dodavanje-u-korpu-2.png)
 
-## 13. Email potvrde
+## 13. Prelazak na naplatu
 
-I druga porudžbina se finalizuje istim putem.
+U korpi kliknemo „Nastavi na naplatu“.
 
-![email-potvrde-2](../../screenshots/kupovina-bez-naloga/13-email-potvrde-2.png)
+![prelazak-na-naplatu-2](../../screenshots/kupovina-bez-naloga/13-prelazak-na-naplatu-2.png)
+
+## 14. Podaci drugog gosta
+
+Drugi gost, drugi email - upisujemo sve podatke ispočetka.
+
+![unos-podataka-kao-gost-2](../../screenshots/kupovina-bez-naloga/14-unos-podataka-kao-gost-2.png)
+
+## 15. Primena kupona
+
+Upisujemo kod kupona i kliknemo dugme za primenu - odmah se vidi umanjen iznos.
+
+![primena-kupona-2](../../screenshots/kupovina-bez-naloga/15-primena-kupona-2.png)
+
+## 16. Potvrda porudžbine
+
+Kliknemo „Potvrdi porudžbinu“.
+
+![potvrda-porudzbine-2](../../screenshots/kupovina-bez-naloga/16-potvrda-porudzbine-2.png)
+
+## 17. Nalog je automatski napravljen
+
+I za drugi email sistem sam pravi nalog.
+
+![nalog-automatski-kreiran-2](../../screenshots/kupovina-bez-naloga/17-nalog-automatski-kreiran-2.png)
+
+## 18. Potvrda putem linka
+
+Link iz email poruke finalizuje i drugu porudžbinu.
+
+![email-potvrde-2](../../screenshots/kupovina-bez-naloga/18-email-potvrde-2.png)

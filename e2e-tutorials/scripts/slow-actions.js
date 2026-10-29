@@ -24,7 +24,15 @@ const PASSWORD = "lozinka123";
  */
 export async function registerViaUISlowly(page, { email, firstName = "Test", lastName = "Korisnik", phone = null }) {
   await page.goto("/registracija");
+  await fillRegisterFormSlowly(page, { email, firstName, lastName, phone });
+}
 
+/**
+ * The registration FORM only (no page.goto) - split out of registerViaUISlowly so a
+ * scenario that reached /registracija by clicking "Registracija" in the header
+ * (registerViaNavSlowly below) fills the exact same form without jumping to a URL.
+ */
+export async function fillRegisterFormSlowly(page, { email, firstName = "Test", lastName = "Korisnik", phone = null }) {
   // no cookie-consent-banner dismissal needed here anymore - the consent cookie
   // is set BEFORE any page loads (see tutorial.fixture.js's preAcceptCookieConsent,
   // called once per context) so the banner never becomes visible in the first place
@@ -264,7 +272,7 @@ export async function navigateAdminViaMenu(adminPage, tut, video, { groupLabel, 
  * that matches zero rows fails in ~10s with a clear "locator not found" error
  * instead of hanging.
  */
-export async function searchAndOpenAdminRecord(adminPage, tut, video, { searchValue, stepIdPrefix }) {
+export async function searchAndOpenAdminRecord(adminPage, tut, video, { searchValue, stepIdPrefix, mobile = false }) {
   await tut.step(`${stepIdPrefix}-pretraga`, async () => {
     await typeSlowly(adminPage.locator('input[name="search"]'), searchValue);
     // exact markup from includes/components/search.ejs - <form class="... admin-list-search">
@@ -275,7 +283,16 @@ export async function searchAndOpenAdminRecord(adminPage, tut, video, { searchVa
 
   await tut.step(`${stepIdPrefix}-otvaranje-rezultata`, async () => {
     // exact markup from admin/_list.ejs's "view" action - <a title="Detalji" aria-label="Detalji">
-    await adminPage.locator('a[title="Detalji"]').first().click({ timeout: NAV_ACTION_TIMEOUT });
+    const detailsLink = adminPage.locator('a[title="Detalji"]').first();
+    // on a phone the list is a horizontally scrolling table (admin/_list.ejs wraps it
+    // in .table-responsive) - the "Detalji" icon sits off to the right, out of the
+    // 390px screen. Click() would scroll it into view instantly, which in a video is a
+    // jump cut; scrolling there smoothly first shows the viewer where the icon is.
+    if (mobile) {
+      await detailsLink.evaluate((el) => el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" }));
+      await adminPage.waitForTimeout(900);
+    }
+    await detailsLink.click({ timeout: NAV_ACTION_TIMEOUT });
   }, { page: adminPage, video });
 }
 
@@ -382,4 +399,268 @@ export async function clickPortalTab(page, { mobile = false, label }) {
   const bar = page.locator(mobile ? ".portal-bottom-nav" : ".portal-desktop-nav");
   await bar.getByRole("link", { name: label, exact: true }).click({ timeout: NAV_ACTION_TIMEOUT });
   await page.waitForLoadState("networkidle");
+}
+
+
+// ---------------------------------------------------------------------------
+// Public-site navigation + "visible" form interactions (desktop + mobile).
+// Everything below clicks through the real header/menus - nothing jumps to a URL -
+// so the video shows each click a first-time visitor would have to make.
+// Step ids emitted here have shared (desktop/phone) wording in
+// e2e-tutorials/common-narration.json, so a scenario does not have to re-write them.
+// ---------------------------------------------------------------------------
+
+/**
+ * Briefly outlines an element in red (and scrolls it to the middle of the screen
+ * first). Native <select>, <input type="date"> and file inputs change value with no
+ * visible interaction in a recording - the OS popup / file dialog is never part of the
+ * video - so without this the viewer sees a value appear out of nowhere and cannot tell
+ * WHICH field was used.
+ */
+export async function highlight(locator, { ms = 1400 } = {}) {
+  const el = locator.first();
+  await scrollToSmoothly(el);
+  await el.evaluate((node, duration) => {
+    const prevOutline = node.style.outline;
+    const prevOffset = node.style.outlineOffset;
+    node.style.outline = "3px solid #dc2626";
+    node.style.outlineOffset = "3px";
+    setTimeout(() => {
+      node.style.outline = prevOutline;
+      node.style.outlineOffset = prevOffset;
+    }, duration);
+  }, ms);
+  await el.page().waitForTimeout(ms);
+}
+
+/** selectOption() with the field highlighted first - see highlight(). */
+export async function selectOptionVisibly(locator, option, opts = {}) {
+  await highlight(locator, opts);
+  await locator.selectOption(option);
+}
+
+/** Sets a native date input (YYYY-MM-DD) with the field highlighted first. */
+export async function chooseDateVisibly(locator, isoDate, opts = {}) {
+  await highlight(locator, opts);
+  await locator.fill(isoDate);
+}
+
+/** setInputFiles() with the file input highlighted first (its dialog is never recorded). */
+export async function uploadFileVisibly(locator, filePath, opts = {}) {
+  await highlight(locator, opts);
+  await locator.setInputFiles(filePath);
+}
+
+/** First visible match inside the open/collapsed main site menu. */
+function mainNavLink(page, href) {
+  return page.locator(`#mainNav .navbar-nav a.nav-link[href="${href}"]`).locator("visible=true").first();
+}
+
+/** Step shared by every phone flow: tap the burger button and wait for the menu to open. */
+async function openBurgerStep(page, tut, id) {
+  await tut.step(id, async () => {
+    await page.locator('.navbar-toggler[data-bs-target="#mainNav"]').click({ timeout: NAV_ACTION_TIMEOUT });
+    await expect(page.locator("#mainNav")).toBeVisible({ timeout: NAV_ACTION_TIMEOUT });
+  });
+}
+
+/**
+ * Clicks one of the main menu links (Usluge, Paketi, Prodavnica, Blog, ...).
+ * Phone: burger button first (step "nav-otvara-meni"), then the link, scrolled into view.
+ * Steps: "nav-otvara-meni" (phone only), then `id` (e.g. "nav-usluge").
+ */
+export async function clickMainNavLink(page, tut, { mobile = false, href, id }) {
+  const link = mainNavLink(page, href);
+  if (mobile) await openBurgerStep(page, tut, "nav-otvara-meni");
+  await tut.step(id, async () => {
+    if (mobile) await scrollToSmoothly(link);
+    await link.click({ timeout: NAV_ACTION_TIMEOUT });
+    await page.waitForLoadState("networkidle");
+  });
+}
+
+/**
+ * Clicks an entry of the secondary "Više" group (O nama, Naši saradnici, Česta pitanja).
+ * Desktop: opens the "Više" dropdown (step "nav-vise-otvara"), then the entry.
+ * Phone: those entries are flat links in the burger menu - same as clickMainNavLink.
+ */
+export async function openMoreMenuLink(page, tut, { mobile = false, href, id }) {
+  if (mobile) return clickMainNavLink(page, tut, { mobile, href, id });
+  const toggle = page.locator("#mainNav .dropdown.d-none.d-lg-block > a.dropdown-toggle");
+  const item = page.locator(`#mainNav .dropdown.d-none.d-lg-block a.dropdown-item[href="${href}"]`);
+  await tut.step("nav-vise-otvara", async () => {
+    await toggle.click({ timeout: NAV_ACTION_TIMEOUT });
+    await expect(item).toBeVisible({ timeout: NAV_ACTION_TIMEOUT });
+  });
+  await tut.step(id, async () => {
+    await item.click({ timeout: NAV_ACTION_TIMEOUT });
+    await page.waitForLoadState("networkidle");
+  });
+}
+
+/** The header's primary "Zakažite termin" button (goes to /usluge). Phone: burger first. */
+export async function clickBookNowButton(page, tut, { mobile = false, id = "nav-zakazite-termin" } = {}) {
+  const button = page.locator('#mainNav a.btn-primary[href="/usluge"]').locator("visible=true").first();
+  if (mobile) await openBurgerStep(page, tut, "nav-otvara-meni");
+  await tut.step(id, async () => {
+    if (mobile) await scrollToSmoothly(button);
+    await button.click({ timeout: NAV_ACTION_TIMEOUT });
+    await page.waitForLoadState("networkidle");
+  });
+}
+
+/**
+ * From a page of the main site: (phone) opens the burger menu, then clicks "Registracija".
+ * Steps: `${prefix}-otvara-meni` (phone only), `${prefix}-klik-registracija`.
+ */
+export async function goToRegisterViaNav(page, tut, { mobile = false, stepIdPrefix = "registracija" } = {}) {
+  const link = page.locator('#mainNav a[href="/registracija"]').locator("visible=true").first();
+  if (mobile) {
+    await tut.step(`${stepIdPrefix}-otvara-meni`, async () => {
+      await page.locator('.navbar-toggler[data-bs-target="#mainNav"]').click({ timeout: NAV_ACTION_TIMEOUT });
+      await expect(link).toBeVisible({ timeout: NAV_ACTION_TIMEOUT });
+    });
+  }
+  await tut.step(`${stepIdPrefix}-klik-registracija`, async () => {
+    await link.click({ timeout: NAV_ACTION_TIMEOUT });
+    await page.waitForLoadState("networkidle");
+  });
+}
+
+/**
+ * Whole registration, reached by clicking: header "Registracija" -> the form filled in
+ * key by key -> submitted. The new account is activated straight in the database
+ * afterwards (there is no mailbox to click the confirmation link in).
+ * Steps: registracija-otvara-meni (phone), registracija-klik-registracija, `stepId`.
+ */
+export async function registerViaNavSlowly(page, tut, { mobile = false, email, firstName = "Test", lastName = "Korisnik", phone = null, stepId = "registracija" }) {
+  await goToRegisterViaNav(page, tut, { mobile });
+  await tut.step(stepId, async () => {
+    await fillRegisterFormSlowly(page, { email, firstName, lastName, phone });
+  });
+}
+
+/**
+ * Whole login, reached by clicking: (phone: burger) -> "Prijava" -> form. Lands on the
+ * home page afterwards (the app redirects there), like a real user would.
+ * Steps: login-otvara-meni (phone), login-klik-prijava, `stepId`.
+ */
+export async function loginViaNavSlowly(page, tut, { mobile = false, email, password = PASSWORD, stepId = "prijava" }) {
+  await goToLoginViaNav(page, tut, { mobile });
+  await tut.step(stepId, async () => {
+    await fillLoginFormSlowly(page, { email, password });
+  });
+}
+
+/**
+ * Leaves a self-service portal (/nalog, /moj-nalog, /moj-partner-nalog) for the public
+ * site: those pages have their own slim header (portal-header.ejs) instead of the main
+ * menu, so the way back is its account dropdown -> "Nazad na sajt".
+ * Steps: `${prefix}-otvara-meni`, `${prefix}-bira-stavku` (default prefix "portal-nazad").
+ */
+export async function backToSiteFromPortal(page, tut, { stepIdPrefix = "portal-nazad" } = {}) {
+  const toggle = page.locator(".portal-header .dropdown-toggle");
+  const back = page.locator('.portal-header a.dropdown-item[href="/"]');
+  await tut.step(`${stepIdPrefix}-otvara-meni`, async () => {
+    await toggle.click({ timeout: NAV_ACTION_TIMEOUT });
+    await expect(back).toBeVisible({ timeout: NAV_ACTION_TIMEOUT });
+  });
+  await tut.step(`${stepIdPrefix}-bira-stavku`, async () => {
+    await back.click({ timeout: NAV_ACTION_TIMEOUT });
+    await page.waitForLoadState("networkidle");
+  });
+}
+
+/**
+ * Clicks the card/link of one catalog item (service, product, package, post) on a
+ * listing page. Phone: scrolls to it first, so the video travels down the list.
+ * If the item is not on the current page of the listing (listings are paged and sorted
+ * newest-first, so a freshly seeded item is normally on page 1) the step falls back to
+ * opening the URL directly and says so on the test console - a failure of the tutorial's
+ * seed data, not something to hide.
+ * Step: `id`.
+ */
+export async function openListedItem(page, tut, { mobile = false, href, id }) {
+  const link = page.locator(`main a[href="${href}"]`).locator("visible=true").first();
+  await tut.step(id, async () => {
+    if ((await link.count()) === 0) {
+      console.warn(`[tutorial] "${href}" is not visible on ${page.url()} - opening it directly instead of clicking its card`);
+      await page.goto(href);
+    } else {
+      if (mobile) await scrollToSmoothly(link);
+      await link.click({ timeout: NAV_ACTION_TIMEOUT });
+    }
+    await page.waitForLoadState("networkidle");
+  });
+}
+
+/**
+ * Clicks an element; on a phone scrolls it to the middle of the screen first (smoothly),
+ * so the video travels to the button instead of the tap happening on something that was
+ * never on screen. Desktop: plain click.
+ */
+export async function clickVisibly(locator, { mobile = false } = {}) {
+  if (mobile) await scrollToSmoothly(locator);
+  await locator.first().click({ timeout: NAV_ACTION_TIMEOUT });
+}
+
+/**
+ * A `tut`-shaped object whose steps are screenshotted/timed on ANOTHER page (the
+ * second actor, e.g. the admin) - so helpers written for the main page (goToLoginViaNav,
+ * openAccountMenuItem, ...) can be reused for that actor without each of them having to
+ * know about the `{ page, video }` argument of tut.step().
+ */
+export function tutFor(tut, page, video) {
+  return { step: (id, fn) => tut.step(id, fn, { page, video }) };
+}
+
+
+/**
+ * The whole "administrator gets into the admin panel" opening, by clicks only (home page ->
+ * "Prijava" -> login form -> account menu -> "Admin panel"), for the actor shown on `adminPage`.
+ * Works for a second actor in their own context (pass its `video`) or for the main page
+ * (omit `video`). Steps: admin-otvaranje-pocetne, admin-login-[otvara-meni|klik-prijava],
+ * admin-prijava, admin-ulazak-[otvara-nalog-meni|otvara-admin-panel] - common wording for
+ * all of them lives in common-narration.json; a scenario may override "admin-prijava".
+ */
+export async function adminSignInViaNav(adminPage, tut, video, { mobile = false, email }) {
+  const adminTut = tutFor(tut, adminPage, video);
+  const opts = video ? { page: adminPage, video } : { page: adminPage };
+  await tut.step("admin-otvaranje-pocetne", async () => {
+    await adminPage.goto("/");
+    await expect(adminPage.locator("main")).toBeVisible();
+  }, opts);
+  await goToLoginViaNav(adminPage, adminTut, { mobile, stepIdPrefix: "admin-login" });
+  await tut.step("admin-prijava", async () => {
+    await fillLoginFormSlowly(adminPage, { email });
+  }, opts);
+  await enterAdminPanel(adminPage, tut, video, { stepIdPrefix: "admin-ulazak", mobile });
+}
+
+
+/**
+ * The customer's booking path up to the contact-details page, by clicks only: header
+ * "Zakažite termin" -> the service card -> "Zakaži" on a variant -> date -> time slot.
+ * Phone: burger menu first (inside clickBookNowButton). Steps: nav-otvara-meni (phone),
+ * nav-zakazite-termin, otvaranje-stranice-usluge, izbor-varijante-usluge, izbor-datuma,
+ * izbor-termina - all with shared wording in common-narration.json / the scenario's own file.
+ * Ends on /zakazivanje/<slug>/podaci.
+ */
+export async function bookServiceViaNav(page, tut, { mobile = false, service }) {
+  await clickBookNowButton(page, tut, { mobile });
+  await openListedItem(page, tut, { mobile, href: `/usluge/${service.slug}`, id: "otvaranje-stranice-usluge" });
+  await tut.step("izbor-varijante-usluge", async () => {
+    await clickVisibly(page.locator(`main a[href*="/zakazivanje/${service.slug}/termin"]`), { mobile });
+    await expect(page).toHaveURL(/\/termin/);
+  });
+  await tut.step("izbor-datuma", async () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    await chooseDateVisibly(page.locator("#slots-date"), tomorrow.toISOString().slice(0, 10));
+    await page.waitForLoadState("networkidle");
+  });
+  await tut.step("izbor-termina", async () => {
+    await clickVisibly(page.locator('a[href*="/podaci?"]'), { mobile });
+    await expect(page).toHaveURL(/\/podaci/);
+  });
 }

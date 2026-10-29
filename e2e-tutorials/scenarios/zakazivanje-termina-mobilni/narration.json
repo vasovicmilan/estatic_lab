@@ -1,0 +1,11 @@
+{
+  "extends": "zakazivanje-termina",
+  "title": {
+    "sr": "Zakazivanje termina (telefon)",
+    "en": "Booking an appointment (phone)"
+  },
+  "intro": {
+    "sr": "Kompletan tok zakazivanja: klijent se registruje, preko dugmeta „Zakažite termin“ bira uslugu, datum i vreme i potvrđuje, a zatim administrator potvrđuje i završava termin. Svaki klik je pokazan, na oba kraja. Snimljeno na telefonu (390x844).",
+    "en": "The full booking flow: the customer registers, picks a service, date and time via the “Zakažite termin” button and confirms, then an admin confirms and completes the appointment. Every click is shown, on both sides. Recorded on a phone (390x844)."
+  }
+}

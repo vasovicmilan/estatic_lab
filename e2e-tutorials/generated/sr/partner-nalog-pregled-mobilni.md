@@ -2,7 +2,7 @@
 
 Partner na svom nalogu vidi koliko je zaradio, kopira svoj referalni link, pregleda proviziju i uzima gotove linkove za svaku uslugu, paket i proizvod iz kataloga za deljenje. Svaki korak navigacije je pokazan - na telefonu.
 
-<video src="../../videos/partner-nalog-pregled-mobilni/merged.sr.burned.webm" controls width="720"></video>
+<video src="../../videos/partner-nalog-pregled-mobilni/merged.sr.burned.mp4" controls width="720"></video>
 
 _Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 

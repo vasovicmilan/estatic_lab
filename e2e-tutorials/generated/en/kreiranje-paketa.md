@@ -2,7 +2,7 @@
 
 The admin creates a new session package - selecting an existing service, entering a price, and setting a required image, all before the package is ready to be assigned to customers.
 
-<video src="../../videos/kreiranje-paketa/merged.en.burned.webm" controls width="720"></video>
+<video src="../../videos/kreiranje-paketa/merged.en.burned.mp4" controls width="720"></video>
 
 _Subtitles are burned into the video - no external .vtt file needed_
 

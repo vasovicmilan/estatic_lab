@@ -32,29 +32,17 @@
       "sr": "Administrator se prijavljuje da bi dodelio paket klijentu.",
       "en": "The admin logs in to assign a package to the customer."
     },
-    "admin-ulazak-otvara-nalog-meni": {
-      "heading": {
-        "sr": "Otvaranje menija naloga",
-        "en": "Open the account menu"
-      },
-      "sr": "Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.",
-      "en": "The admin clicks the dropdown showing their name in the top-right corner."
-    },
-    "admin-ulazak-otvara-admin-panel": {
-      "heading": {
-        "sr": "Ulazak u admin panel",
-        "en": "Enter the admin panel"
-      },
-      "sr": "Administrator bira „Admin panel” iz menija, čime se otvara admin deo sajta.",
-      "en": "The admin picks \"Admin panel\" from the menu, opening the site's admin area."
-    },
     "admin-paketi-otvara-meni": {
       "heading": {
         "sr": "Otvaranje menija „Katalog”",
         "en": "Open the \"Catalog\" menu"
       },
-      "sr": "Administrator klikne na grupu „Katalog” u admin meniju.",
-      "en": "The admin clicks the \"Catalog\" group in the admin menu."
+      "sr": "Administrator {klikne} na grupu „Katalog” u admin meniju.",
+      "en": "The admin {clicks} the \"Catalog\" group in the admin menu.",
+      "mobile": {
+        "sr": "Admin panel ima sopstveni meni iza dugmeta sa tri crtice. Administrator ga otvara i bira grupu „Katalog“.",
+        "en": "The admin panel has its own menu behind a three-line button. The admin opens it and chooses the “Catalog” group."
+      }
     },
     "admin-paketi-bira-stavku": {
       "heading": {
@@ -69,8 +57,8 @@
         "sr": "Dodela novog paketa",
         "en": "Assign a new package"
       },
-      "sr": "Administrator klikne „Dodeli paket”, čime se otvara forma za dodelu.",
-      "en": "The admin clicks \"Assign package\", opening the assignment form."
+      "sr": "Administrator {klikne} „Dodeli paket”, čime se otvara forma za dodelu.",
+      "en": "The admin {clicks} \"Assign package\", opening the assignment form."
     },
     "admin-dodeljuje-paket": {
       "heading": {
@@ -82,19 +70,11 @@
     },
     "otvaranje-stranice-usluge": {
       "heading": {
-        "sr": "Zakazivanje usluge",
-        "en": "Book the service"
+        "sr": "Izbor usluge",
+        "en": "Choosing a service"
       },
-      "sr": "Klijent otvara stranicu usluge za koju ima paket i bira varijantu.",
-      "en": "The customer opens the page for the service their package covers and selects a variant."
-    },
-    "izbor-datuma-i-termina": {
-      "heading": {
-        "sr": "Izbor termina",
-        "en": "Pick a time slot"
-      },
-      "sr": "Klijent bira datum i slobodan termin, isto kao kod obične kupovine.",
-      "en": "The customer picks a date and an available slot, same as an ordinary booking."
+      "sr": "U listi usluga {kliknemo} na uslugu koju paket pokriva. Na njenoj stranici vidimo opis i varijante.",
+      "en": "In the list of services we {click} the service the package covers. Its page shows the description and the variants."
     },
     "placanje-iz-paketa": {
       "heading": {
@@ -122,35 +102,43 @@
     },
     "admin-termini-otvara-meni": {
       "heading": {
-        "sr": "Otvaranje menija „Zakazivanje”",
-        "en": "Open the \"Scheduling\" menu"
+        "sr": "Otvaranje menija „Zakazivanje“",
+        "en": "Open the “Zakazivanje” menu"
       },
-      "sr": "Administrator klikne na grupu „Zakazivanje” u admin meniju.",
-      "en": "The admin clicks the \"Scheduling\" group in the admin menu."
+      "sr": "Administrator {kliknemo} na grupu „Zakazivanje“ u admin meniju, gde vidi dostupne stavke.",
+      "en": "The admin {click}s the “Zakazivanje” group in the admin menu to see its items.",
+      "mobile": {
+        "sr": "Admin panel ima sopstveni meni iza dugmeta sa tri crtice. Administrator ga otvara i bira grupu „Zakazivanje“.",
+        "en": "The admin panel has its own menu behind a three-line button. The admin opens it and chooses the “Zakazivanje” group."
+      }
     },
     "admin-termini-bira-stavku": {
       "heading": {
         "sr": "Otvaranje liste termina",
-        "en": "Open the appointments list"
+        "en": "Open the appointment list"
       },
-      "sr": "Administrator bira „Termini” iz menija.",
-      "en": "The admin picks \"Appointments\" from the menu."
+      "sr": "Administrator bira „Termini“ - otvara se lista svih termina.",
+      "en": "The admin chooses “Termini” - the list of all appointments opens."
     },
     "admin-termini-pretraga": {
       "heading": {
         "sr": "Pretraga termina",
         "en": "Search for the appointment"
       },
-      "sr": "Administrator pretražuje listu po email adresi klijenta.",
-      "en": "The admin searches the list by the customer's email."
+      "sr": "Administrator pretražuje listu po email adresi klijenta da bi brzo našao novi termin.",
+      "en": "The admin searches the list by the customer's email to find the new appointment quickly."
     },
     "admin-termini-otvaranje-rezultata": {
       "heading": {
-        "sr": "Otvaranje termina",
-        "en": "Open the appointment"
+        "sr": "Otvaranje termina iz rezultata",
+        "en": "Open the appointment from the results"
       },
-      "sr": "Administrator otvara novi termin iz rezultata pretrage.",
-      "en": "The admin opens the new appointment from the search results."
+      "sr": "Administrator otvara detalje termina ikonicom u redu tabele.",
+      "en": "The admin opens the appointment's details with the icon in the table row.",
+      "mobile": {
+        "sr": "Na telefonu se tabela pomera u stranu - administrator dodiruje ikonicu za detalje na kraju reda.",
+        "en": "On a phone the table scrolls sideways - the admin taps the details icon at the end of the row."
+      }
     },
     "admin-potvrdjuje-termin": {
       "heading": {
@@ -167,6 +155,30 @@
       },
       "sr": "Kada je usluga zaista pružena, administrator označava termin kao završen - tek sada se seansa iz paketa stvarno troši.",
       "en": "Once the service has actually been delivered, the admin marks it completed - only now is the session from the package actually spent."
+    },
+    "izbor-varijante-usluge": {
+      "heading": {
+        "sr": "Izbor varijante",
+        "en": "Choosing a variant"
+      },
+      "sr": "{Kliknemo} „Zakaži“ na željenoj varijanti i prelazimo na izbor termina.",
+      "en": "We {click} “Zakaži” on the variant we want and move on to choosing a time."
+    },
+    "izbor-datuma": {
+      "heading": {
+        "sr": "Izbor datuma",
+        "en": "Choosing a date"
+      },
+      "sr": "Biramo datum - polje je istaknuto. Sistem prikazuje slobodne termine za taj dan, na osnovu radnog vremena zaposlenih.",
+      "en": "We choose a date - the field is highlighted. The system shows the free slots for that day, based on the employees' working hours."
+    },
+    "izbor-termina": {
+      "heading": {
+        "sr": "Izbor termina",
+        "en": "Choosing a time slot"
+      },
+      "sr": "{Kliknemo} željeno vreme.",
+      "en": "We {click} the time we want."
     }
   }
 }

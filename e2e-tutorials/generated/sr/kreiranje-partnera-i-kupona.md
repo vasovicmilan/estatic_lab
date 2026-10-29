@@ -2,7 +2,7 @@
 
 Administrator promoviše postojećeg korisnika u partnera, podešava mu stope provizije, i kreira referalni kupon koji je direktno vezan za njega - svaka kupovina preko tog kupona sada generiše proviziju.
 
-<video src="../../videos/kreiranje-partnera-i-kupona/merged.sr.burned.webm" controls width="720"></video>
+<video src="../../videos/kreiranje-partnera-i-kupona/merged.sr.burned.mp4" controls width="720"></video>
 
 _Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 

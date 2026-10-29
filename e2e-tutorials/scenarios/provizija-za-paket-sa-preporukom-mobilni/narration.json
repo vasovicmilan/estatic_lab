@@ -1,0 +1,11 @@
+{
+  "extends": "provizija-za-paket-sa-preporukom",
+  "title": {
+    "sr": "Provizija za paket sa preporukom partnera (telefon)",
+    "en": "Commission on a package bought via a partner referral (phone)"
+  },
+  "intro": {
+    "sr": "Kad se paket kupi preko partnerovog koda za preporuku, dva popusta se kombinuju: kupon partnera i ugrađen popust samog paketa. Sistem mora ispravno da izračuna proviziju i partnera (na osnovu stvarno naplaćenog) i zaposlenog (proporcionalno prema pravoj, nepopustovanoj vrednosti usluge) - ovo je stvarna poslovna pravila iz interne dokumentacije, ne izmišljen primer. Snimljeno na telefonu (390x844).",
+    "en": "When a package is bought through a partner's referral code, two discounts combine: the partner's coupon and the package's own built-in discount. The system has to correctly calculate commission for both the partner (based on what was actually paid) and the employee (proportional to the service's true, undiscounted value) - this is a real business rule from the internal docs, not a made-up example. Recorded on a phone (390x844)."
+  }
+}

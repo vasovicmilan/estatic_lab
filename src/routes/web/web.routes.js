@@ -23,6 +23,7 @@ import employeeRoutes from "./employee.routes.js";
 import partnerRoutes from "./partner.routes.js";
 import productRoutes from "./product.routes.js";
 import shopRoutes from "./shop.routes.js";
+import tutorialRoutes from "./tutorial.routes.js";
 
 const router = Router();
 
@@ -75,6 +76,9 @@ router.post(
 // module-gated, same reasoning as catalog.routes.js's /team on the API side -
 // see expert.model.js's own comment: works with zero login/booking behind it.
 router.use("/nas-tim", teamRoutes);
+// /uputstva - in-app video tutorials; which ones are shown (and streamable) depends on the
+// visitor: guest / user / partner / employee / admin - see tutorial-video.service.js
+router.use("/uputstva", tutorialRoutes);
 router.use("/usluge", requireModule("booking"), serviceRoutes);
 router.use("/paketi", requireModule("booking"), packageRoutes);
 router.use("/blog", requireModule("blog"), blogRoutes);

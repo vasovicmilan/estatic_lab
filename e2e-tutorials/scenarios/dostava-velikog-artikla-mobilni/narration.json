@@ -1,0 +1,11 @@
+{
+  "extends": "dostava-velikog-artikla",
+  "title": {
+    "sr": "Dostava velikog/teškog artikla (telefon)",
+    "en": "Shipping a large/heavy item (phone)"
+  },
+  "intro": {
+    "sr": "Za velike ili teške artikle sistem ne može automatski da izračuna cenu dostave. Klijent odmah dobija samo informativni email da porudžbina čeka procenu - pravi email sa cenom i linkom za potvrdu stiže tek kad administrator unese stvarnu cenu dostave. Snimljeno na telefonu (390x844).",
+    "en": "For large or heavy items the system can't calculate shipping automatically. The customer immediately gets only an informational email that the order is pending a quote - the real email with the price and a confirm link only arrives once an admin enters the actual shipping cost. Recorded on a phone (390x844)."
+  }
+}

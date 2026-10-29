@@ -1,0 +1,76 @@
+{
+  "title": {
+    "sr": "Moj nalog - pregled i odjava",
+    "en": "My account - overview and logging out"
+  },
+  "intro": {
+    "sr": "Klijentov sopstveni nalog od registracije do odjave: meni naloga, „Moj profil“, svih šest kartica naloga (gornje kartice na računaru, donja traka na telefonu), povratak na sajt i „Odjava“. Nijednom se ne ukucava adresa.",
+    "en": "A customer's own account from registration to logging out: the account menu, “Moj profil”, all six account tabs (top pills on a computer, the bottom bar on a phone), the way back to the site and “Odjava”. No address is ever typed."
+  },
+  "steps": {
+    "pregled-profila": {
+      "heading": {
+        "sr": "Moj nalog",
+        "en": "My account"
+      },
+      "sr": "Otvorio se „Moj nalog“ - lični podaci i kartice za sve što se tiče našeg naloga.",
+      "en": "“Moj nalog” has opened - the personal details and tabs for everything about our account."
+    },
+    "tab-termini": {
+      "heading": {
+        "sr": "Kartica Termini",
+        "en": "Appointments tab"
+      },
+      "sr": "Na kartici „Termini“ su svi naši zakazani i prošli termini.",
+      "en": "The “Termini” tab holds all our booked and past appointments."
+    },
+    "tab-porudzbine": {
+      "heading": {
+        "sr": "Kartica Porudžbine",
+        "en": "Orders tab"
+      },
+      "sr": "„Porudžbine“ - istorija kupovina i status svake.",
+      "en": "“Porudžbine” - the purchase history and the status of each order."
+    },
+    "tab-adrese": {
+      "heading": {
+        "sr": "Kartica Adrese",
+        "en": "Addresses tab"
+      },
+      "sr": "„Adrese“ - sačuvane adrese za dostavu, i forma za novu.",
+      "en": "“Adrese” - saved delivery addresses, and a form for a new one."
+    },
+    "tab-aktivnost": {
+      "heading": {
+        "sr": "Kartica Aktivnost",
+        "en": "Activity tab"
+      },
+      "sr": "„Aktivnost“ - šta se sve dešavalo na našem nalogu, na primer prijave.",
+      "en": "“Aktivnost” - everything that happened on our account, for example logins."
+    },
+    "tab-podesavanja": {
+      "heading": {
+        "sr": "Kartica Podešavanja",
+        "en": "Settings tab"
+      },
+      "sr": "„Podešavanja“ - lični podaci, promena lozinke i deaktivacija naloga.",
+      "en": "“Podešavanja” - personal details, changing the password and deactivating the account."
+    },
+    "tab-profil": {
+      "heading": {
+        "sr": "Povratak na Profil",
+        "en": "Back to Profile"
+      },
+      "sr": "{Kliknemo} „Profil“ i vraćamo se na početak naloga.",
+      "en": "We {click} “Profil” and are back at the start of the account."
+    },
+    "odjavljen": {
+      "heading": {
+        "sr": "Odjavljeni smo",
+        "en": "Logged out"
+      },
+      "sr": "Sesija je završena - zaglavlje opet nudi „Prijava“ i „Registracija“.",
+      "en": "The session has ended - the header offers “Prijava” and “Registracija” again."
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 Administrator piše i objavljuje novi blog post - naslov, kratak opis, telo teksta kroz editor sastavljen od blokova, i obavezna naslovna slika.
 
-<video src="../../videos/kreiranje-blog-posta/merged.sr.burned.webm" controls width="720"></video>
+<video src="../../videos/kreiranje-blog-posta/merged.sr.burned.mp4" controls width="720"></video>
 
 _Titlovi su zapečeni u video - nije potreban spoljni .vtt fajl_
 

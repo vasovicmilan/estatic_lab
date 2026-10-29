@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
 import { groupStepsByVideo, formatVttTime } from "./lib/subtitle-utils.mjs";
+import { loadNarration } from "./lib/narration.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -41,7 +42,7 @@ async function buildScenario(scenarioId) {
   }
 
   const manifest = await fs.readJson(manifestPath);
-  const narration = await fs.readJson(narrationPath);
+  const narration = await loadNarration(scenarioId);
 
   if (manifest.length === 0) {
     console.warn(`  [skip] ${scenarioId}: empty manifest.json`);

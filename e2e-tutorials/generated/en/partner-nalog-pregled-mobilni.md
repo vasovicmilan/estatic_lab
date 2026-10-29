@@ -2,7 +2,7 @@
 
 On their account a partner sees how much they've earned, copies their referral link, reviews their commission and grabs ready-made links for every service, package and product from the sharing catalog. Every navigation step is shown - on a phone.
 
-<video src="../../videos/partner-nalog-pregled-mobilni/merged.en.burned.webm" controls width="720"></video>
+<video src="../../videos/partner-nalog-pregled-mobilni/merged.en.burned.mp4" controls width="720"></video>
 
 _Subtitles are burned into the video - no external .vtt file needed_
 
