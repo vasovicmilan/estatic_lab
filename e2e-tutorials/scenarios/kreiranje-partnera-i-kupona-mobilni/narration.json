@@ -1,0 +1,140 @@
+{
+  "title": {
+    "sr": "Kreiranje partnera i kupona za njega (telefon)",
+    "en": "Creating a partner and their referral coupon (phone)"
+  },
+  "intro": {
+    "sr": "Administrator promoviše postojećeg korisnika u partnera, podešava mu stope provizije, i kreira referalni kupon koji je direktno vezan za njega - svaka kupovina preko tog kupona sada generiše proviziju.",
+    "en": "The admin promotes an existing customer to a partner, sets their commission rates, and creates a referral coupon directly linked to them - every purchase through that coupon now generates commission."
+  },
+  "steps": {
+    "admin-prijava": {
+      "heading": {
+        "sr": "Prijava administratora",
+        "en": "Admin logs in"
+      },
+      "sr": "Administrator se prijavljuje na svoj nalog.",
+      "en": "The admin logs into their account."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": {
+        "sr": "Meni",
+        "en": "Menu"
+      },
+      "sr": "Administrator na telefonu otvara glavni meni dugmetom sa tri crtice.",
+      "en": "On a phone the admin opens the main menu with the three-line button."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": {
+        "sr": "Admin panel",
+        "en": "Admin panel"
+      },
+      "sr": "U odeljku „Admin“ dodiruje „Admin panel“.",
+      "en": "In the “Admin” section they tap “Admin panel”."
+    },
+    "admin-partneri-otvara-meni": {
+      "heading": {
+        "sr": "Admin meni",
+        "en": "Admin menu"
+      },
+      "sr": "Admin panel ima sopstveni meni iza dugmeta sa tri crtice. Otvaramo ga i biramo grupu „Partnerski program“.",
+      "en": "The admin panel has its own menu behind a three-line button. We open it and choose the “Partnerski program” group."
+    },
+    "admin-partneri-bira-stavku": {
+      "heading": {
+        "sr": "Otvaranje liste partnera",
+        "en": "Open the partners list"
+      },
+      "sr": "Administrator dodiruje „Partneri” u meniju.",
+      "en": "The admin taps \"Partners\" in the menu."
+    },
+    "admin-partneri-klik-na-dodaj": {
+      "heading": {
+        "sr": "Novi partner",
+        "en": "New partner"
+      },
+      "sr": "Administrator dodirne „Novi partner”.",
+      "en": "The admin taps \"New partner\"."
+    },
+    "izbor-korisnika": {
+      "heading": {
+        "sr": "Izbor korisnika",
+        "en": "Select the user"
+      },
+      "sr": "Partner se uvek pravi od postojećeg korisničkog naloga - administrator bira kog klijenta promoviše u partnera.",
+      "en": "A partner is always made from an existing user account - the admin picks which customer to promote."
+    },
+    "unos-provizija": {
+      "heading": {
+        "sr": "Unos stopa provizije",
+        "en": "Enter commission rates"
+      },
+      "sr": "Administrator unosi dve odvojene stope - za usluge/pakete i za artikle iz prodavnice, pošto retko ima smisla da budu iste.",
+      "en": "The admin enters two separate rates - for services/packages and for store products, since they rarely make sense to be the same."
+    },
+    "cuvanje-partnera": {
+      "heading": {
+        "sr": "Čuvanje partnera",
+        "en": "Save the partner"
+      },
+      "sr": "Administrator čuva novog partnera.",
+      "en": "The admin saves the new partner."
+    },
+    "admin-kuponi-otvara-meni": {
+      "heading": {
+        "sr": "Admin meni",
+        "en": "Admin menu"
+      },
+      "sr": "Admin panel ima sopstveni meni iza dugmeta sa tri crtice. Otvaramo ga i biramo grupu „Prodavnica“.",
+      "en": "The admin panel has its own menu behind a three-line button. We open it and choose the “Prodavnica” group."
+    },
+    "admin-kuponi-bira-stavku": {
+      "heading": {
+        "sr": "Otvaranje kupona",
+        "en": "Open coupons"
+      },
+      "sr": "Administrator dodiruje „Kuponi” u meniju.",
+      "en": "The admin taps \"Coupons\" in the menu."
+    },
+    "admin-kuponi-klik-na-dodaj": {
+      "heading": {
+        "sr": "Novi kupon",
+        "en": "New coupon"
+      },
+      "sr": "Administrator dodirne „Novi kupon”.",
+      "en": "The admin taps \"New coupon\"."
+    },
+    "unos-koda-kupona": {
+      "heading": {
+        "sr": "Unos koda kupona",
+        "en": "Enter the coupon code"
+      },
+      "sr": "Administrator unosi jedinstven kod kupona.",
+      "en": "The admin enters a unique coupon code."
+    },
+    "unos-popusta": {
+      "heading": {
+        "sr": "Podešavanje popusta",
+        "en": "Set the discount"
+      },
+      "sr": "Administrator bira tip popusta (procenat) i unosi vrednost.",
+      "en": "The admin picks a discount type (percentage) and enters the value."
+    },
+    "vezivanje-za-partnera": {
+      "heading": {
+        "sr": "Vezivanje za partnera",
+        "en": "Link to the partner"
+      },
+      "sr": "Ovo je ono što kupon čini referalnim - svako korišćenje sada generiše proviziju baš za ovog partnera.",
+      "en": "This is what makes the coupon a referral coupon - every use now generates commission for this specific partner."
+    },
+    "cuvanje-kupona": {
+      "heading": {
+        "sr": "Čuvanje kupona",
+        "en": "Save the coupon"
+      },
+      "sr": "Administrator čuva kupon - partner sad ima svoj referalni kod spreman za deljenje.",
+      "en": "The admin saves the coupon - the partner now has their own referral code ready to share."
+    }
+  }
+}

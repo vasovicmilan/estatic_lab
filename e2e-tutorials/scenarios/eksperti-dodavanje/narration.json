@@ -1,0 +1,84 @@
+{
+  "title": {
+    "sr": "Eksperti - dodavanje člana tima",
+    "en": "Experts - adding a team member"
+  },
+  "intro": {
+    "sr": "Administrator dodaje člana tima u „Eksperti“, a on se odmah pojavljuje na javnoj stranici „Naš tim“.",
+    "en": "An administrator adds a team member in “Eksperti”, who appears on the public “Naš tim” page at once."
+  },
+  "steps": {
+    "admin-eksperti-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Tim“",
+        "en": "“Tim” menu"
+      },
+      "sr": "Otvaramo grupu „Tim“.",
+      "en": "We open the “Tim” group."
+    },
+    "admin-eksperti-bira-stavku": {
+      "heading": {
+        "sr": "Eksperti",
+        "en": "Eksperti"
+      },
+      "sr": "Biramo „Eksperti“.",
+      "en": "We choose “Eksperti”."
+    },
+    "admin-eksperti-klik-na-dodaj": {
+      "heading": {
+        "sr": "Novi ekspert",
+        "en": "New expert"
+      },
+      "sr": "{Kliknemo} „Novi ekspert“. Ekspert je član tima koji se prikazuje na javnoj stranici „Naš tim“; to nije isto što i nalog zaposlenog.",
+      "en": "We {click} “Novi ekspert”. An expert is a team member shown on the public “Naš tim” page; it is not the same as an employee account."
+    },
+    "ekspert-ime": {
+      "heading": {
+        "sr": "Ime i prezime",
+        "en": "First and last name"
+      },
+      "sr": "Upisujemo ime i prezime.",
+      "en": "We type the first and last name."
+    },
+    "ekspert-titula": {
+      "heading": {
+        "sr": "Titula i biografija",
+        "en": "Title and bio"
+      },
+      "sr": "Titula i kratka biografija se prikazuju na kartici.",
+      "en": "The title and short bio are shown on the card."
+    },
+    "ekspert-slika": {
+      "heading": {
+        "sr": "Slika",
+        "en": "Photo"
+      },
+      "sr": "Slika je obavezna, uz alt tekst.",
+      "en": "The photo is required, with alt text."
+    },
+    "ekspert-cuvanje": {
+      "heading": {
+        "sr": "Čuvanje",
+        "en": "Save"
+      },
+      "sr": "Čuvamo eksperta.",
+      "en": "We save the expert."
+    },
+    "otvaranje-pocetne": {
+      "heading": {
+        "sr": "Javni sajt",
+        "en": "The public site"
+      },
+      "sr": "Prelazimo na javni deo sajta.",
+      "en": "We switch to the public site."
+    },
+    "ekspert-na-sajtu": {
+      "heading": {
+        "sr": "Ekspert na stranici „Naš tim“",
+        "en": "The expert on “Naš tim”"
+      },
+      "sr": "Novi ekspert je odmah na javnoj stranici tima.",
+      "en": "The new expert is already on the public team page."
+    }
+  }
+}

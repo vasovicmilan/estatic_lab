@@ -22,6 +22,9 @@ const REPO = path.resolve(__dirname, "..", "..");
  * Usage:
  *   npm run tutorials:all                      everything
  *   npm run tutorials:all -- --only kupovina   record only scenarios whose name matches (regex), then finish
+ *   npm run tutorials:all -- --scenario isplata-zaposlenom-mobilni --scenario radno-vreme-zaposlenog-mobilni
+ *                                              EXACT scenario folder names (repeatable): only those are recorded and
+ *                                              processed, everything already published stays as it is. Use this for new scenarios.
  *   npm run tutorials:all -- --skip-record     steps 2-6 only (videos already recorded)
  *
  * A failing scenario does NOT stop the pipeline: the remaining steps still run for everything that
@@ -32,6 +35,7 @@ const args = process.argv.slice(2);
 const SKIP_RECORD = args.includes("--skip-record");
 const onlyIdx = args.indexOf("--only");
 const ONLY = onlyIdx >= 0 ? args[onlyIdx + 1] : null;
+const SCENARIOS = args.flatMap((a, i) => (a === "--scenario" && args[i + 1] ? [args[i + 1]] : []));
 
 const fmt = (ms) => {
   const s = Math.round(ms / 1000);
@@ -79,7 +83,15 @@ async function main() {
 
   if (!SKIP_RECORD) {
     recordCode = await phase("1/6 record (Playwright)", () =>
-      run("npx", ["playwright", "test", "--config=playwright.tutorials.config.js", ...(ONLY ? ["--grep", ONLY] : [])], { allowFail: true })
+      run(
+        "npx",
+        [
+          "playwright", "test", "--config=playwright.tutorials.config.js",
+          // a path filter (regex on the file path) selects exact scenario folders
+          ...(SCENARIOS.length ? SCENARIOS.map((n) => `scenarios/${n}/`) : ONLY ? ["--grep", ONLY] : []),
+        ],
+        { allowFail: true }
+      )
     );
   }
 
@@ -87,7 +99,12 @@ async function main() {
   const script = (f) => path.join("e2e-tutorials", "scripts", f);
   // the four per-scenario scripts take ONE exact scenario folder name (or none = all)
   let targets = [undefined];
-  if (ONLY) {
+  if (SCENARIOS.length) {
+    for (const n of SCENARIOS) {
+      if (!(await fs.pathExists(path.join(REPO, "e2e-tutorials", "scenarios", n)))) throw new Error(`--scenario "${n}": no such folder in e2e-tutorials/scenarios`);
+    }
+    targets = SCENARIOS;
+  } else if (ONLY) {
     const re = new RegExp(ONLY, "i");
     const names = (await fs.readdir(path.join(REPO, "e2e-tutorials", "scenarios"), { withFileTypes: true })).filter((d) => d.isDirectory() && re.test(d.name)).map((d) => d.name);
     if (names.length === 0) throw new Error(`--only "${ONLY}" matches no scenario folder`);
@@ -100,7 +117,7 @@ async function main() {
   await phase("3/6 merge", each("merge-video.mjs"));
   await phase("4/6 burn captions", each("burn-subtitles.mjs"));
   await phase("5/6 docs", each("build-docs.mjs"));
-  await phase("6/6 publish to /uputstva", () => run(node, [script("publish-videos.mjs"), ...(ONLY ? ["--keep-stale"] : [])]));
+  await phase("6/6 publish to /uputstva", () => run(node, [script("publish-videos.mjs"), ...(ONLY || SCENARIOS.length ? ["--keep-stale"] : [])]));
 
   console.log("\n--- Summary ---");
   for (const [name, ms] of timings) console.log(`  ${name.padEnd(28)} ${fmt(ms)}`);

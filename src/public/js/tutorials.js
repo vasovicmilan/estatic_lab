@@ -78,7 +78,7 @@
           btn.style.backgroundPosition = "center";
           // the poster is fetched only when its card scrolls near the screen (24 cards must not
           // fire 24 image requests at once - that trips the Cloudflare rate-limit rule)
-          btn.setAttribute("data-poster-url", "/uputstva/poster/" + encodeURIComponent(id) + "/" + device);
+          btn.setAttribute("data-poster-url", "/uputstva/poster/" + encodeURIComponent(id) + "/" + device + ".jpg");
           watchPoster(btn);
         }
         btn.addEventListener("click", function () {
@@ -88,7 +88,7 @@
           v.playsInline = true;
           v.preload = "metadata";
           v.className = "w-100 h-100";
-          v.src = "/uputstva/video/" + encodeURIComponent(id) + "/" + device + "/" + lang;
+          v.src = "/uputstva/video/" + encodeURIComponent(id) + "/" + device + "/" + lang + ".mp4";
           box.innerHTML = "";
           box.appendChild(v);
         });

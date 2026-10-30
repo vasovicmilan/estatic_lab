@@ -1,0 +1,100 @@
+{
+  "title": {
+    "sr": "Saradnici - dodavanje i javna stranica",
+    "en": "Collaborators - adding and the public page"
+  },
+  "intro": {
+    "sr": "Administrator dodaje saradnika (firmu sa sopstvenom stranicom i izlaznim linkom sa referalnim kodom), a javna stranica „Naši saradnici“ ga odmah prikazuje.",
+    "en": "An administrator adds a collaborator (a company with its own page and an outbound link carrying the referral code), and the public “Naši saradnici” page shows it at once."
+  },
+  "steps": {
+    "admin-saradnici-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Sadržaj i marketing“",
+        "en": "“Sadržaj i marketing” menu"
+      },
+      "sr": "Otvaramo grupu „Sadržaj i marketing“.",
+      "en": "We open the “Sadržaj i marketing” group."
+    },
+    "admin-saradnici-bira-stavku": {
+      "heading": {
+        "sr": "Saradnici",
+        "en": "Saradnici"
+      },
+      "sr": "Biramo „Saradnici“.",
+      "en": "We choose “Saradnici”."
+    },
+    "admin-saradnici-klik-na-dodaj": {
+      "heading": {
+        "sr": "Novi saradnik",
+        "en": "New collaborator"
+      },
+      "sr": "{Kliknemo} „Novi saradnik“. Saradnik je firma ili brend sa kojim salon sarađuje i koja dobija sopstvenu stranicu na sajtu.",
+      "en": "We {click} “Novi saradnik”. A collaborator is a company or brand the salon works with, getting its own page on the site."
+    },
+    "saradnik-naziv": {
+      "heading": {
+        "sr": "Naziv",
+        "en": "Name"
+      },
+      "sr": "Upisujemo naziv saradnika.",
+      "en": "We type the collaborator's name."
+    },
+    "saradnik-opis": {
+      "heading": {
+        "sr": "Kratak opis",
+        "en": "Short description"
+      },
+      "sr": "Kratak opis se prikazuje na kartici u listi saradnika.",
+      "en": "The short description is shown on the card in the collaborators list."
+    },
+    "saradnik-slika": {
+      "heading": {
+        "sr": "Naslovna slika",
+        "en": "Cover image"
+      },
+      "sr": "Naslovna slika je obavezna, uz alt tekst.",
+      "en": "The cover image is required, with alt text."
+    },
+    "saradnik-link": {
+      "heading": {
+        "sr": "Link ka saradniku",
+        "en": "Link to the collaborator"
+      },
+      "sr": "Izlazni link sa našim referalnim kodom. Aplikacija ga ne prati, prodaju beleži platforma saradnika.",
+      "en": "The outbound link carrying our referral code. The app does not track it; the collaborator's platform records the sale."
+    },
+    "saradnik-cuvanje": {
+      "heading": {
+        "sr": "Čuvanje",
+        "en": "Save"
+      },
+      "sr": "Čuvamo saradnika. Pun sadržaj stranice (galerija, video, tekst) može da se dopuni istim uređivačem kao blog.",
+      "en": "We save the collaborator. The full page content (gallery, video, text) can be added with the same editor as the blog."
+    },
+    "otvaranje-pocetne": {
+      "heading": {
+        "sr": "Javni sajt",
+        "en": "The public site"
+      },
+      "sr": "Sada se vraćamo na javni deo sajta.",
+      "en": "Now we go back to the public site."
+    },
+    "otvaranje-saradnika": {
+      "heading": {
+        "sr": "Saradnik u listi",
+        "en": "The collaborator in the list"
+      },
+      "sr": "Novi saradnik je odmah u listi „Naši saradnici“. {Kliknemo} njegovu karticu.",
+      "en": "The new collaborator is already in the “Naši saradnici” list. We {click} its card."
+    },
+    "stranica-saradnika": {
+      "heading": {
+        "sr": "Stranica saradnika",
+        "en": "The collaborator's page"
+      },
+      "sr": "Posetilac vidi opis i dugme ka saradniku. Link je označen kao sponzorisan, što je ispravno za pretragu.",
+      "en": "The visitor sees the description and the button to the collaborator. The link is marked as sponsored, which is correct for search engines."
+    }
+  }
+}

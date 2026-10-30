@@ -7,6 +7,9 @@ describe("buildRobotsTxt", () => {
     assert.match(buildRobotsTxt("https://x.rs", { booking: true }), /Disallow: \/zakazivanje/);
     assert.doesNotMatch(buildRobotsTxt("https://x.rs", { booking: false }), /zakazivanje/);
   });
+  it("blocks the video tutorials (/uputstva) from crawling", () => {
+    assert.match(buildRobotsTxt("https://x.rs", { booking: false }), /Disallow: \/uputstva/);
+  });
   it("always blocks admin/account and lists the sitemap", () => {
     const out = buildRobotsTxt("https://x.rs", { booking: false });
     assert.match(out, /Disallow: \/admin/);

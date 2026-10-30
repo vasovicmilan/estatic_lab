@@ -1,0 +1,76 @@
+{
+  "title": {
+    "sr": "Newsletter kampanja - priprema",
+    "en": "Newsletter campaign - preparation"
+  },
+  "intro": {
+    "sr": "Administrator priprema kampanju: interni naziv, predmet, segment i sadržaj od blokova, pa čuva nacrt.",
+    "en": "An administrator prepares a campaign: internal name, subject, segment and block content, then saves a draft."
+  },
+  "steps": {
+    "admin-kampanje-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Sadržaj i marketing“",
+        "en": "“Sadržaj i marketing” menu"
+      },
+      "sr": "Otvaramo grupu „Sadržaj i marketing“.",
+      "en": "We open the “Sadržaj i marketing” group."
+    },
+    "admin-kampanje-bira-stavku": {
+      "heading": {
+        "sr": "Kampanje",
+        "en": "Kampanje"
+      },
+      "sr": "Biramo „Kampanje“.",
+      "en": "We choose “Kampanje”."
+    },
+    "admin-kampanje-klik-na-dodaj": {
+      "heading": {
+        "sr": "Nova kampanja",
+        "en": "New campaign"
+      },
+      "sr": "{Kliknemo} „Nova kampanja“. Kampanja je mejl koji šaljemo pretplatnicima newslettera.",
+      "en": "We {click} “Nova kampanja”. A campaign is an email we send to newsletter subscribers."
+    },
+    "kampanja-naziv": {
+      "heading": {
+        "sr": "Interni naziv",
+        "en": "Internal name"
+      },
+      "sr": "Interni naziv vidimo samo mi u panelu, pretplatnici ga ne dobijaju.",
+      "en": "The internal name is only visible to us in the panel; subscribers never receive it."
+    },
+    "kampanja-predmet": {
+      "heading": {
+        "sr": "Predmet mejla",
+        "en": "Email subject"
+      },
+      "sr": "Predmet je ono što pretplatnik vidi u sandučetu, zato treba da bude jasan i kratak.",
+      "en": "The subject is what the subscriber sees in their inbox, so it should be clear and short."
+    },
+    "kampanja-segment": {
+      "heading": {
+        "sr": "Segment",
+        "en": "Segment"
+      },
+      "sr": "Biramo kome šaljemo, po interesovanjima. Ako ništa ne izaberemo, mejl dobijaju svi aktivni pretplatnici.",
+      "en": "We choose who receives it, by interests. If nothing is selected, all active subscribers receive it."
+    },
+    "kampanja-sadrzaj": {
+      "heading": {
+        "sr": "Sadržaj",
+        "en": "Content"
+      },
+      "sr": "Mejl sastavljamo od blokova: naslov, pasus, slika, dugme, usluga ili proizvod. Dodajemo pasus.",
+      "en": "The email is built from blocks: heading, paragraph, image, button, service or product. We add a paragraph."
+    },
+    "kampanja-cuvanje": {
+      "heading": {
+        "sr": "Čuvanje kao nacrt",
+        "en": "Save as draft"
+      },
+      "sr": "{Kliknemo} „Sačuvaj kao nacrt“. Ništa se ne šalje dok kampanju ne zakažemo ili ne pošaljemo ručno.",
+      "en": "We {click} “Sačuvaj kao nacrt”. Nothing is sent until we schedule the campaign or send it by hand."
+    }
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "title": {
+    "sr": "Newsletter - prijava i pregled pretplatnika",
+    "en": "Newsletter - sign-up and subscriber list"
+  },
+  "intro": {
+    "sr": "Posetilac se prijavljuje na newsletter kroz formu u podnožju (email, interesovanje, pristanak), a administrator vidi pretplatnika u „Newsletter“.",
+    "en": "A visitor subscribes through the footer form (email, interest, consent), and an administrator sees the subscriber in “Newsletter”."
+  },
+  "steps": {
+    "newsletter-forma": {
+      "heading": {
+        "sr": "Prijava na newsletter",
+        "en": "Newsletter sign-up"
+      },
+      "sr": "Na dnu svake stranice je forma za prijavu na newsletter.",
+      "en": "At the bottom of every page there is a newsletter sign-up form."
+    },
+    "newsletter-email": {
+      "heading": {
+        "sr": "Email adresa",
+        "en": "Email address"
+      },
+      "sr": "Posetilac upisuje svoj email.",
+      "en": "The visitor types their email."
+    },
+    "newsletter-interesovanje": {
+      "heading": {
+        "sr": "Interesovanja",
+        "en": "Interests"
+      },
+      "sr": "Bira šta ga zanima, pa dobija samo te poruke.",
+      "en": "They choose what interests them and only get those messages."
+    },
+    "newsletter-pristanak": {
+      "heading": {
+        "sr": "Pristanak",
+        "en": "Consent"
+      },
+      "sr": "Pristanak mora da se označi sam; bez njega prijava nije moguća, a vreme pristanka se čuva kao dokaz.",
+      "en": "Consent has to be ticked explicitly; without it sign-up is impossible, and the time of consent is stored as proof."
+    },
+    "newsletter-slanje": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Subscribe"
+      },
+      "sr": "{Kliknemo} „Prijavi se“. Stranica potvrđuje prijavu, a stiže i poruka dobrodošlice.",
+      "en": "We {click} “Prijavi se”. The page confirms the sign-up and a welcome message follows."
+    },
+    "admin-prijava": {
+      "heading": {
+        "sr": "Prijava administratora",
+        "en": "Admin logs in"
+      },
+      "sr": "Administrator se prijavljuje.",
+      "en": "The administrator logs in."
+    },
+    "admin-newsletter-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Sadržaj i marketing“",
+        "en": "“Content and marketing” menu"
+      },
+      "sr": "Otvaramo grupu „Sadržaj i marketing“.",
+      "en": "We open the “Sadržaj i marketing” group."
+    },
+    "admin-newsletter-bira-stavku": {
+      "heading": {
+        "sr": "Newsletter",
+        "en": "Newsletter"
+      },
+      "sr": "Biramo „Newsletter“ - lista pretplatnika.",
+      "en": "We choose “Newsletter” - the subscriber list."
+    },
+    "admin-newsletter-pretraga": {
+      "heading": {
+        "sr": "Pretraga pretplatnika",
+        "en": "Find the subscriber"
+      },
+      "sr": "Pretplatnika nalazimo po emailu.",
+      "en": "We find the subscriber by email."
+    },
+    "admin-newsletter-otvaranje-rezultata": {
+      "heading": {
+        "sr": "Detalji pretplatnika",
+        "en": "Subscriber details"
+      },
+      "sr": "Otvaramo pretplatnika.",
+      "en": "We open the subscriber."
+    },
+    "admin-newsletter-pregled": {
+      "heading": {
+        "sr": "Pretplatnik u listi",
+        "en": "Subscriber recorded"
+      },
+      "sr": "Nova prijava je odmah tu, sa statusom i vremenom prijave. Odjava je za posetioca jedan klik iz svakog mejla.",
+      "en": "The new sign-up is there at once, with status and time. For the visitor, unsubscribing is one click from every email."
+    }
+  }
+}

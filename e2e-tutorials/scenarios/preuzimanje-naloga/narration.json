@@ -1,0 +1,44 @@
+{
+  "title": {
+    "sr": "Preuzimanje naloga posle kupovine bez prijave",
+    "en": "Claiming an account after a guest purchase"
+  },
+  "intro": {
+    "sr": "Gost koji je zakazao ili kupio bez naloga otvara link iz mejla, bira lozinku, preuzima nalog i prijavljuje se.",
+    "en": "A guest who booked or bought without an account opens the email link, chooses a password, claims the account and logs in."
+  },
+  "steps": {
+    "link-iz-mejla": {
+      "heading": {
+        "sr": "Link iz mejla",
+        "en": "The link from the email"
+      },
+      "sr": "Ko je zakazao termin ili kupio bez naloga, dobija mejl sa linkom „Preuzmite vaš nalog“. Otvaramo ga.",
+      "en": "Someone who booked or bought without an account gets an email with a “Preuzmite vaš nalog” link. We open it."
+    },
+    "nova-lozinka": {
+      "heading": {
+        "sr": "Izbor lozinke",
+        "en": "Choose a password"
+      },
+      "sr": "Dovoljno je da izabere lozinku (najmanje 8 znakova): ime i email su već u nalogu.",
+      "en": "They only need to choose a password (at least 8 characters): the name and email are already in the account."
+    },
+    "preuzimanje-cuvanje": {
+      "heading": {
+        "sr": "Preuzimanje naloga",
+        "en": "Claim the account"
+      },
+      "sr": "{Kliknemo} „Preuzmi nalog“. Klik na link u mejlu je istovremeno i potvrda adrese, pa je nalog odmah aktivan, a ranije termini i porudžbine ostaju u njemu.",
+      "en": "We {click} “Preuzmi nalog”. Opening the email link also confirms the address, so the account is active at once, and the earlier appointments and orders stay in it."
+    },
+    "prijava-novom-lozinkom": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Log in"
+      },
+      "sr": "Prijavljujemo se novom lozinkom.",
+      "en": "We log in with the new password."
+    }
+  }
+}

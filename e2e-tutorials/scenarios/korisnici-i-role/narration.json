@@ -1,0 +1,76 @@
+{
+  "title": {
+    "sr": "Korisnici i role",
+    "en": "Users and roles"
+  },
+  "intro": {
+    "sr": "Administrator pronalazi korisnika po emailu u „Korisnici“ i pregleda role i dozvole u „Role“.",
+    "en": "An administrator finds a user by email in “Korisnici” and looks at the roles and permissions in “Role”."
+  },
+  "steps": {
+    "admin-korisnici-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Tim“",
+        "en": "“Tim” menu"
+      },
+      "sr": "Otvaramo grupu „Tim“.",
+      "en": "We open the “Tim” group."
+    },
+    "admin-korisnici-bira-stavku": {
+      "heading": {
+        "sr": "Korisnici",
+        "en": "Korisnici"
+      },
+      "sr": "Biramo „Korisnici“.",
+      "en": "We choose “Korisnici”."
+    },
+    "admin-role-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Sistem“",
+        "en": "“Sistem” menu"
+      },
+      "sr": "Otvaramo grupu „Sistem“.",
+      "en": "We open the “Sistem” group."
+    },
+    "admin-role-bira-stavku": {
+      "heading": {
+        "sr": "Role",
+        "en": "Role"
+      },
+      "sr": "Biramo „Role“.",
+      "en": "We choose “Role”."
+    },
+    "admin-korisnici-pretraga": {
+      "heading": {
+        "sr": "Pretraga korisnika",
+        "en": "Find the user"
+      },
+      "sr": "Korisnika nalazimo po emailu ili imenu.",
+      "en": "We find the user by email or name."
+    },
+    "admin-korisnici-otvaranje-rezultata": {
+      "heading": {
+        "sr": "Detalji korisnika",
+        "en": "User details"
+      },
+      "sr": "Otvaramo nalog korisnika.",
+      "en": "We open the user's account."
+    },
+    "korisnik-detalji": {
+      "heading": {
+        "sr": "Nalog korisnika",
+        "en": "The user's account"
+      },
+      "sr": "Vide se podaci naloga, uloga i aktivnost. Odavde se nalog može i deaktivirati.",
+      "en": "The account data, role and activity are visible. From here an account can also be deactivated."
+    },
+    "role-pregled": {
+      "heading": {
+        "sr": "Role i dozvole",
+        "en": "Roles and permissions"
+      },
+      "sr": "Uloga određuje šta ko sme da radi: administrator, zaposleni, partner i korisnik imaju različite dozvole.",
+      "en": "A role decides what each person may do: administrator, employee, partner and user have different permissions."
+    }
+  }
+}

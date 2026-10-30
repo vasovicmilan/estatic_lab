@@ -1,0 +1,100 @@
+{
+  "title": {
+    "sr": "Zaposleni upravlja svojim terminima (telefon)",
+    "en": "Employee managing their own appointments (phone)"
+  },
+  "intro": {
+    "sr": "Zaposleni ima svoj poseban deo naloga za rad sa sopstvenim terminima - potvrđivanje, završavanje i pregled zarađene provizije - potpuno odvojeno od admin panela.",
+    "en": "An employee has their own dedicated account area for their appointments - confirming, completing, and reviewing earned commission - entirely separate from the admin panel."
+  },
+  "steps": {
+    "otvaranje-pocetne": {
+      "heading": {
+        "sr": "Početna stranica",
+        "en": "Home page"
+      },
+      "sr": "Počinjemo na početnoj stranici sajta.",
+      "en": "We start on the site's home page."
+    },
+    "login-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija",
+        "en": "Open the menu"
+      },
+      "sr": "Na telefonu je meni sakriven iza dugmeta sa tri crtice u gornjem desnom uglu. Dodirnemo ga.",
+      "en": "On a phone the menu is hidden behind the three-line button in the top right corner. We tap it."
+    },
+    "login-klik-prijava": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Log in"
+      },
+      "sr": "U meniju dodirnemo „Prijava“.",
+      "en": "In the menu we tap “Prijava”."
+    },
+    "unos-prijave": {
+      "heading": {
+        "sr": "Unos podataka za prijavu",
+        "en": "Enter your login details"
+      },
+      "sr": "Zaposleni unosi email i lozinku i prijavljuje se.",
+      "en": "The employee enters the email and password and logs in."
+    },
+    "portal-otvara-meni": {
+      "heading": {
+        "sr": "Meni naloga",
+        "en": "Account menu"
+      },
+      "sr": "Posle prijave ponovo otvaramo meni. Na dnu je odeljak sa imenom zaposlenog i linkovima ka nalogu - stranica se sama pomera do njega.",
+      "en": "After logging in we open the menu again. At the bottom is a section with the employee's name and account links - the page scrolls to it."
+    },
+    "portal-bira-stavku": {
+      "heading": {
+        "sr": "Moj kalendar",
+        "en": "My calendar"
+      },
+      "sr": "Dodirnemo „Moj kalendar“ i ulazimo u nalog zaposlenog.",
+      "en": "We tap “Moj kalendar” and enter the employee's account."
+    },
+    "pregled-mojih-termina": {
+      "heading": {
+        "sr": "Moji termini",
+        "en": "My appointments"
+      },
+      "sr": "Na donjoj traci dodirnemo „Termini“ i vidimo termine dodeljene ovom zaposlenom.",
+      "en": "On the bottom bar we tap “Termini” and see the appointments assigned to this employee."
+    },
+    "otvaranje-detalja-termina": {
+      "heading": {
+        "sr": "Detalji termina",
+        "en": "Appointment details"
+      },
+      "sr": "Klikom na termin otvaraju se detalji, sa opcijama za potvrdu i završavanje.",
+      "en": "Clicking the appointment opens its details, with options to confirm and complete it."
+    },
+    "potvrda-termina": {
+      "heading": {
+        "sr": "Potvrda termina",
+        "en": "Confirm the appointment"
+      },
+      "sr": "Zaposleni potvrđuje termin - klijent sada ima siguran, potvrđen termin.",
+      "en": "The employee confirms the appointment - the customer now has a firm, confirmed slot."
+    },
+    "zavrsavanje-termina": {
+      "heading": {
+        "sr": "Završavanje termina",
+        "en": "Complete the appointment"
+      },
+      "sr": "Nakon što je usluga pružena, zaposleni ga označava kao završen - ovo je i trenutak kada se obračunava njegova provizija.",
+      "en": "Once the service has been delivered, the employee marks it completed - this is also when their commission gets recorded."
+    },
+    "pregled-provizije": {
+      "heading": {
+        "sr": "Zarađena provizija",
+        "en": "Earned commission"
+      },
+      "sr": "Na tabu „Provizija“ zaposleni vidi proviziju koju je termin doneo.",
+      "en": "On the “Provizija” tab the employee sees the commission the appointment earned."
+    }
+  }
+}

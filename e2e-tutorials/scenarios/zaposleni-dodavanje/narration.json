@@ -1,0 +1,76 @@
+{
+  "title": {
+    "sr": "Zaposleni - dodavanje i način isplate",
+    "en": "Employees - adding and how they are paid"
+  },
+  "intro": {
+    "sr": "Administrator pravi zaposlenog od postojećeg korisnika: usluge, provizija i mesto za SrediMe kalendar.",
+    "en": "An administrator makes an employee from an existing user: services, commission and the place for the SrediMe calendar."
+  },
+  "steps": {
+    "admin-zaposleni-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Tim“",
+        "en": "“Tim” menu"
+      },
+      "sr": "Otvaramo grupu „Tim“.",
+      "en": "We open the “Tim” group."
+    },
+    "admin-zaposleni-bira-stavku": {
+      "heading": {
+        "sr": "Zaposleni",
+        "en": "Zaposleni"
+      },
+      "sr": "Biramo „Zaposleni“.",
+      "en": "We choose “Zaposleni”."
+    },
+    "admin-zaposleni-klik-na-dodaj": {
+      "heading": {
+        "sr": "Novi zaposleni",
+        "en": "New employee"
+      },
+      "sr": "{Kliknemo} „Novi zaposleni“. Zaposleni se pravi od postojećeg korisničkog naloga, a ne od nule.",
+      "en": "We {click} “Novi zaposleni”. An employee is made from an existing user account, not from scratch."
+    },
+    "zaposleni-korisnik": {
+      "heading": {
+        "sr": "Izbor korisnika",
+        "en": "Choose the user"
+      },
+      "sr": "Biramo korisnika koji postaje zaposleni.",
+      "en": "We choose the user who becomes an employee."
+    },
+    "zaposleni-usluge": {
+      "heading": {
+        "sr": "Usluge koje pruža",
+        "en": "Services they perform"
+      },
+      "sr": "Biramo usluge koje zaposleni izvodi. Samo za te usluge će mu sistem ponuditi termine.",
+      "en": "We pick the services the employee performs. The system offers them appointments only for those."
+    },
+    "zaposleni-isplata": {
+      "heading": {
+        "sr": "Način isplate",
+        "en": "How they are paid"
+      },
+      "sr": "Fiksna plata ili provizija. Za proviziju upisujemo procenat, ovde 25%.",
+      "en": "A fixed salary or commission. For commission we enter the percentage, here 25%."
+    },
+    "zaposleni-sredime": {
+      "heading": {
+        "sr": "SrediMe kalendar",
+        "en": "The SrediMe calendar"
+      },
+      "sr": "Ovde se upisuje SrediMe ICS adresa zaposlenog. Sistem je povremeno čita i blokira vreme koje je tamo već rezervisano, pa se isti termin ne prodaje dvaput.",
+      "en": "This is where the employee's SrediMe ICS address goes. The system reads it periodically and blocks the time already booked there, so the same slot is never sold twice."
+    },
+    "zaposleni-cuvanje": {
+      "heading": {
+        "sr": "Čuvanje",
+        "en": "Save"
+      },
+      "sr": "Čuvamo zaposlenog. Radno vreme on sam podešava na svom nalogu.",
+      "en": "We save the employee. They set their working hours themselves in their account."
+    }
+  }
+}

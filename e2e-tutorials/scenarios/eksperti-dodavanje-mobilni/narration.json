@@ -1,0 +1,11 @@
+{
+  "extends": "eksperti-dodavanje",
+  "title": {
+    "sr": "Eksperti - dodavanje člana tima (telefon)",
+    "en": "Experts - adding a team member (phone)"
+  },
+  "intro": {
+    "sr": "Administrator dodaje člana tima u „Eksperti“, a on se odmah pojavljuje na javnoj stranici „Naš tim“. Snimljeno na telefonu (390x844).",
+    "en": "An administrator adds a team member in “Eksperti”, who appears on the public “Naš tim” page at once. Recorded on a phone (390x844)."
+  }
+}

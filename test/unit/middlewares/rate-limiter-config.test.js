@@ -39,5 +39,8 @@ describe("rate limiter config", () => {
     // static resources are never counted
     for (let i = 0; i < 6; i++) assert.equal(await hit(app, "/images/site/hero.avif"), 200);
     for (let i = 0; i < 6; i++) assert.equal(await hit(app, "/uploads/products/a"), 200);
+    // tutorial posters/videos (many Range requests per video) are not counted either
+    for (let i = 0; i < 6; i++) assert.equal(await hit(app, "/uputstva/poster/pregled-sajta/desktop.jpg"), 200);
+    for (let i = 0; i < 6; i++) assert.equal(await hit(app, "/uputstva/video/pregled-sajta/mobile/sr.mp4"), 200);
   });
 });

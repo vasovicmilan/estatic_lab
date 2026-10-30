@@ -1,0 +1,11 @@
+{
+  "extends": "preuzimanje-naloga",
+  "title": {
+    "sr": "Preuzimanje naloga posle kupovine bez prijave (telefon)",
+    "en": "Claiming an account after a guest purchase (phone)"
+  },
+  "intro": {
+    "sr": "Gost koji je zakazao ili kupio bez naloga otvara link iz mejla, bira lozinku, preuzima nalog i prijavljuje se. Snimljeno na telefonu (390x844).",
+    "en": "A guest who booked or bought without an account opens the email link, chooses a password, claims the account and logs in. Recorded on a phone (390x844)."
+  }
+}

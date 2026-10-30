@@ -1,0 +1,100 @@
+{
+  "title": {
+    "sr": "Kontakt poruka - od posetioca do odgovora",
+    "en": "Contact message - from visitor to reply"
+  },
+  "intro": {
+    "sr": "Posetilac sajta šalje poruku kroz kontakt formu, a administrator je nalazi u „Kontakt“ i označava kao odgovorenu.",
+    "en": "A site visitor sends a message through the contact form, and an administrator finds it in “Kontakt” and marks it answered."
+  },
+  "steps": {
+    "kontakt-ime": {
+      "heading": {
+        "sr": "Ime i prezime",
+        "en": "First and last name"
+      },
+      "sr": "Posetilac upisuje ime i prezime.",
+      "en": "The visitor types their first and last name."
+    },
+    "kontakt-email": {
+      "heading": {
+        "sr": "Email",
+        "en": "Email"
+      },
+      "sr": "Na ovaj email stiže odgovor.",
+      "en": "The reply goes to this email."
+    },
+    "kontakt-tema-poruka": {
+      "heading": {
+        "sr": "Tema i poruka",
+        "en": "Topic and message"
+      },
+      "sr": "Upisuje temu i samu poruku.",
+      "en": "They type the topic and the message itself."
+    },
+    "kontakt-pristanak": {
+      "heading": {
+        "sr": "Pristanak",
+        "en": "Consent"
+      },
+      "sr": "Označavamo da se slažemo sa politikom privatnosti. Bez toga se poruka ne može poslati.",
+      "en": "We tick that we agree with the privacy policy. The message cannot be sent without it."
+    },
+    "kontakt-slanje": {
+      "heading": {
+        "sr": "Slanje poruke",
+        "en": "Send the message"
+      },
+      "sr": "{Kliknemo} „Pošalji poruku“. Stranica potvrđuje da je poruka poslata.",
+      "en": "We {click} “Pošalji poruku”. The page confirms the message was sent."
+    },
+    "admin-prijava": {
+      "heading": {
+        "sr": "Prijava administratora",
+        "en": "Admin logs in"
+      },
+      "sr": "Administrator se prijavljuje.",
+      "en": "The administrator logs in."
+    },
+    "admin-kontakt-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Sadržaj i marketing“",
+        "en": "“Content and marketing” menu"
+      },
+      "sr": "Otvaramo grupu „Sadržaj i marketing“.",
+      "en": "We open the “Sadržaj i marketing” group."
+    },
+    "admin-kontakt-bira-stavku": {
+      "heading": {
+        "sr": "Kontakt poruke",
+        "en": "Contact messages"
+      },
+      "sr": "Biramo „Kontakt“ - lista svih poruka sa sajta.",
+      "en": "We choose “Kontakt” - the list of all messages from the site."
+    },
+    "admin-kontakt-pretraga": {
+      "heading": {
+        "sr": "Pretraga poruke",
+        "en": "Find the message"
+      },
+      "sr": "Poruku nalazimo po emailu, imenu ili temi.",
+      "en": "We find the message by email, name or topic."
+    },
+    "admin-kontakt-otvaranje-rezultata": {
+      "heading": {
+        "sr": "Detalji poruke",
+        "en": "Message details"
+      },
+      "sr": "Otvaramo poruku i čitamo je.",
+      "en": "We open the message and read it."
+    },
+    "admin-kontakt-status": {
+      "heading": {
+        "sr": "Status poruke",
+        "en": "Message status"
+      },
+      "sr": "Posle odgovora status menjamo u „Odgovoren“, pa se vidi šta još čeka.",
+      "en": "After replying, we set the status to “Odgovoren” so it is clear what is still waiting."
+    }
+  }
+}

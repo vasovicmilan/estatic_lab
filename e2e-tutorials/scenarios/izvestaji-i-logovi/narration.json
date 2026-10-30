@@ -1,0 +1,60 @@
+{
+  "title": {
+    "sr": "Poslovni izveštaji i logovi",
+    "en": "Business reports and logs"
+  },
+  "intro": {
+    "sr": "Administrator pregleda poslovne izveštaje i logove sistema, iz admin menija.",
+    "en": "An administrator looks at the business reports and the system logs, from the admin menu."
+  },
+  "steps": {
+    "admin-izvestaji-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Poslovni izveštaji“",
+        "en": "“Poslovni izveštaji” menu"
+      },
+      "sr": "Otvaramo grupu „Poslovni izveštaji“.",
+      "en": "We open the “Poslovni izveštaji” group."
+    },
+    "admin-izvestaji-bira-stavku": {
+      "heading": {
+        "sr": "Pregled",
+        "en": "Pregled"
+      },
+      "sr": "Biramo „Pregled“.",
+      "en": "We choose “Pregled”."
+    },
+    "admin-logovi-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Sistem“",
+        "en": "“Sistem” menu"
+      },
+      "sr": "Otvaramo grupu „Sistem“.",
+      "en": "We open the “Sistem” group."
+    },
+    "admin-logovi-bira-stavku": {
+      "heading": {
+        "sr": "Logovi",
+        "en": "Logovi"
+      },
+      "sr": "Biramo „Logovi“.",
+      "en": "We choose “Logovi”."
+    },
+    "izvestaji-pregled": {
+      "heading": {
+        "sr": "Poslovni izveštaji",
+        "en": "Business reports"
+      },
+      "sr": "Izveštaji pokazuju termine, prodavnicu, pakete, provizije i kupone: tekući period uživo, a prethodni su sačuvani.",
+      "en": "Reports show appointments, the shop, packages, commissions and coupons: the current period live, earlier ones saved."
+    },
+    "logovi-pregled": {
+      "heading": {
+        "sr": "Logovi",
+        "en": "Logs"
+      },
+      "sr": "U logovima je ko je šta uradio u sistemu (revizija) i stanje sajta, što je prvo mesto za proveru kad nešto nije jasno.",
+      "en": "The logs show who did what in the system (audit trail) and the state of the site, the first place to look when something is unclear."
+    }
+  }
+}

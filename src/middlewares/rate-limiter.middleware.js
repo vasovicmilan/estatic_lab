@@ -20,7 +20,7 @@ const STATIC_EXTENSIONS = new Set([
 // express.static already answers most of them before the limiters run (setupStatic in app.js),
 // this is the safety net for the ones that get here anyway (nginx-less setups, uploads path,
 // files without a listed extension).
-const STATIC_PREFIXES = ["/images/", "/uploads/", "/videos/", "/css/", "/js/", "/fonts/", "/bootstrap/", "/assets/"];
+const STATIC_PREFIXES = ["/images/", "/uploads/", "/videos/", "/css/", "/js/", "/fonts/", "/bootstrap/", "/assets/", "/uputstva/video/", "/uputstva/poster/"];
 
 function skipStatic(req) {
   if (req.method !== "GET" && req.method !== "HEAD") return false;

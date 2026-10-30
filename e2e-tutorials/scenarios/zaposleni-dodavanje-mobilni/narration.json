@@ -1,0 +1,11 @@
+{
+  "extends": "zaposleni-dodavanje",
+  "title": {
+    "sr": "Zaposleni - dodavanje i način isplate (telefon)",
+    "en": "Employees - adding and how they are paid (phone)"
+  },
+  "intro": {
+    "sr": "Administrator pravi zaposlenog od postojećeg korisnika: usluge, provizija i mesto za SrediMe kalendar. Snimljeno na telefonu (390x844).",
+    "en": "An administrator makes an employee from an existing user: services, commission and the place for the SrediMe calendar. Recorded on a phone (390x844)."
+  }
+}

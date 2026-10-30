@@ -1,0 +1,68 @@
+{
+  "title": {
+    "sr": "Zaboravljena lozinka",
+    "en": "Forgotten password"
+  },
+  "intro": {
+    "sr": "Klijent koji je zaboravio lozinku traži link, postavlja novu lozinku i prijavljuje se.",
+    "en": "A customer who forgot their password requests a link, sets a new one and logs in."
+  },
+  "steps": {
+    "zaboravljena-link": {
+      "heading": {
+        "sr": "Zaboravili ste lozinku?",
+        "en": "Forgot your password?"
+      },
+      "sr": "Na stranici za prijavu {kliknemo} „Zaboravili ste lozinku?“.",
+      "en": "On the login page we {click} “Zaboravili ste lozinku?”."
+    },
+    "zaboravljena-email": {
+      "heading": {
+        "sr": "Email adresa",
+        "en": "Email address"
+      },
+      "sr": "Upisujemo email adresu naloga.",
+      "en": "We type the account's email address."
+    },
+    "zaboravljena-slanje": {
+      "heading": {
+        "sr": "Slanje linka",
+        "en": "Send the link"
+      },
+      "sr": "{Kliknemo} „Pošalji link“. Na email stiže veza za novu lozinku, a poruka je ista bez obzira da li nalog postoji.",
+      "en": "We {click} “Pošalji link”. A link to set a new password is emailed, and the message is the same whether or not the account exists."
+    },
+    "link-iz-mejla": {
+      "heading": {
+        "sr": "Link iz mejla",
+        "en": "The link from the email"
+      },
+      "sr": "Otvaramo link iz mejla. On važi ograničeno vreme.",
+      "en": "We open the link from the email. It is valid for a limited time."
+    },
+    "nova-lozinka": {
+      "heading": {
+        "sr": "Nova lozinka",
+        "en": "New password"
+      },
+      "sr": "Upisujemo novu lozinku i ponavljamo je (najmanje 8 znakova).",
+      "en": "We type the new password and repeat it (at least 8 characters)."
+    },
+    "nova-lozinka-cuvanje": {
+      "heading": {
+        "sr": "Čuvanje lozinke",
+        "en": "Save the password"
+      },
+      "sr": "{Kliknemo} „Sačuvaj lozinku“. Stiže potvrda i vraćamo se na prijavu.",
+      "en": "We {click} “Sačuvaj lozinku”. A confirmation appears and we are taken back to the login."
+    },
+    "prijava-novom-lozinkom": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Log in"
+      },
+      "sr": "Prijavljujemo se novom lozinkom.",
+      "en": "We log in with the new password."
+    }
+  }
+}

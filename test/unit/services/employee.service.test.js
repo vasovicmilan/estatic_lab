@@ -10,6 +10,32 @@ import * as employeeService from "../../../src/services/employee.service.js";
 import { _clearAggregateHoursCacheForTests } from "../../../src/services/employee.service.js";
 import { buildEmployee, buildRole, id } from "../../helpers/factories.js";
 
+describe("employee.service - createEmployee pay type", () => {
+  async function createWith(t, input) {
+    t.mock.method(employeeRepo, "findEmployeeByUserId", async () => null);
+    t.mock.method(roleService, "findRoleByName", async () => buildRole({ name: "employee", priority: 50 }));
+    const created = buildEmployee();
+    const createMock = t.mock.method(employeeRepo, "createEmployee", async () => created);
+    t.mock.method(userRepo, "findUserById", async () => ({ role: { priority: 0, name: "user" } }));
+    t.mock.method(userRepo, "updateUserById", async () => {});
+    t.mock.method(employeeRepo, "findEmployeeById", async () => created);
+    await employeeService.createEmployee({ userId: id(), ...input });
+    return createMock.mock.calls[0].arguments[0];
+  }
+
+  it("keeps commission pay type and the rate from the form", async (t) => {
+    const saved = await createWith(t, { payType: "commission", commissionRate: "25" });
+    assert.equal(saved.payType, "commission");
+    assert.equal(saved.commissionRate, 25);
+  });
+
+  it("defaults to salary without a rate", async (t) => {
+    const saved = await createWith(t, { payType: "salary", commissionRate: "30" });
+    assert.equal(saved.payType, "salary");
+    assert.equal(saved.commissionRate, null);
+  });
+});
+
 describe("employee.service", () => {
   describe("working hours validation (exercised via createEmployee)", () => {
     it("rejects an unknown weekday", async () => {

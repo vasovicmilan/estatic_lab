@@ -1,0 +1,60 @@
+{
+  "title": {
+    "sr": "Podešavanja sajta - politika zakazivanja i valuta",
+    "en": "Site settings - booking policy and currency"
+  },
+  "intro": {
+    "sr": "Administrator menja razmak između termina, rok otkazivanja i prikaz valute u „Podešavanja sajta“, bez izmene koda i bez restarta.",
+    "en": "An administrator changes the gap between appointments, the cancellation deadline and the currency display in “Podešavanja sajta”, with no code change and no restart."
+  },
+  "steps": {
+    "admin-sajt-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Sadržaj i marketing“",
+        "en": "“Sadržaj i marketing” menu"
+      },
+      "sr": "Otvaramo grupu „Sadržaj i marketing“.",
+      "en": "We open the “Sadržaj i marketing” group."
+    },
+    "admin-sajt-bira-stavku": {
+      "heading": {
+        "sr": "Podešavanja sajta",
+        "en": "Podešavanja sajta"
+      },
+      "sr": "Biramo „Podešavanja sajta“.",
+      "en": "We choose “Podešavanja sajta”."
+    },
+    "sajt-politika-zakazivanja": {
+      "heading": {
+        "sr": "Razmak između termina",
+        "en": "Gap between appointments"
+      },
+      "sr": "Politika zakazivanja je podatak, a ne kod. Razmak između termina menjamo ovde, npr. na 45 minuta.",
+      "en": "The booking policy is data, not code. We change the gap between appointments here, e.g. to 45 minutes."
+    },
+    "sajt-otkazivanje": {
+      "heading": {
+        "sr": "Rok za otkazivanje",
+        "en": "Cancellation deadline"
+      },
+      "sr": "Rok do kog klijent sam otkazuje termin, npr. 12 sati unapred.",
+      "en": "The deadline until which a client may cancel their own appointment, e.g. 12 hours ahead."
+    },
+    "sajt-valuta": {
+      "heading": {
+        "sr": "Prikaz valute",
+        "en": "Currency display"
+      },
+      "sr": "Oznaka valute menja samo prikaz cene, ne i iznose u bazi.",
+      "en": "The currency label changes only how a price is displayed, not the amounts in the database."
+    },
+    "sajt-cuvanje": {
+      "heading": {
+        "sr": "Čuvanje",
+        "en": "Save"
+      },
+      "sr": "Čuvamo. Izmena važi odmah, bez ponovnog pokretanja servera.",
+      "en": "We save. The change is effective at once, with no server restart."
+    }
+  }
+}

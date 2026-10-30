@@ -1,0 +1,11 @@
+{
+  "extends": "zaboravljena-lozinka",
+  "title": {
+    "sr": "Zaboravljena lozinka (telefon)",
+    "en": "Forgotten password (phone)"
+  },
+  "intro": {
+    "sr": "Klijent koji je zaboravio lozinku traži link, postavlja novu lozinku i prijavljuje se. Snimljeno na telefonu (390x844).",
+    "en": "A customer who forgot their password requests a link, sets a new one and logs in. Recorded on a phone (390x844)."
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "title": {
+    "sr": "Utisak klijenta - od slanja do odobravanja",
+    "en": "A customer review - from sending to approval"
+  },
+  "intro": {
+    "sr": "Posetilac ostavlja utisak na početnoj strani, a administrator ga u „Testimoniali“ proverava i odobrava; tek tada postaje javan.",
+    "en": "A visitor leaves a review on the home page, and an administrator checks and approves it in “Testimoniali”; only then does it become public."
+  },
+  "steps": {
+    "admin-testimoniali-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Sadržaj i marketing“",
+        "en": "“Sadržaj i marketing” menu"
+      },
+      "sr": "Otvaramo grupu „Sadržaj i marketing“.",
+      "en": "We open the “Sadržaj i marketing” group."
+    },
+    "admin-testimoniali-bira-stavku": {
+      "heading": {
+        "sr": "Testimoniali",
+        "en": "Testimoniali"
+      },
+      "sr": "Biramo „Testimoniali“.",
+      "en": "We choose “Testimoniali”."
+    },
+    "utisak-forma": {
+      "heading": {
+        "sr": "Ostavite utisak",
+        "en": "Leave a review"
+      },
+      "sr": "Na početnoj strani (i na stranicama usluga, paketa i proizvoda) posetilac može da ostavi utisak.",
+      "en": "On the home page (and on service, package and product pages) a visitor can leave a review."
+    },
+    "utisak-ime": {
+      "heading": {
+        "sr": "Ime",
+        "en": "Name"
+      },
+      "sr": "Upisuje ime koje će biti prikazano uz utisak.",
+      "en": "They type the name shown with the review."
+    },
+    "utisak-ocena": {
+      "heading": {
+        "sr": "Ocena",
+        "en": "Rating"
+      },
+      "sr": "Bira ocenu od jedne do pet zvezdica.",
+      "en": "They choose a rating from one to five stars."
+    },
+    "utisak-poruka": {
+      "heading": {
+        "sr": "Utisak",
+        "en": "The review"
+      },
+      "sr": "Upisuje svoj utisak, najmanje 10 znakova.",
+      "en": "They write the review, at least 10 characters."
+    },
+    "utisak-pristanak": {
+      "heading": {
+        "sr": "Pristanak",
+        "en": "Consent"
+      },
+      "sr": "Pristanak za javno prikazivanje je obavezan.",
+      "en": "Consent to publish it is required."
+    },
+    "utisak-slanje": {
+      "heading": {
+        "sr": "Slanje utiska",
+        "en": "Send the review"
+      },
+      "sr": "{Kliknemo} „Pošalji utisak“. Utisak ne postaje javan odmah: čeka proveru.",
+      "en": "We {click} “Pošalji utisak”. The review does not go public at once: it waits for a check."
+    },
+    "admin-testimoniali-otvaranje": {
+      "heading": {
+        "sr": "Utisak na čekanju",
+        "en": "Pending review"
+      },
+      "sr": "U listi nalazimo utisak na čekanju i otvaramo ga.",
+      "en": "In the list we find the pending review and open it."
+    },
+    "admin-testimoniali-odobrava": {
+      "heading": {
+        "sr": "Odobravanje",
+        "en": "Approving"
+      },
+      "sr": "{Kliknemo} „Odobri“. Tek odobren utisak se prikazuje na sajtu i ulazi u prosečnu ocenu koju vide pretraživači. Neprikladan se odbija.",
+      "en": "We {click} “Odobri”. Only an approved review is shown on the site and counted in the average rating search engines see. An inappropriate one is rejected."
+    }
+  }
+}

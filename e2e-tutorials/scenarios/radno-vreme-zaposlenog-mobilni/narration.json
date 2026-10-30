@@ -1,0 +1,92 @@
+{
+  "title": {
+    "sr": "Radno vreme zaposlenog (telefon)",
+    "en": "Employee working hours (phone)"
+  },
+  "intro": {
+    "sr": "Kako zaposleni podešava svoje radno vreme, i kako se to odmah odražava na dostupne termine za zakazivanje.",
+    "en": "How an employee sets their own working hours, and how that immediately affects which appointment slots are available for booking."
+  },
+  "steps": {
+    "bez-radnog-vremena-nema-termina": {
+      "heading": {
+        "sr": "Bez radnog vremena, nema termina",
+        "en": "No working hours, no slots"
+      },
+      "sr": "Dok zaposleni nema podešeno radno vreme za dati dan, klijent na stranici za zakazivanje ne vidi nijedan slobodan termin.",
+      "en": "While the employee has no working hours set for a given day, the customer sees no available slots on the booking page."
+    },
+    "login-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija",
+        "en": "Open the menu"
+      },
+      "sr": "Na telefonu je meni sakriven iza dugmeta sa tri crtice u gornjem desnom uglu. Dodirnemo ga.",
+      "en": "On a phone the menu is hidden behind the three-line button in the top right corner. We tap it."
+    },
+    "login-klik-prijava": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Log in"
+      },
+      "sr": "U meniju dodirnemo „Prijava“.",
+      "en": "In the menu we tap “Prijava”."
+    },
+    "unos-prijave": {
+      "heading": {
+        "sr": "Unos podataka za prijavu",
+        "en": "Enter your login details"
+      },
+      "sr": "Zaposleni unosi email i lozinku i prijavljuje se.",
+      "en": "The employee enters the email and password and logs in."
+    },
+    "portal-otvara-meni": {
+      "heading": {
+        "sr": "Meni naloga",
+        "en": "Account menu"
+      },
+      "sr": "Posle prijave ponovo otvaramo meni. Na dnu je odeljak sa imenom zaposlenog i linkovima ka nalogu - stranica se sama pomera do njega.",
+      "en": "After logging in we open the menu again. At the bottom is a section with the employee's name and account links - the page scrolls to it."
+    },
+    "portal-bira-stavku": {
+      "heading": {
+        "sr": "Moj kalendar",
+        "en": "My calendar"
+      },
+      "sr": "Dodirnemo „Moj kalendar“ i ulazimo u nalog zaposlenog.",
+      "en": "We tap “Moj kalendar” and enter the employee's account."
+    },
+    "otvaranje-profila": {
+      "heading": {
+        "sr": "Profil i radno vreme",
+        "en": "Profile and working hours"
+      },
+      "sr": "Na donjoj traci dodirnemo „Profil“, gde se nalazi raspored radnog vremena po danima.",
+      "en": "On the bottom bar we tap “Profil”, where the working hours per day are set."
+    },
+    "dodavanje-radnog-vremena": {
+      "heading": {
+        "sr": "Dodavanje radnog vremena",
+        "en": "Add a working window"
+      },
+      "sr": "Zaposleni dodaje vremenski okvir za dan (npr. 09:00-17:00) preko interaktivnog rasporeda.",
+      "en": "The employee adds a time window for the day (e.g. 09:00-17:00) via the interactive schedule widget."
+    },
+    "cuvanje-radnog-vremena": {
+      "heading": {
+        "sr": "Čuvanje radnog vremena",
+        "en": "Save working hours"
+      },
+      "sr": "Klikom na „Sačuvaj radno vreme” izmena se snima.",
+      "en": "Clicking \"Save working hours\" saves the change."
+    },
+    "termini-sada-dostupni": {
+      "heading": {
+        "sr": "Termini su sada dostupni",
+        "en": "Slots are now available"
+      },
+      "sr": "Ista stranica za zakazivanje, bez ikakve dodatne izmene od strane klijenta, sada prikazuje slobodne termine unutar novog radnog vremena.",
+      "en": "The same booking page, with no further change from the customer's side, now shows available slots within the new working hours."
+    }
+  }
+}

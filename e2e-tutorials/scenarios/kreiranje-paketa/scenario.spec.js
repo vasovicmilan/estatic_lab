@@ -79,7 +79,7 @@ test.describe("Tutorial: kreiranje paketa", () => {
       await expectFlashSuccess(page);
     });
 
-    const pkg = await Package.findOne({ name: "Paket relaksacije - 5 seansi" });
+    const pkg = await Package.findOne({ name: "Paket relaksacije - 5 seansi" }).sort({ createdAt: -1 }); // newest: earlier runs leave same-named packages behind
     expect(pkg).toBeTruthy();
     expect(pkg.totalPrice).toBe(15000);
     expect(pkg.items).toHaveLength(1);

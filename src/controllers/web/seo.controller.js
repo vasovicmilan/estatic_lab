@@ -8,7 +8,7 @@ import { FEATURES } from "../../config/features.config.js";
 // shop/blog-only deployment /zakazivanje doesn't exist and listing it would just
 // advertise a path that 404s.
 export function buildRobotsTxt(base, features = FEATURES) {
-  const lines = ["User-agent: *", "Disallow: /admin", "Disallow: /nalog", "Disallow: /moj-nalog", "Disallow: /newsletter/odjava"];
+  const lines = ["User-agent: *", "Disallow: /admin", "Disallow: /nalog", "Disallow: /moj-nalog", "Disallow: /newsletter/odjava", "Disallow: /uputstva"];
   if (features.booking) {
     // Booking-flow state pages (/zakazivanje/:slug/podaci, /termin, ...) -
     // per-visit availability/form state, not content: infinite crawlable

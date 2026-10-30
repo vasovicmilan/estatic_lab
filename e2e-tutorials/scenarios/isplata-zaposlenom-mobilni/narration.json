@@ -1,0 +1,172 @@
+{
+  "title": {
+    "sr": "Isplata zaposlenom (telefon)",
+    "en": "Employee payout (phone)"
+  },
+  "intro": {
+    "sr": "Zaposleni traži isplatu zarađene provizije sa svog naloga, administrator je odobrava i označava kao isplaćenu, a zaposleni u istoriji vidi da je isplata izvršena. Prikazan je svaki klik, na telefonu, za zaposlenog i za administratora.",
+    "en": "An employee requests a payout of earned commission from their account, an admin approves it and marks it paid, and the employee sees in their history that it's done. Every tap is shown, on a phone, for both the employee and the admin."
+  },
+  "steps": {
+    "otvaranje-pocetne": {
+      "heading": {
+        "sr": "Početna stranica",
+        "en": "Home page"
+      },
+      "sr": "Počinjemo na početnoj stranici sajta.",
+      "en": "We start on the site's home page."
+    },
+    "login-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija",
+        "en": "Open the menu"
+      },
+      "sr": "Na telefonu je meni sakriven iza dugmeta sa tri crtice u gornjem desnom uglu. Dodirnemo ga.",
+      "en": "On a phone the menu is hidden behind the three-line button in the top right corner. We tap it."
+    },
+    "login-klik-prijava": {
+      "heading": {
+        "sr": "Prijava",
+        "en": "Log in"
+      },
+      "sr": "U meniju dodirnemo „Prijava“.",
+      "en": "In the menu we tap “Prijava”."
+    },
+    "unos-prijave": {
+      "heading": {
+        "sr": "Unos podataka za prijavu",
+        "en": "Enter your login details"
+      },
+      "sr": "Zaposleni unosi email i lozinku i prijavljuje se.",
+      "en": "The employee enters the email and password and logs in."
+    },
+    "portal-otvara-meni": {
+      "heading": {
+        "sr": "Meni naloga",
+        "en": "Account menu"
+      },
+      "sr": "Posle prijave ponovo otvaramo meni. Na dnu je odeljak sa imenom zaposlenog i linkovima ka nalogu - stranica se sama pomera do njega.",
+      "en": "After logging in we open the menu again. At the bottom is a section with the employee's name and account links - the page scrolls to it."
+    },
+    "portal-bira-stavku": {
+      "heading": {
+        "sr": "Moj kalendar",
+        "en": "My calendar"
+      },
+      "sr": "Dodirnemo „Moj kalendar“ i ulazimo u nalog zaposlenog.",
+      "en": "We tap “Moj kalendar” and enter the employee's account."
+    },
+    "pregled-stanja": {
+      "heading": {
+        "sr": "Pregled zarađenog stanja",
+        "en": "View earned balance"
+      },
+      "sr": "Na svom nalogu zaposleni vidi koliko je do sada zaradio. Stranica se pomera do kartice sa stanjem.",
+      "en": "On their account the employee sees how much they've earned so far. The page scrolls to the balance card."
+    },
+    "zahtev-za-isplatu": {
+      "heading": {
+        "sr": "Zahtev za isplatu",
+        "en": "Request a payout"
+      },
+      "sr": "Zaposleni unosi željeni iznos i šalje zahtev za isplatu.",
+      "en": "The employee enters the desired amount and submits a payout request."
+    },
+    "preostalo-stanje": {
+      "heading": {
+        "sr": "Preostalo stanje",
+        "en": "Remaining balance"
+      },
+      "sr": "Nakon zahteva, forma sama pokazuje koliko je još preostalo za eventualni novi zahtev - već rezervisan iznos se ne može tražiti dvaput.",
+      "en": "After the request, the form itself shows how much is left for a further request - an already-reserved amount can't be requested twice."
+    },
+    "tab-isplate": {
+      "heading": {
+        "sr": "Tab Isplate",
+        "en": "Payouts tab"
+      },
+      "sr": "Na donjoj traci dodirnemo „Isplate“ da vidimo zahteve.",
+      "en": "On the bottom bar we tap “Isplate” to see the requests."
+    },
+    "zahtev-na-cekanju": {
+      "heading": {
+        "sr": "Zahtev na čekanju",
+        "en": "Request pending"
+      },
+      "sr": "Zahtev je u istoriji sa statusom „Zatraženo“, dok ga administrator ne obradi.",
+      "en": "The request is in the history with the status “Zatraženo” until an admin handles it."
+    },
+    "admin-prijava": {
+      "heading": {
+        "sr": "Prijava administratora",
+        "en": "Admin logs in"
+      },
+      "sr": "Administrator se prijavljuje da bi obradio zahtev za isplatu.",
+      "en": "The admin logs in to process the payout request."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": {
+        "sr": "Otvaranje menija naloga",
+        "en": "Open the account menu"
+      },
+      "sr": "Administrator klikne na dropdown sa svojim imenom u gornjem desnom uglu.",
+      "en": "The admin clicks the dropdown showing their name in the top-right corner."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": {
+        "sr": "Ulazak u admin panel",
+        "en": "Enter the admin panel"
+      },
+      "sr": "Administrator bira „Admin panel” iz menija, čime se otvara admin deo sajta.",
+      "en": "The admin picks \"Admin panel\" from the menu, opening the site's admin area."
+    },
+    "admin-isplate-otvara-meni": {
+      "heading": {
+        "sr": "Otvaranje menija „Partnerski program”",
+        "en": "Open the \"Partner program\" menu"
+      },
+      "sr": "Administrator klikne na grupu „Partnerski program” u admin meniju.",
+      "en": "The admin clicks the \"Partner program\" group in the admin menu."
+    },
+    "admin-isplate-bira-stavku": {
+      "heading": {
+        "sr": "Otvaranje isplata",
+        "en": "Open payouts"
+      },
+      "sr": "Administrator bira „Isplate” iz menija.",
+      "en": "The admin picks \"Payouts\" from the menu."
+    },
+    "admin-otvara-zahtev": {
+      "heading": {
+        "sr": "Otvaranje zahteva",
+        "en": "Open the request"
+      },
+      "sr": "Administrator otvara detalje zahteva za isplatu.",
+      "en": "The admin opens the payout request's details."
+    },
+    "admin-odobrava": {
+      "heading": {
+        "sr": "Odobravanje zahteva",
+        "en": "Approve the request"
+      },
+      "sr": "Administrator odobrava zahtev.",
+      "en": "The admin approves the request."
+    },
+    "admin-oznacava-isplaceno": {
+      "heading": {
+        "sr": "Označavanje kao isplaćeno",
+        "en": "Mark as paid"
+      },
+      "sr": "Nakon što je novac stvarno prebačen (van sistema, npr. bankovnim transferom), administrator označava zahtev kao isplaćen.",
+      "en": "Once the money has actually been transferred (outside the system, e.g. via bank transfer), the admin marks the request as paid."
+    },
+    "istorija-isplata": {
+      "heading": {
+        "sr": "Istorija isplata",
+        "en": "Payout history"
+      },
+      "sr": "Zaposleni na tabu „Isplate“ odmah vidi da je isplata izvršena.",
+      "en": "On the “Isplate” tab the employee immediately sees that the payout was completed."
+    }
+  }
+}

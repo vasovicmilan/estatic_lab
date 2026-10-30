@@ -1,0 +1,11 @@
+{
+  "extends": "korisnici-i-role",
+  "title": {
+    "sr": "Korisnici i role (telefon)",
+    "en": "Users and roles (phone)"
+  },
+  "intro": {
+    "sr": "Administrator pronalazi korisnika po emailu u „Korisnici“ i pregleda role i dozvole u „Role“. Snimljeno na telefonu (390x844).",
+    "en": "An administrator finds a user by email in “Korisnici” and looks at the roles and permissions in “Role”. Recorded on a phone (390x844)."
+  }
+}

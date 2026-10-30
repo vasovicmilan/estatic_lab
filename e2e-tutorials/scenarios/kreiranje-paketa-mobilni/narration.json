@@ -1,0 +1,100 @@
+{
+  "title": {
+    "sr": "Kreiranje paketa (telefon)",
+    "en": "Creating a package (phone)"
+  },
+  "intro": {
+    "sr": "Administrator kreira novi paket sesija - bira postojeću uslugu, unosi cenu i obavezno postavlja sliku, sve pre nego što paket bude spreman za dodelu klijentima.",
+    "en": "The admin creates a new session package - selecting an existing service, entering a price, and setting a required image, all before the package is ready to be assigned to customers."
+  },
+  "steps": {
+    "admin-prijava": {
+      "heading": {
+        "sr": "Prijava administratora",
+        "en": "Admin logs in"
+      },
+      "sr": "Administrator se prijavljuje na svoj nalog.",
+      "en": "The admin logs into their account."
+    },
+    "admin-ulazak-otvara-nalog-meni": {
+      "heading": {
+        "sr": "Meni",
+        "en": "Menu"
+      },
+      "sr": "Administrator na telefonu otvara glavni meni dugmetom sa tri crtice.",
+      "en": "On a phone the admin opens the main menu with the three-line button."
+    },
+    "admin-ulazak-otvara-admin-panel": {
+      "heading": {
+        "sr": "Admin panel",
+        "en": "Admin panel"
+      },
+      "sr": "U odeljku „Admin“ dodiruje „Admin panel“.",
+      "en": "In the “Admin” section they tap “Admin panel”."
+    },
+    "admin-paketi-otvara-meni": {
+      "heading": {
+        "sr": "Admin meni",
+        "en": "Admin menu"
+      },
+      "sr": "Admin panel ima sopstveni meni iza dugmeta sa tri crtice. Otvaramo ga i biramo grupu „Katalog“.",
+      "en": "The admin panel has its own menu behind a three-line button. We open it and choose the “Katalog” group."
+    },
+    "admin-paketi-bira-stavku": {
+      "heading": {
+        "sr": "Otvaranje paketa",
+        "en": "Open packages"
+      },
+      "sr": "Administrator dodiruje „Paketi” u meniju.",
+      "en": "The admin taps \"Packages\" in the menu."
+    },
+    "admin-paketi-klik-na-dodaj": {
+      "heading": {
+        "sr": "Novi paket",
+        "en": "New package"
+      },
+      "sr": "Administrator dodirne „Novi paket”.",
+      "en": "The admin taps \"New package\"."
+    },
+    "unos-osnovnih-podataka": {
+      "heading": {
+        "sr": "Unos osnovnih podataka",
+        "en": "Enter basic details"
+      },
+      "sr": "Administrator unosi naziv i opis paketa.",
+      "en": "The admin enters the package's name and description."
+    },
+    "dodavanje-usluge-u-paket": {
+      "heading": {
+        "sr": "Dodavanje usluge u paket",
+        "en": "Add a service to the package"
+      },
+      "sr": "Administrator dodaje red, bira tačno određenu uslugu i varijantu, i unosi broj seansi koje paket sadrži.",
+      "en": "The admin adds a row, picks the exact service and variant, and enters how many sessions the package includes."
+    },
+    "unos-cene": {
+      "heading": {
+        "sr": "Unos cene",
+        "en": "Enter the price"
+      },
+      "sr": "Administrator unosi cenu celog paketa - obično nižu od zbira pojedinačnih seansi.",
+      "en": "The admin enters the package's total price - usually lower than the sum of individual sessions."
+    },
+    "otpremanje-slike": {
+      "heading": {
+        "sr": "Otpremanje slike",
+        "en": "Upload an image"
+      },
+      "sr": "Slika je obavezna za paket - administrator je otprema i unosi alt tekst.",
+      "en": "An image is required for a package - the admin uploads one and enters alt text."
+    },
+    "cuvanje-paketa": {
+      "heading": {
+        "sr": "Čuvanje paketa",
+        "en": "Save the package"
+      },
+      "sr": "Administrator čuva paket - sada je spreman da se dodeli klijentima.",
+      "en": "The admin saves the package - it's now ready to be assigned to customers."
+    }
+  }
+}

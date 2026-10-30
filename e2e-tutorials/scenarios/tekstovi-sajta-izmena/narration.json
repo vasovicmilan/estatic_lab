@@ -1,0 +1,68 @@
+{
+  "title": {
+    "sr": "Tekstovi sajta - izmena stranice „O nama“",
+    "en": "Site texts - editing the “About” page"
+  },
+  "intro": {
+    "sr": "Administrator menja uvodni tekst stranice „O nama“ u „Tekstovi sajta“ i odmah ga vidi na javnom sajtu.",
+    "en": "An administrator edits the “About” intro text in “Tekstovi sajta” and sees it on the public site at once."
+  },
+  "steps": {
+    "admin-tekstovi-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Sadržaj i marketing“",
+        "en": "“Sadržaj i marketing” menu"
+      },
+      "sr": "Otvaramo grupu „Sadržaj i marketing“.",
+      "en": "We open the “Sadržaj i marketing” group."
+    },
+    "admin-tekstovi-bira-stavku": {
+      "heading": {
+        "sr": "Tekstovi sajta",
+        "en": "Tekstovi sajta"
+      },
+      "sr": "Biramo „Tekstovi sajta“.",
+      "en": "We choose “Tekstovi sajta”."
+    },
+    "tekstovi-izbor-teksta": {
+      "heading": {
+        "sr": "Izbor teksta",
+        "en": "Choose the text"
+      },
+      "sr": "Svaki tekst sajta ima svoju karticu: O nama, česta pitanja, privatnost, uslovi, uvodi stranica i SEO naslovi. {Kliknemo} „Izmeni“ na kartici „O nama“.",
+      "en": "Every site text has its own card: About, FAQ, privacy, terms, page intros and SEO titles. We {click} “Izmeni” on the “O nama” card."
+    },
+    "tekstovi-izmena": {
+      "heading": {
+        "sr": "Izmena teksta",
+        "en": "Edit the text"
+      },
+      "sr": "Menjamo uvodni tekst. Dozvoljen je i HTML, npr. link.",
+      "en": "We change the intro text. HTML such as a link is allowed."
+    },
+    "tekstovi-cuvanje": {
+      "heading": {
+        "sr": "Čuvanje",
+        "en": "Save"
+      },
+      "sr": "Čuvamo izmenu.",
+      "en": "We save the change."
+    },
+    "otvaranje-pocetne": {
+      "heading": {
+        "sr": "Javni sajt",
+        "en": "The public site"
+      },
+      "sr": "Vraćamo se na javni deo sajta.",
+      "en": "We go back to the public site."
+    },
+    "tekstovi-javna-stranica": {
+      "heading": {
+        "sr": "Izmena je odmah vidljiva",
+        "en": "The change is live at once"
+      },
+      "sr": "Na stranici „O nama“ novi tekst je odmah tu, bez ponovnog pokretanja ili izmene koda.",
+      "en": "On the “O nama” page the new text is already there, with no restart or code change."
+    }
+  }
+}

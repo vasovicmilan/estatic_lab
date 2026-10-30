@@ -141,6 +141,7 @@ Jedna komanda radi sve redom (traje dugo - pusti je preko noći):
 ```bash
 npm run tutorials:all                          # sve, 6 koraka, na kraju ispiše koliko je koji trajao
 npm run tutorials:all -- --only kupovina       # samo scenariji čije ime sadrži "kupovina" (regex), pa ceo ostatak postupka
+npm run tutorials:all -- --scenario ime-foldera [--scenario drugi-folder]   # TAČNI nazivi foldera (za nove scenarije): snima samo njih, obrađuje samo njih, ostalo objavljeno ne dira
 npm run tutorials:all -- --skip-record         # bez snimanja (koraci 2-6), kad menjaš samo tekst ili veličinu titla
 ```
 

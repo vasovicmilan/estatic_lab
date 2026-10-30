@@ -1,0 +1,92 @@
+{
+  "title": {
+    "sr": "Kreiranje usluge",
+    "en": "Creating a service"
+  },
+  "intro": {
+    "sr": "Administrator pravi novu uslugu kroz tri faze: osnovni podaci sa slikom, varijante i cene, dodaci.",
+    "en": "An administrator creates a new service in three phases: basic data with an image, variants and prices, extras."
+  },
+  "steps": {
+    "admin-usluge-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Katalog“",
+        "en": "“Katalog” menu"
+      },
+      "sr": "Otvaramo grupu „Katalog“.",
+      "en": "We open the “Katalog” group."
+    },
+    "admin-usluge-bira-stavku": {
+      "heading": {
+        "sr": "Usluge",
+        "en": "Usluge"
+      },
+      "sr": "Biramo „Usluge“.",
+      "en": "We choose “Usluge”."
+    },
+    "admin-usluge-klik-na-dodaj": {
+      "heading": {
+        "sr": "Nova usluga",
+        "en": "New service"
+      },
+      "sr": "{Kliknemo} „Nova usluga“. Usluga se pravi u tri faze, svaka na svojoj stranici.",
+      "en": "We {click} “Nova usluga”. A service is created in three phases, each on its own page."
+    },
+    "usluga-faza1-naziv": {
+      "heading": {
+        "sr": "Faza 1: osnovni podaci",
+        "en": "Phase 1: basic data"
+      },
+      "sr": "Upisujemo naziv i kratak opis usluge.",
+      "en": "We enter the service name and a short description."
+    },
+    "usluga-faza1-trajanje": {
+      "heading": {
+        "sr": "Podrazumevano trajanje",
+        "en": "Default duration"
+      },
+      "sr": "Podrazumevano trajanje u minutima. Svaka varijanta može imati svoje.",
+      "en": "The default duration in minutes. Each variant can have its own."
+    },
+    "usluga-faza1-slika": {
+      "heading": {
+        "sr": "Slika usluge",
+        "en": "Service image"
+      },
+      "sr": "Dodajemo sliku i njen opis. Opis je obavezan zbog pristupačnosti i pretrage.",
+      "en": "We add the image and its description. The description is required for accessibility and search."
+    },
+    "usluga-faza1-nastavak": {
+      "heading": {
+        "sr": "Nastavak na fazu 2",
+        "en": "On to phase 2"
+      },
+      "sr": "{Kliknemo} „Sačuvaj i nastavi“. Prelazimo na varijante usluge.",
+      "en": "We {click} “Sačuvaj i nastavi”. We move on to the service variants."
+    },
+    "usluga-faza2-varijanta": {
+      "heading": {
+        "sr": "Varijanta usluge",
+        "en": "Service variant"
+      },
+      "sr": "Dodajemo varijantu: naziv, broj seansi, trajanje i cenu. Jedna seansa je običan termin, više seansi je paket.",
+      "en": "We add a variant: name, number of sessions, duration and price. One session is a regular appointment, several make a package."
+    },
+    "usluga-faza2-nastavak": {
+      "heading": {
+        "sr": "Nastavak na fazu 3",
+        "en": "On to phase 3"
+      },
+      "sr": "{Kliknemo} „Sačuvaj i nastavi“. Poslednja faza sadrži dodatke.",
+      "en": "We {click} “Sačuvaj i nastavi”. The last phase holds the extras."
+    },
+    "usluga-faza3-objava": {
+      "heading": {
+        "sr": "Čuvanje i objava",
+        "en": "Save and publish"
+      },
+      "sr": "Karakteristike, česta pitanja i preporučeni preparati su opcioni i mogu se dopuniti kasnije. {Kliknemo} „Sačuvaj“ i usluga je spremna.",
+      "en": "Features, FAQ and recommended products are optional and can be added later. We {click} “Sačuvaj” and the service is ready."
+    }
+  }
+}

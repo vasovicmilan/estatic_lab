@@ -87,6 +87,10 @@ export async function createEmployee(data) {
     services: data.services || [],
     workingHours: data.workingHours || [],
     isActive: data.isActive ?? true,
+    // pay type used to be dropped here, so every new employee silently ended up on "salary" no matter
+    // what the form said (the model has a validator that requires a rate for "commission")
+    payType: data.payType === "commission" ? "commission" : "salary",
+    commissionRate: data.payType === "commission" && data.commissionRate !== "" && data.commissionRate != null ? Number(data.commissionRate) : null,
     notes: data.notes || "",
     googleCalendarId: data.googleCalendarId || null,
     sredimeIcsUrl: data.sredimeIcsUrl || null,

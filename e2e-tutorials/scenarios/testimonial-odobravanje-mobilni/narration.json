@@ -1,0 +1,11 @@
+{
+  "extends": "testimonial-odobravanje",
+  "title": {
+    "sr": "Utisak klijenta - od slanja do odobravanja (telefon)",
+    "en": "A customer review - from sending to approval (phone)"
+  },
+  "intro": {
+    "sr": "Posetilac ostavlja utisak na početnoj strani, a administrator ga u „Testimoniali“ proverava i odobrava; tek tada postaje javan. Snimljeno na telefonu (390x844).",
+    "en": "A visitor leaves a review on the home page, and an administrator checks and approves it in “Testimoniali”; only then does it become public. Recorded on a phone (390x844)."
+  }
+}

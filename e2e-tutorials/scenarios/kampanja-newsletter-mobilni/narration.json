@@ -1,0 +1,11 @@
+{
+  "extends": "kampanja-newsletter",
+  "title": {
+    "sr": "Newsletter kampanja - priprema (telefon)",
+    "en": "Newsletter campaign - preparation (phone)"
+  },
+  "intro": {
+    "sr": "Administrator priprema kampanju: interni naziv, predmet, segment i sadržaj od blokova, pa čuva nacrt. Snimljeno na telefonu (390x844).",
+    "en": "An administrator prepares a campaign: internal name, subject, segment and block content, then saves a draft. Recorded on a phone (390x844)."
+  }
+}

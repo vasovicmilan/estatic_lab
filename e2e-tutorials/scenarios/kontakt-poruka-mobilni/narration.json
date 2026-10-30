@@ -1,0 +1,11 @@
+{
+  "extends": "kontakt-poruka",
+  "title": {
+    "sr": "Kontakt poruka - od posetioca do odgovora (telefon)",
+    "en": "Contact message - from visitor to reply (phone)"
+  },
+  "intro": {
+    "sr": "Posetilac sajta šalje poruku kroz kontakt formu, a administrator je nalazi u „Kontakt“ i označava kao odgovorenu. Snimljeno na telefonu (390x844).",
+    "en": "A site visitor sends a message through the contact form, and an administrator finds it in “Kontakt” and marks it answered. Recorded on a phone (390x844)."
+  }
+}

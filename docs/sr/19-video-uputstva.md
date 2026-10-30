@@ -19,7 +19,7 @@ Ko je za koje uputstvo određuje `e2e-tutorials/audience.json` (ime scenarija �
 Statički folder (`src/public`) daje svaki fajl svakome ko pogodi adresu, pa bi administratorsko uputstvo bilo javno. Zato su videi **van `src/public`**, u folderu `storage/tutorials` (ili tamo gde pokazuje `TUTORIALS_DIR` u `.env`), i šalju se samo kroz rute koje proveravaju pristup:
 
 - `GET /uputstva` je stranica sa spiskom, filtriranim po posetiocu.
-- `GET /uputstva/video/:id/:uredjaj/:jezik` je sam video, i `GET /uputstva/poster/:id/:uredjaj` sličica.
+- `GET /uputstva/video/:id/:uredjaj/:jezik.mp4` je sam video, i `GET /uputstva/poster/:id/:uredjaj.jpg` sličica. Nastavci su namerni: limiteri (aplikacije i Cloudflare) statiku prepoznaju po nastavku, pa se slike i video ne broje u limit zahteva. Pristup se i dalje proverava po fajlu.
 
 Pravila u `src/services/tutorial-video.service.js`:
 
@@ -45,7 +45,7 @@ Detaljan opis svakog koraka, pisanja scenarija i naracije je u `e2e-tutorials/RE
 
 ## Šta je pokriveno
 
-Objavljeno je 24 uputstva: 3 javna, 9 za korisnike, 5 za partnere, 3 za zaposlene i 4 za administratore. Javna i korisnička i partnerska postoje i za telefon, a uputstva za zaposlene i administratore za sada postoje **samo za računar**. Administratorski deo je najsloženiji i ostaje poslednji na redu. Preostali scenariji (zaboravljena lozinka, preuzimanje naloga, pretraga kataloga, ostale administratorske stavke menija) još nisu snimljeni.
+Prvi pun prolaz objavio je 24 uputstva (3 javna, 9 za korisnike, 5 za partnere, 3 za zaposlene, 4 za administratore). Posle toga je napisano još 18 scenarija (svaki za računar i telefon), pa je ukupno **40 priča, 80 snimaka**: i uputstva za zaposlene i administratore sada postoje i za telefon. Svi stavke administratorskog menija imaju bar jedno uputstvo. Novi scenariji se snimaju komandom `npm run tutorials:all -- --scenario <folder>` (može se ponoviti za više foldera), a svaki mora biti upisan u `e2e-tutorials/audience.json`. Pretraga kataloga nije snimana jer na sajtu ne postoji pretraga.
 
 ## Postavljanje na server
 
@@ -62,3 +62,5 @@ Folder `storage/` je u `.gitignore`: videi su generisani fajlovi i ne ulaze u gi
 - Titlovi su zapečeni u sliku, pa ih gledalac ne može isključiti, a jezik se bira izborom drugog fajla.
 - Snimci prikazuju aplikaciju sa probnim podacima, ne sa produkcijskim, a nazivi i cene u njima su izmišljeni.
 - Da li je treptanje slike na telefonu zaista otklonjeno nije potvrđeno gledanjem svih snimaka.
+
+**Indeksiranje:** uputstva nisu namenjena pretraživačima. `robots.txt` zabranjuje `/uputstva`, a svaki odgovor iz te putanje (stranica, video i slike) nosi zaglavlje `X-Robots-Tag: noindex, nofollow, noarchive`.

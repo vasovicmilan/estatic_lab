@@ -1,0 +1,116 @@
+{
+  "title": {
+    "sr": "Kreiranje kategorije i taga",
+    "en": "Creating a category and a tag"
+  },
+  "intro": {
+    "sr": "Administrator grupiše katalog: pravi kategoriju (sa obaveznom slikom) i tag, kroz menije.",
+    "en": "An administrator groups the catalog: creates a category (with a required image) and a tag, through the menus."
+  },
+  "steps": {
+    "admin-kategorije-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Katalog“",
+        "en": "“Katalog” menu"
+      },
+      "sr": "Otvaramo grupu „Katalog“.",
+      "en": "We open the “Katalog” group."
+    },
+    "admin-kategorije-bira-stavku": {
+      "heading": {
+        "sr": "Kategorije",
+        "en": "Kategorije"
+      },
+      "sr": "Biramo „Kategorije“.",
+      "en": "We choose “Kategorije”."
+    },
+    "admin-kategorije-klik-na-dodaj": {
+      "heading": {
+        "sr": "Nova kategorija",
+        "en": "New category"
+      },
+      "sr": "{Kliknemo} „Nova kategorija“. Kategorije grupišu usluge, proizvode i objave i prave arhivske stranice na sajtu.",
+      "en": "We {click} “Nova kategorija”. Categories group services, products and posts and create archive pages on the site."
+    },
+    "kategorija-naziv": {
+      "heading": {
+        "sr": "Naziv kategorije",
+        "en": "Category name"
+      },
+      "sr": "Upisujemo naziv. Adresa (slug) se pravi sama iz naziva.",
+      "en": "We type the name. The address (slug) is generated from it."
+    },
+    "kategorija-domen": {
+      "heading": {
+        "sr": "Domen",
+        "en": "Domain"
+      },
+      "sr": "Domen kaže za šta je kategorija: usluge, proizvodi ili blog.",
+      "en": "The domain says what the category is for: services, products or the blog."
+    },
+    "kategorija-opis": {
+      "heading": {
+        "sr": "Kratak opis",
+        "en": "Short description"
+      },
+      "sr": "Kratak opis se prikazuje na arhivi kategorije i u rezultatima pretrage.",
+      "en": "The short description appears on the category archive and in search results."
+    },
+    "kategorija-slika": {
+      "heading": {
+        "sr": "Slika kategorije",
+        "en": "Category image"
+      },
+      "sr": "Slika je obavezna, a alt tekst opisuje sliku za čitače ekrana i pretragu.",
+      "en": "The image is required, and the alt text describes it for screen readers and search."
+    },
+    "kategorija-cuvanje": {
+      "heading": {
+        "sr": "Čuvanje kategorije",
+        "en": "Save the category"
+      },
+      "sr": "Čuvamo kategoriju.",
+      "en": "We save the category."
+    },
+    "admin-tagovi-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Katalog“",
+        "en": "“Katalog” menu"
+      },
+      "sr": "Otvaramo grupu „Katalog“.",
+      "en": "We open the “Katalog” group."
+    },
+    "admin-tagovi-bira-stavku": {
+      "heading": {
+        "sr": "Tagovi",
+        "en": "Tagovi"
+      },
+      "sr": "Biramo „Tagovi“.",
+      "en": "We choose “Tagovi”."
+    },
+    "admin-tagovi-klik-na-dodaj": {
+      "heading": {
+        "sr": "Novi tag",
+        "en": "New tag"
+      },
+      "sr": "{Kliknemo} „Novi tag“. Tagovi su sitnije oznake od kategorija, za povezivanje srodnog sadržaja.",
+      "en": "We {click} “Novi tag”. Tags are finer labels than categories, linking related content."
+    },
+    "tag-naziv": {
+      "heading": {
+        "sr": "Naziv taga",
+        "en": "Tag name"
+      },
+      "sr": "Za tag je dovoljan naziv.",
+      "en": "A tag only needs a name."
+    },
+    "tag-cuvanje": {
+      "heading": {
+        "sr": "Čuvanje taga",
+        "en": "Save the tag"
+      },
+      "sr": "Čuvamo tag; sada se može dodeliti uslugama, proizvodima i objavama.",
+      "en": "We save the tag; it can now be assigned to services, products and posts."
+    }
+  }
+}

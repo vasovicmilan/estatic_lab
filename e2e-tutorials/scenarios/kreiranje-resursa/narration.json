@@ -1,0 +1,68 @@
+{
+  "title": {
+    "sr": "Kreiranje resursa",
+    "en": "Creating a resource"
+  },
+  "intro": {
+    "sr": "Administrator dodaje resurs (aparat ili sto) koji termini zauzimaju: naziv, kapacitet i napomena, sve kroz menije.",
+    "en": "An administrator adds a resource (a device or table) that appointments reserve: name, capacity and a note, all through the menus."
+  },
+  "steps": {
+    "admin-resursi-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Zakazivanje“",
+        "en": "“Zakazivanje” menu"
+      },
+      "sr": "Otvaramo grupu „Zakazivanje“.",
+      "en": "We open the “Zakazivanje” group."
+    },
+    "admin-resursi-bira-stavku": {
+      "heading": {
+        "sr": "Resursi",
+        "en": "Resursi"
+      },
+      "sr": "Biramo „Resursi“.",
+      "en": "We choose “Resursi”."
+    },
+    "admin-resursi-klik-na-dodaj": {
+      "heading": {
+        "sr": "Novi resurs",
+        "en": "New resource"
+      },
+      "sr": "{Kliknemo} „Novi resurs“. Resurs je aparat ili sto koji termin zauzima - dok je zauzet, nijedan drugi termin ga ne može koristiti preko njegovog kapaciteta.",
+      "en": "We {click} “Novi resurs”. A resource is a device or table an appointment reserves - while it is in use, no other appointment can exceed its capacity."
+    },
+    "unos-naziva": {
+      "heading": {
+        "sr": "Naziv",
+        "en": "Name"
+      },
+      "sr": "Upisujemo naziv resursa, npr. naziv aparata.",
+      "en": "We type the resource's name, e.g. the name of a device."
+    },
+    "unos-kapaciteta": {
+      "heading": {
+        "sr": "Kapacitet",
+        "en": "Capacity"
+      },
+      "sr": "Kapacitet je broj termina koji mogu da koriste resurs istovremeno. Ovde su dva aparata istog tipa, pa je kapacitet 2.",
+      "en": "Capacity is how many appointments can use the resource at the same time. Here there are two devices of the same type, so the capacity is 2."
+    },
+    "unos-napomene": {
+      "heading": {
+        "sr": "Napomena",
+        "en": "Note"
+      },
+      "sr": "Napomena je interna i služi samo osoblju.",
+      "en": "The note is internal and only staff see it."
+    },
+    "cuvanje-resursa": {
+      "heading": {
+        "sr": "Čuvanje",
+        "en": "Save"
+      },
+      "sr": "Čuvamo resurs. Ako su svi kapaciteti već zauzeti u nekom terminu, sistem više ne nudi usluge koje taj resurs traže.",
+      "en": "We save the resource. When all its capacity is taken at some time, the system stops offering services that need it."
+    }
+  }
+}

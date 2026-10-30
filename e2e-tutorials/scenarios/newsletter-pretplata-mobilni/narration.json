@@ -1,0 +1,11 @@
+{
+  "extends": "newsletter-pretplata",
+  "title": {
+    "sr": "Newsletter - prijava i pregled pretplatnika (telefon)",
+    "en": "Newsletter - sign-up and subscriber list (phone)"
+  },
+  "intro": {
+    "sr": "Posetilac se prijavljuje na newsletter kroz formu u podnožju (email, interesovanje, pristanak), a administrator vidi pretplatnika u „Newsletter“. Snimljeno na telefonu (390x844).",
+    "en": "A visitor subscribes through the footer form (email, interest, consent), and an administrator sees the subscriber in “Newsletter”. Recorded on a phone (390x844)."
+  }
+}
