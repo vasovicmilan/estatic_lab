@@ -84,12 +84,17 @@ export function prepareSiteSettingsFormData(settings) {
     },
     {
       name: "slotGridMinutes",
-      label: "Korak ponuđenih termina (minuti)",
-      type: "number",
+      label: "Korak ponuđenih termina",
+      type: "select",
       width: 6,
       required: true,
-      value: policy.slotGridMinutes,
-      help: "Npr. 30 → termini se nude na 09:00, 09:30, 10:00...",
+      value: String(policy.slotGridMinutes),
+      // string values: _form.ejs compares the posted (string) value to option.value with ===
+      // current value is always kept in the list, so a previously saved custom step never silently changes
+      options: [...new Set([15, 30, 45, 60, policy.slotGridMinutes].filter(Boolean))]
+        .sort((a, b) => a - b)
+        .map((m) => ({ value: String(m), label: m === 60 ? "1 sat (09:00, 10:00...)" : `${m} minuta` })),
+      help: "Na kojim razmacima se nude termini, npr. 30 min → 09:00, 09:30, 10:00...",
     },
     {
       name: "userCancellationCutoffHours",
@@ -99,6 +104,15 @@ export function prepareSiteSettingsFormData(settings) {
       required: true,
       value: policy.userCancellationCutoffHours,
       help: "Koliko sati unapred klijent sme sam da otkaže termin.",
+    },
+    {
+      name: "bookingMinLeadMinutes",
+      label: "Minimalna najava za novo zakazivanje (minuti)",
+      type: "number",
+      width: 6,
+      required: true,
+      value: policy.bookingMinLeadMinutes ?? 60,
+      help: "Npr. 60 → u 11:51 prvi ponuđeni termin je najranije 12:51 (a zbog mreže termina, 13:00).",
     },
     {
       name: "rescheduleMinLeadMinutes",

@@ -35,6 +35,8 @@ const BookingPolicySchema = new Schema(
     rescheduleCutoffHours: { type: Number, default: 24, min: 0 },
     rescheduleSameDayFloorHours: { type: Number, default: 4, min: 0 },
     rescheduleMinLeadMinutes: { type: Number, default: 30, min: 0 },
+    // minimum notice for a NEW self-service booking (a slot starting sooner than this from "now" is neither offered nor accepted)
+    bookingMinLeadMinutes: { type: Number, default: 60, min: 0 },
   },
   { _id: false }
 );

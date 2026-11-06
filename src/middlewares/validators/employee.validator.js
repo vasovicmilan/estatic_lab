@@ -46,6 +46,12 @@ export const validateEmployeeCreate = [
 
   ...workingHoursValidators,
 
+  body("commissionRate")
+    .if(body("payType").equals("commission"))
+    .notEmpty().withMessage("Procenat provizije je obavezan kada je zaposleni na proviziji")
+    .bail()
+    .isFloat({ min: 0, max: 100 }).withMessage("Procenat provizije mora biti broj između 0 i 100"),
+
   booleanishField("isActive"),
 
   body("notes")

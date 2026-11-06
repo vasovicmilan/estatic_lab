@@ -108,6 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
       inputGroup.classList.add("d-none");
       errorEl.classList.add("d-none");
       updateOrderSummary(code, discountAmount);
+      updateBookingSummary(code, discountAmount);
     }
 
     function showRemoved() {
@@ -115,6 +116,30 @@ document.addEventListener("DOMContentLoaded", () => {
       inputGroup.classList.remove("d-none");
       input.value = "";
       updateOrderSummary(null, 0);
+      updateBookingSummary(null, 0);
+    }
+
+    // Same idea for the booking flow's "Pregled termina" card (booking/contact-step.ejs):
+    // a coupon used to show only its badge while the price stayed at the full amount.
+    // Every lookup is guarded, so this is a no-op on the shop checkout page.
+    function updateBookingSummary(code, discountAmount) {
+      const subtotalEl = document.querySelector("[data-booking-subtotal-value]");
+      const totalEl = document.querySelector("[data-booking-total]");
+      if (!subtotalEl || !totalEl) return;
+
+      const subtotal = Number(subtotalEl.dataset.bookingSubtotalValue) || 0;
+      const discount = Number(discountAmount) || 0;
+      const symbol = totalEl.dataset.currencySymbol || "";
+
+      document.querySelectorAll("[data-booking-discount-row], [data-booking-total-row]").forEach((el) => el.classList.toggle("d-none", discount <= 0));
+      const codeEl = document.querySelector("[data-booking-discount-code]");
+      if (codeEl) codeEl.textContent = code || "";
+      const valueEl = document.querySelector("dd[data-booking-discount-value]");
+      if (valueEl) {
+        valueEl.dataset.bookingDiscountValue = String(discount);
+        valueEl.textContent = `-${discount} ${symbol}`.trim();
+      }
+      totalEl.textContent = `${Math.max(0, subtotal - discount)} ${symbol}`.trim();
     }
 
     // Reflects a coupon's discount in the "Vaša porudžbina" summary card on

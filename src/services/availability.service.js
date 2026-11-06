@@ -6,6 +6,7 @@ import resourceService from "./resource.service.js";
 import { validationError, badRequest } from "../utils/error.util.js";
 import { getBookingPolicy, isDateClosed } from "../config/runtime-settings.cache.js";
 import { timeStringToDate, isEmployeeWorkingAt, dayOfWeek } from "../utils/working-hours.util.js";
+import { hasMinimumBookingLeadTime } from "../utils/appointment-cancellation.util.js";
 import { getZonedComponents, getStartOfDayInZone, getEndOfDayInZone } from "../utils/date.time.util.js";
 
 // Computed fresh from the cache on every call, not once at module load -
@@ -259,8 +260,10 @@ export async function getAvailableSlots({ serviceId, servicePackageId, employeeI
   // actually knows the current moment, so it's the right place to drop anything whose
   // start has already passed - applies harmlessly to future dates too, since every
   // slot on a future day already starts after `now`.
+  // Also enforces the minimum booking notice (bookingMinLeadMinutes, default 60) - before this,
+  // at 11:51 the 12:00 slot was still offered even though nobody can arrive in 9 minutes.
   const now = new Date();
-  flat = flat.filter((slot) => slot.startTime > now);
+  flat = flat.filter((slot) => slot.startTime > now && hasMinimumBookingLeadTime(slot.startTime, now));
 
   const resourceIds = resolveResourceIds(service);
   if (resourceIds.length) {

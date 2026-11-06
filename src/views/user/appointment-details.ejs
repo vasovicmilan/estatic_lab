@@ -10,6 +10,7 @@
     <div class="card-body">
       <dl class="row mb-0">
         <dt class="col-5 text-muted">Usluga</dt><dd class="col-7"><%= data.appointment.usluga.naziv %></dd>
+        <% if (data.appointment.usluga.varijanta) { %><dt class="col-5 text-muted">Varijanta</dt><dd class="col-7"><%= data.appointment.usluga.varijanta %></dd><% } %>
         <dt class="col-5 text-muted">Trajanje</dt><dd class="col-7 mono"><%= data.appointment.usluga.trajanje %></dd>
         <dt class="col-5 text-muted">Termin</dt><dd class="col-7 mono"><%= data.appointment.termin.pocetak %></dd>
         <dt class="col-5 text-muted">Terapeut</dt><dd class="col-7"><%= data.appointment.terapeut %></dd>

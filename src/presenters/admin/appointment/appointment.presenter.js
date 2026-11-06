@@ -102,6 +102,7 @@ export function prepareAppointmentDetailsData(appointment, { employeeOptions = [
         type: "table",
         rows: [
           { label: "Usluga", value: appointment.usluga.naziv },
+          { label: "Varijanta", value: appointment.usluga.varijanta || "-" },
           { label: "Trajanje", value: appointment.usluga.trajanje },
           { label: "Cena usluge", value: appointment.usluga.cena },
           { label: "Početak", value: appointment.termin.pocetak },

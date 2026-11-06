@@ -57,11 +57,20 @@ function getEmployeeName(employeeDoc) {
   return employeeDoc._id?.toString() || employeeDoc.toString?.() || "Nepoznat";
 }
 
+// "Terapeutska masaža - 60 min (celo telo)": the service name plus the booked variant,
+// so lists/details say which service it actually is, not just the variant label
+function formatServiceLabel(appointment) {
+  const service = appointment.service?.name;
+  const variant = appointment.variant?.name;
+  if (service && variant && service !== variant) return `${service} - ${variant}`;
+  return service || variant || null;
+}
+
 export function mapAppointmentForAdminShort(appointment) {
   return {
     id: appointment._id.toString(),
     korisnik: getUserName(appointment),
-    usluga: appointment.variant?.name || appointment.service?.name || "Nepoznato",
+    usluga: formatServiceLabel(appointment) || "Nepoznato",
     datum: formatDateTime(appointment.startTime),
     status: translateStatus(appointment.status),
     statusRaw: appointment.status,
@@ -83,7 +92,8 @@ export function mapAppointmentForAdminDetail(appointment) {
     },
     usluga: {
       id: appointment.service?._id?.toString() || appointment.service?.toString() || null,
-      naziv: appointment.variant?.name || appointment.service?.name,
+      naziv: appointment.service?.name || appointment.variant?.name,
+      varijanta: appointment.variant?.name || null,
       trajanje: appointment.variant?.duration ? `${appointment.variant.duration} min` : null,
       cena: appointment.variant?.price != null ? formatMoney(appointment.variant.price) : null,
     },
@@ -131,7 +141,7 @@ export function mapAppointmentForEmployeeShort(appointment) {
   return {
     id: appointment._id.toString(),
     klijent: getUserName(appointment),
-    usluga: appointment.variant?.name || appointment.service?.name,
+    usluga: formatServiceLabel(appointment),
     datum: formatDateTime(appointment.startTime),
     status: translateStatus(appointment.status),
     cena: appointment.finalPrice != null ? formatMoney(appointment.finalPrice) : null,
@@ -147,7 +157,8 @@ export function mapAppointmentForEmployeeDetail(appointment) {
       telefon: getUserPhone(appointment),
     },
     usluga: {
-      naziv: appointment.variant?.name,
+      naziv: appointment.service?.name || appointment.variant?.name,
+      varijanta: appointment.variant?.name || null,
       trajanje: appointment.variant?.duration ? `${appointment.variant.duration} min` : null,
       cena: appointment.variant?.price != null ? formatMoney(appointment.variant.price) : null,
     },
@@ -174,7 +185,7 @@ export function mapAppointmentForEmployeeDetail(appointment) {
 export function mapAppointmentForUserShort(appointment) {
   return {
     id: appointment._id.toString(),
-    usluga: appointment.variant?.name || appointment.service?.name,
+    usluga: formatServiceLabel(appointment),
     datum: formatDateTime(appointment.startTime),
     // raw instant, alongside the already-formatted `datum` display string -
     // user.presenter.js's prepareAppointmentTabData groups the list into
@@ -191,7 +202,8 @@ export function mapAppointmentForUserDetail(appointment) {
   return {
     id: appointment._id.toString(),
     usluga: {
-      naziv: appointment.variant?.name,
+      naziv: appointment.service?.name || appointment.variant?.name,
+      varijanta: appointment.variant?.name || null,
       trajanje: appointment.variant?.duration ? `${appointment.variant.duration} min` : null,
       cena: appointment.variant?.price != null ? formatMoney(appointment.variant.price) : null,
     },

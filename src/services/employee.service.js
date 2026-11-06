@@ -75,6 +75,18 @@ export async function createEmployee(data) {
   if (!data.userId) validationError("userId");
   if (data.workingHours) validateWorkingHours(data.workingHours);
 
+  // The model requires a rate for commission pay - fail with a clean 400 here instead of letting
+  // Mongoose throw (that surfaced as a 500 "Interna greška servera" page for the admin)
+  if (data.payType === "commission") {
+    const rate = data.commissionRate;
+    if (rate === "" || rate == null || Number.isNaN(Number(rate))) {
+      badRequest("Procenat provizije je obavezan kada je zaposleni na proviziji.");
+    }
+    if (Number(rate) < 0 || Number(rate) > 100) {
+      badRequest("Procenat provizije mora biti između 0 i 100.");
+    }
+  }
+
   const existing = await employeeRepo.findEmployeeByUserId(data.userId);
   if (existing) conflict("Ovaj korisnik već ima profil zaposlenog");
 

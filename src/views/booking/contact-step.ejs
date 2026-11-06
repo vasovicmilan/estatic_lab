@@ -110,9 +110,14 @@
               <% if (data.usablePackagePurchase) { %>
                 <span id="priceDisplay"><%= data.variant.cena %> <span class="text-muted small">(0 <%= currencySymbol %> ako plaćate iz paketa)</span></span>
               <% } else { %>
-                <%= data.variant.cena %>
+                <span data-booking-subtotal-value="<%= data.appointmentValue %>"><%= data.variant.cena %></span>
               <% } %>
             </dd>
+            <%# discount + final price - filled in live by the coupon widget (public/js/main.js, updateBookingSummary) and rendered server-side when a coupon is already active (e.g. reload / validation error) %>
+            <dt class="col-6 text-success <%= data.activeCoupon ? '' : 'd-none' %>" data-booking-discount-row>Popust (<span data-booking-discount-code><%= data.activeCoupon ? data.activeCoupon.code : '' %></span>)</dt>
+            <dd class="col-6 price-mono text-success <%= data.activeCoupon ? '' : 'd-none' %>" data-booking-discount-row data-booking-discount-value="<%= data.activeCoupon ? data.activeCoupon.discountAmount : 0 %>" data-currency-symbol="<%= currencySymbol %>">-<%= data.activeCoupon ? data.activeCoupon.discountAmount : 0 %> <%= currencySymbol %></dd>
+            <dt class="col-6 fw-semibold <%= data.activeCoupon ? '' : 'd-none' %>" data-booking-total-row>Ukupno</dt>
+            <dd class="col-6 price-mono fw-semibold <%= data.activeCoupon ? '' : 'd-none' %>" data-booking-total-row data-booking-total data-currency-symbol="<%= currencySymbol %>"><%= Math.max(0, data.appointmentValue - (data.activeCoupon ? Number(data.activeCoupon.discountAmount) || 0 : 0)) %> <%= currencySymbol %></dd>
           </dl>
         </div>
       </div>

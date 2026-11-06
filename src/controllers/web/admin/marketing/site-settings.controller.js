@@ -59,6 +59,7 @@ export async function updateSiteSettings(req, res, next) {
         rescheduleCutoffHours: numberOr(req.body.rescheduleCutoffHours, existing.bookingPolicy.rescheduleCutoffHours),
         rescheduleSameDayFloorHours: numberOr(req.body.rescheduleSameDayFloorHours, existing.bookingPolicy.rescheduleSameDayFloorHours),
         rescheduleMinLeadMinutes: numberOr(req.body.rescheduleMinLeadMinutes, existing.bookingPolicy.rescheduleMinLeadMinutes),
+        bookingMinLeadMinutes: numberOr(req.body.bookingMinLeadMinutes, existing.bookingPolicy.bookingMinLeadMinutes ?? 60),
       },
       currency: {
         code: req.body.currencyCode !== undefined ? req.body.currencyCode.trim() || existing.currency.code : existing.currency.code,
@@ -90,6 +91,7 @@ export async function updateSiteSettings(req, res, next) {
           "rescheduleCutoffHours",
           "rescheduleSameDayFloorHours",
           "rescheduleMinLeadMinutes",
+          "bookingMinLeadMinutes",
         ]),
         ...auditLogService.computeChanges(existing.currency, updated.currency, ["code", "symbol", "symbolPosition"]),
         ...auditLogService.computeChanges(existing.commissionPolicy, updated.commissionPolicy, ["minimumSessionCommission"]),

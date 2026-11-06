@@ -6,6 +6,7 @@ import {
   canUserCancelAppointment,
   getRescheduleWindow,
   hasMinimumRescheduleLeadTime,
+  hasMinimumBookingLeadTime,
 } from "../../../src/utils/appointment-cancellation.util.js";
 
 const DEFAULT_POLICY = {
@@ -15,6 +16,7 @@ const DEFAULT_POLICY = {
   rescheduleCutoffHours: 24,
   rescheduleSameDayFloorHours: 4,
   rescheduleMinLeadMinutes: 30,
+  bookingMinLeadMinutes: 60,
 };
 
 async function setPolicy(overrides) {
@@ -92,6 +94,16 @@ describe("appointment-cancellation.util", () => {
       await setPolicy({ rescheduleMinLeadMinutes: 30 });
       assert.equal(hasMinimumRescheduleLeadTime(new Date(Date.now() + 45 * 60000)), true);
       assert.equal(hasMinimumRescheduleLeadTime(new Date(Date.now() + 10 * 60000)), false);
+    });
+  });
+
+  describe("hasMinimumBookingLeadTime", () => {
+    it("rejects a slot that starts sooner than the minimum booking notice (11:51 -> 12:00)", async () => {
+      await setPolicy({ bookingMinLeadMinutes: 60 });
+      const now = new Date("2026-11-06T10:51:00Z"); // 11:51 Belgrade (CET)
+      assert.equal(hasMinimumBookingLeadTime(new Date("2026-11-06T11:00:00Z"), now), false); // 12:00
+      assert.equal(hasMinimumBookingLeadTime(new Date("2026-11-06T11:51:00Z"), now), true); // 12:51
+      assert.equal(hasMinimumBookingLeadTime(new Date("2026-11-06T12:00:00Z"), now), true); // 13:00
     });
   });
 });

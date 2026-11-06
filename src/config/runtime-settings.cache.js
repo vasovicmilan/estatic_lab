@@ -18,6 +18,7 @@ let cache = {
     rescheduleCutoffHours: 24,
     rescheduleSameDayFloorHours: 4,
     rescheduleMinLeadMinutes: 30,
+    bookingMinLeadMinutes: 60,
   },
   currency: {
     code: "RSD",
@@ -60,6 +61,7 @@ export async function loadRuntimeSettings() {
         rescheduleCutoffHours: settings.bookingPolicy?.rescheduleCutoffHours ?? cache.bookingPolicy.rescheduleCutoffHours,
         rescheduleSameDayFloorHours: settings.bookingPolicy?.rescheduleSameDayFloorHours ?? cache.bookingPolicy.rescheduleSameDayFloorHours,
         rescheduleMinLeadMinutes: settings.bookingPolicy?.rescheduleMinLeadMinutes ?? cache.bookingPolicy.rescheduleMinLeadMinutes,
+        bookingMinLeadMinutes: settings.bookingPolicy?.bookingMinLeadMinutes ?? cache.bookingPolicy.bookingMinLeadMinutes,
       },
       currency: {
         code: settings.currency?.code || cache.currency.code,

@@ -60,6 +60,18 @@ export function hasMinimumRescheduleLeadTime(newStartTime, now = new Date()) {
 }
 
 /**
+ * Whether a NEW booking's start time has the configured minimum notice from
+ * right now (bookingMinLeadMinutes, default 60). Used both to hide too-soon
+ * slots from the availability list and to reject them server-side at booking
+ * time - the two must agree, or the UI would offer slots the server refuses.
+ * Pure instant arithmetic, so it is independent of timezone/DST.
+ */
+export function hasMinimumBookingLeadTime(startTime, now = new Date()) {
+  const minutesUntilStart = (new Date(startTime).getTime() - now.getTime()) / 60000;
+  return minutesUntilStart >= (getBookingPolicy().bookingMinLeadMinutes ?? 60);
+}
+
+/**
  * Whether two timestamps fall on the same calendar day, judged in APP_TIMEZONE
  * (Belgrade), not the server process's own timezone (UTC on this VPS) - was
  * using getFullYear()/getMonth()/getDate() directly, which could disagree with
@@ -72,4 +84,4 @@ export function isSameCalendarDay(dateA, dateB) {
   return a.year === b.year && a.month === b.month && a.day === b.day;
 }
 
-export default { canUserCancelAppointment, getRescheduleWindow, hasMinimumRescheduleLeadTime, isSameCalendarDay };
+export default { canUserCancelAppointment, getRescheduleWindow, hasMinimumRescheduleLeadTime, hasMinimumBookingLeadTime, isSameCalendarDay };

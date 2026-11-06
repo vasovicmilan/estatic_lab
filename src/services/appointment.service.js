@@ -11,7 +11,7 @@ import resourceService from "./resource.service.js";
 import packagePurchaseService from "./package-purchase.service.js";
 import { mapAppointment, mapAppointmentsForAdminList } from "../mappers/appointment.mapper.js";
 import { getAllowedStatuses } from "../models/appointment-status-transitions.js";
-import { canUserCancelAppointment, getRescheduleWindow, hasMinimumRescheduleLeadTime, isSameCalendarDay } from "../utils/appointment-cancellation.util.js";
+import { canUserCancelAppointment, getRescheduleWindow, hasMinimumRescheduleLeadTime, hasMinimumBookingLeadTime, isSameCalendarDay } from "../utils/appointment-cancellation.util.js";
 import { buildPhoneRecord } from "../utils/phone.util.js";
 import { isEmployeeWorkingAt } from "../utils/working-hours.util.js";
 import { zonedInputToUtcDate, getStartOfDayInZone, nextDayStartInZone, formatTime } from "../utils/date.time.util.js";
@@ -239,6 +239,12 @@ export async function bookAppointment(input) {
   // logging a walk-in giveaway redemption that already happened) - the
   // in-the-past guard below only makes sense for the public self-service flow.
   if (priceOverride == null && start < new Date()) badRequest("Ne možete zakazati termin u prošlosti");
+  // Self-service bookings need the minimum notice; admin/employee manual bookings are exempt
+  // (same as the reschedule rules). Enforced here, not only in the slot list, so a stale page
+  // or a hand-crafted request can't book a slot that is too soon.
+  if (actorRole !== "admin" && actorRole !== "employee" && !hasMinimumBookingLeadTime(start)) {
+    badRequest(`Termin se mora zakazati bar ${getBookingPolicy().bookingMinLeadMinutes ?? 60} minuta unapred`);
+  }
 
   // ---- reads before the transaction ----
   const { variant, service } = await serviceService.getActiveVariant(serviceId, servicePackageId);

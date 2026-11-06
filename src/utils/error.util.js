@@ -108,6 +108,21 @@ export function wrapError(error) {
     });
   }
 
+  // A Mongoose schema validation / cast failure is bad user input, not a server bug -
+  // answer 400 with the first human-readable message instead of a 500 "Interna greška".
+  // (Previously e.g. a missing commissionRate on the employee form took the 500 path.)
+  if (error.name === "ValidationError" && error.errors) {
+    const firstMessage = Object.values(error.errors)[0]?.message || error.message;
+    return new AppError(firstMessage, 400, { name: "ValidationError", isOperational: true });
+  }
+  if (error.name === "CastError") {
+    return new AppError("Neispravan format podataka", 400, { name: "CastError", isOperational: true });
+  }
+  if (error.code === 11000) {
+    const field = Object.keys(error.keyPattern || {})[0] || "polje";
+    return new AppError(`Vrednost za '${field}' je već zauzeta`, 409, { name: "ConflictError", isOperational: true });
+  }
+
   // Always captured, in every environment - this `details` is only ever read by
   // logError() (server-side log file) and by buildWebErrorContext(), which itself
   // gates what actually reaches the browser response by NODE_ENV. Gating it here

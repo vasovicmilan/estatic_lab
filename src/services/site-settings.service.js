@@ -60,6 +60,7 @@ export async function getSiteSettingsForEdit() {
       rescheduleCutoffHours: settings.bookingPolicy?.rescheduleCutoffHours,
       rescheduleSameDayFloorHours: settings.bookingPolicy?.rescheduleSameDayFloorHours,
       rescheduleMinLeadMinutes: settings.bookingPolicy?.rescheduleMinLeadMinutes,
+      bookingMinLeadMinutes: settings.bookingPolicy?.bookingMinLeadMinutes,
     },
     currency: {
       code: settings.currency?.code,
@@ -150,6 +151,17 @@ export async function updatePolicy({ bookingPolicy, currency, commissionPolicy }
       if (typeof value !== "number" || isNaN(value) || value < 0) {
         badRequest(`Neispravna vrednost za "${field}" u politici zakazivanja`);
       }
+    }
+
+    // a step of 0 (or tiny/huge) would make slot generation loop forever / offer nothing
+    if (!Number.isInteger(bookingPolicy.slotGridMinutes) || bookingPolicy.slotGridMinutes < 5 || bookingPolicy.slotGridMinutes > 240) {
+      badRequest("Korak ponuđenih termina mora biti ceo broj između 5 i 240 minuta");
+    }
+
+    // newer field - optional so older callers (and stored settings) that don't send it keep working
+    const lead = bookingPolicy.bookingMinLeadMinutes;
+    if (lead !== undefined && (typeof lead !== "number" || isNaN(lead) || lead < 0)) {
+      badRequest('Neispravna vrednost za "bookingMinLeadMinutes" u politici zakazivanja');
     }
 
     if (bookingPolicy.rescheduleSameDayFloorHours >= bookingPolicy.rescheduleCutoffHours) {
