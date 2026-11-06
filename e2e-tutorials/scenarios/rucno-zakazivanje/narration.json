@@ -1,0 +1,84 @@
+{
+  "title": {
+    "sr": "Ručno zakazivanje termina",
+    "en": "Booking an appointment by hand"
+  },
+  "intro": {
+    "sr": "Administrator zakazuje termin za klijenta koji je zvao telefonom: usluga, varijanta, terapeut, vreme i podaci.",
+    "en": "An administrator books an appointment for a client who phoned: service, variant, therapist, time and details."
+  },
+  "steps": {
+    "admin-termini-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Zakazivanje“",
+        "en": "“Zakazivanje” menu"
+      },
+      "sr": "Otvaramo grupu „Zakazivanje“.",
+      "en": "We open the “Zakazivanje” group."
+    },
+    "admin-termini-bira-stavku": {
+      "heading": {
+        "sr": "Termini",
+        "en": "Termini"
+      },
+      "sr": "Biramo „Termini“.",
+      "en": "We choose “Termini”."
+    },
+    "admin-termini-klik-na-dodaj": {
+      "heading": {
+        "sr": "Novi termin (ručno)",
+        "en": "New appointment (manual)"
+      },
+      "sr": "{Kliknemo} „Novi termin (ručno)“. Koristi se kad klijent zove telefonom ili dođe bez zakazivanja.",
+      "en": "We {click} “Novi termin (ručno)”. It is used when a client phones in or walks in without booking."
+    },
+    "rucno-usluga": {
+      "heading": {
+        "sr": "Usluga i varijanta",
+        "en": "Service and variant"
+      },
+      "sr": "Biramo uslugu, pa varijantu. Varijante se pojave tek kad izaberemo uslugu.",
+      "en": "We choose the service, then the variant. Variants only appear once a service is chosen."
+    },
+    "rucno-terapeut": {
+      "heading": {
+        "sr": "Terapeut",
+        "en": "Therapist"
+      },
+      "sr": "Biramo terapeuta koji izvodi uslugu. Može i bez izbora, pa termin ostaje nedodeljen.",
+      "en": "We choose the therapist who performs the service. It can be left empty, and the appointment stays unassigned."
+    },
+    "rucno-vreme": {
+      "heading": {
+        "sr": "Datum i vreme",
+        "en": "Date and time"
+      },
+      "sr": "Upisujemo datum i vreme početka.",
+      "en": "We enter the date and start time."
+    },
+    "rucno-klijent": {
+      "heading": {
+        "sr": "Podaci klijenta",
+        "en": "Client details"
+      },
+      "sr": "Upisujemo podatke klijenta. Za postojećeg korisnika možemo da ga izaberemo iz liste umesto da kucamo.",
+      "en": "We enter the client's details. For an existing user we can pick them from the list instead of typing."
+    },
+    "rucno-napomena": {
+      "heading": {
+        "sr": "Napomena",
+        "en": "Note"
+      },
+      "sr": "Napomena je opciona, ovde samo beležimo kako je termin zakazan.",
+      "en": "The note is optional; here we just record how the appointment was booked."
+    },
+    "rucno-cuvanje": {
+      "heading": {
+        "sr": "Kreiranje termina",
+        "en": "Create the appointment"
+      },
+      "sr": "{Kliknemo} „Kreiraj termin“. Ručni termin nema ograničenje najave od sat vremena. Cenu možemo i ručno da podesimo, na primer za nagradnu igru.",
+      "en": "We {click} “Kreiraj termin”. A manual appointment is not bound by the one-hour lead time. We can also set the price by hand, for example for a giveaway."
+    }
+  }
+}

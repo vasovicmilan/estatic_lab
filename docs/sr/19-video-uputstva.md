@@ -45,7 +45,7 @@ Detaljan opis svakog koraka, pisanja scenarija i naracije je u `e2e-tutorials/RE
 
 ## Šta je pokriveno
 
-Prvi pun prolaz objavio je 24 uputstva (3 javna, 9 za korisnike, 5 za partnere, 3 za zaposlene, 4 za administratore). Posle toga je napisano još 18 scenarija (svaki za računar i telefon), pa je ukupno **40 priča, 80 snimaka**: i uputstva za zaposlene i administratore sada postoje i za telefon. Svi stavke administratorskog menija imaju bar jedno uputstvo. Novi scenariji se snimaju komandom `npm run tutorials:all -- --scenario <folder>` (može se ponoviti za više foldera), a svaki mora biti upisan u `e2e-tutorials/audience.json`. Pretraga kataloga nije snimana jer na sajtu ne postoji pretraga.
+Prvi pun prolaz objavio je 24 uputstva (3 javna, 9 za korisnike, 5 za partnere, 3 za zaposlene, 4 za administratore). Posle toga je napisano još 18 scenarija (svaki za računar i telefon), pa je ukupno **43 priče, 86 snimaka**: i uputstva za zaposlene i administratore sada postoje i za telefon. Svi stavke administratorskog menija imaju bar jedno uputstvo. Novi scenariji se snimaju komandom `npm run tutorials:all -- --scenario <folder>` (može se ponoviti za više foldera), a svaki mora biti upisan u `e2e-tutorials/audience.json`. Pretraga kataloga nije snimana jer na sajtu ne postoji pretraga.
 
 ## Postavljanje na server
 

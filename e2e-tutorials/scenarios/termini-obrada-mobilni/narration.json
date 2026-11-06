@@ -1,0 +1,11 @@
+{
+  "extends": "termini-obrada",
+  "title": {
+    "sr": "Obrada termina: potvrda, preraspodela, završetak (telefon)",
+    "en": "Handling an appointment: confirm, reassign, complete (phone)"
+  },
+  "intro": {
+    "sr": "Administrator potvrđuje zakazani termin, prebacuje ga na drugog terapeuta i označava kao završen. Snimljeno na telefonu (390x844).",
+    "en": "An administrator confirms a booked appointment, hands it to another therapist and marks it as completed. Recorded on a phone (390x844)."
+  }
+}

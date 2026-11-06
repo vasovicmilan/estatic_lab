@@ -1,0 +1,11 @@
+{
+  "extends": "porudzbine-obrada",
+  "title": {
+    "sr": "Obrada porudžbine od prijema do isporuke (telefon)",
+    "en": "Handling an order from receipt to delivery (phone)"
+  },
+  "intro": {
+    "sr": "Administrator vodi porudžbinu kroz statuse: u obradi, poslato, dostavljeno, završeno. Snimljeno na telefonu (390x844).",
+    "en": "An administrator takes an order through the statuses: processing, shipped, delivered, completed. Recorded on a phone (390x844)."
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "extends": "rucno-zakazivanje",
+  "title": {
+    "sr": "Ručno zakazivanje termina (telefon)",
+    "en": "Booking an appointment by hand (phone)"
+  },
+  "intro": {
+    "sr": "Administrator zakazuje termin za klijenta koji je zvao telefonom: usluga, varijanta, terapeut, vreme i podaci. Snimljeno na telefonu (390x844).",
+    "en": "An administrator books an appointment for a client who phoned: service, variant, therapist, time and details. Recorded on a phone (390x844)."
+  }
+}

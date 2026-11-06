@@ -45,7 +45,7 @@ The detailed description of each step, of writing scenarios and narration is in 
 
 ## What is covered
 
-The first full run published 24 tutorials (3 public, 9 for users, 5 for partners, 3 for employees, 4 for administrators). 18 more scenarios were written afterwards (each for computer and phone), so there are now **40 stories, 80 recordings**: employee and administrator tutorials exist for the phone too. Every administrator menu item has at least one tutorial. New scenarios are recorded with `npm run tutorials:all -- --scenario <folder>` (repeatable) and each must be listed in `e2e-tutorials/audience.json`. Catalog search was not recorded because the site has no search.
+The first full run published 24 tutorials (3 public, 9 for users, 5 for partners, 3 for employees, 4 for administrators). 18 more scenarios were written afterwards (each for computer and phone), so there are now **43 stories, 86 recordings**: employee and administrator tutorials exist for the phone too. Every administrator menu item has at least one tutorial. New scenarios are recorded with `npm run tutorials:all -- --scenario <folder>` (repeatable) and each must be listed in `e2e-tutorials/audience.json`. Catalog search was not recorded because the site has no search.
 
 ## Setting it up on the server
 

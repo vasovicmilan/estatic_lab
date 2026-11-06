@@ -40,6 +40,9 @@
     "preuzimanje-naloga": "public",
     "zaposleni-dodavanje": "admin",
     "kreiranje-usluge": "admin",
-    "kampanja-newsletter": "admin"
+    "kampanja-newsletter": "admin",
+    "termini-obrada": "admin",
+    "porudzbine-obrada": "admin",
+    "rucno-zakazivanje": "admin"
   }
 }

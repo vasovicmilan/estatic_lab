@@ -1,0 +1,76 @@
+{
+  "title": {
+    "sr": "Obrada termina: potvrda, preraspodela, završetak",
+    "en": "Handling an appointment: confirm, reassign, complete"
+  },
+  "intro": {
+    "sr": "Administrator potvrđuje zakazani termin, prebacuje ga na drugog terapeuta i označava kao završen.",
+    "en": "An administrator confirms a booked appointment, hands it to another therapist and marks it as completed."
+  },
+  "steps": {
+    "admin-termini-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Zakazivanje“",
+        "en": "“Zakazivanje” menu"
+      },
+      "sr": "Otvaramo grupu „Zakazivanje“.",
+      "en": "We open the “Zakazivanje” group."
+    },
+    "admin-termini-bira-stavku": {
+      "heading": {
+        "sr": "Termini",
+        "en": "Termini"
+      },
+      "sr": "Biramo „Termini“.",
+      "en": "We choose “Termini”."
+    },
+    "admin-termini-pretraga": {
+      "heading": {
+        "sr": "Pretraga termina",
+        "en": "Search appointments"
+      },
+      "sr": "Termin tražimo po imenu ili prezimenu klijenta.",
+      "en": "We look the appointment up by the client's first or last name."
+    },
+    "admin-termini-otvaranje-rezultata": {
+      "heading": {
+        "sr": "Detalji termina",
+        "en": "Appointment details"
+      },
+      "sr": "Otvaramo detalje termina.",
+      "en": "We open the appointment details."
+    },
+    "termin-pregled": {
+      "heading": {
+        "sr": "Novi termin čeka potvrdu",
+        "en": "A new appointment awaits confirmation"
+      },
+      "sr": "Termin koji je klijent zakazao je „na čekanju“. Dok ga ne potvrdimo, nije konačan.",
+      "en": "An appointment the client booked is “pending”. Until we confirm it, it is not final."
+    },
+    "termin-potvrda": {
+      "heading": {
+        "sr": "Potvrda termina",
+        "en": "Confirm the appointment"
+      },
+      "sr": "{Kliknemo} „Potvrdi termin“ i potvrđujemo u prozoru. Klijent dobija obaveštenje.",
+      "en": "We {click} “Potvrdi termin” and confirm in the dialog. The client is notified."
+    },
+    "termin-preraspodela": {
+      "heading": {
+        "sr": "Drugi terapeut",
+        "en": "A different therapist"
+      },
+      "sr": "Ako treba, termin prebacujemo na drugog terapeuta. Lista nudi samo one koji su tada slobodni i rade.",
+      "en": "If needed, we hand the appointment to another therapist. The list only offers those who are free and on shift at that time."
+    },
+    "termin-zavrsetak": {
+      "heading": {
+        "sr": "Završetak termina",
+        "en": "Complete the appointment"
+      },
+      "sr": "Kad je tretman obavljen, {kliknemo} „Označi kao završen“. Tada se obračunava provizija zaposlenog, a ako je plaćeno paketom, troši se jedna seansa.",
+      "en": "When the treatment is done, we {click} “Označi kao završen”. That is when the employee's commission is calculated and, if paid by a package, one session is spent."
+    }
+  }
+}

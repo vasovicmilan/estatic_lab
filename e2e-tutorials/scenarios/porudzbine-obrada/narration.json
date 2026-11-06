@@ -1,0 +1,84 @@
+{
+  "title": {
+    "sr": "Obrada porudžbine od prijema do isporuke",
+    "en": "Handling an order from receipt to delivery"
+  },
+  "intro": {
+    "sr": "Administrator vodi porudžbinu kroz statuse: u obradi, poslato, dostavljeno, završeno.",
+    "en": "An administrator takes an order through the statuses: processing, shipped, delivered, completed."
+  },
+  "steps": {
+    "admin-porudzbine-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Prodavnica“",
+        "en": "“Prodavnica” menu"
+      },
+      "sr": "Otvaramo grupu „Prodavnica“.",
+      "en": "We open the “Prodavnica” group."
+    },
+    "admin-porudzbine-bira-stavku": {
+      "heading": {
+        "sr": "Porudžbine",
+        "en": "Porudžbine"
+      },
+      "sr": "Biramo „Porudžbine“.",
+      "en": "We choose “Porudžbine”."
+    },
+    "admin-porudzbine-pretraga": {
+      "heading": {
+        "sr": "Pretraga porudžbina",
+        "en": "Search orders"
+      },
+      "sr": "Porudžbinu tražimo po imenu, emailu ili nazivu proizvoda.",
+      "en": "We look the order up by name, email or product title."
+    },
+    "admin-porudzbine-otvaranje-rezultata": {
+      "heading": {
+        "sr": "Detalji porudžbine",
+        "en": "Order details"
+      },
+      "sr": "Otvaramo detalje porudžbine.",
+      "en": "We open the order details."
+    },
+    "porudzbina-pregled": {
+      "heading": {
+        "sr": "Nova porudžbina",
+        "en": "A new order"
+      },
+      "sr": "Nova porudžbina je „na čekanju“. Dugmad ispod vode je kroz ceo put do klijenta, korak po korak.",
+      "en": "A new order is “pending”. The buttons below lead it through the whole journey to the customer, step by step."
+    },
+    "porudzbina-obrada": {
+      "heading": {
+        "sr": "U obradi",
+        "en": "Processing"
+      },
+      "sr": "{Kliknemo} „Označi kao u obradi“ kad počnemo da pripremamo paket.",
+      "en": "We {click} “Označi kao u obradi” when we start preparing the parcel."
+    },
+    "porudzbina-slanje": {
+      "heading": {
+        "sr": "Poslato",
+        "en": "Shipped"
+      },
+      "sr": "Kad paket preda kuriru, {kliknemo} „Označi kao poslato“.",
+      "en": "When the parcel is handed to the courier, we {click} “Označi kao poslato”."
+    },
+    "porudzbina-dostava": {
+      "heading": {
+        "sr": "Dostavljeno",
+        "en": "Delivered"
+      },
+      "sr": "Kad kurir dostavi, {kliknemo} „Označi kao dostavljeno“.",
+      "en": "Once the courier has delivered it, we {click} “Označi kao dostavljeno”."
+    },
+    "porudzbina-zavrsetak": {
+      "heading": {
+        "sr": "Završeno",
+        "en": "Completed"
+      },
+      "sr": "Na kraju {kliknemo} „Označi kao završeno“. Tada se obračunava provizija partnera, ako je porudžbina došla preko kupona.",
+      "en": "Finally we {click} “Označi kao završeno”. That is when the partner's commission is calculated, if the order came through a coupon."
+    }
+  }
+}
