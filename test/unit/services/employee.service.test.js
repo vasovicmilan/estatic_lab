@@ -23,6 +23,13 @@ describe("employee.service - createEmployee pay type", () => {
     return createMock.mock.calls[0].arguments[0];
   }
 
+  it("rejects commission pay with an empty rate as a clean 400 (not a Mongoose 500)", async (t) => {
+    await assert.rejects(
+      () => createWith(t, { payType: "commission", commissionRate: "" }),
+      (err) => err.statusCode === 400 && /provizije/.test(err.message)
+    );
+  });
+
   it("keeps commission pay type and the rate from the form", async (t) => {
     const saved = await createWith(t, { payType: "commission", commissionRate: "25" });
     assert.equal(saved.payType, "commission");

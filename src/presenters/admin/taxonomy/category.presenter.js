@@ -1,3 +1,4 @@
+import { escapeHtml, safeHref } from "../../../utils/html.util.js";
 import { formatDateTime } from "../../../utils/date.time.util.js";
 import { CATEGORY_DOMAINS } from "../../../models/category.model.js";
 import { BLOG_BLOCK_TYPES } from "../../../models/schemas/content.blog.schema.js";
@@ -80,7 +81,7 @@ export function prepareCategoryDetailsData(category) {
       {
         title: "Slika",
         type: "custom",
-        content: category.slika ? `<img src="${category.slika.url}" width="120">` : "Nema slike",
+        content: category.slika ? `<img src="${escapeHtml(safeHref(category.slika.url))}" width="120">` : "Nema slike",
       },
       {
         title: "Meta podaci",

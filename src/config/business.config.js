@@ -96,7 +96,7 @@ const ESTETIK_BUSINESS = {
     "https://www.tiktok.com/@estetik.lab",
   ],
 
-  // TODO: no posted opening hours are stored here - there's no fixed salon
+  // NOTE: no posted opening hours are stored here - there's no fixed salon
   // schedule, since who's actually working on a given day depends on individual
   // employee schedules (see Employee.workingHours). organization.builder.js
   // derives real "hours when at least one active employee is here" dynamically

@@ -6,12 +6,13 @@
   <h1 class="h3 mb-4">Moj nalog</h1>
   <%- include("../includes/components/user-tabs") %>
 
-  <form method="GET" class="mb-4" style="max-width: 250px;">
-    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+  <form method="GET" class="d-flex gap-2 mb-4">
+    <select name="status" class="form-select form-select-sm" style="max-width: 200px;" onchange="this.form.submit()">
       <% data.filters.forEach(function(f) { %>
-        <option value="<%= f.value %>"><%= f.label %></option>
+        <option value="<%= f.value %>" <%= data.selectedStatus === f.value ? 'selected' : '' %>><%= f.label %></option>
       <% }) %>
     </select>
+    <%- include("../includes/components/portal-sort-select", { sortControl: data.sortControl, limit: data.pagination.limit }) %>
   </form>
 
   <% if (data.orders && data.orders.length > 0) { %>

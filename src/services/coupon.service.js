@@ -7,6 +7,7 @@ import { validationError, notFound, conflict, badRequest } from "../utils/error.
 import { logInfo } from "../utils/logger.util.js";
 import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE, CART_ABANDONMENT_COUPON_CODE, CART_ABANDONMENT_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
 import { formatMoney } from "../utils/price.util.js";
+import { formatDateTime } from "../utils/date.time.util.js";
 
 export async function listCoupons({ search = "", filters = {}, limit = 10, page = 1, sort } = {}) {
   const result = await couponRepo.findCoupons({ search, limit, page, filters, sort });
@@ -396,6 +397,170 @@ export async function redeemCoupon(
 }
 
 /**
+ * Gives a coupon use back when the appointment/order it was spent on is cancelled/rejected
+ * (or hard-deleted): the use is removed from the coupon's usage history and usedCount is
+ * decremented, so the customer can use it again (maxUsesPerUser) and a limited coupon
+ * (maxUses) frees up a slot. Idempotent - releasing something already released does nothing.
+ * Safe to call with no coupon. Returns true when something was actually released.
+ */
+export async function releaseCoupon(
+  couponId,
+  { appointmentId = null, orderId = null, packagePurchaseId = null } = {},
+  { session, reason = "auto", releasedBy = null, note = "" } = {}
+) {
+  if (!couponId) return false;
+  const updated = await couponRepo.releaseCoupon(couponId, { appointmentId, orderId, packagePurchaseId }, { session, reason, releasedBy, note });
+  if (updated) {
+    logInfo("Coupon use released", { couponId: String(couponId), appointmentId, orderId, packagePurchaseId, reason, releasedBy });
+    eventEmitter.emit("coupon:released", { couponId: String(couponId), appointmentId, orderId, packagePurchaseId });
+  }
+  return Boolean(updated);
+}
+
+const SOURCE_STATUS_LABELS = {
+  pending: "Na čekanju", confirmed: "Potvrđen", completed: "Završen", cancelled: "Otkazan", rejected: "Odbijen",
+  no_show: "Nije došao", returned: "Vraćena", active: "Aktivan", expired: "Istekao", shipped: "Poslata", delivered: "Isporučena",
+};
+const personName = (u) => (u && typeof u === "object" ? `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email || "-" : "-");
+const personId = (u) => (u && typeof u === "object" ? String(u._id) : u ? String(u) : null);
+
+function describeSource(entry) {
+  if (entry.appointment) {
+    const id = String(entry.appointment._id ?? entry.appointment);
+    return { tip: "appointment", tipLabel: "Termin", id, url: `/admin/termini/detalji/${id}`, status: entry.appointment.status };
+  }
+  if (entry.order) {
+    const id = String(entry.order._id ?? entry.order);
+    return { tip: "order", tipLabel: "Porudžbina", id, url: `/admin/porudzbine/detalji/${id}`, status: entry.order.status };
+  }
+  if (entry.packagePurchase) {
+    const id = String(entry.packagePurchase._id ?? entry.packagePurchase);
+    return { tip: "packagePurchase", tipLabel: "Paket", id, url: `/admin/kupljeni-paketi/detalji/${id}`, status: entry.packagePurchase.status };
+  }
+  return { tip: null, tipLabel: "-", id: null, url: null, status: null };
+}
+
+// Admin view model: every live use (with who, what, current status of that thing) and every use
+// that was given back (when, by whom, automatic or manual). A populated ref that no longer exists
+// (e.g. a deleted package) comes back as null - shown as "obrisan".
+export async function getCouponUsageOverview(couponId) {
+  if (!couponId) validationError("couponId");
+  const coupon = await couponRepo.findCouponUsageDetails(couponId);
+  if (!coupon) notFound("Kupon");
+
+  const usages = (coupon.usageHistory || [])
+    .map((u) => {
+      const src = describeSource(u);
+      return {
+        korisnik: personName(u.user),
+        korisnikId: personId(u.user),
+        korisnikUrl: personId(u.user) ? `/admin/korisnici/detalji/${personId(u.user)}` : null,
+        tip: src.tip,
+        tipLabel: src.tipLabel,
+        izvorId: src.id,
+        izvorUrl: src.url,
+        izvorStatus: src.status ? SOURCE_STATUS_LABELS[src.status] || src.status : "obrisan",
+        iznosPopusta: u.discountAmount || 0,
+        iznosPopustaDisplay: formatMoney(u.discountAmount || 0),
+        iskoriscenoU: formatDateTime(u.usedAt),
+        _ts: u.usedAt ? new Date(u.usedAt).getTime() : 0,
+      };
+    })
+    .sort((a, b) => b._ts - a._ts);
+
+  const releases = (coupon.releaseHistory || [])
+    .map((r) => {
+      const src = describeSource(r);
+      return {
+        korisnik: personName(r.user),
+        korisnikUrl: personId(r.user) ? `/admin/korisnici/detalji/${personId(r.user)}` : null,
+        tipLabel: src.tipLabel,
+        izvorUrl: src.url,
+        izvorId: src.id,
+        iznosPopustaDisplay: formatMoney(r.discountAmount || 0),
+        iskoriscenoU: r.usedAt ? formatDateTime(r.usedAt) : "-",
+        oslobodjenoU: formatDateTime(r.releasedAt),
+        nacin: r.reason === "manual" ? "Ručno" : "Automatski",
+        oslobodio: r.releasedBy ? personName(r.releasedBy) : "-",
+        napomena: r.note || "",
+        _ts: r.releasedAt ? new Date(r.releasedAt).getTime() : 0,
+      };
+    })
+    .sort((a, b) => b._ts - a._ts);
+
+  const totalDiscount = usages.reduce((sum, u) => sum + u.iznosPopusta, 0);
+  return {
+    couponId: String(coupon._id),
+    usages,
+    releases,
+    summary: {
+      iskorisceno: coupon.usedCount || 0,
+      maxUpotreba: coupon.maxUses ?? null,
+      preostalo: coupon.maxUses ? Math.max(0, coupon.maxUses - (coupon.usedCount || 0)) : null,
+      ukupanPopust: formatMoney(totalDiscount),
+      brojVracenih: releases.length,
+    },
+  };
+}
+
+/**
+ * Admin hand-release of one use (the coupon page's "Oslobodi" button) - same effect as the automatic
+ * release, but chosen by a person and logged with their note. Refuses (404) when that use is no
+ * longer recorded, so a double click can't decrement twice.
+ */
+export async function releaseCouponByAdmin(couponId, { type, refId }, adminId, note = "") {
+  if (!couponId) validationError("couponId");
+  const refKey = { appointment: "appointmentId", order: "orderId", packagePurchase: "packagePurchaseId" }[type];
+  if (!refKey || !refId) validationError("tip i referenca iskorišćenja");
+  const released = await releaseCoupon(couponId, { [refKey]: refId }, { reason: "manual", releasedBy: adminId, note });
+  if (!released) notFound("Iskorišćenje kupona (već je oslobođeno ili ne postoji)");
+  return true;
+}
+
+/**
+ * The reverse of releaseCoupon, for REOPENING a cancelled/rejected appointment or order that
+ * had a coupon: the use is spent again. It refuses (400) when the coupon can no longer give
+ * it - its overall limit was reached meanwhile, or the customer already used it again for
+ * something else - because reopening would otherwise keep a discount nobody paid a use for.
+ * Does nothing if this appointment/order's use is still recorded (cancelled before coupons
+ * were released, or a repeated call). Deliberately does NOT re-check the validity dates:
+ * the discount was legitimately granted at booking time.
+ */
+export async function reclaimCoupon(couponId, { userId = null, appointmentId = null, orderId = null, discountAmount = 0 }, { session } = {}) {
+  if (!couponId) return false;
+  const coupon = await couponRepo.findCouponById(couponId, { session });
+  if (!coupon) return false; // coupon deleted since - nothing to count against
+
+  if (userId && coupon.maxUsesPerUser) {
+    const alreadyRecorded = (coupon.usageHistory || []).some((u) =>
+      appointmentId ? String(u.appointment) === String(appointmentId) : String(u.order) === String(orderId)
+    );
+    if (!alreadyRecorded) {
+      const used = await couponRepo.countCouponUsagesByUser(coupon._id, userId, { session });
+      if (used >= coupon.maxUsesPerUser) {
+        badRequest("Kupon je u međuvremenu ponovo iskorišćen - ne može se ponovo otvoriti sa istim popustom");
+      }
+    }
+  }
+
+  const updated = await couponRepo.redeemCoupon(
+    coupon._id,
+    { userId, appointmentId, orderId, discountAmount, onlyIfNotRecorded: true },
+    { session }
+  );
+  if (!updated) {
+    // either already recorded (fine) or the cap was reached - tell them apart
+    const fresh = await couponRepo.findCouponById(coupon._id, { session });
+    const recorded = (fresh?.usageHistory || []).some((u) =>
+      appointmentId ? String(u.appointment) === String(appointmentId) : String(u.order) === String(orderId)
+    );
+    if (recorded) return false;
+    badRequest("Kupon je u međuvremenu dostigao maksimalan broj upotreba - ne može se ponovo otvoriti sa istim popustom");
+  }
+  return true;
+}
+
+/**
  * A partner's own referral coupon(s), in a clean minimal shape - not the
  * Serbian admin-display shape mapCouponsForAdminList produces (translated
  * strings, pre-formatted discount text), since the callers here need the raw
@@ -445,6 +610,8 @@ export async function listCouponsForPartner(partnerId) {
 }
 
 export default {
+  getCouponUsageOverview,
+  releaseCouponByAdmin,
   listCoupons,
   getCouponById,
   getCouponForEdit,
@@ -457,6 +624,8 @@ export default {
   validateCouponForPackagePurchase,
   validateCouponForOrder,
   redeemCoupon,
+  releaseCoupon,
+  reclaimCoupon,
   listCouponsForPartner,
   resolveProductCouponEligibility,
   isProductCouponEligible,

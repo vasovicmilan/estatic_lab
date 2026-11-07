@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Coupon from "../models/coupon.model.js";
 import { buildCouponFilter } from "./filters/coupon.filter.js";
 import { resolveLimit, resolveSkip, buildPaginationMeta } from "../utils/pagination.util.js";
@@ -15,6 +16,20 @@ export async function findCouponById(id, { session } = {}) {
     .populate("productDiscount.excludedCategories", "name")
     .populate({ path: "partner", populate: { path: "userId", select: "firstName lastName" } })
     .session(session || null)
+    .lean();
+}
+
+// admin "who used this coupon" view: usage + release history with people and the current status of
+// the appointment/order/package each use belongs to (lean, read-only; kept apart from findCouponById
+// so the populated user objects never leak into the validation/redeem code that reads usageHistory)
+export async function findCouponUsageDetails(id) {
+  return Coupon.findById(id, { code: 1, usedCount: 1, maxUses: 1, usageHistory: 1, releaseHistory: 1 })
+    .populate("usageHistory.user", "firstName lastName email")
+    .populate("usageHistory.appointment", "status")
+    .populate("usageHistory.order", "status")
+    .populate("usageHistory.packagePurchase", "status")
+    .populate("releaseHistory.user", "firstName lastName email")
+    .populate("releaseHistory.releasedBy", "firstName lastName")
     .lean();
 }
 
@@ -44,6 +59,56 @@ export async function countCouponUsagesByUser(couponId, userId, { session } = {}
   return result[0]?.count || 0;
 }
 
+// the usageHistory sub-document filter that identifies "the use belonging to this appointment/order/purchase"
+// ids are cast explicitly: $pull / $not+$elemMatch must compare ObjectIds, and callers may hold strings
+const oid = (v) => (v instanceof mongoose.Types.ObjectId ? v : new mongoose.Types.ObjectId(String(v)));
+function usageRef({ appointmentId = null, packagePurchaseId = null, orderId = null }) {
+  if (appointmentId) return { appointment: oid(appointmentId) };
+  if (orderId) return { order: oid(orderId) };
+  if (packagePurchaseId) return { packagePurchase: oid(packagePurchaseId) };
+  return { _id: null }; // matches nothing - a caller with no reference can't release anything
+}
+
+/**
+ * Gives a redemption back: removes the usage entry that belongs to this appointment/order/purchase
+ * and decrements the counter, in ONE atomic update. The filter requires the entry to still be there,
+ * so calling it twice (double click, retry) releases once - the second call matches nothing and
+ * returns null. After this the user is no longer in usageHistory, so maxUsesPerUser no longer
+ * counts that use and they can order again with the same coupon.
+ */
+export async function releaseCoupon(couponId, ref, { session, reason = "auto", releasedBy = null, note = "" } = {}) {
+  const match = usageRef(ref);
+  // read the entry first so it can be copied into releaseHistory; the update below is still
+  // conditional on the entry being present, so a concurrent release can't double-decrement
+  const current = await Coupon.findOne({ _id: couponId, usageHistory: { $elemMatch: match } }, { "usageHistory.$": 1 })
+    .session(session || null)
+    .lean();
+  const entry = current?.usageHistory?.[0];
+  if (!entry) return null;
+  return Coupon.findOneAndUpdate(
+    { _id: couponId, usageHistory: { $elemMatch: match } },
+    {
+      $inc: { usedCount: -1 },
+      $pull: { usageHistory: match },
+      $push: {
+        releaseHistory: {
+          user: entry.user || null,
+          appointment: entry.appointment || null,
+          packagePurchase: entry.packagePurchase || null,
+          order: entry.order || null,
+          discountAmount: entry.discountAmount || 0,
+          usedAt: entry.usedAt || null,
+          releasedAt: new Date(),
+          reason,
+          releasedBy: releasedBy ? oid(releasedBy) : null,
+          note: String(note || "").slice(0, 300),
+        },
+      },
+    },
+    { returnDocument: "after", session }
+  ).lean();
+}
+
 /**
  * Atomically records one redemption: pushes the usage entry and increments the running
  * counter in a single update, so it's safe to call inside the same transaction that
@@ -69,13 +134,16 @@ export async function countCouponUsagesByUser(couponId, userId, { session } = {}
  */
 export async function redeemCoupon(
   couponId,
-  { userId, appointmentId = null, packagePurchaseId = null, orderId = null, discountAmount },
+  { userId, appointmentId = null, packagePurchaseId = null, orderId = null, discountAmount, onlyIfNotRecorded = false },
   { session } = {}
 ) {
   return Coupon.findOneAndUpdate(
     {
       _id: couponId,
       $or: [{ maxUses: null }, { $expr: { $lt: ["$usedCount", "$maxUses"] } }],
+      // used when re-claiming a coupon for a reopened appointment/order: never add a second
+      // usage entry for the same appointment/order (e.g. one cancelled before coupons were released)
+      ...(onlyIfNotRecorded ? { usageHistory: { $not: { $elemMatch: usageRef({ appointmentId, packagePurchaseId, orderId }) } } } : {}),
     },
     {
       $inc: { usedCount: 1 },
@@ -166,8 +234,10 @@ export default {
   createCoupon,
   findCouponById,
   findCouponByCode,
+  findCouponUsageDetails,
   countCouponUsagesByUser,
   redeemCoupon,
+  releaseCoupon,
   findCoupons,
   updateCouponById,
   deleteCouponById,

@@ -16,6 +16,7 @@
         <option value="<%= opt.value %>" <%= opt.value === data.filters.sourceType.value ? "selected" : "" %>><%= opt.label %></option>
       <% }) %>
     </select>
+    <%- include("../includes/components/portal-sort-select", { sortControl: data.sortControl, limit: data.pagination.limit }) %>
   </form>
 
   <% if (data.items.length === 0) { %>
@@ -32,7 +33,7 @@
             <span class="badge bg-secondary"><%= c.status %></span>
           </div>
           <div class="fs-5 fw-bold text-primary price-mono"><%= c.iznos %></div>
-          <div class="text-muted small mono"><%= c.osnovnaVrednost %> &middot; <%= c.procenat %></div>
+          <div class="text-muted small mono"><%= c.osnovnaVrednost %> &middot; <%= c.procenat %> &middot; <%= c.datumDisplay %></div>
         </div>
       <% }) %>
     </div>
@@ -41,7 +42,7 @@
     <div class="card d-none d-lg-block">
       <div class="card-body p-0">
         <table class="table mb-0">
-          <thead><tr><th>Izvor</th><th>Osnovna vrednost</th><th>Procenat</th><th>Iznos</th><th>Status</th></tr></thead>
+          <thead><tr><th>Izvor</th><th>Osnovna vrednost</th><th>Procenat</th><th>Iznos</th><th>Status</th><th>Datum</th></tr></thead>
           <tbody>
             <% data.items.forEach(function(c) { %>
               <tr>
@@ -50,6 +51,7 @@
                 <td class="mono"><%= c.procenat %></td>
                 <td class="price-mono"><%= c.iznos %></td>
                 <td><%= c.status %></td>
+                <td class="mono"><%= c.datumDisplay %></td>
               </tr>
             <% }) %>
           </tbody>

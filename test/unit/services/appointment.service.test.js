@@ -1255,6 +1255,86 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
   // packagePurchase branch with no matching case at all, leaving a "pending"
   // appointment whose session had already been returned to the purchase's pool by
   // the earlier terminal transition - oversellable capacity.
+  describe("coupon use is given back when an appointment is cancelled/rejected (and spent again on reopen)", () => {
+    function fakeSession(t) {
+      t.mock.method(mongoose, "startSession", async () => ({ withTransaction: async (fn) => fn(), endSession: async () => {} }));
+    }
+
+    it("releases the coupon use in the same transaction as the cancellation", async (t) => {
+      fakeSession(t);
+      const couponId = id();
+      const appointment = buildAppointment({ status: "pending", coupon: couponId, discountApplied: 400 });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      const updateMock = t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "cancelled" }));
+      const releaseMock = t.mock.method(couponService, "releaseCoupon", async () => true);
+
+      await appointmentService.cancelAppointment(appointment._id.toString(), "Predomislio se", id().toString(), "admin");
+
+      assert.equal(releaseMock.mock.calls.length, 1);
+      assert.equal(String(releaseMock.mock.calls[0].arguments[0]), String(couponId));
+      assert.equal(String(releaseMock.mock.calls[0].arguments[1].appointmentId), String(appointment._id));
+      assert.ok(releaseMock.mock.calls[0].arguments[2].session, "release must use the transaction session");
+      assert.ok(updateMock.mock.calls[0].arguments[2].session, "the status update must be in the same transaction");
+    });
+
+    it("does not touch the coupon when a no-coupon appointment is cancelled", async (t) => {
+      const appointment = buildAppointment({ status: "pending", coupon: null });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "cancelled" }));
+      const releaseMock = t.mock.method(couponService, "releaseCoupon", async () => true);
+
+      await appointmentService.cancelAppointment(appointment._id.toString(), "x", id().toString(), "admin");
+      assert.equal(releaseMock.mock.calls.length, 0);
+    });
+
+    it("keeps the coupon use for a no-show (the customer did take the slot)", async (t) => {
+      const appointment = buildAppointment({ status: "confirmed", coupon: id() });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "no_show" }));
+      const releaseMock = t.mock.method(couponService, "releaseCoupon", async () => true);
+
+      await appointmentService.noShowAppointment(appointment._id.toString(), "", id().toString(), "admin");
+      assert.equal(releaseMock.mock.calls.length, 0);
+    });
+
+    it("re-claims the coupon use when a cancelled appointment is reopened, and aborts the reopen if the coupon refuses", async (t) => {
+      fakeSession(t);
+      const couponId = id();
+      const appointment = buildAppointment({ status: "cancelled", coupon: couponId, discountApplied: 400 });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      const updateMock = t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "pending" }));
+      const reclaimMock = t.mock.method(couponService, "reclaimCoupon", async () => {
+        const err = new Error("Kupon je u međuvremenu ponovo iskorišćen");
+        err.statusCode = 400;
+        throw err;
+      });
+
+      await assert.rejects(
+        () => appointmentService.reopenAppointment(appointment._id.toString(), id().toString(), "admin"),
+        (err) => err.statusCode === 400
+      );
+      assert.equal(reclaimMock.mock.calls.length, 1);
+      assert.equal(updateMock.mock.calls.length, 0, "status must not change when the coupon can't be re-claimed");
+    });
+  });
+
+  describe("reopenAppointment - slot must still be free", () => {
+    it("refuses to reopen when the employee was booked in the meantime, and leaves the package session untouched", async (t) => {
+      const appointment = buildAppointment({ status: "cancelled", employee: id(), packagePurchase: id() });
+      t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+      t.mock.method(appointmentRepo, "findOverlappingAppointments", async () => [{ _id: id() }]);
+      const updateMock = t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({}));
+      const reserveMock = t.mock.method(packagePurchaseService, "reserveSession", async () => ({}));
+
+      await assert.rejects(
+        () => appointmentService.reopenAppointment(appointment._id.toString(), id().toString(), "admin"),
+        (err) => err.statusCode === 400 && /zauzet/.test(err.message)
+      );
+      assert.equal(updateMock.mock.calls.length, 0);
+      assert.equal(reserveMock.mock.calls.length, 0);
+    });
+  });
+
   describe("reopenAppointment - package session lifecycle", () => {
     it("re-reserves a session when reopening a rejected package-covered appointment", async (t) => {
       const purchaseId = id();
@@ -1496,4 +1576,30 @@ describe("findAppointmentsDueForReminder / markReminderSent", () => {
     assert.equal(calledId, appointmentId);
     assert.ok(calledData.reminder4hSentAt instanceof Date);
   });
+});
+describe("bookAppointment - backdating is a staff privilege", () => {
+  const yesterday = () => new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const base = () => ({
+    serviceId: id().toString(),
+    servicePackageId: id().toString(),
+    startTime: yesterday(),
+    contact: { firstName: "Ana", email: "ana@example.com" },
+  });
+
+  it("rejects a past start for a public/self-service booking", async () => {
+    await assert.rejects(
+      () => appointmentService.bookAppointment(base()),
+      (err) => err.statusCode === 400 && /prošlosti/.test(err.message)
+    );
+  });
+
+  for (const role of ["admin", "employee"]) {
+    it(`lets ${role} book in the past at the catalog price (no manual price needed) - it gets past the time guards`, async (t) => {
+      const sentinel = new Error("reached-service-lookup");
+      t.mock.method(serviceService, "getActiveVariant", async () => {
+        throw sentinel;
+      });
+      await assert.rejects(() => appointmentService.bookAppointment({ ...base(), actorRole: role }), (err) => err === sentinel);
+    });
+  }
 });

@@ -52,7 +52,7 @@ export function prepareCouponListData(result, query = {}) {
   };
 }
 
-export function prepareCouponDetailsData(coupon) {
+export function prepareCouponDetailsData(coupon, usageOverview = null) {
   return {
     backUrl: "/admin/kuponi",
     editUrl: `/admin/kuponi/izmena/${coupon.id}`,
@@ -117,9 +117,10 @@ export function prepareCouponDetailsData(coupon) {
           : ["Nijedna - popust za artikle važi za sve kategorije"],
       },
       {
-        title: "Istorija korišćenja",
-        type: "table",
-        rows: coupon.istorijaKoriscenja.map((u) => ({ label: u.iskoriscenoU, value: `${u.iznosPopusta} (termin ${u.terminId})` })),
+        title: "Iskorišćenja kupona",
+        type: "custom",
+        content: "coupon-usage-table",
+        data: { couponId: coupon.id, ...(usageOverview || { usages: [], releases: [], summary: null }) },
       },
     ],
     sidebar: [

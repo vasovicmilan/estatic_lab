@@ -1,0 +1,12 @@
+<%
+  // Sort dropdown (+ the current page size, so changing a filter/sort doesn't drop it) for the
+  // portals' GET filter forms. Expects: sortControl ({ value, options }), limit (number|null).
+%>
+<% if (typeof limit !== 'undefined' && limit) { %><input type="hidden" name="limit" value="<%= limit %>"><% } %>
+<% if (typeof sortControl !== 'undefined' && sortControl) { %>
+  <select name="sort" class="form-select form-select-sm" style="max-width:200px;" onchange="this.form.submit()" aria-label="Sortiranje">
+    <% sortControl.options.forEach(function(opt) { %>
+      <option value="<%= opt.value %>" <%= opt.value === sortControl.value ? "selected" : "" %>><%= opt.label %></option>
+    <% }) %>
+  </select>
+<% } %>

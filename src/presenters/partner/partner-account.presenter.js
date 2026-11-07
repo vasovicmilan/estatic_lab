@@ -1,3 +1,4 @@
+import { buildPortalPagination, resolvePortalSort, COMMISSION_SORTS, PAYOUT_SORTS } from "../../utils/portal-list.util.js";
 import { formatDateTime } from "../../utils/date.time.util.js";
 import { formatPrice, formatMoney } from "../../utils/price.util.js";
 import { translateCommissionSourceType, translateCommissionStatus } from "../../utils/commission-display.util.js";
@@ -58,12 +59,8 @@ function mapPayoutRequestRow(request) {
 export function preparePartnerPayoutsTabData(result, query = {}) {
   return {
     items: result.data.map(mapPayoutRequestRow),
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/moj-partner-nalog/isplate",
-      query,
-    },
+    pagination: buildPortalPagination(result, { basePath: "/moj-partner-nalog/isplate", query }),
+    sortControl: resolvePortalSort(query.sort, PAYOUT_SORTS).control,
     filters: {
       status: {
         value: query.status || "",
@@ -82,12 +79,8 @@ export function preparePartnerPayoutsTabData(result, query = {}) {
 export function preparePartnerCommissionsTabData(result, query = {}) {
   return {
     items: result.data.map(mapCommissionRow),
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/moj-partner-nalog/provizije",
-      query,
-    },
+    pagination: buildPortalPagination(result, { basePath: "/moj-partner-nalog/provizije", query }),
+    sortControl: resolvePortalSort(query.sort, COMMISSION_SORTS).control,
     filters: {
       status: {
         value: query.status || "",
@@ -127,6 +120,7 @@ function mapCommissionRow(entry) {
     iznos: formatMoney(entry.amount),
     status: translateCommissionStatus(entry.status),
     datum: entry.earnedAt || entry.createdAt,
+    datumDisplay: formatDateTime(entry.earnedAt || entry.createdAt),
   };
 }
 

@@ -15,6 +15,27 @@ function fakeCsrfError() {
 }
 
 describe("error.util - wrapError", () => {
+  describe("database validation errors are bad input, not server bugs", () => {
+    it("maps a Mongoose ValidationError to an operational 400 with the first message", () => {
+      const err = new Error("Employee validation failed");
+      err.name = "ValidationError";
+      err.errors = { commissionRate: { message: "Procenat provizije je obavezan." } };
+      const wrapped = wrapError(err);
+      assert.equal(wrapped.statusCode, 400);
+      assert.equal(wrapped.isOperational, true);
+      assert.equal(wrapped.message, "Procenat provizije je obavezan.");
+    });
+
+    it("maps a duplicate-key error to an operational 409", () => {
+      const err = new Error("E11000 duplicate key");
+      err.code = 11000;
+      err.keyPattern = { email: 1 };
+      const wrapped = wrapError(err);
+      assert.equal(wrapped.statusCode, 409);
+      assert.equal(wrapped.isOperational, true);
+    });
+  });
+
   describe("CSRF token mismatch (csrf-sync's EBADCSRFTOKEN)", () => {
     it("marks it isOperational, so globalErrorHandler treats it as routine (not a Telegram-worthy error)", () => {
       // A well-formed 403 from a scanner probing a random path with no real

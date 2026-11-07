@@ -1,5 +1,24 @@
 import { Schema, model } from "mongoose";
 
+// one row per use that was GIVEN BACK (appointment/order cancelled, package cancelled before any
+// session was used, or an admin released it by hand). The use itself is removed from usageHistory
+// so limits no longer count it - this log keeps the trail of what was released, when and why.
+const CouponReleaseSchema = new Schema(
+  {
+    user: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    appointment: { type: Schema.Types.ObjectId, ref: "Appointment", default: null },
+    packagePurchase: { type: Schema.Types.ObjectId, ref: "PackagePurchase", default: null },
+    order: { type: Schema.Types.ObjectId, ref: "Order", default: null },
+    discountAmount: { type: Number, default: 0 },
+    usedAt: { type: Date, default: null },
+    releasedAt: { type: Date, default: Date.now },
+    reason: { type: String, enum: ["auto", "manual"], default: "auto" },
+    releasedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    note: { type: String, trim: true, default: "" },
+  },
+  { _id: false }
+);
+
 const CouponUsageSchema = new Schema(
   {
     user: {
@@ -121,6 +140,11 @@ const CouponSchema = new Schema(
 
     usageHistory: {
       type: [CouponUsageSchema],
+      default: [],
+    },
+
+    releaseHistory: {
+      type: [CouponReleaseSchema],
       default: [],
     },
 

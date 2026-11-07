@@ -1,4 +1,5 @@
 import partnerService from "../../../services/partner.service.js";
+import { resolvePortalLimit, resolvePortalSort, COMMISSION_SORTS, PAYOUT_SORTS, ORDER_SORTS } from "../../..//utils/portal-list.util.js";
 import payoutRequestService from "../../../services/payout-request.service.js";
 import couponService from "../../../services/coupon.service.js";
 import commissionService from "../../../services/commission.service.js";
@@ -92,14 +93,15 @@ export async function dashboard(req, res, next) {
 export async function commissions(req, res, next) {
   try {
     const partnerId = await getOwnPartnerId(req);
-    const { page = 1, limit = 10, status, sourceType } = req.query;
+    const { page = 1, status, sourceType } = req.query;
 
     const result = await commissionService.listCommissionsForEarner({
       partner: partnerId,
       status: status || undefined,
       sourceType: sourceType || undefined,
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolvePortalLimit(req.query.limit),
+      sort: resolvePortalSort(req.query.sort, COMMISSION_SORTS).sort,
     });
 
     const viewData = preparePartnerCommissionsTabData(result, req.query);
@@ -119,13 +121,14 @@ export async function commissions(req, res, next) {
 export async function payoutHistory(req, res, next) {
   try {
     const partnerId = await getOwnPartnerId(req);
-    const { page = 1, limit = 10, status } = req.query;
+    const { page = 1, status } = req.query;
 
     const result = await payoutRequestService.listPayoutRequestsForEarner({
       partner: partnerId,
       status: status || undefined,
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolvePortalLimit(req.query.limit),
+      sort: resolvePortalSort(req.query.sort, PAYOUT_SORTS).sort,
     });
 
     const viewData = preparePartnerPayoutsTabData(result, req.query);

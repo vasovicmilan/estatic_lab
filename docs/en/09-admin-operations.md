@@ -62,3 +62,10 @@ Services, packages, products and blog posts have a dedicated SEO page (`/…/:id
 ## Oversight and reporting
 
 Administrators have access to operational reporting and an accountability trail covering actions taken across the platform — covered in full in `10-logs-and-audit-trail.md`. Separately, administrators also see the business numbers — bookings, sales, commissions, coupons — covered in `13-business-reports.md`.
+
+## Lists and tables: time split, page size and sorting
+
+- **Appointments by time.** The customer (`/nalog/termini`) and the employee (`/moj-nalog/termini`) see appointments split into **Danas** (today), **Predstojeći** (upcoming) and **Prošli** (past). Today and upcoming share one list and one pager (soonest first), past has its own (latest first), so one day is never cut across two pages. In the admin (`/admin/termini`) the **Vreme** filter does the same (All / Today / Upcoming / Past); it combines with the "from/to date" filters (the tighter bound wins) and picks the natural order unless a column header was clicked. Day boundaries are Belgrade calendar days (`appointment-time-scope.util.js`).
+- **Page size.** Every list has a "Po strani" (per page) choice: admin tables (`ADMIN_PAGE_SIZES`), public catalogues (`PUBLIC_PAGE_SIZES`), and the user, employee and partner portals 10 / 20 / 50 (`portal-list.util.js`). `?limit=` only accepts the offered values; anything else falls back to the default.
+- **Sorting.** Admin tables: click a column header (`?sortBy=&sortDir=`, whitelisted columns only). Portals: a "Sortiranje" dropdown (`?sort=`): newest/oldest and highest/lowest amount for commissions, payouts and orders; appointments are ordered naturally by time (split above). An unknown value falls back to the default order. Commission tables now also have a **Datum** (date) column.
+- **Logs.** Audit and user activity offer "newest/oldest first".

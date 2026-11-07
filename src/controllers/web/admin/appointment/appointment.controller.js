@@ -14,23 +14,33 @@ import { flashAndRedirect } from "../../../../utils/flash.util.js";
 // bound, so dateTo needs to become the start of the NEXT Belgrade day, not
 // just that day's own midnight - see date.time.util.js.
 import { getStartOfDayInZone, nextDayStartInZone } from "../../../../utils/date.time.util.js";
+import { applyTimeScope } from "../../../../utils/appointment-time-scope.util.js";
 
 export async function listAppointments(req, res, next) {
   try {
-    const { search, status, dateFrom, dateTo, unassignedOnly, page = 1, limit } = req.query;
+    const { search, status, dateFrom, dateTo, unassignedOnly, when, page = 1, limit } = req.query;
+
+    // "Vreme" (Danas / Predstojeći / Prošli) narrows the explicit date range; it also picks the
+    // natural order (soonest first for today/upcoming, latest first for past) unless the admin
+    // clicked a column header.
+    const scoped = applyTimeScope({
+      scope: when,
+      dateFrom: dateFrom ? getStartOfDayInZone(dateFrom) : undefined,
+      dateTo: dateTo ? nextDayStartInZone(dateTo) : undefined,
+    });
 
     const result = await appointmentService.findAppointments({
       search: search || "",
       role: "admin",
       filters: {
         status: status || undefined,
-        dateFrom: dateFrom ? getStartOfDayInZone(dateFrom) : undefined,
-        dateTo: dateTo ? nextDayStartInZone(dateTo) : undefined,
+        dateFrom: scoped.dateFrom,
+        dateTo: scoped.dateTo,
         unassignedOnly: unassignedOnly === "true",
       },
       page: parseInt(page, 10) || 1,
       limit: resolveAdminLimit(limit),
-      sort: resolveAdminSort(req.query, SORT_MAP),
+      sort: resolveAdminSort(req.query, SORT_MAP) || scoped.sort,
     });
 
     const viewData = prepareAppointmentListData(result, req.query);

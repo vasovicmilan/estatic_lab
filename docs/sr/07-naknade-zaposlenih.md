@@ -29,7 +29,7 @@ Ovaj pristup takođe prirodno obrađuje pakete koji objedinjuju više od jedne v
 
 ## Minimalna garantovana provizija po seansi
 
-Iznad proporcionalnog vrednovanja opisanog gore postoji jedna zaštitna mera: **minimalna provizija po seansi** (`minimumSessionCommission`, podrazumevano 500 RSD). Podesiva je administratoru u bilo kom trenutku kroz `/admin/sajt` → odeljak "Provizija", bez izmene koda ili restarta servera — isti obrazac kao i ostale konfigurabilne vrednosti pomenute kroz ovu dokumentaciju.
+Iznad proporcionalnog vrednovanja opisanog gore postoji jedna zaštitna mera: **minimalna provizija po seansi** (`minimumSessionCommission`, podrazumevano 500 RSD; važi za termine iz paketa, sa kuponom ili ručno kreirane). Podesiva je administratoru u bilo kom trenutku kroz `/admin/sajt` → odeljak "Provizija", bez izmene koda ili restarta servera — isti obrazac kao i ostale konfigurabilne vrednosti pomenute kroz ovu dokumentaciju.
 
 ### Zašto postoji
 

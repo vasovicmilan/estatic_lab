@@ -64,3 +64,10 @@ Usluge, paketi, proizvodi i blog imaju posebnu SEO stranicu (`/…/:id/seo`) za 
 ## Nadzor i izveštavanje
 
 Administratori imaju pristup operativnom izveštavanju i tragu odgovornosti koji pokriva akcije preduzete na platformi — u potpunosti pokriveno u `10-logovi-i-revizija.md`. Odvojeno od toga, administratori vide i poslovne brojke — zakazivanja, prodaju, provizije, kupone — pokriveno u `13-poslovni-izvestaji.md`.
+
+## Liste i tabele: podela po vremenu, veličina strane i sortiranje
+
+- **Termini po vremenu.** Korisnik (`/nalog/termini`) i zaposleni (`/moj-nalog/termini`) vide termine podeljene na **Danas**, **Predstojeći** i **Prošli**. "Danas" i "Predstojeći" dele jedan spisak i jednu paginaciju (najbliži prvi), "Prošli" ima svoju (najnoviji prvi), pa jedan dan nikad ne bude presečen između dve strane. U adminu (`/admin/termini`) isto daje filter **Vreme** (Svi / Danas / Predstojeći / Prošli); kombinuje se sa filterima "Od/Do datuma" (važi strožija granica), a bez klika na zaglavlje kolone bira prirodan redosled. Granice dana su po beogradskom vremenu (`appointment-time-scope.util.js`).
+- **Veličina strane.** Sve liste imaju izbor "Po strani": admin tabele (`ADMIN_PAGE_SIZES`), javni katalozi (`PUBLIC_PAGE_SIZES`), a nalozi korisnika, zaposlenog i partnera 10 / 20 / 50 (`portal-list.util.js`). `?limit=` prihvata samo ponuđene vrednosti; sve ostalo se vraća na podrazumevanu.
+- **Sortiranje.** Admin tabele: klik na zaglavlje kolone (`?sortBy=&sortDir=`, samo kolone sa liste dozvoljenih). Nalozi: padajući meni "Sortiranje" (`?sort=`): najnovije/najstarije i najveći/najmanji iznos za provizije, isplate i porudžbine; termini su sortirani prirodno po vremenu (podela iznad). Nepoznata vrednost vraća podrazumevani redosled. Tabele provizija sada imaju i kolonu **Datum**.
+- **Logovi.** Audit i aktivnost korisnika imaju izbor "Najnovije/Najstarije prvo".

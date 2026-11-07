@@ -29,7 +29,7 @@ This approach also naturally handles packages that bundle more than one type of 
 
 ## Minimum guaranteed commission per session
 
-On top of the proportional valuation described above, there's one safety net: a **minimum commission per session** (`minimumSessionCommission`, default 500 RSD). It's configurable by an admin at any time through `/admin/sajt` → the "Provizija" (Commission) section, no code change or server restart required - the same pattern as the other configurable values mentioned throughout this documentation.
+On top of the proportional valuation described above, there's one safety net: a **minimum commission per session** (`minimumSessionCommission`, default 500 RSD; applies to package, coupon or manually created appointments). It's configurable by an admin at any time through `/admin/sajt` → the "Provizija" (Commission) section, no code change or server restart required - the same pattern as the other configurable values mentioned throughout this documentation.
 
 ### Why it exists
 

@@ -11,6 +11,7 @@
         <option value="<%= opt.value %>" <%= opt.value === data.filters.status.value ? "selected" : "" %>><%= opt.label %></option>
       <% }) %>
     </select>
+    <%- include("../includes/components/portal-sort-select", { sortControl: data.sortControl, limit: data.pagination.limit }) %>
   </form>
 
   <% if (data.items.length === 0) { %>

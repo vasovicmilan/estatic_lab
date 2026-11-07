@@ -386,6 +386,19 @@ async function transitionStatus(orderId, nextStatus, actorId, actorRole, extra =
         }
       }
 
+      // Coupon: a cancelled order never happened - the customer gets the coupon use back so they can
+      // order again; reopening spends it again. "returned" keeps the use (the goods were bought and used).
+      const couponId = order.coupon?._id ?? order.coupon;
+      if (couponId && nextStatus === "cancelled") {
+        await couponService.releaseCoupon(couponId, { orderId }, { session });
+      } else if (couponId && nextStatus === "pending" && order.status === "cancelled") {
+        await couponService.reclaimCoupon(
+          couponId,
+          { userId: order.user?._id ?? order.user, orderId, discountAmount: order.discountApplied || 0 },
+          { session }
+        );
+      }
+
       updated = await orderRepo.updateOrderById(orderId, updateData, { session });
     });
   } finally {

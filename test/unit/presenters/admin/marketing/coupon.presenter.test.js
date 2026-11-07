@@ -112,14 +112,21 @@ describe("prepareCouponDetailsData - the productDiscount block", () => {
     assert.equal(partnerSection.rows[0].value, "Petar Petrovic");
   });
 
-  it("shows redemption history entries as label/value rows", () => {
-    const view = prepareCouponDetailsData(
-      buildMappedCoupon({ istorijaKoriscenja: [{ iskoriscenoU: "05.01.2026.", iznosPopusta: "500 RSD", terminId: "apt1" }] })
-    );
-    const historySection = view.sections.find((s) => s.title === "Istorija korišćenja");
+  it("renders the usage overview as a custom section carrying the coupon id and the overview data", () => {
+    const overview = { usages: [{ korisnik: "Ana" }], releases: [], summary: { iskorisceno: 1 } };
+    const view = prepareCouponDetailsData(buildMappedCoupon({ id: "c1" }), overview);
+    const section = view.sections.find((s) => s.title === "Iskorišćenja kupona");
 
-    assert.equal(historySection.rows[0].label, "05.01.2026.");
-    assert.match(historySection.rows[0].value, /500 RSD.*apt1/);
+    assert.equal(section.type, "custom");
+    assert.equal(section.content, "coupon-usage-table");
+    assert.equal(section.data.couponId, "c1");
+    assert.equal(section.data.usages[0].korisnik, "Ana");
+  });
+
+  it("falls back to an empty usage overview when none is supplied", () => {
+    const view = prepareCouponDetailsData(buildMappedCoupon());
+    const section = view.sections.find((s) => s.title === "Iskorišćenja kupona");
+    assert.deepEqual(section.data.usages, []);
   });
 
   it("uses the coupon's own code as the last breadcrumb", () => {

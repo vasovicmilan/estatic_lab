@@ -1,0 +1,66 @@
+<% const d = data; const token = typeof csrfToken !== 'undefined' ? csrfToken : ''; %>
+<% if (d.summary) { %>
+  <div class="row g-2 mb-3 small">
+    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted">Iskorišćeno</div><strong><%= d.summary.iskorisceno %><%= d.summary.maxUpotreba ? ' / ' + d.summary.maxUpotreba : '' %></strong></div></div>
+    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted">Preostalo</div><strong><%= d.summary.preostalo === null ? 'Neograničeno' : d.summary.preostalo %></strong></div></div>
+    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted">Ukupan dat popust</div><strong><%= d.summary.ukupanPopust %></strong></div></div>
+    <div class="col-6 col-md-3"><div class="border rounded p-2"><div class="text-muted">Vraćeno (oslobođeno)</div><strong><%= d.summary.brojVracenih %></strong></div></div>
+  </div>
+<% } %>
+
+<h3 class="h6">Aktivna iskorišćenja</h3>
+<% if (!d.usages.length) { %>
+  <p class="text-muted small">Kupon još nije iskorišćen.</p>
+<% } else { %>
+  <div class="table-responsive mb-4">
+    <table class="table table-sm align-middle">
+      <thead><tr><th>Datum</th><th>Korisnik</th><th>Gde</th><th>Status</th><th>Popust</th><th></th></tr></thead>
+      <tbody>
+        <% d.usages.forEach(function(u) { %>
+          <tr>
+            <td><%= u.iskoriscenoU %></td>
+            <td><% if (u.korisnikUrl) { %><a href="<%= u.korisnikUrl %>"><%= u.korisnik %></a><% } else { %><%= u.korisnik %><% } %></td>
+            <td><% if (u.izvorUrl && u.izvorStatus !== 'obrisan') { %><a href="<%= u.izvorUrl %>"><%= u.tipLabel %></a><% } else { %><%= u.tipLabel %><% } %></td>
+            <td><span class="badge text-bg-light border"><%= u.izvorStatus %></span></td>
+            <td><%= u.iznosPopustaDisplay %></td>
+            <td class="text-end">
+              <% if (u.tip && u.izvorId) { %>
+                <form action="/admin/kuponi/<%= d.couponId %>/oslobodi" method="POST" class="d-flex gap-1 justify-content-end">
+                  <input type="hidden" name="CSRFToken" value="<%= token %>">
+                  <input type="hidden" name="type" value="<%= u.tip %>">
+                  <input type="hidden" name="refId" value="<%= u.izvorId %>">
+                  <input type="text" name="note" class="form-control form-control-sm" maxlength="300" placeholder="Razlog (opciono)" style="max-width: 180px;">
+                  <button type="submit" class="btn btn-outline-warning btn-sm">Oslobodi</button>
+                </form>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+
+<h3 class="h6">Istorija vraćanja</h3>
+<% if (!d.releases.length) { %>
+  <p class="text-muted small mb-0">Nijedno iskorišćenje nije vraćeno.</p>
+<% } else { %>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>Vraćeno</th><th>Korisnik</th><th>Gde</th><th>Popust</th><th>Način</th><th>Ko</th><th>Napomena</th></tr></thead>
+      <tbody>
+        <% d.releases.forEach(function(r) { %>
+          <tr>
+            <td><%= r.oslobodjenoU %></td>
+            <td><% if (r.korisnikUrl) { %><a href="<%= r.korisnikUrl %>"><%= r.korisnik %></a><% } else { %><%= r.korisnik %><% } %></td>
+            <td><% if (r.izvorUrl) { %><a href="<%= r.izvorUrl %>"><%= r.tipLabel %></a><% } else { %><%= r.tipLabel %><% } %></td>
+            <td><%= r.iznosPopustaDisplay %></td>
+            <td><%= r.nacin %></td>
+            <td><%= r.oslobodio %></td>
+            <td><%= r.napomena %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+<% } %>

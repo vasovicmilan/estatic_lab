@@ -1,3 +1,4 @@
+import { buildPortalPagination } from "../../utils/portal-list.util.js";
 import { formatDateTime } from "../../utils/date.time.util.js";
 import { getUserActionLabel } from "../../utils/activity-labels.util.js";
 
@@ -15,12 +16,7 @@ export function prepareUserActivityTabData(result, query = {}) {
       uspesno: item.success,
       ip: item.ip || null,
     })),
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/nalog/aktivnost",
-      query,
-    },
+    pagination: buildPortalPagination(result, { basePath: "/nalog/aktivnost", query }),
   };
 }
 

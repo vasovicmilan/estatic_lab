@@ -64,6 +64,25 @@ describe("payout-request.service", () => {
       assert.equal(createMock.mock.calls.length, 0, "no request should be created once the balance check fails");
     });
 
+    it("backs out a request when a concurrent one pushed the reserved total past what was earned", async (t) => {
+      t.mock.method(commissionService, "getEarnedTotal", async () => 5000);
+      let calls = 0;
+      // first balance read (before insert): nothing reserved; second (after insert): both racers reserved
+      t.mock.method(payoutRepo, "sumPendingRequestedAmount", async () => (calls++ === 0 ? 0 : 8000));
+      t.mock.method(payoutRepo, "sumPaidAmount", async () => 0);
+      t.mock.method(employeeService, "getEmployeeNameById", async () => "Marko Markovic");
+      const created = buildPayoutRequest({ amount: 4000, status: "requested" });
+      t.mock.method(payoutRepo, "createPayoutRequest", async () => created);
+      const atomicMock = t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async () => ({}));
+
+      await assert.rejects(
+        () => payoutService.requestPayout("employee", id().toString(), 4000),
+        (err) => err.statusCode === 409
+      );
+      assert.equal(atomicMock.mock.calls.length, 1);
+      assert.equal(atomicMock.mock.calls[0].arguments[2].status, "rejected");
+    });
+
     it("creates a 'requested' entry with an employeeSnapshot for an employee earner", async (t) => {
       t.mock.method(commissionService, "getEarnedTotal", async () => 5000);
       t.mock.method(payoutRepo, "sumPendingRequestedAmount", async () => 0);

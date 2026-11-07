@@ -16,6 +16,21 @@ Slot availability is calculated from each staff member's working hours, minus wh
 
 > The numbers quoted throughout this document (30-minute buffer, 24-hour cancellation cutoff, etc.) are **defaults** - an admin can change any of them at any time through `/admin/sajt` (Booking Policy), no code change or server restart needed. See `09-admin-operations.md`.
 
+### Booking policy - what the admin configures
+
+Every value below is edited in `/admin/sajt` (**Booking Policy** section), takes effect immediately (no restart), and has a default used until changed:
+
+| Setting | Default | What it does |
+|---|---|---|
+| Buffer between appointments (`bufferMinutes`) | 30 min | Time reserved before and after each appointment for preparation/cleaning |
+| Slot step (`slotGridMinutes`) | 30 min | The spacing at which slots are offered: 15, 30, 45 min or 1 hour (09:00, 10:00...). Allowed range 5-240; 0 is rejected because it would hang slot generation |
+| Minimum notice for a new booking (`bookingMinLeadMinutes`) | 60 min | A slot starting sooner than "now + notice" is neither offered nor accepted by the server. At 11:51 with 60 min notice the first offered slot is 13:00 (12:51 rounded up to the grid). Admin/staff creating a booking manually are exempt |
+| Self-service cancellation cutoff (`userCancellationCutoffHours`) | 24 h | How far ahead a customer may cancel on their own |
+| Reschedule cutoff / same-day floor (`rescheduleCutoffHours`, `rescheduleSameDayFloorHours`) | 24 h / 4 h | See "Modifying an existing appointment" |
+| Minimum notice for a new time (`rescheduleMinLeadMinutes`) | 30 min | Same idea as the notice above, but for **rescheduling** an existing appointment |
+
+The notice is an instant comparison, so it does not depend on the time zone or on daylight-saving changes. The same check runs in two places - when the slot list is built and when the booking is written - so a stale open page or a hand-made request cannot book a slot that is too soon.
+
 When a customer doesn't request a specific staff member, the system assigns the first genuinely available person for that service at the moment of booking — checked at the exact instant the appointment is created, so two customers booking the same slot at the same time can't both succeed and end up double-booked. If more than one staff member is genuinely free, the appointment is deliberately left unassigned rather than picked arbitrarily, so an administrator makes that call instead.
 
 ## What a booking costs
@@ -27,6 +42,8 @@ A booked appointment is priced one of two ways, and only ever one of them for an
 
 These two paths are mutually exclusive by design: an appointment paid for with a package can't *also* carry its own separate discount code, since there's no new payment for a coupon to discount in the first place.
 
+On the contact-details step, the "Appointment summary" shows the price, the coupon discount and the **total** as soon as a coupon is applied or removed (the same as "Your order" in the shop). The server always computes the final price itself (`finalPrice`), so the display is a preview only. An appointment is shown in the admin and in the customer's account as the **service name** on one line and the **variant** on another (previously only the variant was visible).
+
 ## The lifecycle of an appointment
 
 An appointment moves through a defined set of stages:
@@ -37,6 +54,8 @@ An appointment moves through a defined set of stages:
 - **Rejected** — declined before it happened.
 - **Cancelled** — called off. A customer cancelling their own appointment is held to a 24-hour-in-advance cutoff, protecting staff against last-minute cancellations; staff and admin can cancel an appointment on the customer's behalf at any notice.
 - **No-show** — the appointment was confirmed, but the customer never arrived.
+
+**Reopening** a cancelled, rejected or no-show appointment puts it back to "Pending", but only if the therapist and resources are still free at that time - checked before anything is changed (including the package session). Otherwise the reopen is refused with a message instead of creating a double booking.
 
 Who is allowed to move an appointment from one stage to another depends on their role — a customer can cancel their own upcoming appointment, but only staff or admin can mark something completed or a no-show.
 
@@ -95,3 +114,5 @@ For every **confirmed** appointment, the customer automatically gets a reminder 
 The reminder only goes out for `confirmed` appointments — appointments still awaiting confirmation (`pending`) don't get one, since the appointment isn't settled yet. The email always shows the appointment's actual date/time rather than a relative claim like "tomorrow"/"in a few hours" - deliberately, so it stays accurate even if it ends up going out later than intended (e.g. after extended downtime).
 
 If a third window is ever wanted (e.g. 1 hour before), adding an entry to `reminder.config.js` is enough - both the cron schedule (`scheduler.js`) and the sending logic itself (`appointment-reminder-jobs.js`) are driven by that config, with no further code changes needed.
+
+**Backdating.** Admin and employees can manually create an appointment in the past (logging what was already done outside the app) at the catalog price, from a package or with a manual price; the no-past rule and the minimum notice apply only to customers' self-service booking.

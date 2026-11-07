@@ -1,4 +1,5 @@
 import * as userService from "../../../services/user.service.js";
+import { resolvePortalLimit, resolvePortalSort, COMMISSION_SORTS, PAYOUT_SORTS, ORDER_SORTS } from "../../..//utils/portal-list.util.js";
 import * as appointmentService from "../../../services/appointment.service.js";
 import * as orderService from "../../../services/order.service.js";
 import {
@@ -47,8 +48,8 @@ export async function profile(req, res, next) {
 
 export async function appointments(req, res, next) {
   try {
-    const { status, upcomingPage = 1, pastPage = 1, limit = 10 } = req.query;
-    const resolvedLimit = parseInt(limit, 10) || 10;
+    const { status, upcomingPage = 1, pastPage = 1 } = req.query;
+    const resolvedLimit = resolvePortalLimit(req.query.limit);
     const startOfToday = getStartOfDayInZone();
 
     // Queried as two SEPARATE lists (each with its own page) rather than one
@@ -247,7 +248,7 @@ export async function updateSettings(req, res, next) {
 export async function activity(req, res, next) {
   try {
     const { page = 1 } = req.query;
-    const result = await userHistoryService.getOwnHistory(req.session.user.id, { page: parseInt(page, 10) || 1, limit: 20 });
+    const result = await userHistoryService.getOwnHistory(req.session.user.id, { page: parseInt(page, 10) || 1, limit: resolvePortalLimit(req.query.limit, 20) });
 
     const seo = await userSeo(req, { title: "Moja aktivnost", description: "Pregled vaših aktivnosti na sajtu" });
     return res.render("user/_activity-tab", {
@@ -264,14 +265,15 @@ export async function activity(req, res, next) {
 
 export async function orders(req, res, next) {
   try {
-    const { status, page = 1, limit = 10 } = req.query;
+    const { status, page = 1 } = req.query;
 
     const result = await orderService.findOrders({
       requesterId: req.session.user.id,
       role: "user",
       filters: { status: status || undefined },
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolvePortalLimit(req.query.limit),
+      sort: resolvePortalSort(req.query.sort, ORDER_SORTS).sort,
     });
 
     const viewData = prepareOrdersTabData(result, req.query);

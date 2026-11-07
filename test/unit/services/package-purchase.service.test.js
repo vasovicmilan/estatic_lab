@@ -542,8 +542,48 @@ describe("package-purchase.service", () => {
 
   describe("cancelPurchase", () => {
     it("throws 404 for a nonexistent purchase", async (t) => {
-      t.mock.method(packagePurchaseRepo, "updatePackagePurchaseById", async () => null);
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => null);
       await assert.rejects(() => packagePurchaseService.cancelPurchase(id().toString(), id().toString()), (err) => err.statusCode === 404);
+    });
+
+    it("refuses while a pending/confirmed appointment still uses the package", async (t) => {
+      const purchase = buildPackagePurchase();
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => purchase);
+      t.mock.method(appointmentRepo, "countAppointments", async () => 2);
+      const updateMock = t.mock.method(packagePurchaseRepo, "updatePackagePurchaseById", async () => purchase);
+      await assert.rejects(
+        () => packagePurchaseService.cancelPurchase(purchase._id.toString(), id().toString()),
+        (err) => err.statusCode === 400
+      );
+      assert.equal(updateMock.mock.calls.length, 0);
+    });
+
+    function setupCancel(t, purchase) {
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => purchase);
+      t.mock.method(appointmentRepo, "countAppointments", async () => 0);
+      t.mock.method(packagePurchaseRepo, "updatePackagePurchaseById", async () => ({ ...purchase, status: "cancelled" }));
+      return t.mock.method(couponService, "releaseCoupon", async () => true);
+    }
+
+    it("gives the coupon use back when no session was used or held", async (t) => {
+      const couponId = id();
+      const purchase = buildPackagePurchase({ coupon: couponId });
+      const releaseMock = setupCancel(t, purchase);
+      await packagePurchaseService.cancelPurchase(purchase._id.toString(), id().toString());
+      assert.equal(releaseMock.mock.calls.length, 1);
+      assert.equal(releaseMock.mock.calls[0].arguments[0], couponId);
+      assert.deepEqual(releaseMock.mock.calls[0].arguments[1], { packagePurchaseId: purchase._id.toString() });
+    });
+
+    it("keeps the coupon use spent once a session was delivered", async (t) => {
+      const purchase = buildPackagePurchase({
+        coupon: id(),
+        items: [{ service: id(), servicePackageId: id(), sessionsTotal: 3, sessionsUsed: 1, sessionsReserved: 0 }],
+      });
+      const releaseMock = setupCancel(t, purchase);
+      await packagePurchaseService.cancelPurchase(purchase._id.toString(), id().toString());
+      assert.equal(releaseMock.mock.calls.length, 0);
     });
   });
 
@@ -579,12 +619,30 @@ describe("package-purchase.service", () => {
       const purchase = buildPackagePurchase();
       t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => purchase);
       t.mock.method(appointmentRepo, "countAppointments", async () => 0);
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
       const deleteMock = t.mock.method(packagePurchaseRepo, "deletePackagePurchaseById", async () => purchase);
 
       const result = await packagePurchaseService.deletePurchase(purchase._id.toString(), id().toString());
 
       assert.equal(result.success, true);
       assert.equal(deleteMock.mock.calls.length, 1);
+    });
+
+    it("gives the coupon use back when an untouched package is deleted, keeps it if a session was delivered", async (t) => {
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
+      t.mock.method(appointmentRepo, "countAppointments", async () => 0);
+      t.mock.method(packagePurchaseRepo, "deletePackagePurchaseById", async () => ({}));
+      const releaseMock = t.mock.method(couponService, "releaseCoupon", async () => true);
+
+      const untouched = buildPackagePurchase({ coupon: id() });
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => untouched);
+      await packagePurchaseService.deletePurchase(untouched._id.toString(), id().toString());
+      assert.equal(releaseMock.mock.calls.length, 1);
+
+      const used = buildPackagePurchase({ coupon: id(), items: [{ service: id(), servicePackageId: id(), sessionsTotal: 3, sessionsUsed: 2, sessionsReserved: 0 }] });
+      t.mock.method(packagePurchaseRepo, "findPackagePurchaseById", async () => used);
+      await packagePurchaseService.deletePurchase(used._id.toString(), id().toString());
+      assert.equal(releaseMock.mock.calls.length, 1);
     });
 
     it("succeeds when the only referencing appointments are completed/cancelled (terminal statuses don't block)", async (t) => {
@@ -594,6 +652,7 @@ describe("package-purchase.service", () => {
       // none of this purchase's referencing appointments because they're all
       // completed/cancelled/rejected/no_show, so the count comes back 0
       const countMock = t.mock.method(appointmentRepo, "countAppointments", async () => 0);
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
       const deleteMock = t.mock.method(packagePurchaseRepo, "deletePackagePurchaseById", async () => purchase);
 
       const result = await packagePurchaseService.deletePurchase(purchase._id.toString(), id().toString());

@@ -40,13 +40,13 @@ export async function findEarnedCommissionByPackagePurchase(packagePurchaseId, {
     .lean();
 }
 
-export async function findCommissionEntries({ limit = 20, page = 1, filters = {}, session } = {}) {
+export async function findCommissionEntries({ limit = 20, page = 1, filters = {}, sort = { createdAt: -1, _id: -1 }, session } = {}) {
   const filter = buildCommissionEntryFilter(filters);
   const resolvedLimit = resolveLimit(limit);
   const skip = resolveSkip(page, resolvedLimit);
 
   const [data, total] = await Promise.all([
-    CommissionEntry.find(filter).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(resolvedLimit).session(session || null).lean(),
+    CommissionEntry.find(filter).sort(sort).skip(skip).limit(resolvedLimit).session(session || null).lean(),
     CommissionEntry.countDocuments(filter).session(session || null),
   ]);
 

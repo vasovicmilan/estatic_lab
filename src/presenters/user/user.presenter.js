@@ -1,6 +1,7 @@
 import { canUserCancelAppointment, getRescheduleWindow } from "../../utils/appointment-cancellation.util.js";
 import { canUserCancelOrder } from "../../models/order-status-transitions.js";
 import { getZonedComponents } from "../../utils/date.time.util.js";
+import { buildPortalPagination, resolvePortalSort, ORDER_SORTS } from "../../utils/portal-list.util.js";
 
 export function prepareProfileTabData(user) {
   return {
@@ -17,7 +18,7 @@ export function prepareProfileTabData(user) {
 // date - the exact class of bug already fixed once for manual appointment
 // creation (see date.time.util.js) would otherwise put an appointment in
 // the wrong bucket for part of the day.
-function splitUpcomingByToday(appointments) {
+export function splitUpcomingByToday(appointments) {
   const todayKey = (() => {
     const t = getZonedComponents(new Date());
     return `${t.year}-${t.month}-${t.day}`;
@@ -47,25 +48,21 @@ export function prepareAppointmentTabData({ upcoming, past }, query = {}) {
   // paging through "Predstojeći" doesn't reset "Prošli" back to its first
   // page (and vice versa) - each section reads its own pageParam
   // (upcomingPage/pastPage), see includes/pagination.ejs's own support for that
-  const sharedQuery = { status: query.status || "" };
+  const sharedQuery = { status: query.status || "", limit: query.limit || "" };
 
   return {
     appointments: [...upcoming.data, ...past.data],
     groups: { danas, predstojeci, prosli: past.data },
-    paginationUpcoming: {
-      currentPage: upcoming.page,
-      totalPages: upcoming.totalPages,
+    paginationUpcoming: buildPortalPagination(upcoming, {
       basePath: "/nalog/termini",
       pageParam: "upcomingPage",
       query: { ...sharedQuery, pastPage: query.pastPage || "" },
-    },
-    paginationPast: {
-      currentPage: past.page,
-      totalPages: past.totalPages,
+    }),
+    paginationPast: buildPortalPagination(past, {
       basePath: "/nalog/termini",
       pageParam: "pastPage",
       query: { ...sharedQuery, upcomingPage: query.upcomingPage || "" },
-    },
+    }),
     // matched against each filter option's `value` in the view so the
     // dropdown actually shows what's currently applied (<option selected>) -
     // without this the <select> always visually resets to its first option
@@ -120,12 +117,9 @@ export function prepareSettingsTabData(user, { errors = {} } = {}) {
 export function prepareOrdersTabData(result, query = {}) {
   return {
     orders: result.data,
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/nalog/porudzbine",
-      query,
-    },
+    pagination: buildPortalPagination(result, { basePath: "/nalog/porudzbine", query }),
+    selectedStatus: query.status || "",
+    sortControl: resolvePortalSort(query.sort, ORDER_SORTS).control,
     filters: [
       { value: "", label: "Sve" },
       { value: "pending", label: "Na čekanju" },

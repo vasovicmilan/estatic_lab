@@ -49,6 +49,20 @@ export async function requestPayout(earnerType, earnerId, amount) {
     status: "requested",
   });
 
+  // The balance check above and the insert are two separate steps, so two near-simultaneous
+  // requests (double-click, two tabs) can both pass it and together ask for more than is
+  // available. Re-check now that this request counts as "reserved": if the total went
+  // negative, back this one out (rejected, not deleted - the trail stays) and make the earner retry.
+  const after = await getBalance(earnerType, earnerId);
+  if (after.earned - after.paid - after.reserved < 0) {
+    await payoutRepo.updatePayoutRequestStatusAtomic(created._id, "requested", {
+      status: "rejected",
+      rejectedAt: new Date(),
+      adminNote: "Automatski odbijeno: istovremeni zahtevi su premašili raspoloživo stanje",
+    });
+    conflict("Istovremeni zahtevi za isplatu premašuju raspoloživo stanje - pokušajte ponovo");
+  }
+
   logInfo("Payout requested", { earnerType, earnerId, amount });
   return created;
 }
@@ -179,8 +193,8 @@ export async function getPayoutRequestById(requestId) {
  * doesn't include adminNote at all, which is exactly the reason/context the
  * earner needs to see when a request is rejected or approved).
  */
-export async function listPayoutRequestsForEarner({ employee = null, partner = null, status = null, limit = 10, page = 1 } = {}) {
-  const result = await payoutRepo.findPayoutRequests({ filters: { employee, partner, status }, limit, page });
+export async function listPayoutRequestsForEarner({ employee = null, partner = null, status = null, limit = 10, page = 1, sort = undefined } = {}) {
+  const result = await payoutRepo.findPayoutRequests({ filters: { employee, partner, status }, limit, page, ...(sort ? { sort } : {}) });
   return {
     data: result.data.map((r) => ({
       id: r._id.toString(),

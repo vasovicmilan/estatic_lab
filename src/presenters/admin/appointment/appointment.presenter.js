@@ -55,6 +55,18 @@ export function prepareAppointmentListData(result, query = {}) {
             { value: "no_show", label: "Nije se pojavio/la" },
           ],
         },
+        {
+          type: "select",
+          name: "when",
+          label: "Vreme",
+          value: query.when || "",
+          options: [
+            { value: "", label: "Svi termini" },
+            { value: "today", label: "Danas" },
+            { value: "upcoming", label: "Predstojeći" },
+            { value: "past", label: "Prošli" },
+          ],
+        },
         { type: "text", name: "dateFrom", label: "Od datuma", value: query.dateFrom || "" },
         { type: "text", name: "dateTo", label: "Do datuma", value: query.dateTo || "" },
         {

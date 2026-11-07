@@ -331,11 +331,44 @@ export async function uncommitSession(packagePurchaseId, servicePackageId, { ses
   return reverted || updated;
 }
 
+// true when at least one session of the package was already delivered (completed) or is currently
+// held by a booking - i.e. the package's value has been (or is about to be) consumed
+function hasConsumedSessions(purchase) {
+  return (purchase.items || []).some((i) => (i.sessionsUsed || 0) > 0 || (i.sessionsReserved || 0) > 0);
+}
+
+// Cancelling a package: blocked while a pending/confirmed appointment still relies on it (same guard
+// as deletion). The coupon it was bought with is given back automatically ONLY when nothing was
+// consumed; once a session was delivered the discount was realised and the use stays spent (an admin
+// can still release it by hand from the coupon page).
 export async function cancelPurchase(packagePurchaseId, adminId) {
   if (!packagePurchaseId) validationError("packagePurchaseId");
-  const updated = await packagePurchaseRepo.updatePackagePurchaseById(packagePurchaseId, { status: "cancelled" });
-  if (!updated) notFound("Kupljeni paket");
-  logInfo("Package purchase cancelled", { packagePurchaseId, adminId });
+  const existing = await packagePurchaseRepo.findPackagePurchaseById(packagePurchaseId);
+  if (!existing) notFound("Kupljeni paket");
+
+  const activeAppointments = await appointmentRepo.countAppointments({ packagePurchaseId, statusIn: ["pending", "confirmed"] });
+  if (activeAppointments > 0) {
+    badRequest("Ne može se otkazati paket dok postoje zakazani termini koji koriste njegove sesije. Prvo otkažite ili završite te termine.");
+  }
+
+  const couponId = existing.coupon?._id ?? existing.coupon ?? null;
+  const releasesCoupon = Boolean(couponId) && existing.status !== "cancelled" && !hasConsumedSessions(existing);
+
+  let updated;
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      updated = await packagePurchaseRepo.updatePackagePurchaseById(packagePurchaseId, { status: "cancelled" }, { session });
+      if (!updated) notFound("Kupljeni paket");
+      if (releasesCoupon) {
+        await couponService.releaseCoupon(couponId, { packagePurchaseId }, { session, reason: "auto", releasedBy: adminId, note: "Paket otkazan" });
+      }
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  logInfo("Package purchase cancelled", { packagePurchaseId, adminId, couponReleased: releasesCoupon });
   const purchase = await getPurchaseById(updated._id);
   eventEmitter.emit("package_purchase:cancelled", { packagePurchaseId: updated._id.toString() });
   return purchase;
@@ -373,8 +406,21 @@ export async function deletePurchase(packagePurchaseId, adminId) {
     badRequest("Ne može se obrisati paket dok postoje zakazani termini koji koriste preostale sesije.");
   }
 
-  await packagePurchaseRepo.deletePackagePurchaseById(packagePurchaseId);
-  logInfo("Package purchase deleted", { packagePurchaseId, adminId });
+  // same rule as cancelling: an untouched package gives its coupon use back when it disappears
+  const couponId = existing.coupon?._id ?? existing.coupon ?? null;
+  const releasesCoupon = Boolean(couponId) && !hasConsumedSessions(existing);
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      if (releasesCoupon) {
+        await couponService.releaseCoupon(couponId, { packagePurchaseId }, { session, reason: "auto", releasedBy: adminId, note: "Paket obrisan" });
+      }
+      await packagePurchaseRepo.deletePackagePurchaseById(packagePurchaseId, { session });
+    });
+  } finally {
+    await session.endSession();
+  }
+  logInfo("Package purchase deleted", { packagePurchaseId, adminId, couponReleased: releasesCoupon });
   return { success: true };
 }
 

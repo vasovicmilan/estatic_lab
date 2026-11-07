@@ -36,3 +36,26 @@ Greške su klasifikovane tako da se važne izdvajaju:
 - **`Unexpected error`** - stvarni bag (bilo šta što aplikacija nije namerno bacila). Loguje se na `error` nivou (ide u `error.log`) i šalje se Telegram alarm.
 - **`Server error`** - namerna aplikativna greška sa 5xx statusom. Isto tretiranje: `error` nivo i Telegram alarm.
 - **`Handled error`** - rutinski klijentski ishodi (404 za nepostojeću stranicu ili skener koji ispituje sajt, 403 za istekao CSRF token, greške validacije). Loguju se samo na `warn` nivou, bez alarma - očekivane su i inače bi zatrpale prave probleme.
+- **Greške validacije iz baze** (Mongoose `ValidationError`/`CastError` ili duplikat-ključ `11000`) tretiraju se kao pogrešan unos, ne kao bag: postaju 400/409 `Handled error` sa prvom čitljivom porukom — npr. izostavljen procenat provizije kod zaposlenog na proviziji prikazuje poruku na formi umesto 500 stranice i Telegram alarma. (`src/utils/error.util.js`)
+
+## Raspored zakazanih poslova (cron)
+
+Svi poslovi su u `src/jobs/scheduler.js`, rade u vremenskoj zoni `CRON_TIMEZONE` (podrazumevano `Europe/Belgrade`) i pokreću se samo na instanci 0. Modulski poslovi se uključuju samo uz odgovarajući modul (`ENABLED_MODULES`). Poslovi su zamotani u `() => runXxx()` da bi se sačuvao podrazumevani argument `now` (node-cron prosleđuje objekat konteksta).
+
+| Kada | Posao | Modul |
+|---|---|---|
+| 00:15 svaki dan | Dnevni izveštaj o logovima | uvek |
+| 00:20 svaki dan | Dnevni poslovni izveštaj | uvek |
+| 00:30 ponedeljkom / 00:35 ponedeljkom | Nedeljni izveštaj o logovima / poslovni izveštaj | uvek |
+| 00:45 prvog u mesecu / 00:50 prvog u mesecu | Mesečni izveštaj o logovima / poslovni izveštaj | uvek |
+| 01:00 1. jan / 01:05 1. jan, apr, jul, okt / 01:15 1. jan | Godišnji log izveštaj / kvartalni poslovni izveštaj / godišnji poslovni izveštaj | uvek |
+| svakog sata (:00) | Čišćenje isteklih privremenih porudžbina | `shop` |
+| 02:00 svaki dan | Provera provizija nakon roka za odustanak (`commission-grace-period-sweep`) | `shop` ili `booking` |
+| 07:30 / 07:40 svaki dan | Podsetnik za napuštenu korpu, 1. i 2. stepen (2. nosi kupon) | `shop` |
+| svakih 5 min | Objavljivanje zakazanih blog postova | `blog` |
+| svakih 5 min | Slanje zakazanih newsletter kampanja | uvek |
+| svakih 15 min | SrediMe sinhronizacija zauzetosti | `booking` |
+| svakih 15 min | Podsetnici za termine (24 h i 4 h pre) | `booking` |
+| 08:00 / 19:00 svaki dan | Jutarnji / večernji pregled termina za zaposlene | `employees` |
+
+Bekap baze nije u ovoj tabeli — to je sistemski cron (`17-bekapi.md`).

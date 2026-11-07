@@ -1,4 +1,5 @@
 import * as employeeService from "../../../services/employee.service.js";
+import { resolvePortalLimit, resolvePortalSort, COMMISSION_SORTS, PAYOUT_SORTS, ORDER_SORTS } from "../../..//utils/portal-list.util.js";
 import * as appointmentService from "../../../services/appointment.service.js";
 import externalBusyIntervalService from "../../../services/external-busy-interval.service.js";
 import payoutRequestService from "../../../services/payout-request.service.js";
@@ -101,17 +102,32 @@ export async function appointments(req, res, next) {
   try {
     const employee = await getOwnEmployee(req);
     const employeeId = employeeIdOf(employee);
-    const { status, page = 1, limit = 10 } = req.query;
+    const { status, upcomingPage = 1, pastPage = 1 } = req.query;
+    const limit = resolvePortalLimit(req.query.limit);
+    const startOfToday = getStartOfDayInZone();
 
-    const result = await appointmentService.findAppointments({
-      requesterId: employeeId,
-      role: "employee",
-      filters: { status: status || undefined },
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
-    });
+    // Danas/Predstojeći and Prošli are two independent lists with their own pager - same approach
+    // (and same reason) as the customer's own list, see user.controller.js's appointments().
+    const [upcoming, past] = await Promise.all([
+      appointmentService.findAppointments({
+        requesterId: employeeId,
+        role: "employee",
+        filters: { status: status || undefined, dateFrom: startOfToday },
+        sort: { startTime: 1, _id: 1 },
+        page: parseInt(upcomingPage, 10) || 1,
+        limit,
+      }),
+      appointmentService.findAppointments({
+        requesterId: employeeId,
+        role: "employee",
+        filters: { status: status || undefined, dateTo: startOfToday },
+        sort: { startTime: -1, _id: -1 },
+        page: parseInt(pastPage, 10) || 1,
+        limit,
+      }),
+    ]);
 
-    const viewData = prepareEmployeeAppointmentTabData(result, req.query);
+    const viewData = prepareEmployeeAppointmentTabData({ upcoming, past }, req.query);
     const externalBusy = await externalBusyIntervalService.getUpcomingForEmployee(employeeId, { limit: 30 });
 
     return res.render("employee/appointments", {
@@ -337,14 +353,15 @@ export async function commissions(req, res, next) {
   try {
     const employee = await getOwnEmployee(req);
     const employeeId = employeeIdOf(employee);
-    const { page = 1, limit = 10, status, sourceType } = req.query;
+    const { page = 1, status, sourceType } = req.query;
 
     const result = await commissionService.listCommissionsForEarner({
       employee: employeeId,
       status: status || undefined,
       sourceType: sourceType || undefined,
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolvePortalLimit(req.query.limit),
+      sort: resolvePortalSort(req.query.sort, COMMISSION_SORTS).sort,
     });
 
     const viewData = prepareEmployeeCommissionsTabData(result, req.query);
@@ -365,13 +382,14 @@ export async function payoutHistory(req, res, next) {
   try {
     const employee = await getOwnEmployee(req);
     const employeeId = employeeIdOf(employee);
-    const { page = 1, limit = 10, status } = req.query;
+    const { page = 1, status } = req.query;
 
     const result = await payoutRequestService.listPayoutRequestsForEarner({
       employee: employeeId,
       status: status || undefined,
       page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
+      limit: resolvePortalLimit(req.query.limit),
+      sort: resolvePortalSort(req.query.sort, PAYOUT_SORTS).sort,
     });
 
     const viewData = prepareEmployeePayoutsTabData(result, req.query);

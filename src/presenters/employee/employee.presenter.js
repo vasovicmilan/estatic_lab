@@ -2,6 +2,8 @@ import { formatDateTime } from "../../utils/date.time.util.js";
 import { formatPrice, formatMoney } from "../../utils/price.util.js";
 import { translateCommissionSourceType, translateCommissionStatus } from "../../utils/commission-display.util.js";
 import { getRescheduleWindow } from "../../utils/appointment-cancellation.util.js";
+import { buildPortalPagination, resolvePortalSort, COMMISSION_SORTS, PAYOUT_SORTS } from "../../utils/portal-list.util.js";
+import { splitUpcomingByToday } from "../user/user.presenter.js";
 
 const PAYOUT_STATUS_LABELS = { requested: "Zatraženo", approved: "Odobreno", paid: "Isplaćeno", rejected: "Odbijeno" };
 
@@ -33,15 +35,26 @@ export function prepareEmployeeDashboardData({
   };
 }
 
-export function prepareEmployeeAppointmentTabData(result, query = {}) {
+// Same Danas / Predstojeći / Prošli split as the customer's own list (see user.controller.js's
+// appointments() for why they are two independent, separately paged queries rather than one
+// list sliced into pages: a single calendar day can then never straddle two pages).
+export function prepareEmployeeAppointmentTabData({ upcoming, past }, query = {}) {
+  const { danas, predstojeci } = splitUpcomingByToday(upcoming.data);
+  const sharedQuery = { status: query.status || "", limit: query.limit || "" };
   return {
-    appointments: result.data,
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
+    appointments: [...upcoming.data, ...past.data],
+    groups: { danas, predstojeci, prosli: past.data },
+    paginationUpcoming: buildPortalPagination(upcoming, {
       basePath: "/moj-nalog/termini",
-      query,
-    },
+      pageParam: "upcomingPage",
+      query: { ...sharedQuery, pastPage: query.pastPage || "" },
+    }),
+    paginationPast: buildPortalPagination(past, {
+      basePath: "/moj-nalog/termini",
+      pageParam: "pastPage",
+      query: { ...sharedQuery, upcomingPage: query.upcomingPage || "" },
+    }),
+    selectedStatus: query.status || "",
     filters: [
       { value: "", label: "Svi" },
       { value: "pending", label: "Na čekanju" },
@@ -88,12 +101,8 @@ export function prepareEmployeeProfileTabData(employee) {
 export function prepareEmployeeCommissionsTabData(result, query = {}) {
   return {
     items: result.data.map(mapCommissionRow),
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/moj-nalog/provizije",
-      query,
-    },
+    pagination: buildPortalPagination(result, { basePath: "/moj-nalog/provizije", query }),
+    sortControl: resolvePortalSort(query.sort, COMMISSION_SORTS).control,
     filters: {
       status: {
         value: query.status || "",
@@ -120,12 +129,8 @@ export function prepareEmployeeCommissionsTabData(result, query = {}) {
 export function prepareEmployeePayoutsTabData(result, query = {}) {
   return {
     items: result.data.map(mapPayoutRequestRow),
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      basePath: "/moj-nalog/isplate",
-      query,
-    },
+    pagination: buildPortalPagination(result, { basePath: "/moj-nalog/isplate", query }),
+    sortControl: resolvePortalSort(query.sort, PAYOUT_SORTS).control,
     filters: {
       status: {
         value: query.status || "",
@@ -150,6 +155,7 @@ function mapCommissionRow(entry) {
     iznos: formatMoney(entry.amount),
     status: translateCommissionStatus(entry.status),
     datum: entry.earnedAt || entry.createdAt,
+    datumDisplay: formatDateTime(entry.earnedAt || entry.createdAt),
   };
 }
 

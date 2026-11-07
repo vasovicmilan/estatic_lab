@@ -235,14 +235,16 @@ export async function bookAppointment(input) {
 
   const start = startTime instanceof Date ? startTime : new Date(startTime);
   if (isNaN(start.getTime())) badRequest("Neispravno vreme termina");
-  // A manual admin/employee booking is explicitly allowed to backdate (e.g.
-  // logging a walk-in giveaway redemption that already happened) - the
-  // in-the-past guard below only makes sense for the public self-service flow.
-  if (priceOverride == null && start < new Date()) badRequest("Ne možete zakazati termin u prošlosti");
+  // Admin/employee manual bookings may ALWAYS backdate - staff log things that already happened
+  // (a walk-in, a session given outside the app, a giveaway), at the catalog price, from a
+  // package, or with a manual price alike. The in-the-past guard only applies to the public
+  // self-service flow.
+  const isStaffBooking = actorRole === "admin" || actorRole === "employee";
+  if (!isStaffBooking && start < new Date()) badRequest("Ne možete zakazati termin u prošlosti");
   // Self-service bookings need the minimum notice; admin/employee manual bookings are exempt
   // (same as the reschedule rules). Enforced here, not only in the slot list, so a stale page
   // or a hand-crafted request can't book a slot that is too soon.
-  if (actorRole !== "admin" && actorRole !== "employee" && !hasMinimumBookingLeadTime(start)) {
+  if (!isStaffBooking && !hasMinimumBookingLeadTime(start)) {
     badRequest(`Termin se mora zakazati bar ${getBookingPolicy().bookingMinLeadMinutes ?? 60} minuta unapred`);
   }
 
@@ -556,6 +558,37 @@ export async function createManualAppointment(input, { actorId = null, actorRole
   });
 }
 
+/**
+ * Reopening a cancelled/rejected/no-show appointment puts it back into the active
+ * set (pending), but the slot it held was released when it left it - another booking
+ * may have taken that employee/resource since. Without this check the reopen either
+ * double-books the employee/resource or trips the partial unique index (E11000)
+ * AFTER the package-session reservation below had already been changed, leaving the
+ * purchase and the appointment out of sync. Checked before anything is mutated.
+ */
+async function assertReopenSlotStillFree(appointment) {
+  const { startTime, endTime, _id } = appointment;
+  const employeeId = appointment.employee?._id ?? appointment.employee;
+
+  if (employeeId) {
+    const overlapping = await appointmentRepo.findOverlappingAppointments(employeeId, startTime, endTime, _id);
+    if (overlapping.length > 0) {
+      badRequest("Termin se ne može ponovo otvoriti: terapeut je u međuvremenu zauzet u tom terminu");
+    }
+  }
+
+  for (const entry of appointment.resources || []) {
+    const resourceId = entry.resource?._id ?? entry.resource;
+    if (!resourceId) continue;
+    const raw = await resourceService.getResourceByIdRaw(resourceId);
+    const capacity = resourceService.getEffectiveCapacity(raw);
+    const used = await appointmentRepo.countOverlappingResourceAppointments(resourceId, startTime, endTime, _id);
+    if (!capacity || used >= capacity) {
+      badRequest("Termin se ne može ponovo otvoriti: resurs je u međuvremenu zauzet u tom terminu");
+    }
+  }
+}
+
 async function transitionStatus(appointmentId, nextStatus, actorId, actorRole, extra = {}) {
   const appointment = await appointmentRepo.findAppointmentById(appointmentId);
   if (!appointment) notFound("Termin");
@@ -564,6 +597,10 @@ async function transitionStatus(appointmentId, nextStatus, actorId, actorRole, e
   const allowed = getAllowedStatuses(appointment.status, actorRole);
   if (!allowed.includes(nextStatus)) {
     badRequest(`Prelaz iz statusa "${appointment.status}" u "${nextStatus}" nije dozvoljen`);
+  }
+
+  if (nextStatus === "pending" && appointment.status !== "pending") {
+    await assertReopenSlotStillFree(appointment);
   }
 
   // Package-purchase session lifecycle: "completed" delivers the reserved session
@@ -604,7 +641,35 @@ async function transitionStatus(appointmentId, nextStatus, actorId, actorRole, e
     }
   }
 
-  const updated = await appointmentRepo.updateAppointmentById(appointmentId, { status: nextStatus, ...extra });
+  // Coupon: a cancelled/rejected appointment never happened, so its coupon use goes back to the
+  // customer (they can book again with it); reopening it spends the use again. Same transaction as
+  // the status update, so the coupon and the status can't disagree. "no_show"/"completed" keep the use.
+  const couponId = appointment.coupon?._id ?? appointment.coupon;
+  const releasesCoupon = Boolean(couponId) && (nextStatus === "cancelled" || nextStatus === "rejected");
+  const reclaimsCoupon = Boolean(couponId) && nextStatus === "pending" && (appointment.status === "cancelled" || appointment.status === "rejected");
+
+  let updated;
+  if (releasesCoupon || reclaimsCoupon) {
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        if (releasesCoupon) {
+          await couponService.releaseCoupon(couponId, { appointmentId }, { session });
+        } else {
+          await couponService.reclaimCoupon(
+            couponId,
+            { userId: appointment.user?._id ?? appointment.user, appointmentId, discountAmount: appointment.discountApplied || 0 },
+            { session }
+          );
+        }
+        updated = await appointmentRepo.updateAppointmentById(appointmentId, { status: nextStatus, ...extra }, { session });
+      });
+    } finally {
+      await session.endSession();
+    }
+  } else {
+    updated = await appointmentRepo.updateAppointmentById(appointmentId, { status: nextStatus, ...extra });
+  }
   logInfo("Appointment status changed", { appointmentId, from: appointment.status, to: nextStatus, actorId, actorRole });
 
   eventEmitter.emit("appointment:status_changed", { appointmentId, status: nextStatus, previousStatus: appointment.status });
@@ -887,6 +952,12 @@ export async function deleteAppointmentById(appointmentId, actorId) {
   // package-purchase.service.js's reserveSession/releaseSession/commitSession)
   if (appointment.packagePurchase && (appointment.status === "pending" || appointment.status === "confirmed")) {
     await packagePurchaseService.releaseSession(appointment.packagePurchase, appointment.variant.servicePackageId);
+  }
+
+  // a hard-deleted appointment never happened either - give its coupon use back (idempotent: no-op if already released)
+  const deletedCouponId = appointment.coupon?._id ?? appointment.coupon;
+  if (deletedCouponId) {
+    await couponService.releaseCoupon(deletedCouponId, { appointmentId: appointment._id });
   }
 
   await appointmentRepo.deleteAppointmentById(appointmentId);

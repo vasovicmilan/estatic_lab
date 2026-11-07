@@ -116,7 +116,9 @@ export async function couponDetails(req, res, next) {
   try {
     const { couponId } = req.params;
     const coupon = await couponService.getCouponById(couponId);
-    const viewData = prepareCouponDetailsData(coupon);
+    const usageOverview = await couponService.getCouponUsageOverview(couponId);
+    const viewData = prepareCouponDetailsData(coupon, usageOverview);
+    viewData.csrfToken = res.locals.csrfToken;
 
     return res.render("admin/_details", {
       pageTitle: `Kupon - ${coupon.osnovno.kod}`,
@@ -269,6 +271,30 @@ export async function updateCoupon(req, res, next) {
   }
 }
 
+export async function releaseCouponUse(req, res, next) {
+  const { couponId } = req.params;
+  const back = `/admin/kuponi/detalji/${couponId}`;
+  try {
+    const { type, refId, note } = req.body;
+    await couponService.releaseCouponByAdmin(couponId, { type, refId }, req.session?.user?.id, note);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "COUPON_USE_RELEASED",
+      entity: { type: "Coupon", id: couponId },
+      changes: { released: { old: `${type}:${refId}`, new: null } },
+      req,
+      success: true,
+    });
+    return flashAndRedirect(req, res, "success", "Iskorišćenje kupona je oslobođeno - korisnik ga može ponovo iskoristiti", back);
+  } catch (error) {
+    logError("[releaseCouponUse] Greška pri oslobađanju kupona", error, { couponId, userId: req.session?.user?.id });
+    if (error.statusCode) {
+      return flashAndRedirect(req, res, "error", error.message, back);
+    }
+    next(error);
+  }
+}
+
 export async function deleteCoupon(req, res, next) {
   try {
     const { couponId } = req.params;
@@ -297,6 +323,7 @@ export async function deleteCoupon(req, res, next) {
 export default {
   listCoupons,
   couponDetails,
+  releaseCouponUse,
   newCouponForm,
   editCouponForm,
   createCoupon,

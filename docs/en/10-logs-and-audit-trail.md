@@ -36,3 +36,26 @@ Errors are classified so the important ones stand out:
 - **`Unexpected error`** - an actual bug (anything not deliberately thrown by the application). Logged at `error` level (goes to `error.log`) and sent as a Telegram alert.
 - **`Server error`** - a deliberate application error with a 5xx status. Same handling: `error` level and Telegram alert.
 - **`Handled error`** - routine client-side outcomes (404 for a missing page or a scanner probing the site, 403 for an expired CSRF token, validation failures). Logged at `warn` level only, no alert - these are expected and would otherwise bury the real problems.
+- **Database validation failures** (a Mongoose `ValidationError`/`CastError`, or a duplicate-key `11000`) are treated as bad input, not as bugs: they become a 400/409 `Handled error` with the first readable message, so e.g. forgetting the commission rate for a commission-paid employee shows a message on the form instead of a 500 page and a Telegram alert. (`src/utils/error.util.js`)
+
+## Scheduled jobs (cron)
+
+All jobs live in `src/jobs/scheduler.js`, run in the `CRON_TIMEZONE` time zone (default `Europe/Belgrade`) and only on instance 0. Module jobs are only registered when the matching module is enabled (`ENABLED_MODULES`). Jobs are wrapped as `() => runXxx()` so their default `now` argument survives (node-cron passes a context object).
+
+| When | Job | Module |
+|---|---|---|
+| 00:15 daily | Daily log report | always |
+| 00:20 daily | Daily business report | always |
+| 00:30 / 00:35 Mondays | Weekly log report / business report | always |
+| 00:45 / 00:50 on the 1st | Monthly log report / business report | always |
+| 01:00 Jan 1 / 01:05 Jan, Apr, Jul, Oct 1st / 01:15 Jan 1 | Yearly log report / quarterly business report / yearly business report | always |
+| every hour (:00) | Expired temporary-order cleanup | `shop` |
+| 02:00 daily | Commission grace-period sweep (`commission-grace-period-sweep`) | `shop` or `booking` |
+| 07:30 / 07:40 daily | Abandoned-cart reminder, stage 1 and 2 (stage 2 carries a coupon) | `shop` |
+| every 5 min | Publish scheduled blog posts | `blog` |
+| every 5 min | Send scheduled newsletter campaigns | always |
+| every 15 min | SrediMe busy-time sync | `booking` |
+| every 15 min | Appointment reminders (24 h and 4 h before) | `booking` |
+| 08:00 / 19:00 daily | Employee morning / evening appointment digest | `employees` |
+
+The database backup is not in this table - it is a system cron (`17-backups.md`).

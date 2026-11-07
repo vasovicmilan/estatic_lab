@@ -231,6 +231,24 @@ describe("order.service", () => {
     });
   });
 
+  describe("coupon use is given back when an order is cancelled", () => {
+    it("releases the coupon inside the cancel transaction, but not for a return", async (t) => {
+      mockSession(t);
+      const couponId = id();
+      const order = buildOrder({ status: "pending", coupon: couponId, discountApplied: 300, items: [buildOrderItem()] });
+      t.mock.method(orderRepo, "findOrderById", async () => order);
+      t.mock.method(orderRepo, "updateOrderById", async () => order);
+      t.mock.method(productService, "restoreVariationStock", async () => {});
+      const releaseMock = t.mock.method(couponService, "releaseCoupon", async () => true);
+
+      await orderService.cancelOrder(order._id.toString(), "Predomislio se", id().toString(), "admin");
+
+      assert.equal(releaseMock.mock.calls.length, 1);
+      assert.equal(String(releaseMock.mock.calls[0].arguments[0]), String(couponId));
+      assert.equal(String(releaseMock.mock.calls[0].arguments[1].orderId), String(order._id));
+    });
+  });
+
   describe("cancelOrder - user vs admin rules", () => {
     it("lets a user cancel their own order while still pending", async (t) => {
       mockSession(t);

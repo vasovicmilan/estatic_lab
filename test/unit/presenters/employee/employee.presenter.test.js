@@ -46,16 +46,28 @@ describe("prepareEmployeeDashboardData", () => {
 });
 
 describe("prepareEmployeeAppointmentTabData", () => {
-  it("carries items and pagination through unmodified", () => {
-    const result = { data: [{ id: "a1" }], page: 1, totalPages: 2 };
-    const view = prepareEmployeeAppointmentTabData(result, {});
+  const list = (data, page = 1, totalPages = 1, total = data.length) => ({ data, page, totalPages, total, limit: 10 });
+  const inHours = (h) => new Date(Date.now() + h * 3600 * 1000);
 
-    assert.equal(view.appointments.length, 1);
-    assert.equal(view.pagination.totalPages, 2);
+  it("splits into Danas / Predstojeći / Prošli with a separate pager (and page-size options) for upcoming and past", () => {
+    const upcoming = list([{ id: "later", startTimeRaw: inHours(24 * 5) }], 1, 3, 25);
+    const past = list([{ id: "old", startTimeRaw: inHours(-24 * 5) }], 2, 4, 40);
+    const view = prepareEmployeeAppointmentTabData({ upcoming, past }, { status: "confirmed", limit: "20" });
+
+    assert.deepEqual(view.groups.predstojeci.map((a) => a.id), ["later"]);
+    assert.deepEqual(view.groups.prosli.map((a) => a.id), ["old"]);
+    assert.equal(view.paginationUpcoming.pageParam, "upcomingPage");
+    assert.equal(view.paginationPast.pageParam, "pastPage");
+    assert.equal(view.paginationPast.currentPage, 2);
+    assert.ok(view.paginationUpcoming.pageSizeOptions.includes(20));
+    assert.equal(view.selectedStatus, "confirmed");
+    // paging one section must not lose the status, the page size, or the other section's page
+    assert.equal(view.paginationUpcoming.query.limit, "20");
+    assert.equal(view.paginationUpcoming.query.status, "confirmed");
   });
 
   it("offers a narrower status filter set than the admin panel - no reject/cancel, an employee can't do those", () => {
-    const view = prepareEmployeeAppointmentTabData({ data: [], page: 1, totalPages: 1 });
+    const view = prepareEmployeeAppointmentTabData({ upcoming: list([]), past: list([]) });
     const values = view.filters.map((f) => f.value);
 
     assert.deepEqual(values, ["", "pending", "confirmed", "completed", "no_show"]);

@@ -14,6 +14,8 @@ router.post("/", validateCouponCreate, CouponController.createCoupon);
 
 router.put("/:couponId", validateCouponId, validateCouponUpdate, CouponController.updateCoupon);
 
+router.post("/:couponId/oslobodi", validateCouponId, CouponController.releaseCouponUse);
+
 router.delete("/:couponId", validateCouponId, CouponController.deleteCoupon);
 
 export default router;

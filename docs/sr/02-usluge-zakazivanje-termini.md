@@ -16,6 +16,21 @@ Dostupnost termina se računa na osnovu radnog vremena svakog zaposlenog, umanje
 
 > Brojevi navedeni u ovom dokumentu (30 minuta razmaka, 24 sata rok otkazivanja, itd.) su **podrazumevane vrednosti** — admin ih može promeniti u bilo kom trenutku kroz `/admin/sajt` (Politika zakazivanja), bez izmene koda ili restart-a servera. Videti `09-admin-operacije.md`.
 
+### Politika zakazivanja — šta admin podešava
+
+Sve vrednosti ispod se menjaju u `/admin/sajt` (sekcija **Politika zakazivanja**), važe odmah (bez restarta) i imaju podrazumevanu vrednost koja važi dok se ne promene:
+
+| Podešavanje | Podrazumevano | Šta radi |
+|---|---|---|
+| Razmak između termina (`bufferMinutes`) | 30 min | Rezervisano pre i posle svakog termina za pripremu/čišćenje |
+| Korak ponuđenih termina (`slotGridMinutes`) | 30 min | Na kojim razmacima se nude termini: 15 min, 30 min, 45 min ili 1 sat (09:00, 10:00…). Dozvoljeno je 5–240 min; vrednost 0 se odbija jer bi zaglavila generisanje termina |
+| Minimalna najava za novo zakazivanje (`bookingMinLeadMinutes`) | 60 min | Termin koji počinje ranije od „sada + najava" se ne nudi i server ga odbija pri zakazivanju. U 11:51 sa najavom od 60 min prvi ponuđeni termin je 13:00 (12:51 zaokruženo na mrežu). Administrator i zaposleni pri ručnom kreiranju termina su izuzeti |
+| Rok za samostalno otkazivanje (`userCancellationCutoffHours`) | 24 h | Koliko unapred klijent sme sam da otkaže |
+| Rok za pomeranje / prag istog dana (`rescheduleCutoffHours`, `rescheduleSameDayFloorHours`) | 24 h / 4 h | Videti „Izmena postojećeg termina" |
+| Minimalna najava za novo vreme (`rescheduleMinLeadMinutes`) | 30 min | Isto pravilo kao najava iznad, ali za **pomeranje** postojećeg termina |
+
+Minimalna najava je računanje sa trenutkom (instant), pa ne zavisi od vremenske zone ni od prelaska na letnje/zimsko računanje vremena. Ista provera se radi na dva mesta — pri izradi liste slobodnih termina i pri samom upisu — da stara otvorena stranica ili ručno sastavljen zahtev ne bi mogli da zakažu prekasan termin.
+
 Kada klijent ne zahteva konkretnog zaposlenog, sistem dodeljuje prvu zaista dostupnu osobu za tu uslugu u trenutku zakazivanja — proveravano u tačnom trenutku kreiranja termina, tako da dva klijenta koja zakazuju isti termin u isto vreme ne mogu oba uspeti i završiti sa duplim zakazivanjem. Ako je dostupno više od jednog zaposlenog, termin se namerno ostavlja nedodeljen umesto da se nasumično bira, tako da tu odluku donosi administrator.
 
 ## Šta zakazivanje košta
@@ -27,6 +42,8 @@ Zakazani termin se naplaćuje na jedan od dva načina, i uvek samo jedan od njih
 
 Ova dva puta se međusobno isključuju po dizajnu: termin plaćen paketom ne može *takođe* nositi sopstveni odvojeni kod za popust, pošto nema nove naplate koju bi kupon uopšte mogao da umanji.
 
+Na koraku sa kontakt podacima, „Pregled termina" odmah prikazuje cenu, popust kupona i **ukupnu cenu** čim se kupon primeni ili ukloni (isto kao „Vaša porudžbina" u prodavnici). Server svakako računa konačnu cenu sam (`finalPrice`), pa prikaz služi samo kao pregled. Termin se u adminu i u nalogu klijenta prikazuje kao **naziv usluge** u jednom redu i **varijanta** u drugom (ranije se videla samo varijanta).
+
 ## Životni ciklus termina
 
 Termin prolazi kroz definisan skup faza:
@@ -37,6 +54,8 @@ Termin prolazi kroz definisan skup faza:
 - **Odbijen** — odbijen pre nego što se odigrao.
 - **Otkazan** — otkazan. Klijent koji otkazuje sopstveni termin je ograničen rokom od 24 sata unapred, što štiti osoblje od otkazivanja u poslednjem trenutku; osoblje i admin mogu otkazati termin u ime klijenta bez tog ograničenja.
 - **Nije se pojavio/la** — termin je bio potvrđen, ali klijent nikada nije došao.
+
+**Ponovno otvaranje** otkazanog, odbijenog ili „nije se pojavio" termina vraća ga u „Na čekanju", ali samo ako su terapeut i resursi u tom terminu u međuvremenu ostali slobodni — proverava se pre bilo kakve izmene (uključujući sesiju iz paketa). Inače se otvaranje odbija sa porukom, umesto da napravi dvostruko zakazivanje.
 
 Ko sme da pomeri termin iz jedne faze u drugu zavisi od njegove role — klijent može da otkaže sopstveni predstojeći termin, ali samo osoblje ili admin mogu da označe nešto kao završeno ili da klijent nije došao.
 
@@ -95,3 +114,5 @@ Za svaki **potvrđen** termin, klijent automatski dobija email podsetnik **24 sa
 Podsetnik se šalje samo za termine sa statusom `confirmed` — termini koji čekaju potvrdu (`pending`) ne dobijaju podsetnik, pošto termin još uvek nije siguran. Email sadržaj uvek prikazuje tačan datum/vreme termina umesto relativne tvrdnje tipa "sutra"/"za par sati" — ovo je namerno, da bi email ostao tačan čak i ako se pošalje kasnije nego što je predviđeno (npr. nakon dužeg prekida rada servera).
 
 Ako se u budućnosti želi treći prozor (npr. 1 sat pre termina), dovoljno je dodati novi unos u `reminder.config.js` — i cron raspored (`scheduler.js`) i sama logika slanja (`appointment-reminder-jobs.js`) su vođeni tom konfiguracijom, bez potrebe za dodatnim izmenama koda.
+
+**Unazad.** Admin i zaposleni mogu ručno da kreiraju termin i u prošlosti (unos onoga što je već odrađeno van aplikacije) po katalogskoj ceni, iz paketa ili sa ručnom cenom; zabrana prošlosti i minimalna najava važe samo za samostalno zakazivanje korisnika.

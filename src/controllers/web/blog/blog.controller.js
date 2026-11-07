@@ -90,6 +90,9 @@ export async function postDetails(req, res, next) {
       data: viewData,
     });
   } catch (error) {
+    // Nepostojeći slug: ne baci 404 odmah, nego pusti zahtev dalje do
+    // legacyUrlMiddleware (301 sa starog sluga) i tek onda do notFoundHandler.
+    if (error?.statusCode === 404) return next();
     logError("[postDetails] Greška pri učitavanju blog objave", error, { slug: req.params.slug });
     next(error);
   }

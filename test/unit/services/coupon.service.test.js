@@ -539,4 +539,89 @@ describe("listCouponsForPartner", () => {
     assert.equal(result.maxUses, 50);
     assert.equal(result.usedCount, 12);
   });
+
+  describe("releaseCoupon / reclaimCoupon", () => {
+    it("releaseCoupon reports whether a use was actually given back (idempotent)", async (t) => {
+      let calls = 0;
+      t.mock.method(couponRepo, "releaseCoupon", async () => (calls++ === 0 ? { usedCount: 0 } : null));
+      const couponId = id();
+      const appointmentId = id();
+      assert.equal(await couponService.releaseCoupon(couponId, { appointmentId }), true);
+      assert.equal(await couponService.releaseCoupon(couponId, { appointmentId }), false);
+    });
+
+    it("releaseCoupon with no coupon is a no-op", async (t) => {
+      const repoMock = t.mock.method(couponRepo, "releaseCoupon", async () => null);
+      assert.equal(await couponService.releaseCoupon(null, { appointmentId: id() }), false);
+      assert.equal(repoMock.mock.calls.length, 0);
+    });
+
+    it("releaseCouponByAdmin releases manually with the admin and note, and 404s when the use is already gone", async (t) => {
+      let calls = 0;
+      const repoMock = t.mock.method(couponRepo, "releaseCoupon", async () => (calls++ === 0 ? { usedCount: 0 } : null));
+      const couponId = id();
+      const orderId = id();
+      const adminId = id();
+      assert.equal(await couponService.releaseCouponByAdmin(couponId, { type: "order", refId: orderId }, adminId, "greška"), true);
+      assert.deepEqual(repoMock.mock.calls[0].arguments[1], { appointmentId: null, orderId, packagePurchaseId: null });
+      assert.equal(repoMock.mock.calls[0].arguments[2].reason, "manual");
+      assert.equal(repoMock.mock.calls[0].arguments[2].releasedBy, adminId);
+      await assert.rejects(() => couponService.releaseCouponByAdmin(couponId, { type: "order", refId: orderId }, adminId), (e) => e.statusCode === 404);
+      await assert.rejects(() => couponService.releaseCouponByAdmin(couponId, { type: "bogus", refId: orderId }, adminId), (e) => e.statusCode === 400);
+    });
+
+    it("getCouponUsageOverview lists uses with who/where/status and the release log", async (t) => {
+      const userId = id();
+      const apptId = id();
+      t.mock.method(couponRepo, "findCouponUsageDetails", async () => ({
+        _id: id(),
+        usedCount: 1,
+        maxUses: 5,
+        usageHistory: [{ user: { _id: userId, firstName: "Ana", lastName: "Anić" }, appointment: { _id: apptId, status: "confirmed" }, discountAmount: 400, usedAt: new Date() }],
+        releaseHistory: [{ user: { _id: userId, firstName: "Ana", lastName: "Anić" }, order: id(), discountAmount: 100, usedAt: new Date(), releasedAt: new Date(), reason: "manual", releasedBy: { _id: id(), firstName: "Admin", lastName: "A" }, note: "x" }],
+      }));
+      const out = await couponService.getCouponUsageOverview(id());
+      assert.equal(out.usages[0].korisnik, "Ana Anić");
+      assert.equal(out.usages[0].tip, "appointment");
+      assert.equal(out.usages[0].izvorStatus, "Potvrđen");
+      assert.equal(out.summary.preostalo, 4);
+      assert.equal(out.releases[0].nacin, "Ručno");
+      assert.equal(out.releases[0].oslobodio, "Admin A");
+    });
+
+    it("reclaimCoupon refuses when the customer already used the coupon again (maxUsesPerUser)", async (t) => {
+      const coupon = buildCoupon({ maxUsesPerUser: 1, usageHistory: [] });
+      t.mock.method(couponRepo, "findCouponById", async () => coupon);
+      t.mock.method(couponRepo, "countCouponUsagesByUser", async () => 1);
+      const redeemMock = t.mock.method(couponRepo, "redeemCoupon", async () => coupon);
+
+      await assert.rejects(
+        () => couponService.reclaimCoupon(coupon._id, { userId: id(), appointmentId: id(), discountAmount: 400 }),
+        (err) => err.statusCode === 400
+      );
+      assert.equal(redeemMock.mock.calls.length, 0);
+    });
+
+    it("reclaimCoupon spends the use again (once) when the customer still has uses left", async (t) => {
+      const coupon = buildCoupon({ maxUsesPerUser: 1, usageHistory: [] });
+      t.mock.method(couponRepo, "findCouponById", async () => coupon);
+      t.mock.method(couponRepo, "countCouponUsagesByUser", async () => 0);
+      const redeemMock = t.mock.method(couponRepo, "redeemCoupon", async () => coupon);
+
+      const appointmentId = id();
+      assert.equal(await couponService.reclaimCoupon(coupon._id, { userId: id(), appointmentId, discountAmount: 400 }), true);
+      assert.equal(redeemMock.mock.calls[0].arguments[1].onlyIfNotRecorded, true);
+    });
+
+    it("reclaimCoupon aborts when the coupon's overall limit was reached meanwhile", async (t) => {
+      const coupon = buildCoupon({ maxUsesPerUser: null, usageHistory: [] });
+      t.mock.method(couponRepo, "findCouponById", async () => coupon);
+      t.mock.method(couponRepo, "redeemCoupon", async () => null);
+
+      await assert.rejects(
+        () => couponService.reclaimCoupon(coupon._id, { userId: id(), appointmentId: id(), discountAmount: 400 }),
+        (err) => err.statusCode === 400
+      );
+    });
+  });
 });
