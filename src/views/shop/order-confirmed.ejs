@@ -25,9 +25,13 @@
         <div class="card-header"><h2 class="h6 mb-0">Detalji porudžbine</h2></div>
         <ul class="list-group list-group-flush">
           <% data.order.stavke.forEach(function(item) { %>
-            <li class="list-group-item d-flex justify-content-between">
-              <span><%= item.naziv %> (<%= item.varijanta %>) &times; <%= item.kolicina %></span>
-              <strong class="price-mono"><%= item.ukupno %> <%= currencySymbol %></strong>
+            <li class="list-group-item order-line">
+              <div class="order-line-info">
+                <span class="order-line-name"><%= item.naziv %></span>
+                <span class="order-line-meta"><% if (item.varijanta) { %><%= item.varijanta %><% } %></span>
+              </div>
+              <span class="order-line-qty" aria-label="Količina"><span aria-hidden="true">&times;</span> <%= item.kolicina %></span>
+              <strong class="price-mono order-line-price"><%= item.ukupno %> <%= currencySymbol %></strong>
             </li>
           <% }) %>
         </ul>

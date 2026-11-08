@@ -33,7 +33,7 @@ import {
  */
 
 export async function getSiteContent() {
-  const content = await siteContentRepo.findOrCreateSiteContent();
+  const content = await siteContentRepo.findSiteContentCached();
   return {
     about: { intro: content.about.intro, sections: content.about.sections },
     faq: { items: content.faq.items },
@@ -121,7 +121,7 @@ export function isPageSeoKey(key) {
 }
 
 export async function getPageSeoAll() {
-  const content = await siteContentRepo.findOrCreateSiteContent();
+  const content = await siteContentRepo.findSiteContentCached();
   return mergePageSeo(content.pageSeo);
 }
 

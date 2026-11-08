@@ -1,4 +1,61 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // premium polish (see public/css/premium.css) - public site only (the public footer is
+  // the marker; admin/employee/partner portals use portal-footer and are left untouched).
+  (function initPremiumUi() {
+    if (!document.querySelector(".site-footer")) return;
+
+    // 1) navbar gets a soft shadow once the page is scrolled
+    const nav = document.querySelector(".navbar.sticky-top");
+    if (nav) {
+      let ticking = false;
+      const update = () => {
+        nav.classList.toggle("is-scrolled", window.scrollY > 8);
+        ticking = false;
+      };
+      window.addEventListener("scroll", () => {
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
+      }, { passive: true });
+      update();
+    }
+
+    // 2) scroll reveal: section headings + card columns fade up, staggered per row
+    window.__revealInit = true; // tells head.ejs's safety timeout we took over
+    const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced || !("IntersectionObserver" in window)) {
+      document.documentElement.classList.remove("reveal-ready");
+      return;
+    }
+
+    const targets = new Set();
+    document.querySelectorAll("main > section > .container > .d-flex.align-items-end, main > section > .container > .section-eyebrow, main > section > .container > h2")
+      .forEach((el) => targets.add(el));
+    document.querySelectorAll("main .row.g-4 > [class*='col-'], main .row.g-5 > [class*='col-']")
+      .forEach((el) => {
+        // do not animate rows nested in forms / tables / admin-like widgets
+        if (el.closest("form, table, .modal, .accordion")) return;
+        targets.add(el);
+      });
+    document.querySelectorAll("main > section.container > .section-eyebrow, main > section.container > h2")
+      .forEach((el) => targets.add(el));
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("is-visible");
+        io.unobserve(entry.target);
+      });
+    }, { threshold: 0.08, rootMargin: "0px 0px -6% 0px" });
+
+    targets.forEach((el) => {
+      // stagger by position within the row (max 5 steps so long grids don't lag)
+      const siblings = el.parentElement ? Array.from(el.parentElement.children) : [];
+      const idx = Math.max(0, siblings.indexOf(el));
+      el.style.setProperty("--reveal-i", String(idx % 5));
+      el.setAttribute("data-reveal", "");
+      io.observe(el);
+    });
+  })();
+
   // cookie consent banner (see includes/components/cookie-consent.ejs) - shown
   // once until the visitor makes a choice, stored client-side since it's purely
   // a UI preference with no server-side logic depending on it today. Exposed as

@@ -11,10 +11,14 @@
       <h2 class="h6">Stavke</h2>
       <ul class="list-group list-group-flush mb-3">
         <% data.order.stavke.forEach(function(item) { %>
-          <li class="list-group-item d-flex justify-content-between px-0">
-            <span><%= item.naziv %> (<%= item.varijanta %>) &times; <%= item.kolicina %></span>
-            <strong class="price-mono"><%= item.ukupno %> <%= currencySymbol %></strong>
-          </li>
+          <li class="list-group-item order-line px-0">
+              <div class="order-line-info">
+                <span class="order-line-name"><%= item.naziv %></span>
+                <span class="order-line-meta"><% if (item.varijanta) { %><%= item.varijanta %><% } %></span>
+              </div>
+              <span class="order-line-qty" aria-label="Količina"><span aria-hidden="true">&times;</span> <%= item.kolicina %></span>
+              <strong class="price-mono order-line-price"><%= item.ukupno %> <%= currencySymbol %></strong>
+            </li>
         <% }) %>
       </ul>
 
