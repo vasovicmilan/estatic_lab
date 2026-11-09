@@ -71,3 +71,27 @@ The title and short bio are shown on the card.
 The photo is required, with alt text.
 
 ![ekspert-slika](../../screenshots/eksperti-dodavanje/11-ekspert-slika.png)
+
+## 12. Save
+
+We save the expert.
+
+![ekspert-cuvanje](../../screenshots/eksperti-dodavanje/12-ekspert-cuvanje.png)
+
+## 13. The public site
+
+We switch to the public site.
+
+![otvaranje-pocetne](../../screenshots/eksperti-dodavanje/13-otvaranje-pocetne.png)
+
+## 14. Our team
+
+Click “Naš tim” - who works at the salon.
+
+![nav-nas-tim](../../screenshots/eksperti-dodavanje/14-nav-nas-tim.png)
+
+## 15. The expert on “Naš tim”
+
+The new expert is already on the public team page.
+
+![ekspert-na-sajtu](../../screenshots/eksperti-dodavanje/15-ekspert-na-sajtu.png)

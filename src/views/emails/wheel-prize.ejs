@@ -1,0 +1,14 @@
+<%- include("_layout", {
+  title: "Vaša nagrada sa točka sreće",
+  eyebrow: "Točak sreće",
+  heading: `Čestitamo${typeof firstName !== 'undefined' && firstName ? ', ' + firstName : ''}!`,
+  preheader: `Osvojili ste: ${prizeLabel}`,
+  body: `
+    <p style="font-size:14px; color:#5b564f; line-height:1.6; margin:0 0 20px;">
+      Na točku sreće ste osvojili: <strong>${prizeLabel}</strong>.
+    </p>
+    ${couponBlock(couponCode, `Kod važi jednom i do ${validUntilLabel}. Unesite ga prilikom zakazivanja termina ili porudžbine.`)}
+    ${ctaButton(servicesUrl, "Zakaži termin")}
+    ${linkFallback(servicesUrl)}
+  `
+}) %>

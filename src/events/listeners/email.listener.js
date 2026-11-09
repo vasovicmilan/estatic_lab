@@ -267,6 +267,13 @@ eventEmitter.on(
   })
 );
 
+eventEmitter.on(
+  "wheel:won",
+  safe("wheel:won", async (payload) => {
+    await emailService.sendWheelPrizeEmail(payload);
+  })
+);
+
 // ==================== PARTNER / EMPLOYEE PAYOUTS ====================
 
 eventEmitter.on(

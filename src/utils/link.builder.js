@@ -30,6 +30,7 @@ export const LINK_ROUTES = Object.freeze({
   orderConfirm: { web: "/korpa/potvrda/:orderId/:token", frontend: "/korpa/potvrda/:orderId/:token" },
   cart: { web: "/korpa", frontend: "/korpa" },
   home: { web: "/", frontend: "/" },
+  services: { web: "/usluge", frontend: "/usluge" },
 
   // ---- Customer's own area ----
   accountAppointments: { web: "/nalog/termini", frontend: "/moj-nalog/zakazivanja" },

@@ -24,6 +24,7 @@ import appointmentRoutes from "./admin/appointment.routes.js";
 import postRoutes from "./admin/post.routes.js";
 import contactRoutes from "./admin/contact.routes.js";
 import couponRoutes from "./admin/coupon.routes.js";
+import wheelRoutes from "./admin/wheel.routes.js";
 import newsletterRoutes from "./admin/news-letter.routes.js";
 import campaignRoutes from "./admin/campaign.routes.js";
 import testimonialRoutes from "./admin/testimonial.routes.js";
@@ -60,6 +61,7 @@ router.use("/termini", requirePermission(PERMISSION.MANAGE_APPOINTMENTS_ALL), ap
 router.use("/blog", requirePermission(PERMISSION.MANAGE_BLOG), postRoutes);
 router.use("/kontakt", requirePermission(PERMISSION.MANAGE_MARKETING), contactRoutes);
 router.use("/kuponi", requirePermission(PERMISSION.MANAGE_COUPONS), couponRoutes);
+router.use("/tocak", requirePermission(PERMISSION.MANAGE_MARKETING), wheelRoutes);
 router.use("/newsletter", requirePermission(PERMISSION.MANAGE_MARKETING), newsletterRoutes);
 // campaign.routes.js existed and was fully wired (controller/validator/views all
 // reference /admin/newsletter/kampanje/... - see campaign.presenter.js's sendUrl and

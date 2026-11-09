@@ -3,8 +3,10 @@ import { webAuthMiddleware, optionalWebAuth } from "../../middlewares/auth.middl
 import { requireModule } from "../../middlewares/feature.middleware.js";
 import * as IndexController from "../../controllers/web/index.controller.js";
 import * as SeoController from "../../controllers/web/seo.controller.js";
-import { contactLimiter, newsletterLimiter, testimonialLimiter, couponLimiter } from "../../middlewares/rate-limiter.middleware.js";
+import { contactLimiter, newsletterLimiter, testimonialLimiter, couponLimiter, wheelLimiter } from "../../middlewares/rate-limiter.middleware.js";
 import * as CouponController from "../../controllers/web/public/coupon.controller.js";
+import * as WheelController from "../../controllers/web/public/wheel.controller.js";
+import { validateWheelSpin } from "../../middlewares/validators/wheel.validator.js";
 import * as BusinessPartnerController from "../../controllers/web/public/business-partner.controller.js";
 import { validateContactCreate } from "../../middlewares/validators/contact.validator.js";
 import { validateNewsletterSubscribe } from "../../middlewares/validators/newsletter.validator.js";
@@ -42,6 +44,10 @@ router.get("/politika-privatnosti", IndexController.privacyPage);
 router.get("/uslovi-koriscenja", IndexController.termsPage);
 router.get("/faq", IndexController.faqPage);
 router.get("/kontakt", IndexController.contactPage);
+
+// prize wheel for fairs/events (reached through a QR code) - see wheel.service.js
+router.get("/tocak", WheelController.wheelPage);
+router.post("/tocak/vrti", wheelLimiter, validateHoneypot, validateWheelSpin, WheelController.spinWheel);
 
 router.get("/saradnici", BusinessPartnerController.businessPartnerList);
 router.get("/saradnici/:slug", BusinessPartnerController.businessPartnerDetails);

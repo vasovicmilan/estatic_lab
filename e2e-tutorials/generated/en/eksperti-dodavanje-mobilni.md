@@ -77,3 +77,33 @@ The title and short bio are shown on the card.
 The photo is required, with alt text.
 
 ![ekspert-slika](../../screenshots/eksperti-dodavanje-mobilni/12-ekspert-slika.png)
+
+## 13. Save
+
+We save the expert.
+
+![ekspert-cuvanje](../../screenshots/eksperti-dodavanje-mobilni/13-ekspert-cuvanje.png)
+
+## 14. The public site
+
+We switch to the public site.
+
+![otvaranje-pocetne](../../screenshots/eksperti-dodavanje-mobilni/14-otvaranje-pocetne.png)
+
+## 15. Open the menu
+
+On a phone the menu is hidden behind the three-line button in the top right corner. We tap it.
+
+![nav-otvara-meni](../../screenshots/eksperti-dodavanje-mobilni/15-nav-otvara-meni.png)
+
+## 16. Our team
+
+Tap “Naš tim” - who works at the salon.
+
+![nav-nas-tim](../../screenshots/eksperti-dodavanje-mobilni/16-nav-nas-tim.png)
+
+## 17. The expert on “Naš tim”
+
+The new expert is already on the public team page.
+
+![ekspert-na-sajtu](../../screenshots/eksperti-dodavanje-mobilni/17-ekspert-na-sajtu.png)

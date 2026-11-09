@@ -113,6 +113,18 @@ export const contactLimiter = rateLimit({
   handler: handleRateLimitExceeded("Možete poslati samo jednu poruku u minuti."),
 });
 
+// Prize wheel at a fair: many visitors share ONE address (venue wifi / carrier NAT), so this has to
+// be far looser than the contact limiter. The real brake on abuse is one spin per email/phone plus
+// the limited prize stock (see wheel.service.js) - this only stops a script from hammering the endpoint.
+export const wheelLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: envInt("RATE_LIMIT_WHEEL_MAX", 80),
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInTest,
+  handler: handleRateLimitExceeded("Previše pokušaja sa ove mreže - sačekajte nekoliko minuta ili se javite osoblju na štandu."),
+});
+
 export const newsletterLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 2,

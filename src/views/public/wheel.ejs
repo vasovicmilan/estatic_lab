@@ -1,0 +1,103 @@
+<%- include("../includes/head") %>
+<link rel="stylesheet" href="/css/wheel.css?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>">
+<%- include("../includes/navigation") %>
+
+<main class="wheel-page">
+  <section class="py-4 py-md-5">
+    <div class="container" style="max-width: 560px;">
+      <div class="text-center mb-4">
+        <p class="section-eyebrow mb-2">Estetik Lab</p>
+        <h1 class="h2 mb-2">Zavrtite točak sreće</h1>
+        <p class="text-muted mb-0">Ostavite kontakt, zavrtite točak i uvek nešto osvajate: popust ili besplatan tretman.</p>
+      </div>
+
+      <% if (!data.prizes.length) { %>
+        <div class="alert alert-info text-center">Nagradna igra trenutno nije aktivna. Javite se osoblju na štandu.</div>
+      <% } else { %>
+
+      <div class="wheel-stage mb-4" aria-hidden="false">
+        <div class="wheel-pointer"></div>
+        <div class="wheel-rotor" id="wheelRotor"></div>
+        <div class="wheel-hub"><i class="bi bi-stars"></i></div>
+      </div>
+
+      <div id="wheelFormWrap" class="card wheel-card">
+        <div class="card-body p-4">
+          <form id="wheelForm" novalidate>
+            <input type="text" name="nickname" class="d-none" tabindex="-1" autocomplete="off">
+            <div class="row g-3">
+              <div class="col-6">
+                <label class="form-label" for="w-firstName">Ime</label>
+                <input type="text" id="w-firstName" name="firstName" class="form-control" autocomplete="given-name" required>
+                <div class="text-danger small mt-1" data-error-for="firstName"></div>
+              </div>
+              <div class="col-6">
+                <label class="form-label" for="w-lastName">Prezime</label>
+                <input type="text" id="w-lastName" name="lastName" class="form-control" autocomplete="family-name" required>
+                <div class="text-danger small mt-1" data-error-for="lastName"></div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="w-email">Email</label>
+                <input type="email" id="w-email" name="email" class="form-control" autocomplete="email" inputmode="email" required>
+                <div class="text-danger small mt-1" data-error-for="email"></div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="w-phone">Telefon</label>
+                <input type="tel" id="w-phone" name="phone" class="form-control" autocomplete="tel" inputmode="tel" placeholder="06x xxx xxxx" required>
+                <div class="text-danger small mt-1" data-error-for="phone"></div>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="w-segment">Šta vas najviše zanima?</label>
+                <select id="w-segment" name="segment" class="form-select" required>
+                  <option value="" selected disabled>Izaberite</option>
+                  <option value="usluge">Tretmani i masaže</option>
+                  <option value="kozmetika">Kozmetika i nega</option>
+                  <option value="b2b">Saradnja / poslovna ponuda</option>
+                </select>
+                <div class="text-danger small mt-1" data-error-for="segment"></div>
+              </div>
+            </div>
+
+            <div class="form-check mt-3">
+              <input type="checkbox" class="form-check-input" id="w-consentContact" name="consentContact" value="true" required>
+              <label class="form-check-label small" for="w-consentContact">Slažem se da me Estetik Lab kontaktira u vezi nagrade i da se moji podaci obrađuju prema <a href="/politika-privatnosti" target="_blank" rel="noopener">politici privatnosti</a>.</label>
+              <div class="text-danger small mt-1" data-error-for="consentContact"></div>
+            </div>
+            <div class="form-check mt-2">
+              <input type="checkbox" class="form-check-input" id="w-consentMarketing" name="consentMarketing" value="true">
+              <label class="form-check-label small" for="w-consentMarketing">Želim da primam novosti i akcije putem emaila (opciono, odjava u bilo kom trenutku).</label>
+            </div>
+
+            <div id="wheelError" class="alert alert-danger small mt-3 mb-0 d-none" role="alert"></div>
+
+            <button type="submit" id="wheelSubmit" class="btn btn-primary btn-lg w-100 mt-4">
+              <i class="bi bi-stars me-1"></i><span class="label">Zavrti točak</span>
+            </button>
+            <p class="text-muted small text-center mt-3 mb-0">Jedno vrtenje po osobi.</p>
+          </form>
+        </div>
+      </div>
+
+      <div id="wheelResult" class="card wheel-card wheel-result d-none">
+        <div class="card-body p-4 p-md-5">
+          <p class="section-eyebrow mb-2">Čestitamo!</p>
+          <p class="wheel-result-prize mb-4" id="resultPrize"></p>
+          <p class="text-muted small mb-2">Vaš kod:</p>
+          <div class="wheel-code mb-3" id="resultCode"></div>
+          <div class="mb-3">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="copyCode">Kopiraj kod</button>
+          </div>
+          <p class="mb-1">Važi jednom, do <strong id="resultUntil"></strong>.</p>
+          <p class="text-muted small mb-4">Kod smo poslali i na vaš email. Unesite ga pri zakazivanju termina ili porudžbini.</p>
+          <a href="/usluge" class="btn btn-primary">Pogledaj usluge</a>
+        </div>
+      </div>
+
+      <div id="wheelData" hidden data-config="<%= JSON.stringify({ prizes: data.prizes, source: data.source }) %>"></div>
+      <script src="/js/wheel.js?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>" defer></script>
+      <% } %>
+    </div>
+  </section>
+</main>
+
+<%- include("../includes/footer") %>

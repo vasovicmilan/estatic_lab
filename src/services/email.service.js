@@ -9,7 +9,7 @@ import { generateOrderInvoicePdf } from "../utils/invoice-pdf.util.js";
 import { generateBusinessReportPdf } from "../utils/business-report-pdf.util.js";
 import { getReportTotals, getPackageBreakdown } from "../utils/business-report-totals.util.js";
 import { infoRow, infoTable, statusTone, badge, ctaButton, linkFallback, couponBlock } from "../utils/email-content.util.js";
-import { formatDateTime, getZonedComponents } from "../utils/date.time.util.js";
+import { formatDate, formatDateTime, getZonedComponents } from "../utils/date.time.util.js";
 import { getCurrency } from "../config/runtime-settings.cache.js";
 import { formatMoney } from "../utils/price.util.js";
 import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE, CART_ABANDONMENT_COUPON_CODE, CART_ABANDONMENT_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
@@ -371,6 +371,17 @@ export async function sendNewsletterWelcomeEmail({ email }, unsubscribeToken) {
   return emailProvider.sendEmail({ to: email, subject: `Dobrodošli u ${siteName()} newsletter`, html });
 }
 
+export async function sendWheelPrizeEmail({ email, firstName, prizeLabel, couponCode, validUntil }) {
+  const html = await renderTemplate("wheel-prize", {
+    firstName,
+    prizeLabel,
+    couponCode,
+    validUntilLabel: formatDate(validUntil),
+    servicesUrl: buildLink("services"),
+  });
+  return emailProvider.sendEmail({ to: email, subject: `Vaša nagrada sa točka sreće - ${siteName()}`, html });
+}
+
 export async function sendNewsletterCampaign(subscribers, campaign) {
   const results = [];
   for (const subscriber of subscribers) {
@@ -460,6 +471,7 @@ export default {
   notifyAdminNewContact,
   notifyAdminNewTestimonial,
   sendNewsletterWelcomeEmail,
+  sendWheelPrizeEmail,
   sendNewsletterCampaign,
   sendLogReportEmail,
   sendBusinessReportEmail,

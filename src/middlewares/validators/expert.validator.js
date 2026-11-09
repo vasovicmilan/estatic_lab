@@ -3,6 +3,14 @@ import { collectValidationErrors } from "./collect-validation-errors.js";
 import { requireImageDescIfUploaded } from "./helpers/image-desc.validator.js";
 import { slugField, booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
 
+// HTML forms send a lone value as a string and an empty multi-select as "" -
+// normalize to an array of non-empty values before isArray()/isMongoId() run.
+const normalizeToArray = (value) => {
+  if (value === undefined || value === null) return [];
+  const list = Array.isArray(value) ? value : [value];
+  return list.filter((v) => v !== "" && v !== null && v !== undefined);
+};
+
 export const validateExpertCreate = [
   body("firstName")
     .trim()
@@ -36,6 +44,7 @@ export const validateExpertCreate = [
 
   body("services")
     .optional()
+    .customSanitizer(normalizeToArray)
     .isArray().withMessage("Usluge moraju biti niz"),
 
   body("services.*")
@@ -74,6 +83,7 @@ export const validateExpertUpdate = [
 
   body("services")
     .optional()
+    .customSanitizer(normalizeToArray)
     .isArray().withMessage("Usluge moraju biti niz"),
 
   body("services.*")

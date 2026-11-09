@@ -77,3 +77,33 @@ Titula i kratka biografija se prikazuju na kartici.
 Slika je obavezna, uz alt tekst.
 
 ![ekspert-slika](../../screenshots/eksperti-dodavanje-mobilni/12-ekspert-slika.png)
+
+## 13. Čuvanje
+
+Čuvamo eksperta.
+
+![ekspert-cuvanje](../../screenshots/eksperti-dodavanje-mobilni/13-ekspert-cuvanje.png)
+
+## 14. Javni sajt
+
+Prelazimo na javni deo sajta.
+
+![otvaranje-pocetne](../../screenshots/eksperti-dodavanje-mobilni/14-otvaranje-pocetne.png)
+
+## 15. Otvaranje menija
+
+Na telefonu je meni sakriven iza dugmeta sa tri crtice u gornjem desnom uglu. Dodirnemo ga.
+
+![nav-otvara-meni](../../screenshots/eksperti-dodavanje-mobilni/15-nav-otvara-meni.png)
+
+## 16. Naš tim
+
+Dodirnemo „Naš tim“ - ko radi u salonu.
+
+![nav-nas-tim](../../screenshots/eksperti-dodavanje-mobilni/16-nav-nas-tim.png)
+
+## 17. Ekspert na stranici „Naš tim“
+
+Novi ekspert je odmah na javnoj stranici tima.
+
+![ekspert-na-sajtu](../../screenshots/eksperti-dodavanje-mobilni/17-ekspert-na-sajtu.png)

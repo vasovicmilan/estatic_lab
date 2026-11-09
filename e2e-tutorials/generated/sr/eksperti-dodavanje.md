@@ -71,3 +71,27 @@ Titula i kratka biografija se prikazuju na kartici.
 Slika je obavezna, uz alt tekst.
 
 ![ekspert-slika](../../screenshots/eksperti-dodavanje/11-ekspert-slika.png)
+
+## 12. Čuvanje
+
+Čuvamo eksperta.
+
+![ekspert-cuvanje](../../screenshots/eksperti-dodavanje/12-ekspert-cuvanje.png)
+
+## 13. Javni sajt
+
+Prelazimo na javni deo sajta.
+
+![otvaranje-pocetne](../../screenshots/eksperti-dodavanje/13-otvaranje-pocetne.png)
+
+## 14. Naš tim
+
+Kliknemo „Naš tim“ - ko radi u salonu.
+
+![nav-nas-tim](../../screenshots/eksperti-dodavanje/14-nav-nas-tim.png)
+
+## 15. Ekspert na stranici „Naš tim“
+
+Novi ekspert je odmah na javnoj stranici tima.
+
+![ekspert-na-sajtu](../../screenshots/eksperti-dodavanje/15-ekspert-na-sajtu.png)

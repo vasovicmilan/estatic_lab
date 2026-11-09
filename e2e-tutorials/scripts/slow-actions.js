@@ -380,7 +380,7 @@ export async function openAccountMenuItem(page, tut, { mobile = false, href, ste
     ? page.locator('.navbar-toggler[data-bs-target="#mainNav"]')
     : page.locator(".dropdown.d-none.d-lg-block > button.dropdown-toggle");
   const item = mobile
-    ? page.locator(`#mainNav .d-lg-none a.nav-link[href="${href}"]`)
+    ? page.locator(`#mainNav .d-lg-none a[href="${href}"]`) // "Odjava" is .mobile-account-logout (not .nav-link) since the account block redesign
     : page.locator(`.dropdown.d-none.d-lg-block a.dropdown-item[href="${href}"]`);
 
   await tut.step(`${stepIdPrefix}-otvara-meni`, async () => {
