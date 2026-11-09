@@ -1,5 +1,6 @@
 import QRCode from "qrcode";
 import wheelService from "../../../../services/wheel.service.js";
+import { prepareWheelCouponListData } from "../../../../presenters/admin/marketing/wheel-coupon.presenter.js";
 import { prepareLeadListData, prepareLeadDetailsData, SORT_MAP } from "../../../../presenters/admin/marketing/lead.presenter.js";
 import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
@@ -30,6 +31,26 @@ export async function listLeads(req, res, next) {
     });
   } catch (error) {
     logError("[listLeads] Greška pri učitavanju kontakata sa točka", error, { userId: req.session?.user?.id });
+    next(error);
+  }
+}
+
+export async function listWheelCoupons(req, res, next) {
+  try {
+    const { search, prize, state, page = 1, limit } = req.query;
+    const result = await wheelService.listWheelCoupons({
+      search: search || "",
+      filters: { prize: prize || undefined, state: ["used", "active", "expired"].includes(state) ? state : undefined },
+      page: parseInt(page, 10) || 1,
+      limit: resolveAdminLimit(limit),
+    });
+    return res.render("admin/_list", {
+      pageTitle: search ? `Pretraga: ${search}` : "Točak sreće - kuponi",
+      pageDescription: "Jednokratni kuponi podeljeni preko točka sreće",
+      data: prepareWheelCouponListData(result, req.query),
+    });
+  } catch (error) {
+    logError("[listWheelCoupons] Greška pri učitavanju kupona sa točka", error, { userId: req.session?.user?.id });
     next(error);
   }
 }
@@ -160,4 +181,4 @@ export async function updatePrize(req, res, next) {
   }
 }
 
-export default { listLeads, leadDetails, deleteLead, exportLeads, prizesPage, qrDownload, updatePrize };
+export default { listLeads, listWheelCoupons, leadDetails, deleteLead, exportLeads, prizesPage, qrDownload, updatePrize };

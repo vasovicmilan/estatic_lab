@@ -13,6 +13,8 @@ export function prepareNewsletterListData(result, query = {}) {
       [
         { key: "email", label: "Email" },
         { key: "status", label: "Status" },
+        { key: "interesovanja", label: "Oblast" },
+        { key: "izvor", label: "Izvor" },
         { key: "prijavljen", label: "Prijavljen" },
       ],
       SORT_MAP
@@ -42,6 +44,32 @@ export function prepareNewsletterListData(result, query = {}) {
             { value: "unsubscribed", label: "Odjavljeni" },
           ],
         },
+        {
+          type: "select",
+          name: "interest",
+          label: "Oblast",
+          value: query.interest || "",
+          options: [
+            { value: "", label: "Sve oblasti" },
+            { value: "general", label: "Usluge, tretmani i paketi" },
+            { value: "products", label: "Kozmetika i proizvodi" },
+            { value: "partnership", label: "B2B / partnerstvo" },
+          ],
+        },
+        {
+          type: "select",
+          name: "source",
+          label: "Izvor",
+          value: query.source || "",
+          options: [
+            { value: "", label: "Svi izvori" },
+            { value: "footer", label: "Footer sajta" },
+            { value: "tocak", label: "Točak sreće" },
+            { value: "api", label: "API / frontend" },
+            { value: "admin", label: "Admin" },
+            { value: "unknown", label: "Nepoznato" },
+          ],
+        },
       ],
     },
   };
@@ -57,6 +85,9 @@ export function prepareNewsletterDetailsData(subscriber) {
         rows: [
           { label: "Email", value: subscriber.osnovno.email },
           { label: "Status", value: subscriber.osnovno.status },
+          { label: "Oblast", value: subscriber.osnovno.interesovanja.join(", ") },
+          { label: "Izvor", value: subscriber.osnovno.izvor },
+          { label: "Detalj izvora", value: subscriber.osnovno.izvorDetalj || "-" },
         ],
       },
     ],

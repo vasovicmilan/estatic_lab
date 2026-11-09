@@ -45,8 +45,17 @@ export async function findAllLeadsForExport(filters = {}) {
   return Lead.find(buildLeadFilter(filters)).populate("coupon", "usedCount").sort({ createdAt: -1 }).lean();
 }
 
+export async function findLeadsByCouponIds(couponIds = []) {
+  if (!couponIds.length) return [];
+  return Lead.find({ coupon: { $in: couponIds } }, { coupon: 1, firstName: 1, lastName: 1, email: 1 }).lean();
+}
+
+export async function allCouponIds() {
+  return Lead.distinct("coupon");
+}
+
 export async function distinctSources() {
   return Lead.distinct("source");
 }
 
-export default { createLead, findLeadById, findLeadByEmailOrPhoneHash, deleteLeadById, findLeads, findAllLeadsForExport, distinctSources };
+export default { createLead, findLeadById, findLeadByEmailOrPhoneHash, deleteLeadById, findLeads, findAllLeadsForExport, distinctSources, findLeadsByCouponIds, allCouponIds };

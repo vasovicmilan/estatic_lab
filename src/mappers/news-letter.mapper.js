@@ -8,11 +8,25 @@ function translateStatus(status) {
   return map[status] || status;
 }
 
+// general = studio services/treatments/packages, products = cosmetics & products,
+// partnership = B2B / partner program - the three audiences a campaign can address.
 const INTEREST_LABELS = {
-  general: "Opšte",
-  products: "Proizvodi",
-  partnership: "Partnerski program",
+  general: "Usluge, tretmani i paketi",
+  products: "Kozmetika i proizvodi",
+  partnership: "B2B / partnerstvo",
 };
+
+const SOURCE_LABELS = {
+  footer: "Footer sajta",
+  tocak: "Točak sreće",
+  api: "API / frontend",
+  admin: "Admin",
+  unknown: "Nepoznato",
+};
+
+export function translateSource(source) {
+  return SOURCE_LABELS[source || "unknown"] || source;
+}
 
 // Canonical label lookup for NEWSLETTER_INTERESTS (see news-letter.model.js) -
 // campaign.mapper.js imports this too, rather than keeping its own copy, since
@@ -20,6 +34,11 @@ const INTEREST_LABELS = {
 // enum and should always read the same in Serbian.
 export function translateInterest(interest) {
   return INTEREST_LABELS[interest] || interest;
+}
+
+function formatSource(subscriber) {
+  const label = translateSource(subscriber.source);
+  return subscriber.sourceDetail ? `${label} (${subscriber.sourceDetail})` : label;
 }
 
 export function mapSubscribersForAdminList(subscribers = []) {
@@ -31,7 +50,8 @@ export function mapSubscribersForAdminList(subscribers = []) {
         email: subscriber.email,
         status: translateStatus(subscriber.status),
         statusRaw: subscriber.status,
-        interesovanja: (subscriber.interests || []).map(translateInterest),
+        interesovanja: (subscriber.interests || []).map(translateInterest).join(", "),
+        izvor: formatSource(subscriber),
         prijavljen: formatDate(subscriber.subscribedAt),
       };
     })
@@ -48,6 +68,8 @@ export function mapSubscriberForAdminDetail(subscriber) {
       status: translateStatus(subscriber.status),
       statusRaw: subscriber.status,
       interesovanja: (subscriber.interests || []).map(translateInterest),
+      izvor: translateSource(subscriber.source),
+      izvorDetalj: subscriber.sourceDetail || null,
     },
     vreme: {
       prijavljen: formatDateTime(subscriber.subscribedAt),
@@ -67,4 +89,5 @@ export default {
   mapSubscriberForAdminDetail,
   mapSubscriberRaw,
   translateInterest,
+  translateSource,
 };

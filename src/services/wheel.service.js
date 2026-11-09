@@ -6,6 +6,7 @@ import categoryRepo from "../repositories/category.repository.js";
 import eventEmitter from "../events/event.emitter.js";
 import newsLetterService from "./news-letter.service.js";
 import { mapLeadsForAdminList, mapLeadForAdminDetail, mapLeadsToCsv } from "../mappers/lead.mapper.js";
+import { formatDate } from "../utils/date.time.util.js";
 import { buildPhoneRecord } from "../utils/phone.util.js";
 import { encryptField } from "../utils/encrypted-field.util.js";
 import { pickWeighted, buildSpinPlan, generateWheelCode, secureRandom } from "../utils/wheel.util.js";
@@ -33,7 +34,18 @@ export const DEFAULT_PRIZES = [
   { key: "besplatan-esma", label: "Besplatan ESMA tretman", shortLabel: "ESMA gratis", weight: 3, stock: 8, discountType: "percentage", discountValue: 100, maxDiscountAmount: 3500, serviceSlugs: ["teslatone-24"] },
 ];
 
+// Coupons the wheel minted before Coupon.origin existed would otherwise show up in the main
+// coupon list - flag them once (idempotent, a no-op when there is nothing left to flag).
+async function flagLegacyWheelCoupons() {
+  try {
+    await couponRepo.markCouponsAsWheel(await leadRepo.allCouponIds());
+  } catch (error) {
+    logError("[wheel] flagLegacyWheelCoupons failed", error);
+  }
+}
+
 export async function ensureDefaultPrizes() {
+  await flagLegacyWheelCoupons();
   if ((await wheelPrizeRepo.countPrizes()) > 0) return;
   await wheelPrizeRepo.createPrizes(
     DEFAULT_PRIZES.map((p, i) => ({ stock: null, maxDiscountAmount: null, includeProducts: false, ...p, order: i + 1, color: PALETTE[i % PALETTE.length] }))
@@ -117,6 +129,8 @@ async function mintCoupon(prize) {
         validFrom: new Date(),
         validUntil,
         isActive: true,
+        origin: "wheel",
+        wheelPrizeKey: prize.key,
       });
       return { coupon, validUntil };
     } catch (error) {
@@ -182,7 +196,7 @@ export async function spin(data, { ip, userAgent, rng = secureRandom } = {}) {
 
   if (data.consentMarketing) {
     try {
-      await newsLetterService.subscribe(email, SEGMENT_TO_INTERESTS[data.segment]);
+      await newsLetterService.subscribe(email, SEGMENT_TO_INTERESTS[data.segment], { source: "tocak", sourceDetail: lead.source || null });
     } catch (error) {
       logError("[wheel] Newsletter subscribe failed (lead already saved)", error, { email });
     }
@@ -224,6 +238,46 @@ export async function exportLeadsCsv(filters = {}) {
   return mapLeadsToCsv(await leadRepo.findAllLeadsForExport(filters));
 }
 
+const COUPON_STATE_LABELS = { used: "Iskorišćen", active: "Aktivan", expired: "Istekao" };
+
+function couponState(c, now = new Date()) {
+  if ((c.usedCount || 0) > 0) return "used";
+  if (!c.isActive || (c.validUntil && c.validUntil < now)) return "expired";
+  return "active";
+}
+
+/** Admin view of the single-use coupons the wheel handed out - kept out of the main coupon list. */
+export async function listWheelCoupons({ search = "", filters = {}, limit = 10, page = 1, sort } = {}) {
+  await flagLegacyWheelCoupons();
+  const result = await couponRepo.findCoupons({
+    search,
+    limit,
+    page,
+    filters: { origin: "wheel", wheelPrizeKey: filters.prize || undefined, state: filters.state || undefined },
+    ...(sort ? { sort } : {}),
+  });
+  const [leads, prizes] = await Promise.all([
+    leadRepo.findLeadsByCouponIds(result.data.map((c) => c._id)),
+    wheelPrizeRepo.findAllPrizes(),
+  ]);
+  const leadByCoupon = new Map(leads.map((l) => [String(l.coupon), l]));
+  const prizeLabel = new Map(prizes.map((p) => [p.key, p.label]));
+  const now = new Date();
+  const data = result.data.map((c) => {
+    const lead = leadByCoupon.get(String(c._id));
+    return {
+      id: c._id.toString(),
+      kod: c.code,
+      nagrada: prizeLabel.get(c.wheelPrizeKey) || c.wheelPrizeKey || "-",
+      dobitnik: lead ? `${lead.firstName} (${lead.email})` : "-",
+      status: COUPON_STATE_LABELS[couponState(c, now)],
+      vaziDo: formatDate(c.validUntil),
+      iskorisceno: `${c.usedCount || 0}/${c.maxUses ?? 1}`,
+    };
+  });
+  return { data, total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages, prizes: prizes.map((p) => ({ key: p.key, label: p.label })) };
+}
+
 export async function listSources() {
   return leadRepo.distinctSources();
 }
@@ -262,4 +316,4 @@ export async function updatePrize(prizeId, { weight, stock, validDays, isActive 
   return updated;
 }
 
-export default { getWheelConfig, spin, ensureDefaultPrizes, listLeads, getLeadById, exportLeadsCsv, listSources, deleteLead, listPrizesForAdmin, updatePrize };
+export default { getWheelConfig, spin, ensureDefaultPrizes, listWheelCoupons, listLeads, getLeadById, exportLeadsCsv, listSources, deleteLead, listPrizesForAdmin, updatePrize };

@@ -44,7 +44,7 @@ export async function subscribeNewsletter(req, res, next) {
     const { email, interests } = req.body;
     const interestList = Array.isArray(interests) ? interests : interests ? [interests] : [];
 
-    const result = await indexService.submitNewsletterForm(email, interestList);
+    const result = await indexService.submitNewsletterForm(email, interestList, { source: "api" });
     logInfo("[api/subscribeNewsletter] Prijava na newsletter", { email, interests: interestList });
     await recordActivity({ req, action: "NEWSLETTER_SUBSCRIBED", meta: { interests: interestList, source: "api" } });
     return res.status(201).json({ success: true, data: { message: result.message } });

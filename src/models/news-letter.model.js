@@ -5,6 +5,10 @@ import { Schema, model } from "mongoose";
 // could actually be in.
 export const NEWSLETTER_INTERESTS = ["general", "products", "partnership"];
 
+// Where the address came from (which part of the system). "unknown" = signed up before this
+// field existed. Set once, on the first opt-in - see news-letter.service.js's subscribe().
+export const NEWSLETTER_SOURCES = ["footer", "tocak", "api", "admin", "unknown"];
+
 const NewsLetterSchema = new Schema(
   {
     email: {
@@ -32,6 +36,21 @@ const NewsLetterSchema = new Schema(
       type: [String],
       enum: NEWSLETTER_INTERESTS,
       default: ["general"],
+    },
+
+    source: {
+      type: String,
+      enum: NEWSLETTER_SOURCES,
+      default: "unknown",
+      index: true,
+    },
+    // Finer detail for `source`: the page path the footer form was submitted from
+    // (e.g. "/usluge/neo-sculpt-pro"), or the campaign tag of the wheel QR (?src=sajam-2026).
+    sourceDetail: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+      default: null,
     },
 
     unsubscribeToken: {

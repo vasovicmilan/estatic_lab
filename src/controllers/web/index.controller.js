@@ -10,6 +10,8 @@ import {
   prepareFaqPageData,
 } from "../../presenters/public/index.presenter.js";
 import { buildWebsiteJsonLd, buildFaqPageJsonLd } from "../../seo/utils.seo.js";
+import { buildPageSeo } from "../../seo/index.js";
+import { BUSINESS } from "../../config/business.config.js";
 import { logError, logWarn, logInfo } from "../../utils/logger.util.js";
 import { flashAndRedirect } from "../../utils/flash.util.js";
 import { getCapturedReferralCode } from "../../middlewares/coupon-capture.middleware.js";
@@ -228,13 +230,27 @@ export async function submitTestimonial(req, res, next) {
   }
 }
 
+function refererPath(req) {
+  try {
+    const ref = req.get("Referrer");
+    return ref ? new URL(ref).pathname.slice(0, 120) : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function submitNewsletter(req, res, next) {
   try {
     if (req.validationErrors) {
       return flashAndRedirect(req, res, "error", "Unesite ispravnu email adresu", req.get("Referrer") || "/");
     }
 
-    const result = await indexService.submitNewsletterForm(req.body.email, toIdArray(req.body.interests));
+    // the footer form is on every page, so the referrer's path tells us which part of the site
+    // the signup came from (path only - never the query string, which can carry tokens)
+    const result = await indexService.submitNewsletterForm(req.body.email, toIdArray(req.body.interests), {
+      source: "footer",
+      sourceDetail: refererPath(req),
+    });
     logInfo("[submitNewsletter] Prijava na newsletter", { email: req.body.email, interests: req.body.interests });
     await recordActivity({ req, action: "NEWSLETTER_SUBSCRIBED", meta: { interests: toIdArray(req.body.interests) } });
 
@@ -248,14 +264,35 @@ export async function submitNewsletter(req, res, next) {
   }
 }
 
+function unsubscribeSeo() {
+  return buildPageSeo({
+    title: "Odjava sa newsletter-a",
+    description: "Odjava sa newsletter-a",
+    canonical: `${BUSINESS.siteUrl}/newsletter/odjava`,
+    isIndexable: false,
+  });
+}
+
 export async function unsubscribeNewsletter(req, res, next) {
   try {
     const result = await indexService.unsubscribeNewsletter(req.params.token);
     await recordActivity({ req, action: "NEWSLETTER_UNSUBSCRIBED" });
-    return flashAndRedirect(req, res, "success", result.message, "/");
+    // A dedicated confirmation page, not a flash on "/": the home page renders flash messages
+    // below the hero, so the visitor never saw "unsubscribed" and assumed nothing happened.
+    return res.render("public/newsletter-unsubscribe", {
+      pageTitle: "Odjava sa newsletter-a",
+      pageDescription: "Potvrda odjave sa newsletter-a",
+      seo: unsubscribeSeo(),
+      data: { success: true, message: result.message, breadcrumbs: [] },
+    });
   } catch (error) {
     logError("[unsubscribeNewsletter] Greška pri odjavi sa newsletter-a", error, { token: req.params.token });
-    return flashAndRedirect(req, res, "error", error.message || "Nevažeći link za odjavu.", "/");
+    return res.status(400).render("public/newsletter-unsubscribe", {
+      pageTitle: "Odjava sa newsletter-a",
+      pageDescription: "Odjava sa newsletter-a nije uspela",
+      seo: unsubscribeSeo(),
+      data: { success: false, message: error.message || "Nevažeći link za odjavu.", breadcrumbs: [] },
+    });
   }
 }
 

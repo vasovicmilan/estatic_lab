@@ -74,21 +74,21 @@ describe("public newsletter flow (HTTP)", () => {
     });
 
     describe("GET /newsletter/odjava/:token", () => {
-        it("unsubscribes a valid token and redirects home", async () => {
+        it("unsubscribes a valid token and shows a confirmation page", async () => {
             const created = await newsLetterRepo.createSubscriber({ email: "odjava@example.com", unsubscribeToken: "real-token" });
 
             const res = await request(app).get("/newsletter/odjava/real-token");
 
-            assert.equal(res.status, 302);
-            assert.equal(res.headers.location, "/");
+            assert.equal(res.status, 200);
+            assert.match(res.text, /Uspešno ste se odjavili/);
             const updated = await newsLetterRepo.findSubscriberById(created._id);
             assert.equal(updated.status, "unsubscribed");
         });
 
-        it("redirects home gracefully for an invalid token, without throwing", async () => {
+        it("shows an error page (not a crash) for an invalid token", async () => {
             const res = await request(app).get("/newsletter/odjava/bad-token");
-            assert.equal(res.status, 302);
-            assert.equal(res.headers.location, "/");
+            assert.equal(res.status, 400);
+            assert.match(res.text, /Odjava nije uspela/);
         });
     });
 });

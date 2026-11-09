@@ -1,5 +1,6 @@
 import { formatDateTime, utcDateToZonedInputValue } from "../utils/date.time.util.js";
 import { renderContentBlocks } from "../utils/content-blocks.util.js";
+import { translateInterest } from "./news-letter.mapper.js";
 
 function translateStatus(status) {
   const map = {
@@ -10,15 +11,8 @@ function translateStatus(status) {
   return map[status] || status;
 }
 
-const INTEREST_LABELS = {
-  general: "Opšte",
-  products: "Proizvodi",
-  partnership: "Partnerski program",
-};
-
-export function translateInterest(interest) {
-  return INTEREST_LABELS[interest] || interest;
-}
+// single source of truth for segment labels lives next to the subscriber mapper
+export { translateInterest };
 
 function getSegmentLabel(targetInterests = []) {
   if (!targetInterests.length) return "Svi pretplatnici";

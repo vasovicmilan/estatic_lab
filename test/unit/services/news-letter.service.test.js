@@ -75,3 +75,34 @@ describe("news-letter.service", () => {
     });
   });
 });
+describe("news-letter.service - signup source", () => {
+  it("stores where a brand-new subscriber came from", async (t) => {
+    t.mock.method(newsLetterRepo, "findSubscriberByEmail", async () => null);
+    let payload;
+    t.mock.method(newsLetterRepo, "createSubscriber", async (data) => { payload = data; return { ...data, _id: id() }; });
+    await newsLetterService.subscribe("izvor@example.com", ["products"], { source: "footer", sourceDetail: "/usluge/neo-sculpt-pro" });
+    assert.equal(payload.source, "footer");
+    assert.equal(payload.sourceDetail, "/usluge/neo-sculpt-pro");
+  });
+
+  it("falls back to 'unknown' for a missing or invalid source", async (t) => {
+    t.mock.method(newsLetterRepo, "findSubscriberByEmail", async () => null);
+    let payload;
+    t.mock.method(newsLetterRepo, "createSubscriber", async (data) => { payload = data; return { ...data, _id: id() }; });
+    await newsLetterService.subscribe("a@example.com", [], { source: "hacker" });
+    assert.equal(payload.source, "unknown");
+    assert.equal(payload.sourceDetail, null);
+  });
+
+  it("fills in the source for a legacy subscriber, but never overwrites a known one", async (t) => {
+    const patches = [];
+    t.mock.method(newsLetterRepo, "updateSubscriberById", async (_id, patch) => { patches.push(patch); });
+    t.mock.method(newsLetterRepo, "findSubscriberByEmail", async () => buildSubscriber({ status: "subscribed", source: "unknown" }));
+    await newsLetterService.subscribe("x@example.com", ["general"], { source: "tocak", sourceDetail: "sajam" });
+    assert.equal(patches[0].source, "tocak");
+
+    t.mock.method(newsLetterRepo, "findSubscriberByEmail", async () => buildSubscriber({ status: "subscribed", source: "footer" }));
+    await newsLetterService.subscribe("x@example.com", ["general"], { source: "tocak" });
+    assert.equal("source" in patches[1], false);
+  });
+});

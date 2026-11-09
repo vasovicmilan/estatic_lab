@@ -93,7 +93,7 @@ export async function listCoupons(req, res, next) {
 
     const result = await couponService.listCoupons({
       search: search || "",
-      filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined },
+      filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined, excludeOrigin: "wheel" },
       page: parseInt(page, 10) || 1,
       limit: resolveAdminLimit(limit),
       sort: resolveAdminSort(req.query, SORT_MAP),

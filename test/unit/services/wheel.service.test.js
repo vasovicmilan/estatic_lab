@@ -62,7 +62,9 @@ function setup(t, { prizes = [prize()], claim, existingLead = null } = {}) {
   t.mock.method(couponRepo, "createCoupon", async (data) => { const c = { ...data, _id: id(), usedCount: 0, usageHistory: [] }; state.createdCoupons.push(c); return c; });
   t.mock.method(couponRepo, "deleteCouponById", async (cid) => { state.deletedCoupons.push(String(cid)); });
   t.mock.method(categoryRepo, "findAllCategoriesByDomain", async () => []);
-  t.mock.method(newsLetterService, "subscribe", async (email, interests) => { state.subscribed.push({ email, interests }); });
+  t.mock.method(leadRepo, "allCouponIds", async () => []);
+  t.mock.method(couponRepo, "markCouponsAsWheel", async () => ({ modifiedCount: 0 }));
+  t.mock.method(newsLetterService, "subscribe", async (email, interests, origin) => { state.subscribed.push({ email, interests, origin }); });
   t.mock.method(eventEmitter, "emit", (name, payload) => { state.events.push({ name, payload }); return true; });
   return state;
 }
@@ -92,6 +94,13 @@ describe("wheel.service", () => {
   });
 
   describe("spin - result", () => {
+    it("marks the minted coupon as a wheel coupon (kept out of the main coupon list) with its prize key", async (t) => {
+      const s = setup(t);
+      await wheelService.spin(validBody());
+      assert.equal(s.createdCoupons[0].origin, "wheel");
+      assert.equal(s.createdCoupons[0].wheelPrizeKey, "popust-10");
+    });
+
     it("returns the prize, a TOCAK- code, the validity date and a 3-9 turn plan", async (t) => {
       const s = setup(t);
       const res = await wheelService.spin(validBody());
@@ -258,7 +267,7 @@ describe("wheel.service", () => {
       await wheelService.spin(validBody({ consentMarketing: false, email: "a@e.com" }));
       assert.equal(s.subscribed.length, 0);
       await wheelService.spin(validBody({ consentMarketing: true, segment: "kozmetika", email: "b@e.com" }));
-      assert.deepEqual(s.subscribed, [{ email: "b@e.com", interests: ["products"] }]);
+      assert.deepEqual(s.subscribed, [{ email: "b@e.com", interests: ["products"], origin: { source: "tocak", sourceDetail: "tocak" } }]);
       await wheelService.spin(validBody({ consentMarketing: true, segment: "b2b", email: "c@e.com" }));
       assert.deepEqual(s.subscribed[1].interests, ["partnership"]);
     });

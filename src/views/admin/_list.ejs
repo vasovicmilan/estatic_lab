@@ -11,6 +11,9 @@
       <% if (data.topbar && data.topbar.searchUrl) { %>
         <%- include("../includes/components/search", { search: data.topbar.search }) %>
       <% } %>
+      <% if (data.topbar && data.topbar.extraLinks) { data.topbar.extraLinks.forEach(function(l) { %>
+        <a href="<%= l.url %>" class="btn btn-outline-secondary btn-sm"><%= l.label %></a>
+      <% }) } %>
       <% if (data.topbar && data.topbar.createUrl) { %>
         <a href="<%= data.topbar.createUrl %>" class="btn btn-primary btn-sm">
           <i class="bi bi-plus-lg"></i> <%= data.topbar.createLabel || "Dodaj" %>

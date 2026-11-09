@@ -9,9 +9,9 @@ export const SORT_MAP = {
 
 
 const INTEREST_OPTIONS = [
-  { value: "general", label: "Opšte" },
-  { value: "products", label: "Proizvodi" },
-  { value: "partnership", label: "Partnerski program" },
+  { value: "general", label: "Usluge, tretmani i paketi" },
+  { value: "products", label: "Kozmetika i proizvodi" },
+  { value: "partnership", label: "B2B / partnerstvo" },
 ];
 
 export function prepareCampaignListData(result, query = {}) {
@@ -114,6 +114,9 @@ export function prepareCampaignFormData(campaign = null) {
 
   return {
     formAction: isEdit ? `/admin/newsletter/kampanje/${campaign.id}` : "/admin/newsletter/kampanje",
+    // _form.ejs renders "Odustani" as <a href="<%= data.cancelUrl %>"> - without this it
+    // rendered href="" and the button just reloaded the same form.
+    cancelUrl: isEdit ? `/admin/newsletter/kampanje/detalji/${campaign.id}` : "/admin/newsletter/kampanje",
     isEdit,
     fields: [
       {

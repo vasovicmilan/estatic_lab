@@ -1,0 +1,28 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main>
+  <section class="py-5">
+    <div class="container" style="max-width: 560px;">
+      <div class="text-center py-4">
+        <% if (data.success) { %>
+          <div class="d-inline-flex align-items-center justify-content-center bg-success-subtle text-success-emphasis rounded-circle mb-3" style="width:72px;height:72px;">
+            <i class="bi bi-check-lg fs-1" aria-hidden="true"></i>
+          </div>
+          <h1 class="h3 mb-3">Uspešno ste se odjavili</h1>
+          <p class="text-muted mb-4">Više nećete primati naš newsletter. Ako ste se predomislili, možete se ponovo prijaviti u dnu bilo koje stranice sajta.</p>
+        <% } else { %>
+          <div class="d-inline-flex align-items-center justify-content-center bg-danger-subtle text-danger-emphasis rounded-circle mb-3" style="width:72px;height:72px;">
+            <i class="bi bi-exclamation-lg fs-1" aria-hidden="true"></i>
+          </div>
+          <h1 class="h3 mb-3">Odjava nije uspela</h1>
+          <p class="text-muted mb-4"><%= data.message %></p>
+          <p class="text-muted small mb-4">Ako i dalje primate poruke koje ne želite, javite nam se putem <a href="/kontakt">kontakt stranice</a> i odjavićemo vas ručno.</p>
+        <% } %>
+        <a href="/" class="btn btn-primary">Nazad na početnu</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<%- include("../includes/footer") %>

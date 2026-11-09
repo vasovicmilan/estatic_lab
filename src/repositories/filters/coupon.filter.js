@@ -11,6 +11,13 @@ export function buildCouponFilter({
   // itself (what callers pass in) stays `package`.
   package: packageId = null,
   validNow = false,
+  // `origin: "wheel"` = only wheel coupons; `excludeOrigin: "wheel"` = everything else
+  // (also matches legacy documents that have no origin field)
+  origin = null,
+  excludeOrigin = null,
+  wheelPrizeKey = null,
+  // wheel coupon states: "used" | "active" | "expired"
+  state = null,
 } = {}) {
   const filter = {};
 
@@ -22,6 +29,15 @@ export function buildCouponFilter({
   if (service) filter.applicableServices = service;
   if (packageId) filter.applicablePackages = packageId;
   if (partner) filter.partner = partner;
+  if (origin) filter.origin = origin;
+  if (excludeOrigin) filter.origin = { $ne: excludeOrigin };
+  if (wheelPrizeKey) filter.wheelPrizeKey = wheelPrizeKey;
+  if (state) {
+    const now = new Date();
+    if (state === "used") filter.usedCount = { $gte: 1 };
+    if (state === "active") Object.assign(filter, { usedCount: 0, isActive: true, validUntil: { $gte: now } });
+    if (state === "expired") Object.assign(filter, { usedCount: 0, validUntil: { $lt: now } });
+  }
 
   if (validNow) {
     const now = new Date();

@@ -99,9 +99,9 @@ export async function submitTestimonialForm(data) {
   return testimonialService.submitTestimonial(data);
 }
 
-export async function submitNewsletterForm(email, interests = []) {
+export async function submitNewsletterForm(email, interests = [], origin = {}) {
   if (!email) validationError("email");
-  return newsLetterService.subscribe(email, interests);
+  return newsLetterService.subscribe(email, interests, origin);
 }
 
 export async function unsubscribeNewsletter(token) {

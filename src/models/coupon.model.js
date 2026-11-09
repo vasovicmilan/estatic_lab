@@ -193,6 +193,22 @@ const CouponSchema = new Schema(
       default: true,
       index: true,
     },
+
+    // Who made this coupon. "wheel" coupons (one single-use code per prize won, minted by
+    // wheel.service.js) are hundreds of near-identical rows - they live in their own admin view
+    // (/admin/tocak/kuponi) and are left out of the main coupon list. Documents created before
+    // this field existed have no `origin` at all and count as "manual".
+    origin: {
+      type: String,
+      enum: ["manual", "wheel"],
+      default: "manual",
+      index: true,
+    },
+    wheelPrizeKey: {
+      type: String,
+      default: null,
+      index: true,
+    },
   },
   { timestamps: true }
 );

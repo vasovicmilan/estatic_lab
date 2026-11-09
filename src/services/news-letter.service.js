@@ -4,6 +4,7 @@ import { mapSubscribersForAdminList, mapSubscriberForAdminDetail } from "../mapp
 import { generateRandomToken } from "./crypto.service.js";
 import { validationError, notFound, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
+import { NEWSLETTER_SOURCES } from "../models/news-letter.model.js";
 
 export async function listSubscribers({ search = "", filters = {}, limit = 10, page = 1, sort } = {}) {
   const result = await newsLetterRepo.findSubscribers({ search, limit, page, filters, sort });
@@ -17,17 +18,29 @@ export async function getSubscriberById(subscriberId) {
   return mapSubscriberForAdminDetail(subscriber);
 }
 
-export async function subscribe(email, interests = ["general"]) {
+function cleanSourceDetail(value) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().slice(0, 120);
+  return trimmed || null;
+}
+
+// `origin` records which part of the system the signup came from. It is written once, on the
+// first opt-in (or filled in later for a legacy address whose source is still "unknown") -
+// a later signup through another door doesn't overwrite where the person first came from.
+export async function subscribe(email, interests = ["general"], origin = {}) {
   if (!email) validationError("email");
   const cleanInterests = interests.length ? interests : ["general"];
+  const source = NEWSLETTER_SOURCES.includes(origin.source) ? origin.source : "unknown";
+  const sourceDetail = cleanSourceDetail(origin.sourceDetail);
 
   const existing = await newsLetterRepo.findSubscriberByEmail(email);
   if (existing) {
     // merge, don't overwrite - re-subscribing to add "products" shouldn't
     // silently drop an existing "partnership" opt-in
     const mergedInterests = Array.from(new Set([...(existing.interests || []), ...cleanInterests]));
+    const originPatch = !existing.source || existing.source === "unknown" ? { source, sourceDetail } : {};
     if (existing.status === "subscribed") {
-      await newsLetterRepo.updateSubscriberById(existing._id, { interests: mergedInterests });
+      await newsLetterRepo.updateSubscriberById(existing._id, { interests: mergedInterests, ...originPatch });
       return { message: "Već ste prijavljeni na naš newsletter" };
     }
     await newsLetterRepo.updateSubscriberById(existing._id, {
@@ -35,6 +48,7 @@ export async function subscribe(email, interests = ["general"]) {
       unsubscribedAt: null,
       subscribedAt: new Date(),
       interests: mergedInterests,
+      ...originPatch,
     });
     logInfo("Newsletter re-subscribed", { email });
     return { message: "Uspešno ste se ponovo prijavili na newsletter" };
@@ -45,6 +59,8 @@ export async function subscribe(email, interests = ["general"]) {
     email: email.toLowerCase().trim(),
     unsubscribeToken,
     interests: cleanInterests,
+    source,
+    sourceDetail,
     consentedAt: new Date(),
   });
 

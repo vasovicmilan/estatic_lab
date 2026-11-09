@@ -8,11 +8,11 @@ import auditLogService from "../../../../services/audit-log.service.js";
 
 export async function listSubscribers(req, res, next) {
   try {
-    const { search, status, page = 1, limit } = req.query;
+    const { search, status, source, interest, page = 1, limit } = req.query;
 
     const result = await newsLetterService.listSubscribers({
       search: search || "",
-      filters: { status: status || undefined },
+      filters: { status: status || undefined, source: source || undefined, interest: interest || undefined },
       page: parseInt(page, 10) || 1,
       limit: resolveAdminLimit(limit),
       sort: resolveAdminSort(req.query, SORT_MAP),

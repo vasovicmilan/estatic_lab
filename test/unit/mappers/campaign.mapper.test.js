@@ -13,7 +13,7 @@ describe("campaign.mapper", () => {
 
     it("joins translated interest labels when targeted", () => {
       const campaign = buildCampaign({ targetInterests: ["products", "partnership"] });
-      assert.equal(mapCampaignForAdminDetail(campaign).segment, "Proizvodi, Partnerski program");
+      assert.equal(mapCampaignForAdminDetail(campaign).segment, "Kozmetika i proizvodi, B2B / partnerstvo");
     });
   });
 
@@ -58,9 +58,9 @@ describe("campaign.mapper", () => {
 
   describe("translateInterest", () => {
     it("translates known interests to Serbian labels", () => {
-      assert.equal(translateInterest("general"), "Opšte");
-      assert.equal(translateInterest("products"), "Proizvodi");
-      assert.equal(translateInterest("partnership"), "Partnerski program");
+      assert.equal(translateInterest("general"), "Usluge, tretmani i paketi");
+      assert.equal(translateInterest("products"), "Kozmetika i proizvodi");
+      assert.equal(translateInterest("partnership"), "B2B / partnerstvo");
     });
 
     it("falls back to the raw value for an unknown interest", () => {

@@ -254,7 +254,7 @@ export async function listCoupons(req, res, next) {
     const sortField = COUPON_SORT_FIELDS[sort];
     const result = await couponService.listCoupons({
       search: search || "",
-      filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined },
+      filters: { isActive: isActive === "true" ? true : isActive === "false" ? false : undefined, excludeOrigin: "wheel" },
       sort: sortField ? { [sortField]: order === "asc" ? 1 : -1 } : undefined,
       page: resolvePage(page),
       limit: resolveLimit(limit),

@@ -40,6 +40,7 @@ export function prepareLeadListData(result, query = {}, sources = []) {
     topbar: {
       searchUrl: "/admin/tocak/pretraga",
       search: query.search || "",
+      extraLinks: [{ url: "/admin/tocak/kuponi", label: "Kuponi" }],
       createUrl: "/admin/tocak/nagrade",
       createLabel: "Nagrade, QR i izvoz",
       filters: [

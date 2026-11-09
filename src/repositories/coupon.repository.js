@@ -188,6 +188,12 @@ export async function deleteCouponById(id, { session } = {}) {
   return Coupon.findByIdAndDelete(id, { session }).lean();
 }
 
+// idempotent: flags coupons that the wheel minted before Coupon.origin existed
+export async function markCouponsAsWheel(ids = []) {
+  if (!ids.length) return { modifiedCount: 0 };
+  return Coupon.updateMany({ _id: { $in: ids }, origin: { $ne: "wheel" } }, { $set: { origin: "wheel" } });
+}
+
 export async function countCoupons(filters = {}, { session } = {}) {
   return Coupon.countDocuments(buildCouponFilter(filters)).session(session || null);
 }
@@ -242,6 +248,7 @@ export default {
   updateCouponById,
   deleteCouponById,
   countCoupons,
+  markCouponsAsWheel,
   pullServiceFromAllCoupons,
   pullPackageFromAllCoupons,
   pullProductFromAllCoupons,
