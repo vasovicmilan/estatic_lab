@@ -27,9 +27,15 @@ function todayBounds() {
   return { start, end };
 }
 
+const EMPTY = { total: 0, data: [] };
+
 export async function dashboard(req, res, next) {
   try {
     const { start: todayStart, end: todayEnd } = todayBounds();
+    // scoped roles (blog / services / shop manager) never pay for - or see - counts of areas
+    // they cannot open; a query is only run when the matching permission is held
+    const permissions = req.user?.permissions || [];
+    const gate = (permission, run) => (permissions.includes(permission) ? run() : Promise.resolve(EMPTY));
 
     const [
       pending,
@@ -51,35 +57,35 @@ export async function dashboard(req, res, next) {
       recentContacts,
       recentOrders,
     ] = await Promise.all([
-      appointmentService.findAppointments({ role: "admin", filters: { status: "pending" }, limit: 1 }),
-      appointmentService.findAppointments({ role: "admin", filters: { status: "confirmed" }, limit: 1 }),
+      gate("manage_appointments_all", () => appointmentService.findAppointments({ role: "admin", filters: { status: "pending" }, limit: 1 })),
+      gate("manage_appointments_all", () => appointmentService.findAppointments({ role: "admin", filters: { status: "confirmed" }, limit: 1 })),
       // 2+ employees were free at booking time, so the system deliberately left it for
       // an admin to pick (see appointment.service.js's resolveEmployeeAssignment) -
       // these are invisible anywhere else on the dashboard, easy to lose track of
-      appointmentService.findAppointments({ role: "admin", filters: { unassignedOnly: true }, limit: 1 }),
-      appointmentService.findAppointments({ role: "admin", filters: { dateFrom: todayStart, dateTo: todayEnd }, limit: 1 }),
-      contactService.listContacts({ filters: { status: "new" }, limit: 1 }),
-      employeeService.listEmployees({ filters: { isActive: true }, limit: 1 }),
-      userService.listUsers({ limit: 1 }),
-      packagePurchaseService.listPurchases({ filters: { status: "active" }, limit: 1 }),
-      orderService.findOrders({ role: "admin", filters: { status: "pending" }, limit: 1 }),
-      productService.listProducts({ filters: { inStock: false, isActive: true }, limit: 1 }),
+      gate("manage_appointments_all", () => appointmentService.findAppointments({ role: "admin", filters: { unassignedOnly: true }, limit: 1 })),
+      gate("manage_appointments_all", () => appointmentService.findAppointments({ role: "admin", filters: { dateFrom: todayStart, dateTo: todayEnd }, limit: 1 })),
+      gate("manage_marketing", () => contactService.listContacts({ filters: { status: "new" }, limit: 1 })),
+      gate("manage_employees", () => employeeService.listEmployees({ filters: { isActive: true }, limit: 1 })),
+      gate("manage_users", () => userService.listUsers({ limit: 1 })),
+      gate("manage_appointments_all", () => packagePurchaseService.listPurchases({ filters: { status: "active" }, limit: 1 })),
+      gate("manage_orders", () => orderService.findOrders({ role: "admin", filters: { status: "pending" }, limit: 1 })),
+      gate("manage_products", () => productService.listProducts({ filters: { inStock: false, isActive: true }, limit: 1 })),
       // "requested" is the initial, not-yet-reviewed state (see payout-request.model.js) -
       // these need an admin decision, same category as pending orders/appointments, but
       // were never surfaced anywhere on the dashboard before
-      payoutRequestService.listPayoutRequests({ filters: { status: "requested" }, limit: 1 }),
+      gate("manage_payouts", () => payoutRequestService.listPayoutRequests({ filters: { status: "requested" }, limit: 1 })),
       // submitted but not yet approved for public display
-      testimonialService.listTestimonials({ filters: { status: "pending" }, limit: 1 }),
+      gate("manage_marketing", () => testimonialService.listTestimonials({ filters: { status: "pending" }, limit: 1 })),
       // not "needs review" in the same sense as the above, but a resource sitting
       // inactive silently blocks every service that depends on it (see
       // resource.model.js/availability.service.js) - worth flagging so it's not
       // forgotten about after, say, a device goes in for repair
-      resourceService.listResources({ isActive: false, limit: 1 }),
-      newsletterService.listSubscribers({ limit: 1 }),
-      appointmentService.findAppointments({ role: "admin", filters: { status: "pending" }, limit: 5 }),
-      appointmentService.findAppointments({ role: "admin", filters: { unassignedOnly: true }, limit: 5 }),
-      contactService.listContacts({ filters: { status: "new" }, limit: 5 }),
-      orderService.findOrders({ role: "admin", filters: { status: "pending" }, limit: 5 }),
+      gate("manage_resources", () => resourceService.listResources({ isActive: false, limit: 1 })),
+      gate("manage_marketing", () => newsletterService.listSubscribers({ limit: 1 })),
+      gate("manage_appointments_all", () => appointmentService.findAppointments({ role: "admin", filters: { status: "pending" }, limit: 5 })),
+      gate("manage_appointments_all", () => appointmentService.findAppointments({ role: "admin", filters: { unassignedOnly: true }, limit: 5 })),
+      gate("manage_marketing", () => contactService.listContacts({ filters: { status: "new" }, limit: 5 })),
+      gate("manage_orders", () => orderService.findOrders({ role: "admin", filters: { status: "pending" }, limit: 5 })),
     ]);
 
     const stats = {
@@ -104,7 +110,7 @@ export async function dashboard(req, res, next) {
       unassignedAppointments: recentUnassigned.data,
       contacts: recentContacts.data,
       orders: recentOrders.data,
-    });
+    }, { permissions });
 
     return res.render("admin/dashboard", {
       pageTitle: "Admin panel",

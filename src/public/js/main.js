@@ -21,7 +21,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // 2) scroll reveal: section headings + card columns fade up, staggered per row
     window.__revealInit = true; // tells head.ejs's safety timeout we took over
     const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced || !("IntersectionObserver" in window)) {
+    // the admin screens share the public footer (so .site-footer is there) but must never be
+    // animated: their detail pages put a whole record into one tall column, and on a phone such a
+    // column can never reach the intersection threshold - it stayed hidden (or flashed and vanished)
+    const isAdmin = /^\/admin(\/|$)/.test(window.location.pathname);
+    if (reduced || isAdmin || !("IntersectionObserver" in window)) {
       document.documentElement.classList.remove("reveal-ready");
       return;
     }
@@ -47,6 +51,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }, { threshold: 0.08, rootMargin: "0px 0px -6% 0px" });
 
     targets.forEach((el) => {
+      // an element taller than ~1.2 screens can never be 8% visible at once (narrow phone + long
+      // content), so it would stay at opacity 0 forever - show those straight away
+      if (el.getBoundingClientRect().height > window.innerHeight * 1.2) return;
       // stagger by position within the row (max 5 steps so long grids don't lag)
       const siblings = el.parentElement ? Array.from(el.parentElement.children) : [];
       const idx = Math.max(0, siblings.indexOf(el));

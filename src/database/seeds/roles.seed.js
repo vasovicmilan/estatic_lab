@@ -53,19 +53,58 @@ const defaultRoles = [
   },
 ];
 
-export async function seedRoles() {
-  const results = [];
+// Scoped back-office roles. Coupons, orders, users, marketing, site content, logs and reports
+// stay with the admin on purpose; a shop manager who should also handle orders gets
+// "manage_orders" added here (or, for a one-off, in Admin > Role - but the next seed run
+// writes the list below again, like it does for every role in this file).
+export const managerRoles = [
+  {
+    name: "menadzer bloga",
+    description: "Upravlja blogom (članci, galerija, SEO) i kategorijama/tagovima",
+    permissions: ["access_admin_panel", "view_dashboard", "manage_blog", "manage_taxonomy"],
+    isDefault: false,
+    priority: 30,
+  },
+  {
+    name: "menadzer usluga",
+    description: "Upravlja uslugama i paketima (katalog), kategorijama/tagovima; bez uvida u prodaju i termine",
+    permissions: ["access_admin_panel", "view_dashboard", "manage_services", "manage_packages", "manage_taxonomy"],
+    isDefault: false,
+    priority: 30,
+  },
+  {
+    name: "menadzer prodavnice",
+    description: "Upravlja artiklima prodavnice i kategorijama/tagovima; kuponi i porudžbine ostaju adminu",
+    permissions: ["access_admin_panel", "view_dashboard", "manage_products", "manage_taxonomy"],
+    isDefault: false,
+    priority: 30,
+  },
+];
 
-  for (const roleData of defaultRoles) {
+export const allRoles = [...defaultRoles, ...managerRoles];
+
+/**
+ * Idempotent: every role above is created when missing and brought back to the definition
+ * above when it already exists (name is the key). Roles that are not listed here (custom ones
+ * made in Admin > Role) are never touched. Safe to run on every deploy.
+ */
+export async function seedRoles() {
+  const existing = new Set((await Role.find({ name: { $in: allRoles.map((r) => r.name) } }).select("name").lean()).map((r) => r.name));
+  const results = [];
+  const created = [];
+  const updated = [];
+
+  for (const roleData of allRoles) {
     const role = await Role.findOneAndUpdate({ name: roleData.name }, roleData, {
       upsert: true,
       returnDocument: "after",
       setDefaultsOnInsert: true,
     });
     results.push(role);
+    (existing.has(roleData.name) ? updated : created).push(roleData.name);
   }
 
-  logInfo("Roles seeded", { count: results.length, roles: results.map((r) => r.name) });
+  logInfo("Roles seeded", { created, updated });
   return results;
 }
 

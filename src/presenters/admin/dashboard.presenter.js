@@ -7,41 +7,41 @@ import { FEATURES } from "../../config/features.config.js";
  * something an admin needs to actually act on (a decision pending), distinct from
  * "Danas" (today's operational snapshot) and "Pregled" (general state, not urgent).
  */
-export function prepareDashboardData(stats, recent) {
+export function prepareDashboardData(stats, recent, { permissions } = {}) {
   const sections = [
     {
       title: "Zahteva pažnju",
       tiles: [
-        { label: "Termini na čekanju", value: stats.pendingAppointments, url: "/admin/termini?status=pending", icon: "bi-hourglass-split", module: "booking" },
+        { label: "Termini na čekanju", value: stats.pendingAppointments, url: "/admin/termini?status=pending", icon: "bi-hourglass-split", module: "booking", permission: "manage_appointments_all" },
         // left unassigned on purpose when 2+ employees were free at booking time (see
         // appointment.service.js's resolveEmployeeAssignment) - was invisible anywhere
         // on the dashboard before, easy to lose track of until a customer shows up
-        { label: "Nedodeljeni termini", value: stats.unassignedAppointments, url: "/admin/termini?unassignedOnly=true", icon: "bi-person-fill-exclamation", module: "booking" },
-        { label: "Nove poruke", value: stats.newContacts, url: "/admin/kontakt?status=new", icon: "bi-envelope" },
-        { label: "Porudžbine na čekanju", value: stats.pendingOrders, url: "/admin/porudzbine?status=pending", icon: "bi-box-seam", module: "shop" },
-        { label: "Zahtevi za isplatu", value: stats.pendingPayoutRequests, url: "/admin/isplate?status=requested", icon: "bi-cash-coin", module: "partners" },
-        { label: "Testimonijali na čekanju", value: stats.pendingTestimonials, url: "/admin/testimoniali?status=pending", icon: "bi-chat-square-quote" },
-        { label: "Proizvodi bez zaliha", value: stats.outOfStockProducts, url: "/admin/proizvodi?inStock=false", icon: "bi-exclamation-triangle", module: "shop" },
+        { label: "Nedodeljeni termini", value: stats.unassignedAppointments, url: "/admin/termini?unassignedOnly=true", icon: "bi-person-fill-exclamation", module: "booking", permission: "manage_appointments_all" },
+        { label: "Nove poruke", value: stats.newContacts, url: "/admin/kontakt?status=new", icon: "bi-envelope", permission: "manage_marketing" },
+        { label: "Porudžbine na čekanju", value: stats.pendingOrders, url: "/admin/porudzbine?status=pending", icon: "bi-box-seam", module: "shop", permission: "manage_orders" },
+        { label: "Zahtevi za isplatu", value: stats.pendingPayoutRequests, url: "/admin/isplate?status=requested", icon: "bi-cash-coin", module: "partners", permission: "manage_payouts" },
+        { label: "Testimonijali na čekanju", value: stats.pendingTestimonials, url: "/admin/testimoniali?status=pending", icon: "bi-chat-square-quote", permission: "manage_marketing" },
+        { label: "Proizvodi bez zaliha", value: stats.outOfStockProducts, url: "/admin/proizvodi?inStock=false", icon: "bi-exclamation-triangle", module: "shop", permission: "manage_products" },
       ],
     },
     {
       title: "Danas",
       tiles: [
-        { label: "Termini danas", value: stats.todayAppointments, url: "/admin/termini", icon: "bi-calendar-day", module: "booking" },
+        { label: "Termini danas", value: stats.todayAppointments, url: "/admin/termini", icon: "bi-calendar-day", module: "booking", permission: "manage_appointments_all" },
       ],
     },
     {
       title: "Pregled",
       tiles: [
-        { label: "Potvrđeni termini", value: stats.confirmedAppointments, url: "/admin/termini?status=confirmed", icon: "bi-calendar-check", module: "booking" },
-        { label: "Aktivni zaposleni", value: stats.activeEmployees, url: "/admin/zaposleni?isActive=true", icon: "bi-person-badge", module: "employees" },
-        { label: "Registrovani korisnici", value: stats.totalUsers, url: "/admin/korisnici", icon: "bi-people" },
-        { label: "Aktivni kupljeni paketi", value: stats.activePackagePurchases, url: "/admin/kupljeni-paketi?status=active", icon: "bi-bag-check", module: "booking" },
+        { label: "Potvrđeni termini", value: stats.confirmedAppointments, url: "/admin/termini?status=confirmed", icon: "bi-calendar-check", module: "booking", permission: "manage_appointments_all" },
+        { label: "Aktivni zaposleni", value: stats.activeEmployees, url: "/admin/zaposleni?isActive=true", icon: "bi-person-badge", module: "employees", permission: "manage_employees" },
+        { label: "Registrovani korisnici", value: stats.totalUsers, url: "/admin/korisnici", icon: "bi-people", permission: "manage_users" },
+        { label: "Aktivni kupljeni paketi", value: stats.activePackagePurchases, url: "/admin/kupljeni-paketi?status=active", icon: "bi-bag-check", module: "booking", permission: "manage_appointments_all" },
         // not itself urgent, but a resource sitting inactive silently blocks every
         // service that depends on it (see resource.model.js) - worth a glance so it
         // isn't forgotten about after a device goes in for repair, say
-        { label: "Neaktivni resursi", value: stats.inactiveResources, url: "/admin/resursi?isActive=false", icon: "bi-grid-3x3-gap", module: "booking" },
-        { label: "Newsletter prijave", value: stats.newsletterSubscribers, url: "/admin/newsletter", icon: "bi-envelope-paper" },
+        { label: "Neaktivni resursi", value: stats.inactiveResources, url: "/admin/resursi?isActive=false", icon: "bi-grid-3x3-gap", module: "booking", permission: "manage_resources" },
+        { label: "Newsletter prijave", value: stats.newsletterSubscribers, url: "/admin/newsletter", icon: "bi-envelope-paper", permission: "manage_marketing" },
       ],
     },
   ];
@@ -53,6 +53,7 @@ export function prepareDashboardData(stats, recent) {
   const activityTabs = [
     {
       id: "pending-appointments",
+      permission: "manage_appointments_all",
       module: "booking",
       label: "Termini na čekanju",
       viewAllUrl: "/admin/termini?status=pending",
@@ -65,6 +66,7 @@ export function prepareDashboardData(stats, recent) {
     },
     {
       id: "unassigned-appointments",
+      permission: "manage_appointments_all",
       module: "booking",
       label: "Nedodeljeni termini",
       viewAllUrl: "/admin/termini?unassignedOnly=true",
@@ -77,6 +79,7 @@ export function prepareDashboardData(stats, recent) {
     },
     {
       id: "contacts",
+      permission: "manage_marketing",
       label: "Nove poruke",
       viewAllUrl: "/admin/kontakt?status=new",
       items: (recent.contacts || []).map((c) => ({
@@ -88,6 +91,7 @@ export function prepareDashboardData(stats, recent) {
     },
     {
       id: "orders",
+      permission: "manage_orders",
       module: "shop",
       // was fetched by the controller and passed to this presenter before, but the
       // view never actually rendered it - restored here
@@ -103,7 +107,10 @@ export function prepareDashboardData(stats, recent) {
   ];
 
   // Kartice/tabovi modula koji ovaj deployment nema (ENABLED_MODULES) se ne prikazuju.
-  const on = (item) => !item.module || FEATURES[item.module];
+  // roles with a narrower scope (blog / services / shop manager) only see what they may open;
+  // `permissions` omitted = no filtering (kept for callers that predate scoped roles)
+  const allowed = (item) => !item.permission || !Array.isArray(permissions) || permissions.includes(item.permission);
+  const on = (item) => (!item.module || FEATURES[item.module]) && allowed(item);
   return {
     sections: sections.map((section) => ({ ...section, tiles: section.tiles.filter(on) })).filter((section) => section.tiles.length > 0),
     activityTabs: activityTabs.filter(on),

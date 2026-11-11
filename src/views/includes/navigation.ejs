@@ -190,72 +190,72 @@
     {
       label: "Zakazivanje", icon: "bi-calendar-check",
       items: [
-        { href: "/admin/termini", label: "Termini", icon: "bi-calendar-check", feature: features.booking },
-        { href: "/admin/resursi", label: "Resursi", icon: "bi-grid-3x3-gap", feature: features.booking },
+        { href: "/admin/termini", permission: "manage_appointments_all", label: "Termini", icon: "bi-calendar-check", feature: features.booking },
+        { href: "/admin/resursi", permission: "manage_resources", label: "Resursi", icon: "bi-grid-3x3-gap", feature: features.booking },
       ],
     },
     {
       label: "Katalog", icon: "bi-heart-pulse",
       items: [
-        { href: "/admin/usluge", label: "Usluge", icon: "bi-heart-pulse", feature: features.booking },
-        { href: "/admin/paketi", label: "Paketi", icon: "bi-box-seam", feature: features.booking },
-        { href: "/admin/kupljeni-paketi", label: "Kupljeni paketi", icon: "bi-bag-check", feature: features.booking },
-        { href: "/admin/kategorije", label: "Kategorije", icon: "bi-tags" },
-        { href: "/admin/tagovi", label: "Tagovi", icon: "bi-tag" },
+        { href: "/admin/usluge", permission: "manage_services", label: "Usluge", icon: "bi-heart-pulse", feature: features.booking },
+        { href: "/admin/paketi", permission: "manage_packages", label: "Paketi", icon: "bi-box-seam", feature: features.booking },
+        { href: "/admin/kupljeni-paketi", permission: "manage_appointments_all", label: "Kupljeni paketi", icon: "bi-bag-check", feature: features.booking },
+        { href: "/admin/kategorije", permission: "manage_taxonomy", label: "Kategorije", icon: "bi-tags" },
+        { href: "/admin/tagovi", permission: "manage_taxonomy", label: "Tagovi", icon: "bi-tag" },
       ],
     },
     {
       label: "Prodavnica", icon: "bi-shop",
       items: [
-        { href: "/admin/proizvodi", label: "Proizvodi", icon: "bi-box2-heart", feature: features.shop },
-        { href: "/admin/porudzbine", label: "Porudžbine", icon: "bi-receipt", feature: features.shop },
-        { href: "/admin/privremene-porudzbine", label: "Privremene porudžbine", icon: "bi-hourglass-split", feature: features.shop },
-        { href: "/admin/kuponi", label: "Kuponi", icon: "bi-ticket-perforated", feature: features.coupons },
+        { href: "/admin/proizvodi", permission: "manage_products", label: "Proizvodi", icon: "bi-box2-heart", feature: features.shop },
+        { href: "/admin/porudzbine", permission: "manage_orders", label: "Porudžbine", icon: "bi-receipt", feature: features.shop },
+        { href: "/admin/privremene-porudzbine", permission: "manage_orders", label: "Privremene porudžbine", icon: "bi-hourglass-split", feature: features.shop },
+        { href: "/admin/kuponi", permission: "manage_coupons", label: "Kuponi", icon: "bi-ticket-perforated", feature: features.coupons },
       ],
     },
     {
       label: "Tim", icon: "bi-people",
       items: [
-        { href: "/admin/zaposleni", label: "Zaposleni", icon: "bi-person-badge", feature: features.employees },
-        { href: "/admin/eksperti", label: "Eksperti", icon: "bi-award" },
-        { href: "/admin/korisnici", label: "Korisnici", icon: "bi-people" },
+        { href: "/admin/zaposleni", permission: "manage_employees", label: "Zaposleni", icon: "bi-person-badge", feature: features.employees },
+        { href: "/admin/eksperti", permission: "manage_employees", label: "Eksperti", icon: "bi-award" },
+        { href: "/admin/korisnici", permission: "manage_users", label: "Korisnici", icon: "bi-people" },
       ],
     },
     {
       label: "Partnerski program", icon: "bi-diagram-3",
       items: [
-        { href: "/admin/partneri", label: "Partneri", icon: "bi-person-vcard", feature: features.partners },
+        { href: "/admin/partneri", permission: "manage_partners", label: "Partneri", icon: "bi-person-vcard", feature: features.partners },
         // Isplate covers BOTH employee commission payouts and partner payouts
         // (see admin-ops.routes.js's payout-requests) - relevant whenever
         // either role can exist, not just when partners are on.
-        { href: "/admin/isplate", label: "Isplate", icon: "bi-cash-coin", feature: features.employees || features.partners },
+        { href: "/admin/isplate", permission: "manage_payouts", label: "Isplate", icon: "bi-cash-coin", feature: features.employees || features.partners },
       ],
     },
     {
       label: "Sadržaj i marketing", icon: "bi-newspaper",
       items: [
-        { href: "/admin/blog", label: "Blog", icon: "bi-newspaper", feature: features.blog },
-        { href: "/admin/kontakt", label: "Kontakt", icon: "bi-envelope-paper" },
-        { href: "/admin/tocak", label: "Točak sreće", icon: "bi-stars" },
-        { href: "/admin/newsletter", label: "Newsletter", icon: "bi-send" },
-        { href: "/admin/newsletter/kampanje", label: "Kampanje", icon: "bi-megaphone" },
-        { href: "/admin/testimoniali", label: "Testimoniali", icon: "bi-star" },
-        { href: "/admin/saradnici", label: "Saradnici", icon: "bi-shop" },
-        { href: "/admin/sajt", label: "Podešavanja sajta", icon: "bi-sliders", exact: true },
-        { href: "/admin/sajt/sadrzaj", label: "Tekstovi sajta", icon: "bi-file-earmark-richtext" },
+        { href: "/admin/blog", permission: "manage_blog", label: "Blog", icon: "bi-newspaper", feature: features.blog },
+        { href: "/admin/kontakt", permission: "manage_marketing", label: "Kontakt", icon: "bi-envelope-paper" },
+        { href: "/admin/tocak", permission: "manage_marketing", label: "Točak sreće", icon: "bi-stars" },
+        { href: "/admin/newsletter", permission: "manage_marketing", label: "Newsletter", icon: "bi-send" },
+        { href: "/admin/newsletter/kampanje", permission: "manage_marketing", label: "Kampanje", icon: "bi-megaphone" },
+        { href: "/admin/testimoniali", permission: "manage_marketing", label: "Testimoniali", icon: "bi-star" },
+        { href: "/admin/saradnici", permission: "manage_marketing", label: "Saradnici", icon: "bi-shop" },
+        { href: "/admin/sajt", permission: "manage_site_content", label: "Podešavanja sajta", icon: "bi-sliders", exact: true },
+        { href: "/admin/sajt/sadrzaj", permission: "manage_site_content", label: "Tekstovi sajta", icon: "bi-file-earmark-richtext" },
       ],
     },
     {
       label: "Poslovni izveštaji", icon: "bi-graph-up",
       items: [
-        { href: "/admin/poslovni-izvestaji", label: "Pregled", icon: "bi-graph-up" },
+        { href: "/admin/poslovni-izvestaji", permission: "view_business_reports", label: "Pregled", icon: "bi-graph-up" },
       ],
     },
     {
       label: "Sistem", icon: "bi-gear",
       items: [
-        { href: "/admin/logovi", label: "Logovi", icon: "bi-clipboard-data" },
-        { href: "/admin/role", label: "Role", icon: "bi-shield-lock" },
+        { href: "/admin/logovi", permission: "view_logs", label: "Logovi", icon: "bi-clipboard-data" },
+        { href: "/admin/role", permission: "manage_roles", label: "Role", icon: "bi-shield-lock" },
       ],
     },
   ];
@@ -263,8 +263,13 @@
   // roles, categories/tags, users, experts, newsletter, etc. - see docs/*/16).
   // A group that ends up with zero visible items (e.g. "Zakazivanje" when
   // booking is off) doesn't render its dropdown at all.
+  // Items are also filtered by the viewer's permissions: a blog / services / shop manager only
+  // gets the menu entries they can actually open (the routes enforce the same permission, this
+  // just stops the menu from offering pages that answer 403).
+  const adminPermissions = user?.permissions || [];
+  const canSee = (item) => !item.permission || user?.roleName === "admin" || adminPermissions.includes(item.permission);
   adminNavGroups.forEach((group) => {
-    group.items = group.items.filter((item) => item.feature === undefined || item.feature);
+    group.items = group.items.filter((item) => (item.feature === undefined || item.feature) && canSee(item));
   });
   const visibleAdminNavGroups = adminNavGroups.filter((group) => group.items.length > 0);
   function isGroupActive(group) {

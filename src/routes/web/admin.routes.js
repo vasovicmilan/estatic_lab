@@ -56,7 +56,10 @@ router.use("/tagovi", requirePermission(PERMISSION.MANAGE_TAXONOMY), tagRoutes);
 router.use("/resursi", requirePermission(PERMISSION.MANAGE_RESOURCES), resourceRoutes);
 router.use("/usluge", requirePermission(PERMISSION.MANAGE_SERVICES), serviceRoutes);
 router.use("/paketi", requirePermission(PERMISSION.MANAGE_PACKAGES), packageRoutes);
-router.use("/kupljeni-paketi", requirePermission(PERMISSION.MANAGE_PACKAGES), packagePurchaseRoutes);
+// purchased packages are customer + money data (who bought what, what is left), not catalog:
+// they follow the same permission as the appointments they get spent on, so a "services and
+// packages" manager edits the catalog without seeing sales
+router.use("/kupljeni-paketi", requirePermission(PERMISSION.MANAGE_APPOINTMENTS_ALL), packagePurchaseRoutes);
 router.use("/termini", requirePermission(PERMISSION.MANAGE_APPOINTMENTS_ALL), appointmentRoutes);
 router.use("/blog", requirePermission(PERMISSION.MANAGE_BLOG), postRoutes);
 router.use("/kontakt", requirePermission(PERMISSION.MANAGE_MARKETING), contactRoutes);
