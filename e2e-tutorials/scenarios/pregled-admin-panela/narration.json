@@ -1,0 +1,68 @@
+{
+  "title": {
+    "sr": "Admin panel: šta vidim čim se prijavim",
+    "en": "The admin panel: what I see right after signing in"
+  },
+  "intro": {
+    "sr": "Početna stranica administracije je kontrolna tabla: u jednom pogledu pokazuje šta čeka na odluku, šta je danas na rasporedu i kakvo je opšte stanje. Ovo je prvo mesto koje pogledate svako jutro.",
+    "en": "The admin home page is a control board: in one glance it shows what is waiting for a decision, what is on today and the general state of things. This is the first place to look every morning."
+  },
+  "steps": {
+    "pocetna-admin-panel": {
+      "heading": {
+        "sr": "Admin panel",
+        "en": "Admin panel"
+      },
+      "sr": "Posle prijave otvara se „Admin panel“. Sve stavke za upravljanje sajtom nalaze se u tamnom meniju na vrhu, grupisane po temama (zakazivanje, katalog, prodavnica, tim, partnerski program, sadržaj i marketing, izveštaji, sistem).",
+      "en": "After signing in the “Admin panel” opens. Everything for managing the site is in the dark menu at the top, grouped by topic (booking, catalog, shop, team, partner program, content and marketing, reports, system)."
+    },
+    "pocetna-zahteva-paznju": {
+      "heading": {
+        "sr": "Zahteva pažnju",
+        "en": "Needs attention"
+      },
+      "sr": "Prvi blok, „Zahteva pažnju“, pokazuje stvari koje čekaju vašu odluku: termine na čekanju i nedodeljene termine, nove poruke iz kontakt forme, porudžbine na čekanju, zahteve za isplatu, testimonijale za odobravanje i proizvode bez zaliha. Broj na pločici je broj stavki, a klik vodi pravo na filtriranu listu. Ako je sve na nuli, nema ničega što kasni.",
+      "en": "The first block, “Zahteva pažnju”, shows things waiting for your decision: pending and unassigned appointments, new contact messages, pending orders, payout requests, testimonials to approve and out-of-stock products. The number on a tile is the number of items, and a click opens the filtered list directly. If everything is zero, nothing is overdue."
+    },
+    "pocetna-danas": {
+      "heading": {
+        "sr": "Danas",
+        "en": "Today"
+      },
+      "sr": "Blok „Danas“ je operativni pregled dana: koliko termina je zakazano za danas. Korisno pre otvaranja salona, da se zna kako izgleda raspored.",
+      "en": "The “Danas” block is the day's operational view: how many appointments are booked for today. Useful before opening the salon, to know what the schedule looks like."
+    },
+    "pocetna-pregled-stanja": {
+      "heading": {
+        "sr": "Pregled stanja",
+        "en": "General state"
+      },
+      "sr": "„Pregled“ je opšte stanje sistema koje nije hitno: potvrđeni termini, aktivni zaposleni, registrovani korisnici, aktivni kupljeni paketi, neaktivni resursi i broj prijava na newsletter. Neaktivan resurs, na primer aparat u servisu, tiho blokira sve usluge koje ga koriste, pa vredi povremeno proveriti ovaj broj.",
+      "en": "“Pregled” is the general, non-urgent state of the system: confirmed appointments, active employees, registered users, active purchased packages, inactive resources and the number of newsletter signups. An inactive resource, for example a device in repair, silently blocks every service that uses it, so it is worth checking this number from time to time."
+    },
+    "pocetna-aktivnost-tabovi": {
+      "heading": {
+        "sr": "Poslednja aktivnost",
+        "en": "Recent activity"
+      },
+      "sr": "Ispod pločica je panel sa karticama: poslednji termini, novi termini, poruke i porudžbine. To su kratke liste sa poslednjim stavkama, za brz skok na ono što se upravo desilo, bez otvaranja cele liste.",
+      "en": "Below the tiles is a tabbed panel: latest appointments, new appointments, messages and orders. These are short lists of the most recent items, for a quick jump to what just happened without opening the full list."
+    },
+    "pocetna-drugi-tab": {
+      "heading": {
+        "sr": "Druga kartica",
+        "en": "Another tab"
+      },
+      "sr": "{Kliknemo} drugu karticu da vidimo drugu listu. „Vidi sve“ vodi na punu listu sa pretragom i filterima.",
+      "en": "We {click} another tab to see another list. “Vidi sve” opens the full list with search and filters."
+    },
+    "pocetna-meni": {
+      "heading": {
+        "sr": "Meni administracije",
+        "en": "Admin menu"
+      },
+      "sr": "Odavde se kroz tamni meni ide u sve ostale delove sistema, a svaki od njih ima svoj tutorijal u ovoj zbirci.",
+      "en": "From here the dark menu leads into every other part of the system, and each of them has its own tutorial in this collection."
+    }
+  }
+}

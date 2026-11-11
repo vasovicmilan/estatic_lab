@@ -1,7 +1,7 @@
 import { expect, newRecordedContext, typeSlowly } from "../scripts/tutorial.fixture.js";
 import {
   seedAdminUser, adminSignInViaNav, navigateAdminViaMenu, clickAdminCreateButton, searchAndOpenAdminRecord,
-  clickVisibly, scrollToSmoothly, scrollToTop, highlight, uploadFileVisibly, selectOptionVisibly,
+  clickVisibly, scrollToSmoothly, scrollToTop, highlight, uploadFileVisibly, selectOptionVisibly, focusIfPresent,
 } from "../scripts/slow-actions.js";
 import { expectFlashSuccess } from "../../test/e2e/helpers/e2e-helpers.js";
 import path from "path";
@@ -61,5 +61,28 @@ export async function run({ page, browser, tut, mobile, scenarioId }) {
     await expect(adminPage.getByText(email).first()).toBeVisible();
   }, { page: adminPage, video: adminVideo });
 
+  // the new "Oblast" and "Izvor" columns: what the subscriber is interested in, and which part of the
+  // system the signup came from (here: the footer, with the page it was sent from)
+  await tut.step("admin-newsletter-oblast-izvor", async () => {
+    await focusIfPresent(adminPage.getByText("Footer sajta").first());
+    await focusIfPresent(adminPage.getByText("Kozmetika i proizvodi").first());
+  }, { page: adminPage, video: adminVideo });
+
+  await tut.step("admin-newsletter-filteri", async () => {
+    await scrollToTop(adminPage);
+    await focusIfPresent(adminPage.locator('select[name="interest"]'));
+    await focusIfPresent(adminPage.locator('select[name="source"]'));
+  }, { page: adminPage, video: adminVideo });
+
   await finalizeAdminVideo();
+
+  // --- the subscriber unsubscribes through the link at the bottom of every newsletter ---
+  const fresh = await NewsLetter.findOne({ email });
+  await tut.step("newsletter-odjava-link", async () => {
+    await page.goto(`/newsletter/odjava/${fresh.unsubscribeToken}`);
+    await expect(page.locator("h1", { hasText: "Uspešno ste se odjavili" })).toBeVisible();
+  });
+  await tut.step("newsletter-odjava-potvrda", async () => {
+    await focusIfPresent(page.locator("h1", { hasText: "Uspešno ste se odjavili" }));
+  });
 }

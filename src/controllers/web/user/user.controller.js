@@ -2,6 +2,7 @@ import * as userService from "../../../services/user.service.js";
 import { resolvePortalLimit, resolvePortalSort, COMMISSION_SORTS, PAYOUT_SORTS, ORDER_SORTS } from "../../..//utils/portal-list.util.js";
 import * as appointmentService from "../../../services/appointment.service.js";
 import * as orderService from "../../../services/order.service.js";
+import packagePurchaseService from "../../../services/package-purchase.service.js";
 import {
   prepareProfileTabData,
   prepareAppointmentTabData,
@@ -10,6 +11,8 @@ import {
   prepareOrdersTabData,
   prepareOrderDetailData,
   prepareAddressesTabData,
+  preparePackagesTabData,
+  preparePackageDetailData,
 } from "../../../presenters/user/user.presenter.js";
 import userHistoryService from "../../../services/user-history.service.js";
 import { prepareUserActivityTabData } from "../../../presenters/user/activity.presenter.js";
@@ -90,6 +93,32 @@ export async function appointments(req, res, next) {
     });
   } catch (error) {
     logError("[appointments] Greška pri učitavanju termina korisnika", error, { userId: req.session?.user?.id, ...req.query });
+    next(error);
+  }
+}
+
+const PACKAGE_STATUSES = new Set(["active", "completed", "expired", "cancelled"]);
+
+export async function packages(req, res, next) {
+  try {
+    const status = PACKAGE_STATUSES.has(req.query.status) ? req.query.status : "";
+    const purchases = await packagePurchaseService.listMyPurchases(req.session.user.id, { status });
+    const viewData = preparePackagesTabData(purchases, { status });
+    const seo = await userSeo(req, { title: "Moji paketi", description: "Pregled kupljenih paketa i preostalih seansi" });
+    return res.render("user/_packages-tab", { pageTitle: seo.title, pageDescription: seo.description, seo, data: viewData });
+  } catch (error) {
+    logError("[packages] Greška pri učitavanju paketa korisnika", error, { userId: req.session?.user?.id });
+    next(error);
+  }
+}
+
+export async function packageDetails(req, res, next) {
+  try {
+    const purchase = await packagePurchaseService.getMyPurchase(req.session.user.id, req.params.packagePurchaseId);
+    const seo = await userSeo(req, { title: "Detalji paketa", description: purchase.paket });
+    return res.render("user/package-details", { pageTitle: seo.title, pageDescription: seo.description, seo, data: preparePackageDetailData(purchase) });
+  } catch (error) {
+    logError("[packageDetails] Greška pri učitavanju paketa", error, { userId: req.session?.user?.id, packagePurchaseId: req.params?.packagePurchaseId });
     next(error);
   }
 }

@@ -1,0 +1,180 @@
+{
+  "title": {
+    "sr": "Točak sreće: administracija",
+    "en": "Wheel of fortune: administration"
+  },
+  "intro": {
+    "sr": "Posle sajma vlasnik vidi ko je ostavio kontakt, šta je dobio i ko je iskoristio kod. Ovde se podešavaju i nagrade, zalihe i QR kod za štampu.",
+    "en": "After the fair the owner sees who left a contact, what they won and who used the code. Prizes, stock and the QR code for printing are also set here."
+  },
+  "steps": {
+    "admin-tocak-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Sadržaj i marketing“",
+        "en": "“Sadržaj i marketing” menu"
+      },
+      "sr": "Otvaramo grupu „Sadržaj i marketing“.",
+      "en": "We open the “Sadržaj i marketing” group."
+    },
+    "admin-tocak-bira-stavku": {
+      "heading": {
+        "sr": "Točak sreće",
+        "en": "Točak sreće"
+      },
+      "sr": "Biramo „Točak sreće“.",
+      "en": "We choose “Točak sreće”."
+    },
+    "tocak-kontakti": {
+      "heading": {
+        "sr": "Kontakti sa sajma",
+        "en": "Contacts from the fair"
+      },
+      "sr": "Lista pokazuje svakog ko je zavrteo točak: ime, email, interesovanje, izvor (oznaka sajma), nagradu, kod i da li je kod iskorišćen. Ovo su topli kontakti, spremni za poziv ili poruku.",
+      "en": "The list shows everyone who spun the wheel: name, email, interest, source (the fair's tag), prize, code and whether the code was used. These are warm contacts, ready for a call or message."
+    },
+    "tocak-filteri": {
+      "heading": {
+        "sr": "Filteri",
+        "en": "Filters"
+      },
+      "sr": "Filteri po interesovanju i izvoru razdvajaju kontakte za usluge, za kozmetiku i poslovne (b2b), pa se svakoj grupi piše drugačije. Izvor razlikuje više sajmova.",
+      "en": "Filters by interest and source separate contacts for services, cosmetics and business (b2b), so each group gets a different message. The source tells several fairs apart."
+    },
+    "tocak-detalji": {
+      "heading": {
+        "sr": "Jedan kontakt",
+        "en": "One contact"
+      },
+      "sr": "Detalji pokazuju sve o jednom kontaktu: pristanke, osvojenu nagradu i kod. Telefon i prezime su u bazi šifrovani, a ovde se prikazuju samo ovlašćenima.",
+      "en": "The details show everything about one contact: consents, the prize won and the code. The phone and last name are encrypted in the database and shown here only to authorised users."
+    },
+    "tocak-nagrade-klik": {
+      "heading": {
+        "sr": "Nagrade i QR",
+        "en": "Prizes and QR"
+      },
+      "sr": "{Kliknemo} „Nagrade, QR i izvoz“ za podešavanja točka.",
+      "en": "We {click} “Nagrade, QR i izvoz” for the wheel's settings."
+    },
+    "tocak-nagrade-tabela": {
+      "heading": {
+        "sr": "Nagrade i zalihe",
+        "en": "Prizes and stock"
+      },
+      "sr": "Svaka nagrada ima težinu (šansu da padne), zalihu (koliko ih ukupno sme da se podeli), broj podeljenih, preostale i rok važenja koda. Kad se zaliha jedne nagrade potroši, točak automatski daje najblažu, tako da posetilac uvek nešto dobije, a trošak je ograničen.",
+      "en": "Each prize has a weight (the chance of it landing), a stock (how many may be given out in total), the number given, the remaining and the code's validity. When one prize runs out, the wheel automatically gives the mildest, so the visitor always wins something and the cost is capped."
+    },
+    "tocak-nagrada-dodavanje": {
+      "heading": {
+        "sr": "Nova nagrada",
+        "en": "Add a prize"
+      },
+      "sr": "{Kliknemo} „Dodaj nagradu“. Točkom se u potpunosti upravlja odavde, nema potrebe za izmenama u bazi.",
+      "en": "We {click} “Dodaj nagradu”. The wheel is fully managed from here, no database changes needed."
+    },
+    "tocak-nagrada-forma": {
+      "heading": {
+        "sr": "Podaci o nagradi",
+        "en": "Prize details"
+      },
+      "sr": "Upisujemo naziv, kratak naziv koji staje na točak (do 18 karaktera), vrednost popusta, šansu i zalihu. Ispod se bira da li kupon važi za sve usluge ili samo za izabrane, i da li je nagrada rezervna, ona koju točak daje kad ostale nestanu.",
+      "en": "We enter the name, the short name that fits on the wheel (up to 18 characters), the discount value, the chance and the stock. Below, we choose whether the coupon applies to all services or only to selected ones, and whether the prize is the fallback, the one the wheel gives when the others run out."
+    },
+    "tocak-nagrada-cuvanje": {
+      "heading": {
+        "sr": "Čuvanje",
+        "en": "Saving"
+      },
+      "sr": "Čuvamo nagradu i ona odmah ulazi u tabelu i na točak. Na točku mora biti od 2 do 12 aktivnih nagrada, inače natpisi nisu čitljivi.",
+      "en": "We save the prize and it immediately appears in the table and on the wheel. The wheel must have 2 to 12 active prizes, otherwise the labels are not readable."
+    },
+    "tocak-nagrada-izmena": {
+      "heading": {
+        "sr": "Izmena nagrade",
+        "en": "Editing a prize"
+      },
+      "sr": "„Izmeni“ otvara punu formu: popust, usluge, boju, redosled i aktivnost. Ključ nagrade se ne menja, jer ga već izdati kuponi koriste. Zaliha ne može pasti ispod već podeljenog.",
+      "en": "“Izmeni” opens the full form: discount, services, colour, order and activity. The prize key does not change because already issued coupons use it. Stock cannot drop below what was already handed out."
+    },
+    "tocak-nagrada-odustani": {
+      "heading": {
+        "sr": "Odustajanje",
+        "en": "Cancelling"
+      },
+      "sr": "„Odustani“ vraća na tabelu bez ikakve izmene.",
+      "en": "“Odustani” returns to the table with no change."
+    },
+    "tocak-nagrada-brisanje": {
+      "heading": {
+        "sr": "Brisanje nagrade",
+        "en": "Deleting a prize"
+      },
+      "sr": "Nagrada koju niko nije osvojio može da se obriše korpom, uz potvrdu. Ona koju je neko već dobio samo se isključuje, jer kontakti i kuponi na nju upućuju. Rezervna nagrada se ne briše dok ne označite drugu.",
+      "en": "A prize nobody has won can be deleted with the bin, after a confirmation. One that someone already won is only switched off, because contacts and coupons refer to it. The fallback prize cannot be deleted until you mark another one."
+    },
+    "tocak-qr": {
+      "heading": {
+        "sr": "QR kod za štampu",
+        "en": "QR code for printing"
+      },
+      "sr": "Odavde se preuzima QR kod (PNG za štampu, SVG za dizajnera). Polje za oznaku izvora, na primer ime sajma, upisuje se u adresu koda, pa se kasnije vidi koji je sajam doneo koji kontakt.",
+      "en": "The QR code is downloaded here (PNG for printing, SVG for a designer). The source tag field, for example the fair's name, is put into the code's address, so you can later see which fair brought which contact."
+    },
+    "tocak-izvoz": {
+      "heading": {
+        "sr": "Izvoz kontakata",
+        "en": "Export"
+      },
+      "sr": "„Izvoz svih kontakata (CSV)“ pravi tabelu koja se otvara u Excelu, za slanje poruka ili uvoz u neki drugi alat.",
+      "en": "“Izvoz svih kontakata (CSV)” makes a table that opens in Excel, for sending messages or importing into another tool."
+    },
+    "tocak-kuponi-klik": {
+      "heading": {
+        "sr": "Kuponi sa točka",
+        "en": "Wheel coupons"
+      },
+      "sr": "{Kliknemo} „Kuponi“. Svaka nagrada je poseban jednokratan kod.",
+      "en": "We {click} “Kuponi”. Every prize is a separate single-use code."
+    },
+    "tocak-kuponi-lista": {
+      "heading": {
+        "sr": "Lista kodova",
+        "en": "List of codes"
+      },
+      "sr": "Za svaki kod se vidi nagrada, dobitnik, status (aktivan, iskorišćen ili istekao), koliko je iskorišćen i do kada važi. Tako se zna koliko je poklona stvarno pretvoreno u dolazak.",
+      "en": "For each code you see the prize, the winner, the status (active, used or expired), how much it was used and until when it is valid. That tells how many gifts really turned into a visit."
+    },
+    "tocak-kuponi-filteri": {
+      "heading": {
+        "sr": "Filteri kodova",
+        "en": "Code filters"
+      },
+      "sr": "Filteri po nagradi i statusu pokazuju, na primer, koliko je besplatnih masaža još neiskorišćeno.",
+      "en": "Filters by prize and status show, for example, how many free massages are still unused."
+    },
+    "admin-kuponi-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Prodavnica“",
+        "en": "“Prodavnica” menu"
+      },
+      "sr": "Otvaramo grupu „Prodavnica“.",
+      "en": "We open the “Prodavnica” group."
+    },
+    "admin-kuponi-bira-stavku": {
+      "heading": {
+        "sr": "Kuponi",
+        "en": "Kuponi"
+      },
+      "sr": "Biramo „Kuponi“.",
+      "en": "We choose “Kuponi”."
+    },
+    "tocak-glavna-lista-kupona": {
+      "heading": {
+        "sr": "Glavna lista kupona",
+        "en": "The main coupon list"
+      },
+      "sr": "U običnoj listi kupona nema kodova sa točka, da stotine jednokratnih kodova ne zatrpaju kupone koje pravite ručno. Nalaze se samo ovde, u delu „Točak sreće“.",
+      "en": "The regular coupon list has no wheel codes, so hundreds of single-use codes do not clutter the coupons you create by hand. They live only in the “Točak sreće” section."
+    }
+  }
+}

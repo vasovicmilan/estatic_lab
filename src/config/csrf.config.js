@@ -11,8 +11,23 @@ export const { csrfSynchronisedProtection, generateToken } = csrfSync({
     req.get("X-CSRF-Token"),
 });
 
+// Anonymous, session-less JSON endpoints that visitors hit from QR codes, often inside in-app
+// browsers (Instagram, Facebook, camera apps) that drop or isolate the session cookie - every
+// spin from such a phone failed with CsrfError 403 before it even reached validation.
+// Nothing here acts on a logged-in user's behalf: the spin is guarded by the honeypot, a rate
+// limiter and one-spin-per-contact. A cross-site page cannot send application/json without a
+// CORS preflight, so requiring that content type keeps it out of reach of forged form posts.
+const CSRF_EXEMPT_JSON_PATHS = new Set(["/tocak/vrti"]);
+
+export function isCsrfExemptJsonRequest(req) {
+  const path = (req.originalUrl || "").split("?")[0];
+  if (!CSRF_EXEMPT_JSON_PATHS.has(path)) return false;
+  return (req.headers?.["content-type"] || "").toLowerCase().startsWith("application/json");
+}
+
 export function csrfWebProtection(req, res, next) {
   if (req.originalUrl.startsWith("/api")) return next();
+  if (isCsrfExemptJsonRequest(req)) return next();
 
   const method = req.method?.toUpperCase();
   const needsProtection = ["POST", "PUT", "PATCH", "DELETE"].includes(method);

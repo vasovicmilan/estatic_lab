@@ -5,7 +5,10 @@ import { validateProfileUpdate, validateAddressCreate, validateAddressId } from 
 import { validateChangePassword, validateDeactivateAccount } from "../../middlewares/validators/auth.validator.js";
 import { validateAppointmentId, validateAppointmentCancel, validateAppointmentReschedule } from "../../middlewares/validators/appointment.validator.js";
 import { validateOrderId, validateOrderCancel } from "../../middlewares/validators/order.validator.js";
+import { mongoIdParamValidator } from "../../middlewares/validators/helpers/common.validator.js";
 import * as AuthController from "../../controllers/web/auth/auth.controller.js";
+
+const validatePackagePurchaseId = mongoIdParamValidator("packagePurchaseId", "paketa");
 
 const router = Router();
 
@@ -14,6 +17,9 @@ router.get("/termini", requireModule("booking"), UserController.appointments);
 router.get("/termini/detalji/:appointmentId", requireModule("booking"), validateAppointmentId, UserController.appointmentDetails);
 router.put("/termini/:appointmentId/otkazi", requireModule("booking"), validateAppointmentId, validateAppointmentCancel, UserController.cancelAppointment);
 router.put("/termini/:appointmentId/pomeri", requireModule("booking"), validateAppointmentId, validateAppointmentReschedule, UserController.rescheduleAppointment);
+
+router.get("/paketi", requireModule("booking"), UserController.packages);
+router.get("/paketi/detalji/:packagePurchaseId", requireModule("booking"), validatePackagePurchaseId, UserController.packageDetails);
 
 router.get("/porudzbine", requireModule("shop"), UserController.orders);
 router.get("/porudzbine/detalji/:orderId", requireModule("shop"), validateOrderId, UserController.orderDetails);

@@ -289,20 +289,170 @@ export async function deleteLead(leadId) {
   logInfo("Lead deleted", { leadId });
 }
 
-export async function listPrizesForAdmin() {
-  await ensureDefaultPrizes();
-  return (await wheelPrizeRepo.findAllPrizes()).map((p) => ({
+export const MIN_ACTIVE_PRIZES = 2;
+export const MAX_ACTIVE_PRIZES = 12; // more slices than this and the labels on the wheel stop being readable
+
+const DIACRITICS = { č: "c", ć: "c", š: "s", ž: "z", đ: "dj" };
+
+/** "Besplatan ESMA tretman" -> "besplatan-esma-tretman" (the stable id coupons keep pointing at). */
+export function slugifyPrizeKey(label) {
+  return String(label || "")
+    .toLowerCase()
+    .replace(/[čćšžđ]/g, (c) => DIACRITICS[c])
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+async function uniquePrizeKey(label, all) {
+  const base = slugifyPrizeKey(label) || "nagrada";
+  const taken = new Set(all.map((p) => p.key));
+  if (!taken.has(base)) return base;
+  for (let i = 2; i < 100; i++) if (!taken.has(`${base}-${i}`)) return `${base}-${i}`;
+  return `${base}-${Date.now()}`;
+}
+
+function toPrizeView(p) {
+  return {
     id: p._id.toString(),
     key: p.key,
     label: p.label,
+    shortLabel: p.shortLabel,
+    color: p.color,
     weight: p.weight,
     stock: p.stock,
     awardedCount: p.awardedCount,
     remaining: p.stock == null ? null : Math.max(0, p.stock - p.awardedCount),
     validDays: p.validDays,
+    order: p.order,
     isActive: p.isActive,
     isFallback: p.isFallback,
-  }));
+    discountType: p.discountType,
+    discountValue: p.discountValue,
+    maxDiscountAmount: p.maxDiscountAmount ?? null,
+    serviceSlugs: p.serviceSlugs || [],
+    includeProducts: !!p.includeProducts,
+  };
+}
+
+export async function listPrizesForAdmin() {
+  await ensureDefaultPrizes();
+  return (await wheelPrizeRepo.findAllPrizes()).map(toPrizeView);
+}
+
+export async function getPrizeForEdit(prizeId) {
+  if (!prizeId) validationError("prizeId");
+  const prize = await wheelPrizeRepo.findPrizeById(prizeId);
+  if (!prize) notFound("Nagrada");
+  return toPrizeView(prize);
+}
+
+/** Services a prize can be tied to (value = slug, because that is what the coupon is minted from). */
+export async function listServiceOptions() {
+  const result = await serviceRepo.findServices({ limit: 300, page: 1, populateFields: [], sort: { name: 1 } });
+  return (result.data || []).map((s) => ({ value: s.slug, label: s.name }));
+}
+
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+function num(value, fallback = null) {
+  if (value === undefined || value === null || value === "" || Number.isNaN(Number(value))) return fallback;
+  return Number(value);
+}
+
+/** Cleans and validates the whole prize form; `existing` is the stored prize when editing. */
+async function normalizePrizeInput(input, existing = null) {
+  const label = String(input.label ?? "").trim();
+  const shortLabel = String(input.shortLabel ?? "").trim();
+  if (!label) badRequest("Naziv nagrade je obavezan");
+  if (!shortLabel) badRequest("Kratak naziv (za točak) je obavezan");
+  if (shortLabel.length > 18) badRequest("Kratak naziv može imati najviše 18 karaktera, da stane na točak");
+
+  const discountType = input.discountType;
+  if (!["percentage", "fixed"].includes(discountType)) badRequest("Izaberite tip popusta");
+  const discountValue = num(input.discountValue);
+  if (discountValue == null || discountValue <= 0) badRequest("Vrednost popusta mora biti veća od 0");
+  if (discountType === "percentage" && discountValue > 100) badRequest("Procenat popusta ne može biti veći od 100");
+
+  const maxDiscountAmount = num(input.maxDiscountAmount);
+  if (maxDiscountAmount != null && maxDiscountAmount < 0) badRequest("Maksimalan popust ne može biti negativan");
+
+  const weight = num(input.weight);
+  if (weight == null || weight < 0) badRequest("Šansa mora biti broj 0 ili veći");
+  const stock = num(input.stock);
+  if (stock != null && (!Number.isInteger(stock) || stock < 0)) badRequest("Zaliha mora biti ceo broj 0 ili veći");
+  if (stock != null && existing && stock < existing.awardedCount) badRequest(`Zaliha ne može biti manja od već podeljenih (${existing.awardedCount})`);
+  const validDays = num(input.validDays, 30);
+  if (!Number.isInteger(validDays) || validDays < 1 || validDays > 365) badRequest("Rok važenja je 1-365 dana");
+  const order = num(input.order, existing?.order ?? 0);
+
+  const color = input.color ? String(input.color).trim() : existing?.color || "#b08d57";
+  if (!HEX_COLOR.test(color)) badRequest("Boja mora biti u obliku #rrggbb");
+
+  const serviceSlugs = Array.from(new Set((Array.isArray(input.serviceSlugs) ? input.serviceSlugs : []).map((x) => String(x).trim()).filter(Boolean)));
+  for (const slug of serviceSlugs) {
+    if (!(await serviceRepo.findServiceBySlug(slug))) badRequest(`Usluga "${slug}" ne postoji`);
+  }
+
+  const isActive = input.isActive !== false;
+  const isFallback = !!input.isFallback;
+  if (isFallback && (stock != null || !isActive)) badRequest("Rezervna nagrada mora biti aktivna i bez ograničene zalihe - to je ono što točak daje kad ostale nestanu.");
+
+  return { label, shortLabel, color, discountType, discountValue, maxDiscountAmount, weight, stock, validDays, order, isActive, isFallback, serviceSlugs, includeProducts: !!input.includeProducts };
+}
+
+// the wheel needs a sensible number of slices: at least 2 to be a choice, at most 12 to stay readable
+function assertActiveCount(prizes, { replacing = null, adding = null } = {}) {
+  const active = prizes.filter((p) => (replacing && String(p._id) === String(replacing._id) ? replacing.isActive : p.isActive)).length + (adding?.isActive ? 1 : 0);
+  if (active < MIN_ACTIVE_PRIZES) badRequest(`Točak mora imati bar ${MIN_ACTIVE_PRIZES} aktivne nagrade.`);
+  if (active > MAX_ACTIVE_PRIZES) badRequest(`Točak može imati najviše ${MAX_ACTIVE_PRIZES} aktivnih nagrada, inače se natpisi ne vide. Isključite neku pre dodavanja nove.`);
+}
+
+export async function createPrize(input) {
+  const data = await normalizePrizeInput(input);
+  const all = await wheelPrizeRepo.findAllPrizes();
+  assertActiveCount(all, { adding: data });
+  const key = await uniquePrizeKey(input.key || data.label, all);
+  const created = await wheelPrizeRepo.createPrize({ ...data, key, awardedCount: 0, color: input.color ? data.color : PALETTE[all.length % PALETTE.length] });
+  if (data.isFallback) await wheelPrizeRepo.unsetFallbackExcept(created._id);
+  logInfo("Wheel prize created", { prizeId: created._id, key });
+  return toPrizeView(created);
+}
+
+/** Full edit of one prize (everything except its key, which coupons already minted refer to). */
+export async function updatePrizeFull(prizeId, input) {
+  if (!prizeId) validationError("prizeId");
+  const existing = await wheelPrizeRepo.findPrizeById(prizeId);
+  if (!existing) notFound("Nagrada");
+  const data = await normalizePrizeInput(input, existing);
+  const all = await wheelPrizeRepo.findAllPrizes();
+  assertActiveCount(all, { replacing: { _id: existing._id, isActive: data.isActive } });
+  if (existing.isFallback && !data.isFallback) {
+    badRequest("Ovo je rezervna nagrada. Da biste je zamenili, označite drugu nagradu kao rezervnu.");
+  }
+  const updated = await wheelPrizeRepo.updatePrizeById(prizeId, data);
+  if (data.isFallback) await wheelPrizeRepo.unsetFallbackExcept(updated._id);
+  logInfo("Wheel prize fully updated", { prizeId });
+  return { before: toPrizeView(existing), after: toPrizeView(updated) };
+}
+
+/**
+ * Deletes a prize that was never handed out. One that already has winners is only ever switched
+ * off - the contacts and coupons it produced keep pointing at it.
+ */
+export async function deletePrize(prizeId) {
+  if (!prizeId) validationError("prizeId");
+  const existing = await wheelPrizeRepo.findPrizeById(prizeId);
+  if (!existing) notFound("Nagrada");
+  if (existing.isFallback) badRequest("Rezervna nagrada ne može da se obriše. Prvo označite drugu nagradu kao rezervnu.");
+  if (existing.awardedCount > 0) badRequest(`Nagrada je već dodeljena ${existing.awardedCount} put(a) i ne može da se obriše. Isključite je (Aktivna) umesto toga.`);
+  const all = await wheelPrizeRepo.findAllPrizes();
+  assertActiveCount(all.filter((p) => String(p._id) !== String(prizeId)));
+  await wheelPrizeRepo.deletePrizeById(prizeId);
+  logInfo("Wheel prize deleted", { prizeId, key: existing.key });
+  return toPrizeView(existing);
 }
 
 export async function updatePrize(prizeId, { weight, stock, validDays, isActive }) {
@@ -311,9 +461,10 @@ export async function updatePrize(prizeId, { weight, stock, validDays, isActive 
   if (!existing) notFound("Nagrada");
   if (existing.isFallback && isActive === false) badRequest("Rezervna nagrada ne može da se isključi - točak mora imati šta da dodeli.");
   if (stock != null && stock < existing.awardedCount) badRequest(`Zaliha ne može biti manja od već podeljenih (${existing.awardedCount})`);
+  if (isActive === false && existing.isActive) assertActiveCount(await wheelPrizeRepo.findAllPrizes(), { replacing: { _id: existing._id, isActive: false } });
   const updated = await wheelPrizeRepo.updatePrizeById(prizeId, { weight, stock, validDays, isActive });
   logInfo("Wheel prize updated", { prizeId, weight, stock, validDays, isActive });
   return updated;
 }
 
-export default { getWheelConfig, spin, ensureDefaultPrizes, listWheelCoupons, listLeads, getLeadById, exportLeadsCsv, listSources, deleteLead, listPrizesForAdmin, updatePrize };
+export default { getWheelConfig, spin, ensureDefaultPrizes, listWheelCoupons, listLeads, getLeadById, exportLeadsCsv, listSources, deleteLead, listPrizesForAdmin, getPrizeForEdit, listServiceOptions, createPrize, updatePrizeFull, deletePrize, updatePrize };

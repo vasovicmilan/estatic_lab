@@ -8,8 +8,22 @@ export async function findPrizeById(id) {
   return WheelPrize.findById(id).lean();
 }
 
+export async function deletePrizeById(id) {
+  return WheelPrize.findByIdAndDelete(id).lean();
+}
+
+// exactly one prize may be the fallback - called after another one was made the fallback
+export async function unsetFallbackExcept(id) {
+  return WheelPrize.updateMany({ _id: { $ne: id }, isFallback: true }, { $set: { isFallback: false } });
+}
+
 export async function countPrizes() {
   return WheelPrize.countDocuments({});
+}
+
+export async function createPrize(data) {
+  const [created] = await WheelPrize.insertMany([data]);
+  return created.toObject();
 }
 
 export async function createPrizes(prizes) {
@@ -39,4 +53,4 @@ export async function releasePrize(id) {
   return WheelPrize.findOneAndUpdate({ _id: id, awardedCount: { $gt: 0 } }, { $inc: { awardedCount: -1 } }, { returnDocument: "after" }).lean();
 }
 
-export default { findAllPrizes, findPrizeById, countPrizes, createPrizes, updatePrizeById, claimPrize, releasePrize };
+export default { findAllPrizes, findPrizeById, createPrize, deletePrizeById, unsetFallbackExcept, countPrizes, createPrizes, updatePrizeById, claimPrize, releasePrize };

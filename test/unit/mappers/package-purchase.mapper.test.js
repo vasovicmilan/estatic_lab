@@ -101,3 +101,67 @@ describe("package-purchase.mapper", () => {
     assert.equal(mapPackagePurchaseForAdminDetail(null), null);
   });
 });
+import { mapPackagePurchaseForUser, mapPackagePurchasesForUser, mapPackagePurchaseForUserDetail, effectiveStatus } from "../../../src/mappers/package-purchase.mapper.js";
+
+describe("package-purchase.mapper - customer view", () => {
+  const day = 86400000;
+  const mk = (over = {}) => buildPackagePurchase({
+    status: "active", expiresAt: null, pricePaid: 8000, originalPrice: 10000, discountApplied: 2000,
+    items: [
+      { service: id(), servicePackageId: id(), sessionsTotal: 6, sessionsUsed: 2, sessionsReserved: 1 },
+      { service: id(), servicePackageId: id(), sessionsTotal: 4, sessionsUsed: 0, sessionsReserved: 0 },
+    ],
+    ...over,
+  });
+
+  it("sums sessions and progress across items", () => {
+    const m = mapPackagePurchaseForUser(mk());
+    assert.equal(m.ukupno, 10);
+    assert.equal(m.iskorisceno, 2);
+    assert.equal(m.rezervisano, 1);
+    assert.equal(m.preostalo, 7);
+    assert.equal(m.procenat, 30);
+    assert.equal(m.isActive, true);
+    assert.ok(m.popust);
+  });
+
+  it("active package past its expiry date is shown as expired with the lost sessions", () => {
+    const p = mk({ expiresAt: new Date(Date.now() - day) });
+    assert.equal(effectiveStatus(p), "expired");
+    const m = mapPackagePurchaseForUser(p);
+    assert.equal(m.status, "Istekao");
+    assert.equal(m.isActive, false);
+    assert.equal(m.propaloSeansi, 7);
+  });
+
+  it("flags a package that expires within 14 days and still has sessions", () => {
+    assert.equal(mapPackagePurchaseForUser(mk({ expiresAt: new Date(Date.now() + 5 * day) })).istekaUskoro, true);
+    assert.equal(mapPackagePurchaseForUser(mk({ expiresAt: new Date(Date.now() + 60 * day) })).istekaUskoro, false);
+    assert.equal(mapPackagePurchaseForUser(mk()).istekaUskoro, false);
+  });
+
+  it("no expiry date means never expires", () => {
+    assert.equal(mapPackagePurchaseForUser(mk()).istice, "Ne ističe");
+  });
+
+  it("does not expose notes or who recorded it", () => {
+    const m = mapPackagePurchaseForUser(mk({ notes: "interno" }));
+    assert.equal(JSON.stringify(m).includes("interno"), false);
+    assert.equal("napomena" in m, false);
+  });
+
+  it("admin list also shows an elapsed package as expired", () => {
+    const [m] = mapPackagePurchasesForAdminList([mk({ expiresAt: new Date(Date.now() - day) })]);
+    assert.equal(m.status, "Istekao");
+  });
+
+  it("detail lists the appointments booked from the package", () => {
+    const m = mapPackagePurchaseForUserDetail(mk(), [{ _id: id(), startTime: new Date(), status: "confirmed", service: { name: "ESMA" }, packagePurchase: id(), finalPrice: 0 }]);
+    assert.equal(m.termini.length, 1);
+    assert.equal(m.termini[0].placenoPaketom, true);
+  });
+
+  it("list mapper skips empty entries", () => {
+    assert.equal(mapPackagePurchasesForUser([null, mk()]).length, 1);
+  });
+});

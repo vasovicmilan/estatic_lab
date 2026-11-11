@@ -86,15 +86,21 @@ describe("prize wheel (HTTP)", () => {
     assert.equal(awarded, 1, "refused spins must not take anything from the stock");
   });
 
-  it("rejects a submission without the contact consent (400) and without a CSRF token (403)", async () => {
+  it("rejects a submission without the contact consent (400); JSON spin needs no CSRF token but a form post still does (403)", async () => {
     const agent = request.agent(app);
     const { token } = await pageAndToken(agent);
     const noConsent = await agent.post("/tocak/vrti").set("X-CSRF-Token", token).send(body({ consentContact: false }));
     assert.equal(noConsent.status, 400);
     assert.ok(noConsent.body.errors.consentContact);
 
-    const noToken = await agent.post("/tocak/vrti").send(body({ email: "x@example.com" }));
-    assert.equal(noToken.status, 403);
+    // the spin is deliberately exempt from CSRF for JSON requests (QR visitors in in-app browsers
+    // lose the session cookie) - a token-less JSON request is judged on its data alone
+    const noToken = await request(app).post("/tocak/vrti").send(body({ email: "x@example.com" }));
+    assert.equal(noToken.status, 200);
+
+    // ...but a classic form post (what a forged cross-site request would be) is still blocked
+    const forged = await request(app).post("/tocak/vrti").type("form").send(body({ email: "y@example.com" }));
+    assert.equal(forged.status, 403);
   });
 
   it("silently refuses a bot that fills the hidden honeypot field", async () => {

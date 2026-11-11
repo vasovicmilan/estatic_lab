@@ -153,3 +153,32 @@ export function prepareCartTabData(cart) {
     checkoutUrl: "/korpa/naplata",
   };
 }
+export function preparePackagesTabData(purchases = [], query = {}) {
+  const active = purchases.filter((p) => p.isActive);
+  return {
+    packages: purchases,
+    selectedStatus: query.status || "",
+    filters: [
+      { value: "", label: "Svi" },
+      { value: "active", label: "Aktivni" },
+      { value: "completed", label: "Iskorišćeni" },
+      { value: "expired", label: "Istekli" },
+      { value: "cancelled", label: "Otkazani" },
+    ],
+    // headline numbers across every active package
+    summary: {
+      aktivnih: active.length,
+      preostalo: active.reduce((sum, p) => sum + p.preostalo, 0),
+      istekaUskoro: active.filter((p) => p.istekaUskoro).length,
+    },
+    bookUrl: "/usluge",
+  };
+}
+
+export function preparePackageDetailData(purchase) {
+  return {
+    purchase,
+    backUrl: "/nalog/paketi",
+    bookUrl: "/usluge",
+  };
+}

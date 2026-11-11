@@ -1,0 +1,100 @@
+{
+  "title": {
+    "sr": "Točak sreće: korak posetioca",
+    "en": "Wheel of fortune: the visitor's side"
+  },
+  "intro": {
+    "sr": "Na sajmu posetilac skenira QR kod, ostavi kontakt i zavrti točak. Uvek nešto dobije: popust ili besplatan tretman, u obliku koda koji važi jednom.",
+    "en": "At the fair a visitor scans the QR code, leaves their contact and spins the wheel. They always win something: a discount or a free treatment, as a code valid once."
+  },
+  "steps": {
+    "tocak-otvaranje": {
+      "heading": {
+        "sr": "Stranica točka",
+        "en": "The wheel page"
+      },
+      "sr": "QR kod sa sajma otvara ovu stranicu direktno u telefonu, bez prijave i bez instaliranja ičega.",
+      "en": "The QR code from the fair opens this page directly on the phone, with no sign-in and nothing to install."
+    },
+    "tocak-tocak": {
+      "heading": {
+        "sr": "Točak",
+        "en": "The wheel"
+      },
+      "sr": "Točak je prikazan odmah, da posetilac vidi sve moguće nagrade pre nego što se prijavi. Veće polje znači veću šansu: najčešće je popust od 10%, ređe 15% i 20%, a najređe besplatan tretman.",
+      "en": "The wheel is shown right away, so the visitor sees all possible prizes before signing up. A bigger slice means a bigger chance: most often a 10% discount, less often 15% and 20%, and rarest of all a free treatment."
+    },
+    "tocak-ime": {
+      "heading": {
+        "sr": "Ime i prezime",
+        "en": "First and last name"
+      },
+      "sr": "Posetilac upisuje ime i prezime, da znamo kome pripada nagrada.",
+      "en": "The visitor types their first and last name, so we know who the prize belongs to."
+    },
+    "tocak-kontakt": {
+      "heading": {
+        "sr": "Email i telefon",
+        "en": "Email and phone"
+      },
+      "sr": "Email i telefon su obavezni: na email stiže kod nagrade, a telefon omogućava da kontaktiramo posetioca. Isti email ili telefon može da zavrti točak samo jednom.",
+      "en": "Email and phone are required: the prize code is sent to the email, and the phone lets us contact the visitor. The same email or phone can spin only once."
+    },
+    "tocak-oblast": {
+      "heading": {
+        "sr": "Šta zanima posetioca",
+        "en": "What the visitor is interested in"
+      },
+      "sr": "Izbor oblasti (tretmani i masaže, kozmetika i nega, saradnja) govori šta posetioca zanima i prenosi se u newsletter, pa dobija samo ono što ga zanima.",
+      "en": "The chosen area (treatments and massages, cosmetics and care, partnership) tells what the visitor is interested in and carries over to the newsletter, so they only get what they care about."
+    },
+    "tocak-pristanak": {
+      "heading": {
+        "sr": "Pristanak",
+        "en": "Consent"
+      },
+      "sr": "Obavezan pristanak da ih kontaktiramo u vezi nagrade.",
+      "en": "Required consent to be contacted about the prize."
+    },
+    "tocak-newsletter": {
+      "heading": {
+        "sr": "Newsletter (opciono)",
+        "en": "Newsletter (optional)"
+      },
+      "sr": "Prijava na newsletter je zasebna i opciona kvačica. Samo ko je izričito štiklirao dospeva na listu za obaveštenja.",
+      "en": "Newsletter signup is a separate, optional checkbox. Only those who explicitly tick it end up on the notification list."
+    },
+    "tocak-vrtenje": {
+      "heading": {
+        "sr": "Vrtenje",
+        "en": "Spinning"
+      },
+      "sr": "{Kliknemo} dugme za vrtenje. Nagradu je već odabrao server (ne telefon, pa se ne može namestiti), a točak se zavrti nekoliko krugova, svaki put različito, i stane na toj nagradi.",
+      "en": "We {click} the spin button. The prize has already been chosen by the server (not the phone, so it cannot be rigged), and the wheel spins a few turns, different every time, and stops on that prize."
+    },
+    "tocak-nagrada": {
+      "heading": {
+        "sr": "Nagrada",
+        "en": "The prize"
+      },
+      "sr": "Posle zaustavljanja prikazuje se šta je posetilac osvojio.",
+      "en": "After it stops, what the visitor won is shown."
+    },
+    "tocak-kod": {
+      "heading": {
+        "sr": "Kod nagrade",
+        "en": "The prize code"
+      },
+      "sr": "Kod je jedinstven i važi jednom. Posetilac ga unosi pri zakazivanju ili kupovini, a isti kod stiže i na email, pa se ne gubi.",
+      "en": "The code is unique and valid once. The visitor enters it when booking or buying, and the same code is also emailed, so it is not lost."
+    },
+    "tocak-rok": {
+      "heading": {
+        "sr": "Rok važenja",
+        "en": "Validity"
+      },
+      "sr": "Kod ima rok važenja, što podstiče da se vrate u salon u narednim danima.",
+      "en": "The code has an expiry date, which encourages coming back to the salon in the following days."
+    }
+  }
+}

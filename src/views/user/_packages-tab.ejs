@@ -1,0 +1,55 @@
+<%- include("../includes/head") %>
+<%- include("../includes/components/portal-header", { portalHome: "/nalog" }) %>
+
+<main class="container py-4">
+  <%- include("../includes/flash-messages") %>
+  <h1 class="h3 mb-4">Moj nalog</h1>
+  <%- include("../includes/components/user-tabs") %>
+
+  <% if (data.summary.aktivnih > 0) { %>
+    <div class="alert alert-light border d-flex flex-wrap gap-3 align-items-center" role="status">
+      <span><strong><%= data.summary.aktivnih %></strong> aktivan paket</span>
+      <span><strong><%= data.summary.preostalo %></strong> slobodnih seansi</span>
+      <% if (data.summary.istekaUskoro > 0) { %><span class="text-warning-emphasis"><i class="bi bi-exclamation-triangle"></i> <%= data.summary.istekaUskoro %> uskoro ističe</span><% } %>
+      <a href="<%= data.bookUrl %>" class="btn btn-sm btn-primary ms-md-auto">Zakaži termin</a>
+    </div>
+  <% } %>
+
+  <form method="GET" class="mb-4" style="max-width: 250px;">
+    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+      <% data.filters.forEach(function(f) { %>
+        <option value="<%= f.value %>" <%= data.selectedStatus === f.value ? 'selected' : '' %>><%= f.label %></option>
+      <% }) %>
+    </select>
+  </form>
+
+  <% if (data.packages.length > 0) { %>
+    <div class="list-group">
+      <% data.packages.forEach(function(p) { %>
+        <a href="/nalog/paketi/detalji/<%= p.id %>" class="list-group-item list-group-item-action">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <div>
+              <div class="fw-semibold"><%= p.paket %></div>
+              <div class="text-muted small mono">Kupljeno <%= p.kupljeno %> · Ističe: <%= p.istice %></div>
+            </div>
+            <div class="text-end">
+              <span class="badge <%= p.isActive ? 'bg-success' : 'bg-secondary' %>"><%= p.status %></span>
+              <% if (p.istekaUskoro) { %><div class="small text-warning-emphasis">ističe za <%= p.preostaloDana %> d</div><% } %>
+            </div>
+          </div>
+          <div class="progress mt-2" style="height:6px" role="progressbar" aria-valuenow="<%= p.procenat %>" aria-valuemin="0" aria-valuemax="100" aria-label="Iskorišćenost paketa">
+            <div class="progress-bar" style="width: <%= p.procenat %>%"></div>
+          </div>
+          <div class="small text-muted mt-1">
+            <%= p.iskorisceno %> iskorišćeno<% if (p.rezervisano) { %>, <%= p.rezervisano %> zakazano<% } %> od <%= p.ukupno %> · <strong><%= p.preostalo %> slobodno</strong>
+            <% if (p.propaloSeansi > 0) { %> · <%= p.propaloSeansi %> neiskorišćeno<% } %>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <p class="text-muted">Nemate <%= data.selectedStatus ? "pakete u ovom statusu" : "kupljenih paketa" %>. Paket možete kupiti u salonu, a seanse zakazujete ovde na sajtu. <a href="/paketi">Pogledajte pakete</a>.</p>
+  <% } %>
+</main>
+
+<%- include("../includes/portal-footer") %>

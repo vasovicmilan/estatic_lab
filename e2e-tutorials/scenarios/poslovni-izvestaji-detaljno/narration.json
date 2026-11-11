@@ -1,0 +1,116 @@
+{
+  "title": {
+    "sr": "Poslovni izveštaji: šta znači svaki broj",
+    "en": "Business reports: what every number means"
+  },
+  "intro": {
+    "sr": "Poslovni izveštaji sabiraju rad salona po periodima: termine, prodavnicu, pakete, provizije i kupone. Ovde je objašnjeno šta pokazuje svaki blok i kako se čitaju sačuvani izveštaji.",
+    "en": "Business reports add up the salon's work per period: appointments, shop, packages, commissions and coupons. This explains what each block shows and how to read the saved reports."
+  },
+  "steps": {
+    "admin-izvestaji-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Poslovni izveštaji“",
+        "en": "“Poslovni izveštaji” menu"
+      },
+      "sr": "Otvaramo grupu „Poslovni izveštaji“.",
+      "en": "We open the “Poslovni izveštaji” group."
+    },
+    "admin-izvestaji-bira-stavku": {
+      "heading": {
+        "sr": "Pregled",
+        "en": "Pregled"
+      },
+      "sr": "Biramo „Pregled“.",
+      "en": "We choose “Pregled”."
+    },
+    "izvestaji-periodi": {
+      "heading": {
+        "sr": "Pet perioda",
+        "en": "Five periods"
+      },
+      "sr": "Pregled ima po jednu karticu za dnevni, nedeljni, mesečni, kvartalni i godišnji izveštaj. Svaka pokazuje broj termina i njihov prihod, porudžbine i prihod prodavnice, prodate pakete i ukupan prihod.",
+      "en": "The overview has one card each for the daily, weekly, monthly, quarterly and yearly report. Each shows the number of appointments and their revenue, orders and shop revenue, packages sold and the total revenue."
+    },
+    "izvestaji-uzivo": {
+      "heading": {
+        "sr": "Oznaka „Uživo“",
+        "en": "The “Uživo” badge"
+      },
+      "sr": "Oznaka „Uživo“ znači da period još traje, pa se brojevi računaju sveže pri svakom otvaranju stranice. Kad period istekne, sistem ga sačuva i taj sačuvani izveštaj se više ne menja.",
+      "en": "The “Uživo” badge means the period is still running, so the numbers are recalculated every time the page opens. When the period ends, the system saves it and that saved report no longer changes."
+    },
+    "izvestaji-istorija-klik": {
+      "heading": {
+        "sr": "Istorija izveštaja",
+        "en": "Report history"
+      },
+      "sr": "{Kliknemo} „Istorija“ na kartici dnevnog izveštaja da vidimo sve sačuvane dane.",
+      "en": "We {click} “Istorija” on the daily report card to see all saved days."
+    },
+    "izvestaji-istorija-lista": {
+      "heading": {
+        "sr": "Lista sačuvanih izveštaja",
+        "en": "Saved reports list"
+      },
+      "sr": "Istorija je tabela sačuvanih perioda, jedan red po danu, sa osnovnim brojevima. Kolone se mogu sortirati, pa se lako nalazi najbolji ili najslabiji period.",
+      "en": "The history is a table of saved periods, one row per day, with the main numbers. The columns can be sorted, so the best or weakest period is easy to find."
+    },
+    "izvestaji-detalji-klik": {
+      "heading": {
+        "sr": "Detalji",
+        "en": "Details"
+      },
+      "sr": "{Kliknemo} „Detalji“ da otvorimo jedan izveštaj.",
+      "en": "We {click} “Detalji” to open one report."
+    },
+    "izvestaji-detalj-zaglavlje": {
+      "heading": {
+        "sr": "Jedan izveštaj",
+        "en": "One report"
+      },
+      "sr": "U zaglavlju je period na koji se izveštaj odnosi, a „Preuzmi PDF“ pravi dokument koji se može poslati knjigovođi ili sačuvati.",
+      "en": "The header shows the period the report covers, and “Preuzmi PDF” produces a document that can be sent to an accountant or kept."
+    },
+    "izvestaji-detalj-termini": {
+      "heading": {
+        "sr": "Termini",
+        "en": "Appointments"
+      },
+      "sr": "Blok o terminima daje ukupan prihod i broj zakazivanja, pa razlaganje „Po usluzi“ (koji tretmani donose najviše) i „Po terapeutu“ (ko je koliko radio i zaradio). Na osnovu toga se odlučuje šta promovisati i kako rasporediti smene.",
+      "en": "The appointments block gives the total revenue and number of bookings, then a breakdown “Po usluzi” (which treatments earn the most) and “Po terapeutu” (who worked and earned how much). This guides what to promote and how to plan shifts."
+    },
+    "izvestaji-detalj-prodavnica": {
+      "heading": {
+        "sr": "Prodavnica",
+        "en": "Shop"
+      },
+      "sr": "Za prodavnicu se vidi broj porudžbina, prihod i lista najprodavanijih proizvoda sa brojem komada, što pomaže pri nabavci i zalihama.",
+      "en": "For the shop it shows the number of orders, the revenue and the list of best-selling products with units sold, which helps with purchasing and stock."
+    },
+    "izvestaji-detalj-paketi": {
+      "heading": {
+        "sr": "Paketi",
+        "en": "Packages"
+      },
+      "sr": "Kod paketa je „Obračun prodatih paketa“ posebno važan: paket se plaća unapred, a tretmani se odrađuju kasnije, pa ovaj blok pokazuje prihod od prodaje paketa i razlaganje „Po paketu“ (koliko je kog prodato).",
+      "en": "For packages the “Obračun prodatih paketa” is especially important: a package is paid in advance while the treatments are done later, so this block shows the revenue from package sales and a breakdown “Po paketu” (how many of each were sold)."
+    },
+    "izvestaji-detalj-provizije-kuponi": {
+      "heading": {
+        "sr": "Provizije i kuponi",
+        "en": "Commissions and coupons"
+      },
+      "sr": "„Provizije“ su ukupno obračunate za zaposlene i partnere u tom periodu, što je trošak koji treba oduzeti od prihoda. „Po kuponu“ pokazuje koliko je puta koji kod iskorišćen i koliki je popust dat, pa se vidi da li se akcija isplatila.",
+      "en": "“Provizije” are the commissions calculated for employees and partners in that period, a cost to subtract from revenue. “Po kuponu” shows how many times each code was used and how much discount was given, so you can see whether a promotion paid off."
+    },
+    "izvestaji-detalj-pdf": {
+      "heading": {
+        "sr": "PDF izveštaj",
+        "en": "PDF report"
+      },
+      "sr": "Na kraju, dugme „Preuzmi PDF“ je spremno za arhiviranje ili slanje. Sačuvani izveštaji ostaju u istoriji trajno.",
+      "en": "Finally, the “Preuzmi PDF” button is ready for archiving or sending. Saved reports stay in the history permanently."
+    }
+  }
+}

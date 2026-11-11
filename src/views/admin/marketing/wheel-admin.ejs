@@ -15,7 +15,10 @@
   </div>
 
   <div class="card mb-4">
-    <div class="card-header fw-semibold">Nagrade</div>
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">Nagrade</span>
+      <a href="/admin/tocak/nagrade/nova" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Dodaj nagradu</a>
+    </div>
     <div class="card-body p-0">
       <div class="table-responsive">
         <table class="table align-middle mb-0">
@@ -28,7 +31,7 @@
               <th style="width:120px">Preostalo</th>
               <th style="width:110px">Rok (dana)</th>
               <th style="width:80px">Aktivna</th>
-              <th style="width:100px"></th>
+              <th style="width:230px"></th>
             </tr>
           </thead>
           <tbody>
@@ -44,7 +47,13 @@
                 <td><%= p.remaining == null ? "∞" : p.remaining %></td>
                 <td><input form="prize-<%= p.id %>" type="number" name="validDays" min="1" max="365" step="1" value="<%= p.validDays %>" class="form-control form-control-sm" required></td>
                 <td><input form="prize-<%= p.id %>" type="checkbox" name="isActive" value="true" class="form-check-input" <%= p.isActive ? "checked" : "" %> <%= p.isFallback ? "onclick=\"return false\"" : "" %>></td>
-                <td><button form="prize-<%= p.id %>" type="submit" class="btn btn-sm btn-primary">Sačuvaj</button></td>
+                <td class="text-nowrap">
+                  <button form="prize-<%= p.id %>" type="submit" class="btn btn-sm btn-primary">Sačuvaj</button>
+                  <a href="/admin/tocak/nagrade/<%= p.id %>/izmena" class="btn btn-sm btn-outline-secondary">Izmeni</a>
+                  <% if (!p.isFallback && p.awardedCount === 0) { %>
+                    <button form="prize-del-<%= p.id %>" type="submit" class="btn btn-sm btn-outline-danger" title="Briše nagradu sa točka"><i class="bi bi-trash"></i></button>
+                  <% } %>
+                </td>
               </tr>
             <% }) %>
           </tbody>
@@ -55,11 +64,18 @@
           <input type="hidden" name="_method" value="PUT">
           <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
         </form>
+        <% if (!p.isFallback && p.awardedCount === 0) { %>
+          <form action="/admin/tocak/nagrade/<%= p.id %>" method="POST" id="prize-del-<%= p.id %>" class="d-none" data-confirm="Obrisati nagradu „<%= p.label %>“ sa točka?">
+            <input type="hidden" name="_method" value="DELETE">
+            <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
+          </form>
+        <% } %>
       <% }) %>
     </div>
     <div class="card-footer small text-muted">
       Šansa je relativna težina (45 : 25 : 15 znači da je prva tri puta verovatnija od treće). Kad zaliha nagrade dođe do nule,
       točak je više ne daje ni ne prikazuje, a umesto nje se dodeljuje sledeća. Prazna zaliha znači neograničeno. Zaliha ne može biti manja od već podeljenog.
+      „Izmeni“ otvara punu formu (naziv, popust, usluge, boja). Nagrada koju je neko već osvojio ne može da se obriše, samo da se isključi; rezervna se ne briše dok ne označite drugu. Na točku mora biti 2 do 12 aktivnih nagrada.
     </div>
   </div>
 

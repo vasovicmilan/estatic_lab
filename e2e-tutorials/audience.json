@@ -43,6 +43,11 @@
     "kampanja-newsletter": "admin",
     "termini-obrada": "admin",
     "porudzbine-obrada": "admin",
-    "rucno-zakazivanje": "admin"
+    "rucno-zakazivanje": "admin",
+    "pregled-admin-panela": "admin",
+    "poslovni-izvestaji-detaljno": "admin",
+    "logovi-i-audit": "admin",
+    "tocak-srece-posetilac": "public",
+    "tocak-srece-admin": "admin"
   }
 }

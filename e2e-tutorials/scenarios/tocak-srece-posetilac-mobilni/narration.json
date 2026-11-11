@@ -1,0 +1,11 @@
+{
+  "extends": "tocak-srece-posetilac",
+  "title": {
+    "sr": "Točak sreće: korak posetioca (telefon)",
+    "en": "Wheel of fortune: the visitor's side (phone)"
+  },
+  "intro": {
+    "sr": "Na sajmu posetilac skenira QR kod, ostavi kontakt i zavrti točak. Uvek nešto dobije: popust ili besplatan tretman, u obliku koda koji važi jednom. Snimljeno na telefonu (390x844).",
+    "en": "At the fair a visitor scans the QR code, leaves their contact and spins the wheel. They always win something: a discount or a free treatment, as a code valid once. Recorded on a phone (390x844)."
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "title": {
+    "sr": "Logovi, audit i aktivnost korisnika",
+    "en": "Logs, audit trail and user activity"
+  },
+  "intro": {
+    "sr": "Sistem beleži tri vrste tragova: tehničke logove sajta, audit log (ko je šta izmenio) i aktivnost korisnika (šta posetioci rade). Ovde je objašnjeno čemu služi svaki i kada ga otvoriti.",
+    "en": "The system keeps three kinds of traces: technical site logs, the audit log (who changed what) and user activity (what visitors do). This explains what each is for and when to open it."
+  },
+  "steps": {
+    "admin-logovi-otvara-meni": {
+      "heading": {
+        "sr": "Meni „Sistem“",
+        "en": "“Sistem” menu"
+      },
+      "sr": "Otvaramo grupu „Sistem“.",
+      "en": "We open the “Sistem” group."
+    },
+    "admin-logovi-bira-stavku": {
+      "heading": {
+        "sr": "Logovi",
+        "en": "Logovi"
+      },
+      "sr": "Biramo „Logovi“.",
+      "en": "We choose “Logovi”."
+    },
+    "logovi-dashboard": {
+      "heading": {
+        "sr": "Logovi sajta",
+        "en": "Site logs"
+      },
+      "sr": "Stranica „Logovi“ je tehnički pregled današnjeg rada sajta, uživo. Prvo mesto za proveru kad neko kaže da „nešto ne radi“.",
+      "en": "The “Logovi” page is a technical view of today's site activity, live. The first place to check when someone says that “something isn't working”."
+    },
+    "logovi-greske": {
+      "heading": {
+        "sr": "Najčešće greške",
+        "en": "Most frequent errors"
+      },
+      "sr": "„Najčešće greške“ grupiše iste greške i pokazuje koliko se puta ponavljaju. Greška koja se ponavlja stotinu puta je prioritet, a jednokratna obično nije.",
+      "en": "“Najčešće greške” groups identical errors and shows how often they repeat. An error repeated a hundred times is a priority, a one-off usually is not."
+    },
+    "logovi-rute": {
+      "heading": {
+        "sr": "Rute i odgovori",
+        "en": "Routes and responses"
+      },
+      "sr": "„Najposećenije rute“ pokazuje koje stranice posetioci najviše otvaraju, a „Rute sa 4xx/5xx odgovorima“ one koje vraćaju grešku: 4xx znači da je zahtev pogrešan (npr. stranica ne postoji), a 5xx da je greška na serveru.",
+      "en": "“Najposećenije rute” shows which pages visitors open most, and “Rute sa 4xx/5xx odgovorima” those that return an error: 4xx means the request was wrong (for example a page that does not exist), 5xx means a server error."
+    },
+    "audit-klik": {
+      "heading": {
+        "sr": "Audit log",
+        "en": "Audit log"
+      },
+      "sr": "{Kliknemo} „Audit log“. Ovo je trag svih važnih izmena u administraciji.",
+      "en": "We {click} “Audit log”. This is the trail of all important changes made in the administration."
+    },
+    "audit-tabela": {
+      "heading": {
+        "sr": "Ko je šta uradio",
+        "en": "Who did what"
+      },
+      "sr": "Svaki red kaže kada, ko (korisnik i rola), koju akciju, na kom zapisu (entitet), sa koje adrese i da li je uspela. To je odgovor na pitanje „ko je promenio cenu“ ili „ko je otkazao porudžbinu“.",
+      "en": "Each row says when, who (user and role), which action, on which record (entity), from which address and whether it succeeded. It answers “who changed the price” or “who cancelled the order”."
+    },
+    "audit-izmene": {
+      "heading": {
+        "sr": "Šta se promenilo",
+        "en": "What changed"
+      },
+      "sr": "Kolona „Izmene“ pokazuje staru i novu vrednost samo za polja koja su se zaista promenila, na primer cenu sa 2.990 na 2.490. Lozinke i osetljivi podaci se nikad ne upisuju.",
+      "en": "The “Izmene” column shows the old and new value only for the fields that actually changed, for example a price from 2,990 to 2,490. Passwords and sensitive data are never recorded."
+    },
+    "audit-filteri": {
+      "heading": {
+        "sr": "Filteri",
+        "en": "Filters"
+      },
+      "sr": "Filteri sužavaju listu po akciji, roli, uspehu i datumu, a sortiranje menja redosled. Tako se za par sekundi dolazi do tačno jedne izmene.",
+      "en": "The filters narrow the list by action, role, success and date, and sorting changes the order. This gets you to exactly one change in a few seconds."
+    },
+    "audit-pretraga": {
+      "heading": {
+        "sr": "Pretraga po korisniku",
+        "en": "Search by user"
+      },
+      "sr": "Pretraga radi po emailu ili nazivu akcije, pa se lako vide sve izmene jednog zaposlenog.",
+      "en": "Search works on email or action name, so all changes by one employee are easy to see."
+    },
+    "aktivnost-nazad": {
+      "heading": {
+        "sr": "Nazad na logove",
+        "en": "Back to the logs"
+      },
+      "sr": "Vraćamo se na „Logove“, odakle vode i ostale dve stranice.",
+      "en": "We go back to “Logovi”, which links to the other two pages."
+    },
+    "aktivnost-klik": {
+      "heading": {
+        "sr": "Aktivnost korisnika",
+        "en": "User activity"
+      },
+      "sr": "{Kliknemo} „Aktivnost korisnika“. Za razliku od audita, ovde se ne beleže izmene u administraciji, već šta rade posetioci i klijenti.",
+      "en": "We {click} “Aktivnost korisnika”. Unlike the audit log, this does not record changes in the administration but what visitors and clients do."
+    },
+    "aktivnost-statistika": {
+      "heading": {
+        "sr": "Šta posetioci rade",
+        "en": "What visitors do"
+      },
+      "sr": "Statistika pokazuje šta se najviše dodaje u korpu, koje se usluge najviše zakazuju i koje su akcije najčešće. To je jeftin način da se vidi šta zanima klijente, bez dodatnih alata.",
+      "en": "The statistics show what is added to the cart most, which services are booked most and which actions are most frequent. It is a cheap way to see what interests clients, without extra tools."
+    },
+    "aktivnost-tabela": {
+      "heading": {
+        "sr": "Pojedinačne akcije",
+        "en": "Individual actions"
+      },
+      "sr": "Ispod su pojedinačne akcije sa vremenom, rolom (gost, korisnik...) i filterima. Korisno i pri podršci: ako klijent kaže da zakazivanje nije prošlo, ovde se vidi šta je radio.",
+      "en": "Below are the individual actions with time, role (guest, user...) and filters. Also useful for support: if a client says a booking did not go through, you can see what they did."
+    },
+    "istorija-nazad": {
+      "heading": {
+        "sr": "Nazad na logove",
+        "en": "Back to the logs"
+      },
+      "sr": "Opet se vraćamo na „Logove“ za poslednju stranicu.",
+      "en": "Back to “Logovi” for the last page."
+    },
+    "istorija-klik": {
+      "heading": {
+        "sr": "Istorija dnevnih izveštaja",
+        "en": "Daily report history"
+      },
+      "sr": "{Kliknemo} „Istorija dnevnih izveštaja“. Današnji log je uživo, a svaki prošli dan se sačuva kao poseban izveštaj.",
+      "en": "We {click} “Istorija dnevnih izveštaja”. Today's log is live, and every past day is saved as a separate report."
+    },
+    "istorija-pregled": {
+      "heading": {
+        "sr": "Prošli dani",
+        "en": "Past days"
+      },
+      "sr": "Svaki sačuvani dan ima svoj izveštaj sa najsporijim rutama, greškama i najposećenijim stranicama. Uporedite dane da vidite da li se stanje sajta popravlja ili pogoršava, na primer posle nove verzije.",
+      "en": "Every saved day has its own report with the slowest routes, errors and most visited pages. Compare days to see whether the site is getting better or worse, for example after a new release."
+    }
+  }
+}

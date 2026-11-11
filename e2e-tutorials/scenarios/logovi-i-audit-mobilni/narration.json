@@ -1,0 +1,11 @@
+{
+  "extends": "logovi-i-audit",
+  "title": {
+    "sr": "Logovi, audit i aktivnost korisnika (telefon)",
+    "en": "Logs, audit trail and user activity (phone)"
+  },
+  "intro": {
+    "sr": "Sistem beleži tri vrste tragova: tehničke logove sajta, audit log (ko je šta izmenio) i aktivnost korisnika (šta posetioci rade). Ovde je objašnjeno čemu služi svaki i kada ga otvoriti. Snimljeno na telefonu (390x844).",
+    "en": "The system keeps three kinds of traces: technical site logs, the audit log (who changed what) and user activity (what visitors do). This explains what each is for and when to open it. Recorded on a phone (390x844)."
+  }
+}

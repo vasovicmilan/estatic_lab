@@ -4,8 +4,8 @@
     "en": "Newsletter - sign-up and subscriber list"
   },
   "intro": {
-    "sr": "Posetilac se prijavljuje na newsletter kroz formu u podnožju (email, interesovanje, pristanak), a administrator vidi pretplatnika u „Newsletter“.",
-    "en": "A visitor subscribes through the footer form (email, interest, consent), and an administrator sees the subscriber in “Newsletter”."
+    "sr": "Posetilac se prijavljuje na newsletter kroz formu u podnožju (email, interesovanje, pristanak), administrator vidi pretplatnika sa oblašću i izvorom, a pretplatnik se na kraju odjavljuje linkom iz mejla.",
+    "en": "A visitor subscribes through the footer form (email, interest, consent), an administrator sees the subscriber with area and source, and the subscriber finally unsubscribes through the link in the email."
   },
   "steps": {
     "newsletter-forma": {
@@ -95,6 +95,38 @@
       },
       "sr": "Nova prijava je odmah tu, sa statusom i vremenom prijave. Odjava je za posetioca jedan klik iz svakog mejla.",
       "en": "The new sign-up is there at once, with status and time. For the visitor, unsubscribing is one click from every email."
+    },
+    "admin-newsletter-oblast-izvor": {
+      "heading": {
+        "sr": "Oblast i izvor",
+        "en": "Area and source"
+      },
+      "sr": "Tabela ima dve kolone koje razlikuju pretplatnike: „Oblast“ (usluge, tretmani i paketi, kozmetika i proizvodi ili b2b/partnerstvo) i „Izvor“ (footer sajta, točak sreće, API ili admin), uz stranicu sa koje je prijava stigla. Tako se zna ko traži tretmane, a ko saradnju, i koji deo sistema donosi pretplatnike.",
+      "en": "The table has two columns that tell subscribers apart: “Oblast” (services, treatments and packages, cosmetics and products, or b2b/partnership) and “Izvor” (site footer, wheel of fortune, API or admin), together with the page the signup came from. This shows who wants treatments and who wants a partnership, and which part of the system brings subscribers."
+    },
+    "admin-newsletter-filteri": {
+      "heading": {
+        "sr": "Filteri po oblasti i izvoru",
+        "en": "Filters by area and source"
+      },
+      "sr": "Filteri po oblasti i izvoru izdvajaju grupu kojoj se piše. Kampanja se istim redom bira po oblasti, pa B2B ponuda ne stiže onima koji žele samo tretmane.",
+      "en": "Filters by area and source pick out the group to write to. A campaign is chosen by area in the same way, so a B2B offer does not reach those who only want treatments."
+    },
+    "newsletter-odjava-link": {
+      "heading": {
+        "sr": "Odjava iz mejla",
+        "en": "Unsubscribing from the email"
+      },
+      "sr": "Svaki newsletter u dnu ima link za odjavu. Pretplatnik ga otvara i odmah se odjavljuje, bez prijave i bez dodatnih koraka.",
+      "en": "Every newsletter has an unsubscribe link at the bottom. The subscriber opens it and is unsubscribed immediately, with no sign-in and no extra steps."
+    },
+    "newsletter-odjava-potvrda": {
+      "heading": {
+        "sr": "Potvrda odjave",
+        "en": "Unsubscribe confirmation"
+      },
+      "sr": "Prikazuje se jasna potvrda da je odjava uspela. Ako je link star ili pogrešan, stranica to kaže i nudi kontakt, pa niko ne ostaje u nedoumici.",
+      "en": "A clear confirmation that the unsubscribe worked is shown. If the link is old or wrong, the page says so and offers a contact, so nobody is left wondering."
     }
   }
 }

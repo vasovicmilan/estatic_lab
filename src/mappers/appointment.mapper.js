@@ -195,6 +195,9 @@ export function mapAppointmentForUserShort(appointment) {
     startTimeRaw: appointment.startTime,
     status: translateStatus(appointment.status),
     cena: appointment.finalPrice != null ? formatMoney(appointment.finalPrice) : null,
+    // covered by a purchased package: the 0 RSD is not "free", it was prepaid
+    placenoPaketom: Boolean(appointment.packagePurchase),
+    paketId: appointment.packagePurchase ? String(appointment.packagePurchase._id ?? appointment.packagePurchase) : null,
   };
 }
 
@@ -222,6 +225,8 @@ export function mapAppointmentForUserDetail(appointment) {
     popust: appointment.discountApplied ? formatMoney(appointment.discountApplied) : null,
     konacnaCena: appointment.finalPrice != null ? formatMoney(appointment.finalPrice) : null,
     kupon: appointment.coupon?.code || null,
+    placenoPaketom: Boolean(appointment.packagePurchase),
+    paketId: appointment.packagePurchase ? String(appointment.packagePurchase._id ?? appointment.packagePurchase) : null,
     createdAt: formatDateTime(appointment.createdAt),
 
     razlogOdbijanja: appointment.status === "rejected" ? appointment.rejectionReason || "Nije naveden" : null,

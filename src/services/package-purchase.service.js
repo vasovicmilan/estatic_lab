@@ -6,7 +6,7 @@ import packageService from "./package.service.js";
 import serviceService from "./service.service.js";
 import userService from "./user.service.js";
 import couponService from "./coupon.service.js";
-import { mapPackagePurchasesForAdminList, mapPackagePurchaseForAdminDetail } from "../mappers/package-purchase.mapper.js";
+import { mapPackagePurchasesForAdminList, mapPackagePurchaseForAdminDetail, mapPackagePurchasesForUser, mapPackagePurchaseForUserDetail, effectiveStatus } from "../mappers/package-purchase.mapper.js";
 import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
 import { logInfo, logWarn } from "../utils/logger.util.js";
 
@@ -157,6 +157,34 @@ export async function listPurchasesForUser(userId) {
   if (!userId) validationError("userId");
   const purchases = await packagePurchaseRepo.findPurchasesByUser(userId, { populateFields: adminPopulate });
   return mapPackagePurchasesForAdminList(purchases);
+}
+
+const userPopulate = [
+  { path: "package", select: "name" },
+  { path: "items.service", select: "name packages" },
+];
+
+/** The signed-in customer's own packages, newest first; `status` filters on what is shown (expiry included). */
+export async function listMyPurchases(userId, { status = "" } = {}) {
+  if (!userId) validationError("userId");
+  const purchases = await packagePurchaseRepo.findPurchasesByUser(userId, { populateFields: userPopulate });
+  const filtered = status ? purchases.filter((p) => effectiveStatus(p) === status) : purchases;
+  return mapPackagePurchasesForUser(filtered);
+}
+
+/** One of the customer's packages with the appointments booked against it. Someone else's id is a plain 404. */
+export async function getMyPurchase(userId, packagePurchaseId) {
+  if (!userId || !packagePurchaseId) validationError("packagePurchaseId");
+  const purchase = await packagePurchaseRepo.findPackagePurchaseById(packagePurchaseId, { populateFields: userPopulate });
+  if (!purchase || String(purchase.user?._id ?? purchase.user) !== String(userId)) notFound("Kupljeni paket");
+  const appointments = await appointmentRepo.findAppointments({
+    filters: { packagePurchaseId: purchase._id },
+    sort: { startTime: -1, _id: -1 },
+    limit: 100,
+    page: 1,
+    populateFields: [{ path: "service", select: "name slug" }],
+  });
+  return mapPackagePurchaseForUserDetail(purchase, appointments.data);
 }
 
 export async function listPurchases({ filters = {}, limit = 10, page = 1, sort } = {}) {
@@ -429,6 +457,8 @@ export default {
   getPurchaseById,
   getPurchaseForCommission,
   listPurchasesForUser,
+  listMyPurchases,
+  getMyPurchase,
   listPurchases,
   findUsablePurchaseForService,
   assertUsablePurchase,

@@ -1,0 +1,11 @@
+{
+  "extends": "pregled-admin-panela",
+  "title": {
+    "sr": "Admin panel: šta vidim čim se prijavim (telefon)",
+    "en": "The admin panel: what I see right after signing in (phone)"
+  },
+  "intro": {
+    "sr": "Početna stranica administracije je kontrolna tabla: u jednom pogledu pokazuje šta čeka na odluku, šta je danas na rasporedu i kakvo je opšte stanje. Ovo je prvo mesto koje pogledate svako jutro. Snimljeno na telefonu (390x844).",
+    "en": "The admin home page is a control board: in one glance it shows what is waiting for a decision, what is on today and the general state of things. This is the first place to look every morning. Recorded on a phone (390x844)."
+  }
+}

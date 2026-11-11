@@ -1,6 +1,7 @@
 import QRCode from "qrcode";
 import wheelService from "../../../../services/wheel.service.js";
 import { prepareWheelCouponListData } from "../../../../presenters/admin/marketing/wheel-coupon.presenter.js";
+import { prepareWheelPrizeFormData } from "../../../../presenters/admin/marketing/wheel-prize.presenter.js";
 import { prepareLeadListData, prepareLeadDetailsData, SORT_MAP } from "../../../../presenters/admin/marketing/lead.presenter.js";
 import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
@@ -181,4 +182,106 @@ export async function updatePrize(req, res, next) {
   }
 }
 
-export default { listLeads, listWheelCoupons, leadDetails, deleteLead, exportLeads, prizesPage, qrDownload, updatePrize };
+async function renderPrizeForm(res, { prize = null, extra = {}, status = 200, pageTitle }) {
+  const serviceOptions = await wheelService.listServiceOptions();
+  const form = prepareWheelPrizeFormData(prize, { serviceOptions });
+  return res.status(status).render("admin/_form", {
+    pageTitle,
+    pageDescription: "Nagrada točka sreće",
+    data: { ...form, errors: {}, csrfToken: res.locals.csrfToken, ...extra },
+  });
+}
+
+export async function newPrizeForm(req, res, next) {
+  try {
+    return await renderPrizeForm(res, { pageTitle: "Nova nagrada točka" });
+  } catch (error) {
+    logError("[newPrizeForm] Greška", error, { userId: req.session?.user?.id });
+    next(error);
+  }
+}
+
+export async function editPrizeForm(req, res, next) {
+  try {
+    const prize = await wheelService.getPrizeForEdit(req.params.prizeId);
+    return await renderPrizeForm(res, { prize, pageTitle: "Izmena nagrade točka" });
+  } catch (error) {
+    logError("[editPrizeForm] Greška", error, { prizeId: req.params.prizeId, userId: req.session?.user?.id });
+    if (error.statusCode) return flashAndRedirect(req, res, "error", error.message, "/admin/tocak/nagrade");
+    next(error);
+  }
+}
+
+export async function createPrize(req, res, next) {
+  try {
+    if (req.validationErrors) {
+      return await renderPrizeForm(res, { status: 400, pageTitle: "Nova nagrada točka", extra: { errors: req.validationErrors, formData: req.body } });
+    }
+    const prize = await wheelService.createPrize(req.body);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "WHEEL_PRIZE_CREATED",
+      entity: { type: "WheelPrize", id: prize.id },
+      changes: { key: prize.key, label: prize.label, weight: prize.weight, stock: prize.stock, isFallback: prize.isFallback },
+      req,
+      success: true,
+    });
+    return flashAndRedirect(req, res, "success", "Nagrada je dodata na točak", "/admin/tocak/nagrade");
+  } catch (error) {
+    logError("[createPrize] Greška pri dodavanju nagrade", error, { userId: req.session?.user?.id });
+    if (error.statusCode === 400 || error.statusCode === 409) {
+      return await renderPrizeForm(res, { status: 400, pageTitle: "Nova nagrada točka", extra: { errors: { general: error.message }, formData: req.body } });
+    }
+    next(error);
+  }
+}
+
+export async function updatePrizeFull(req, res, next) {
+  const { prizeId } = req.params;
+  try {
+    const current = await wheelService.getPrizeForEdit(prizeId);
+    if (req.validationErrors) {
+      return await renderPrizeForm(res, { prize: current, status: 400, pageTitle: "Izmena nagrade točka", extra: { errors: req.validationErrors, formData: req.body } });
+    }
+    const { before, after } = await wheelService.updatePrizeFull(prizeId, req.body);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "WHEEL_PRIZE_UPDATED",
+      entity: { type: "WheelPrize", id: prizeId },
+      changes: { before, after },
+      req,
+      success: true,
+    });
+    return flashAndRedirect(req, res, "success", "Nagrada je sačuvana", "/admin/tocak/nagrade");
+  } catch (error) {
+    logError("[updatePrizeFull] Greška pri izmeni nagrade", error, { prizeId, userId: req.session?.user?.id });
+    if (error.statusCode === 400 || error.statusCode === 409) {
+      const current = await wheelService.getPrizeForEdit(prizeId).catch(() => null);
+      return await renderPrizeForm(res, { prize: current, status: 400, pageTitle: "Izmena nagrade točka", extra: { errors: { general: error.message }, formData: req.body } });
+    }
+    if (error.statusCode) return flashAndRedirect(req, res, "error", error.message, "/admin/tocak/nagrade");
+    next(error);
+  }
+}
+
+export async function deletePrize(req, res, next) {
+  const { prizeId } = req.params;
+  try {
+    const prize = await wheelService.deletePrize(prizeId);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "WHEEL_PRIZE_DELETED",
+      entity: { type: "WheelPrize", id: prizeId },
+      changes: { key: prize.key, label: prize.label },
+      req,
+      success: true,
+    });
+    return flashAndRedirect(req, res, "success", "Nagrada je obrisana", "/admin/tocak/nagrade");
+  } catch (error) {
+    logError("[deletePrize] Greška pri brisanju nagrade", error, { prizeId, userId: req.session?.user?.id });
+    if (error.statusCode) return flashAndRedirect(req, res, "error", error.message, "/admin/tocak/nagrade");
+    next(error);
+  }
+}
+
+export default { listLeads, listWheelCoupons, leadDetails, deleteLead, exportLeads, prizesPage, qrDownload, updatePrize, newPrizeForm, editPrizeForm, createPrize, updatePrizeFull, deletePrize };

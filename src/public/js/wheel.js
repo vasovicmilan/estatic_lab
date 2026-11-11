@@ -111,11 +111,17 @@
     ev.preventDefault();
     if (spinning) return;
     showErrors({}, "");
+    var consentBox = document.getElementById("w-consentContact");
+    // in-app browsers sometimes skip the native "required" check, so the consent is verified here too
+    if (!consentBox || !consentBox.checked) {
+      showErrors({ consentContact: "Morate prihvatiti da vas kontaktiramo u vezi nagrade" }, "");
+      return;
+    }
     var fd = new FormData(form);
     var body = {
       firstName: fd.get("firstName"), lastName: fd.get("lastName"), email: fd.get("email"), phone: fd.get("phone"),
       segment: fd.get("segment"), source: cfg.source || "", nickname: fd.get("nickname") || "",
-      consentContact: !!fd.get("consentContact"), consentMarketing: !!fd.get("consentMarketing")
+      consentContact: consentBox.checked, consentMarketing: !!(document.getElementById("w-consentMarketing") || {}).checked
     };
     spinning = true;
     btn.disabled = true;

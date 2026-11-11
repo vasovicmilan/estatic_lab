@@ -40,7 +40,7 @@
             </div>
             <div class="text-end">
               <span class="badge bg-secondary"><%= a.status %></span>
-              <div class="small price-mono"><%= a.cena %></div>
+              <% if (a.placenoPaketom) { %><div class="small text-success"><i class="bi bi-ticket-perforated"></i> Iz paketa</div><% } else { %><% if (a.placenoPaketom) { %><div class="small text-success"><i class="bi bi-ticket-perforated"></i> Iz paketa</div><% } else { %><div class="small price-mono"><%= a.cena %></div><% } %><% } %>
             </div>
           </a>
         <% }) %>
@@ -61,7 +61,7 @@
             </div>
             <div class="text-end">
               <span class="badge bg-secondary"><%= a.status %></span>
-              <div class="small price-mono"><%= a.cena %></div>
+              <% if (a.placenoPaketom) { %><div class="small text-success"><i class="bi bi-ticket-perforated"></i> Iz paketa</div><% } else { %><div class="small price-mono"><%= a.cena %></div><% } %>
             </div>
           </a>
         <% }) %>

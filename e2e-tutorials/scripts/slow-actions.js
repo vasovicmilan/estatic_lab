@@ -664,3 +664,17 @@ export async function bookServiceViaNav(page, tut, { mobile = false, service }) 
     await expect(page).toHaveURL(/\/podaci/);
   });
 }
+
+/**
+ * Highlights the first VISIBLE match, or does nothing when there is none (a section that is
+ * hidden by a feature flag, or a list that is empty on a fresh tutorial database). Used by the
+ * explanatory "tour" scenarios, where a step is about showing and explaining a block, not about
+ * a click that must succeed - one missing block must not fail the whole recording.
+ * Returns whether something was highlighted.
+ */
+export async function focusIfPresent(locator, opts = {}) {
+  const visible = locator.locator("visible=true");
+  if ((await visible.count()) === 0) return false;
+  await highlight(visible, opts);
+  return true;
+}

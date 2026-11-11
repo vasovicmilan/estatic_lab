@@ -1,0 +1,11 @@
+{
+  "extends": "poslovni-izvestaji-detaljno",
+  "title": {
+    "sr": "Poslovni izveštaji: šta znači svaki broj (telefon)",
+    "en": "Business reports: what every number means (phone)"
+  },
+  "intro": {
+    "sr": "Poslovni izveštaji sabiraju rad salona po periodima: termine, prodavnicu, pakete, provizije i kupone. Ovde je objašnjeno šta pokazuje svaki blok i kako se čitaju sačuvani izveštaji. Snimljeno na telefonu (390x844).",
+    "en": "Business reports add up the salon's work per period: appointments, shop, packages, commissions and coupons. This explains what each block shows and how to read the saved reports. Recorded on a phone (390x844)."
+  }
+}

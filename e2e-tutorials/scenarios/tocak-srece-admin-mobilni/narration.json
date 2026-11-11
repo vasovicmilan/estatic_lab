@@ -1,0 +1,11 @@
+{
+  "extends": "tocak-srece-admin",
+  "title": {
+    "sr": "Točak sreće: administracija (telefon)",
+    "en": "Wheel of fortune: administration (phone)"
+  },
+  "intro": {
+    "sr": "Posle sajma vlasnik vidi ko je ostavio kontakt, šta je dobio i ko je iskoristio kod. Ovde se podešavaju i nagrade, zalihe i QR kod za štampu. Snimljeno na telefonu (390x844).",
+    "en": "After the fair the owner sees who left a contact, what they won and who used the code. Prizes, stock and the QR code for printing are also set here. Recorded on a phone (390x844)."
+  }
+}

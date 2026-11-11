@@ -15,7 +15,11 @@
         <dt class="col-5 text-muted">Termin</dt><dd class="col-7 mono"><%= data.appointment.termin.pocetak %></dd>
         <dt class="col-5 text-muted">Terapeut</dt><dd class="col-7"><%= data.appointment.terapeut %></dd>
         <dt class="col-5 text-muted">Status</dt><dd class="col-7"><%= data.appointment.status %></dd>
-        <dt class="col-5 text-muted">Cena</dt><dd class="col-7 price-mono"><%= data.appointment.konacnaCena %></dd>
+        <% if (data.appointment.placenoPaketom) { %>
+          <dt class="col-5 text-muted">Plaćanje</dt><dd class="col-7">Iz kupljenog paketa (<a href="/nalog/paketi/detalji/<%= data.appointment.paketId %>">pogledaj paket</a>)</dd>
+        <% } else { %>
+          <dt class="col-5 text-muted">Cena</dt><dd class="col-7 price-mono"><%= data.appointment.konacnaCena %></dd>
+        <% } %>
         <% if (data.appointment.napomena) { %><dt class="col-5 text-muted">Napomena</dt><dd class="col-7"><%= data.appointment.napomena %></dd><% } %>
         <% if (data.appointment.razlogOdbijanja) { %><dt class="col-5 text-muted">Razlog odbijanja</dt><dd class="col-7"><%= data.appointment.razlogOdbijanja %></dd><% } %>
         <% if (data.appointment.razlogOtkazivanja) { %><dt class="col-5 text-muted">Razlog otkazivanja</dt><dd class="col-7"><%= data.appointment.razlogOtkazivanja %></dd><% } %>
