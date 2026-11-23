@@ -14,6 +14,7 @@ export function mapLeadsForAdminList(leads = []) {
     imePrezime: `${lead.firstName} ${decryptField(lead.lastName) || ""}`.trim(),
     email: lead.email,
     segment: SEGMENT_LABELS[lead.segment] || lead.segment,
+    tocak: lead.wheel?.name || "-",
     izvor: lead.source,
     nagrada: lead.prizeLabel,
     kod: lead.couponCode,
@@ -32,6 +33,7 @@ export function mapLeadForAdminDetail(lead) {
       email: lead.email,
       telefon: decryptPhone(lead.phone),
       segment: SEGMENT_LABELS[lead.segment] || lead.segment,
+      tocak: lead.wheel?.name || "-",
       izvor: lead.source,
       saglasnostKontakt: lead.consentContact ? "Da" : "Ne",
       saglasnostMarketing: lead.consentMarketing ? "Da" : "Ne",
@@ -54,7 +56,7 @@ function csvCell(value) {
 }
 
 export function mapLeadsToCsv(leads = []) {
-  const header = ["Datum", "Ime", "Prezime", "Email", "Telefon", "Segment", "Izvor", "Newsletter", "Nagrada", "Kod", "Važi do", "Iskorišćen"];
+  const header = ["Datum", "Ime", "Prezime", "Email", "Telefon", "Segment", "Točak", "Izvor", "Newsletter", "Nagrada", "Kod", "Važi do", "Iskorišćen"];
   const rows = leads.map((l) =>
     [
       formatDateTime(l.createdAt),
@@ -63,6 +65,7 @@ export function mapLeadsToCsv(leads = []) {
       l.email,
       decryptPhone(l.phone),
       SEGMENT_LABELS[l.segment] || l.segment,
+      l.wheel?.name || "",
       l.source,
       l.consentMarketing ? "Da" : "Ne",
       l.prizeLabel,

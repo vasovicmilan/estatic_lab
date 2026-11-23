@@ -17,8 +17,8 @@
             <% if (variant.oznaka) { %><span class="badge bg-primary mb-2 align-self-center"><%= variant.oznaka %></span><% } %>
             <h2 class="h5"><%= variant.naziv %></h2>
             <p class="text-muted small mono"><%= variant.trajanje %> min</p>
-            <p class="h4 flex-grow-1 price-mono"><%= variant.cena %></p>
-            <a href="<%= data.nextUrl %>?servicePackageId=<%= variant.id %>" class="btn btn-primary w-100">Izaberi</a>
+            <p class="h4 flex-grow-1 price-mono"><%= variant.cena %><%- include("../includes/components/price-eur", { eur: variant.cenaEur, oldEur: variant.staraCenaEur }) %></p>
+            <a href="<%= data.nextUrl %>?servicePackageId=<%= variant.id %><% if (data.preselectedEmployeeId) { %>&employeeId=<%= data.preselectedEmployeeId %><% } %>" class="btn btn-primary w-100">Izaberi</a>
           </div>
         </div>
       </div>

@@ -126,6 +126,7 @@
                   <div class="d-flex align-items-baseline gap-2 mb-3">
                     <strong class="fs-5 price-mono"><%= variant.cena %></strong>
                     <% if (variant.staraCena) { %><span class="text-muted text-decoration-line-through small price-mono"><%= variant.staraCena %></span><% } %>
+                    <%- include("../includes/components/price-eur", { eur: variant.cenaEur, oldEur: variant.staraCenaEur }) %>
                   </div>
                   <a href="/zakazivanje/<%= data.service.slug %>/termin?servicePackageId=<%= variant.id %>" class="btn btn-primary rounded-pill w-100">Zakaži</a>
                 </div>

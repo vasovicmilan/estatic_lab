@@ -1,4 +1,6 @@
 import * as campaignService from "../../../../services/campaign.service.js";
+import wheelService from "../../../../services/wheel.service.js";
+import * as materialService from "../../../../services/material.service.js";
 import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import { prepareCampaignListData, prepareCampaignDetailsData, prepareCampaignFormData } from "../../../../presenters/admin/marketing/campaign.presenter.js";
 import { SORT_MAP } from "../../../../presenters/admin/marketing/campaign.presenter.js";
@@ -9,6 +11,7 @@ import { flashAndRedirect } from "../../../../utils/flash.util.js";
 import { normalizeError } from "../../../../utils/error.util.js";
 import { toIdArray } from "../../../../utils/form-array.util.js";
 import { zonedInputToUtcDate } from "../../../../utils/date.time.util.js";
+import { parseCheckbox } from "../../../../utils/form-bool.util.js";
 
 // content blocks are submitted as JSON from the dynamic form-builder widget
 // rather than a flat form field, same as post.controller.js/product.controller.js
@@ -22,12 +25,21 @@ function parseJsonField(value, fallback = []) {
   }
 }
 
+// the campaign form's two dropdown-like lists: wheel campaign tags that can narrow the audience, and
+// the uploaded materials a "file" block can point at
+async function formOptions() {
+  const [sources, materials] = await Promise.all([wheelService.listSources().catch(() => []), materialService.listMaterialOptions().catch(() => [])]);
+  return { sources: (sources || []).filter(Boolean).sort(), materials };
+}
+
 function buildCampaignPayload(req) {
   return {
     title: req.body.title,
     subject: req.body.subject,
     content: parseJsonField(req.body.content),
     targetInterests: toIdArray(req.body.targetInterests),
+    targetSources: toIdArray(req.body.targetSources),
+    onlyUnusedCoupon: parseCheckbox(req.body.onlyUnusedCoupon, false),
     status: req.body.status || "draft",
     // req.body.scheduledFor is whatever a <input type="datetime-local"> submitted -
     // see post.controller.js's identical comment on buildPostPayload.
@@ -64,7 +76,9 @@ export async function campaignDetails(req, res, next) {
   try {
     const { campaignId } = req.params;
     const campaign = await campaignService.getCampaignById(campaignId);
-    const viewData = prepareCampaignDetailsData(campaign);
+    // a send that already happened has its own counters - the estimate only matters before it
+    const recipients = campaign.statusRaw === "sent" ? null : await campaignService.countCampaignRecipients(campaignId).catch(() => null);
+    const viewData = prepareCampaignDetailsData(campaign, { recipients, testEmail: req.session?.user?.email || "" });
 
     return res.render("admin/_details", {
       pageTitle: `Kampanja - ${campaign.naslov}`,
@@ -79,7 +93,7 @@ export async function campaignDetails(req, res, next) {
 
 export async function newCampaignForm(req, res, next) {
   try {
-    const formData = prepareCampaignFormData(null);
+    const formData = prepareCampaignFormData(null, await formOptions());
     return res.render("admin/_form", {
       pageTitle: "Nova kampanja",
       pageDescription: "Kreiraj novu newsletter kampanju",
@@ -95,7 +109,7 @@ export async function editCampaignForm(req, res, next) {
   try {
     const { campaignId } = req.params;
     const campaign = await campaignService.getCampaignForEdit(campaignId);
-    const formData = prepareCampaignFormData(campaign);
+    const formData = prepareCampaignFormData(campaign, await formOptions());
 
     return res.render("admin/_form", {
       pageTitle: `Izmena - ${campaign.title}`,
@@ -112,7 +126,7 @@ export async function createCampaign(req, res, next) {
   try {
     if (req.validationErrors) {
       logWarn("[createCampaign] Validacione greške pri kreiranju kampanje", { validationErrors: req.validationErrors, userId: req.session?.user?.id });
-      const formData = prepareCampaignFormData(null);
+      const formData = prepareCampaignFormData(null, await formOptions());
       return res.status(400).render("admin/_form", {
         pageTitle: "Nova kampanja",
         pageDescription: "Kreiraj novu newsletter kampanju",
@@ -137,7 +151,7 @@ export async function createCampaign(req, res, next) {
 
     const { statusCode, message } = normalizeError(error);
     if (statusCode === 400 || statusCode === 409) {
-      const formData = prepareCampaignFormData(null);
+      const formData = prepareCampaignFormData(null, await formOptions());
       return res.status(statusCode).render("admin/_form", {
         pageTitle: "Nova kampanja",
         pageDescription: "Kreiraj novu newsletter kampanju",
@@ -155,7 +169,7 @@ export async function updateCampaign(req, res, next) {
     if (req.validationErrors) {
       logWarn(`[updateCampaign] Validacione greške za campaignId=${campaignId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
       const campaign = await campaignService.getCampaignForEdit(campaignId);
-      const formData = prepareCampaignFormData(campaign);
+      const formData = prepareCampaignFormData(campaign, await formOptions());
       return res.status(400).render("admin/_form", {
         pageTitle: `Izmena - ${campaign.title}`,
         pageDescription: campaign.subject,
@@ -184,7 +198,7 @@ export async function updateCampaign(req, res, next) {
     const { statusCode, message } = normalizeError(error);
     if (statusCode === 400 || statusCode === 404 || statusCode === 409) {
       const campaign = await campaignService.getCampaignForEdit(req.params.campaignId).catch(() => null);
-      const formData = prepareCampaignFormData(campaign);
+      const formData = prepareCampaignFormData(campaign, await formOptions());
       return res.status(statusCode).render("admin/_form", {
         pageTitle: campaign ? `Izmena - ${campaign.title}` : "Izmena kampanje",
         pageDescription: campaign?.subject || "",
@@ -217,6 +231,32 @@ export async function sendCampaignNow(req, res, next) {
     }
     next(error);
   }
+}
+
+// "Pošalji probni mejl": the campaign exactly as a subscriber would get it, to one address, without
+// touching its status or counters
+export async function sendCampaignTest(req, res, next) {
+  const { campaignId } = req.params;
+  const back = `/admin/newsletter/kampanje/detalji/${campaignId}`;
+  try {
+    if (req.validationErrors) return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), back);
+    const { email } = await campaignService.sendCampaignTest(campaignId, req.body.email, req.session?.user?.firstName || "");
+    logInfo(`[sendCampaignTest] Probni mejl za kampanju #${campaignId}`, { campaignId, email, adminId: req.session?.user?.id });
+    return flashAndRedirect(req, res, "success", `Probni mejl je poslat na ${email}.`, back);
+  } catch (error) {
+    logError("[sendCampaignTest] Greška pri slanju probnog mejla", error, { campaignId, userId: req.session?.user?.id });
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode) return flashAndRedirect(req, res, "error", message, back);
+    next(error);
+  }
+}
+
+// Upload for a campaign's "image" block (called by public/js/admin-content-blocks.js). Saves a
+// JPEG under /images/campaigns - see multer.config.js's handleEmailImageUpload.
+export function uploadCampaignImage(req, res) {
+  if (!req.uploadedFile) return res.status(400).json({ success: false, message: "Izaberite sliku (JPG, PNG, WEBP ili AVIF)." });
+  logInfo("[uploadCampaignImage] Slika za kampanju otpremljena", { path: req.uploadedFile.img, adminId: req.session?.user?.id });
+  return res.status(201).json({ success: true, data: req.uploadedFile });
 }
 
 export async function deleteCampaign(req, res, next) {
@@ -253,5 +293,7 @@ export default {
   createCampaign,
   updateCampaign,
   sendCampaignNow,
+  sendCampaignTest,
+  uploadCampaignImage,
   deleteCampaign,
 };

@@ -15,6 +15,7 @@ import {
   mapProductForPublicDetail,
   mapProductsForSelect,
 } from "../mappers/product.mapper.js";
+import { validateEurPair } from "../utils/eur-price.util.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 import { deleteUploadedFile, deleteUploadedFiles } from "../utils/file-cleanup.util.js";
@@ -53,6 +54,8 @@ function validateVariations(variations = []) {
     if (!v.label) badRequest("Svaka varijanta mora imati naziv");
     if (v.price == null || v.price < 0) badRequest(`Varijanta "${v.label}" mora imati validnu cenu`);
     if (v.stock == null || v.stock < 0) badRequest(`Varijanta "${v.label}" mora imati validno stanje zaliha`);
+    const eurError = validateEurPair({ price: v.priceEur, oldPrice: v.compareAtPriceEur }, `Varijanta "${v.label}"`);
+    if (eurError) badRequest(eurError);
   }
 }
 

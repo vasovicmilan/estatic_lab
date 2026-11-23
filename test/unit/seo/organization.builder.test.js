@@ -14,7 +14,8 @@ describe("seo/organization.builder", () => {
     const result = await buildOrganizationJsonLd(fakeReq());
 
     assert.equal(result["@type"], "HealthAndBeautyBusiness");
-    assert.equal(result.telephone, "+381 65 977 4000");
+    assert.equal(result.telephone, "+381 65 977 4001");
+    assert.equal(result.contactPoint[0].telephone, "+381 65 977 4000");
     assert.equal(result.address.addressLocality, "Novi Sad");
     assert.equal(result.geo.latitude, 45.24961274772971);
   });

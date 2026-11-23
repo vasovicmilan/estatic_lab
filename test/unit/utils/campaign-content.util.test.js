@@ -81,4 +81,21 @@ describe("campaign-content.util - renderCampaignContentToEmailHtml", () => {
     );
     assert.equal(html, '<p style="font-size:15px; color:#3a352f; line-height:1.7; margin:0 0 16px;">ovo ostaje</p>');
   });
+
+  it("renders a file block as a download button pointing at the material page (absolute URL)", () => {
+    const html = renderCampaignContentToEmailHtml(
+      [{ type: "file", title: "Ponuda 2026", text: "Sve cene na jednom mestu", button: { url: "/materijali/ponuda-2026", text: "Preuzmi PDF" }, order: 0 }],
+      BASE_URL
+    );
+    assert.ok(html.includes('href="https://beautymedica.rs/materijali/ponuda-2026"'));
+    assert.ok(html.includes("Preuzmi PDF"));
+    assert.ok(html.includes("Ponuda 2026"));
+  });
+
+  it("skips a file block with no material chosen, and escapes its text", () => {
+    assert.equal(renderCampaignContentToEmailHtml([{ type: "file", title: "x", order: 0 }], BASE_URL), "");
+    const html = renderCampaignContentToEmailHtml([{ type: "file", title: "<b>x</b>", button: { url: "/materijali/a", text: "<i>" }, order: 0 }], BASE_URL);
+    assert.ok(!html.includes("<b>x</b>"));
+    assert.ok(html.includes("&lt;b&gt;x&lt;/b&gt;"));
+  });
 });

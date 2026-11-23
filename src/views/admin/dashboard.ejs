@@ -5,7 +5,23 @@
   <%- include("../includes/breadcrumbs") %>
   <%- include("../includes/flash-messages") %>
 
-  <h1 class="h3 mb-4">Admin panel</h1>
+  <h1 class="h3 mb-3"><%= data.title || "Admin panel" %></h1>
+
+  <% if (data.quickLinks && data.quickLinks.length) { %>
+    <div class="d-flex flex-wrap gap-2 mb-4">
+      <% data.quickLinks.forEach(function(l) { %>
+        <a href="<%= l.url %>" class="btn btn-sm <%= l.primary ? 'btn-primary' : 'btn-outline-secondary' %>"><i class="bi <%= l.icon %>"></i> <%= l.label %></a>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (data.areaLinks && data.areaLinks.length) { %>
+    <div class="d-flex flex-wrap gap-2 mb-4" aria-label="Pregledi po oblastima">
+      <% data.areaLinks.forEach(function(a) { %>
+        <a href="<%= a.url %>" class="btn btn-sm btn-outline-primary"><i class="bi <%= a.icon %>"></i> <%= a.label %></a>
+      <% }) %>
+    </div>
+  <% } %>
 
   <% data.sections.forEach(function(section) { %>
     <h2 class="h6 text-muted text-uppercase mb-2"><%= section.title %></h2>
@@ -26,6 +42,7 @@
     </div>
   <% }) %>
 
+  <% if (data.activityTabs.length > 0) { %>
   <div class="card">
     <div class="card-header">
       <ul class="nav nav-tabs card-header-tabs" role="tablist">
@@ -80,6 +97,7 @@
       </div>
     </div>
   </div>
+  <% } %>
 </main>
 
 <%- include("../includes/footer") %>

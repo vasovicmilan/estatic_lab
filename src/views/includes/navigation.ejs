@@ -197,6 +197,7 @@
     {
       label: "Katalog", icon: "bi-heart-pulse",
       items: [
+        { href: "/admin/pregled/katalog", permissionAny: ["manage_services", "manage_packages"], label: "Pregled kataloga", icon: "bi-speedometer", feature: features.booking },
         { href: "/admin/usluge", permission: "manage_services", label: "Usluge", icon: "bi-heart-pulse", feature: features.booking },
         { href: "/admin/paketi", permission: "manage_packages", label: "Paketi", icon: "bi-box-seam", feature: features.booking },
         { href: "/admin/kupljeni-paketi", permission: "manage_appointments_all", label: "Kupljeni paketi", icon: "bi-bag-check", feature: features.booking },
@@ -207,6 +208,7 @@
     {
       label: "Prodavnica", icon: "bi-shop",
       items: [
+        { href: "/admin/pregled/prodavnica", permission: "manage_products", label: "Pregled prodavnice", icon: "bi-speedometer", feature: features.shop },
         { href: "/admin/proizvodi", permission: "manage_products", label: "Proizvodi", icon: "bi-box2-heart", feature: features.shop },
         { href: "/admin/porudzbine", permission: "manage_orders", label: "Porudžbine", icon: "bi-receipt", feature: features.shop },
         { href: "/admin/privremene-porudzbine", permission: "manage_orders", label: "Privremene porudžbine", icon: "bi-hourglass-split", feature: features.shop },
@@ -234,6 +236,7 @@
     {
       label: "Sadržaj i marketing", icon: "bi-newspaper",
       items: [
+        { href: "/admin/pregled/blog", permission: "manage_blog", label: "Pregled bloga", icon: "bi-speedometer", feature: features.blog },
         { href: "/admin/blog", permission: "manage_blog", label: "Blog", icon: "bi-newspaper", feature: features.blog },
         { href: "/admin/kontakt", permission: "manage_marketing", label: "Kontakt", icon: "bi-envelope-paper" },
         { href: "/admin/tocak", permission: "manage_marketing", label: "Točak sreće", icon: "bi-stars" },
@@ -267,7 +270,11 @@
   // gets the menu entries they can actually open (the routes enforce the same permission, this
   // just stops the menu from offering pages that answer 403).
   const adminPermissions = user?.permissions || [];
-  const canSee = (item) => !item.permission || user?.roleName === "admin" || adminPermissions.includes(item.permission);
+  const canSee = (item) =>
+    user?.roleName === "admin" ||
+    (!item.permission && !item.permissionAny) ||
+    (item.permission && adminPermissions.includes(item.permission)) ||
+    (item.permissionAny && item.permissionAny.some((p) => adminPermissions.includes(p)));
   adminNavGroups.forEach((group) => {
     group.items = group.items.filter((item) => (item.feature === undefined || item.feature) && canSee(item));
   });

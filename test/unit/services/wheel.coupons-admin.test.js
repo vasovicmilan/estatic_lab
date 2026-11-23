@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import wheelService from "../../../src/services/wheel.service.js";
 import wheelPrizeRepo from "../../../src/repositories/wheel-prize.repository.js";
+import wheelRepo from "../../../src/repositories/wheel.repository.js";
 import leadRepo from "../../../src/repositories/lead.repository.js";
 import couponRepo from "../../../src/repositories/coupon.repository.js";
 import { buildCouponFilter } from "../../../src/repositories/filters/coupon.filter.js";
@@ -26,6 +27,7 @@ describe("wheel coupons - separate admin view", () => {
       };
     });
     t.mock.method(leadRepo, "findLeadsByCouponIds", async () => [{ coupon: usedId, firstName: "Ana", email: "ana@example.com" }]);
+    t.mock.method(wheelRepo, "findAllWheels", async () => []);
     t.mock.method(wheelPrizeRepo, "findAllPrizes", async () => [{ key: "popust-10", label: "10% popusta" }, { key: "popust-20", label: "20% popusta" }]);
 
     const res = await wheelService.listWheelCoupons({ filters: { prize: "popust-10" } });
@@ -47,6 +49,7 @@ describe("wheel coupons - separate admin view", () => {
       data: [{ _id: id(), code: "TOCAK-CCCCCC", usedCount: 0, maxUses: 1, isActive: true, validUntil: new Date(Date.now() - 864e5), wheelPrizeKey: "popust-10" }],
       total: 1, page: 1, limit: 10, totalPages: 1,
     }));
+    t.mock.method(wheelRepo, "findAllWheels", async () => []);
     t.mock.method(leadRepo, "findLeadsByCouponIds", async () => []);
     t.mock.method(wheelPrizeRepo, "findAllPrizes", async () => []);
     const res = await wheelService.listWheelCoupons();

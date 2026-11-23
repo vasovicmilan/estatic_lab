@@ -120,7 +120,7 @@
     var fd = new FormData(form);
     var body = {
       firstName: fd.get("firstName"), lastName: fd.get("lastName"), email: fd.get("email"), phone: fd.get("phone"),
-      segment: fd.get("segment"), source: cfg.source || "", nickname: fd.get("nickname") || "",
+      segment: fd.get("segment"), source: cfg.source || "", wheel: cfg.wheel || "", nickname: fd.get("nickname") || "",
       consentContact: consentBox.checked, consentMarketing: !!(document.getElementById("w-consentMarketing") || {}).checked
     };
     spinning = true;

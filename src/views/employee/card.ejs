@@ -1,0 +1,170 @@
+<%- include("../includes/head") %>
+<%- include("../includes/components/portal-header", { portalHome: "/moj-nalog" }) %>
+
+<%
+  const e = data.editor;
+  const c = e.card;
+  const chk = (v) => (v ? "checked" : "");
+%>
+<main class="container py-4">
+  <%- include("../includes/flash-messages") %>
+  <h1 class="h3 mb-4">Moja vizitka</h1>
+
+  <%- include("../includes/components/employee-tabs") %>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <form action="<%= data.actionUrl %>" method="POST" enctype="multipart/form-data" class="card">
+        <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
+        <div class="card-body">
+          <p class="text-muted small">Ime, titula i slika su uvek vidljivi na vizitki. Sve ostalo (telefon, email, mreže, opis, usluge) prikazuje se samo ako to sami štikliraš.</p>
+
+          <div class="form-check form-switch mb-4">
+            <input class="form-check-input" type="checkbox" role="switch" id="isPublic" name="isPublic" value="true" <%= chk(c.isPublic) %>>
+            <label class="form-check-label fw-semibold" for="isPublic">Vizitka je javna (dostupna preko linka i QR koda)</label>
+            <% if (c.adminDisabled) { %><div class="text-danger small mt-1">Administrator je isključio vašu vizitku - nije vidljiva dok je ne vrati.</div><% } %>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="displayName">Ime na vizitki</label>
+              <input class="form-control" id="displayName" name="displayName" maxlength="80" value="<%= c.displayName %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="title">Titula / zvanje</label>
+              <input class="form-control" id="title" name="title" maxlength="80" value="<%= c.title %>" placeholder="npr. Kozmetičar">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Slika</label>
+              <div class="d-flex align-items-center gap-3 flex-wrap">
+                <% if (c.photo && c.photo.img) { %><img src="<%= c.photo.img %>" alt="" class="rounded-circle" style="width:72px;height:72px;object-fit:cover;"><% } %>
+                <input type="file" class="form-control" name="photo" accept="image/*" style="max-width:320px;">
+              </div>
+              <div class="d-flex gap-3 flex-wrap mt-2">
+                <% if (e.expertPhoto) { %>
+                  <div class="form-check"><input class="form-check-input" type="checkbox" id="copyExpertPhoto" name="copyExpertPhoto" value="true"><label class="form-check-label small" for="copyExpertPhoto">Preuzmi sliku sa mog tim profila (kopira se jednom, bez trajne veze)</label></div>
+                <% } %>
+                <% if (c.photo && c.photo.img) { %>
+                  <div class="form-check"><input class="form-check-input" type="checkbox" id="removePhoto" name="removePhoto" value="true"><label class="form-check-label small" for="removePhoto">Ukloni sliku</label></div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4">
+          <h2 class="h6">Šta se prikazuje</h2>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="form-check"><input class="form-check-input" type="checkbox" id="showPhone" name="showPhone" value="true" <%= chk(c.show.phone) %>><label class="form-check-label" for="showPhone">Telefon <span class="text-muted small">(<%= e.contact.phone || "nije unet na nalogu" %>)</span></label></div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check"><input class="form-check-input" type="checkbox" id="showEmail" name="showEmail" value="true" <%= chk(c.show.email) %>><label class="form-check-label" for="showEmail">Email <span class="text-muted small">(<%= e.contact.email %>)</span></label></div>
+            </div>
+
+            <div class="col-12">
+              <div class="form-check mb-1"><input class="form-check-input" type="checkbox" id="showBio" name="showBio" value="true" <%= chk(c.show.bio) %>><label class="form-check-label" for="showBio">Kratak opis</label></div>
+              <textarea class="form-control" name="bio" rows="3" maxlength="300" placeholder="Do 300 karaktera"><%= c.bio %></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-check mb-1"><input class="form-check-input" type="checkbox" id="showInstagram" name="showInstagram" value="true" <%= chk(c.show.instagram) %>><label class="form-check-label" for="showInstagram">Instagram</label></div>
+              <input class="form-control" name="instagram" maxlength="200" value="<%= c.instagram %>" placeholder="@nalog ili link">
+            </div>
+            <div class="col-md-6">
+              <div class="form-check mb-1"><input class="form-check-input" type="checkbox" id="showFacebook" name="showFacebook" value="true" <%= chk(c.show.facebook) %>><label class="form-check-label" for="showFacebook">Facebook</label></div>
+              <input class="form-control" name="facebook" maxlength="200" value="<%= c.facebook %>" placeholder="link ka stranici">
+            </div>
+            <div class="col-md-6">
+              <div class="form-check mb-1"><input class="form-check-input" type="checkbox" id="showWebsite" name="showWebsite" value="true" <%= chk(c.show.website) %>><label class="form-check-label" for="showWebsite">Sajt</label></div>
+              <input class="form-control" name="website" maxlength="200" value="<%= c.website %>" placeholder="https://...">
+            </div>
+          </div>
+
+          <hr class="my-4">
+          <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="showServices" name="showServices" value="true" <%= chk(c.show.services) %>><label class="form-check-label fw-semibold" for="showServices">Prikaži usluge i dugme „Zakaži kod mene”</label></div>
+
+          <% if (!e.availableCategories.length) { %>
+            <p class="text-muted small">Još nemate dodeljenih aktivnih usluga - administrator ih dodeljuje u vašem profilu.</p>
+          <% } else { %>
+            <label class="form-label small text-muted mb-1">Kategorije čije usluge se prikazuju (samo one u kojima radite)</label>
+            <div class="mb-3">
+              <% e.availableCategories.forEach(function(cat) { %>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="checkbox" id="cat-<%= cat.id %>" name="categories" value="<%= cat.id %>" <%= chk(c.categories.includes(cat.id)) %>>
+                  <label class="form-check-label" for="cat-<%= cat.id %>"><%= cat.name %></label>
+                </div>
+              <% }) %>
+            </div>
+
+            <label class="form-label small text-muted mb-1">Izdvojene usluge (najviše <%= e.maxPinned %>, prikazuju se prve)</label>
+            <div class="mb-3" data-pinned-limit="<%= e.maxPinned %>">
+              <% e.availableServices.forEach(function(svc) { %>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="svc-<%= svc.id %>" name="pinnedServices" value="<%= svc.id %>" <%= chk(c.pinnedServices.includes(svc.id)) %>>
+                  <label class="form-check-label" for="svc-<%= svc.id %>"><%= svc.name %></label>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+
+          <% if (e.materials.length) { %>
+            <hr class="my-4">
+            <label class="form-label" for="materialId">Brošura / materijal za preuzimanje (opciono)</label>
+            <select class="form-select" id="materialId" name="materialId">
+              <option value="">- bez materijala -</option>
+              <% e.materials.forEach(function(m) { %><option value="<%= m.id %>" <%= c.materialId === m.id ? "selected" : "" %>><%= m.title %></option><% }) %>
+            </select>
+          <% } %>
+        </div>
+        <div class="card-footer text-end"><button type="submit" class="btn btn-primary">Sačuvaj vizitku</button></div>
+      </form>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header"><h2 class="h6 mb-0">Link i QR kod</h2></div>
+        <div class="card-body text-center">
+          <% if (e.url) { %>
+            <div class="mx-auto mb-3" style="max-width: 220px;"><%- data.qrSvg %></div>
+            <p class="small text-break"><a href="<%= e.url %>" target="_blank" rel="noopener"><%= e.url %></a></p>
+            <div class="d-flex gap-2 justify-content-center mb-3">
+              <a class="btn btn-outline-primary btn-sm" href="/moj-nalog/vizitka/qr/svg"><i class="bi bi-download"></i> SVG</a>
+              <a class="btn btn-outline-primary btn-sm" href="/moj-nalog/vizitka/qr/png"><i class="bi bi-download"></i> PNG</a>
+            </div>
+            <p class="text-muted small mb-1">Pregleda: <%= c.viewCount %> · Sačuvanih kontakata: <%= c.contactDownloadCount %></p>
+
+            <hr>
+            <form action="/moj-nalog/vizitka/novi-link" method="POST" class="text-start">
+              <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
+              <p class="small text-muted mb-2">Novi link poništava stari - već odštampani QR kodovi prestaju da rade.</p>
+              <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="confirmRegenerate" name="confirmRegenerate" value="true"><label class="form-check-label small" for="confirmRegenerate">Razumem, napravi novi link</label></div>
+              <button type="submit" class="btn btn-outline-danger btn-sm">Napravi novi link</button>
+            </form>
+          <% } else { %>
+            <p class="text-muted mb-0">Link i QR kod se prave kad prvi put sačuvate vizitku.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // najviše N izdvojenih usluga - isti limit se proverava i na serveru
+  (function () {
+    var box = document.querySelector("[data-pinned-limit]");
+    if (!box) return;
+    var limit = parseInt(box.getAttribute("data-pinned-limit"), 10);
+    var boxes = box.querySelectorAll("input[type=checkbox]");
+    function sync() {
+      var checked = box.querySelectorAll("input:checked").length;
+      boxes.forEach(function (b) { if (!b.checked) b.disabled = checked >= limit; });
+    }
+    boxes.forEach(function (b) { b.addEventListener("change", sync); });
+    sync();
+  })();
+</script>
+
+<%- include("../includes/portal-footer") %>

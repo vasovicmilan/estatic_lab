@@ -19,7 +19,8 @@ export const CAMPAIGN_STATUSES = ["draft", "scheduled", "sending", "sent", "fail
 // render down to plain tables and inline styles - see campaign-content.util.js's
 // renderCampaignContentToEmailHtml, the one place that actually turns these into
 // HTML for sending.
-export const CAMPAIGN_BLOCK_TYPES = ["heading", "paragraph", "image", "cta", "serviceReference", "productReference", "divider"];
+// "file" = a download button for an uploaded Material (see models/material.model.js).
+export const CAMPAIGN_BLOCK_TYPES = ["heading", "paragraph", "image", "cta", "file", "serviceReference", "productReference", "divider"];
 
 const CampaignSchema = new Schema(
   {
@@ -49,6 +50,20 @@ const CampaignSchema = new Schema(
       type: [String],
       enum: NEWSLETTER_INTERESTS,
       default: [],
+    },
+
+    // narrows the audience to people who came in through a wheel/QR campaign tag
+    // (Lead.source, e.g. "sajam-ns-2026"). Empty = no narrowing by source. Combined with
+    // targetInterests as AND; only people who are still subscribed ever get a mail.
+    targetSources: {
+      type: [{ type: String, trim: true, maxlength: 60 }],
+      default: [],
+    },
+
+    // only wheel contacts whose coupon has not been used yet (a "you still have your prize" mail)
+    onlyUnusedCoupon: {
+      type: Boolean,
+      default: false,
     },
 
     status: {

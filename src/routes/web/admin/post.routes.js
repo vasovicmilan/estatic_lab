@@ -1,4 +1,5 @@
 import { Router } from "express";
+import * as DeactivateController from "../../../controllers/web/admin/deactivate.controller.js";
 import * as PostController from "../../../controllers/web/admin/blog/post.controller.js";
 import {
   validatePostCreate,
@@ -43,6 +44,9 @@ router.put(
 
 router.put("/:postId/status", validatePostId, validatePostStatus, PostController.updatePostStatus);
 router.put("/:postId/seo", validatePostId, validatePostSeo, PostController.updatePostSeo);
+
+// reversible removal for roles that may not hard-delete (delete itself is admin-only)
+router.put("/:postId/arhiviranje", validatePostId, DeactivateController.archivePost);
 
 router.delete("/:postId", validatePostId, PostController.deletePost);
 

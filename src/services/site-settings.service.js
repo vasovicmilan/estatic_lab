@@ -80,6 +80,7 @@ export async function getSiteSettingsForEdit() {
         email: b.email,
         adminEmail: b.adminEmail,
         phone: b.phone,
+        b2bPhone: b.b2bPhone || "",
         taxId: b.taxId || "",
         registrationNumber: b.registrationNumber || "",
         streetAddress: b.address.streetAddress,
@@ -287,6 +288,7 @@ export async function updateBusiness(input = {}) {
   const email = str(input.email).toLowerCase();
   const adminEmail = str(input.adminEmail).toLowerCase();
   const phone = str(input.phone);
+  const b2bPhone = str(input.b2bPhone);
   const taxId = str(input.taxId);
   const registrationNumber = str(input.registrationNumber);
   const streetAddress = str(input.streetAddress);
@@ -299,6 +301,7 @@ export async function updateBusiness(input = {}) {
   if (!EMAIL_RE.test(email)) badRequest("Kontakt email nije ispravan");
   if (adminEmail && !EMAIL_RE.test(adminEmail)) badRequest("Email za obaveštenja nije ispravan");
   if (!phone || phone.replace(/\D/g, "").length < 6) badRequest("Telefon nije ispravan");
+  if (b2bPhone && b2bPhone.replace(/\D/g, "").length < 6) badRequest("B2B telefon nije ispravan");
   if (taxId && !/^\d{9}$/.test(taxId)) badRequest("PIB mora imati tačno 9 cifara");
   if (registrationNumber && !/^\d{8}$/.test(registrationNumber)) badRequest("Matični broj mora imati tačno 8 cifara");
   if (!streetAddress || !addressLocality) badRequest("Ulica i grad su obavezni");
@@ -333,6 +336,7 @@ export async function updateBusiness(input = {}) {
     email,
     adminEmail,
     phone,
+    b2bPhone,
     taxId,
     registrationNumber,
     address: { streetAddress, addressLocality, postalCode, addressCountry },
@@ -370,6 +374,7 @@ export function businessInputFromBody(body = {}, existing = {}) {
     email: pick("businessEmail", existing.email),
     adminEmail: pick("businessAdminEmail", existing.adminEmail),
     phone: pick("businessPhone", existing.phone),
+    b2bPhone: pick("businessB2bPhone", existing.b2bPhone),
     taxId: pick("businessTaxId", existing.taxId),
     registrationNumber: pick("businessRegistrationNumber", existing.registrationNumber),
     streetAddress: pick("businessStreetAddress", existing.streetAddress),

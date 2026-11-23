@@ -1,5 +1,6 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 import { formatPrice, formatMoney } from "../utils/price.util.js";
+import { formatEur, formatEurRange } from "../utils/eur-price.util.js";
 import { renderContentBlocks, contentBlocksToPlainText } from "../utils/content-blocks.util.js";
 import { formatImage } from "../utils/image-format.util.js";
 
@@ -30,6 +31,12 @@ function getCategoryNames(product) {
 function getTagNames(product) {
   if (!product.tags || !Array.isArray(product.tags)) return [];
   return product.tags.filter((t) => t && typeof t === "object" && t.name).map((t) => t.name);
+}
+
+// optional EUR price next to the range - only when EVERY active variation has one (utils/eur-price.util.js)
+function getEurRange(product) {
+  if (product.priceOnRequest) return null;
+  return formatEurRange((product.variations || []).filter((v) => v.isActive).map((v) => v.priceEur));
 }
 
 function getPriceRange(product) {
@@ -73,6 +80,8 @@ function mapVariations(variations = []) {
     sku: v.sku || null,
     cena: v.price,
     staraCena: v.compareAtPrice || null,
+    cenaEur: formatEur(v.priceEur),
+    staraCenaEur: formatEur(v.compareAtPriceEur),
     stanje: v.stock,
     pragNiskogStanja: v.lowStockThreshold,
     naStanju: v.stock > 0,
@@ -192,6 +201,7 @@ export function mapProductForPublicCard(product) {
     slika: formatImage(product.image),
     kategorije: getCategoryNames(product),
     cena: getPriceRange(product),
+    cenaEur: getEurRange(product),
     naUpit: !!product.priceOnRequest,
     poNarudzbini: !!product.madeToOrder,
     naStanju: getTotalStock(product) > 0,

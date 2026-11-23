@@ -17,7 +17,9 @@ const ROTATE_OPTIONS = {
   frequency: "daily",
   dateFormat: "yyyy-MM-dd",
   mkdir: true,
-  limit: { count: 30 }, // keep 30 rotated days + the active file
+  // removeOtherLogFiles: without it pino-roll only counts files created by the CURRENT process, so
+  // after every restart the older ones were never cleaned up and logs/ grew without bound
+  limit: { count: 30, removeOtherLogFiles: true }, // keep 30 rotated days + the active file
 };
 
 const rollTransport = (name) =>

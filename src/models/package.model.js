@@ -42,6 +42,9 @@ const PackageSchema = new Schema(
 
     totalPrice: { type: Number, required: true, min: 0 },
     basePrice: { type: Number, min: 0 },
+    // optional EUR price shown next to totalPrice/basePrice - presentation only, see utils/eur-price.util.js
+    totalPriceEur: { type: Number, min: 0, default: null, set: (v) => (v === "" ? null : v) },
+    basePriceEur: { type: Number, min: 0, default: null, set: (v) => (v === "" ? null : v) },
     totalDuration: { type: Number, min: 0 },
 
     badge: { type: String, trim: true },

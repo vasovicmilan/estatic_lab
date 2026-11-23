@@ -1,12 +1,18 @@
 import { Router } from "express";
 import * as WheelController from "../../../controllers/web/admin/marketing/wheel.controller.js";
-import { validateLeadId, validatePrizeId, validatePrizeUpdate, validatePrizeCreate, validatePrizeFullUpdate } from "../../../middlewares/validators/wheel.validator.js";
+import { validateLeadId, validatePrizeId, validatePrizeUpdate, validatePrizeCreate, validatePrizeFullUpdate, validateWheelForm, validateWheelId } from "../../../middlewares/validators/wheel.validator.js";
 import { validateSearch } from "../../../middlewares/validators/search.validator.js";
 
 const router = Router();
 
 // fixed paths first so none of them can be read as a :leadId
 router.get("/kuponi", validateSearch, WheelController.listWheelCoupons);
+router.get("/tockovi", WheelController.listWheels);
+router.get("/tockovi/novi", WheelController.newWheelForm);
+router.post("/tockovi", validateWheelForm, WheelController.createWheel);
+router.get("/tockovi/:wheelId/izmena", validateWheelId, WheelController.editWheelForm);
+router.put("/tockovi/:wheelId", validateWheelId, validateWheelForm, WheelController.updateWheel);
+router.delete("/tockovi/:wheelId", validateWheelId, WheelController.deleteWheel);
 router.get("/nagrade", WheelController.prizesPage);
 router.get("/nagrade/nova", WheelController.newPrizeForm);
 router.post("/nagrade", validatePrizeCreate, WheelController.createPrize);

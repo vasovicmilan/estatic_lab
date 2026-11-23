@@ -11,7 +11,7 @@ export const SORT_MAP = {
   datum: "createdAt",
 };
 
-export function prepareLeadListData(result, query = {}, sources = []) {
+export function prepareLeadListData(result, query = {}, sources = [], wheels = []) {
   return {
     items: result.data,
     columns: markSortableColumns(
@@ -19,6 +19,7 @@ export function prepareLeadListData(result, query = {}, sources = []) {
         { key: "imePrezime", label: "Ime i prezime" },
         { key: "email", label: "Email" },
         { key: "segment", label: "Interesovanje" },
+        { key: "tocak", label: "Točak" },
         { key: "izvor", label: "Izvor" },
         { key: "nagrada", label: "Nagrada" },
         { key: "kod", label: "Kod" },
@@ -40,7 +41,7 @@ export function prepareLeadListData(result, query = {}, sources = []) {
     topbar: {
       searchUrl: "/admin/tocak/pretraga",
       search: query.search || "",
-      extraLinks: [{ url: "/admin/tocak/kuponi", label: "Kuponi" }],
+      extraLinks: [{ url: "/admin/tocak/tockovi", label: "Točkovi" }, { url: "/admin/tocak/kuponi", label: "Kuponi" }],
       createUrl: "/admin/tocak/nagrade",
       createLabel: "Nagrade, QR i izvoz",
       filters: [
@@ -50,6 +51,13 @@ export function prepareLeadListData(result, query = {}, sources = []) {
           label: "Interesovanje",
           value: query.segment || "",
           options: [{ value: "", label: "Sva" }, ...LEAD_SEGMENTS.map((s) => ({ value: s, label: SEGMENT_LABELS[s] }))],
+        },
+        {
+          type: "select",
+          name: "tocak",
+          label: "Točak",
+          value: query.tocak || "",
+          options: [{ value: "", label: "Svi točkovi" }, ...wheels.map((w) => ({ value: w.value, label: w.label }))],
         },
         {
           type: "select",
@@ -76,6 +84,7 @@ export function prepareLeadDetailsData(lead) {
           { label: "Email", value: lead.osnovno.email },
           { label: "Telefon", value: lead.osnovno.telefon || "-" },
           { label: "Interesovanje", value: lead.osnovno.segment },
+          { label: "Točak", value: lead.osnovno.tocak },
           { label: "Izvor", value: lead.osnovno.izvor },
         ],
       },

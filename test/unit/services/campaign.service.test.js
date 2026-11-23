@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import campaignRepo from "../../../src/repositories/campaign.repository.js";
 import newsLetterRepo from "../../../src/repositories/news-letter.repository.js";
+import leadRepo from "../../../src/repositories/lead.repository.js";
 import emailService from "../../../src/services/email.service.js";
 import * as campaignService from "../../../src/services/campaign.service.js";
 import { buildCampaign, buildSubscriber, id } from "../../helpers/factories.js";
@@ -208,6 +209,134 @@ describe("campaign.service", () => {
 
       assert.equal(failMock.mock.calls.length, 1);
       assert.equal(failMock.mock.calls[0].arguments[0], campaign._id.toString());
+    });
+  });
+
+  describe("audience narrowed by wheel campaign tag / unused coupon", () => {
+    const setup = (t, campaign, subscribers, leadEmails) => {
+      t.mock.method(campaignRepo, "findCampaignDocById", async () => campaign);
+      t.mock.method(campaignRepo, "findCampaignById", async () => campaign);
+      t.mock.method(newsLetterRepo, "findAllActiveSubscribers", async () => subscribers);
+      t.mock.method(newsLetterRepo, "findActiveSubscribersByInterests", async () => subscribers);
+      const leadMock = t.mock.method(leadRepo, "findEmailsByAudience", async () => leadEmails);
+      let sentTo;
+      t.mock.method(emailService, "sendNewsletterCampaign", async (recipients) => {
+        sentTo = recipients.map((r) => r.email);
+        return recipients.map((r) => ({ email: r.email, sent: true }));
+      });
+      return { leadMock, sent: () => sentTo };
+    };
+
+    it("sends only to active subscribers whose email is a lead of the chosen source", async (t) => {
+      const campaign = buildCampaign({ status: "draft", targetSources: ["sajam-ns-2026"] });
+      t.mock.method(campaign, "save", async () => campaign);
+      const { leadMock, sent } = setup(t, campaign, [buildSubscriber({ email: "a@x.com" }), buildSubscriber({ email: "b@x.com" })], ["a@x.com", "nije-pretplacen@x.com"]);
+
+      await campaignService.sendCampaignNow(campaign._id.toString());
+
+      assert.deepEqual(sent(), ["a@x.com"]);
+      assert.deepEqual(leadMock.mock.calls[0].arguments[0], { sources: ["sajam-ns-2026"], onlyUnusedCoupon: false });
+    });
+
+    it("onlyUnusedCoupon alone (no source) still narrows to wheel contacts with an unused coupon", async (t) => {
+      const campaign = buildCampaign({ status: "draft", targetSources: [], onlyUnusedCoupon: true });
+      t.mock.method(campaign, "save", async () => campaign);
+      const { leadMock, sent } = setup(t, campaign, [buildSubscriber({ email: "a@x.com" }), buildSubscriber({ email: "b@x.com" })], ["b@x.com"]);
+
+      await campaignService.sendCampaignNow(campaign._id.toString());
+
+      assert.deepEqual(sent(), ["b@x.com"]);
+      assert.deepEqual(leadMock.mock.calls[0].arguments[0], { sources: [], onlyUnusedCoupon: true });
+    });
+
+    it("never touches the lead collection for a campaign without these filters", async (t) => {
+      const campaign = buildCampaign({ status: "draft" });
+      t.mock.method(campaign, "save", async () => campaign);
+      const { leadMock, sent } = setup(t, campaign, [buildSubscriber({ email: "a@x.com" })], []);
+
+      await campaignService.sendCampaignNow(campaign._id.toString());
+
+      assert.equal(leadMock.mock.calls.length, 0);
+      assert.deepEqual(sent(), ["a@x.com"]);
+    });
+
+    it("an unsubscribed person is never reached, even if their email is a lead (only active subscribers are candidates)", async (t) => {
+      const campaign = buildCampaign({ status: "draft", targetSources: ["sajam-ns-2026"] });
+      t.mock.method(campaign, "save", async () => campaign);
+      // findAllActiveSubscribers only returns status "subscribed" - the lead list alone can never add someone
+      const { sent } = setup(t, campaign, [], ["odjavljen@x.com"]);
+      t.mock.method(emailService, "sendNewsletterCampaign", async () => {
+        throw new Error("should not be called");
+      });
+
+      await campaignService.sendCampaignNow(campaign._id.toString());
+      assert.equal(sent(), undefined);
+    });
+
+    it("countCampaignRecipients reports the size of the resolved audience", async (t) => {
+      const campaign = buildCampaign({ targetSources: ["sajam-ns-2026"] });
+      setup(t, campaign, [buildSubscriber({ email: "a@x.com" }), buildSubscriber({ email: "b@x.com" })], ["a@x.com", "b@x.com"]);
+      assert.equal(await campaignService.countCampaignRecipients(campaign._id.toString()), 2);
+    });
+  });
+
+  describe("sendCampaignTest", () => {
+    it("sends one [TEST] mail to the given address with the given name and does not change the campaign", async (t) => {
+      const campaign = buildCampaign({ status: "draft", subject: "Ponuda" });
+      const saveMock = t.mock.method(campaign, "save", async () => campaign);
+      t.mock.method(campaignRepo, "findCampaignById", async () => campaign);
+      let call;
+      t.mock.method(emailService, "sendNewsletterCampaign", async (recipients, payload) => {
+        call = { recipients, payload };
+        return [{ email: recipients[0].email, sent: true }];
+      });
+
+      await campaignService.sendCampaignTest(campaign._id.toString(), "ja@x.com", "Milan");
+
+      assert.equal(call.recipients.length, 1);
+      assert.equal(call.recipients[0].email, "ja@x.com");
+      assert.equal(call.recipients[0].firstName, "Milan");
+      assert.equal(call.payload.subject, "[TEST] Ponuda");
+      assert.equal(saveMock.mock.calls.length, 0);
+      assert.equal(campaign.status, "draft");
+    });
+
+    it("reports a failed test send instead of pretending it worked", async (t) => {
+      t.mock.method(campaignRepo, "findCampaignById", async () => buildCampaign());
+      t.mock.method(emailService, "sendNewsletterCampaign", async () => [{ email: "ja@x.com", sent: false, error: "smtp down" }]);
+      await assert.rejects(() => campaignService.sendCampaignTest(id().toString(), "ja@x.com"), (e) => e.statusCode === 400 && /smtp down/.test(e.message));
+    });
+
+    it("needs a campaign id and an email", async () => {
+      await assert.rejects(() => campaignService.sendCampaignTest(null, "a@x.com"), (e) => e.statusCode === 400);
+      await assert.rejects(() => campaignService.sendCampaignTest(id().toString(), ""), (e) => e.statusCode === 400);
+    });
+  });
+
+  describe("createCampaign / updateCampaignById keep the audience filters", () => {
+    it("stores targetSources and onlyUnusedCoupon on create", async (t) => {
+      let payload;
+      t.mock.method(campaignRepo, "createCampaign", async (data) => {
+        payload = data;
+        return buildCampaign(data);
+      });
+      t.mock.method(campaignRepo, "findCampaignById", async () => buildCampaign(payload));
+      await campaignService.createCampaign({ title: "T", subject: "S", targetSources: ["sajam-ns-2026"], onlyUnusedCoupon: true });
+      assert.deepEqual(payload.targetSources, ["sajam-ns-2026"]);
+      assert.equal(payload.onlyUnusedCoupon, true);
+    });
+
+    it("updating with an empty selection clears the filters instead of keeping the old ones", async (t) => {
+      const existing = buildCampaign({ status: "draft", targetSources: ["sajam-ns-2026"], onlyUnusedCoupon: true });
+      t.mock.method(campaignRepo, "findCampaignById", async () => existing);
+      let patch;
+      t.mock.method(campaignRepo, "updateCampaignById", async (_id, data) => {
+        patch = data;
+        return { ...existing, ...data };
+      });
+      await campaignService.updateCampaignById(existing._id.toString(), { targetSources: [], onlyUnusedCoupon: false });
+      assert.deepEqual(patch.targetSources, []);
+      assert.equal(patch.onlyUnusedCoupon, false);
     });
   });
 });

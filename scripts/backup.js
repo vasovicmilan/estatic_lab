@@ -34,6 +34,8 @@ const BACKUP_DIR = process.env.BACKUP_DIR;
 const RETENTION_DAYS = Number(process.env.BACKUP_RETENTION_DAYS) || 14;
 const UPLOAD_PUBLIC_PATH = process.env.UPLOAD_PUBLIC_PATH || path.join(process.cwd(), "src", "public");
 const MONGO_URI = process.env.MONGO_URI;
+// downloadable materials (PDF offers/brochures) - same default as src/config/material-upload.config.js
+const MATERIALS_DIR = process.env.MATERIALS_DIR ? path.resolve(process.env.MATERIALS_DIR) : path.join(process.cwd(), "storage", "materials");
 
 // Only the genuinely irreplaceable content-upload subfolders (see
 // multer.config.js for the full authoritative list of these same folder
@@ -63,6 +65,16 @@ async function backupUploads(destArchive) {
   // server/path later just a matter of extracting into the new
   // UPLOAD_PUBLIC_PATH, unchanged.
   await execFileAsync("tar", ["-czf", destArchive, "-C", UPLOAD_PUBLIC_PATH, ...existingSubfolders]);
+  return true;
+}
+
+// The uploaded materials live OUTSIDE src/public (see material-upload.config.js), so the images/
+// videos archive above does not cover them. Files in that folder are random-named; the original
+// names and titles are in the database dump.
+async function backupMaterials(destArchive) {
+  if (!(await fs.pathExists(MATERIALS_DIR))) return false;
+  if ((await fs.readdir(MATERIALS_DIR)).length === 0) return false;
+  await execFileAsync("tar", ["-czf", destArchive, "-C", path.dirname(MATERIALS_DIR), path.basename(MATERIALS_DIR)]);
   return true;
 }
 
@@ -101,6 +113,7 @@ async function main() {
   if (dbStats.size === 0) throw new Error("mongodump produced an empty archive - treating as a failed backup");
 
   const uploadsBackedUp = await backupUploads(uploadsArchive);
+  const materialsBackedUp = await backupMaterials(path.join(dayDir, "materials.tar.gz"));
 
   await pruneOldBackups();
 
@@ -108,6 +121,7 @@ async function main() {
     date: dateStr,
     dbBytes: dbStats.size,
     uploadsBackedUp,
+    materialsBackedUp,
     dir: dayDir,
   });
   process.exitCode = 0;

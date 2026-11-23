@@ -1,5 +1,6 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 import { formatMoney } from "../utils/price.util.js";
+import { formatEur } from "../utils/eur-price.util.js";
 import { formatImage } from "../utils/image-format.util.js";
 
 // A raw (unpopulated) Mongoose ObjectId is ALSO typeof "object" - and it even has a
@@ -129,6 +130,8 @@ export function mapPackageForAdminDetail(pkg) {
     stavke: mapItems(pkg.items),
     cena: pkg.totalPrice,
     staraCena: pkg.basePrice || null,
+    cenaEur: formatEur(pkg.totalPriceEur),
+    staraCenaEur: formatEur(pkg.basePriceEur),
     ukupnoTrajanje: pkg.totalDuration ? `${pkg.totalDuration} min` : null,
     oznaka: pkg.badge || "",
     najbolji: pkg.isBest,
@@ -160,6 +163,8 @@ export function mapPackageForEdit(pkg) {
     })),
     totalPrice: pkg.totalPrice,
     basePrice: pkg.basePrice || null,
+    totalPriceEur: pkg.totalPriceEur ?? null,
+    basePriceEur: pkg.basePriceEur ?? null,
     totalDuration: pkg.totalDuration || null,
     badge: pkg.badge || "",
     isBest: pkg.isBest,
@@ -189,6 +194,8 @@ export function mapPackageForPublicCard(pkg) {
     stavke: getItemsSummary(pkg.items),
     cena: formatMoney(pkg.totalPrice),
     staraCena: pkg.basePrice ? formatMoney(pkg.basePrice) : null,
+    cenaEur: formatEur(pkg.totalPriceEur),
+    staraCenaEur: formatEur(pkg.basePriceEur),
     ustedaProcenat: getSavingsPercent(pkg),
     oznaka: pkg.badge || null,
     najbolji: Boolean(pkg.isBest),
@@ -217,6 +224,8 @@ export function mapPackageForPublicDetail(pkg) {
     stavke: mapItems(pkg.items),
     cena: pkg.totalPrice,
     staraCena: pkg.basePrice || null,
+    cenaEur: formatEur(pkg.totalPriceEur),
+    staraCenaEur: formatEur(pkg.basePriceEur),
     ukupnoTrajanje: pkg.totalDuration ? `${pkg.totalDuration} min` : null,
     oznaka: pkg.badge || "",
     najbolji: pkg.isBest,

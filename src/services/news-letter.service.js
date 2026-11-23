@@ -18,6 +18,12 @@ export async function getSubscriberById(subscriberId) {
   return mapSubscriberForAdminDetail(subscriber);
 }
 
+function cleanFirstName(value) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().slice(0, 60);
+  return trimmed || null;
+}
+
 function cleanSourceDetail(value) {
   if (typeof value !== "string") return null;
   const trimmed = value.trim().slice(0, 120);
@@ -32,6 +38,7 @@ export async function subscribe(email, interests = ["general"], origin = {}) {
   const cleanInterests = interests.length ? interests : ["general"];
   const source = NEWSLETTER_SOURCES.includes(origin.source) ? origin.source : "unknown";
   const sourceDetail = cleanSourceDetail(origin.sourceDetail);
+  const firstName = cleanFirstName(origin.firstName);
 
   const existing = await newsLetterRepo.findSubscriberByEmail(email);
   if (existing) {
@@ -39,6 +46,8 @@ export async function subscribe(email, interests = ["general"], origin = {}) {
     // silently drop an existing "partnership" opt-in
     const mergedInterests = Array.from(new Set([...(existing.interests || []), ...cleanInterests]));
     const originPatch = !existing.source || existing.source === "unknown" ? { source, sourceDetail } : {};
+    // a name learned later (e.g. from the wheel) fills the gap, but never replaces one already there
+    if (firstName && !existing.firstName) originPatch.firstName = firstName;
     if (existing.status === "subscribed") {
       await newsLetterRepo.updateSubscriberById(existing._id, { interests: mergedInterests, ...originPatch });
       return { message: "Već ste prijavljeni na naš newsletter" };
@@ -61,6 +70,7 @@ export async function subscribe(email, interests = ["general"], origin = {}) {
     interests: cleanInterests,
     source,
     sourceDetail,
+    ...(firstName ? { firstName } : {}),
     consentedAt: new Date(),
   });
 

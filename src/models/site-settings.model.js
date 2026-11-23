@@ -142,6 +142,7 @@ const BusinessSchema = new Schema(
     email: { type: String, trim: true, lowercase: true, maxlength: 160 },
     adminEmail: { type: String, trim: true, lowercase: true, maxlength: 160 },
     phone: { type: String, trim: true, maxlength: 40 },
+    b2bPhone: { type: String, trim: true, maxlength: 40 },
     taxId: { type: String, trim: true, maxlength: 20 },
     registrationNumber: { type: String, trim: true, maxlength: 20 },
     address: {

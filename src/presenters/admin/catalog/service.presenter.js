@@ -24,6 +24,7 @@ export function prepareServiceListData(result, query = {}, { categoryOptions = [
       { type: "view", url: "/admin/usluge/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/usluge/izmena/", icon: "pencil" },
       { type: "custom", url: "/admin/usluge/", idKey: "id", subPath: "seo", icon: "search", label: "SEO" },
+      { type: "deactivate", url: "/admin/usluge/", suffix: "/deaktivacija", label: "Deaktiviraj", icon: "eye-slash" },
       { type: "delete", url: "/admin/usluge/", icon: "trash" },
     ],
     sort: buildSortState(query, SORT_MAP),

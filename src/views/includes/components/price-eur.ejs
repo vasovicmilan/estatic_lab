@@ -1,0 +1,3 @@
+<%# Optional EUR price next to the main price (presentation only - see utils/eur-price.util.js).
+    Locals: eur (e.g. "21 €"), oldEur (struck-through, optional). Renders nothing without eur. %>
+<% if (typeof eur !== "undefined" && eur) { %><span class="text-muted small ms-2 price-mono" data-price-eur>(<%= eur %><% if (typeof oldEur !== "undefined" && oldEur) { %> <s><%= oldEur %></s><% } %>)</span><% } %>

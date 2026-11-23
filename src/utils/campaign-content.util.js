@@ -55,6 +55,18 @@ function renderBlock(block, baseUrl) {
       return html;
     }
 
+    // download button for an uploaded Material - button.url is the material's page
+    // (/materijali/<slug>), so it is also what the QR code of that material opens
+    case "file": {
+      if (!block.button?.url) return "";
+      let html = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0; background-color:#faf8f6; border:1px solid #e5ddd3; border-radius:8px;"><tr><td style="padding:20px 24px;">`;
+      if (block.title) html += `<p style="font-size:16px; font-weight:700; color:#2d2a26; margin:0 0 4px; text-align:center;">${escapeHtml(block.title)}</p>`;
+      if (block.text) html += `<p style="font-size:14px; color:#6b655e; margin:0; text-align:center;">${escapeHtml(block.text)}</p>`;
+      html += ctaButton(toAbsoluteUrl(block.button.url, baseUrl), escapeHtml(block.button.text || "Preuzmite materijal"));
+      html += `</td></tr></table>`;
+      return html;
+    }
+
     case "divider":
       return `<hr style="border:none; border-top:1px solid #e5ddd3; margin:28px 0;">`;
 

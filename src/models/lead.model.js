@@ -23,7 +23,12 @@ const LeadSchema = new Schema(
     firstName: { type: String, required: true, trim: true },
     // encrypted ciphertext at rest (same convention as Contact.lastName)
     lastName: { type: String, required: true },
-    email: { type: String, required: true, trim: true, lowercase: true, unique: true },
+    // jedno vrtenje po emailu / telefonu PO TOČKU - isti kontakt sme da zavrti drugi točak
+    // (unique indeksi su (wheel,email) i (wheel,phone.hash), vidi dole). Stari unique indeksi
+    // email_1 i phone.hash_1 se skidaju skriptom scripts/migrate-multi-wheel.js; namerno nema obične
+    // indekse na istim ključevima - isti ključ sa drugim opcijama Mongo odbija da napravi.
+    wheel: { type: Schema.Types.ObjectId, ref: "Wheel", required: true, index: true },
+    email: { type: String, required: true, trim: true, lowercase: true },
     // { hash, encrypted } - hash is what makes "one spin per phone" possible
     phone: { type: LeadPhoneSchema, required: true },
 
@@ -46,7 +51,8 @@ const LeadSchema = new Schema(
   { timestamps: true }
 );
 
-LeadSchema.index({ "phone.hash": 1 }, { unique: true });
+LeadSchema.index({ wheel: 1, email: 1 }, { unique: true });
+LeadSchema.index({ wheel: 1, "phone.hash": 1 }, { unique: true });
 LeadSchema.index({ createdAt: -1 });
 
 export default model("Lead", LeadSchema);

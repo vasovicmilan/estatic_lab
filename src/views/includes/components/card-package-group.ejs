@@ -36,6 +36,7 @@
             data-tier-button
             data-tier-id="<%= tier.id %>"
             data-tier-price="<%= tier.cena %>"
+            data-tier-price-eur="<%= tier.cenaEur ? '(' + tier.cenaEur + ')' : '' %>"
             data-tier-old-price="<%= tier.staraCena || '' %>"
             data-tier-badge="<%= tier.oznaka || (tier.najbolji ? 'Najbolja vrednost' : '') %>"
             data-tier-badge-class="<%= tier.najbolji ? 'text-bg-warning' : 'text-bg-secondary' %>"
@@ -53,6 +54,7 @@
 
     <div class="d-flex align-items-baseline gap-2 mt-auto pt-2 border-top">
       <strong class="text-primary-emphasis" data-tier-price-target><%= activeTier.cena %></strong>
+      <span class="text-muted small price-mono" data-tier-price-eur-target><%= activeTier.cenaEur ? '(' + activeTier.cenaEur + ')' : '' %></span>
       <span class="text-muted text-decoration-line-through small" data-tier-old-price-target><%= activeTier.staraCena || '' %></span>
       <% if (activeTier.ustedaProcenat) { %>
         <span class="ms-auto small fw-bold text-success" data-tier-savings-target>Ušteda <%= activeTier.ustedaProcenat %>%</span>

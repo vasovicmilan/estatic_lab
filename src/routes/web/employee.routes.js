@@ -4,6 +4,10 @@ import * as EmployeeController from "../../controllers/web/employee/employee.con
 import { validateAppointmentId, validateAppointmentReject, validateAppointmentNoShow, validateAppointmentReschedule } from "../../middlewares/validators/appointment.validator.js";
 import { validateWorkingHoursUpdate } from "../../middlewares/validators/employee.validator.js";
 import { validatePayoutRequest } from "../../middlewares/validators/payout-request.validator.js";
+import * as EmployeeCardController from "../../controllers/web/employee/employee-card.controller.js";
+import { validateEmployeeCard } from "../../middlewares/validators/employee-card.validator.js";
+import { processUpload } from "../../config/multer.config.js";
+import { csrfAfterMulter } from "../../config/csrf.config.js";
 import { parseJsonFields } from "../../middlewares/parse-json-fields.middleware.js";
 
 const router = Router();
@@ -29,5 +33,12 @@ router.post("/isplata", validatePayoutRequest, EmployeeController.requestPayout)
 
 router.get("/profil", EmployeeController.profile);
 router.put("/profil/radno-vreme", parseJsonFields("workingHours"), validateWorkingHoursUpdate, EmployeeController.updateWorkingHours);
+
+// virtuelna vizitka (javna strana /vizitka/:slug + QR). Multipart (slika) -> CSRF token ide u telu
+// (CSRFToken) i proverava se posle multera, isto kao u admin upload rutama.
+router.get("/vizitka", EmployeeCardController.cardPage);
+router.post("/vizitka", ...processUpload("photo", "vizitke"), csrfAfterMulter, validateEmployeeCard, EmployeeCardController.saveCard);
+router.post("/vizitka/novi-link", EmployeeCardController.regenerateLink);
+router.get("/vizitka/qr/:format", EmployeeCardController.qrDownload);
 
 export default router;

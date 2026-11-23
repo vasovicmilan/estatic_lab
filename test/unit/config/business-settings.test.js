@@ -39,8 +39,24 @@ describe("business settings (admin-editable business identity)", () => {
 
   it("toPhoneHref normalises local and international formats", () => {
     assert.equal(toPhoneHref("+381 65 977 4000"), "+381659774000");
+    assert.equal(toPhoneHref("065 977 4001"), "+381659774001");
     assert.equal(toPhoneHref("00381659774000"), "+381659774000");
     assert.equal(toPhoneHref("065 977 4000"), "+381659774000");
+  });
+
+  it("salon phone and B2B phone are separate, each with its own tel: href", () => {
+    const d = resolveBusiness(null);
+    assert.equal(d.phone, "+381 65 977 4001");
+    assert.equal(d.phoneHref, "+381659774001");
+    assert.equal(d.b2bPhone, "+381 65 977 4000");
+    assert.equal(d.b2bPhoneHref, "+381659774000");
+  });
+
+  it("a stored B2B phone overrides the default; clearing it hides it", () => {
+    assert.equal(resolveBusiness({ b2bPhone: "064 111 222" }).b2bPhoneHref, "+38164111222");
+    const cleared = resolveBusiness({ b2bPhone: "" });
+    assert.equal(cleared.b2bPhone, null);
+    assert.equal(cleared.b2bPhoneHref, "");
   });
 
   it("runtime cache applies stored business + shop policy on load", async (t) => {

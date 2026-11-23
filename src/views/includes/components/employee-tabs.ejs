@@ -9,6 +9,7 @@
       { href: "/moj-nalog/isplate", label: "Isplate", icon: "bi-wallet2", matchPrefix: "/moj-nalog/isplate" }
     );
   }
+  employeeTabs.push({ href: "/moj-nalog/vizitka", label: "Vizitka", icon: "bi-person-vcard", matchPrefix: "/moj-nalog/vizitka" });
   employeeTabs.push({ href: "/moj-nalog/profil", label: "Profil", icon: "bi-person", matchPrefix: "/moj-nalog/profil" });
 %>
 <%- include("portal-nav", { tabs: employeeTabs, currentPath: typeof currentPath !== "undefined" ? currentPath : "" }) %>

@@ -5,20 +5,23 @@ import { logError, logWarn } from "../../../utils/logger.util.js";
 
 const SOURCE_PATTERN = /^[a-z0-9_-]{1,60}$/i;
 
+// /tocak (podrazumevani točak) i /tocak/:slug (ostali)
 export async function wheelPage(req, res, next) {
   try {
-    const prizes = await wheelService.getWheelConfig();
+    const { wheel, prizes, isOpen } = await wheelService.getWheelConfig(req.params.slug);
     const source = typeof req.query.src === "string" && SOURCE_PATTERN.test(req.query.src) ? req.query.src : "";
-    const title = "Zavrtite točak sreće";
-    const description = "Ostavite kontakt, zavrtite točak i osvojite popust ili besplatan tretman u Estetik Lab-u.";
+    const title = wheel.title || "Zavrtite točak sreće";
+    const description = wheel.intro || "Ostavite kontakt, zavrtite točak i osvojite popust ili besplatan tretman u Estetik Lab-u.";
+    const path = req.params.slug && req.params.slug !== "tocak" ? `/tocak/${wheel.slug}` : "/tocak";
     return res.render("public/wheel", {
       pageTitle: `${title} | ${BUSINESS.name}`,
       pageDescription: description,
       // a campaign landing page for a QR code, not something search engines should list
-      seo: buildPageSeo({ title, description, canonical: `${BUSINESS.siteUrl}/tocak`, isIndexable: false }),
-      data: { prizes, source, csrfToken: res.locals.csrfToken, formData: {}, breadcrumbs: [] },
+      seo: buildPageSeo({ title, description, canonical: `${BUSINESS.siteUrl}${path}`, isIndexable: false }),
+      data: { wheel, prizes, isOpen, title, description, source, csrfToken: res.locals.csrfToken, formData: {}, breadcrumbs: [] },
     });
   } catch (error) {
+    if (error.statusCode === 404) return next();
     logError("[wheelPage] Greška pri učitavanju točka", error);
     next(error);
   }

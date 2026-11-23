@@ -221,7 +221,9 @@
                   <input type="hidden" name="<%= field.name %>" value="<%= JSON.stringify(blocksValue) %>" data-repeater-input="<%= field.name %>">
                   <div class="border rounded p-3 <%= (typeof data.errors !== 'undefined' && data.errors[field.name]) ? 'border-danger' : '' %>"
                        data-content-blocks="<%= field.name %>"
-                       data-content-blocks-value="<%= JSON.stringify(blocksValue) %>">
+                       data-content-blocks-value="<%= JSON.stringify(blocksValue) %>"
+                       <% if (field.uploadUrl) { %>data-upload-url="<%= field.uploadUrl %>"<% } %>
+                       <% if (field.materials) { %>data-materials="<%= JSON.stringify(field.materials) %>"<% } %>>
                     <div class="input-group mb-2">
                       <select class="form-select" data-block-type-select>
                         <% (field.blockTypes || []).forEach(function(bt) { %>

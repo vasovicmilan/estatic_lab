@@ -42,6 +42,20 @@ const ProductVariationSchema = new Schema(
       type: Number,
       min: 0,
     },
+    // optional EUR price shown NEXT TO the main one - presentation only, nothing in cart/order/
+    // reporting reads it (see utils/eur-price.util.js). Blank -> no EUR price is shown.
+    priceEur: {
+      type: Number,
+      min: 0,
+      default: null,
+      set: (v) => (v === "" ? null : v),
+    },
+    compareAtPriceEur: {
+      type: Number,
+      min: 0,
+      default: null,
+      set: (v) => (v === "" ? null : v),
+    },
 
     stock: {
       type: Number,

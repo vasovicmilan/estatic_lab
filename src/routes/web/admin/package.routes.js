@@ -1,4 +1,5 @@
 import { Router } from "express";
+import * as DeactivateController from "../../../controllers/web/admin/deactivate.controller.js";
 import * as PackageController from "../../../controllers/web/admin/catalog/package.controller.js";
 import { validatePackageCreate, validatePackageUpdate, validatePackageSeo, validatePackageId } from "../../../middlewares/validators/package.validator.js";
 import { validateSearch } from "../../../middlewares/validators/search.validator.js";
@@ -56,6 +57,9 @@ router.put(
 // --- SEO ključne reči (posebna stranica, kao kod usluga/proizvoda/bloga) ---
 router.get("/:packageId/seo", validatePackageId, PackageController.editPackageSeoForm);
 router.put("/:packageId/seo", validatePackageId, validatePackageSeo, PackageController.updatePackageSeo);
+
+// reversible removal for roles that may not hard-delete (delete itself is admin-only)
+router.put("/:packageId/deaktivacija", validatePackageId, DeactivateController.deactivatePackage);
 
 router.delete("/:packageId", validatePackageId, PackageController.deletePackage);
 

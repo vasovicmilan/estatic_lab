@@ -126,7 +126,29 @@ export async function findActiveSlugsForSitemap() {
   return Post.find({ status: "published", publishedAt: { $lte: new Date() } }, { slug: 1, updatedAt: 1 }).lean();
 }
 
+/** Counts per status, total views of published posts and published posts missing a meta description. */
+export async function getPostStats({ session } = {}) {
+  const [byStatus, views, missingSeo] = await Promise.all([
+    Post.aggregate([{ $group: { _id: "$status", n: { $sum: 1 } } }]).session(session || null),
+    Post.aggregate([{ $match: { status: "published" } }, { $group: { _id: null, views: { $sum: "$views" } } }]).session(session || null),
+    Post.countDocuments({
+      status: "published",
+      $or: [{ "seo.description": { $exists: false } }, { "seo.description": "" }, { "seo.description": null }],
+    }).session(session || null),
+  ]);
+  const counts = Object.fromEntries(byStatus.map((r) => [r._id, r.n]));
+  return {
+    draft: counts.draft || 0,
+    scheduled: counts.scheduled || 0,
+    published: counts.published || 0,
+    archived: counts.archived || 0,
+    totalViews: views[0]?.views || 0,
+    missingSeo,
+  };
+}
+
 export default {
+  getPostStats,
   createPost,
   findPostById,
   findPostBySlug,

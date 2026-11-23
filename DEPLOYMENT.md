@@ -120,6 +120,7 @@ Seed skripte (`src/database/seeds/run-*.js`) sadrže Estetik Lab demo sadržaj i
 ## 9. Bekap i video uputstva
 
 - **Bekap:** podesi cron za `npm run backup:daily` (vidi `docs/sr/17-bekapi.md`). Bekap bez probe vraćanja nije bekap: bar jednom uradi probno vraćanje na drugoj bazi, i razmotri kopiju van servera.
+- **Materijali za preuzimanje** (admin → Materijali): PDF ponude, brošure i slike koje se otpremaju kroz admin, dobijaju stranicu `/materijali/<slug>` i QR kod, a mogu se ubaciti u newsletter kampanju kao blok „Fajl za preuzimanje“. Fajlovi se čuvaju u `storage/materials` (ili `MATERIALS_DIR`), van `src/public` i van gita, pa ručno kopiranje `src/` na server ne može da ih prepiše. `scripts/backup.js` ih uključuje u dnevni backup (`materials.tar.gz`). U nginx-u mora biti `client_max_body_size 25m;` (ograničenje jednog fajla je 25 MB). Nove ikonice (`bi-folder2-open`, `bi-download`, `bi-file-earmark-arrow-down`, `bi-envelope-check`, `bi-upload`) zahtevaju `npm run build:icons` posle kopiranja.
 - **Video uputstva** (`/uputstva`): snimaju se i objavljuju na razvojnoj mašini (`npm run tutorials:all`), a gotovi fajlovi se kopiraju u `storage/tutorials` na serveru ili u folder iz `TUTORIALS_DIR`. Folder mora biti van `src/public` i ne ulazi u git. Bez njega stranica radi, samo su kartice označene kao nedostupne. Vidi `docs/sr/19-video-uputstva.md`.
 
 ## Ažuriranje postojeće produkcije (npr. beautymedica.rs)

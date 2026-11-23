@@ -33,6 +33,12 @@ export const BLOG_BLOCK_TYPES = [
   "productReference",
 ];
 
+// Block types that exist in the schema but are NOT offered in the blog/product editors:
+// "file" is a newsletter-campaign-only block - a button that links to a Material's download
+// page (see campaign.model.js's CAMPAIGN_BLOCK_TYPES and models/material.model.js). It is kept
+// out of BLOG_BLOCK_TYPES so the post/product editors never list it.
+export const CAMPAIGN_ONLY_BLOCK_TYPES = ["file"];
+
 // One card in a `cards` block. Deliberately NOT ServiceFeatureSchema (icon/title/text
 // here vs icon/name/description there, plus ServiceFeatureSchema's slug/isActive don't
 // apply to display-only blog content) - reusing it would mean either renaming fields
@@ -52,7 +58,7 @@ const ContentBlogSchema = new Schema(
     type: {
       type: String,
       required: true,
-      enum: BLOG_BLOCK_TYPES,
+      enum: [...BLOG_BLOCK_TYPES, ...CAMPAIGN_ONLY_BLOCK_TYPES],
     },
 
     // used by: paragraph, heading, quote
@@ -134,7 +140,7 @@ const ContentBlogSchema = new Schema(
       default: undefined,
     },
 
-    // used by: cta, serviceReference, productReference - the link target + button
+    // used by: cta, serviceReference, productReference, file - the link target + button
     // label. Same shape for all three: cta is a standalone "book now" prompt,
     // serviceReference/productReference are "see also" links into a specific
     // Service/Product page - visually distinct in the templates but structurally

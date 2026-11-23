@@ -9,6 +9,8 @@ import roleRoutes from "./admin/role.routes.js";
 import userRoutes from "./admin/user.routes.js";
 import profileRoutes from "./admin/profile.routes.js";
 import employeeRoutes from "./admin/employee.routes.js";
+import employeeCardRoutes from "./admin/employee-card.routes.js";
+import areaDashboardRoutes from "./admin/area-dashboard.routes.js";
 import partnerRoutes from "./admin/partner.routes.js";
 import payoutRequestRoutes from "./admin/payout-request.routes.js";
 import logSummaryRoutes from "./admin/log-summary.routes.js";
@@ -27,6 +29,7 @@ import couponRoutes from "./admin/coupon.routes.js";
 import wheelRoutes from "./admin/wheel.routes.js";
 import newsletterRoutes from "./admin/news-letter.routes.js";
 import campaignRoutes from "./admin/campaign.routes.js";
+import materialRoutes from "./admin/material.routes.js";
 import testimonialRoutes from "./admin/testimonial.routes.js";
 import businessPartnerRoutes from "./admin/business-partner.routes.js";
 import productRoutes from "./admin/product.routes.js";
@@ -41,11 +44,13 @@ router.use(adminMiddleware);
 router.use(adminLimiter);
 
 router.get("/", DashboardController.dashboard);
+router.use("/pregled", areaDashboardRoutes);
 
 router.use("/role", requirePermission(PERMISSION.MANAGE_ROLES), roleRoutes);
 router.use("/korisnici", requirePermission(PERMISSION.MANAGE_USERS), userRoutes);
 router.use("/profil", profileRoutes);
 router.use("/zaposleni", requirePermission(PERMISSION.MANAGE_EMPLOYEES), employeeRoutes);
+router.use("/vizitke", requirePermission(PERMISSION.MANAGE_EMPLOYEES), employeeCardRoutes);
 router.use("/partneri", requirePermission(PERMISSION.MANAGE_PARTNERS), partnerRoutes);
 router.use("/isplate", requirePermission(PERMISSION.MANAGE_PAYOUTS), payoutRequestRoutes);
 router.use("/logovi", requirePermission(PERMISSION.VIEW_LOGS), logSummaryRoutes);
@@ -73,6 +78,7 @@ router.use("/newsletter", requirePermission(PERMISSION.MANAGE_MARKETING), newsle
 // sites for the POST->PUT conversion below - mounted at the path the presenter/views
 // already assumed.
 router.use("/newsletter/kampanje", requirePermission(PERMISSION.MANAGE_MARKETING), campaignRoutes);
+router.use("/materijali", requirePermission(PERMISSION.MANAGE_MARKETING), materialRoutes);
 router.use("/testimoniali", requirePermission(PERMISSION.MANAGE_MARKETING), testimonialRoutes);
 router.use("/saradnici", requirePermission(PERMISSION.MANAGE_MARKETING), businessPartnerRoutes);
 router.use("/proizvodi", requirePermission(PERMISSION.MANAGE_PRODUCTS), productRoutes);

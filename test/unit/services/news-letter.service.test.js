@@ -106,3 +106,33 @@ describe("news-letter.service - signup source", () => {
     assert.equal("source" in patches[1], false);
   });
 });
+
+describe("news-letter.service - first name", () => {
+  it("stores the first name of a brand-new subscriber (trimmed)", async (t) => {
+    t.mock.method(newsLetterRepo, "findSubscriberByEmail", async () => null);
+    let payload;
+    t.mock.method(newsLetterRepo, "createSubscriber", async (data) => { payload = data; return { ...data, _id: id() }; });
+    await newsLetterService.subscribe("ana@example.com", ["general"], { source: "tocak", firstName: "  Ana " });
+    assert.equal(payload.firstName, "Ana");
+  });
+
+  it("leaves firstName out entirely when none is given (a footer signup)", async (t) => {
+    t.mock.method(newsLetterRepo, "findSubscriberByEmail", async () => null);
+    let payload;
+    t.mock.method(newsLetterRepo, "createSubscriber", async (data) => { payload = data; return { ...data, _id: id() }; });
+    await newsLetterService.subscribe("footer@example.com", ["general"], { source: "footer" });
+    assert.equal("firstName" in payload, false);
+  });
+
+  it("fills a missing name on an existing subscriber, but never replaces one that is already there", async (t) => {
+    const patches = [];
+    t.mock.method(newsLetterRepo, "updateSubscriberById", async (_id, patch) => { patches.push(patch); });
+    t.mock.method(newsLetterRepo, "findSubscriberByEmail", async () => buildSubscriber({ status: "subscribed", source: "footer", firstName: null }));
+    await newsLetterService.subscribe("x@example.com", ["general"], { source: "tocak", firstName: "Ana" });
+    assert.equal(patches[0].firstName, "Ana");
+
+    t.mock.method(newsLetterRepo, "findSubscriberByEmail", async () => buildSubscriber({ status: "subscribed", source: "footer", firstName: "Marija" }));
+    await newsLetterService.subscribe("x@example.com", ["general"], { source: "tocak", firstName: "Ana" });
+    assert.equal("firstName" in patches[1], false);
+  });
+});

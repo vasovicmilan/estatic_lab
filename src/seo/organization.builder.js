@@ -50,6 +50,10 @@ export async function buildOrganizationJsonLd(req) {
     url: base,
     ...(BUSINESS.email ? { email: BUSINESS.email } : {}),
     ...(BUSINESS.phone ? { telephone: BUSINESS.phone } : {}),
+    // aparati / poslovna saradnja imaju poseban broj - schema.org ContactPoint
+    ...(BUSINESS.b2bPhone
+      ? { contactPoint: [{ "@type": "ContactPoint", telephone: BUSINESS.b2bPhone, contactType: "sales", areaServed: "RS", availableLanguage: ["sr"] }] }
+      : {}),
     // PIB / matični broj aren't assigned yet (business registration pending),
     // so these are omitted entirely rather than emitted as null/empty -
     // schema.org validators flag empty required-looking fields, and an

@@ -357,6 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("[data-package-group]").forEach((card) => {
     const priceEl = card.querySelector("[data-tier-price-target]");
     const oldPriceEl = card.querySelector("[data-tier-old-price-target]");
+    const priceEurEl = card.querySelector("[data-tier-price-eur-target]");
     const savingsEl = card.querySelector("[data-tier-savings-target]");
     const badgeEl = card.querySelector("[data-tier-badge-target]");
     const descEl = card.querySelector("[data-tier-desc-target]");
@@ -376,6 +377,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (priceEl) priceEl.textContent = button.dataset.tierPrice || "";
         if (oldPriceEl) oldPriceEl.textContent = button.dataset.tierOldPrice || "";
+        if (priceEurEl) priceEurEl.textContent = button.dataset.tierPriceEur || "";
         if (savingsEl) savingsEl.textContent = button.dataset.tierSavings || "";
         if (descEl) descEl.textContent = button.dataset.tierDesc || "";
         if (ctaEl) ctaEl.setAttribute("href", button.dataset.tierHref || "#");

@@ -23,6 +23,8 @@ await fs.ensureDir(path.join(PUBLIC_PATH, "images", "testimonials"));
 await fs.ensureDir(path.join(PUBLIC_PATH, "images", "experts"));
 await fs.ensureDir(path.join(PUBLIC_PATH, "images", "partners"));
 await fs.ensureDir(path.join(PUBLIC_PATH, "images", "site"));
+await fs.ensureDir(path.join(PUBLIC_PATH, "images", "campaigns"));
+await fs.ensureDir(path.join(PUBLIC_PATH, "images", "vizitke"));
 await fs.ensureDir(path.join(PUBLIC_PATH, "videos"));
 await fs.ensureDir(path.join(PUBLIC_PATH, "videos", "thumbnails"));
 
@@ -41,7 +43,7 @@ const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 // passed explicitly at every call site (see the routes files) and is what the
 // returned URL (/images/${type}/...) is built from too - so this makes the
 // folder actually written to match the URL that gets saved to the database.
-const KNOWN_IMAGE_TYPES = new Set(["services", "packages", "products", "categories", "posts", "testimonials", "experts", "partners", "business-partners", "site"]);
+const KNOWN_IMAGE_TYPES = new Set(["services", "packages", "products", "categories", "posts", "testimonials", "experts", "partners", "business-partners", "site", "campaigns", "vizitke"]);
 
 function getDestination(type) {
   const subfolder = KNOWN_IMAGE_TYPES.has(type) ? type : "site";
@@ -112,6 +114,24 @@ async function handleImageUpload(file, destination, type) {
   };
 }
 
+// =============== EMAIL IMAGE (newsletter campaigns) ===============
+// Mail clients are not browsers: Outlook for desktop still cannot show WEBP, which is what every
+// other upload here becomes. Images that go INTO an email are saved as a single JPEG instead
+// (1200px wide is plenty for a 600px-wide email on a retina phone). A transparent PNG logo is
+// flattened onto white, since JPEG has no transparency.
+
+async function handleEmailImageUpload(file, destination, type) {
+  const filename = `${generateFilename(file.originalname)}-email.jpg`;
+  await sharp(file.buffer)
+    .rotate()
+    .resize({ width: 1200, withoutEnlargement: true })
+    .flatten({ background: "#ffffff" })
+    .jpeg({ quality: 85, mozjpeg: true })
+    .toFile(path.join(destination, filename));
+
+  return { img: `/images/${type}/${filename}`, imgDesc: "" };
+}
+
 // =============== VIDEO (ffmpeg - thumbnail only, no re-encode) ===============
 
 async function processVideo(buffer, baseFilename) {
@@ -171,6 +191,8 @@ function processUpload(fieldName, type = "site") {
         if (isVideo) {
           const baseFilename = generateFilename(req.file.originalname);
           req.uploadedFile = await processVideo(req.file.buffer, baseFilename);
+        } else if (type === "campaigns") {
+          req.uploadedFile = await handleEmailImageUpload(req.file, destination, type);
         } else {
           req.uploadedFile = await handleImageUpload(req.file, destination, type);
         }

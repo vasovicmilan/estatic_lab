@@ -17,6 +17,7 @@ import {
 import categoryService from "./category.service.js";
 import { generateSlug, generateUniqueSlug } from "../utils/slug.util.js";
 import { validationError, notFound, conflict, badRequest } from "../utils/error.util.js";
+import { validateEurPair } from "../utils/eur-price.util.js";
 import { logInfo } from "../utils/logger.util.js";
 import { createTtlCache } from "../utils/ttl-cache.util.js";
 
@@ -40,6 +41,8 @@ function validatePackages(packages = []) {
     if (!p.name) badRequest("Svaka varijanta mora imati naziv");
     if (!p.duration || p.duration < 5) badRequest(`Varijanta "${p.name}" mora imati trajanje od bar 5 minuta`);
     if (p.totalPrice == null || p.totalPrice < 0) badRequest(`Varijanta "${p.name}" mora imati validnu cenu`);
+    const eurError = validateEurPair({ price: p.totalPriceEur, oldPrice: p.basePriceEur }, `Varijanta "${p.name}"`);
+    if (eurError) badRequest(eurError);
   }
 }
 

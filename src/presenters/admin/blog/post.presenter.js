@@ -29,6 +29,7 @@ export function preparePostListData(result, query = {}) {
       { type: "view", url: "/admin/blog/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/blog/izmena/", icon: "pencil" },
       { type: "custom", url: "/admin/blog/", idKey: "id", subPath: "seo", icon: "search", label: "SEO" },
+      { type: "deactivate", url: "/admin/blog/", suffix: "/arhiviranje", label: "Arhiviraj", icon: "eye-slash" },
       { type: "delete", url: "/admin/blog/", icon: "trash" },
     ],
     sort: buildSortState(query, SORT_MAP),

@@ -7,6 +7,9 @@ import { Schema, model } from "mongoose";
 // unlimited prize the wheel falls back to whenever the drawn one has just run out.
 const WheelPrizeSchema = new Schema(
   {
+    // točak kome nagrada pripada (više točkova - vidi wheel.model.js). `key` ostaje jedinstven
+    // na nivou cele baze, jer ga kuponi (Coupon.wheelPrizeKey) čuvaju kao stabilnu oznaku.
+    wheel: { type: Schema.Types.ObjectId, ref: "Wheel", required: true, index: true },
     key: { type: String, required: true, unique: true, trim: true, lowercase: true },
     label: { type: String, required: true, trim: true },
     shortLabel: { type: String, required: true, trim: true, maxlength: 18 },

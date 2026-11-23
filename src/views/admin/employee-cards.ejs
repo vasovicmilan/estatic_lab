@@ -1,0 +1,40 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container-fluid py-4">
+  <%- include("../includes/flash-messages") %>
+  <h1 class="h3 mb-4"><%= pageTitle %></h1>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Zaposleni</th><th>Link</th><th>Status</th><th class="text-end">Pregleda</th><th class="text-end">Kontakata</th><th></th></tr></thead>
+        <tbody>
+          <% if (!data.cards.length) { %><tr><td colspan="6" class="text-muted text-center py-4">Nijedan zaposleni još nije napravio vizitku.</td></tr><% } %>
+          <% data.cards.forEach(function(c) { %>
+            <tr>
+              <td><%= c.name %></td>
+              <td class="small"><a href="<%= c.url %>" target="_blank" rel="noopener"><%= c.url %></a></td>
+              <td>
+                <% if (c.adminDisabled) { %><span class="badge text-bg-danger">Isključena (admin)</span>
+                <% } else if (c.isPublic) { %><span class="badge text-bg-success">Javna</span>
+                <% } else { %><span class="badge text-bg-secondary">Nije javna</span><% } %>
+              </td>
+              <td class="text-end"><%= c.views %></td>
+              <td class="text-end"><%= c.contactDownloads %></td>
+              <td class="text-end">
+                <form action="/admin/vizitke/<%= c.id %>/status" method="POST" class="d-inline">
+                  <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
+                  <input type="hidden" name="disabled" value="<%= c.adminDisabled ? 'false' : 'true' %>">
+                  <button type="submit" class="btn btn-sm <%= c.adminDisabled ? 'btn-outline-success' : 'btn-outline-danger' %>"><%= c.adminDisabled ? "Vrati" : "Isključi" %></button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>

@@ -61,7 +61,7 @@ export function prepareCampaignListData(result, query = {}) {
   };
 }
 
-export function prepareCampaignDetailsData(campaign) {
+export function prepareCampaignDetailsData(campaign, { recipients = null, testEmail = "" } = {}) {
   return {
     backUrl: "/admin/newsletter/kampanje",
     editUrl: campaign.statusRaw === "sent" ? null : `/admin/newsletter/kampanje/izmena/${campaign.id}`,
@@ -74,6 +74,8 @@ export function prepareCampaignDetailsData(campaign) {
           { label: "Predmet email-a", value: campaign.predmet },
           { label: "Status", value: campaign.status },
           { label: "Segment", value: campaign.segment },
+          { label: "Izvor kontakata", value: campaign.izvori },
+          ...(recipients !== null ? [{ label: "Trenutno bi stiglo na", value: `${recipients} adresa` }] : []),
         ],
       },
       {
@@ -94,6 +96,9 @@ export function prepareCampaignDetailsData(campaign) {
           poslato: campaign.poslato,
           neuspesno: campaign.neuspesno,
           sendUrl: `/admin/newsletter/kampanje/${campaign.id}/posalji`,
+          testUrl: `/admin/newsletter/kampanje/${campaign.id}/probni`,
+          testEmail,
+          recipients,
         },
       },
       {
@@ -108,7 +113,7 @@ export function prepareCampaignDetailsData(campaign) {
   };
 }
 
-export function prepareCampaignFormData(campaign = null) {
+export function prepareCampaignFormData(campaign = null, { sources = [], materials = [] } = {}) {
   const isEdit = !!campaign;
   const values = campaign || {};
 
@@ -138,7 +143,36 @@ export function prepareCampaignFormData(campaign = null) {
         options: INTEREST_OPTIONS,
         help: "Ništa izabrano = šalje se svim aktivnim pretplatnicima, bez obzira na interesovanja.",
       },
-      { name: "content", label: "Sadržaj email-a", type: "content-blocks", width: 12, value: values.content || [], blockTypes: CAMPAIGN_BLOCK_TYPES },
+      {
+        name: "targetSources",
+        label: "Samo kontakti sa događaja / QR koda (opciono)",
+        type: "checkbox-group",
+        width: 12,
+        value: values.targetSources || [],
+        options: sources.map((source) => ({ value: source, label: source })),
+        help: sources.length
+          ? "Oznake su iz točka sreće (npr. sajam-ns-2026). Izabrana oznaka + segment iznad = samo oni koji ispunjavaju oba uslova. Ništa izabrano = bez ovog ograničenja. Mejl dobijaju samo oni koji su i dalje prijavljeni na newsletter."
+          : "Još nema kontakata iz točka sreće, pa nema oznaka za izbor.",
+      },
+      {
+        name: "onlyUnusedCoupon",
+        label: "Samo oni koji još nisu iskoristili kupon sa točka",
+        type: "checkbox",
+        width: 12,
+        value: !!values.onlyUnusedCoupon,
+        help: "Za podsetnik „vaša nagrada vas čeka“. Važi samo za ljude koji su vrteli točak (u kombinaciji sa izabranim izvorom, ako je izabran).",
+      },
+      {
+        name: "content",
+        label: "Sadržaj email-a",
+        type: "content-blocks",
+        width: 12,
+        value: values.content || [],
+        blockTypes: CAMPAIGN_BLOCK_TYPES,
+        materials,
+        uploadUrl: "/admin/newsletter/kampanje/otpremi-sliku",
+        help: "Ime primaoca: napiši {{ime}} u naslovu ili tekstu (ako ga nemamo, izostavlja se) ili {{ime|poštovani korisniče}} sa rezervnom rečju. Blok „Fajl za preuzimanje“ šalje dugme ka materijalu iz sekcije Materijali.",
+      },
       {
         name: "status",
         label: "Status",

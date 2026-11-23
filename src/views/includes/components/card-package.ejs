@@ -29,6 +29,7 @@
       <div>
         <strong class="price-mono"><%= pkg.cena %></strong>
         <% if (pkg.staraCena) { %><span class="text-muted text-decoration-line-through small ms-1 price-mono"><%= pkg.staraCena %></span><% } %>
+        <%- include("price-eur", { eur: pkg.cenaEur, oldEur: pkg.staraCenaEur }) %>
       </div>
       <a href="/paketi/<%= pkg.slug %>" class="btn btn-outline-primary btn-sm position-relative" style="z-index: 2;">Detalji</a>
     </div>

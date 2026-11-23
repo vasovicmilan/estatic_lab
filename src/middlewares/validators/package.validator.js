@@ -27,6 +27,15 @@ export const validatePackageCreate = [
     .optional({ values: "falsy" })
     .isFloat({ min: 0 }).withMessage("Stara cena mora biti pozitivan broj"),
 
+  body("totalPriceEur")
+    .optional({ values: "falsy" })
+    .isFloat({ min: 0 }).withMessage("Cena u evrima mora biti pozitivan broj"),
+
+  body("basePriceEur")
+    .optional({ values: "falsy" })
+    .isFloat({ min: 0 }).withMessage("Stara cena u evrima mora biti pozitivan broj")
+    .custom((value, { req }) => !!req.body.totalPriceEur).withMessage("Stara cena u evrima traži i cenu u evrima"),
+
   booleanishField("isBest", true),
 
   booleanishField("isActive", true),
@@ -52,6 +61,15 @@ export const validatePackageUpdate = [
   body("totalPrice")
     .optional()
     .isFloat({ min: 0 }).withMessage("Cena mora biti pozitivan broj"),
+
+  body("totalPriceEur")
+    .optional({ values: "falsy" })
+    .isFloat({ min: 0 }).withMessage("Cena u evrima mora biti pozitivan broj"),
+
+  body("basePriceEur")
+    .optional({ values: "falsy" })
+    .isFloat({ min: 0 }).withMessage("Stara cena u evrima mora biti pozitivan broj")
+    .custom((value, { req }) => !!req.body.totalPriceEur).withMessage("Stara cena u evrima traži i cenu u evrima"),
 
   booleanishField("isActive", true),
 

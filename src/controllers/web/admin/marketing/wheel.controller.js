@@ -2,6 +2,7 @@ import QRCode from "qrcode";
 import wheelService from "../../../../services/wheel.service.js";
 import { prepareWheelCouponListData } from "../../../../presenters/admin/marketing/wheel-coupon.presenter.js";
 import { prepareWheelPrizeFormData } from "../../../../presenters/admin/marketing/wheel-prize.presenter.js";
+import { prepareWheelFormData } from "../../../../presenters/admin/marketing/wheel-config.presenter.js";
 import { prepareLeadListData, prepareLeadDetailsData, SORT_MAP } from "../../../../presenters/admin/marketing/lead.presenter.js";
 import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
 import { resolveAdminSort } from "../../../../utils/admin-list.util.js";
@@ -11,24 +12,43 @@ import { BUSINESS } from "../../../../config/business.config.js";
 import auditLogService from "../../../../services/audit-log.service.js";
 
 const SOURCE_PATTERN = /^[a-z0-9_-]{1,60}$/i;
+const WHEEL_SLUG_PATTERN = /^[a-z0-9-]{2,60}$/;
+const DEFAULT_SLUG = "tocak";
+
+// ?tocak=<slug> bira točak na stranama nagrada/QR; bez njega je to podrazumevani
+function wheelSlugFrom(req) {
+  const raw = typeof req.query.tocak === "string" ? req.query.tocak.trim() : "";
+  return WHEEL_SLUG_PATTERN.test(raw) ? raw : DEFAULT_SLUG;
+}
+
+export const prizesUrl = (slug) => (slug && slug !== DEFAULT_SLUG ? `/admin/tocak/nagrade?tocak=${encodeURIComponent(slug)}` : "/admin/tocak/nagrade");
+
+async function slugOfWheelId(wheelId) {
+  try {
+    return (await wheelService.getWheelForEdit(wheelId)).slug;
+  } catch {
+    return DEFAULT_SLUG;
+  }
+}
 
 export async function listLeads(req, res, next) {
   try {
-    const { search, segment, source, page = 1, limit } = req.query;
-    const [result, sources] = await Promise.all([
+    const { search, segment, source, tocak, page = 1, limit } = req.query;
+    const [result, sources, wheels] = await Promise.all([
       wheelService.listLeads({
         search: search || "",
-        filters: { segment: segment || undefined, source: source || undefined },
+        filters: { segment: segment || undefined, source: source || undefined, wheel: WHEEL_SLUG_PATTERN.test(tocak || "") ? tocak : undefined },
         page: parseInt(page, 10) || 1,
         limit: resolveAdminLimit(limit),
         sort: resolveAdminSort(req.query, SORT_MAP),
       }),
       wheelService.listSources(),
+      wheelService.listWheelOptions(),
     ]);
     return res.render("admin/_list", {
       pageTitle: search ? `Pretraga: ${search}` : "Točak sreće - kontakti",
       pageDescription: "Kontakti prikupljeni preko točka sreće",
-      data: prepareLeadListData(result, req.query, sources),
+      data: prepareLeadListData(result, req.query, sources, wheels),
     });
   } catch (error) {
     logError("[listLeads] Greška pri učitavanju kontakata sa točka", error, { userId: req.session?.user?.id });
@@ -85,8 +105,8 @@ export async function deleteLead(req, res, next) {
 
 export async function exportLeads(req, res, next) {
   try {
-    const { segment, source, search } = req.query;
-    const csv = await wheelService.exportLeadsCsv({ segment: segment || undefined, source: source || undefined, search: search || "" });
+    const { segment, source, search, tocak } = req.query;
+    const csv = await wheelService.exportLeadsCsv({ segment: segment || undefined, source: source || undefined, search: search || "", wheel: WHEEL_SLUG_PATTERN.test(tocak || "") ? tocak : undefined });
     await auditLogService.recordAuditLog({ actor: req.session?.user, action: "LEADS_EXPORTED", entity: { type: "Lead", id: "export" }, req, success: true });
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="tocak-kontakti-${new Date().toISOString().slice(0, 10)}.csv"`);
@@ -99,15 +119,18 @@ export async function exportLeads(req, res, next) {
 
 export async function prizesPage(req, res, next) {
   try {
-    const prizes = await wheelService.listPrizesForAdmin();
+    const wheel = await wheelService.getWheelBySlugForAdmin(wheelSlugFrom(req));
+    const [prizes, wheels] = await Promise.all([wheelService.listPrizesForAdmin(wheel.id), wheelService.listWheelOptions()]);
     const rawSource = typeof req.query.src === "string" ? req.query.src.trim() : "";
     const source = SOURCE_PATTERN.test(rawSource) ? rawSource : "sajam";
-    const url = wheelUrl(source);
+    const url = wheelUrl(wheel.slug, source);
     const qrSvg = await QRCode.toString(url, { type: "svg", margin: 2, errorCorrectionLevel: "M", width: 320 });
     return res.render("admin/marketing/wheel-admin", {
       pageTitle: "Točak sreće - nagrade i QR",
       pageDescription: "Šanse, zalihe i QR kod za točak sreće",
       data: {
+        wheel,
+        wheels,
         prizes,
         source,
         url,
@@ -116,18 +139,20 @@ export async function prizesPage(req, res, next) {
         breadcrumbs: [
           { label: "Admin", url: "/admin" },
           { label: "Točak sreće", url: "/admin/tocak" },
-          { label: "Nagrade i QR", url: null },
+          { label: wheel.name, url: null },
         ],
       },
     });
   } catch (error) {
+    if (error.statusCode === 404) return flashAndRedirect(req, res, "error", "Točak ne postoji", "/admin/tocak/tockovi");
     logError("[prizesPage] Greška pri učitavanju nagrada točka", error, { userId: req.session?.user?.id });
     next(error);
   }
 }
 
-function wheelUrl(source) {
-  return `${BUSINESS.siteUrl.replace(/\/+$/, "")}/tocak?src=${encodeURIComponent(source)}`;
+function wheelUrl(wheelSlug, source) {
+  const base = `${BUSINESS.siteUrl.replace(/\/+$/, "")}/tocak`;
+  return `${base}${wheelSlug && wheelSlug !== DEFAULT_SLUG ? `/${wheelSlug}` : ""}?src=${encodeURIComponent(source)}`;
 }
 
 // printable QR: /admin/tocak/qr.svg?src=sajam-ns-2026 or /admin/tocak/qr.png?src=...
@@ -135,16 +160,18 @@ export async function qrDownload(req, res, next) {
   try {
     const rawSource = typeof req.query.src === "string" ? req.query.src.trim() : "";
     const source = SOURCE_PATTERN.test(rawSource) ? rawSource : "sajam";
-    const url = wheelUrl(source);
+    const wheelSlug = wheelSlugFrom(req);
+    const url = wheelUrl(wheelSlug, source);
+    const nameSuffix = wheelSlug === DEFAULT_SLUG ? source : `${wheelSlug}-${source}`;
     if (req.params.format === "png") {
       const png = await QRCode.toBuffer(url, { type: "png", margin: 3, errorCorrectionLevel: "M", width: 1200 });
       res.setHeader("Content-Type", "image/png");
-      res.setHeader("Content-Disposition", `attachment; filename="tocak-qr-${source}.png"`);
+      res.setHeader("Content-Disposition", `attachment; filename="tocak-qr-${nameSuffix}.png"`);
       return res.send(png);
     }
     const svg = await QRCode.toString(url, { type: "svg", margin: 3, errorCorrectionLevel: "M" });
     res.setHeader("Content-Type", "image/svg+xml");
-    res.setHeader("Content-Disposition", `attachment; filename="tocak-qr-${source}.svg"`);
+    res.setHeader("Content-Disposition", `attachment; filename="tocak-qr-${nameSuffix}.svg"`);
     return res.send(svg);
   } catch (error) {
     logError("[qrDownload] Greška pri generisanju QR koda", error, { userId: req.session?.user?.id });
@@ -156,10 +183,10 @@ export async function updatePrize(req, res, next) {
   const { prizeId } = req.params;
   try {
     if (req.validationErrors) {
-      return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), "/admin/tocak/nagrade");
+      return flashAndRedirect(req, res, "error", Object.values(req.validationErrors).join(", "), prizesUrl(wheelSlugFrom(req)));
     }
     const { weight, stock, validDays, isActive } = req.body;
-    await wheelService.updatePrize(prizeId, {
+    const updatedPrize = await wheelService.updatePrize(prizeId, {
       weight,
       stock: stock === undefined || stock === "" || Number.isNaN(stock) ? null : stock,
       validDays,
@@ -174,17 +201,17 @@ export async function updatePrize(req, res, next) {
       req,
       success: true,
     });
-    return flashAndRedirect(req, res, "success", "Nagrada je sačuvana", "/admin/tocak/nagrade");
+    return flashAndRedirect(req, res, "success", "Nagrada je sačuvana", prizesUrl(await slugOfWheelId(updatedPrize.wheel)));
   } catch (error) {
     logError("[updatePrize] Greška pri izmeni nagrade", error, { prizeId, userId: req.session?.user?.id });
-    if (error.statusCode) return flashAndRedirect(req, res, "error", error.message, "/admin/tocak/nagrade");
+    if (error.statusCode) return flashAndRedirect(req, res, "error", error.message, prizesUrl(wheelSlugFrom(req)));
     next(error);
   }
 }
 
-async function renderPrizeForm(res, { prize = null, extra = {}, status = 200, pageTitle }) {
+async function renderPrizeForm(res, { prize = null, wheel, extra = {}, status = 200, pageTitle }) {
   const serviceOptions = await wheelService.listServiceOptions();
-  const form = prepareWheelPrizeFormData(prize, { serviceOptions });
+  const form = prepareWheelPrizeFormData(prize, { serviceOptions, wheel });
   return res.status(status).render("admin/_form", {
     pageTitle,
     pageDescription: "Nagrada točka sreće",
@@ -194,7 +221,8 @@ async function renderPrizeForm(res, { prize = null, extra = {}, status = 200, pa
 
 export async function newPrizeForm(req, res, next) {
   try {
-    return await renderPrizeForm(res, { pageTitle: "Nova nagrada točka" });
+    const wheel = await wheelService.getWheelBySlugForAdmin(wheelSlugFrom(req));
+    return await renderPrizeForm(res, { wheel, pageTitle: "Nova nagrada točka" });
   } catch (error) {
     logError("[newPrizeForm] Greška", error, { userId: req.session?.user?.id });
     next(error);
@@ -204,7 +232,8 @@ export async function newPrizeForm(req, res, next) {
 export async function editPrizeForm(req, res, next) {
   try {
     const prize = await wheelService.getPrizeForEdit(req.params.prizeId);
-    return await renderPrizeForm(res, { prize, pageTitle: "Izmena nagrade točka" });
+    const wheel = await wheelService.getWheelForEdit(prize.wheelId);
+    return await renderPrizeForm(res, { prize, wheel, pageTitle: "Izmena nagrade točka" });
   } catch (error) {
     logError("[editPrizeForm] Greška", error, { prizeId: req.params.prizeId, userId: req.session?.user?.id });
     if (error.statusCode) return flashAndRedirect(req, res, "error", error.message, "/admin/tocak/nagrade");
@@ -213,11 +242,13 @@ export async function editPrizeForm(req, res, next) {
 }
 
 export async function createPrize(req, res, next) {
+  let wheel = null;
   try {
+    wheel = await wheelService.getWheelForEdit(req.body.wheel);
     if (req.validationErrors) {
-      return await renderPrizeForm(res, { status: 400, pageTitle: "Nova nagrada točka", extra: { errors: req.validationErrors, formData: req.body } });
+      return await renderPrizeForm(res, { wheel, status: 400, pageTitle: "Nova nagrada točka", extra: { errors: req.validationErrors, formData: req.body } });
     }
-    const prize = await wheelService.createPrize(req.body);
+    const prize = await wheelService.createPrize(wheel.id, req.body);
     await auditLogService.recordAuditLog({
       actor: req.session?.user,
       action: "WHEEL_PRIZE_CREATED",
@@ -226,11 +257,11 @@ export async function createPrize(req, res, next) {
       req,
       success: true,
     });
-    return flashAndRedirect(req, res, "success", "Nagrada je dodata na točak", "/admin/tocak/nagrade");
+    return flashAndRedirect(req, res, "success", "Nagrada je dodata na točak", prizesUrl(wheel.slug));
   } catch (error) {
     logError("[createPrize] Greška pri dodavanju nagrade", error, { userId: req.session?.user?.id });
-    if (error.statusCode === 400 || error.statusCode === 409) {
-      return await renderPrizeForm(res, { status: 400, pageTitle: "Nova nagrada točka", extra: { errors: { general: error.message }, formData: req.body } });
+    if (wheel && (error.statusCode === 400 || error.statusCode === 409)) {
+      return await renderPrizeForm(res, { wheel, status: 400, pageTitle: "Nova nagrada točka", extra: { errors: { general: error.message }, formData: req.body } });
     }
     next(error);
   }
@@ -241,7 +272,7 @@ export async function updatePrizeFull(req, res, next) {
   try {
     const current = await wheelService.getPrizeForEdit(prizeId);
     if (req.validationErrors) {
-      return await renderPrizeForm(res, { prize: current, status: 400, pageTitle: "Izmena nagrade točka", extra: { errors: req.validationErrors, formData: req.body } });
+      return await renderPrizeForm(res, { prize: current, wheel: await wheelService.getWheelForEdit(current.wheelId), status: 400, pageTitle: "Izmena nagrade točka", extra: { errors: req.validationErrors, formData: req.body } });
     }
     const { before, after } = await wheelService.updatePrizeFull(prizeId, req.body);
     await auditLogService.recordAuditLog({
@@ -252,12 +283,13 @@ export async function updatePrizeFull(req, res, next) {
       req,
       success: true,
     });
-    return flashAndRedirect(req, res, "success", "Nagrada je sačuvana", "/admin/tocak/nagrade");
+    return flashAndRedirect(req, res, "success", "Nagrada je sačuvana", prizesUrl(await slugOfWheelId(after.wheelId)));
   } catch (error) {
     logError("[updatePrizeFull] Greška pri izmeni nagrade", error, { prizeId, userId: req.session?.user?.id });
     if (error.statusCode === 400 || error.statusCode === 409) {
       const current = await wheelService.getPrizeForEdit(prizeId).catch(() => null);
-      return await renderPrizeForm(res, { prize: current, status: 400, pageTitle: "Izmena nagrade točka", extra: { errors: { general: error.message }, formData: req.body } });
+      const wheel = current ? await wheelService.getWheelForEdit(current.wheelId).catch(() => null) : null;
+      return await renderPrizeForm(res, { prize: current, wheel, status: 400, pageTitle: "Izmena nagrade točka", extra: { errors: { general: error.message }, formData: req.body } });
     }
     if (error.statusCode) return flashAndRedirect(req, res, "error", error.message, "/admin/tocak/nagrade");
     next(error);
@@ -276,12 +308,127 @@ export async function deletePrize(req, res, next) {
       req,
       success: true,
     });
-    return flashAndRedirect(req, res, "success", "Nagrada je obrisana", "/admin/tocak/nagrade");
+    return flashAndRedirect(req, res, "success", "Nagrada je obrisana", prizesUrl(await slugOfWheelId(prize.wheelId)));
   } catch (error) {
     logError("[deletePrize] Greška pri brisanju nagrade", error, { prizeId, userId: req.session?.user?.id });
-    if (error.statusCode) return flashAndRedirect(req, res, "error", error.message, "/admin/tocak/nagrade");
+    if (error.statusCode) return flashAndRedirect(req, res, "error", error.message, prizesUrl(wheelSlugFrom(req)));
     next(error);
   }
 }
 
-export default { listLeads, listWheelCoupons, leadDetails, deleteLead, exportLeads, prizesPage, qrDownload, updatePrize, newPrizeForm, editPrizeForm, createPrize, updatePrizeFull, deletePrize };
+// ---------------- točkovi (lista, dodavanje, izmena, brisanje) ----------------
+
+const WHEELS_PAGE = "/admin/tocak/tockovi";
+
+export async function listWheels(req, res, next) {
+  try {
+    const wheels = await wheelService.listWheelsForAdmin();
+    return res.render("admin/marketing/wheels", {
+      pageTitle: "Točkovi sreće",
+      pageDescription: "Svaki točak ima svoj link, QR, nagrade i kontakte",
+      data: {
+        wheels: wheels.map((w) => ({ ...w, publicPath: w.isDefault ? "/tocak" : `/tocak/${w.slug}` })),
+        csrfToken: res.locals.csrfToken,
+        breadcrumbs: [
+          { label: "Admin", url: "/admin" },
+          { label: "Točak sreće", url: "/admin/tocak" },
+          { label: "Točkovi", url: null },
+        ],
+      },
+    });
+  } catch (error) {
+    logError("[listWheels] Greška pri učitavanju točkova", error, { userId: req.session?.user?.id });
+    next(error);
+  }
+}
+
+async function renderWheelForm(res, { wheel = null, extra = {}, status = 200, pageTitle }) {
+  const wheels = await wheelService.listWheelOptions();
+  const form = prepareWheelFormData(wheel, { wheels });
+  return res.status(status).render("admin/_form", {
+    pageTitle,
+    pageDescription: "Točak sreće",
+    data: { ...form, errors: {}, csrfToken: res.locals.csrfToken, ...extra },
+  });
+}
+
+export async function newWheelForm(req, res, next) {
+  try {
+    return await renderWheelForm(res, { pageTitle: "Novi točak" });
+  } catch (error) {
+    logError("[newWheelForm] Greška", error, { userId: req.session?.user?.id });
+    next(error);
+  }
+}
+
+export async function editWheelForm(req, res, next) {
+  try {
+    const wheel = await wheelService.getWheelForEdit(req.params.wheelId);
+    return await renderWheelForm(res, { wheel, pageTitle: "Izmena točka" });
+  } catch (error) {
+    logError("[editWheelForm] Greška", error, { wheelId: req.params.wheelId, userId: req.session?.user?.id });
+    if (error.statusCode) return flashAndRedirect(req, res, "error", error.message, WHEELS_PAGE);
+    next(error);
+  }
+}
+
+export async function createWheel(req, res, next) {
+  try {
+    if (req.validationErrors) {
+      return await renderWheelForm(res, { status: 400, pageTitle: "Novi točak", extra: { errors: req.validationErrors, formData: req.body } });
+    }
+    const { wheel, copiedPrizes } = await wheelService.createWheel(req.body);
+    await auditLogService.recordAuditLog({
+      actor: req.session?.user,
+      action: "WHEEL_CREATED",
+      entity: { type: "Wheel", id: wheel.id },
+      changes: { name: wheel.name, slug: wheel.slug, copiedPrizes },
+      req,
+      success: true,
+    });
+    const hint = copiedPrizes ? `Kopirano nagrada: ${copiedPrizes}.` : "Dodajte bar 2 nagrade da bi se točak otvorio.";
+    return flashAndRedirect(req, res, "success", `Točak je napravljen. ${hint}`, prizesUrl(wheel.slug));
+  } catch (error) {
+    logError("[createWheel] Greška pri pravljenju točka", error, { userId: req.session?.user?.id });
+    if (error.statusCode === 400 || error.statusCode === 404 || error.statusCode === 409) {
+      return await renderWheelForm(res, { status: 400, pageTitle: "Novi točak", extra: { errors: { general: error.message }, formData: req.body } });
+    }
+    next(error);
+  }
+}
+
+export async function updateWheel(req, res, next) {
+  const { wheelId } = req.params;
+  try {
+    const current = await wheelService.getWheelForEdit(wheelId);
+    if (req.validationErrors) {
+      return await renderWheelForm(res, { wheel: current, status: 400, pageTitle: "Izmena točka", extra: { errors: req.validationErrors, formData: req.body } });
+    }
+    const { before, after } = await wheelService.updateWheel(wheelId, req.body);
+    await auditLogService.recordAuditLog({ actor: req.session?.user, action: "WHEEL_UPDATED", entity: { type: "Wheel", id: wheelId }, changes: { before, after }, req, success: true });
+    return flashAndRedirect(req, res, "success", "Točak je sačuvan", WHEELS_PAGE);
+  } catch (error) {
+    logError("[updateWheel] Greška pri izmeni točka", error, { wheelId, userId: req.session?.user?.id });
+    if (error.statusCode === 400 || error.statusCode === 409) {
+      const current = await wheelService.getWheelForEdit(wheelId).catch(() => null);
+      return await renderWheelForm(res, { wheel: current, status: 400, pageTitle: "Izmena točka", extra: { errors: { general: error.message }, formData: req.body } });
+    }
+    if (error.statusCode) return flashAndRedirect(req, res, "error", error.message, WHEELS_PAGE);
+    next(error);
+  }
+}
+
+export async function deleteWheel(req, res, next) {
+  const { wheelId } = req.params;
+  try {
+    const wheel = await wheelService.deleteWheel(wheelId);
+    await auditLogService.recordAuditLog({ actor: req.session?.user, action: "WHEEL_DELETED", entity: { type: "Wheel", id: wheelId }, changes: { name: wheel.name, slug: wheel.slug }, req, success: true });
+    return flashAndRedirect(req, res, "success", "Točak je obrisan", WHEELS_PAGE);
+  } catch (error) {
+    logError("[deleteWheel] Greška pri brisanju točka", error, { wheelId, userId: req.session?.user?.id });
+    if (error.statusCode) return flashAndRedirect(req, res, "error", error.message, WHEELS_PAGE);
+    next(error);
+  }
+}
+
+export default { listWheels, newWheelForm, editWheelForm, createWheel, updateWheel, deleteWheel, listLeads, listWheelCoupons, leadDetails, deleteLead, exportLeads, prizesPage, qrDownload, updatePrize, newPrizeForm, editPrizeForm, createPrize, updatePrizeFull, deletePrize };

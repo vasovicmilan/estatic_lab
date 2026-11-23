@@ -1,5 +1,6 @@
 import campaignRepo from "../repositories/campaign.repository.js";
 import newsLetterRepo from "../repositories/news-letter.repository.js";
+import leadRepo from "../repositories/lead.repository.js";
 import { mapCampaignsForAdminList, mapCampaignForAdminDetail, mapCampaignForEdit } from "../mappers/campaign.mapper.js";
 import { renderCampaignContentToEmailHtml } from "../utils/campaign-content.util.js";
 import emailService from "./email.service.js";
@@ -51,6 +52,8 @@ export async function createCampaign(data) {
     subject: data.subject,
     content: data.content || [],
     targetInterests: data.targetInterests || [],
+    targetSources: data.targetSources || [],
+    onlyUnusedCoupon: !!data.onlyUnusedCoupon,
     status: data.status || "draft",
     scheduledFor: data.status === "scheduled" ? data.scheduledFor : null,
   });
@@ -76,6 +79,8 @@ export async function updateCampaignById(campaignId, data) {
     subject: data.subject ?? existing.subject,
     content: data.content ?? existing.content,
     targetInterests: data.targetInterests ?? existing.targetInterests,
+    targetSources: data.targetSources ?? existing.targetSources ?? [],
+    onlyUnusedCoupon: data.onlyUnusedCoupon ?? existing.onlyUnusedCoupon ?? false,
     status,
     scheduledFor: status === "scheduled" ? data.scheduledFor ?? existing.scheduledFor : null,
   });
@@ -97,11 +102,60 @@ export async function deleteCampaignById(campaignId) {
 // shared by the "Pošalji sada" admin path and the scheduled cron sweep below -
 // takes the live Mongoose doc (already fetched/claimed by the caller) so it can
 // just mutate + .save() it, with no re-fetch or status check of its own.
+// Who a campaign goes to. Always a currently SUBSCRIBED newsletter address (so an unsubscribe is
+// honoured and every mail has a working unsubscribe link), narrowed by:
+//   - interests (empty = everyone),
+//   - wheel campaign tag(s) (Lead.source - e.g. "sajam-ns-2026") and/or "coupon not used yet".
+// Source/coupon are looked up on the Lead by email, NOT on the subscriber's own `source`: that one
+// is only written on the first signup, so someone who joined through the footer and later spun
+// the wheel would be missed.
+async function resolveRecipients(campaign) {
+  const interests = campaign.targetInterests || [];
+  const sources = campaign.targetSources || [];
+
+  let subscribers = interests.length
+    ? await newsLetterRepo.findActiveSubscribersByInterests(interests)
+    : await newsLetterRepo.findAllActiveSubscribers();
+
+  if (sources.length || campaign.onlyUnusedCoupon) {
+    const leadEmails = new Set(await leadRepo.findEmailsByAudience({ sources, onlyUnusedCoupon: !!campaign.onlyUnusedCoupon }));
+    subscribers = subscribers.filter((subscriber) => leadEmails.has(subscriber.email));
+  }
+
+  return subscribers;
+}
+
+/** How many people a campaign would reach right now (shown before sending). */
+export async function countCampaignRecipients(campaignId) {
+  if (!campaignId) validationError("campaignId");
+  const campaign = await campaignRepo.findCampaignById(campaignId);
+  if (!campaign) notFound("Kampanja");
+  return (await resolveRecipients(campaign)).length;
+}
+
+/**
+ * One test mail of the campaign to `email`, rendered exactly like a real send (name placeholders
+ * filled with `firstName`). Does not change the campaign's status or counters.
+ */
+export async function sendCampaignTest(campaignId, email, firstName = "") {
+  if (!campaignId) validationError("campaignId");
+  if (!email) validationError("email");
+  const campaign = await campaignRepo.findCampaignById(campaignId);
+  if (!campaign) notFound("Kampanja");
+
+  const body = renderCampaignContentToEmailHtml(campaign.content, BASE_URL);
+  const [result] = await emailService.sendNewsletterCampaign(
+    [{ email, firstName, unsubscribeToken: "test" }],
+    { subject: `[TEST] ${campaign.subject}`, body }
+  );
+  if (!result?.sent) badRequest(`Probni mejl nije poslat: ${result?.error || "nepoznata greška"}`);
+  logInfo("Campaign test sent", { campaignId: campaignId.toString(), email });
+  return { email };
+}
+
 async function performSend(campaign) {
   const campaignId = campaign._id.toString();
-  const subscribers = campaign.targetInterests.length
-    ? await newsLetterRepo.findActiveSubscribersByInterests(campaign.targetInterests)
-    : await newsLetterRepo.findAllActiveSubscribers();
+  const subscribers = await resolveRecipients(campaign);
 
   const body = renderCampaignContentToEmailHtml(campaign.content, BASE_URL);
   const results = subscribers.length ? await emailService.sendNewsletterCampaign(subscribers, { subject: campaign.subject, body }) : [];
@@ -181,4 +235,6 @@ export default {
   deleteCampaignById,
   sendCampaignNow,
   sendScheduledCampaign,
+  sendCampaignTest,
+  countCampaignRecipients,
 };

@@ -102,6 +102,7 @@
                   <div class="d-flex align-items-baseline gap-2 mb-3">
                     <strong class="fs-5 price-mono"><%= variant.cena %> <%= currencySymbol %></strong>
                     <% if (variant.staraCena) { %><span class="text-muted text-decoration-line-through small price-mono"><%= variant.staraCena %> <%= currencySymbol %></span><% } %>
+                    <%- include("../includes/components/price-eur", { eur: variant.cenaEur, oldEur: variant.staraCenaEur }) %>
                   </div>
 
                   <% if (variant.naStanju) { %>

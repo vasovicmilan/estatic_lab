@@ -21,6 +21,7 @@ export const validateWheelSpin = [
     .custom((value) => /^\+?[\d\s/().-]{8,20}$/.test(value) && value.replace(/\D/g, "").length >= 8)
     .withMessage("Unesite ispravan broj telefona"),
   body("segment").isIn(LEAD_SEGMENTS).withMessage("Izaberite šta vas zanima"),
+  body("wheel").optional({ values: "falsy" }).trim().matches(/^[a-z0-9-]{2,60}$/).withMessage("Neispravan točak"),
   body("source").optional({ values: "falsy" }).trim().matches(/^[a-z0-9_-]{1,60}$/i).withMessage("Neispravan izvor"),
   body("consentContact").custom(isChecked).withMessage("Morate prihvatiti da vas kontaktiramo u vezi nagrade"),
   body("consentMarketing").optional().custom((v) => v === undefined || v === "" || v === "false" || isChecked(v)),
@@ -65,7 +66,24 @@ const prizeFormRules = [
 export const validatePrizeCreate = prizeFormRules;
 export const validatePrizeFullUpdate = prizeFormRules;
 
+const slugOrEmpty = (name) => body(name).optional({ values: "falsy" }).trim().matches(/^[a-z0-9-]{2,60}$/).withMessage("Link može imati samo mala slova, brojeve i crtice (2-60 karaktera)");
+
+// forma za točak (dodavanje + izmena); pravila oko slug-a, datuma i brisanja su u servisu
+export const validateWheelForm = [
+  body("name").trim().notEmpty().withMessage("Naziv točka je obavezan").isLength({ max: 80 }).withMessage("Naziv može imati najviše 80 karaktera"),
+  slugOrEmpty("slug"),
+  body("title").optional({ values: "falsy" }).trim().isLength({ max: 120 }).withMessage("Naslov može imati najviše 120 karaktera"),
+  body("intro").optional({ values: "falsy" }).trim().isLength({ max: 300 }).withMessage("Uvodni tekst može imati najviše 300 karaktera"),
+  body("validFrom").optional({ values: "falsy" }).isISO8601().withMessage("Neispravan datum početka"),
+  body("validUntil").optional({ values: "falsy" }).isISO8601().withMessage("Neispravan datum kraja"),
+  body("order").optional({ values: "falsy" }).isInt({ min: -1000, max: 1000 }).withMessage("Redosled mora biti ceo broj").toInt(),
+  body("copyFrom").optional({ values: "falsy" }).isMongoId().withMessage("Neispravan točak za kopiranje"),
+  body("isActive").optional().customSanitizer(isCheckedOrOne),
+  collectValidationErrors,
+];
+
+export const validateWheelId = mongoIdParamValidator("wheelId", "točka");
 export const validatePrizeId = mongoIdParamValidator("prizeId", "nagrade");
 export const validateLeadId = mongoIdParamValidator("leadId", "kontakta");
 
-export default { validateWheelSpin, validatePrizeCreate, validatePrizeFullUpdate, validatePrizeUpdate, validatePrizeId, validateLeadId };
+export default { validateWheelForm, validateWheelId, validateWheelSpin, validatePrizeCreate, validatePrizeFullUpdate, validatePrizeUpdate, validatePrizeId, validateLeadId };

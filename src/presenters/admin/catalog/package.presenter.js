@@ -25,6 +25,7 @@ export function preparePackageListData(result, query = {}, { categoryOptions = [
       { type: "view", url: "/admin/paketi/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/paketi/izmena/", icon: "pencil" },
       { type: "custom", url: "/admin/paketi/", idKey: "id", subPath: "seo", icon: "search", label: "SEO" },
+      { type: "deactivate", url: "/admin/paketi/", suffix: "/deaktivacija", label: "Deaktiviraj", icon: "eye-slash" },
       { type: "delete", url: "/admin/paketi/", icon: "trash" },
     ],
     sort: buildSortState(query, SORT_MAP),

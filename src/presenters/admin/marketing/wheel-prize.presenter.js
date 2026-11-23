@@ -4,21 +4,23 @@ const DISCOUNT_TYPES = [
 ];
 
 /** Form definition for adding / editing a wheel prize; `prize` is the service view of a stored prize. */
-export function prepareWheelPrizeFormData(prize = null, { serviceOptions = [] } = {}) {
+export function prepareWheelPrizeFormData(prize = null, { serviceOptions = [], wheel = null } = {}) {
   const isEdit = !!prize;
   const v = prize || { weight: 10, validDays: 30, isActive: true, discountType: "percentage", serviceSlugs: [], stock: null };
   const locked = !!prize?.isFallback;
+  const back = wheel && !wheel.isDefault ? `/admin/tocak/nagrade?tocak=${encodeURIComponent(wheel.slug)}` : "/admin/tocak/nagrade";
   return {
     formAction: isEdit ? `/admin/tocak/nagrade/${prize.id}` : "/admin/tocak/nagrade",
-    cancelUrl: "/admin/tocak/nagrade",
+    cancelUrl: back,
     isEdit,
     breadcrumbs: [
       { label: "Admin", url: "/admin" },
       { label: "Točak sreće", url: "/admin/tocak" },
-      { label: "Nagrade i QR", url: "/admin/tocak/nagrade" },
+      { label: wheel ? `Nagrade: ${wheel.name}` : "Nagrade i QR", url: back },
       { label: isEdit ? "Izmena nagrade" : "Nova nagrada", url: null },
     ],
     fields: [
+      ...(wheel && !isEdit ? [{ name: "wheel", type: "hidden", value: wheel.id }] : []),
       { name: "label", label: "Naziv nagrade", type: "text", width: 8, value: v.label || "", required: true, help: "Pun naziv koji posetilac vidi kad osvoji, npr. „Besplatan ESMA tretman“." },
       { name: "shortLabel", label: "Kratak naziv na točku", type: "text", width: 4, value: v.shortLabel || "", required: true, max: 18, help: "Najviše 18 karaktera, mora da stane na isečak." },
       { sectionTitle: "Popust koji nagrada daje", name: "discountType", label: "Tip popusta", type: "select", width: 4, value: v.discountType, options: DISCOUNT_TYPES },

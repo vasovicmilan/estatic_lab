@@ -10,7 +10,8 @@
         <% if (typeof business !== "undefined" && business) { %>
           <ul class="list-unstyled small mb-3">
             <% if (business.address && business.address.full) { %><li class="mb-2 d-flex gap-2 text-white text-opacity-75"><i class="bi bi-geo-alt" aria-hidden="true"></i><span><%= business.address.full %></span></li><% } %>
-            <% if (business.phone) { %><li class="mb-2 d-flex gap-2"><i class="bi bi-telephone text-white text-opacity-75" aria-hidden="true"></i><a href="tel:<%= business.phoneHref %>" class="text-white text-opacity-75 text-decoration-none"><%= business.phone %></a></li><% } %>
+            <% if (business.phone) { %><li class="mb-2 d-flex gap-2"><i class="bi bi-telephone text-white text-opacity-75" aria-hidden="true"></i><a href="tel:<%= business.phoneHref %>" class="text-white text-opacity-75 text-decoration-none"><%= business.phone %></a><% if (business.b2bPhone) { %><span class="text-white text-opacity-50">salon</span><% } %></li><% } %>
+            <% if (business.b2bPhone) { %><li class="mb-2 d-flex gap-2"><i class="bi bi-telephone-outbound text-white text-opacity-75" aria-hidden="true"></i><a href="tel:<%= business.b2bPhoneHref %>" class="text-white text-opacity-75 text-decoration-none"><%= business.b2bPhone %></a><span class="text-white text-opacity-50">aparati i saradnja</span></li><% } %>
             <% if (business.email) { %><li class="mb-2 d-flex gap-2"><i class="bi bi-envelope text-white text-opacity-75" aria-hidden="true"></i><a href="mailto:<%= business.email %>" class="text-white text-opacity-75 text-decoration-none"><%= business.email %></a></li><% } %>
           </ul>
           <% if (business.sameAs && business.sameAs.length) {

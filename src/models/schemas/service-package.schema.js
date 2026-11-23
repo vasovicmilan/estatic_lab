@@ -48,6 +48,19 @@ const ServicePackageSchema = new Schema(
       type: Number,
       min: 0,
     },
+    // optional EUR price shown next to totalPrice/basePrice - presentation only, see utils/eur-price.util.js
+    totalPriceEur: {
+      type: Number,
+      min: 0,
+      default: null,
+      set: (v) => (v === "" ? null : v),
+    },
+    basePriceEur: {
+      type: Number,
+      min: 0,
+      default: null,
+      set: (v) => (v === "" ? null : v),
+    },
 
     badge: {
       type: String, // e.g. "NAJPOPULARNIJE"

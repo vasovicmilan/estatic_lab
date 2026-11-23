@@ -26,7 +26,7 @@
     <h3 class="h6 product-card-title mb-1"><%= product.naziv %></h3>
     <p class="text-muted small product-card-desc flex-grow-1 mb-3"><%= product.kratakOpis %></p>
     <div class="d-flex justify-content-between align-items-center gap-2 pt-2 border-top">
-      <strong class="price-mono"><%= product.cena %></strong>
+      <span><strong class="price-mono"><%= product.cena %></strong><%- include("price-eur", { eur: product.cenaEur, oldEur: null }) %></span>
       <span class="btn btn-outline-primary btn-sm">Detalji</span>
     </div>
   </div>

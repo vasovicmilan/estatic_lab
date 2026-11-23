@@ -1,4 +1,5 @@
 import { Router } from "express";
+import * as DeactivateController from "../../../controllers/web/admin/deactivate.controller.js";
 import * as ProductController from "../../../controllers/web/admin/catalog/product.controller.js";
 import {
   validateProductStep1,
@@ -86,6 +87,9 @@ router.put(
   validateMediaUpdate,
   ProductController.updateProductGallery
 );
+
+// reversible removal for roles that may not hard-delete (delete itself is admin-only)
+router.put("/:productId/deaktivacija", validateProductId, DeactivateController.deactivateProduct);
 
 router.delete("/:productId", validateProductId, ProductController.deleteProduct);
 

@@ -19,6 +19,16 @@ const NewsLetterSchema = new Schema(
       lowercase: true,
     },
 
+    // optional - only known when the address came with a name (the prize wheel collects one);
+    // used for "{{ime}}" in campaigns, see utils/email-personalization.util.js. A footer signup
+    // has an email and nothing else.
+    firstName: {
+      type: String,
+      trim: true,
+      maxlength: 60,
+      default: null,
+    },
+
     status: {
       type: String,
       enum: ["subscribed", "unsubscribed"],

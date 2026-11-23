@@ -1,3 +1,4 @@
+import { normalizeEur } from "../../../../utils/eur-price.util.js";
 import { isValidObjectId } from "mongoose";
 import { formatMoney } from "../../../../utils/price.util.js";
 import { resolveAdminLimit } from "../../../../utils/pagination.util.js";
@@ -93,6 +94,8 @@ function buildPackagePayload(req, existing = {}) {
   data.isActive = parseCheckbox(req.body.isActive, existing.isActive ?? true);
   data.totalPrice = req.body.totalPrice != null ? Number(req.body.totalPrice) : existing.totalPrice;
   data.basePrice = req.body.basePrice ? Number(req.body.basePrice) : null;
+  data.totalPriceEur = normalizeEur(req.body.totalPriceEur);
+  data.basePriceEur = normalizeEur(req.body.basePriceEur);
   data.totalDuration = req.body.totalDuration ? Number(req.body.totalDuration) : null;
 
   return data;

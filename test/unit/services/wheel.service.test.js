@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import wheelRepo from "../../../src/repositories/wheel.repository.js";
 import wheelPrizeRepo from "../../../src/repositories/wheel-prize.repository.js";
 import leadRepo from "../../../src/repositories/lead.repository.js";
 import couponRepo from "../../../src/repositories/coupon.repository.js";
@@ -12,9 +13,12 @@ import * as wheelService from "../../../src/services/wheel.service.js";
 import { decryptField } from "../../../src/utils/encrypted-field.util.js";
 import { id } from "../../helpers/factories.js";
 
+const WHEEL = { _id: id(), name: "Točak sreće", slug: "tocak", isActive: true, validFrom: null, validUntil: null };
+
 function prize(overrides = {}) {
   return {
     _id: id(),
+    wheel: WHEEL._id,
     key: "popust-10",
     label: "10% popusta",
     shortLabel: "10% popust",
@@ -47,8 +51,11 @@ const validBody = (o = {}) => ({
 });
 
 // Wires every collaborator with working defaults; each test overrides what it cares about.
-function setup(t, { prizes = [prize()], claim, existingLead = null } = {}) {
+function setup(t, { prizes = [prize()], claim, existingLead = null, wheel = WHEEL } = {}) {
   const state = { claimed: [], released: [], createdCoupons: [], deletedCoupons: [], leads: [], subscribed: [], events: [] };
+  t.mock.method(wheelRepo, "countWheels", async () => 1);
+  t.mock.method(wheelRepo, "findWheelBySlug", async (slug) => (slug === wheel.slug ? wheel : null));
+  t.mock.method(wheelRepo, "findAllWheels", async () => [wheel]);
   t.mock.method(wheelPrizeRepo, "countPrizes", async () => prizes.length);
   t.mock.method(wheelPrizeRepo, "findAllPrizes", async () => prizes);
   t.mock.method(wheelPrizeRepo, "claimPrize", async (pid) => {
@@ -90,6 +97,43 @@ describe("wheel.service", () => {
       await assert.rejects(() => wheelService.spin(validBody()), (e) => e.statusCode === 409);
       assert.equal(s.claimed.length, 0);
       assert.equal(s.createdCoupons.length, 0);
+    });
+  });
+
+  describe("spin - više točkova", () => {
+    it("the one-spin check and the stock are per wheel, and the lead remembers its wheel and takes its slug as default source", async (t) => {
+      const other = { _id: id(), name: "Sajam", slug: "sajam-lepote", isActive: true, validFrom: null, validUntil: null };
+      const otherPrize = prize({ wheel: other._id });
+      const s = setup(t, { wheel: other, prizes: [otherPrize] });
+      let checkedWheel;
+      t.mock.method(leadRepo, "findLeadByEmailOrPhoneHash", async (_e, _h, wid) => { checkedWheel = String(wid); return null; });
+      let prizeWheel;
+      t.mock.method(wheelPrizeRepo, "findAllPrizes", async ({ wheelId } = {}) => { prizeWheel = String(wheelId); return [otherPrize]; });
+      await wheelService.spin(validBody({ wheel: "sajam-lepote" }));
+      assert.equal(checkedWheel, String(other._id));
+      assert.equal(prizeWheel, String(other._id));
+      assert.equal(String(s.leads[0].wheel), String(other._id));
+      assert.equal(s.leads[0].source, "sajam-lepote");
+    });
+
+    it("no wheel in the request means the default wheel", async (t) => {
+      const s = setup(t);
+      await wheelService.spin(validBody());
+      assert.equal(String(s.leads[0].wheel), String(WHEEL._id));
+      assert.equal(s.leads[0].source, "tocak");
+    });
+
+    it("refuses to spin a wheel that is off or outside its dates - and takes nothing", async (t) => {
+      for (const over of [{ isActive: false }, { validUntil: new Date(Date.now() - 864e5) }, { validFrom: new Date(Date.now() + 864e5) }]) {
+        const s = setup(t, { wheel: { ...WHEEL, ...over } });
+        await assert.rejects(() => wheelService.spin(validBody()), (e) => e.statusCode === 409);
+        assert.equal(s.claimed.length, 0);
+      }
+    });
+
+    it("an unknown wheel is 404", async (t) => {
+      setup(t);
+      await assert.rejects(() => wheelService.spin(validBody({ wheel: "nepostoji" })), (e) => e.statusCode === 404);
     });
   });
 
@@ -267,7 +311,7 @@ describe("wheel.service", () => {
       await wheelService.spin(validBody({ consentMarketing: false, email: "a@e.com" }));
       assert.equal(s.subscribed.length, 0);
       await wheelService.spin(validBody({ consentMarketing: true, segment: "kozmetika", email: "b@e.com" }));
-      assert.deepEqual(s.subscribed, [{ email: "b@e.com", interests: ["products"], origin: { source: "tocak", sourceDetail: "tocak" } }]);
+      assert.deepEqual(s.subscribed, [{ email: "b@e.com", interests: ["products"], origin: { source: "tocak", sourceDetail: "tocak", firstName: "Ana" } }]);
       await wheelService.spin(validBody({ consentMarketing: true, segment: "b2b", email: "c@e.com" }));
       assert.deepEqual(s.subscribed[1].interests, ["partnership"]);
     });
@@ -296,8 +340,20 @@ describe("wheel.service", () => {
         prizes: [prize(), prize({ key: "esma", stock: 3, awardedCount: 3, isFallback: false }), prize({ key: "off", isActive: false, isFallback: false })],
       });
       const cfg = await wheelService.getWheelConfig();
-      assert.deepEqual(cfg.map((c) => c.key), ["popust-10"]);
-      assert.deepEqual(Object.keys(cfg[0]).sort(), ["color", "key", "label", "shortLabel"]);
+      assert.deepEqual(cfg.prizes.map((c) => c.key), ["popust-10"]);
+      assert.deepEqual(Object.keys(cfg.prizes[0]).sort(), ["color", "key", "label", "shortLabel"]);
+    });
+
+    it("is closed (not playable) with fewer than two winnable prizes, open with two", async (t) => {
+      setup(t, { prizes: [prize()] });
+      assert.equal((await wheelService.getWheelConfig()).isOpen, false);
+      setup(t, { prizes: [prize(), prize({ key: "popust-15", isFallback: false })] });
+      assert.equal((await wheelService.getWheelConfig("tocak")).isOpen, true);
+    });
+
+    it("an unknown wheel is 404", async (t) => {
+      setup(t);
+      await assert.rejects(() => wheelService.getWheelConfig("nepostoji"), (e) => e.statusCode === 404);
     });
   });
 

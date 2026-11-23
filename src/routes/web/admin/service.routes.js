@@ -1,4 +1,5 @@
 import { Router } from "express";
+import * as DeactivateController from "../../../controllers/web/admin/deactivate.controller.js";
 import * as ServiceController from "../../../controllers/web/admin/catalog/service.controller.js";
 import {
   validateServiceStep1,
@@ -83,6 +84,9 @@ router.put(
   validateMediaUpdate,
   ServiceController.updateServiceGallery
 );
+
+// reversible removal for roles that may not hard-delete (delete itself is admin-only)
+router.put("/:serviceId/deaktivacija", validateServiceId, DeactivateController.deactivateService);
 
 router.delete("/:serviceId", validateServiceId, ServiceController.deleteService);
 

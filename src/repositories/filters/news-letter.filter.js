@@ -5,7 +5,8 @@ export function buildNewsLetterFilter({ search = "", status = null, source = nul
   const filter = {};
 
   if (search) {
-    filter.email = { $regex: search, $options: "i" };
+    const rx = { $regex: search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" };
+    filter.$or = [{ email: rx }, { firstName: rx }];
   }
 
   if (status) filter.status = status;

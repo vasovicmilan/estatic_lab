@@ -33,6 +33,18 @@ export const validateCampaignCreate = [
     .optional()
     .isIn(NEWSLETTER_INTERESTS).withMessage("Nepoznat segment"),
 
+  body("targetSources")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravni izvori"),
+
+  body("targetSources.*")
+    .optional()
+    .matches(/^[a-z0-9_-]{1,60}$/i).withMessage("Neispravna oznaka izvora"),
+
+  body("onlyUnusedCoupon")
+    .optional()
+    .isIn(["true", "false", "on", "1", "0", true, false]).withMessage("Neispravna vrednost"),
+
   body("status")
     .optional()
     .isIn(["draft", "scheduled"]).withMessage("Neispravan status"),
@@ -78,6 +90,18 @@ export const validateCampaignUpdate = [
     .optional()
     .isIn(NEWSLETTER_INTERESTS).withMessage("Nepoznat segment"),
 
+  body("targetSources")
+    .optional()
+    .custom(isArrayOrString).withMessage("Neispravni izvori"),
+
+  body("targetSources.*")
+    .optional()
+    .matches(/^[a-z0-9_-]{1,60}$/i).withMessage("Neispravna oznaka izvora"),
+
+  body("onlyUnusedCoupon")
+    .optional()
+    .isIn(["true", "false", "on", "1", "0", true, false]).withMessage("Neispravna vrednost"),
+
   body("status")
     .optional()
     .isIn(["draft", "scheduled"]).withMessage("Neispravan status"),
@@ -99,6 +123,15 @@ export const validateCampaignUpdate = [
   collectValidationErrors,
 ];
 
+export const validateCampaignTest = [
+  body("email")
+    .trim()
+    .notEmpty().withMessage("Unesite email adresu za probni mejl")
+    .isEmail().withMessage("Unesite ispravnu email adresu"),
+
+  collectValidationErrors,
+];
+
 export const validateCampaignId = mongoIdParamValidator("campaignId", "kampanje");
 
-export default { validateCampaignCreate, validateCampaignUpdate, validateCampaignId };
+export default { validateCampaignCreate, validateCampaignUpdate, validateCampaignId, validateCampaignTest };

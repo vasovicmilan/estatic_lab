@@ -1,0 +1,57 @@
+<%- include("../../includes/head") %>
+<%- include("../../includes/navigation") %>
+
+<main class="container-fluid py-4">
+  <%- include("../../includes/breadcrumbs") %>
+  <%- include("../../includes/flash-messages") %>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1 class="h3 mb-0">Točkovi sreće</h1>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="/admin/tocak" class="btn btn-outline-secondary btn-sm"><i class="bi bi-people"></i> Svi kontakti</a>
+      <a href="/admin/tocak/tockovi/novi" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Novi točak</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Točak</th><th>Javni link</th><th>Status</th><th class="text-end">Nagrada</th><th class="text-end">Kontakata</th><th></th></tr></thead>
+        <tbody>
+          <% data.wheels.forEach(function(w) { %>
+            <tr>
+              <td><strong><%= w.name %></strong><% if (w.isDefault) { %> <span class="badge bg-secondary ms-1">podrazumevani</span><% } %></td>
+              <td class="small"><a href="<%= w.publicPath %>" target="_blank" rel="noopener"><code><%= w.publicPath %></code></a></td>
+              <td>
+                <% if (!w.isActive) { %><span class="badge text-bg-secondary">Isključen</span>
+                <% } else if (w.isOpen && w.prizeCount >= 2) { %><span class="badge text-bg-success">Otvoren</span>
+                <% } else if (w.prizeCount < 2) { %><span class="badge text-bg-warning">Nema dovoljno nagrada</span>
+                <% } else { %><span class="badge text-bg-warning">Van perioda</span><% } %>
+              </td>
+              <td class="text-end"><%= w.prizeCount %></td>
+              <td class="text-end"><%= w.leadCount %></td>
+              <td class="text-end text-nowrap">
+                <a href="/admin/tocak/nagrade?tocak=<%= w.slug %>" class="btn btn-sm btn-outline-primary">Nagrade i QR</a>
+                <a href="/admin/tocak?tocak=<%= w.slug %>" class="btn btn-sm btn-outline-secondary">Kontakti</a>
+                <a href="/admin/tocak/tockovi/<%= w.id %>/izmena" class="btn btn-sm btn-outline-warning">Izmeni</a>
+                <% if (!w.isDefault && w.leadCount === 0) { %>
+                  <form action="/admin/tocak/tockovi/<%= w.id %>" method="POST" class="d-inline" data-confirm="Obrisati točak „<%= w.name %>“ i sve njegove nagrade?">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Obriši"><i class="bi bi-trash"></i></button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer small text-muted">
+      Svaki točak ima svoj link (<code>/tocak/&lt;link&gt;</code>), nagrade, zalihe i kontakte. Ista osoba sme da zavrti svaki točak po jednom.
+      Točak sa kontaktima se ne briše, samo isključuje.
+    </div>
+  </div>
+</main>
+
+<%- include("../../includes/footer") %>

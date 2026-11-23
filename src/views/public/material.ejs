@@ -1,0 +1,32 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main>
+  <section class="py-4 py-md-5">
+    <div class="container" style="max-width: 640px;">
+      <div class="card">
+        <div class="card-body p-4 p-md-5 text-center">
+          <p class="section-eyebrow mb-2">Estetik Lab</p>
+          <h1 class="h3 mb-3"><%= data.material.naslov %></h1>
+
+          <% if (data.material.isImage) { %>
+            <img src="/materijali/<%= data.material.slug %>/pregled" alt="<%= data.material.naslov %>" class="img-fluid rounded mb-4">
+          <% } else { %>
+            <p class="mb-3" style="font-size: 3rem;" aria-hidden="true"><i class="bi bi-file-earmark-arrow-down"></i></p>
+          <% } %>
+
+          <% if (data.material.opis) { %>
+            <p class="text-muted mb-4"><%= data.material.opis %></p>
+          <% } %>
+
+          <a href="/materijali/<%= data.material.slug %>/preuzmi" class="btn btn-primary btn-lg">
+            <i class="bi bi-download"></i> Preuzmi
+          </a>
+          <p class="text-muted small mt-3 mb-0"><%= data.material.tip %> · <%= data.material.velicina %></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<%- include("../includes/footer") %>

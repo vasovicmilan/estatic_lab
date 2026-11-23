@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import request from "supertest";
 import { createTestApp, closeTestApp, clearTestDatabase } from "../setup/test-app.js";
 import { registerAndLogin } from "../../helpers/session.js";
+import wheelRepo from "../../../src/repositories/wheel.repository.js";
 import wheelPrizeRepo from "../../../src/repositories/wheel-prize.repository.js";
 import leadRepo from "../../../src/repositories/lead.repository.js";
 import couponRepo from "../../../src/repositories/coupon.repository.js";
@@ -31,10 +32,13 @@ describe("prize wheel (HTTP)", () => {
   afterEach(async () => {
     await clearTestDatabase();
   });
-  // one unlimited 10% prize only, so the draw is deterministic and needs no services in the test DB
+  // the default wheel with one unlimited 10% prize that is the only one with weight (so the draw is
+  // deterministic and needs no services in the test DB) plus a weightless one - a wheel needs 2 to open
   beforeEach(async () => {
+    const wheel = await wheelRepo.createWheel({ name: "Točak sreće", slug: "tocak" });
     await wheelPrizeRepo.createPrizes([
-      { key: "popust-10", label: "10% popusta", shortLabel: "10% popust", weight: 1, isFallback: true, discountType: "percentage", discountValue: 10, validDays: 30, order: 1 },
+      { wheel: wheel._id, key: "popust-10", label: "10% popusta", shortLabel: "10% popust", weight: 1, isFallback: true, discountType: "percentage", discountValue: 10, validDays: 30, order: 1 },
+      { wheel: wheel._id, key: "popust-5", label: "5% popusta", shortLabel: "5% popust", weight: 0, discountType: "percentage", discountValue: 5, validDays: 30, order: 2 },
     ]);
   });
 
@@ -49,6 +53,10 @@ describe("prize wheel (HTTP)", () => {
     assert.match(res.text, /noindex/);
     assert.match(res.text, /id="wheelData"/);
     assert.match(res.text, /10% popust/);
+  });
+
+  it("an unknown wheel link is a 404, and /tocak/vrti is not read as a wheel", async () => {
+    assert.equal((await request(app).get("/tocak/nepostoji")).status, 404);
   });
 
   it("spins: saves the lead, mints a single-use coupon and returns the code with the animation plan", async () => {
@@ -66,7 +74,8 @@ describe("prize wheel (HTTP)", () => {
     assert.equal(coupon.maxUses, 1);
     assert.equal(coupon.discountValue, 10);
 
-    const lead = await leadRepo.findLeadByEmailOrPhoneHash("ana@example.com", "x");
+    const wheel = await wheelRepo.findWheelBySlug("tocak");
+    const lead = await leadRepo.findLeadByEmailOrPhoneHash("ana@example.com", "x", wheel._id);
     assert.equal(lead.source, "sajam-test");
     assert.equal(lead.couponCode, res.body.couponCode);
   });

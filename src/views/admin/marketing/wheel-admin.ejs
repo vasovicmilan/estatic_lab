@@ -6,18 +6,26 @@
   <%- include("../../includes/flash-messages") %>
 
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <h1 class="h3 mb-0">Točak sreće: nagrade i QR</h1>
+    <h1 class="h3 mb-0">Točak sreće: <%= data.wheel.name %></h1>
     <div class="d-flex flex-wrap gap-2">
-      <a href="/admin/tocak" class="btn btn-outline-secondary btn-sm"><i class="bi bi-people"></i> Kontakti</a>
+      <% if (data.wheels.length > 1) { %>
+        <form method="GET" action="/admin/tocak/nagrade" class="d-inline">
+          <select name="tocak" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="Izaberi točak">
+            <% data.wheels.forEach(function(w) { %><option value="<%= w.value %>" <%= w.value === data.wheel.slug ? "selected" : "" %>><%= w.label %></option><% }) %>
+          </select>
+        </form>
+      <% } %>
+      <a href="/admin/tocak/tockovi" class="btn btn-outline-secondary btn-sm"><i class="bi bi-collection"></i> Točkovi</a>
+      <a href="/admin/tocak?tocak=<%= data.wheel.slug %>" class="btn btn-outline-secondary btn-sm"><i class="bi bi-people"></i> Kontakti</a>
       <a href="/admin/tocak/kuponi" class="btn btn-outline-secondary btn-sm"><i class="bi bi-ticket-perforated"></i> Kuponi</a>
-      <a href="/admin/tocak/izvoz.csv" class="btn btn-outline-secondary btn-sm"><i class="bi bi-download"></i> Izvoz svih kontakata (CSV)</a>
+      <a href="/admin/tocak/izvoz.csv?tocak=<%= data.wheel.slug %>" class="btn btn-outline-secondary btn-sm"><i class="bi bi-download"></i> Izvoz kontakata ovog točka (CSV)</a>
     </div>
   </div>
 
   <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
       <span class="fw-semibold">Nagrade</span>
-      <a href="/admin/tocak/nagrade/nova" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Dodaj nagradu</a>
+      <a href="/admin/tocak/nagrade/nova?tocak=<%= data.wheel.slug %>" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Dodaj nagradu</a>
     </div>
     <div class="card-body p-0">
       <div class="table-responsive">
@@ -60,12 +68,12 @@
         </table>
       </div>
       <% data.prizes.forEach(function(p) { %>
-        <form action="/admin/tocak/nagrade/<%= p.id %>" method="POST" id="prize-<%= p.id %>" class="d-none">
+        <form action="/admin/tocak/nagrade/<%= p.id %>?tocak=<%= data.wheel.slug %>" method="POST" id="prize-<%= p.id %>" class="d-none">
           <input type="hidden" name="_method" value="PUT">
           <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
         </form>
         <% if (!p.isFallback && p.awardedCount === 0) { %>
-          <form action="/admin/tocak/nagrade/<%= p.id %>" method="POST" id="prize-del-<%= p.id %>" class="d-none" data-confirm="Obrisati nagradu „<%= p.label %>“ sa točka?">
+          <form action="/admin/tocak/nagrade/<%= p.id %>?tocak=<%= data.wheel.slug %>" method="POST" id="prize-del-<%= p.id %>" class="d-none" data-confirm="Obrisati nagradu „<%= p.label %>“ sa točka?">
             <input type="hidden" name="_method" value="DELETE">
             <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
           </form>
@@ -88,6 +96,7 @@
         </div>
         <div class="col-md-7 col-lg-8">
           <form method="GET" action="/admin/tocak/nagrade" class="row g-2 align-items-end mb-3">
+            <input type="hidden" name="tocak" value="<%= data.wheel.slug %>">
             <div class="col-sm-8">
               <label class="form-label" for="qr-src">Oznaka događaja (izvor)</label>
               <input type="text" id="qr-src" name="src" value="<%= data.source %>" pattern="[A-Za-z0-9_\-]{1,60}" class="form-control" placeholder="npr. sajam-ns-2026">
@@ -97,8 +106,8 @@
           <p class="mb-1 small text-muted">Kod vodi na:</p>
           <p class="mb-3"><a href="<%= data.url %>" target="_blank" rel="noopener"><code><%= data.url %></code></a></p>
           <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-primary btn-sm" href="/admin/tocak/qr.png?src=<%= encodeURIComponent(data.source) %>"><i class="bi bi-download"></i> PNG (1200 px)</a>
-            <a class="btn btn-outline-primary btn-sm" href="/admin/tocak/qr.svg?src=<%= encodeURIComponent(data.source) %>"><i class="bi bi-download"></i> SVG (za štampu)</a>
+            <a class="btn btn-primary btn-sm" href="/admin/tocak/qr.png?tocak=<%= data.wheel.slug %>&src=<%= encodeURIComponent(data.source) %>"><i class="bi bi-download"></i> PNG (1200 px)</a>
+            <a class="btn btn-outline-primary btn-sm" href="/admin/tocak/qr.svg?tocak=<%= data.wheel.slug %>&src=<%= encodeURIComponent(data.source) %>"><i class="bi bi-download"></i> SVG (za štampu)</a>
           </div>
           <p class="small text-muted mt-3 mb-0">Za svaki događaj napravite poseban QR sa svojom oznakom, pa u listi kontakata možete filtrirati koliko ih je došlo sa kog sajma.</p>
         </div>

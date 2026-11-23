@@ -167,6 +167,7 @@
                           <td>
                             <%= v.cena %> <%= currencySymbol %>
                             <% if (v.staraCena) { %><span class="text-muted text-decoration-line-through ms-1 small"><%= v.staraCena %> <%= currencySymbol %></span><% } %>
+                            <% if (v.cenaEur) { %><div class="small text-muted">u evrima: <%= v.cenaEur %><% if (v.staraCenaEur) { %> <s><%= v.staraCenaEur %></s><% } %></div><% } %>
                           </td>
                           <td><%= v.najbolji ? "Da" : "Ne" %></td>
                           <td><%= v.aktivan ? "Da" : "Ne" %></td>

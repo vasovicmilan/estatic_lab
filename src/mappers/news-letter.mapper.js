@@ -48,6 +48,7 @@ export function mapSubscribersForAdminList(subscribers = []) {
       return {
         id: subscriber._id.toString(),
         email: subscriber.email,
+        ime: subscriber.firstName || "-",
         status: translateStatus(subscriber.status),
         statusRaw: subscriber.status,
         interesovanja: (subscriber.interests || []).map(translateInterest).join(", "),
@@ -65,6 +66,7 @@ export function mapSubscriberForAdminDetail(subscriber) {
     id: subscriber._id.toString(),
     osnovno: {
       email: subscriber.email,
+      ime: subscriber.firstName || null,
       status: translateStatus(subscriber.status),
       statusRaw: subscriber.status,
       interesovanja: (subscriber.interests || []).map(translateInterest),

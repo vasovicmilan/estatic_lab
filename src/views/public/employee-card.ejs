@@ -1,0 +1,69 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<%
+  const c = data.card;
+  const initials = c.name.split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+%>
+<main>
+  <section class="py-4 py-md-5">
+    <div class="container" style="max-width: 560px;">
+      <div class="card">
+        <div class="card-body p-4 text-center">
+          <% if (c.photo) { %>
+            <img src="<%= c.photo %>" alt="<%= c.name %>" class="rounded-circle mb-3" style="width:120px;height:120px;object-fit:cover;">
+          <% } else { %>
+            <div class="rounded-circle bg-primary-subtle text-primary-emphasis d-inline-flex align-items-center justify-content-center mb-3" style="width:120px;height:120px;font-size:2.5rem;" aria-hidden="true"><%= initials %></div>
+          <% } %>
+          <h1 class="h3 mb-1"><%= c.name %></h1>
+          <% if (c.title) { %><p class="text-muted mb-2"><%= c.title %></p><% } %>
+          <p class="section-eyebrow mb-3">Estetik Lab</p>
+
+          <% if (c.bio) { %><p class="mb-4"><%= c.bio %></p><% } %>
+
+          <div class="d-grid gap-2 mb-3">
+            <a href="/vizitka/<%= c.slug %>/kontakt.vcf" class="btn btn-primary"><i class="bi bi-person-plus"></i> Sačuvaj kontakt</a>
+            <% if (c.hasServices) { %><a href="#usluge" class="btn btn-outline-primary"><i class="bi bi-calendar-check"></i> Zakaži kod mene</a><% } %>
+            <% if (c.phone) { %><a href="tel:<%= c.phone %>" class="btn btn-outline-secondary"><i class="bi bi-telephone"></i> <%= c.phone %></a><% } %>
+            <% if (c.email) { %><a href="mailto:<%= c.email %>" class="btn btn-outline-secondary"><i class="bi bi-envelope"></i> <%= c.email %></a><% } %>
+            <% if (c.material) { %><a href="<%= c.material.url %>" class="btn btn-outline-secondary"><i class="bi bi-download"></i> <%= c.material.title %></a><% } %>
+          </div>
+
+          <% if (c.instagram || c.facebook || c.website) { %>
+            <div class="d-flex justify-content-center gap-3 fs-4 mb-2">
+              <% if (c.instagram) { %><a href="<%= c.instagram %>" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="bi bi-instagram"></i></a><% } %>
+              <% if (c.facebook) { %><a href="<%= c.facebook %>" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="bi bi-facebook"></i></a><% } %>
+              <% if (c.website) { %><a href="<%= c.website %>" target="_blank" rel="noopener noreferrer" aria-label="Sajt"><i class="bi bi-globe"></i></a><% } %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <% if (c.hasServices) { %>
+        <div class="card mt-3" id="usluge">
+          <div class="card-body p-4">
+            <h2 class="h5 mb-3">Usluge</h2>
+            <% if (c.pinned.length) { %>
+              <h3 class="h6 text-muted">Izdvojeno</h3>
+              <ul class="list-unstyled mb-3">
+                <% c.pinned.forEach(function(s) { %>
+                  <li class="d-flex justify-content-between align-items-center gap-2 py-1"><a href="<%= s.detailsUrl %>"><%= s.name %></a><a class="btn btn-sm btn-primary" href="<%= s.url %>">Zakaži</a></li>
+                <% }) %>
+              </ul>
+            <% } %>
+            <% c.groups.forEach(function(g) { %>
+              <h3 class="h6 text-muted"><%= g.name %></h3>
+              <ul class="list-unstyled mb-3">
+                <% g.services.forEach(function(s) { %>
+                  <li class="d-flex justify-content-between align-items-center gap-2 py-1"><a href="<%= s.detailsUrl %>"><%= s.name %></a><a class="btn btn-sm btn-outline-primary" href="<%= s.url %>">Zakaži</a></li>
+                <% }) %>
+              </ul>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </section>
+</main>
+
+<%- include("../includes/footer") %>

@@ -17,8 +17,17 @@
       { name: "meta", label: "Izvor / autor citata", type: "text" },
     ],
     image: [
-      { name: "image.img", label: "Putanja do slike (iz galerije)", type: "text" },
+      // "image-upload" is a plain path input everywhere, plus an upload button in editors that
+      // declare data-upload-url (the newsletter campaign form does)
+      { name: "image.img", label: "Putanja do slike (iz galerije)", type: "image-upload" },
       { name: "image.imgDesc", label: "Opis slike (alt tekst)", type: "text" },
+    ],
+    // newsletter campaigns only: a download button for an uploaded material (data-materials)
+    file: [
+      { name: "button.url", label: "Materijal", type: "material-select" },
+      { name: "title", label: "Naslov", type: "text" },
+      { name: "text", label: "Kratak opis", type: "textarea" },
+      { name: "button.text", label: "Tekst dugmeta", type: "text" },
     ],
     video: [
       { name: "video.url", label: "URL videa", type: "text" },
@@ -80,6 +89,7 @@
     callout: "Istaknuta napomena",
     faq: "Pitanja i odgovori (FAQ)",
     cta: "Poziv na akciju (CTA)",
+    file: "Fajl za preuzimanje",
     divider: "Razdvajač",
     serviceReference: "Link ka usluzi",
     productReference: "Link ka proizvodu",
@@ -99,7 +109,157 @@
     target[keys[keys.length - 1]] = value;
   }
 
-  function buildFieldInput(field, blockData) {
+  function readJsonAttr(container, attr) {
+    try {
+      return JSON.parse(container.getAttribute(attr) || "[]");
+    } catch {
+      return [];
+    }
+  }
+
+  // path input + (when the editor has an upload endpoint) a file picker that uploads the image
+  // and fills the path in
+  function buildImageUploadField(field, blockData, container) {
+    const value = blockData ? getNested(blockData, field.name) : undefined;
+    const uploadUrl = container && container.dataset.uploadUrl;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "col-12 mb-2";
+    const label = document.createElement("label");
+    label.className = "form-label small mb-1";
+    label.textContent = uploadUrl ? "Slika" : field.label;
+    wrapper.appendChild(label);
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "form-control form-control-sm";
+    input.value = value ?? "";
+    input.dataset.blockField = field.name;
+    if (uploadUrl) input.placeholder = "Putanja se popunjava nakon otpremanja";
+    wrapper.appendChild(input);
+
+    if (!uploadUrl) return wrapper;
+
+    const preview = document.createElement("img");
+    preview.className = "rounded mt-2 d-block";
+    preview.style.maxHeight = "90px";
+    preview.alt = "";
+    const updatePreview = () => {
+      preview.src = input.value || "";
+      preview.style.display = input.value ? "block" : "none";
+    };
+    input.addEventListener("input", updatePreview);
+    updatePreview();
+
+    const row = document.createElement("div");
+    row.className = "input-group input-group-sm mt-2";
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/jpeg,image/png,image/webp,image/avif";
+    fileInput.className = "form-control";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn btn-outline-primary";
+    button.innerHTML = '<i class="bi bi-upload"></i> Otpremi';
+    row.appendChild(fileInput);
+    row.appendChild(button);
+    wrapper.appendChild(row);
+
+    const status = document.createElement("div");
+    status.className = "small mt-1";
+    wrapper.appendChild(status);
+
+    button.addEventListener("click", async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) {
+        status.className = "small mt-1 text-danger";
+        status.textContent = "Prvo izaberite sliku.";
+        return;
+      }
+      const form = container.closest("form");
+      const token = form && form.querySelector('input[name="CSRFToken"]');
+      const body = new FormData();
+      // text fields first, then the file: the CSRF check reads the token from the parsed body
+      body.append("CSRFToken", token ? token.value : "");
+      body.append("image", file);
+
+      button.disabled = true;
+      status.className = "small mt-1 text-muted";
+      status.textContent = "Otpremanje...";
+      try {
+        const response = await fetch(uploadUrl, { method: "POST", body, credentials: "same-origin", headers: { Accept: "application/json" } });
+        const json = await response.json().catch(() => null);
+        if (!response.ok || !json || !json.success) throw new Error((json && json.message) || "Otpremanje nije uspelo.");
+        input.value = json.data.img;
+        // the alt text is required by the schema - prefill it from the file name so a forgotten one
+        // does not block saving (it can be edited right below)
+        const block = input.closest("[data-content-block]");
+        const altInput = block && block.querySelector('[data-block-field="image.imgDesc"]');
+        if (altInput && !altInput.value) altInput.value = file.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        fileInput.value = "";
+        status.className = "small mt-1 text-success";
+        status.textContent = "Slika je otpremljena.";
+      } catch (error) {
+        status.className = "small mt-1 text-danger";
+        status.textContent = error.message || "Otpremanje nije uspelo.";
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    return wrapper;
+  }
+
+  // dropdown of uploaded materials; picking one fills the block's title / button text when empty
+  function buildMaterialSelectField(field, blockData, container) {
+    const value = blockData ? getNested(blockData, field.name) : "";
+    const materials = container ? readJsonAttr(container, "data-materials") : [];
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "col-12 mb-2";
+    const label = document.createElement("label");
+    label.className = "form-label small mb-1";
+    label.textContent = field.label;
+    wrapper.appendChild(label);
+
+    const select = document.createElement("select");
+    select.className = "form-select form-select-sm";
+    select.dataset.blockField = field.name;
+    const addOption = (optionValue, text) => {
+      const option = document.createElement("option");
+      option.value = optionValue;
+      option.textContent = text;
+      select.appendChild(option);
+    };
+    addOption("", materials.length ? "- izaberite materijal -" : "- nema otpremljenih materijala -");
+    materials.forEach((m) => addOption(m.url, m.title));
+    // a material that has since been switched off must not silently vanish from an old draft
+    if (value && !materials.some((m) => m.url === value)) addOption(value, `${value} (nije aktivan)`);
+    select.value = value || "";
+    wrapper.appendChild(select);
+
+    select.addEventListener("change", () => {
+      const block = select.closest("[data-content-block]");
+      const material = materials.find((m) => m.url === select.value);
+      if (!block || !material) return;
+      const titleInput = block.querySelector('[data-block-field="title"]');
+      const buttonInput = block.querySelector('[data-block-field="button.text"]');
+      if (titleInput && !titleInput.value) titleInput.value = material.title;
+      if (buttonInput && !buttonInput.value) buttonInput.value = "Preuzmi";
+    });
+
+    const hint = document.createElement("small");
+    hint.className = "text-muted d-block mt-1";
+    hint.innerHTML = 'Materijale dodajete u sekciji <a href="/admin/materijali" target="_blank" rel="noopener">Materijali</a>.';
+    wrapper.appendChild(hint);
+    return wrapper;
+  }
+
+  function buildFieldInput(field, blockData, container) {
+    if (field.type === "image-upload") return buildImageUploadField(field, blockData, container);
+    if (field.type === "material-select") return buildMaterialSelectField(field, blockData, container);
+
     const value = blockData ? getNested(blockData, field.name) : undefined;
     let input;
 
@@ -528,7 +688,7 @@
     }));
   }
 
-  function buildBlock(type, blockData) {
+  function buildBlock(type, blockData, container) {
     const block = document.createElement("div");
     block.className = "border rounded p-3 mb-2";
     block.dataset.contentBlock = "";
@@ -567,13 +727,13 @@
       // rendered above the question/answer builder
       const fieldsRow = document.createElement("div");
       fieldsRow.className = "row";
-      (BLOCK_FIELDS.faq || []).forEach((field) => fieldsRow.appendChild(buildFieldInput(field, blockData)));
+      (BLOCK_FIELDS.faq || []).forEach((field) => fieldsRow.appendChild(buildFieldInput(field, blockData, container)));
       block.appendChild(fieldsRow);
       block.appendChild(buildFaqBuilder(blockData));
     } else {
       const fieldsRow = document.createElement("div");
       fieldsRow.className = "row";
-      (BLOCK_FIELDS[type] || []).forEach((field) => fieldsRow.appendChild(buildFieldInput(field, blockData)));
+      (BLOCK_FIELDS[type] || []).forEach((field) => fieldsRow.appendChild(buildFieldInput(field, blockData, container)));
       block.appendChild(fieldsRow);
     }
 
@@ -652,11 +812,11 @@
     initialValue
       .slice()
       .sort((a, b) => (a.order || 0) - (b.order || 0))
-      .forEach((blockData) => blocksContainer.appendChild(buildBlock(blockData.type, blockData)));
+      .forEach((blockData) => blocksContainer.appendChild(buildBlock(blockData.type, blockData, container)));
 
     const typeSelect = container.querySelector("[data-block-type-select]");
     container.querySelector("[data-block-add]").addEventListener("click", () => {
-      blocksContainer.appendChild(buildBlock(typeSelect.value, null));
+      blocksContainer.appendChild(buildBlock(typeSelect.value, null, container));
       sync(container);
     });
 

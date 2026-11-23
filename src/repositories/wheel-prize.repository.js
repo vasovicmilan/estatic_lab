@@ -1,7 +1,11 @@
 import WheelPrize from "../models/wheel-prize.model.js";
 
-export async function findAllPrizes({ onlyActive = false } = {}) {
-  return WheelPrize.find(onlyActive ? { isActive: true } : {}).sort({ order: 1, createdAt: 1 }).lean();
+// bez wheelId vraća nagrade SVIH točkova (potrebno za jedinstvenost ključa i listu kupona)
+export async function findAllPrizes({ onlyActive = false, wheelId = null } = {}) {
+  const filter = {};
+  if (onlyActive) filter.isActive = true;
+  if (wheelId) filter.wheel = wheelId;
+  return WheelPrize.find(filter).sort({ order: 1, createdAt: 1 }).lean();
 }
 
 export async function findPrizeById(id) {
@@ -13,12 +17,21 @@ export async function deletePrizeById(id) {
 }
 
 // exactly one prize may be the fallback - called after another one was made the fallback
-export async function unsetFallbackExcept(id) {
-  return WheelPrize.updateMany({ _id: { $ne: id }, isFallback: true }, { $set: { isFallback: false } });
+export async function unsetFallbackExcept(id, wheelId) {
+  return WheelPrize.updateMany({ _id: { $ne: id }, wheel: wheelId, isFallback: true }, { $set: { isFallback: false } });
 }
 
-export async function countPrizes() {
-  return WheelPrize.countDocuments({});
+export async function deletePrizesByWheel(wheelId) {
+  return WheelPrize.deleteMany({ wheel: wheelId });
+}
+
+export async function countPrizes({ wheelId = null } = {}) {
+  return WheelPrize.countDocuments(wheelId ? { wheel: wheelId } : {});
+}
+
+// nagrade iz doba pre više točkova (bez polja wheel) -> podrazumevani točak
+export async function assignOrphanPrizesToWheel(wheelId) {
+  return WheelPrize.collection.updateMany({ wheel: { $exists: false } }, { $set: { wheel: wheelId } });
 }
 
 export async function createPrize(data) {
@@ -53,4 +66,4 @@ export async function releasePrize(id) {
   return WheelPrize.findOneAndUpdate({ _id: id, awardedCount: { $gt: 0 } }, { $inc: { awardedCount: -1 } }, { returnDocument: "after" }).lean();
 }
 
-export default { findAllPrizes, findPrizeById, createPrize, deletePrizeById, unsetFallbackExcept, countPrizes, createPrizes, updatePrizeById, claimPrize, releasePrize };
+export default { findAllPrizes, findPrizeById, createPrize, deletePrizeById, unsetFallbackExcept, countPrizes, createPrizes, updatePrizeById, claimPrize, releasePrize, assignOrphanPrizesToWheel, deletePrizesByWheel };

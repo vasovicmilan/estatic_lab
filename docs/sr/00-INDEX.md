@@ -23,5 +23,6 @@ Ova dokumentacija je podeljena na fokusirane fajlove, gde svaki pokriva jednu ob
 | `17-bekapi.md` | Dnevni lokalni bekap baze i uploadovanih slika/videa — šta je pokriveno, podešavanje servera (`mongodump`/cron), uputstvo za vraćanje, i šta još nedostaje (kopije van servera) |
 | `18-marketing-seo-blog-newsletter.md` | Marketing: SEO (meta, strukturirani podaci, sitemap, robots), AI optimizacija (`llms.txt`), blog i newsletter kampanje, automatski mejlovi, ograničenja |
 | `19-video-uputstva.md` | Video uputstva na `/uputstva`: snimanje, titlovi, objavljivanje, pristup po ulogama, `npm run tutorials:all` |
+| `20-tocak-materijali-vizitka-eur.md` | Više točkova sreće i leadovi, materijali za preuzimanje, javna vizitka zaposlenog (vCard, QR), cene u evrima |
 
 Svaki fajl je samostalan — nije potrebno da ih čitate po redosledu, iako `06` (partnerski program) koristi pojmove iz `03`, `05` i `07`, `11` se nadovezuje na životni ciklus termina opisan u `02`, a `14` (brisanje) najviše koristi ako već poznajete entitete opisane u `02`, `03` i `04`.

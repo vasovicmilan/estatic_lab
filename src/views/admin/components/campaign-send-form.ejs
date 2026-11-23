@@ -2,11 +2,21 @@
 <% if (d.status === "sent") { %>
   <p class="text-muted small mb-0">Ova kampanja je već poslata (<%= d.poslatoZa %>) - <%= d.poslato %> uspešno, <%= d.neuspesno %> neuspešno.</p>
 <% } else { %>
-  <form action="<%= d.sendUrl %>" method="POST" onsubmit="return confirm('Kampanja će odmah biti poslata svim pretplatnicima u izabranom segmentu. Ova akcija se ne može poništiti. Nastaviti?');">
+  <form action="<%= d.testUrl %>" method="POST" class="mb-3">
+    <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+    <label class="form-label small mb-1" for="campaign-test-email">Probni mejl (pre pravog slanja)</label>
+    <input type="email" id="campaign-test-email" name="email" class="form-control form-control-sm mb-2" value="<%= d.testEmail || '' %>" placeholder="email@primer.rs" required>
+    <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+      <i class="bi bi-envelope-check"></i> Pošalji probni mejl
+    </button>
+    <p class="text-muted small mt-1 mb-0">Isto kao što ga vidi primalac. Ne menja status kampanje.</p>
+  </form>
+  <hr>
+  <form action="<%= d.sendUrl %>" method="POST" onsubmit="return confirm('Kampanja će odmah biti poslata <%= d.recipients !== null && d.recipients !== undefined ? d.recipients + ' primalaca' : 'svim pretplatnicima u izabranom segmentu' %>. Ova akcija se ne može poništiti. Nastaviti?');">
     <input type="hidden" name="_method" value="PUT">
     <input type="hidden" name="CSRFToken" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
     <button type="submit" class="btn btn-success btn-sm w-100">
-      <i class="bi bi-send"></i> Pošalji odmah
+      <i class="bi bi-send"></i> Pošalji odmah<% if (d.recipients !== null && d.recipients !== undefined) { %> (<%= d.recipients %>)<% } %>
     </button>
   </form>
   <% if (d.status === "scheduled") { %>

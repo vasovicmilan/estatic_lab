@@ -1,5 +1,6 @@
 import { formatDateTime } from "../utils/date.time.util.js";
 import { formatPrice, formatMoney } from "../utils/price.util.js";
+import { formatEur, formatEurRange } from "../utils/eur-price.util.js";
 import { formatImage } from "../utils/image-format.util.js";
 
 function getCategoryNames(service) {
@@ -55,6 +56,11 @@ function getRelatedPostIds(entity) {
   return entity.relatedPosts.map((p) => (typeof p === "object" ? p._id?.toString() : p?.toString())).filter(Boolean);
 }
 
+// optional EUR price next to the range - only when EVERY active variant has one (utils/eur-price.util.js)
+function getEurRange(service) {
+  return formatEurRange((service.packages || []).filter((p) => p.isActive).map((p) => p.totalPriceEur));
+}
+
 function getPriceRange(service) {
   const prices = (service.packages || []).filter((p) => p.isActive).map((p) => p.totalPrice);
   if (!prices.length) return null;
@@ -72,6 +78,8 @@ function mapPackages(packages = []) {
     trajanje: `${p.duration} min`,
     cena: formatMoney(p.totalPrice),
     staraCena: p.basePrice ? formatMoney(p.basePrice) : null,
+    cenaEur: formatEur(p.totalPriceEur),
+    staraCenaEur: formatEur(p.basePriceEur),
     oznaka: p.badge || null,
     najbolji: Boolean(p.isBest),
     aktivan: Boolean(p.isActive),
@@ -142,6 +150,8 @@ export function mapServiceForAdminDetail(service) {
       trajanje: p.duration,
       cena: p.totalPrice,
       staraCena: p.basePrice || null,
+      cenaEur: formatEur(p.totalPriceEur),
+      staraCenaEur: formatEur(p.basePriceEur),
       oznaka: p.badge || null,
       najbolji: p.isBest,
       aktivan: p.isActive,
@@ -207,6 +217,7 @@ export function mapServiceForPublicCard(service) {
     slika: formatImage(service.image),
     kategorije: getCategoryNames(service),
     cena: getPriceRange(service),
+    cenaEur: getEurRange(service),
     istaknuto: Boolean(service.highlight),
     cta: service.ctaText,
   };

@@ -33,13 +33,15 @@ export async function serviceStep(req, res, next) {
     const { serviceSlug } = req.params;
     const service = await serviceService.getServiceBySlug(serviceSlug);
     const viewData = prepareBookingServiceStepData(service);
+    // dolazak sa vizitke zaposlenog (/vizitka/:slug) - izbor zaposlenog se prenosi u sledeći korak
+    const preselectedEmployeeId = /^[a-f0-9]{24}$/i.test(String(req.query.employeeId || "")) ? String(req.query.employeeId) : "";
 
     const seo = await bookingSeo(req, { title: `Zakazivanje - ${service.naziv}`, description: "Izaberite varijantu usluge" });
     return res.render("booking/service-step", {
       pageTitle: seo.title,
       pageDescription: seo.description,
       seo,
-      data: { ...viewData, csrfToken: res.locals.csrfToken },
+      data: { ...viewData, preselectedEmployeeId, csrfToken: res.locals.csrfToken },
     });
   } catch (error) {
     logError("[serviceStep] Greška pri učitavanju koraka izbora usluge", error, { serviceSlug: req.params.serviceSlug });

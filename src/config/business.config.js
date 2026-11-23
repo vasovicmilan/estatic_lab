@@ -29,11 +29,12 @@ const ESTETIK_BUSINESS = {
   email: process.env.SUPPORT_EMAIL || "estetik.lab.ns@gmail.com",
   // where admin notifications (new appointment / order / contact...) are mailed
   adminEmail: process.env.ADMIN_EMAIL || process.env.SUPPORT_EMAIL || "estetik.lab.ns@gmail.com",
-  phone: "+381 65 977 4000",
-  // Bug fix: this was missing the trailing "0" ("+38165977400", 11 digits)
-  // against the 12-digit displayed number above - every tel: link on the site
-  // (kontakt page, footer, etc.) was dialing a wrong/nonexistent number.
-  phoneHref: "+381659774000",
+  // salon + usluge (zakazivanje, kozmetika); aparati i saradnja imaju poseban broj ispod
+  phone: "+381 65 977 4001",
+  phoneHref: "+381659774001",
+  // B2B / aparati / poslovna saradnja
+  b2bPhone: "+381 65 977 4000",
+  b2bPhoneHref: "+381659774000",
 
   // Canonical site origin - single source of truth for every "BASE_URL" that used
   // to be redefined with its own fallback in ~10 separate files (email.service.js,
@@ -113,6 +114,8 @@ const NEUTRAL_BUSINESS = {
   adminEmail: process.env.ADMIN_EMAIL || process.env.SUPPORT_EMAIL || "",
   phone: "",
   phoneHref: "",
+  b2bPhone: "",
+  b2bPhoneHref: "",
   siteUrl: process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`,
   taxId: null,
   registrationNumber: null,
@@ -153,11 +156,11 @@ export function resolveBusiness(stored) {
   const base = JSON.parse(JSON.stringify(DEFAULT_BUSINESS));
   if (!stored) return base;
   const out = { ...base };
-  for (const key of ["name", "legalName", "alternateName", "email", "adminEmail", "phone", "taxId", "registrationNumber"]) {
+  for (const key of ["name", "legalName", "alternateName", "email", "adminEmail", "phone", "b2bPhone", "taxId", "registrationNumber"]) {
     if (isFilled(stored[key])) out[key] = stored[key].trim();
   }
   // optional identifiers may be cleared on purpose (not yet registered) - an explicit "" stored wins
-  for (const key of ["taxId", "registrationNumber", "alternateName"]) {
+  for (const key of ["taxId", "registrationNumber", "alternateName", "b2bPhone"]) {
     if (typeof stored[key] === "string" && stored[key].trim() === "") out[key] = null;
   }
   out.address = { ...base.address };
@@ -174,6 +177,7 @@ export function resolveBusiness(stored) {
   // no dedicated notification address saved -> follow the (possibly edited) public contact email
   if (!isFilled(stored.adminEmail) && isFilled(stored.email)) out.adminEmail = out.email;
   out.phoneHref = toPhoneHref(out.phone);
+  out.b2bPhoneHref = out.b2bPhone ? toPhoneHref(out.b2bPhone) : "";
   return out;
 }
 

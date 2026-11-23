@@ -27,6 +27,7 @@ export function prepareProductListData(result, query = {}) {
       { type: "view", url: "/admin/proizvodi/detalji/", icon: "eye" },
       { type: "edit", url: "/admin/proizvodi/izmena/", icon: "pencil" },
       { type: "custom", url: "/admin/proizvodi/", idKey: "id", subPath: "seo", icon: "search", label: "SEO" },
+      { type: "deactivate", url: "/admin/proizvodi/", suffix: "/deaktivacija", label: "Deaktiviraj", icon: "eye-slash" },
       { type: "delete", url: "/admin/proizvodi/", icon: "trash" },
     ],
     sort: buildSortState(query, SORT_MAP),

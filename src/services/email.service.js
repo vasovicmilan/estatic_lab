@@ -15,6 +15,7 @@ import { formatMoney } from "../utils/price.util.js";
 import { WELCOME_COUPON_CODE, WELCOME_COUPON_DISCOUNT_VALUE, CART_ABANDONMENT_COUPON_CODE, CART_ABANDONMENT_COUPON_DISCOUNT_VALUE } from "../config/marketing.config.js";
 import { BUSINESS } from "../config/business.config.js";
 import { buildLink } from "../utils/link.builder.js";
+import { personalizeText } from "../utils/email-personalization.util.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -386,12 +387,14 @@ export async function sendNewsletterCampaign(subscribers, campaign) {
   const results = [];
   for (const subscriber of subscribers) {
     try {
+      // {{ime}} / {{ime|rezerva}} in the subject and body - see email-personalization.util.js
+      const subject = personalizeText(campaign.subject, subscriber.firstName);
       const html = await renderTemplate("newsletter-campaign", {
         email: subscriber.email,
-        campaign,
+        campaign: { ...campaign, subject, body: personalizeText(campaign.body, subscriber.firstName, { html: true }) },
         unsubscribeUrl: buildLink("newsletterUnsubscribe", { token: subscriber.unsubscribeToken }),
       });
-      const result = await emailProvider.sendEmail({ to: subscriber.email, subject: campaign.subject, html });
+      const result = await emailProvider.sendEmail({ to: subscriber.email, subject, html });
       results.push({ email: subscriber.email, sent: true, messageId: result.messageId });
     } catch (error) {
       results.push({ email: subscriber.email, sent: false, error: error.message });

@@ -37,6 +37,7 @@ const TYPE_PERMISSIONS = {
   // admin had no way to satisfy createBusinessPartner's required coverImage field.
   "business-partners": "manage_marketing",
   site: "manage_site_content",
+  campaigns: "manage_marketing",
 };
 
 // type -> the module gate (feature.middleware.js) the matching entity's own routes

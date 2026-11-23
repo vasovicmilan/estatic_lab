@@ -10,6 +10,7 @@ import * as testimonialService from "../../../services/testimonial.service.js";
 import resourceService from "../../../services/resource.service.js";
 import * as newsletterService from "../../../services/news-letter.service.js";
 import { prepareDashboardData } from "../../../presenters/admin/dashboard.presenter.js";
+import { availableAreas } from "../../../presenters/admin/area-dashboard.presenter.js";
 import { logError } from "../../../utils/logger.util.js";
 import { getStartOfDayInZone } from "../../../utils/date.time.util.js";
 
@@ -111,6 +112,13 @@ export async function dashboard(req, res, next) {
       contacts: recentContacts.data,
       orders: recentOrders.data,
     }, { permissions });
+
+    const areas = availableAreas(permissions);
+    // a scoped role (blog / services / shop manager) has nothing on the general overview - send it to its own
+    if (viewData.sections.length === 0 && viewData.activityTabs.length === 0 && areas.length > 0) {
+      return res.redirect(areas[0].url);
+    }
+    viewData.areaLinks = areas;
 
     return res.render("admin/dashboard", {
       pageTitle: "Admin panel",

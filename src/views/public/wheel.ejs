@@ -7,11 +7,11 @@
     <div class="container" style="max-width: 560px;">
       <div class="text-center mb-4">
         <p class="section-eyebrow mb-2">Estetik Lab</p>
-        <h1 class="h2 mb-2">Zavrtite točak sreće</h1>
-        <p class="text-muted mb-0">Ostavite kontakt, zavrtite točak i uvek nešto osvajate: popust ili besplatan tretman.</p>
+        <h1 class="h2 mb-2"><%= data.title %></h1>
+        <p class="text-muted mb-0"><%= data.wheel.intro || "Ostavite kontakt, zavrtite točak i uvek nešto osvajate: popust ili besplatan tretman." %></p>
       </div>
 
-      <% if (!data.prizes.length) { %>
+      <% if (!data.isOpen) { %>
         <div class="alert alert-info text-center">Nagradna igra trenutno nije aktivna. Javite se osoblju na štandu.</div>
       <% } else { %>
 
@@ -65,7 +65,7 @@
             </div>
             <div class="form-check mt-2">
               <input type="checkbox" class="form-check-input" id="w-consentMarketing" name="consentMarketing" value="true">
-              <label class="form-check-label small" for="w-consentMarketing">Želim da primam novosti i akcije putem emaila (opciono, odjava u bilo kom trenutku).</label>
+              <label class="form-check-label small" for="w-consentMarketing">Želim da primam ponude, akcije i korisne materijale Estetik Laba putem emaila (opciono, odjava u bilo kom trenutku).</label>
             </div>
 
             <div id="wheelError" class="alert alert-danger small mt-3 mb-0 d-none" role="alert"></div>
@@ -93,7 +93,7 @@
         </div>
       </div>
 
-      <div id="wheelData" hidden data-config="<%= JSON.stringify({ prizes: data.prizes, source: data.source }) %>"></div>
+      <div id="wheelData" hidden data-config="<%= JSON.stringify({ prizes: data.prizes, source: data.source, wheel: data.wheel.slug }) %>"></div>
       <script src="/js/wheel.js?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>" defer></script>
       <% } %>
     </div>

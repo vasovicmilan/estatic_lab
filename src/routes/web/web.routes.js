@@ -6,6 +6,8 @@ import * as SeoController from "../../controllers/web/seo.controller.js";
 import { contactLimiter, newsletterLimiter, testimonialLimiter, couponLimiter, wheelLimiter } from "../../middlewares/rate-limiter.middleware.js";
 import * as CouponController from "../../controllers/web/public/coupon.controller.js";
 import * as WheelController from "../../controllers/web/public/wheel.controller.js";
+import * as MaterialController from "../../controllers/web/public/material.controller.js";
+import * as EmployeeCardPublicController from "../../controllers/web/public/employee-card.controller.js";
 import { validateWheelSpin } from "../../middlewares/validators/wheel.validator.js";
 import * as BusinessPartnerController from "../../controllers/web/public/business-partner.controller.js";
 import { validateContactCreate } from "../../middlewares/validators/contact.validator.js";
@@ -47,6 +49,17 @@ router.get("/kontakt", IndexController.contactPage);
 
 // prize wheel for fairs/events (reached through a QR code) - see wheel.service.js
 router.get("/tocak", WheelController.wheelPage);
+router.get("/tocak/:slug", WheelController.wheelPage);
+
+// downloadable materials (offers, brochures) reached through a QR code or a newsletter button -
+// see material.service.js. The files live outside src/public, only these routes serve them.
+router.get("/materijali/:slug", MaterialController.materialPage);
+router.get("/materijali/:slug/preuzmi", MaterialController.materialDownload);
+router.get("/materijali/:slug/pregled", MaterialController.materialPreview);
+
+// javna vizitka zaposlenog (QR kod) - deo modula "employees"
+router.get("/vizitka/:slug", requireModule("employees"), EmployeeCardPublicController.cardPage);
+router.get("/vizitka/:slug/kontakt.vcf", requireModule("employees"), EmployeeCardPublicController.cardVCard);
 router.post("/tocak/vrti", wheelLimiter, validateHoneypot, validateWheelSpin, WheelController.spinWheel);
 
 router.get("/saradnici", BusinessPartnerController.businessPartnerList);

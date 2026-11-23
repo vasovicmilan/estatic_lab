@@ -31,6 +31,8 @@ const legalContact = () => ({
   email: BUSINESS.email,
   phone: BUSINESS.phone,
   phoneHref: BUSINESS.phoneHref,
+  b2bPhone: BUSINESS.b2bPhone,
+  b2bPhoneHref: BUSINESS.b2bPhoneHref,
   // null until the business registration is done - views check for these
   // before rendering rather than assuming they're always present.
   taxId: BUSINESS.taxId,

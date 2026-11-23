@@ -19,6 +19,13 @@ function getSegmentLabel(targetInterests = []) {
   return targetInterests.map(translateInterest).join(", ");
 }
 
+function describeSources(campaign) {
+  const parts = [];
+  if ((campaign.targetSources || []).length) parts.push(campaign.targetSources.join(", "));
+  if (campaign.onlyUnusedCoupon) parts.push("samo neiskorišćeni kuponi");
+  return parts.length ? parts.join(" · ") : "Svi";
+}
+
 export function mapCampaignsForAdminList(campaigns = []) {
   return campaigns
     .map((campaign) => {
@@ -52,7 +59,10 @@ export function mapCampaignForAdminDetail(campaign) {
     segmenti: (campaign.targetInterests || []).map(translateInterest),
     segmentiRaw: campaign.targetInterests || [],
     segment: getSegmentLabel(campaign.targetInterests),
-    sadrzaj: renderContentBlocks(campaign.content),
+    izvori: describeSources(campaign),
+    // the details page's shared block renderer knows the "cta" shape; a "file" block is the same
+    // title + text + button, so it is shown as one
+    sadrzaj: renderContentBlocks((campaign.content || []).map((block) => (block.type === "file" ? { ...block, type: "cta" } : block))),
     zakazanoZa: campaign.scheduledFor ? formatDateTime(campaign.scheduledFor) : null,
     poslatoZa: campaign.sentAt ? formatDateTime(campaign.sentAt) : null,
     poslato: campaign.sentCount || 0,
@@ -73,6 +83,8 @@ export function mapCampaignForEdit(campaign) {
     subject: campaign.subject,
     content: campaign.content || [],
     targetInterests: campaign.targetInterests || [],
+    targetSources: campaign.targetSources || [],
+    onlyUnusedCoupon: !!campaign.onlyUnusedCoupon,
     status: campaign.status,
     // "YYYY-MM-DDTHH:mm" in Europe/Belgrade wall-clock time, same convention
     // as mapPostForEdit's scheduledFor - see date.time.util.js.

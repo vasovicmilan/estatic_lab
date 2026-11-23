@@ -12,6 +12,7 @@ export function prepareNewsletterListData(result, query = {}) {
     columns: markSortableColumns(
       [
         { key: "email", label: "Email" },
+        { key: "ime", label: "Ime" },
         { key: "status", label: "Status" },
         { key: "interesovanja", label: "Oblast" },
         { key: "izvor", label: "Izvor" },
@@ -84,6 +85,7 @@ export function prepareNewsletterDetailsData(subscriber) {
         type: "table",
         rows: [
           { label: "Email", value: subscriber.osnovno.email },
+          { label: "Ime", value: subscriber.osnovno.ime || "-" },
           { label: "Status", value: subscriber.osnovno.status },
           { label: "Oblast", value: subscriber.osnovno.interesovanja.join(", ") },
           { label: "Izvor", value: subscriber.osnovno.izvor },
