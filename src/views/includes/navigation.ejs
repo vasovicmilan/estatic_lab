@@ -220,6 +220,7 @@
       items: [
         { href: "/admin/zaposleni", permission: "manage_employees", label: "Zaposleni", icon: "bi-person-badge", feature: features.employees },
         { href: "/admin/eksperti", permission: "manage_employees", label: "Eksperti", icon: "bi-award" },
+        { href: "/admin/vizitke", permission: "manage_employees", label: "Vizitke", icon: "bi-person-vcard" },
         { href: "/admin/korisnici", permission: "manage_users", label: "Korisnici", icon: "bi-people" },
       ],
     },
@@ -240,7 +241,8 @@
         { href: "/admin/blog", permission: "manage_blog", label: "Blog", icon: "bi-newspaper", feature: features.blog },
         { href: "/admin/kontakt", permission: "manage_marketing", label: "Kontakt", icon: "bi-envelope-paper" },
         { href: "/admin/tocak", permission: "manage_marketing", label: "Točak sreće", icon: "bi-stars" },
-        { href: "/admin/newsletter", permission: "manage_marketing", label: "Newsletter", icon: "bi-send" },
+        { href: "/admin/materijali", permission: "manage_marketing", label: "Materijali", icon: "bi-folder2-open" },
+        { href: "/admin/newsletter", permission: "manage_marketing", label: "Newsletter", icon: "bi-send", exact: true },
         { href: "/admin/newsletter/kampanje", permission: "manage_marketing", label: "Kampanje", icon: "bi-megaphone" },
         { href: "/admin/testimoniali", permission: "manage_marketing", label: "Testimoniali", icon: "bi-star" },
         { href: "/admin/saradnici", permission: "manage_marketing", label: "Saradnici", icon: "bi-shop" },
