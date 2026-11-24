@@ -19,6 +19,7 @@ const AuditLogSchema = new Schema(
     actor: {
       id: { type: Schema.Types.ObjectId, ref: "User", default: null }, // null for unauthenticated/system actions
       email: { type: String, default: null },
+      via: { type: String, default: null }, // "api-token:<naziv tokena>" za akcije preko API tokena
       role: { type: String, default: null }, // role name at the time of the action, not a live ref - if the role is later renamed or deleted, this entry still shows what it was called then
     },
 

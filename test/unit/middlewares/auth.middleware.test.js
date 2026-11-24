@@ -226,3 +226,41 @@ describe("auth.middleware - optionalApiAuth", () => {
     assert.equal(req.user, undefined);
   });
 });
+
+describe("auth.middleware - API tokens (elk_)", () => {
+  it("authenticates an elk_ token on the admin API and marks req.user", async (t) => {
+    const apiTokenService = (await import("../../../src/services/api-token.service.js")).default;
+    t.mock.method(apiTokenService, "authenticateApiToken", async () => ({ id: "u1", via: "api-token", permissions: ["access_admin_panel"] }));
+    // named import is used inside the middleware, so stub the repositories it reaches instead
+    const apiTokenRepo = (await import("../../../src/repositories/api-token.repository.js")).default;
+    const userRepoMod = (await import("../../../src/repositories/user.repository.js")).default;
+    const { sha256 } = await import("../../../src/services/crypto.service.js");
+    const raw = "elk_testsecret";
+    t.mock.method(apiTokenRepo, "findByHash", async (h) => (h === sha256(raw) ? { _id: "t1", name: "C", user: "u1", scopes: ["blog"], expiresAt: new Date(Date.now() + 1e6), revokedAt: null, createdAt: new Date() } : null));
+    t.mock.method(apiTokenRepo, "getAccessState", async () => ({ paused: false }));
+    t.mock.method(apiTokenRepo, "touchToken", async () => {});
+    t.mock.method(userRepoMod, "findUserById", async () => ({ _id: "u1", email: "c@x.rs", status: "active", role: { name: "claude asistent", permissions: ["access_admin_panel", "manage_blog"] } }));
+    const mod = await import("../../../src/services/api-token.service.js");
+    mod.invalidatePauseCache();
+
+    const req = { headers: { authorization: `Bearer ${raw}` }, originalUrl: "/api/v1/admin/posts", ip: "1.1.1.1" };
+    let err = "none";
+    await apiAuthMiddleware(req, fakeRes(), (e) => { err = e; });
+    assert.equal(err, undefined);
+    assert.equal(req.user.via, "api-token");
+  });
+
+  it("refuses an elk_ token outside /api/v1/admin", async () => {
+    const req = { headers: { authorization: "Bearer elk_whatever" }, originalUrl: "/api/v1/me" };
+    let err;
+    await apiAuthMiddleware(req, fakeRes(), (e) => { err = e; });
+    assert.equal(err.statusCode, 401);
+  });
+
+  it("does not re-check a request that already authenticated with a token", async () => {
+    const req = { headers: { authorization: "Bearer elk_x" }, originalUrl: "/api/v1/admin/posts", user: { via: "api-token" } };
+    let err = "none";
+    await apiAuthMiddleware(req, fakeRes(), (e) => { err = e; });
+    assert.equal(err, undefined);
+  });
+});

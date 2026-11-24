@@ -7,7 +7,8 @@ import { requirePermission } from "../../../middlewares/permission.middleware.js
 import { PERMISSION } from "../../../models/role.model.js";
 
 const router = Router();
-router.use(apiAuthMiddleware, requirePermission(PERMISSION.MANAGE_ORDERS));
+// samo /orders: ovaj router je montiran na /admin, pa je router.use bez putanje tražio MANAGE_ORDERS za SVAKU admin rutu posle njega (blog, katalog, materijali...)
+router.use("/orders", apiAuthMiddleware, requirePermission(PERMISSION.MANAGE_ORDERS));
 
 router.get("/orders", AdminOrderController.listOrders);
 router.post("/orders/manual", AdminOrderController.normalizeManualOrderBody, validateManualOrderCreate, handleApiValidationErrors, AdminOrderController.createManualOrder);

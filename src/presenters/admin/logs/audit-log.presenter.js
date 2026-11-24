@@ -27,6 +27,7 @@ export function prepareAuditLogListData(result, query = {}, availableActions = [
           { value: "partner", label: "Partner" },
           { value: "user", label: "Korisnik" },
           { value: "system", label: "Sistem (cron)" },
+          { value: "claude asistent", label: "Claude asistent (API token)" },
         ],
       },
       search: { value: query.search || "" },
@@ -41,7 +42,7 @@ function mapAuditLogRow(entry) {
   return {
     id: entry._id.toString(),
     vreme: formatDateTime(entry.timestamp),
-    korisnik: entry.actor?.email || "Sistem",
+    korisnik: entry.actor?.email ? (entry.actor.via ? `${entry.actor.email} [${entry.actor.via}]` : entry.actor.email) : "Sistem",
     rola: entry.actor?.role || "-",
     akcija: entry.action,
     entitet: formatEntity(entry.entity),
@@ -56,6 +57,9 @@ function mapAuditLogRow(entry) {
 function entity_label(type) {
   const map = {
     Product: "Proizvod",
+    ApiToken: "API token",
+    ApiAccessState: "Pristup tokenima",
+    Material: "Materijal",
     Service: "Usluga",
     Package: "Paket",
     PackagePurchase: "Kupljen paket",

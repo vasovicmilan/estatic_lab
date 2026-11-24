@@ -81,7 +81,32 @@ export const managerRoles = [
   },
 ];
 
-export const allRoles = [...defaultRoles, ...managerRoles];
+// Nalog za API token asistenta (Claude). Odvojeno od managera jer ima drugačija pravila: dozvole su
+// samo gornja granica, a token ih sužava izborom oblasti i allowlist ogradom (api-token-guard).
+export const assistantRoles = [
+  {
+    // Rola za nalog na koji se kače API tokeni (Claude asistent). Dozvole su same po sebi samo
+    // gornja granica: token ih još sužava izborom oblasti (blog/katalog/materijali), a posebna
+    // allowlist ograda (api-token-guard.middleware.js) propušta samo nacrte. Nema korisnika,
+    // porudžbina, termina, isplata, newslettera, logova ni tekstova sajta.
+    name: "claude asistent",
+    description: "Nalog za API token asistenta: nacrti bloga, kataloga i materijala; objavljuje i briše samo vlasnik",
+    permissions: [
+      "access_admin_panel",
+      "manage_blog",
+      "manage_services",
+      "manage_packages",
+      "manage_products",
+      "manage_resources",
+      "manage_taxonomy",
+      "manage_marketing",
+    ],
+    isDefault: false,
+    priority: 20,
+  },
+];
+
+export const allRoles = [...defaultRoles, ...managerRoles, ...assistantRoles];
 
 /**
  * Idempotent: every role above is created when missing and brought back to the definition

@@ -30,6 +30,7 @@ import wheelRoutes from "./admin/wheel.routes.js";
 import newsletterRoutes from "./admin/news-letter.routes.js";
 import campaignRoutes from "./admin/campaign.routes.js";
 import materialRoutes from "./admin/material.routes.js";
+import apiTokenRoutes from "./admin/api-token.routes.js";
 import testimonialRoutes from "./admin/testimonial.routes.js";
 import businessPartnerRoutes from "./admin/business-partner.routes.js";
 import productRoutes from "./admin/product.routes.js";
@@ -79,6 +80,8 @@ router.use("/newsletter", requirePermission(PERMISSION.MANAGE_MARKETING), newsle
 // already assumed.
 router.use("/newsletter/kampanje", requirePermission(PERMISSION.MANAGE_MARKETING), campaignRoutes);
 router.use("/materijali", requirePermission(PERMISSION.MANAGE_MARKETING), materialRoutes);
+// tokeni se prave i opozivaju samo uz manage_roles (u praksi samo admin); tokeni ne mogu da pozovu web rute
+router.use("/api-tokeni", requirePermission(PERMISSION.MANAGE_ROLES), apiTokenRoutes);
 router.use("/testimoniali", requirePermission(PERMISSION.MANAGE_MARKETING), testimonialRoutes);
 router.use("/saradnici", requirePermission(PERMISSION.MANAGE_MARKETING), businessPartnerRoutes);
 router.use("/proizvodi", requirePermission(PERMISSION.MANAGE_PRODUCTS), productRoutes);

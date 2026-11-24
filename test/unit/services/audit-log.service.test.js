@@ -143,7 +143,7 @@ describe("audit-log.service", () => {
 
       await auditLogService.recordAuditLog({ actor: null, action: "GRACE_PERIOD_SWEEP" });
 
-      assert.deepEqual(captured.actor, { id: null, email: null, role: null });
+      assert.deepEqual(captured.actor, { id: null, email: null, role: null, via: null });
     });
   });
 
@@ -303,5 +303,16 @@ describe("audit-log.service", () => {
       });
       await auditLogService.scrubActorEmail("u1"); // must not throw
     });
+  });
+});
+
+describe("recordAuditLog - API token actor", () => {
+  it("marks actions performed through an API token with its name", async (t) => {
+    let captured;
+    const repo = (await import("../../../src/repositories/audit-log.repository.js")).default;
+    t.mock.method(repo, "createAuditLog", async (doc) => { captured = doc; });
+    const { recordAuditLog } = await import("../../../src/services/audit-log.service.js");
+    await recordAuditLog({ actor: { id: "507f1f77bcf86cd799439011", email: "c@x.rs", roleName: "claude asistent", via: "api-token", tokenName: "Claude blog" }, action: "POST_CREATED" });
+    assert.equal(captured.actor.via, "api-token:Claude blog");
   });
 });

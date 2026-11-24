@@ -1,6 +1,7 @@
 import { verifyJwt } from "../services/crypto.service.js";
 import { AuthenticationError } from "../utils/error.util.js";
 import userRepo from "../repositories/user.repository.js";
+import { authenticateApiToken, looksLikeApiToken } from "../services/api-token.service.js";
 
 // Statuses a verified Bearer token is allowed to act as. Anything else (suspended,
 // re-deactivated, anonymized/deleted, still pending) means the account is not
@@ -94,9 +95,27 @@ export async function apiAuthMiddleware(req, res, next) {
     return next(new AuthenticationError("Nedostaje token za autorizaciju"));
   }
 
+  // Router-level apiAuthMiddleware runs more than once per request (mount + each route file);
+  // a token request that already passed the first time is not re-checked against the database.
+  if (req.user?.via === "api-token") return next();
+
+  const rawToken = authHeader.split(" ")[1];
+  if (looksLikeApiToken(rawToken)) {
+    // API tokeni (elk_...) važe SAMO za admin API; nikad za /me, /employee, /partner, korpu...
+    if (!req.originalUrl.startsWith("/api/v1/admin")) {
+      return next(new AuthenticationError("Ovaj token ne važi za tražene rute."));
+    }
+    try {
+      req.user = await authenticateApiToken(rawToken, { ip: req.ip });
+      return next();
+    } catch (error) {
+      return next(error instanceof AuthenticationError ? error : new AuthenticationError("Token nije validan ili je istekao"));
+    }
+  }
+
   let decoded;
   try {
-    const token = authHeader.split(" ")[1];
+    const token = rawToken;
     // verifyJwt (crypto.service.js) instead of calling the jsonwebtoken library
     // directly here - same JWT_SECRET validation-at-startup and single place that
     // knows how tokens are signed/verified, rather than this file quietly

@@ -14,12 +14,15 @@ import adminCatalogRoutes from "./admin-catalog.routes.js";
 import adminPackagePurchaseRoutes from "./admin-package-purchase.routes.js";
 import adminMarketingRoutes from "./admin-marketing.routes.js";
 import adminOpsRoutes from "./admin-ops.routes.js";
+import adminMaterialsRoutes from "./admin-materials.routes.js";
 import adminUploadsRoutes from "./admin-uploads.routes.js";
 import publicFormsRoutes from "./public-forms.routes.js";
 import { requireModule } from "../../../middlewares/feature.middleware.js";
 import { apiAuthMiddleware } from "../../../middlewares/auth.middleware.js";
 import { adminMiddleware } from "../../../middlewares/admin.middleware.js";
 import { requireAdminForDelete } from "../../../middlewares/permission.middleware.js";
+import { apiTokenGuard } from "../../../middlewares/api-token-guard.middleware.js";
+import { apiTokenLimiter, apiTokenWriteLimiter, apiTokenDailyWriteLimiter } from "../../../middlewares/rate-limiter.middleware.js";
 
 const router = Router();
 
@@ -58,6 +61,8 @@ router.use("/partner", requireModule("partners"), partnerRoutes);
 // access_admin_panel, so a role holding e.g. manage_users without access_admin_panel
 // could call those API routes even though the web panel would have refused it.
 router.use("/admin", apiAuthMiddleware, adminMiddleware);
+// API tokeni (Claude asistent): allowlist ruta, prinudni nacrti i limiti po tokenu - videti api-token-guard.middleware.js
+router.use("/admin", apiTokenGuard, apiTokenLimiter, apiTokenWriteLimiter, apiTokenDailyWriteLimiter);
 // hard delete is admin-only here too (same rule as the web panel); other roles get a 403
 router.use("/admin", requireAdminForDelete);
 router.use("/admin", adminTaxonomyRoutes);
@@ -67,6 +72,7 @@ router.use("/admin", requireModule("shop"), adminOrderRoutes);
 router.use("/admin", adminCatalogRoutes);
 router.use("/admin/package-purchases", requireModule("booking"), adminPackagePurchaseRoutes);
 router.use("/admin", adminMarketingRoutes);
+router.use("/admin", adminMaterialsRoutes);
 router.use("/admin", adminOpsRoutes);
 router.use("/admin", adminUploadsRoutes);
 router.use("/", requireModule("shop"), cartRoutes);

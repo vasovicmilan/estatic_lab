@@ -207,3 +207,39 @@ export const adminLimiter = rateLimit({
   skip: (req) => skipInTest() || skipStatic(req),
   handler: handleRateLimitExceeded("Previše zahteva ka admin panelu.", 429),
 });
+
+// ---- API tokeni (npr. Claude asistent): ograničenje po TOKENU, ne po IP adresi ----
+const tokenKey = (req) => req.user?.tokenId || clientKey(req);
+const notToken = (req) => skipInTest() || req.user?.via !== "api-token";
+const isRead = (req) => req.method === "GET" || req.method === "HEAD";
+
+export const apiTokenLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: envInt("RATE_LIMIT_TOKEN_MAX", 60),
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: tokenKey,
+  skip: notToken,
+  handler: handleRateLimitExceeded("Previše zahteva za ovaj token.", 429),
+});
+
+export const apiTokenWriteLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: envInt("RATE_LIMIT_TOKEN_WRITE_MAX", 20),
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: tokenKey,
+  skip: (req) => notToken(req) || isRead(req),
+  handler: handleRateLimitExceeded("Previše izmena u minuti za ovaj token.", 429),
+});
+
+// dnevni plafon upisa: greška u petlji ne sme da napravi stotine nacrta
+export const apiTokenDailyWriteLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: envInt("RATE_LIMIT_TOKEN_WRITE_DAY_MAX", 200),
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: tokenKey,
+  skip: (req) => notToken(req) || isRead(req),
+  handler: handleRateLimitExceeded("Dnevni limit izmena za ovaj token je potrošen.", 429),
+});

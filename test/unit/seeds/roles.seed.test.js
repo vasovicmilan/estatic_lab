@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import Role, { PERMISSIONS } from "../../../src/models/role.model.js";
-import { managerRoles, seedRoles } from "../../../src/database/seeds/roles.seed.js";
+import { managerRoles, assistantRoles, seedRoles } from "../../../src/database/seeds/roles.seed.js";
 
 describe("manager roles", () => {
   it("use only real permissions and a valid role name", () => {
@@ -29,11 +29,26 @@ describe("manager roles", () => {
     t.mock.method(Role, "find", () => ({ select: () => ({ lean: async () => [{ name: "admin" }, { name: "user" }, { name: "menadzer bloga" }] }) }));
     t.mock.method(Role, "findOneAndUpdate", async (q, d, o) => { upserts.push({ name: q.name, upsert: o.upsert, permissions: d.permissions }); return d; });
     const out = await seedRoles();
-    assert.equal(out.length, 7);
+    assert.equal(out.length, 8);
     assert.ok(upserts.every((u) => u.upsert === true));
-    assert.deepEqual(upserts.map((u) => u.name).sort(), ["admin", "employee", "menadzer bloga", "menadzer prodavnice", "menadzer usluga", "partner", "user"]);
+    assert.deepEqual(upserts.map((u) => u.name).sort(), ["admin", "claude asistent", "employee", "menadzer bloga", "menadzer prodavnice", "menadzer usluga", "partner", "user"]);
     // the admin definition keeps everything the live admin role already has
     const admin = upserts.find((u) => u.name === "admin").permissions;
     ["manage_site_content", "view_business_reports", "manage_coupons", "manage_roles"].forEach((p) => assert.ok(admin.includes(p)));
+  });
+});
+
+describe("assistant role (API tokens)", () => {
+  const role = assistantRoles.find((r) => r.name === "claude asistent");
+
+  it("exists, uses only real permissions and a valid name", () => {
+    assert.ok(role);
+    assert.match(role.name, /^[a-z][a-z0-9 _-]{1,49}$/);
+    role.permissions.forEach((p) => assert.ok(PERMISSIONS.includes(p), p));
+  });
+
+  it("never holds users, roles, orders, payouts, logs, reports, site content or appointments", () => {
+    const forbidden = ["manage_users", "manage_roles", "manage_orders", "manage_payouts", "view_logs", "view_business_reports", "manage_site_content", "manage_employees", "manage_partners", "manage_coupons", "manage_appointments_all"];
+    forbidden.forEach((p) => assert.ok(!role.permissions.includes(p), `must not have ${p}`));
   });
 });

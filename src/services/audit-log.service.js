@@ -76,6 +76,8 @@ export async function recordAuditLog({
         id: actor?.id || null,
         email: actor?.email || null,
         role: actor?.roleName || actor?.role || null,
+        // "api-token:<naziv>" kad je akciju izvršio API token (npr. Claude asistent), inače null
+        via: actor?.via ? `${actor.via}:${actor.tokenName || actor.tokenId || ""}` : null,
       },
       action,
       entity: entity ? { type: entity.type, id: normalizeEntityId(entity.id) } : null,

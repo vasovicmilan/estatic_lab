@@ -180,6 +180,10 @@ Ceo router iza `manage_orders`. `GET /orders`, `POST /orders/manual`, `GET /orde
 | PUT | `/site-settings/neradni-dani` | `manage_site_content` |
 | GET/PUT | `/profile` | samo `access_admin_panel` (uvek sopstveni admin profil) |
 
+## API tokeni (asistent)
+
+Pored JWT-a iz prijave, `/api/v1/admin/*` prihvata i API token oblika `elk_...` (zaglavlje `Authorization: Bearer elk_...`) koji vlasnik pravi u `/admin/api-tokeni`. Token važi 1 do 90 dana, može da se opozove u svakom trenutku, dozvole čita uživo iz role pri svakom zahtevu, ograničen je allowlist-om ruta i uvek pravi nacrte. Pun opis: `21-claude-asistent-pristup.md`. Materijali (`/materials`, multipart, polje `file`) su dostupni samo kroz ovaj API.
+
 ## Šta trenutno NIJE pokriveno API-jem
 
 - **Sve što web `/admin` panel ima za pojedinačne poddomene koje ovde nisu eksplicitno navedene** - ako se doda novi web-only admin ekran, proveriti da li mu treba i API ekvivalent pre nego što se pretpostavi da već postoji.

@@ -1,0 +1,103 @@
+<%- include("../includes/head") %>
+<%- include("../includes/navigation") %>
+
+<main class="container-fluid py-4">
+  <%- include("../includes/flash-messages") %>
+  <h1 class="h3 mb-1"><%= pageTitle %></h1>
+  <p class="text-muted mb-4">Token daje asistentu pristup sistemu samo u okviru izabranih oblasti. Sve što uradi vidi se u logovima sa nazivom tokena. Sav sadržaj koji pravi ili menja ostaje nacrt dok ga ti ne objaviš ili aktiviraš.</p>
+
+  <% if (data.newToken) { %>
+    <div class="alert alert-warning">
+      <h2 class="h6">Token „<%= data.newToken.name %>“ je napravljen. Kopiraj ga sada, više se neće prikazati.</h2>
+      <div class="input-group mb-2">
+        <input type="text" class="form-control font-monospace" id="newTokenSecret" value="<%= data.newToken.secret %>" readonly onclick="this.select()">
+        <button type="button" class="btn btn-outline-dark" onclick="navigator.clipboard.writeText(document.getElementById('newTokenSecret').value)">Kopiraj</button>
+      </div>
+      <div class="small">Važi do <%= new Date(data.newToken.expiresAt).toLocaleString("sr-RS") %>. Ne lepi ga u čet; predaj ga kao tajnu promenljivu okruženja.</div>
+    </div>
+  <% } %>
+
+  <div class="card mb-4 <%= data.state.paused ? 'border-danger' : '' %>">
+    <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div>
+        <strong>Pristup tokenima: </strong>
+        <% if (data.state.paused) { %><span class="badge text-bg-danger">PAUZIRAN (svi tokeni su blokirani)</span>
+        <% } else { %><span class="badge text-bg-success">Uključen</span><% } %>
+      </div>
+      <form action="/admin/api-tokeni/pauza" method="POST" class="d-inline">
+        <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
+        <input type="hidden" name="paused" value="<%= data.state.paused ? 'false' : 'true' %>">
+        <button type="submit" class="btn <%= data.state.paused ? 'btn-success' : 'btn-danger' %>"><%= data.state.paused ? "Ponovo uključi pristup" : "Pauziraj sve tokene odmah" %></button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">Novi token</div>
+    <div class="card-body">
+      <% if (!data.accounts.length) { %>
+        <p class="text-muted mb-0">Nema naloga sa rolom „claude asistent“. Napravi korisnika u <a href="/admin/korisnici">Korisnici</a>, dodeli mu tu rolu (nasumična lozinka koju niko ne koristi) i vrati se ovde.</p>
+      <% } else { %>
+      <form action="/admin/api-tokeni" method="POST" class="row g-3">
+        <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
+        <div class="col-md-4">
+          <label class="form-label" for="tokenName">Naziv</label>
+          <input class="form-control" id="tokenName" name="name" maxlength="80" placeholder="npr. Claude - blog i katalog" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="tokenUser">Nalog</label>
+          <select class="form-select" id="tokenUser" name="userId" required>
+            <% data.accounts.forEach(function(a) { %><option value="<%= a.id %>"><%= a.label %></option><% }) %>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="tokenDays">Važi (dana, <%= data.limits.min %> do <%= data.limits.max %>)</label>
+          <input class="form-control" type="number" id="tokenDays" name="days" min="<%= data.limits.min %>" max="<%= data.limits.max %>" value="7" required>
+        </div>
+        <div class="col-12">
+          <div class="form-label">Oblasti</div>
+          <% data.scopes.forEach(function(s) { %>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="scopes" value="<%= s.value %>" id="scope-<%= s.value %>"><label class="form-check-label" for="scope-<%= s.value %>"><%= s.label %></label></div>
+          <% }) %>
+        </div>
+        <div class="col-12"><button type="submit" class="btn btn-primary">Napravi token</button></div>
+      </form>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Naziv</th><th>Nalog</th><th>Oblasti</th><th>Ističe</th><th>Poslednja upotreba</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <% if (!data.tokens.length) { %><tr><td colspan="7" class="text-muted text-center py-4">Još nema tokena.</td></tr><% } %>
+          <% data.tokens.forEach(function(t) { %>
+            <tr>
+              <td><%= t.name %><div class="small text-muted font-monospace"><%= t.prefix %>…</div></td>
+              <td class="small"><%= t.userEmail %></td>
+              <td class="small"><%= (t.scopes || []).join(", ") %></td>
+              <td class="small"><%= new Date(t.expiresAt).toLocaleDateString("sr-RS") %></td>
+              <td class="small"><%= t.lastUsedAt ? new Date(t.lastUsedAt).toLocaleString("sr-RS") : "nikad" %><% if (t.lastUsedIp) { %><div class="text-muted"><%= t.lastUsedIp %></div><% } %></td>
+              <td>
+                <% if (t.status === "active") { %><span class="badge text-bg-success">Aktivan</span>
+                <% } else if (t.status === "revoked") { %><span class="badge text-bg-danger">Opozvan</span>
+                <% } else { %><span class="badge text-bg-secondary">Istekao</span><% } %>
+              </td>
+              <td class="text-end">
+                <% if (t.status === "active") { %>
+                  <form action="/admin/api-tokeni/<%= t.id %>/opozovi" method="POST" class="d-inline" onsubmit="return confirm('Opozvati token? Prestaje da radi odmah.');">
+                    <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Opozovi</button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<%- include("../includes/footer") %>
