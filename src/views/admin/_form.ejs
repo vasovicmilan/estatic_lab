@@ -361,11 +361,11 @@
   </div>
 </main>
 
-<script src="/js/admin-multiselect.js"></script>
-<script src="/js/admin-repeater.js"></script>
-<script src="/js/admin-comparison-table.js"></script>
-<script src="/js/admin-content-blocks.js"></script>
-<script src="/js/admin-schedule.js"></script>
-<script src="/js/admin-select-preview.js"></script>
-<script src="/js/admin-package-purchase-coupon.js"></script>
+<script src="/js/admin-multiselect.js?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>"></script>
+<script src="/js/admin-repeater.js?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>"></script>
+<script src="/js/admin-comparison-table.js?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>"></script>
+<script src="/js/admin-content-blocks.js?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>"></script>
+<script src="/js/admin-schedule.js?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>"></script>
+<script src="/js/admin-select-preview.js?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>"></script>
+<script src="/js/admin-package-purchase-coupon.js?v=<%= typeof assetVersion !== 'undefined' ? assetVersion : '' %>"></script>
 <%- include("../includes/footer") %>
