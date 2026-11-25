@@ -20,18 +20,20 @@
  */
 function flashMessage(type, message) {
   if (this.session === undefined) throw new Error("req.flash() requires sessions");
+  // citanje ne sme da menja sesiju - inace express-session snima novu sesiju za svaki zahtev
+  if (type && message === undefined) {
+    const messages = this.session.flash?.[type];
+    if (!messages) return [];
+    delete this.session.flash[type];
+    return messages;
+  }
+
   const messagesByType = (this.session.flash = this.session.flash || {});
 
   if (type && message !== undefined) {
     messagesByType[type] = messagesByType[type] || [];
     messagesByType[type].push(message);
     return messagesByType[type].length;
-  }
-
-  if (type) {
-    const messages = messagesByType[type];
-    delete messagesByType[type];
-    return messages || [];
   }
 
   this.session.flash = {};

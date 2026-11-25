@@ -97,4 +97,26 @@ describe("flash middleware", () => {
       assert.deepEqual(req.flash("success"), []);
     });
   });
+
+  describe("reading does not touch the session", () => {
+    it("reading an empty type leaves the session without a flash key (no new session gets saved)", () => {
+      const { req, res } = fakeReqRes();
+      flash()(req, res, () => {});
+
+      assert.deepEqual(req.flash("error"), []);
+      assert.deepEqual(req.flash("success"), []);
+      assert.deepEqual(req.session, {});
+    });
+
+    it("reading a queued type returns it once and removes only that type", () => {
+      const { req, res } = fakeReqRes();
+      flash()(req, res, () => {});
+      req.flash("success", "Sačuvano");
+      req.flash("error", "Greška");
+
+      assert.deepEqual(req.flash("success"), ["Sačuvano"]);
+      assert.deepEqual(req.flash("success"), []);
+      assert.deepEqual(req.session.flash, { error: ["Greška"] });
+    });
+  });
 });
