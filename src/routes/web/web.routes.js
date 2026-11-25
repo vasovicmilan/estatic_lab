@@ -29,10 +29,13 @@ import productRoutes from "./product.routes.js";
 import shopRoutes from "./shop.routes.js";
 import tutorialRoutes from "./tutorial.routes.js";
 
+import { csrfTokenEndpoint } from "../../config/csrf.config.js";
+
 const router = Router();
 
 router.use(optionalWebAuth);
 
+router.get("/csrf-token", csrfTokenEndpoint);
 router.get("/robots.txt", SeoController.robotsTxt);
 router.get("/sitemap.xml", SeoController.sitemapXml);
 router.get("/llms.txt", SeoController.llmsTxt);

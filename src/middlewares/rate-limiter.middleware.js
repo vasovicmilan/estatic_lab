@@ -2,6 +2,7 @@ import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { timingSafeEqual } from "crypto";
 import path from "path";
 import { AppError } from "../utils/error.util.js";
+import { logWarn } from "../utils/logger.util.js";
 
 // Limits are tunable per deployment without a code change (.env): RATE_LIMIT_GLOBAL_MAX,
 // RATE_LIMIT_API_MAX, RATE_LIMIT_ADMIN_MAX (requests per minute per client). Defaults are
@@ -55,6 +56,23 @@ function handleRateLimitExceeded(message, statusCode = 429) {
   };
 }
 
+// globalLimiter radi PRE sesije, CSRF-a i prikaza stranica (vidi app.js), pa i odgovor mora da bude jeftin:
+// običan tekst, bez šablona, bez upisa u sesiju i bez reda u logu za svaki blokiran zahtev. Umesto
+// hiljada redova pod naletom, jednom u minuti se upiše koliko ih je blokirano.
+let blockedSinceLastReport = 0;
+const blockedReportTimer = setInterval(() => {
+  if (blockedSinceLastReport > 0) {
+    logWarn("[rate-limit] Blokirani zahtevi (globalni limit) u poslednjem minutu", { count: blockedSinceLastReport });
+    blockedSinceLastReport = 0;
+  }
+}, 60 * 1000);
+blockedReportTimer.unref();
+
+export function globalLimitExceeded(req, res) {
+  blockedSinceLastReport += 1;
+  res.status(429).set("Cache-Control", "no-store").type("text/plain; charset=utf-8").send("Previše zahteva - pokušajte ponovo kasnije.");
+}
+
 export const globalLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: envInt("RATE_LIMIT_GLOBAL_MAX", 100),
@@ -64,7 +82,7 @@ export const globalLimiter = rateLimit({
   // /api/v1 has its own apiLimiter (routes/index.routes.js) - counting it here too meant every
   // API call spent from TWO buckets, so the effective limit was the lower of the two.
   skip: (req) => skipInTest() || skipStatic(req) || (req.originalUrl || "").startsWith("/api/"),
-  handler: handleRateLimitExceeded("Previše zahteva - pokušajte ponovo kasnije."),
+  handler: globalLimitExceeded,
 });
 
 export const loginLimiter = rateLimit({

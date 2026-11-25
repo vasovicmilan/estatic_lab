@@ -44,7 +44,9 @@ describe("prize wheel (HTTP)", () => {
 
   async function pageAndToken(agent) {
     const res = await agent.get("/tocak?src=sajam-test");
-    return { res, token: metaToken(res.text) };
+    let token = metaToken(res.text);
+    if (!token) token = (await agent.get("/csrf-token")).body?.token || "";
+    return { res, token };
   }
 
   it("renders the page as noindex, with the wheel data embedded", async () => {

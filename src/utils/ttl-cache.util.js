@@ -27,6 +27,10 @@ export function createTtlCache(ttlMs, maxEntries = 1000) {
       store.set(key, { value, expiresAt: Date.now() + ttlMs });
     },
 
+    delete(key) {
+      store.delete(key);
+    },
+
     size() {
       return store.size;
     },

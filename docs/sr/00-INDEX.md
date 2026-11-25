@@ -25,5 +25,6 @@ Ova dokumentacija je podeljena na fokusirane fajlove, gde svaki pokriva jednu ob
 | `19-video-uputstva.md` | Video uputstva na `/uputstva`: snimanje, titlovi, objavljivanje, pristup po ulogama, `npm run tutorials:all` |
 | `20-tocak-materijali-vizitka-eur.md` | Više točkova sreće i leadovi, materijali za preuzimanje, javna vizitka zaposlenog (vCard, QR), cene u evrima |
 | `21-claude-asistent-pristup.md` | Claude kao asistent: API tokeni, rola, allowlist ruta, prinudni nacrti, opoziv, pauza, revizija, uvođenje |
+| `22-otpornost-na-napade.md` | Otpornost na botnet napade: sesije samo kad zatreba (flash, CSRF), limiter pre sesije, keš sitemap-a, limit tela zahteva, provera posle deploy-a |
 
 Svaki fajl je samostalan — nije potrebno da ih čitate po redosledu, iako `06` (partnerski program) koristi pojmove iz `03`, `05` i `07`, `11` se nadovezuje na životni ciklus termina opisan u `02`, a `14` (brisanje) najviše koristi ako već poznajete entitete opisane u `02`, `03` i `04`.

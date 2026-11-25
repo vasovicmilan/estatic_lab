@@ -22,3 +22,13 @@ describe("createTtlCache", () => {
     assert.equal(c.get("a"), 3);
   });
 });
+
+describe("ttl-cache delete", () => {
+  it("briše jedan ključ", async () => {
+    const { createTtlCache } = await import("../../../src/utils/ttl-cache.util.js");
+    const cache = createTtlCache(1000, 5);
+    cache.set("a", 1);
+    cache.delete("a");
+    assert.equal(cache.get("a"), undefined);
+  });
+});

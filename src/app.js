@@ -29,18 +29,40 @@ setupHelmet(app);
 
 // Mounted before CORS/session/CSRF/globalLimiter and everything else below - an
 // uptime monitor needs no auth, no cookies, and must not be caught by globalLimiter
-// (see rate-limiter.middleware.js's globalLimiter, applied further down) or a
+// (see rate-limiter.middleware.js's globalLimiter, applied right after static files) or a
 // well-behaved 30-60s poll could get 429'd during exactly the traffic spike or
 // incident when the monitor matters most.
 app.use(healthRoutes);
 
 setupCors(app);
 setupStatic(app);
+
+// Odmah posle statike i /health, PRE morgan-a, sesije, CSRF-a i prikaza stranica: zahtev koji će ionako biti
+// odbijen ne sme da košta upis sesije u bazu, upit za podešavanja ni red u logu. (Ranije je limiter bio
+// iza svega toga, pa je napad sa mnogo adresa plaćao pun put kroz aplikaciju pre nego što bi dobio 429.)
+app.use(globalLimiter);
+
 setupMorgan(app);
 app.use(requestIdMiddleware);
 
-app.use(express.json({ limit: "5mb" }));
-app.use(express.urlencoded({ extended: true, limit: "5mb" }));
+// Telo zahteva se čita u memoriju PRE autentikacije, pa je svaki dozvoljeni megabajt trošak koji može da
+// napravi bilo ko. Javne forme (kontakt, newsletter, prijava, korpa, zakazivanje) su male: 100 KB je
+// dovoljno. Veći limit ostaje samo za admin panel i API, gde se šalju sadržaji blokova i objave.
+const LARGE_BODY_PREFIXES = ["/admin", "/api"];
+const isLargeBodyPath = (req) => LARGE_BODY_PREFIXES.some((prefix) => req.path === prefix || req.path.startsWith(`${prefix}/`));
+const jsonLarge = express.json({ limit: "5mb" });
+const jsonSmall = express.json({ limit: "100kb" });
+const urlencodedLarge = express.urlencoded({ extended: true, limit: "5mb" });
+const urlencodedSmall = express.urlencoded({ extended: true, limit: "100kb" });
+app.use((req, res, next) => (isLargeBodyPath(req) ? jsonLarge : jsonSmall)(req, res, next));
+app.use((req, res, next) => (isLargeBodyPath(req) ? urlencodedLarge : urlencodedSmall)(req, res, next));
+// preveliko telo: običan tekst odmah (stranica greške traži podatke koje tek postavljaju kasniji middleware-i)
+app.use((err, req, res, next) => {
+  if (err?.type === "entity.too.large") {
+    return res.status(413).set("Cache-Control", "no-store").type("text/plain; charset=utf-8").send("Zahtev je prevelik.");
+  }
+  return next(err);
+});
 app.use(cookieParser());
 
 setupMethodOverride(app);
@@ -66,7 +88,6 @@ app.use((req, res, next) => {
 });
 
 setupViewEngine(app);
-app.use(globalLimiter);
 // After every body/session middleware (AsyncLocalStorage context is most reliable when set
 // this late) and right before the routes: tells link.builder.js whether this request is web or /api.
 app.use(linkContextMiddleware);

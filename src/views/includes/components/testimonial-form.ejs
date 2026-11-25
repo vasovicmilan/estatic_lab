@@ -11,7 +11,7 @@
     <h2 class="h5 mb-3">Ostavite utisak</h2>
 
     <form action="/testimonials/posalji" method="POST">
-      <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+      <input type="hidden" name="CSRFToken" value="<%= typeof csrfTokenSoft !== 'undefined' ? csrfTokenSoft : (typeof csrfToken !== 'undefined' ? csrfToken : '') %>">
       <input type="text" name="nickname" class="d-none" tabindex="-1" autocomplete="off">
       <% if (_serviceId) { %><input type="hidden" name="service" value="<%= _serviceId %>"><% } %>
       <% if (_packageId) { %><input type="hidden" name="package" value="<%= _packageId %>"><% } %>

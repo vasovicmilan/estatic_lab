@@ -151,7 +151,44 @@ document.addEventListener("DOMContentLoaded", () => {
   // coupon apply/remove widget (see includes/components/coupon-field.ejs) - one
   // generic handler covers both the booking contact step and checkout, since the
   // actual validation differs server-side but the UI interaction is identical
-  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
+  // Anoniman posetilac nema token u stranici (server ga ne pravi dok ne zatreba) - traži se sa /csrf-token
+  // jednom, pa se pamti. Prijavljeni korisnici ga već imaju u meta tagu.
+  let csrfPromise = null;
+  const getCsrfToken = () => {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta && meta.content) return Promise.resolve(meta.content);
+    if (!csrfPromise) {
+      csrfPromise = fetch("/csrf-token", { credentials: "same-origin", headers: { Accept: "application/json" } })
+        .then((r) => r.json())
+        .then((j) => {
+          const token = (j && j.token) || "";
+          if (token && meta) meta.content = token;
+          return token;
+        })
+        .catch(() => {
+          csrfPromise = null;
+          return "";
+        });
+    }
+    return csrfPromise;
+  };
+
+  // forme sa praznim CSRFToken poljem (npr. newsletter u podnožju): token se dovuče pri slanju
+  document.addEventListener(
+    "submit",
+    (event) => {
+      const form = event.target;
+      const input = form && form.querySelector ? form.querySelector('input[name="CSRFToken"]') : null;
+      if (!input || input.value || form.dataset.csrfFetching) return;
+      event.preventDefault();
+      getCsrfToken().then((token) => {
+        input.value = token;
+        form.dataset.csrfFetching = "1";
+        HTMLFormElement.prototype.submit.call(form);
+      });
+    },
+    true
+  );
 
   document.querySelectorAll("[data-coupon-widget]").forEach((widget) => {
     const context = widget.dataset.couponContext;
@@ -255,6 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       applyBtn.disabled = true;
       try {
+        const csrfToken = await getCsrfToken();
         const res = await fetch("/kupon/primeni", {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": csrfToken },
@@ -276,7 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
     removeBtn?.addEventListener("click", async () => {
       removeBtn.disabled = true;
       try {
-        await fetch("/kupon/ukloni", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken } });
+        await fetch("/kupon/ukloni", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": await getCsrfToken() } });
       } catch {
         // removing is best-effort client-side regardless - the widget resets either way
       } finally {

@@ -41,6 +41,22 @@ export function csrfWebProtection(req, res, next) {
   return csrfSynchronisedProtection(req, res, next);
 }
 
+// Token se pravi TEK kad ga šablon zaista ispiše (ili ga kontroler pročita iz res.locals).
+// generateToken(req) upisuje token u sesiju, a sesija ide u MongoDB - pa je dosadašnje pravljenje
+// tokena na svakom zahtevu značilo jedan upis u bazu za svaku posetu, i za one koji nikad ne šalju formu.
+function lazyToken(req) {
+  let value;
+  return {
+    toString() {
+      if (value === undefined) value = generateToken(req);
+      return value;
+    },
+    toJSON() {
+      return this.toString();
+    },
+  };
+}
+
 export function csrfLocals(req, res, next) {
   if (req.originalUrl.startsWith("/api")) return next();
   if (!req.session) return next();
@@ -54,11 +70,23 @@ export function csrfLocals(req, res, next) {
   // visitor already gets today.
   if (isLikelyBot(req.get("user-agent"))) {
     res.locals.csrfToken = "";
+    res.locals.csrfTokenSoft = "";
     return next();
   }
 
-  res.locals.csrfToken = generateToken(req);
+  res.locals.csrfToken = lazyToken(req);
+  // Za mesta koja se prikazuju na SVAKOJ stranici (meta tag u zaglavlju, newsletter forma u podnožju):
+  // prijavljen korisnik ionako ima sesiju pa dobija pravi token, a anoniman samo ako već ima token u sesiji.
+  // Inače ostaje prazno i javni JavaScript ga traži sa /csrf-token tek kad zatreba (slanje forme, AJAX).
+  res.locals.csrfTokenSoft = req.session.isLoggedIn ? res.locals.csrfToken : req.session.csrfToken || "";
   next();
+}
+
+// GET /csrf-token - anonimni posetilac traži token tek kad pošalje formu ili AJAX zahtev.
+export function csrfTokenEndpoint(req, res) {
+  res.set("Cache-Control", "no-store, private");
+  if (!req.session) return res.status(503).json({ success: false });
+  return res.json({ success: true, token: generateToken(req) });
 }
 
 export function csrfAfterMulter(req, res, next) {
