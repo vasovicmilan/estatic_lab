@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 
 // Oblasti koje token sme da dodirne. Ovo je SUŽAVANJE dozvola role (presek), nikad proširenje:
 // token ne može da uradi ništa što njegova rola ne dozvoljava, a ovde se još bira šta od toga.
-export const TOKEN_SCOPES = ["blog", "catalog", "materials"];
+export const TOKEN_SCOPES = ["blog", "catalog", "materials", "site"];
 
 export const TOKEN_MIN_DAYS = 1;
 export const TOKEN_MAX_DAYS = 90;

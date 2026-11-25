@@ -2,7 +2,7 @@ import { body } from "express-validator";
 import { collectValidationErrors } from "./collect-validation-errors.js";
 import { booleanishField, mongoIdParamValidator } from "./helpers/common.validator.js";
 
-const FLAGS = ["isPublic", "showPhone", "showEmail", "showBio", "showInstagram", "showFacebook", "showWebsite", "showServices", "copyExpertPhoto", "removePhoto"];
+const FLAGS = ["isPublic", "showPhone", "showEmail", "showBio", "showInstagram", "showFacebook", "showWebsite", "showServices", "showProducts", "copyExpertPhoto", "removePhoto"];
 
 export const validateEmployeeCard = [
   body("displayName").optional().trim().isLength({ max: 80 }).withMessage("Ime na vizitki može imati najviše 80 karaktera"),
@@ -14,6 +14,8 @@ export const validateEmployeeCard = [
   body("categories.*").optional().isMongoId().withMessage("Neispravna kategorija"),
   body("pinnedServices.*").optional().isMongoId().withMessage("Neispravna usluga"),
   body("pinnedServices").optional().custom((value) => (Array.isArray(value) ? value.length : 1) <= 3).withMessage("Možete izdvojiti najviše 3 usluge"),
+  body("pinnedProducts.*").optional().isMongoId().withMessage("Neispravan artikal"),
+  body("pinnedProducts").optional().custom((value) => (Array.isArray(value) ? value.length : 1) <= 6).withMessage("Možete izdvojiti najviše 6 artikala"),
   body("materialId").optional({ values: "falsy" }).isMongoId().withMessage("Neispravan materijal"),
   ...FLAGS.map((name) => booleanishField(name, true)),
   collectValidationErrors,

@@ -174,3 +174,36 @@ describe("category.service", () => {
     });
   });
 });
+describe("category.service - getCategoriesForSelect onlyActive", () => {
+  const active = (name, parent = null) => buildCategory({ _id: id(), name, parent, domain: "service", meta: { isActive: true, priority: 0 } });
+  const inactive = (name, parent = null) => buildCategory({ _id: id(), name, parent, domain: "service", meta: { isActive: false, priority: 0 } });
+
+  it("hides inactive categories", async (t) => {
+    const a = active("Masaže");
+    const b = inactive("Stare");
+    t.mock.method(categoryRepo, "findAllCategoriesByDomain", async () => [a, b]);
+    const out = await categoryService.getCategoriesForSelect("service", { onlyActive: true });
+    assert.deepEqual(out.map((c) => c.naziv), ["Masaže"]);
+  });
+
+  it("keeps an inactive category that is already assigned (so saving the form does not drop it)", async (t) => {
+    const a = active("Masaže");
+    const b = inactive("Stare");
+    t.mock.method(categoryRepo, "findAllCategoriesByDomain", async () => [a, b]);
+    const out = await categoryService.getCategoriesForSelect("service", { onlyActive: true, keepIds: [b._id.toString()] });
+    assert.equal(out.length, 2);
+  });
+
+  it("does not lose an active child of an inactive parent", async (t) => {
+    const parent = inactive("Roditelj");
+    const child = active("Dete", parent._id);
+    t.mock.method(categoryRepo, "findAllCategoriesByDomain", async () => [parent, child]);
+    const out = await categoryService.getCategoriesForSelect("service", { onlyActive: true });
+    assert.deepEqual(out.map((c) => c.naziv), ["Dete"]);
+  });
+
+  it("still returns everything by default", async (t) => {
+    t.mock.method(categoryRepo, "findAllCategoriesByDomain", async () => [active("A"), inactive("B")]);
+    assert.equal((await categoryService.getCategoriesForSelect("service")).length, 2);
+  });
+});

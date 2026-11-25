@@ -17,6 +17,10 @@ export async function listTokens() {
   return ApiToken.find({}).sort({ createdAt: -1 }).populate("user", "firstName lastName email").lean();
 }
 
+export async function updateScopes(id, scopes) {
+  return ApiToken.findOneAndUpdate({ _id: id, revokedAt: null }, { $set: { scopes } }, { new: true }).lean();
+}
+
 export async function revokeToken(id, revokedBy) {
   return ApiToken.findOneAndUpdate({ _id: id, revokedAt: null }, { $set: { revokedAt: new Date(), revokedBy } }, { new: true }).lean();
 }
@@ -41,4 +45,4 @@ export async function setPaused(paused, userId) {
   ).lean();
 }
 
-export default { createToken, findByHash, findTokenById, listTokens, revokeToken, revokeAllForUser, touchToken, getAccessState, setPaused };
+export default { createToken, findByHash, findTokenById, updateScopes, listTokens, revokeToken, revokeAllForUser, touchToken, getAccessState, setPaused };

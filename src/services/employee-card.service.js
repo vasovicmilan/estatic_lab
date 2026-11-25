@@ -5,6 +5,7 @@ import fs from "fs-extra";
 import cardRepo from "../repositories/employee-card.repository.js";
 import employeeRepo from "../repositories/employee.repository.js";
 import materialRepo from "../repositories/material.repository.js";
+import productRepo from "../repositories/product.repository.js";
 import { decryptPhone } from "../utils/phone.util.js";
 import { normalizeSocialLink } from "../utils/social-link.util.js";
 import { buildVCard } from "../utils/vcard.util.js";
@@ -12,11 +13,13 @@ import { deleteUploadedFile } from "../utils/file-cleanup.util.js";
 import { notFound, badRequest, validationError } from "../utils/error.util.js";
 import { logInfo } from "../utils/logger.util.js";
 import { BUSINESS } from "../config/business.config.js";
+import { FEATURES } from "../config/features.config.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_PATH = process.env.UPLOAD_PUBLIC_PATH || path.join(__dirname, "..", "public");
 
 export const MAX_PINNED_SERVICES = 3;
+export const MAX_PINNED_PRODUCTS = 6;
 const SLUG_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"; // bez zamenljivih znakova (0/o, 1/l/i)
 const SLUG_LENGTH = 8;
 
@@ -71,6 +74,13 @@ function collectWorkArea(employee) {
   };
 }
 
+/** Aktivni artikli prodavnice koje zaposleni može da izdvoji (prazno ako je modul prodavnice isključen). */
+async function loadProductOptions() {
+  if (!FEATURES.shop) return [];
+  const result = await productRepo.findProducts({ limit: 100, filters: { isActive: true }, populateFields: [], sort: { name: 1 } });
+  return (result?.data || []).map((p) => ({ id: idOf(p), name: p.name, slug: p.slug }));
+}
+
 async function loadEmployee(employeeId) {
   const employee = await employeeRepo.findEmployeeById(employeeId, { populateFields: employeePopulate });
   if (!employee) notFound("Zaposleni");
@@ -89,9 +99,10 @@ function defaultsFor(employee) {
     instagram: "",
     facebook: "",
     website: "",
-    show: { phone: false, email: false, bio: false, instagram: false, facebook: false, website: false, services: false },
+    show: { phone: false, email: false, bio: false, instagram: false, facebook: false, website: false, services: false, products: false },
     categories: [],
     pinnedServices: [],
+    pinnedProducts: [],
     material: null,
     viewCount: 0,
     contactDownloadCount: 0,
@@ -112,15 +123,18 @@ export async function getEditorData(employeeId) {
       id: existing ? idOf(existing) : null,
       categories: (card.categories || []).map(idOf),
       pinnedServices: (card.pinnedServices || []).map(idOf),
+      pinnedProducts: (card.pinnedProducts || []).map(idOf),
       materialId: card.material ? idOf(card.material) : "",
     },
     url: existing ? buildCardUrl(existing.slug) : null,
     contact: { phone: decryptPhone(employee.userId?.phone), email: employee.userId?.email || "" },
     availableCategories: area.categories,
     availableServices: area.services,
+    availableProducts: await loadProductOptions(),
     materials: (await materialRepo.findActiveMaterialOptions()).map((m) => ({ id: idOf(m), title: m.title })),
     expertPhoto: employee.expert?.image?.img || null,
     maxPinned: MAX_PINNED_SERVICES,
+    maxPinnedProducts: MAX_PINNED_PRODUCTS,
   };
 }
 
@@ -158,6 +172,15 @@ export async function saveCard(employeeId, input, { photo = null, copyExpertPhot
   const pinnedServices = [...new Set(toIdList(input.pinnedServices).filter((id) => allowedServices.has(id)))];
   if (pinnedServices.length > MAX_PINNED_SERVICES) badRequest(`Možete izdvojiti najviše ${MAX_PINNED_SERVICES} usluge.`);
 
+  // artikli: samo aktivni artikli prodavnice (nema izbora nepostojećih ili neaktivnih id-eva)
+  let pinnedProducts = [];
+  const requestedProducts = [...new Set(toIdList(input.pinnedProducts))];
+  if (requestedProducts.length > MAX_PINNED_PRODUCTS) badRequest(`Možete izdvojiti najviše ${MAX_PINNED_PRODUCTS} artikala.`);
+  if (requestedProducts.length && FEATURES.shop) {
+    const allowedProducts = new Set((await loadProductOptions()).map((p) => p.id));
+    pinnedProducts = requestedProducts.filter((pid) => allowedProducts.has(pid));
+  }
+
   let material = null;
   if (input.materialId) {
     const options = await materialRepo.findActiveMaterialOptions();
@@ -182,9 +205,11 @@ export async function saveCard(employeeId, input, { photo = null, copyExpertPhot
       facebook: !!show.facebook,
       website: !!show.website,
       services: !!show.services,
+      products: !!show.products,
     },
     categories,
     pinnedServices,
+    pinnedProducts,
     material,
   };
 
@@ -255,6 +280,15 @@ export async function getPublicCard(slug, { countView = true } = {}) {
   }
   const toView = (s) => ({ name: s.name, url: bookUrl(s), detailsUrl: `/usluge/${s.slug}` });
 
+  // artikli prodavnice: bez partnerskog koda (prvi korak), samo aktivni, redosledom koji je zaposleni izabrao
+  let products = [];
+  if (show.products && FEATURES.shop && (card.pinnedProducts || []).length) {
+    const wanted = card.pinnedProducts.map(idOf);
+    const found = await productRepo.findProductsByIds(wanted, { populateFields: [] });
+    const byId = new Map((found || []).filter((p) => p && p.isActive !== false).map((p) => [idOf(p), p]));
+    products = wanted.map((pid) => byId.get(pid)).filter(Boolean).map((p) => ({ name: p.name, url: `/prodavnica/${p.slug}` }));
+  }
+
   const material = card.material && card.material.isActive ? { title: card.material.title, url: `/materijali/${card.material.slug}` } : null;
 
   if (countView) await cardRepo.incrementCounter(card._id, "viewCount");
@@ -274,6 +308,8 @@ export async function getPublicCard(slug, { countView = true } = {}) {
     pinned: pinned.map(toView),
     groups: groups.map((g) => ({ name: g.name, services: g.services.map(toView) })),
     hasServices: pinned.length > 0 || groups.length > 0,
+    products,
+    hasProducts: products.length > 0,
     material,
   };
 }
@@ -323,6 +359,7 @@ export async function getCardUrlForEmployee(employeeId) {
 
 export default {
   MAX_PINNED_SERVICES,
+  MAX_PINNED_PRODUCTS,
   buildCardUrl,
   getEditorData,
   saveCard,

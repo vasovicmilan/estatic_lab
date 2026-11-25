@@ -109,6 +109,20 @@
             </div>
           <% } %>
 
+          <% if (e.availableProducts.length) { %>
+            <hr class="my-4">
+            <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="showProducts" name="showProducts" value="true" <%= chk(c.show.products) %>><label class="form-check-label fw-semibold" for="showProducts">Prikaži izdvojene artikle iz prodavnice</label></div>
+            <label class="form-label small text-muted mb-1">Izdvojeni artikli (najviše <%= e.maxPinnedProducts %>, prikazuju se redom kojim su u listi)</label>
+            <div class="mb-3" style="max-height: 260px; overflow-y: auto;" data-pinned-limit="<%= e.maxPinnedProducts %>">
+              <% e.availableProducts.forEach(function(p) { %>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="prd-<%= p.id %>" name="pinnedProducts" value="<%= p.id %>" <%= chk(c.pinnedProducts.includes(p.id)) %>>
+                  <label class="form-check-label" for="prd-<%= p.id %>"><%= p.name %></label>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+
           <% if (e.materials.length) { %>
             <hr class="my-4">
             <label class="form-label" for="materialId">Brošura / materijal za preuzimanje (opciono)</label>
@@ -152,18 +166,18 @@
 </main>
 
 <script>
-  // najviše N izdvojenih usluga - isti limit se proverava i na serveru
+  // najviše N izdvojenih usluga/artikala - isti limit se proverava i na serveru
   (function () {
-    var box = document.querySelector("[data-pinned-limit]");
-    if (!box) return;
-    var limit = parseInt(box.getAttribute("data-pinned-limit"), 10);
-    var boxes = box.querySelectorAll("input[type=checkbox]");
-    function sync() {
-      var checked = box.querySelectorAll("input:checked").length;
-      boxes.forEach(function (b) { if (!b.checked) b.disabled = checked >= limit; });
-    }
-    boxes.forEach(function (b) { b.addEventListener("change", sync); });
-    sync();
+    document.querySelectorAll("[data-pinned-limit]").forEach(function (box) {
+      var limit = parseInt(box.getAttribute("data-pinned-limit"), 10);
+      var boxes = box.querySelectorAll("input[type=checkbox]");
+      function sync() {
+        var checked = box.querySelectorAll("input:checked").length;
+        boxes.forEach(function (b) { if (!b.checked) b.disabled = checked >= limit; });
+      }
+      boxes.forEach(function (b) { b.addEventListener("change", sync); });
+      sync();
+    });
   })();
 </script>
 

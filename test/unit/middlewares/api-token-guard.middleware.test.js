@@ -92,4 +92,59 @@ describe("api-token-guard", () => {
     assert.equal(audit.mock.callCount(), 1);
     assert.equal(audit.mock.calls[0].arguments[0].action, "API_TOKEN_DENIED");
   });
+
+  it("allows editing site texts only with the site scope, and never the legal pages", (t) => {
+    for (const slug of ["o-nama", "faq", "partnerski-program", "pocetna-uvod", "zasto-mi", "pocetna-hero", "usluge-uvod", "paketi-uvod", "prodavnica-uvod", "blog-uvod", "kontakt", "seo-stranica", "tim-uvod"]) {
+      assert.equal(run(t, { method: "PUT", path: `/site-content/${slug}`, scopes: ["site"], body: {} }).error, undefined, slug);
+      assert.equal(run(t, { method: "PUT", path: `/site-content/${slug}`, scopes: ["blog", "catalog", "materials"], body: {} }).error.statusCode, 403, slug);
+    }
+    assert.equal(run(t, { method: "GET", path: "/site-content", scopes: ["site"], body: {} }).error, undefined);
+    for (const slug of ["politika-privatnosti", "uslovi-koriscenja"]) {
+      assert.equal(run(t, { method: "PUT", path: `/site-content/${slug}`, scopes: ["site", "blog", "catalog", "materials"], body: {} }).error.statusCode, 403, slug);
+    }
+  });
+
+  it("lists only active categories for a token", (t) => {
+    const { req, error } = run(t, { method: "GET", path: "/categories", scopes: ["catalog"], body: {} });
+    assert.equal(error, undefined);
+    assert.equal(req.query.isActive, "true");
+  });
+  for (const path of ["/categories", "/tags"]) {
+    for (const scope of ["blog", "catalog"]) {
+      it(`creates ${path} as inactive for a ${scope} token`, (t) => {
+        const { req, error } = run(t, { method: "POST", path, scopes: [scope], body: { name: "x", isActive: true } });
+        assert.equal(error, undefined);
+        assert.equal(req.body.isActive, false);
+      });
+    }
+  }
+
+  it("editing a category cannot change activity, priority, domain or parent", (t) => {
+    const { req, error } = run(t, { method: "PUT", path: "/categories/abc", scopes: ["catalog"], body: { name: "Novo", isActive: true, priority: 5, domain: "blog", parent: "p1" } });
+    assert.equal(error, undefined);
+    assert.deepEqual(req.body, { name: "Novo" });
+  });
+
+  it("editing a tag cannot change activity or domain", (t) => {
+    const { req, error } = run(t, { method: "PUT", path: "/tags/abc", scopes: ["blog"], body: { name: "Novo", isActive: false, domain: "service" } });
+    assert.equal(error, undefined);
+    assert.deepEqual(req.body, { name: "Novo" });
+  });
+
+  for (const path of ["/categories/abc", "/tags/abc"]) {
+    it(`never deletes ${path}`, (t) => {
+      const { error } = run(t, { method: "DELETE", path, scopes: ["blog", "catalog", "site", "materials"], body: {} });
+      assert.equal(error.statusCode, 403);
+    });
+  }
+
+  it("a token can list its own inactive categories when it asks for them explicitly", (t) => {
+    const { req, error } = run(t, { method: "GET", path: "/categories", scopes: ["catalog"], body: {} });
+    assert.equal(error, undefined);
+    const explicit = { method: "GET", path: "/categories", originalUrl: "/api/v1/admin/categories", body: {}, query: { isActive: "false" }, user: { id: "u", via: "api-token", scopes: ["catalog"], tokenId: "t", tokenName: "c" } };
+    t.mock.method(auditLogService, "recordAuditLog", async () => {});
+    apiTokenGuard(explicit, {}, () => {});
+    assert.equal(explicit.query.isActive, "false");
+    assert.equal(req.query.isActive, "true");
+  });
 });

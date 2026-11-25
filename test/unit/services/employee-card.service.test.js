@@ -3,10 +3,11 @@ import assert from "node:assert/strict";
 import cardRepo from "../../../src/repositories/employee-card.repository.js";
 import employeeRepo from "../../../src/repositories/employee.repository.js";
 import materialRepo from "../../../src/repositories/material.repository.js";
+import productRepo from "../../../src/repositories/product.repository.js";
 import * as cardService from "../../../src/services/employee-card.service.js";
 import { id } from "../../helpers/factories.js";
 
-const ids = { employee: id(), cat1: id(), cat2: id(), s1: id(), s2: id(), s3: id(), s4: id(), foreignCat: id(), foreignSvc: id() };
+const ids = { p1: id(), p2: id(), p3: id(), pOff: id(), employee: id(), cat1: id(), cat2: id(), s1: id(), s2: id(), s3: id(), s4: id(), foreignCat: id(), foreignSvc: id() };
 
 function employeeFixture() {
   const cat = (oid, name) => ({ _id: oid, name, slug: name });
@@ -37,6 +38,14 @@ beforeEach(() => {
   counters = [];
   employeeRepo.findEmployeeById = async () => employeeFixture();
   materialRepo.findActiveMaterialOptions = async () => [];
+  const products = [
+    { _id: ids.p1, name: "Aparat A", slug: "aparat-a", isActive: true },
+    { _id: ids.p2, name: "Aparat B", slug: "aparat-b", isActive: true },
+    { _id: ids.p3, name: "Aparat C", slug: "aparat-c", isActive: true },
+    { _id: ids.pOff, name: "Ugašen", slug: "ugasen", isActive: false },
+  ];
+  productRepo.findProducts = async () => ({ data: products.filter((p) => p.isActive) });
+  productRepo.findProductsByIds = async (list) => products.filter((p) => list.map(String).includes(String(p._id)));
   cardRepo.findCardByEmployee = async () => stored;
   cardRepo.findCardBySlug = async () => stored;
   cardRepo.slugExists = async () => false;
@@ -57,7 +66,7 @@ describe("employee-card.service saveCard", () => {
     assert.match(created.slug, /^[a-z2-9]{8}$/);
     assert.equal(created.isPublic, false);
     assert.equal(created.displayName, "Ana Petrović");
-    assert.deepEqual(created.show, { phone: false, email: false, bio: false, instagram: false, facebook: false, website: false, services: false });
+    assert.deepEqual(created.show, { phone: false, email: false, bio: false, instagram: false, facebook: false, website: false, services: false, products: false });
   });
 
   it("keeps only the employee's own categories and services (no foreign ids)", async () => {
@@ -101,7 +110,7 @@ describe("employee-card.service getPublicCard", () => {
     displayName: "Ana P.",
     title: "Kozmetičar",
     bio: "Tajni opis",
-    show: { phone: false, email: false, bio: false, instagram: false, facebook: false, website: false, services: false },
+    show: { phone: false, email: false, bio: false, instagram: false, facebook: false, website: false, services: false, products: false },
     instagram: "https://instagram.com/ana",
     categories: [],
     pinnedServices: [],
@@ -160,5 +169,41 @@ describe("employee-card.service getPublicCard", () => {
     assert.ok(!text.includes("EMAIL"));
     assert.equal(fileName, "ana-p.vcf");
     assert.deepEqual(counters, ["contactDownloadCount"]);
+  });
+});
+
+describe("employee-card.service artikli prodavnice", () => {
+  it("čuva samo aktivne postojeće artikle, bez duplikata", async () => {
+    await cardService.saveCard(ids.employee, { pinnedProducts: [ids.p1, ids.p1, ids.pOff, id()], show: { products: true } });
+    assert.deepEqual(created.pinnedProducts.map(String), [String(ids.p1)]);
+    assert.equal(created.show.products, true);
+  });
+
+  it("odbija više od 6 artikala", async () => {
+    await assert.rejects(() => cardService.saveCard(ids.employee, { pinnedProducts: [1, 2, 3, 4, 5, 6, 7].map(() => id()) }), /najviše 6/);
+  });
+
+  it("javna vizitka prikazuje artikle izabranim redosledom, linkovi su bez koda, neaktivni se preskaču", async () => {
+    stored = {
+      _id: id(), employee: ids.employee, slug: "abcd2345", isPublic: true, adminDisabled: false, displayName: "Ana P.",
+      show: { products: true }, categories: [], pinnedServices: [], pinnedProducts: [ids.p2, ids.pOff, ids.p1], material: null,
+    };
+    const view = await cardService.getPublicCard("abcd2345");
+    assert.equal(view.hasProducts, true);
+    assert.deepEqual(view.products, [
+      { name: "Aparat B", url: "/prodavnica/aparat-b" },
+      { name: "Aparat A", url: "/prodavnica/aparat-a" },
+    ]);
+    assert.ok(view.products.every((p) => !p.url.includes("code=")));
+  });
+
+  it("ne prikazuje artikle ako nisu uključeni", async () => {
+    stored = {
+      _id: id(), employee: ids.employee, slug: "abcd2345", isPublic: true, adminDisabled: false, displayName: "Ana P.",
+      show: { products: false }, categories: [], pinnedServices: [], pinnedProducts: [ids.p1], material: null,
+    };
+    const view = await cardService.getPublicCard("abcd2345");
+    assert.equal(view.hasProducts, false);
+    assert.deepEqual(view.products, []);
   });
 });

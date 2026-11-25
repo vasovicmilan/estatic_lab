@@ -143,4 +143,40 @@ describe("API tokens (HTTP)", () => {
     const res = await request(app).delete("/api/v1/admin/materials/507f1f77bcf86cd799439011").set(auth(token));
     assert.equal(res.status, 403);
   });
+
+  it("site texts need the site scope", async () => {
+    const withSite = await setup(app, { scopes: ["site"] });
+    assert.equal((await request(app).get("/api/v1/admin/site-content").set(auth(withSite.token))).status, 200);
+    assert.equal((await request(app).put("/api/v1/admin/site-content/politika-privatnosti").set(auth(withSite.token)).send({})).status, 403);
+  });
+
+  it("changing a token's scopes takes effect immediately", async () => {
+    const { token, record, admin } = await setup(app, { scopes: ["blog"] });
+    assert.equal((await request(app).get("/api/v1/admin/site-content").set(auth(token))).status, 403);
+    await apiTokenService.updateApiTokenScopes(record._id.toString(), ["blog", "site"], { id: admin._id, email: admin.email, roleName: "admin" });
+    assert.equal((await request(app).get("/api/v1/admin/site-content").set(auth(token))).status, 200);
+  });
+
+  it("a catalog token reads only active categories", async () => {
+    const { token } = await setup(app, { scopes: ["catalog"] });
+    assert.equal((await request(app).get("/api/v1/admin/categories").set(auth(token))).status, 200);
+  });
+
+  it("a token creates categories and tags as inactive, cannot reactivate or delete them", async () => {
+    const { token } = await setup(app, { scopes: ["catalog"] });
+    const created = await request(app).post("/api/v1/admin/categories").set(auth(token)).send({ name: "Aparati za lice", domain: "product", isActive: true });
+    assert.equal(created.status, 201);
+    const categoryId = created.body.data.id || created.body.data._id;
+
+    const edited = await request(app).put(`/api/v1/admin/categories/${categoryId}`).set(auth(token)).send({ name: "Aparati za lice i telo", isActive: true });
+    assert.equal(edited.status, 200);
+    const list = await request(app).get("/api/v1/admin/categories?isActive=false").set(auth(token));
+    assert.equal(list.status, 200);
+
+    assert.equal((await request(app).delete(`/api/v1/admin/categories/${categoryId}`).set(auth(token))).status, 403);
+
+    const tag = await request(app).post("/api/v1/admin/tags").set(auth(token)).send({ name: "HIFU", domain: "product", isActive: true });
+    assert.equal(tag.status, 201);
+    assert.equal((await request(app).delete(`/api/v1/admin/tags/${tag.body.data.id || tag.body.data._id}`).set(auth(token))).status, 403);
+  });
 });

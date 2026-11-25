@@ -65,9 +65,11 @@ export async function saveCard(req, res, next) {
           facebook: parseCheckbox(b.showFacebook, false),
           website: parseCheckbox(b.showWebsite, false),
           services: parseCheckbox(b.showServices, false),
+          products: parseCheckbox(b.showProducts, false),
         },
         categories: b.categories,
         pinnedServices: b.pinnedServices,
+        pinnedProducts: b.pinnedProducts,
         materialId: b.materialId,
       },
       { photo: req.uploadedFile || null, copyExpertPhoto: parseCheckbox(b.copyExpertPhoto, false) }

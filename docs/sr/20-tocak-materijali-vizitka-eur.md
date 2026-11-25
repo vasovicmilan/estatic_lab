@@ -24,6 +24,7 @@ Ovaj dokument opisuje četiri nezavisne celine: više točkova sreće sa leadovi
 - Svaki zaposleni ima najviše jednu vizitku (`EmployeeCard`), uređuje je na `/moj-nalog/vizitka`.
 - Javna adresa je `/vizitka/:slug`; slug je nasumičnih 8 znakova (bez lako pobrkanih). Kontakt se preuzima kao vCard 3.0 (`/kontakt.vcf`), a QR kod se nudi kao SVG i PNG.
 - **Privatnost**: ništa lično nije javno po podrazumevanoj vrednosti; svako polje se posebno uključuje (`show`). Vizitka je javna tek kad zaposleni uključi `isPublic`.
+- Zaposleni koji ne radi usluge (npr. marketing aparata) može da izdvoji do 6 aktivnih artikala iz prodavnice (`pinnedProducts`, uključuje se opcijom `show.products`). Na vizitki se prikazuje odeljak "Artikli" sa linkovima na `/prodavnica/<slug>`; neaktivni artikli se preskaču, a odeljak se ne prikazuje ako je modul prodavnice isključen. Linkovi su za sada bez partnerskog koda (povezivanje sa partnerskim programom je predviđeno kao sledeći korak).
 - Zaposleni može da istakne do 3 svoje aktivne usluge. Fotografija se jednom kopira iz profila stručnjaka.
 - Dugme za zakazivanje vodi na zakazivanje sa unapred izabranim zaposlenim (`?employeeId=`).
 - **Admin**: `/admin/vizitke` pregled svih vizitki; administrator može da onemogući vizitku (`adminDisabled`), što ima prednost nad izborom zaposlenog.

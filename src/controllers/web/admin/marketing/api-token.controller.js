@@ -11,6 +11,7 @@ export const SCOPE_LABELS = {
   blog: "Blog (nacrti postova + slike)",
   catalog: "Katalog (usluge, paketi, proizvodi + slike)",
   materials: "Materijali (PDF, katalozi, brošure)",
+  site: "Tekstovi sajta (početna, o nama, FAQ, partnerski program) - izmena je odmah javna",
 };
 
 async function renderPage(req, res, extra = {}, status = 200) {
@@ -65,6 +66,19 @@ export async function createToken(req, res, next) {
   }
 }
 
+export async function updateScopes(req, res, next) {
+  try {
+    if (req.validationErrors) return flashAndRedirect(req, res, "error", "Neispravan token.", PAGE);
+    await apiTokenService.updateApiTokenScopes(req.params.tokenId, [].concat(req.body.scopes || []), req.session?.user);
+    return flashAndRedirect(req, res, "success", "Oblasti tokena su sačuvane. Važi odmah, nije potreban novi token.", PAGE);
+  } catch (error) {
+    logError("[updateScopes] Greška pri izmeni oblasti tokena", error, { tokenId: req.params.tokenId });
+    const { statusCode, message } = normalizeError(error);
+    if (statusCode === 400 || statusCode === 404) return flashAndRedirect(req, res, "error", message, PAGE);
+    next(error);
+  }
+}
+
 export async function revokeToken(req, res, next) {
   try {
     if (req.validationErrors) return flashAndRedirect(req, res, "error", "Neispravan token.", PAGE);
@@ -89,4 +103,4 @@ export async function setPause(req, res, next) {
   }
 }
 
-export default { listTokens, createToken, revokeToken, setPause };
+export default { listTokens, createToken, updateScopes, revokeToken, setPause };

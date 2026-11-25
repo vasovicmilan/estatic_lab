@@ -8,6 +8,7 @@ const validateTokenId = mongoIdParamValidator("tokenId", "tokena");
 router.get("/", ApiTokenController.listTokens);
 router.post("/", ApiTokenController.createToken);
 router.post("/pauza", ApiTokenController.setPause);
+router.post("/:tokenId/oblasti", validateTokenId, ApiTokenController.updateScopes);
 router.post("/:tokenId/opozovi", validateTokenId, ApiTokenController.revokeToken);
 
 export default router;

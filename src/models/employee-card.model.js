@@ -36,11 +36,15 @@ const EmployeeCardSchema = new Schema(
       facebook: { type: Boolean, default: false },
       website: { type: Boolean, default: false },
       services: { type: Boolean, default: false },
+      products: { type: Boolean, default: false },
     },
 
     // kategorije čije usluge se prikazuju (samo one u kojima zaposleni stvarno radi) + do 3 izdvojene usluge
     categories: [{ type: Schema.Types.ObjectId, ref: "Category" }],
     pinnedServices: [{ type: Schema.Types.ObjectId, ref: "Service" }],
+
+    // izdvojeni artikli iz prodavnice (do 6) - za zaposlene koji promovišu aparate/proizvode, ne usluge
+    pinnedProducts: [{ type: Schema.Types.ObjectId, ref: "Product" }],
 
     // opcioni materijal (brošura) kao dugme za preuzimanje
     material: { type: Schema.Types.ObjectId, ref: "Material", default: null },

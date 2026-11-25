@@ -88,7 +88,7 @@ export const assistantRoles = [
     // Rola za nalog na koji se kače API tokeni (Claude asistent). Dozvole su same po sebi samo
     // gornja granica: token ih još sužava izborom oblasti (blog/katalog/materijali), a posebna
     // allowlist ograda (api-token-guard.middleware.js) propušta samo nacrte. Nema korisnika,
-    // porudžbina, termina, isplata, newslettera, logova ni tekstova sajta.
+    // porudžbina, termina, isplata, newslettera ni logova. Tekstovi sajta su dozvoljeni, ali ne i pravne stranice.
     name: "claude asistent",
     description: "Nalog za API token asistenta: nacrti bloga, kataloga i materijala; objavljuje i briše samo vlasnik",
     permissions: [
@@ -100,6 +100,7 @@ export const assistantRoles = [
       "manage_resources",
       "manage_taxonomy",
       "manage_marketing",
+      "manage_site_content",
     ],
     isDefault: false,
     priority: 20,

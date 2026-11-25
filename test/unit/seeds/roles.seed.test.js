@@ -41,6 +41,10 @@ describe("manager roles", () => {
 describe("assistant role (API tokens)", () => {
   const role = assistantRoles.find((r) => r.name === "claude asistent");
 
+  it("may edit site texts", () => {
+    assert.ok(role.permissions.includes("manage_site_content"));
+  });
+
   it("exists, uses only real permissions and a valid name", () => {
     assert.ok(role);
     assert.match(role.name, /^[a-z][a-z0-9 _-]{1,49}$/);
@@ -48,7 +52,7 @@ describe("assistant role (API tokens)", () => {
   });
 
   it("never holds users, roles, orders, payouts, logs, reports, site content or appointments", () => {
-    const forbidden = ["manage_users", "manage_roles", "manage_orders", "manage_payouts", "view_logs", "view_business_reports", "manage_site_content", "manage_employees", "manage_partners", "manage_coupons", "manage_appointments_all"];
+    const forbidden = ["manage_users", "manage_roles", "manage_orders", "manage_payouts", "view_logs", "view_business_reports", "manage_employees", "manage_partners", "manage_coupons", "manage_appointments_all"];
     forbidden.forEach((p) => assert.ok(!role.permissions.includes(p), `must not have ${p}`));
   });
 });

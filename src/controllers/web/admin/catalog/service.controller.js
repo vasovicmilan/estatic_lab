@@ -42,9 +42,11 @@ function parseJsonField(value, fallback = []) {
 // employeeService is still imported for serviceDetails' "Broj terapeuta" count below -
 // which employees can perform a service now lives only on Employee.services, assigned
 // from the employee's own edit form, not here (see service.model.js)
-async function loadFormOptions() {
+async function loadFormOptions(service = null) {
+  // samo aktivne kategorije; one vec dodeljene usluzi ostaju radi ocuvanja pri cuvanju
+  const keepIds = (service?.categories || []).map((c) => (typeof c === "object" ? c.id ?? c._id?.toString() : c)).filter(Boolean);
   const [categories, tags, resources, products, posts] = await Promise.all([
-    categoryService.getCategoriesForSelect("service"),
+    categoryService.getCategoriesForSelect("service", { onlyActive: true, keepIds }),
     tagService.getTagsForSelect("service"),
     resourceService.getResourcesForSelect(),
     productService.getProductsForSelect(),
@@ -419,7 +421,7 @@ export async function editServiceForm(req, res, next) {
   try {
     const { serviceId } = req.params;
     const service = await serviceService.getServiceForEdit(serviceId);
-    const options = await loadFormOptions();
+    const options = await loadFormOptions(service);
     const formData = prepareServiceFormData(service, options);
 
     return res.render("admin/_form", {
@@ -443,7 +445,7 @@ export async function updateService(req, res, next) {
     if (req.validationErrors) {
       logWarn(`[updateService] Validacione greške za serviceId=${serviceId}`, { validationErrors: req.validationErrors, userId: req.session?.user?.id });
       const service = await serviceService.getServiceForEdit(serviceId);
-      const options = await loadFormOptions();
+      const options = await loadFormOptions(service);
       const formData = prepareServiceFormData(service, options);
       return res.status(400).render("admin/_form", {
         pageTitle: `Izmena - ${service.name}`,
@@ -479,7 +481,7 @@ export async function updateService(req, res, next) {
     const { statusCode, message } = normalizeError(error);
     if (statusCode === 400 || statusCode === 404 || statusCode === 409) {
       const service = await serviceService.getServiceForEdit(req.params.serviceId).catch(() => null);
-      const options = await loadFormOptions();
+      const options = await loadFormOptions(service);
       const formData = prepareServiceFormData(service, options);
       return res.status(statusCode).render("admin/_form", {
         pageTitle: service ? `Izmena - ${service.name}` : "Izmena usluge",

@@ -57,7 +57,7 @@ describe("api-token.service - createApiToken", () => {
   it("requires a name and at least one valid scope", async (t) => {
     stubCreate(t);
     await assert.rejects(service.createApiToken({ name: " ", userId: "u1", scopes: ["blog"], days: 7, actor: {} }), /Naziv/);
-    await assert.rejects(service.createApiToken({ name: "x", userId: "u1", scopes: ["site"], days: 7, actor: {} }), /oblast/);
+    await assert.rejects(service.createApiToken({ name: "x", userId: "u1", scopes: ["bogus"], days: 7, actor: {} }), /oblast/);
   });
 
   it("refuses an admin account and inactive accounts", async (t) => {
@@ -119,6 +119,24 @@ describe("api-token.service - authenticateApiToken", () => {
     assert.ok((await service.authenticateApiToken(raw)).permissions.includes("manage_blog"));
     stub(t, { user: { ...activeUser, role: { ...activeUser.role, permissions: ["access_admin_panel"] } } });
     assert.deepEqual((await service.authenticateApiToken(raw)).permissions, ["access_admin_panel"]);
+  });
+});
+
+describe("api-token.service - site scope and scope updates", () => {
+  it("the site scope unlocks only manage_site_content", () => {
+    assert.deepEqual(effectivePermissions(["access_admin_panel", "manage_site_content", "manage_blog"], ["site"]).sort(), ["access_admin_panel", "manage_site_content"]);
+  });
+
+  it("updates scopes of an active token only", async (t) => {
+    t.mock.method(auditLogService, "recordAuditLog", async () => {});
+    const future = new Date(Date.now() + 86400000);
+    t.mock.method(apiTokenRepo, "findTokenById", async () => ({ _id: "t1", scopes: ["blog"], revokedAt: null, expiresAt: future }));
+    const upd = t.mock.method(apiTokenRepo, "updateScopes", async (id, scopes) => ({ _id: id, scopes }));
+    await service.updateApiTokenScopes("t1", ["blog", "site", "bogus"], { id: "a1" });
+    assert.deepEqual(upd.mock.calls[0].arguments[1], ["blog", "site"]);
+    await assert.rejects(service.updateApiTokenScopes("t1", [], { id: "a1" }), /oblast/);
+    t.mock.method(apiTokenRepo, "findTokenById", async () => ({ _id: "t1", scopes: ["blog"], revokedAt: new Date(), expiresAt: future }));
+    await assert.rejects(service.updateApiTokenScopes("t1", ["blog"], { id: "a1" }));
   });
 });
 

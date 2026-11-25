@@ -14,9 +14,10 @@ export const TOKEN_PREFIX = "elk_";
 // Koje dozvole role token uopšte može da iskoristi, po oblasti. Presek sa rolom: ako rola nema
 // dozvolu, oblast ne pomaže; ako oblast nije izabrana, dozvola iz role se ne koristi.
 export const SCOPE_PERMISSIONS = {
-  blog: ["manage_blog"],
+  blog: ["manage_blog", "manage_taxonomy"],
   catalog: ["manage_services", "manage_packages", "manage_products", "manage_resources", "manage_taxonomy"],
   materials: ["manage_marketing"],
+  site: ["manage_site_content"],
 };
 
 // Token nikad ne sme da nosi nalog sa ovim rolama, bez obzira na izbor oblasti.
@@ -115,6 +116,22 @@ export async function listAssistantAccounts() {
   return users.map((u) => ({ id: u._id.toString(), label: `${[u.firstName, u.lastName].filter(Boolean).join(" ") || "Asistent"} (${u.email})` }));
 }
 
+/** Menja oblasti AKTIVNOG tokena (tajna ostaje ista). Dozvole role i dalje ograničavaju presek. */
+export async function updateApiTokenScopes(tokenId, scopes, actor) {
+  const clean = [...new Set(Array.isArray(scopes) ? scopes : [])].filter((s) => TOKEN_SCOPES.includes(s));
+  if (clean.length === 0) badRequest("Izaberite bar jednu oblast.");
+  const existing = await apiTokenRepo.findTokenById(tokenId);
+  if (!existing || existing.revokedAt || new Date(existing.expiresAt).getTime() <= Date.now()) notFound("Aktivan token");
+  const updated = await apiTokenRepo.updateScopes(tokenId, clean);
+  await auditLogService.recordAuditLog({
+    actor,
+    action: "API_TOKEN_UPDATED",
+    entity: { type: "ApiToken", id: tokenId },
+    changes: { scopes: { old: existing.scopes, new: clean } },
+  });
+  return updated;
+}
+
 export async function revokeApiToken(tokenId, actor) {
   const revoked = await apiTokenRepo.revokeToken(tokenId, actor?.id);
   if (!revoked) notFound("Aktivan token");
@@ -179,6 +196,6 @@ export async function authenticateApiToken(rawToken, { ip } = {}) {
 }
 
 export default {
-  createApiToken, listApiTokens, listAssistantAccounts, revokeApiToken, setApiAccessPaused, getApiAccessState,
+  createApiToken, listApiTokens, listAssistantAccounts, updateApiTokenScopes, revokeApiToken, setApiAccessPaused, getApiAccessState,
   authenticateApiToken, effectivePermissions, looksLikeApiToken, isPaused, invalidatePauseCache,
 };

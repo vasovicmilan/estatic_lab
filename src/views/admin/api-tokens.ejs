@@ -76,7 +76,17 @@
             <tr>
               <td><%= t.name %><div class="small text-muted font-monospace"><%= t.prefix %>…</div></td>
               <td class="small"><%= t.userEmail %></td>
-              <td class="small"><%= (t.scopes || []).join(", ") %></td>
+              <td class="small">
+                <% if (t.status === "active") { %>
+                  <form action="/admin/api-tokeni/<%= t.id %>/oblasti" method="POST">
+                    <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
+                    <% data.scopes.forEach(function(s) { %>
+                      <div class="form-check"><input class="form-check-input" type="checkbox" name="scopes" value="<%= s.value %>" id="t<%= t.id %>-<%= s.value %>" <%= (t.scopes || []).includes(s.value) ? "checked" : "" %>><label class="form-check-label" for="t<%= t.id %>-<%= s.value %>"><%= s.value %></label></div>
+                    <% }) %>
+                    <button type="submit" class="btn btn-sm btn-outline-secondary mt-1">Sačuvaj oblasti</button>
+                  </form>
+                <% } else { %><%= (t.scopes || []).join(", ") %><% } %>
+              </td>
               <td class="small"><%= new Date(t.expiresAt).toLocaleDateString("sr-RS") %></td>
               <td class="small"><%= t.lastUsedAt ? new Date(t.lastUsedAt).toLocaleString("sr-RS") : "nikad" %><% if (t.lastUsedIp) { %><div class="text-muted"><%= t.lastUsedIp %></div><% } %></td>
               <td>

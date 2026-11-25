@@ -65,10 +65,22 @@ export async function getCategoryAndDescendantIds(categoryId, domain) {
   return categoryRepo.findCategoryAndDescendantIds(categoryId, domain);
 }
 
-export async function getCategoriesForSelect(domain) {
+// onlyActive: nudi samo aktivne kategorije. keepIds: neaktivne koje su vec dodeljene stavci koja se menja
+// ostaju u listi, da ih cuvanje forme ne bi tiho skinulo. Aktivna kategorija ciji je roditelj neaktivan
+// postaje korenska stavka u listi, da ne nestane iz hijerarhije.
+export async function getCategoriesForSelect(domain, { onlyActive = false, keepIds = [] } = {}) {
   ensureValidDomain(domain);
-  const categories = await categoryRepo.findAllCategoriesByDomain(domain, { onlyActive: false });
-  return mapCategoriesForSelectWithHierarchy(categories);
+  const all = await categoryRepo.findAllCategoriesByDomain(domain, { onlyActive: false });
+  if (!onlyActive) return mapCategoriesForSelectWithHierarchy(all);
+
+  const keep = new Set((keepIds || []).map(String));
+  const shown = all.filter((c) => c.meta?.isActive === true || keep.has(c._id.toString()));
+  const shownIds = new Set(shown.map((c) => c._id.toString()));
+  const rehomed = shown.map((c) => {
+    const parentId = c.parent ? (c.parent._id || c.parent).toString() : null;
+    return parentId && !shownIds.has(parentId) ? { ...c, parent: null } : c;
+  });
+  return mapCategoriesForSelectWithHierarchy(rehomed);
 }
 
 // bulk name lookup by id - e.g. coupon.service.js building a specific "this
