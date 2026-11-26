@@ -327,7 +327,7 @@ Changes take effect immediately. The system keeps the current values in memory (
 
 **Links in emails follow the door.** A verification, password-reset, order-confirmation or unsubscribe link in an email opens the same face the person used: someone who registered on the website gets a website link, someone who registered through the separate frontend gets a link to that frontend. Staff alerts work the same way. One central place builds every such link, so a new frontend only needs its own set of pages, not changes across the codebase.
 
-**Why this approach.** One set of business rules and one permission model means a rule fixed once is fixed everywhere, and a frontend team can build against a single predictable contract. The deliberate trade-off: permissions are copied into the token at sign-in, so a change made by an admin reaches an already-signed-in API user only after the token expires (up to 24 hours); for urgent revocation the account itself is deactivated, which is checked on every request. Versioning by folder (`v1`) means a future `v2` can change the contract without touching what existing clients rely on. For the route list and details see `docs/en/15-api-v1-reference.md`.
+**Why this approach.** One set of business rules and one permission model means a rule fixed once is fixed everywhere, and a frontend team can build against a single predictable contract. The token carries the permissions from sign-in, but the server replaces them with the current ones from the role on every request, so a change made by an admin applies immediately; suspending the account or changing a user's role invalidates tokens already issued. Permanent deletion is reserved for the `admin` role on both the website and the API. Versioning by folder (`v1`) means a future `v2` can change the contract without touching what existing clients rely on. For the route list and details see `docs/en/15-api-v1-reference.md`.
 
 ---
 
@@ -336,8 +336,9 @@ Changes take effect immediately. The system keeps the current values in memory (
 **Business challenge.** A production platform handling personal data and payments needs to be resilient against common attacks without relying solely on "security through obscurity."
 
 **How it was solved** (a brief overview, not business logic in the strict sense, but directly protects the business):
-- **UFW firewall** restricted to Cloudflare's IP ranges: the server isn't directly reachable outside of Cloudflare.
-- **Cloudflare Authenticated Origin Pulls (mTLS)**: the server only accepts traffic that genuinely came through Cloudflare, not any request that merely claims to have.
+- **UFW firewall**: web ports (80/443) are open only to Cloudflare's IP ranges, so the website cannot be reached around Cloudflare.
+- **Authenticated Origin Pulls (mTLS)**: nginx requires Cloudflare's client certificate. With Cloudflare's shared certificate this proves that a request comes from the Cloudflare network; proving it comes from this particular account needs the account's own certificate.
+- **Rate limiting**: everything that is not a real static file is counted per visitor, with stricter limits on sign-in and public forms (see `docs/en/22-attack-resilience.md`).
 - **A CSRF sync layer** on every state-changing form.
 - **Telegram security alerts** with throttling against spam (see section 12).
 - **The audit log** as described above: deters and uncovers misuse from the inside, not just attacks from the outside.
@@ -358,9 +359,9 @@ Changes take effect immediately. The system keeps the current values in memory (
 
 **Why all three, not just one.** A unit test proves a commission calculation produces the right number. An integration test proves an HTTP request with bad data returns the right status code (not a 500 where a 400 belongs, or the reverse, a silently swallowed error). An E2E test proves a customer *can actually* complete a purchase start to finish through the real form, including things only a browser does (hidden fields, JS widgets, session cookies).
 
-**Current state (latest run, fully green):**
-- **3,228 of 3,228** unit and integration tests pass (1,112 suites), with the most financially sensitive services (`commission.service.js`, `payout-request.service.js`, `resource.service.js`) at 100% line and function coverage. Line coverage overall was last measured at about 82% (`npm run test:coverage` gives the exact current figure).
-- **25 of 25** E2E tests pass, one or more per key business flow start to finish: booking with commission, a coupon with a distinct discount for items, cancellation with stock restored, a full payout cycle, and (added after the section 9 bug was found) an employee's commission on a package, both with and without a partner referral code, and so on.
+**Current state:**
+- **3,604 of 3,605** unit and integration tests pass (1,196 suites, state as of 2026-11-26); the only failure on a fresh clone is the test for `favicon.ico`, which is not in git. The most financially sensitive services (`commission.service.js`, `payout-request.service.js`, `resource.service.js`) were at 100% line and function coverage at the last measurement; overall line coverage was then about 82% (`npm run test:coverage` gives the exact current figure).
+- **There are 25 E2E tests** (last recorded run: 25 of 25), one or more per key business flow start to finish: booking with commission, a coupon with a distinct discount for items, cancellation with stock restored, a full payout cycle, and (added after the section 9 bug was found) an employee's commission on a package, both with and without a partner referral code, and so on.
 
 ---
 
@@ -392,7 +393,7 @@ Full detail: `docs/en/18-marketing-seo-blog-newsletter.md`.
 
 **Why this approach.** Recorded by the system, a tutorial is rebuilt with one command when a screen changes. Served through role-checked routes instead of a static folder, an administrator tutorial cannot leak to someone who merely guesses the address.
 
-**How it was solved.** `npm run tutorials:all` (first full run: 1 h 38 min for 41 recordings), `e2e-tutorials/audience.json` for who sees what, a manifest and a service that checks access for every file, `Range` support for seeking, and `private` caching for role-only videos. Not yet done: phone versions for employees and administrators, and the remaining administrator scenarios.
+**How it was solved.** `npm run tutorials:all` (first full run: 1 h 38 min for 41 recordings), `e2e-tutorials/audience.json` for who sees what, a manifest and a service that checks access for every file, `Range` support for seeking, and `private` caching for role-only videos.
 
 Full detail: `docs/en/19-video-tutorials.md` and `e2e-tutorials/README.md`.
 

@@ -241,9 +241,15 @@ export async function findUserCartQuantities(userId, { session } = {}) {
 // Same reasoning as findUserCartQuantities above - runs on every Bearer-token
 // request (auth.middleware.js's apiAuthMiddleware/optionalApiAuth), so it
 // projects only what that revocation check needs (see user.model.js's
-// tokenValidAfter) instead of the full document + role populate findUserById does.
+// tokenValidAfter) instead of the full document findUserById returns. The role is
+// populated with just its name + permissions, so a permission change takes effect for
+// people who are already signed in (see auth.middleware.js's currentRoleFields).
 export async function findAuthStateById(userId, { session } = {}) {
-  return User.findById(userId).select("status tokenValidAfter").session(session || null).lean();
+  return User.findById(userId)
+    .select("status tokenValidAfter role")
+    .populate({ path: "role", select: "name permissions" })
+    .session(session || null)
+    .lean();
 }
 
 export default {

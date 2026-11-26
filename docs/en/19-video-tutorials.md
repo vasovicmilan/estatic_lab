@@ -19,7 +19,7 @@ Who a tutorial is for is set in `e2e-tutorials/audience.json` (scenario name →
 A static folder (`src/public`) hands every file to anyone who guesses the address, so an administrator tutorial would be public. So the videos live **outside `src/public`**, in `storage/tutorials` (or wherever `TUTORIALS_DIR` in `.env` points), and are delivered only through routes that check access:
 
 - `GET /uputstva` is the list page, filtered per visitor.
-- `GET /uputstva/video/:id/:device/:lang.mp4` is the video itself, and `GET /uputstva/poster/:id/:device.jpg` the thumbnail. The extensions are deliberate: rate limiters (the app's and Cloudflare's) recognise static files by extension, so posters and video do not count against the request limit. Access is still checked per file.
+- `GET /uputstva/video/:id/:device/:lang.mp4` is the video itself and `GET /uputstva/poster/:id/:device.jpg` the thumbnail. These are dynamic routes (access is checked per file). A page has dozens of posters and a video is fetched in many `Range` requests, so the app's limiter gives **exactly these two URL shapes** a separate, higher quota (`RATE_LIMIT_MEDIA_MAX`, default 600 per minute) instead of the general one. If a Cloudflare rule exempts these addresses by extension, tie the exemption to the path as well (`/uputstva/video/`, `/uputstva/poster/`), so an extension on an arbitrary address cannot bypass the rule.
 
 Rules in `src/services/tutorial-video.service.js`:
 
@@ -45,7 +45,7 @@ The detailed description of each step, of writing scenarios and narration is in 
 
 ## What is covered
 
-The first full run published 24 tutorials (3 public, 9 for users, 5 for partners, 3 for employees, 4 for administrators). 18 more scenarios were written afterwards (each for computer and phone), so there are now **43 stories, 86 recordings**: employee and administrator tutorials exist for the phone too. Every administrator menu item has at least one tutorial. New scenarios are recorded with `npm run tutorials:all -- --scenario <folder>` (repeatable) and each must be listed in `e2e-tutorials/audience.json`. Catalog search was not recorded because the site has no search.
+The first full run published 24 tutorials (3 public, 9 for users, 5 for partners, 3 for employees, 4 for administrators). 18 more scenarios were written afterwards (each for computer and phone), so there are now **43 stories, 86 recordings**: employee and administrator tutorials exist for the phone too. Every administrator menu item has at least one tutorial. New scenarios are recorded with `npm run tutorials:all -- --scenario <folder>` (repeatable) and each must be listed in `e2e-tutorials/audience.json`. Catalog search was not recorded because the site has no search. More scenarios have been added since: the repository now has 96 scenario folders (48 stories, each for computer and phone).
 
 ## Setting it up on the server
 
@@ -57,7 +57,6 @@ The `storage/` folder is in `.gitignore`: the videos are generated files and do 
 
 ## Known limitations
 
-- Mobile versions for employees and administrators are missing (see above).
 - The videos are made locally and transferred by hand; there is no automatic upload to the server.
 - Subtitles are burned into the picture, so the viewer cannot turn them off, and the language is chosen by choosing another file.
 - The recordings show the application with test data, not production data, and the names and prices in them are made up.

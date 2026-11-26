@@ -327,7 +327,7 @@ Izmene su odmah aktivne. Sistem drži trenutne vrednosti u memoriji (`runtime-se
 
 **Linkovi u mejlovima prate ulaz.** Link za verifikaciju, reset lozinke, potvrdu porudžbine ili odjavu u mejlu otvara istu stranu koju je osoba koristila: ko se registrovao na sajtu dobija link ka sajtu, ko se registrovao kroz odvojeni frontend dobija link ka tom frontendu. Alarmi za osoblje rade isto. Jedno centralno mesto pravi sve takve linkove, pa novom frontendu trebaju samo sopstvene stranice, a ne izmene po celom kodu.
 
-**Zašto ovaj pristup.** Jedan skup poslovnih pravila i jedan model dozvola znači da ispravka pravila važi svuda, a frontend tim gradi prema jednom predvidljivom ugovoru. Namerni kompromis: dozvole se kopiraju u token pri prijavi, pa izmena koju admin napravi stiže do već prijavljenog API korisnika tek kad token istekne (do 24 sata); za hitno oduzimanje pristupa deaktivira se sam nalog, što se proverava pri svakom zahtevu. Verzionisanje po folderu (`v1`) omogućava da budući `v2` promeni ugovor bez diranja onoga na šta se postojeći klijenti oslanjaju. Za spisak ruta i detalje videti `docs/sr/15-api-v1-referenca.md`.
+**Zašto ovaj pristup.** Jedan skup poslovnih pravila i jedan model dozvola znači da ispravka pravila važi svuda, a frontend tim gradi prema jednom predvidljivom ugovoru. Token nosi dozvole iz trenutka prijave, ali ih server na svakom zahtevu zamenjuje aktuelnim iz role, pa izmena koju napravi admin važi odmah; suspendovanje naloga ili promena role korisnika poništava već izdate tokene. Trajno brisanje sme samo rola `admin`, i na sajtu i preko API-ja. Verzionisanje po folderu (`v1`) znači da buduća `v2` može da promeni ugovor bez diranja onoga na šta se postojeći klijenti oslanjaju. Spisak ruta i detalji: `docs/sr/15-api-v1-referenca.md`.
 
 ---
 
@@ -336,8 +336,9 @@ Izmene su odmah aktivne. Sistem drži trenutne vrednosti u memoriji (`runtime-se
 **Poslovni izazov.** Produkciona platforma koja obrađuje lične podatke i plaćanja treba da bude otporna na uobičajene napade bez oslanjanja isključivo na "security through obscurity".
 
 **Kako je rešeno** (kratak pregled, ne poslovna logika u strogom smislu, ali direktno štiti poslovanje):
-- **UFW firewall** ograničen na Cloudflare IP opsege: server nije direktno dostupan van Cloudflare-a.
-- **Cloudflare Authenticated Origin Pulls (mTLS)**: server prihvata samo saobraćaj koji je zaista prošao kroz Cloudflare, ne bilo koji zahtev koji tvrdi da jeste.
+- **UFW firewall**: web portovi (80/443) otvoreni su samo za Cloudflare IP opsege, pa se sajtu ne može prići mimo Cloudflare-a.
+- **Authenticated Origin Pulls (mTLS)**: nginx zahteva Cloudflare klijentski sertifikat. Sa Cloudflare-ovim zajedničkim sertifikatom to dokazuje da zahtev dolazi sa Cloudflare mreže; dokaz da dolazi baš sa ovog naloga traži sopstveni sertifikat.
+- **Rate limiting**: sve što nije pravi statički fajl broji se po posetiocu, uz strože limite za prijavu i javne forme (videti `docs/sr/22-otpornost-na-napade.md`).
 - **CSRF sync sloj** na svim formama koje menjaju stanje.
 - **Telegram bezbednosni alarmi** sa throttling-om protiv spam-a (videti sekciju 12).
 - **Audit log** kao gore opisano: odvraća i otkriva zloupotrebu iznutra, ne samo napade spolja.
@@ -358,9 +359,9 @@ Izmene su odmah aktivne. Sistem drži trenutne vrednosti u memoriji (`runtime-se
 
 **Zašto sva tri, ne samo jedan.** Jedinični test dokazuje da obračun provizije daje tačan broj. Integracioni dokazuje da HTTP zahtev sa pogrešnim podacima vrati tačan status kod (a ne 500 gde treba 400, ili obrnuto, tiho progutana greška). E2E dokazuje da klijent *stvarno može* da završi kupovinu od početka do kraja kroz pravu formu, uključujući stvari koje samo pregledač radi (skrivena polja, JS vidžeti, sesijski kolačići).
 
-**Trenutno stanje (poslednje pokretanje, potpuno zeleno):**
-- **3228 od 3228** jediničnih i integracionih testova prolazi (1112 grupa), sa finansijski najosetljivijim servisima (`commission.service.js`, `payout-request.service.js`, `resource.service.js`) na 100% pokrivenosti linija i funkcija. Ukupna pokrivenost linija je poslednji put merena na oko 82% (`npm run test:coverage` daje tačan trenutni broj).
-- **25 od 25** E2E testa prolaze, po jedan ili više po ključnom poslovnom toku od početka do kraja: zakazivanje sa provizijom, kupon sa posebnim popustom za artikle, otkazivanje sa vraćanjem zaliha, kompletan ciklus isplate, i (dodato posle otkrivanja bag-a iz sekcije 9) provizija zaposlenog na paketu, sa i bez partnerskog referalnog koda, i tako dalje.
+**Trenutno stanje:**
+- **3604 od 3605** jediničnih i integracionih testova prolazi (1196 grupa, stanje od 26.11.2026); jedini pad na svežem klonu je test za `favicon.ico`, koji nije u git-u. Finansijski najosetljiviji servisi (`commission.service.js`, `payout-request.service.js`, `resource.service.js`) bili su na 100% pokrivenosti linija i funkcija pri poslednjem merenju; ukupna pokrivenost linija tada je bila oko 82% (`npm run test:coverage` daje tačan trenutni broj).
+- **E2E testova ima 25** (poslednji zabeleženi prolaz: 25 od 25), po jedan ili više po ključnom poslovnom toku od početka do kraja: zakazivanje sa provizijom, kupon sa posebnim popustom za artikle, otkazivanje sa vraćanjem zaliha, kompletan ciklus isplate, i (dodato posle otkrivanja bag-a iz sekcije 9) provizija zaposlenog na paketu, sa i bez partnerskog referalnog koda, i tako dalje.
 
 ---
 

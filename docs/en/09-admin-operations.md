@@ -2,6 +2,8 @@
 
 This is a summary of what an administrator can see and manage across the platform. Individual areas are covered in more depth in their own files; this one is the map.
 
+**Permanent deletion** anywhere in the admin area is reserved for the `admin` role, on the web panel and through the API; other roles deactivate or archive (see `01-users-roles-permissions.md`).
+
 ## Catalog management
 
 Full control over what's offered and sold: services and their variants, multi-session packages and what they bundle, physical products and their variations, and the categories and tags used to organize all of it. The content side of the site — blog posts and general marketing content — is managed the same way.

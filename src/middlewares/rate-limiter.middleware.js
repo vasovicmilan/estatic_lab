@@ -1,6 +1,5 @@
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { timingSafeEqual } from "crypto";
-import path from "path";
 import { AppError } from "../utils/error.util.js";
 import { logWarn } from "../utils/logger.util.js";
 
@@ -13,22 +12,24 @@ function envInt(name, fallback) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-const STATIC_EXTENSIONS = new Set([
-  ".js", ".mjs", ".css", ".png", ".jpg", ".jpeg", ".jfif", ".webp", ".avif", ".svg", ".gif", ".bmp", ".ico",
-  ".woff", ".woff2", ".ttf", ".otf", ".eot", ".map", ".mp4", ".webm", ".mov", ".mp3", ".pdf", ".json", ".txt", ".xml",
-]);
-// Static/uploaded resources (images, videos, css/js, fonts) never count toward any limit -
-// express.static already answers most of them before the limiters run (setupStatic in app.js),
-// this is the safety net for the ones that get here anyway (nginx-less setups, uploads path,
-// files without a listed extension).
-const STATIC_PREFIXES = ["/images/", "/uploads/", "/videos/", "/css/", "/js/", "/fonts/", "/bootstrap/", "/assets/", "/uputstva/video/", "/uputstva/poster/"];
+// Pravi statički fajlovi NIKAD ne stižu do limitera: express.static (setupStatic u app.js) je montiran
+// pre njih i sam odgovara. Zato ovde namerno NEMA izuzetka po ekstenziji ili po prefiksu putanje -
+// takav izuzetak je puštao svaki NEPOSTOJEĆI "fajl" (/blog/x.txt, /api/v1/.../x.json) da bez ikakvog
+// limita stigne do ruta, sesije i baze.
+//
+// Jedini izuzetak od običnog limita su video uputstva i posteri: to su dinamičke rute (pristup se proverava
+// po fajlu), a jedna strana ima desetine postera i video koji se vuče u mnogo Range zahteva. Oni nisu
+// neograničeni, već imaju SVOJU, višu kvotu. Obrazac mora da odgovara samo tim dvema rutama
+// (routes/web/tutorial.routes.js), a ne bilo čemu ispod /uputstva/.
+const TUTORIAL_MEDIA_PATH = /^\/uputstva\/(?:video\/[^/]+\/[^/]+\/[^/]+\.mp4|poster\/[^/]+\/[^/]+\.jpg)\/?$/i;
 
-function skipStatic(req) {
-  if (req.method !== "GET" && req.method !== "HEAD") return false;
-  const p = (req.path || "").toLowerCase();
-  if (STATIC_PREFIXES.some((prefix) => p.startsWith(prefix))) return true;
-  return STATIC_EXTENSIONS.has(path.extname(p));
+export function isTutorialMedia(req) {
+  return (req.method === "GET" || req.method === "HEAD") && TUTORIAL_MEDIA_PATH.test(req.path || "");
 }
+
+// /api/v1 ima svoj apiLimiter (routes/index.routes.js). Samo TAJ prefiks sme da se preskoči u globalnom
+// limiteru: ostalo pod /api/ nema nijedan drugi limit. Bez razlike u velikim/malim slovima, kao Express.
+const API_V1_PATH = /^\/api\/v1(?:[/?]|$)/i;
 
 // Angular SSR renders pages on ITS server and calls this API from there, so without help every
 // visitor would appear as the SSR server's single IP and share one bucket. When SSR_SHARED_SECRET
@@ -73,15 +74,18 @@ export function globalLimitExceeded(req, res) {
   res.status(429).set("Cache-Control", "no-store").type("text/plain; charset=utf-8").send("Previše zahteva - pokušajte ponovo kasnije.");
 }
 
+const globalMax = envInt("RATE_LIMIT_GLOBAL_MAX", 100);
+const mediaMax = envInt("RATE_LIMIT_MEDIA_MAX", 600);
+
 export const globalLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: envInt("RATE_LIMIT_GLOBAL_MAX", 100),
+  max: (req) => (isTutorialMedia(req) ? mediaMax : globalMax),
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: clientKey,
-  // /api/v1 has its own apiLimiter (routes/index.routes.js) - counting it here too meant every
-  // API call spent from TWO buckets, so the effective limit was the lower of the two.
-  skip: (req) => skipInTest() || skipStatic(req) || (req.originalUrl || "").startsWith("/api/"),
+  keyGenerator: (req) => (isTutorialMedia(req) ? `media:${clientKey(req)}` : clientKey(req)),
+  // /api/v1 is not counted here too - that made every API call spend from TWO buckets, so the
+  // effective limit was the lower of the two.
+  skip: (req) => skipInTest() || API_V1_PATH.test(req.originalUrl || ""),
   handler: globalLimitExceeded,
 });
 
@@ -203,7 +207,7 @@ export const apiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: clientKey,
-  skip: (req) => skipInTest() || skipStatic(req),
+  skip: skipInTest,
   handler: handleRateLimitExceeded("API rate limit exceeded.", 429),
 });
 
@@ -222,7 +226,7 @@ export const adminLimiter = rateLimit({
   max: envInt("RATE_LIMIT_ADMIN_MAX", 300),
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => skipInTest() || skipStatic(req),
+  skip: skipInTest,
   handler: handleRateLimitExceeded("Previše zahteva ka admin panelu.", 429),
 });
 

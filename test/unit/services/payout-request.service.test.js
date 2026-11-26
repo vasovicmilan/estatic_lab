@@ -305,7 +305,19 @@ describe("payout-request.service", () => {
       t.mock.method(payoutRepo, "findPayoutRequestById", async () => buildPayoutRequest({ status: "paid" }));
 
       await assert.rejects(() => payoutService.rejectPayoutRequest(id().toString()), (err) => err.statusCode === 409);
-      assert.deepEqual(updateMock.mock.calls[0].arguments[1], { $ne: "paid" });
+      assert.deepEqual(updateMock.mock.calls[0].arguments[1], { $in: ["requested", "approved"] });
+    });
+
+    it("refuses to reject the same request twice - no second event, no overwritten note", async (t) => {
+      t.mock.method(payoutRepo, "updatePayoutRequestStatusAtomic", async () => null);
+      t.mock.method(payoutRepo, "findPayoutRequestById", async () => buildPayoutRequest({ status: "rejected" }));
+      const emitMock = t.mock.method(eventEmitter, "emit", () => {});
+
+      await assert.rejects(
+        () => payoutService.rejectPayoutRequest(id().toString(), "druga beleska"),
+        (err) => err.statusCode === 409 && /već obrađen/.test(err.message)
+      );
+      assert.equal(emitMock.mock.callCount(), 0);
     });
 
     it("allows rejecting either 'requested' or 'approved' - not just the initial state", async (t) => {

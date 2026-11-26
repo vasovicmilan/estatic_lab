@@ -178,12 +178,16 @@ export async function findAppointmentsByEmployee(employeeId, options = {}) {
   });
 }
 
-export async function updateAppointmentById(id, updateData, { session } = {}) {
-  return Appointment.findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true, session }).lean();
+// `expectedStatus` makes the write conditional: it only happens if the appointment is still in
+// the status the caller read (and decided on). Otherwise nothing is written and null comes back.
+export async function updateAppointmentById(id, updateData, { session, expectedStatus } = {}) {
+  const filter = expectedStatus ? { _id: id, status: expectedStatus } : { _id: id };
+  return Appointment.findOneAndUpdate(filter, updateData, { returnDocument: "after", runValidators: true, session }).lean();
 }
 
-export async function deleteAppointmentById(id, { session } = {}) {
-  return Appointment.findByIdAndDelete(id, { session }).lean();
+export async function deleteAppointmentById(id, { session, expectedStatus } = {}) {
+  const filter = expectedStatus ? { _id: id, status: expectedStatus } : { _id: id };
+  return Appointment.findOneAndDelete(filter, { session }).lean();
 }
 
 export async function countAppointments(filters = {}, { session } = {}) {

@@ -34,6 +34,9 @@ Each set covers:
 | 17 | Backups |
 | 18 | Marketing: SEO, Blog, AI Optimization & Email Campaigns |
 | 19 | Video Tutorials (`/uputstva`) |
+| 20 | Prize Wheels, Downloadable Materials, Employee Card & EUR Prices |
+| 21 | Claude Assistant Access (API tokens) |
+| 22 | Resilience Against Attacks & Rate Limiting |
 
 For a higher-level walkthrough of *why* each part of the system is built the way it is (business challenge, approach, solution, across every domain), see [`BUSINESS-LOGIC.md`](BUSINESS-LOGIC.md) (English) or [`POSLOVNA-LOGIKA.md`](POSLOVNA-LOGIKA.md) (Serbian).
 
@@ -49,7 +52,7 @@ CSS and icons are not served straight from `node_modules` - `npm run build:css` 
 
 ## Testing
 
-Three layers: unit (mocked dependencies), integration (real HTTP requests against an in-memory MongoDB), and E2E (Playwright, real browser against a real running server). Latest run: **3,228/3,228** unit and integration tests (1,112 suites; line coverage about 82% at last measurement, `npm run test:coverage` gives the exact figure), **25/25** E2E tests. The video tutorials are a separate Playwright suite (see `docs/en/19-video-tutorials.md`). See `docs/en/12-testing.md` / `docs/sr/12-testiranje.md`.
+Three layers: unit (mocked dependencies), integration (real HTTP requests against an in-memory MongoDB), and E2E (Playwright, real browser against a real running server). The current test counts are kept in one place: [`docs/en/12-testing.md`](docs/en/12-testing.md) / [`docs/sr/12-testiranje.md`](docs/sr/12-testiranje.md). The video tutorials are a separate Playwright suite (see `docs/en/19-video-tutorials.md`).
 
 ```bash
 npm test              # unit + integration
@@ -58,6 +61,6 @@ npx playwright test   # E2E
 
 ## Deployment
 
-PM2 (cluster mode) + nginx + Cloudflare, one deployment per client (hosted white-label, not multi-tenant).
+Cloudflare + nginx + PM2 (**one instance, fork mode**) + MongoDB (replica set, required for transactions), one deployment per client (hosted white-label, not multi-tenant).
 
 For onboarding a **new client** (environment setup, the one mandatory seed step, first-admin bootstrap, and what's admin-panel-configurable vs. what still needs a manual code change per client), see [`DEPLOYMENT.md`](DEPLOYMENT.md) and [`.env.example`](.env.example).

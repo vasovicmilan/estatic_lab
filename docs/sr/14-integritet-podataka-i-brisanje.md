@@ -15,6 +15,12 @@ između entiteta pripada jednom od četiri nivoa strogosti, u zavisnosti od toga
 
 ---
 
+## Ko sme da briše
+
+Pravila ispod govore **šta se dešava** pri brisanju. **Ko sme** da pokrene trajno brisanje u admin delu je zasebna provera: samo rola `admin`, i na web panelu i na API-ju (`requireAdminForDelete`), bez obzira na dozvolu za oblast. Korisnikove sopstvene radnje van admin dela (npr. brisanje svoje adrese) nisu time obuhvaćene.
+
+---
+
 ## Četiri nivoa
 
 ### Nivo 0 - Strukturalna hijerarhija: tvrda blokada, bez izuzetka

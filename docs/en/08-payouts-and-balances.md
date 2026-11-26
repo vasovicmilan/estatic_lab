@@ -24,6 +24,8 @@ An administrator reviewing a payout request can:
 - **Mark it paid**, once the money has actually been sent.
 - **Reject** it, with an explanatory note the earner can see.
 
+Only a request that is **pending or approved** can be rejected. A paid request cannot be rejected, and an already rejected one cannot be rejected again (409 error), so the earner gets no second email and the original reason is kept.
+
 Separately, an administrator can also **record a payout directly** — for situations where money changed hands outside the normal request flow (a cash payment made in person, for instance) and simply needs to be reflected in the system afterward, without the earner needing to have submitted a request for it first.
 
 Whichever path is used, the earner is notified by email the moment their payout's status changes, including the reason if a request is declined — so they're never left wondering what happened to a request they submitted.

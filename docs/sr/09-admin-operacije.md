@@ -2,6 +2,8 @@
 
 Ovo je pregled onoga što administrator može da vidi i njime upravlja na platformi. Pojedinačne oblasti su detaljnije pokrivene u sopstvenim fajlovima; ovo je mapa.
 
+**Trajno brisanje** bilo čega u admin delu dozvoljeno je samo roli `admin`, na web panelu i preko API-ja; ostale role deaktiviraju ili arhiviraju (videti `01-korisnici-role-dozvole.md`).
+
 ## Upravljanje katalogom
 
 Puna kontrola nad onim što se nudi i prodaje: usluge i njihove varijante, paketi sa više seansi i šta objedinjuju, fizički proizvodi i njihove varijacije, i kategorije i tagovi korišćeni da se sve to organizuje. Sadržajna strana sajta — blog objave i opšti marketinški sadržaj — se upravlja na isti način.

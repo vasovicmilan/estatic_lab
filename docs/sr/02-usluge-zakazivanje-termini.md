@@ -116,3 +116,9 @@ Podsetnik se šalje samo za termine sa statusom `confirmed` — termini koji če
 Ako se u budućnosti želi treći prozor (npr. 1 sat pre termina), dovoljno je dodati novi unos u `reminder.config.js` — i cron raspored (`scheduler.js`) i sama logika slanja (`appointment-reminder-jobs.js`) su vođeni tom konfiguracijom, bez potrebe za dodatnim izmenama koda.
 
 **Unazad.** Admin i zaposleni mogu ručno da kreiraju termin i u prošlosti (unos onoga što je već odrađeno van aplikacije) po katalogskoj ceni, iz paketa ili sa ručnom cenom; zabrana prošlosti i minimalna najava važe samo za samostalno zakazivanje korisnika.
+
+## Istovremene izmene istog termina
+
+Promena statusa se upisuje samo ako je termin još u onom statusu koji je pročitan. Ako ga je u međuvremenu promenio ili obrisao neko drugi (dva klika, admin i zaposleni u isto vreme), druga akcija dobija grešku 409 „Termin je u međuvremenu izmenjen - osvežite stranicu i pokušajte ponovo“ i ništa ne menja.
+
+Kada promena dira seansu iz paketa ili kupon, **status termina, seansa i kupon se upisuju u istoj transakciji**: ili prođe sve, ili ništa. Isto važi za brisanje termina. Zato jedan termin ne može dva puta da potroši ili vrati seansu. Ako ponovno otvaranje sudari sa već zauzetim terminom, vraća se jasna poruka i stanje ostaje nepromenjeno.

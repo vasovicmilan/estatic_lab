@@ -158,7 +158,8 @@ export async function markPayoutRequestPaid(requestId, adminNote = "") {
 }
 
 export async function rejectPayoutRequest(requestId, adminNote = "") {
-  const updated = await payoutRepo.updatePayoutRequestStatusAtomic(requestId, { $ne: "paid" }, {
+  // samo otvoren zahtev: ponovljeno odbijanje bi prepisalo datum i belešku i ponovo poslalo obaveštenje
+  const updated = await payoutRepo.updatePayoutRequestStatusAtomic(requestId, { $in: ["requested", "approved"] }, {
     status: "rejected",
     rejectedAt: new Date(),
     adminNote,
@@ -167,7 +168,8 @@ export async function rejectPayoutRequest(requestId, adminNote = "") {
   if (!updated) {
     const existing = await payoutRepo.findPayoutRequestById(requestId);
     if (!existing) notFound("Zahtev za isplatu");
-    conflict("Isplaćen zahtev se ne može odbiti");
+    if (existing.status === "paid") conflict("Isplaćen zahtev se ne može odbiti");
+    conflict(`Zahtev je već obrađen (status: "${existing.status}")`);
   }
 
   logInfo("Payout request rejected", { requestId });

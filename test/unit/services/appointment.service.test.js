@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
+import eventEmitter from "../../../src/events/event.emitter.js";
 import appointmentRepo from "../../../src/repositories/appointment.repository.js";
 import userService from "../../../src/services/user.service.js";
 import serviceService from "../../../src/services/service.service.js";
@@ -1133,6 +1134,7 @@ describe("bookAppointment - package purchase payment", () => {
 
 describe("completeAppointment / cancelAppointment / rejectAppointment - package session lifecycle", () => {
   it("commits the reservation (reserved -> used) when completed", async (t) => {
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
     const purchaseId = id();
     const servicePackageId = id();
     const appointment = buildAppointment({
@@ -1154,6 +1156,7 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
   });
 
   it("releases the reservation when cancelled by the user", async (t) => {
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
     const purchaseId = id();
     const servicePackageId = id();
     const owner = buildUser();
@@ -1177,6 +1180,7 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
   });
 
   it("releases the reservation when rejected by the assigned employee", async (t) => {
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
     const purchaseId = id();
     const servicePackageId = id();
     const employeeUser = buildEmployee();
@@ -1204,6 +1208,7 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
   // cancelled/rejected are untouched and still release normally.
   describe("noShowAppointment - package session lifecycle (no-show forfeits the session, unlike a timely cancellation)", () => {
     it("commits (consumes) the session, the same as an actually-completed visit - it does NOT release it back to the pool", async (t) => {
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
       const purchaseId = id();
       const servicePackageId = id();
       const employeeUser = buildEmployee();
@@ -1227,6 +1232,7 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
     });
 
     it("still releases (forgives) the session for an ordinary, timely cancellation - only no_show forfeits", async (t) => {
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
       const purchaseId = id();
       const servicePackageId = id();
       const owner = buildUser();
@@ -1314,7 +1320,9 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
         (err) => err.statusCode === 400
       );
       assert.equal(reclaimMock.mock.calls.length, 1);
-      assert.equal(updateMock.mock.calls.length, 0, "status must not change when the coupon can't be re-claimed");
+      // the status is written first, in the SAME transaction, so the failure above rolls it back
+      // (the rollback itself is proven against a real database in appointment-transition.http.test.js)
+      assert.ok(updateMock.mock.calls[0].arguments[2].session);
     });
   });
 
@@ -1337,6 +1345,7 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
 
   describe("reopenAppointment - package session lifecycle", () => {
     it("re-reserves a session when reopening a rejected package-covered appointment", async (t) => {
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
       const purchaseId = id();
       const servicePackageId = id();
       const appointment = buildAppointment({
@@ -1360,6 +1369,7 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
     });
 
     it("re-reserves a session when reopening a cancelled package-covered appointment", async (t) => {
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
       const purchaseId = id();
       const servicePackageId = id();
       const appointment = buildAppointment({
@@ -1377,6 +1387,7 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
     });
 
     it("un-commits the session when reopening a no_show package-covered appointment (it was consumed, not released, on entry)", async (t) => {
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
       const purchaseId = id();
       const servicePackageId = id();
       const appointment = buildAppointment({
@@ -1398,6 +1409,7 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
     });
 
     it("aborts the reopen (appointment stays in its prior status) when no sessions are left to re-reserve", async (t) => {
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
       const purchaseId = id();
       const servicePackageId = id();
       const appointment = buildAppointment({
@@ -1414,13 +1426,14 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
       });
 
       await assert.rejects(() => appointmentService.reopenAppointment(appointment._id.toString(), id().toString(), "admin"));
-      // the appointment's own status update must never be reached if reserving the
-      // session failed - a "pending" appointment with nothing backing it is exactly
-      // the broken state this fix exists to prevent
-      assert.equal(updateMock.mock.calls.length, 0);
+      // a "pending" appointment with nothing backing it is exactly the broken state this
+      // must prevent: the status is written in the SAME transaction as the reservation, so
+      // the failure rolls it back (proven on a real database in appointment-transition.http.test.js)
+      assert.ok(updateMock.mock.calls[0].arguments[2].session);
     });
 
     it("aborts the reopen of a no_show appointment when there's nothing left to un-commit (e.g. already reopened by someone else)", async (t) => {
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
       const purchaseId = id();
       const servicePackageId = id();
       const appointment = buildAppointment({
@@ -1437,10 +1450,11 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
       });
 
       await assert.rejects(() => appointmentService.reopenAppointment(appointment._id.toString(), id().toString(), "admin"));
-      assert.equal(updateMock.mock.calls.length, 0);
+      assert.ok(updateMock.mock.calls[0].arguments[2].session);
     });
 
     it("does not touch package sessions at all for an a-la-carte (non-package) appointment", async (t) => {
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
       const appointment = buildAppointment({ status: "rejected", packagePurchase: null });
       t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
       t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "pending" }));
@@ -1452,6 +1466,7 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
     });
 
     it("only admin is allowed to reopen - employee/user attempts are rejected by the state machine", async (t) => {
+      t.mock.method(mongoose, "startSession", async () => fakeSession());
       const employeeUser = buildEmployee();
       // employee is the appointment's own assigned employee, so canAccessAppointment
       // passes - the rejection this test verifies must come from
@@ -1468,6 +1483,7 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
   });
 
   it("does not touch package-purchase lifecycle for an appointment with no packagePurchase", async (t) => {
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
     const appointment = buildAppointment({ status: "confirmed", packagePurchase: null });
     t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
     t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "completed" }));
@@ -1481,6 +1497,7 @@ describe("completeAppointment / cancelAppointment / rejectAppointment - package 
   });
 
   it("does not commit/release for a transition to 'confirmed' (only completed/cancelled/rejected touch the lifecycle)", async (t) => {
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
     const purchaseId = id();
     const servicePackageId = id();
     const appointment = buildAppointment({
@@ -1602,4 +1619,56 @@ describe("bookAppointment - backdating is a staff privilege", () => {
       await assert.rejects(() => appointmentService.bookAppointment({ ...base(), actorRole: role }), (err) => err === sentinel);
     });
   }
+});
+
+describe("transitionStatus - one transaction, conditional on the status it read", () => {
+  const withPackage = (status) =>
+    buildAppointment({ status, packagePurchase: id(), variant: { servicePackageId: id(), name: "60 min", duration: 60, price: 3000 } });
+
+  it("passes the same session to the status write and the package session, and the expected previous status", async (t) => {
+    const appointment = withPackage("confirmed");
+    const session = fakeSession();
+    t.mock.method(mongoose, "startSession", async () => session);
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+    const updateMock = t.mock.method(appointmentRepo, "updateAppointmentById", async () => ({ ...appointment, status: "completed" }));
+    const commitMock = t.mock.method(packagePurchaseService, "commitSession", async () => ({ status: "active" }));
+    const emitConsumed = t.mock.method(packagePurchaseService, "emitSessionConsumed", () => {});
+
+    await appointmentService.completeAppointment(appointment._id.toString(), id().toString(), "admin");
+
+    assert.equal(updateMock.mock.calls[0].arguments[2].session, session);
+    assert.equal(updateMock.mock.calls[0].arguments[2].expectedStatus, "confirmed");
+    assert.equal(commitMock.mock.calls[0].arguments[2].session, session);
+    assert.equal(emitConsumed.mock.callCount(), 1);
+    assert.equal(emitConsumed.mock.calls[0].arguments[2], "active");
+  });
+
+  it("touches neither the package nor any listener when the status changed in the meantime", async (t) => {
+    const appointment = withPackage("confirmed");
+    t.mock.method(mongoose, "startSession", async () => fakeSession());
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+    t.mock.method(appointmentRepo, "updateAppointmentById", async () => null);
+    const commitMock = t.mock.method(packagePurchaseService, "commitSession", async () => ({}));
+    const emitMock = t.mock.method(eventEmitter, "emit", () => {});
+
+    await assert.rejects(
+      () => appointmentService.completeAppointment(appointment._id.toString(), id().toString(), "admin"),
+      (err) => err.statusCode === 409
+    );
+    assert.equal(commitMock.mock.callCount(), 0);
+    assert.equal(emitMock.mock.callCount(), 0);
+  });
+
+  it("also refuses a stale change for an appointment without a package or coupon", async (t) => {
+    const appointment = buildAppointment({ status: "pending" });
+    t.mock.method(appointmentRepo, "findAppointmentById", async () => appointment);
+    t.mock.method(appointmentRepo, "updateAppointmentById", async () => null);
+    const emitMock = t.mock.method(eventEmitter, "emit", () => {});
+
+    await assert.rejects(
+      () => appointmentService.confirmAppointment(appointment._id.toString(), id().toString(), "admin"),
+      (err) => err.statusCode === 409
+    );
+    assert.equal(emitMock.mock.callCount(), 0);
+  });
 });

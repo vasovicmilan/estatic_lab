@@ -15,6 +15,20 @@ Nastalo posle incidenta 25.11.2026 (sajt nedostupan oko 5 h, vidi izveštaj o in
 | `sitemap.xml` i `llms.txt` se keširaju 10 minuta | `controllers/web/seo.controller.js` | jedan upit u bazu na 10 minuta umesto desetak po zahtevu |
 | Limit tela zahteva 100 KB, a 5 MB samo za `/admin` i `/api` | `app.js` | javne rute ne mogu da zauzmu megabajte po zahtevu; preveliko telo dobija 413 |
 
+## Limiteri: šta se broji
+
+Pravi statički fajlovi ne stižu do limitera, jer je `express.static` montiran pre njega i sam odgovara. Zato limiter **nema izuzetke po ekstenziji ni po prefiksu**: ranije su takvi izuzeci puštali svaki nepostojeći „fajl“ (npr. `/blog/x.txt`), sve pod `/api/` van `/api/v1` i `/api/v1/...x.json` do ruta, sesije i baze bez ikakvog limita (ispravljeno 26.11.2026).
+
+| Zahtev | Limit (po minutu, po IP adresi) |
+|---|---|
+| Pravi statički fajl | ne broji se |
+| `GET`/`HEAD` video i poster iz `/uputstva` (tačno ta dva oblika adrese) | `RATE_LIMIT_MEDIA_MAX`, 600, zaseban brojač |
+| `/api/v1/...` | `apiLimiter`, `RATE_LIMIT_API_MAX`, 120 |
+| Sve ostalo, uključujući nepostojeće putanje i ostatak `/api/` | `globalLimiter`, `RATE_LIMIT_GLOBAL_MAX`, 100 |
+| `/admin` | pored opšteg i `adminLimiter`, `RATE_LIMIT_ADMIN_MAX`, 300 |
+
+Posledica: i slika koja nedostaje (404) troši kvotu posetioca, pa polomljene linkove ka slikama treba popraviti.
+
 Stranice koje stvarno prikazuju formu (prijava, registracija, kontakt, zakazivanje, korpa, admin) i dalje ispisuju token u samoj formi, pa i dalje prave sesiju. To je namerno: tu je forma svrha posete, a limiter ih štiti pre sesije.
 
 ## Kako proveriti posle deploy-a
@@ -28,5 +42,5 @@ Stranice koje stvarno prikazuju formu (prijava, registracija, kontakt, zakazivan
 
 - Otkrivanje uzroka pada memorije: pokreni aplikaciju sa `--max-old-space-size=1024 --heapsnapshot-near-heap-limit=1` (pm2: `--node-args`), pa posle sledećeg pada analiziraj snimak u Chrome DevTools (Memory).
 - `pm2 start ... --max-memory-restart 1G`, da proces sam krene ispočetka pre nego što se uguši.
-- Spoljni monitor na `/health` i izuzetak za `/health` u Cloudflare geo pravilu.
-- Rate limiter je u memoriji procesa: svaki restart ga briše, a u klaster režimu (`-i max`) svaki proces ima svoj brojač.
+- Spoljni monitor na `/health`. Ako Cloudflare pravilo izaziva posetioce van regiona, treba mu izuzetak za `/health` (i obavezno `and not cf.client.bot`, videti `DEPLOYMENT.md`).
+- Rate limiter je u memoriji procesa: svaki restart ga briše, a u klaster režimu svaki proces bi imao svoj brojač. Zato aplikacija radi kao **jedna instanca u fork režimu** (videti `DEPLOYMENT.md`).

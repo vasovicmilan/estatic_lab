@@ -49,7 +49,7 @@ cp .env.example .env
 
 Popuni `.env` - videti komentare u samom fajlu za objašnjenje svake promenljive. Ukratko, ono što se **mora** popuniti za funkcionalan deployment:
 
-- `MONGO_URI` - nova, prazna baza (nikad deljena sa drugim klijentom)
+- `MONGO_URI` - nova, prazna baza (nikad deljena sa drugim klijentom). Baza **mora biti replica set** (MongoDB Atlas to jeste; lokalni `mongod` treba pokrenuti sa `--replSet`), jer aplikacija koristi transakcije (zakazivanje, porudžbine, kuponi, paketi). Na samostalnom `mongod`-u te operacije pucaju
 - `BASE_URL`, `SITE_NAME` - domen i naziv ovog klijenta
 - `SESSION_SECRET`, `JWT_SECRET` - **generiši sveže** po deployment-u, nikad ponovo koristi (`openssl rand -hex 32`)
 - `AES_SECRET` - ključ za šifrovanje osetljivih polja; mora imati **tačno 32 karaktera** (`openssl rand -hex 16`). Ne menjati posle prvog pokretanja, inače se već šifrovani podaci ne mogu pročitati
@@ -75,8 +75,10 @@ Ovo kreira `admin`/`employee`/`partner`/`user` role sa njihovim dozvolama. Bez o
 ## 4. Pokreni server
 
 ```bash
-pm2 start src/server.js --name <klijent-ime> -i max
+pm2 start src/server.js --name <klijent-ime>
 ```
+
+**Jedna instanca, fork režim - bez `-i`.** Aplikacija deo stanja drži u memoriji procesa: brojače rate limitera, keš runtime podešavanja (politika zakazivanja, valuta, neradni dani) i kratke keševe. U klaster režimu bi svaki proces imao svoje brojače (limit se množi brojem procesa), a izmenu podešavanja bi video samo proces koji ju je sačuvao, sve do restarta. Cron poslovi se i tada pokreću samo na instanci 0. Pre eventualnog prelaska na više instanci treba zajedničko skladište za limitere i osvežavanje keševa između procesa.
 
 (ili po ustaljenom PM2/nginx/Cloudflare obrascu koji već koristiš za produkciju - podesi nginx reverse proxy i Cloudflare DNS/SSL za domen ovog klijenta)
 
@@ -120,7 +122,7 @@ Seed skripte (`src/database/seeds/run-*.js`) sadrže Estetik Lab demo sadržaj i
 ## 9. Bekap i video uputstva
 
 - **Bekap:** podesi cron za `npm run backup:daily` (vidi `docs/sr/17-bekapi.md`). Bekap bez probe vraćanja nije bekap: bar jednom uradi probno vraćanje na drugoj bazi, i razmotri kopiju van servera.
-- **Materijali za preuzimanje** (admin → Materijali): PDF ponude, brošure i slike koje se otpremaju kroz admin, dobijaju stranicu `/materijali/<slug>` i QR kod, a mogu se ubaciti u newsletter kampanju kao blok „Fajl za preuzimanje“. Fajlovi se čuvaju u `storage/materials` (ili `MATERIALS_DIR`), van `src/public` i van gita, pa ručno kopiranje `src/` na server ne može da ih prepiše. `scripts/backup.js` ih uključuje u dnevni backup (`materials.tar.gz`). U nginx-u mora biti `client_max_body_size 25m;` (ograničenje jednog fajla je 25 MB). Nove ikonice (`bi-folder2-open`, `bi-download`, `bi-file-earmark-arrow-down`, `bi-envelope-check`, `bi-upload`) zahtevaju `npm run build:icons` posle kopiranja.
+- **Materijali za preuzimanje** (admin → Materijali): PDF ponude, brošure i slike koje se otpremaju kroz admin, dobijaju stranicu `/materijali/<slug>` i QR kod, a mogu se ubaciti u newsletter kampanju kao blok „Fajl za preuzimanje“. Fajlovi se čuvaju u `storage/materials` (ili `MATERIALS_DIR`), van `src/public` i van gita, pa ručno kopiranje `src/` na server ne može da ih prepiše. `scripts/backup.js` ih uključuje u dnevni backup (`materials.tar.gz`). U nginx-u `client_max_body_size` mora biti najmanje `25m` (ograničenje jednog materijala je 25 MB; ako se kroz admin otpremaju veći video fajlovi, potreban je veći). Nove ikonice (`bi-folder2-open`, `bi-download`, `bi-file-earmark-arrow-down`, `bi-envelope-check`, `bi-upload`) zahtevaju `npm run build:icons` posle kopiranja.
 - **Video uputstva** (`/uputstva`): snimaju se i objavljuju na razvojnoj mašini (`npm run tutorials:all`), a gotovi fajlovi se kopiraju u `storage/tutorials` na serveru ili u folder iz `TUTORIALS_DIR`. Folder mora biti van `src/public` i ne ulazi u git. Bez njega stranica radi, samo su kartice označene kao nedostupne. Vidi `docs/sr/19-video-uputstva.md`.
 
 ## Ažuriranje postojeće produkcije (npr. beautymedica.rs)
@@ -140,18 +142,23 @@ pm2 restart <ime-procesa>
 
 ## Server: nginx, Cloudflare, ufw, fail2ban
 
-Podešavanje produkcionog servera (beautymedica.rs: nginx + Cloudflare ispred PM2 procesa). Aplikacija sama ne može da zaštiti server od skeniranja, pa su slojevi ovakvi:
+Put zahteva: **posetilac → Cloudflare → ufw → nginx → aplikacija (PM2, 127.0.0.1) → MongoDB**. Aplikacija sama ne može da zaštiti server od skeniranja, pa su slojevi ovakvi:
 
 - **Aplikacija sluša samo lokalno.** `BIND_HOST=127.0.0.1` u `.env` (kad nije postavljeno, sluša na `0.0.0.0`), tako da port aplikacije nije dostupan sa interneta, samo preko nginx-a.
-- **`TRUST_PROXY_HOPS=2`** kad su ispred Cloudflare **i** nginx (samo nginx = `1`). Bez toga `req.ip` je IP proxy-ja i rate limiteri broje sve posetioce kao jednog.
-- **nginx `real_ip`**: `set_real_ip_from` za svaki Cloudflare opseg (`https://www.cloudflare.com/ips-v4` i `ips-v6`) i `real_ip_header CF-Connecting-IP;`. Opsege povremeno osvežavati.
-- **Rate limiteri** (po minutu po klijentu): `RATE_LIMIT_GLOBAL_MAX=100`, `RATE_LIMIT_API_MAX=120`, `RATE_LIMIT_ADMIN_MAX=300` (podrazumevano u kodu). Statički fajlovi se ne broje. Podizanje limita nije rešenje za Cloudflare izazov - to je posebno Cloudflare pravilo.
 - **ufw**: SSH, a 80/443 samo sa Cloudflare opsega; ostalo `deny incoming`. Port aplikacije se ne otvara.
-- **fail2ban**: filter nad nginx access logom; jail ne koristi ufw (iza Cloudflare-a ufw vidi samo Cloudflare IP) nego nginx `deny` listu (include u `server` bloku) i `nginx -s reload`.
+- **Authenticated Origin Pulls (mTLS)**: u nginx `server` bloku `ssl_client_certificate <origin-pull CA>; ssl_verify_client on;`, a u Cloudflare-u uključen AOP. SSL režim mora biti Full ili Full (strict). Sa Cloudflare-ovim zajedničkim sertifikatom ovo dokazuje samo da zahtev dolazi sa Cloudflare mreže; ako treba dokaz da dolazi baš sa tvog naloga, koristi se sopstveni sertifikat (zone-level ili per-hostname AOP).
+- **Podrazumevani `server` blok**: nepoznat domen ili pristup preko IP adrese ne sme da padne ni na jedan sajt (`return 444;`, a na 443 `ssl_reject_handshake on;`).
+- **nginx `real_ip`**: `set_real_ip_from` za svaki Cloudflare opseg (`https://www.cloudflare.com/ips-v4` i `ips-v6`) i `real_ip_header CF-Connecting-IP;`. Opsege povremeno osvežavati (i u nginx-u i u ufw-u).
+- **`TRUST_PROXY_HOPS=2`** kad su ispred Cloudflare **i** nginx sa `real_ip` i `proxy_add_x_forwarded_for` (samo nginx = `1`). Bez toga `req.ip` je IP proxy-ja i rate limiteri broje sve posetioce kao jednog.
+- **Kanonski domen**: `www` i `http` se preusmeravaju na `https://<domen>` na Cloudflare-u, a nginx to ponavlja kao rezervu.
+- **Rate limiteri** (po minutu po klijentu): `RATE_LIMIT_GLOBAL_MAX=100`, `RATE_LIMIT_API_MAX=120`, `RATE_LIMIT_ADMIN_MAX=300`, `RATE_LIMIT_MEDIA_MAX=600` (video uputstva i posteri) - podrazumevano u kodu. Pravi statički fajlovi se ne broje jer ih `express.static` posluži pre limitera; nepostojeće putanje se broje, bez obzira na ekstenziju. Detalji: `docs/sr/22-otpornost-na-napade.md`. Podizanje limita nije rešenje za Cloudflare izazov - to je posebno Cloudflare pravilo.
+- **fail2ban**: filter nad nginx access logom; jail ne koristi ufw (iza Cloudflare-a ufw vidi samo Cloudflare IP) nego nginx `deny` listu (include u konfiguraciji) i `nginx -s reload`.
 - **Dnevni logovi**: aplikacija piše dnevno rotirane fajlove (`pino-roll`). fail2ban razvija glob putanje samo pri startu, pa novi dnevni fajl ostaje neprimećen - potreban je mali čuvar (cron/systemd timer) koji pri promeni imena današnjeg fajla radi `fail2ban-client reload`.
 - **Cloudflare**: skeniranje za `.php`/`wp-*`/`.env` i sl. blokirati posebnim custom pravilom (Block), ne u pravilu za izazov.
+- **Cloudflare i pretraživači**: svako pravilo sa izazovom ili blokadom po zemlji mora da izuzme proverene botove (`and not cf.client.bot`). Googlebot pretežno dolazi sa adresa iz SAD, pa bi pravilo "samo moja zemlja" bez tog izuzetka zaustavilo indeksiranje.
+- **Obnova Let's Encrypt sertifikata** iza takvog pravila: provera domena dolazi iz inostranstva, pa putanja `/.well-known/acme-challenge/` ne sme da dobije izazov. Provera: `sudo certbot renew --dry-run`.
 
-Provera: `sudo ufw status verbose`, `sudo fail2ban-client status`, `sudo fail2ban-client status <jail>`, `sudo nginx -t`.
+Provera: `sudo ufw status verbose`, `sudo fail2ban-client status`, `sudo fail2ban-client status <jail>`, `sudo nginx -t`, `pm2 list` (režim mora biti `fork`, jedna instanca).
 
 ## Provera pre lansiranja
 

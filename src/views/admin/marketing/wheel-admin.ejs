@@ -58,7 +58,7 @@
                 <td class="text-nowrap">
                   <button form="prize-<%= p.id %>" type="submit" class="btn btn-sm btn-primary">Sačuvaj</button>
                   <a href="/admin/tocak/nagrade/<%= p.id %>/izmena" class="btn btn-sm btn-outline-secondary">Izmeni</a>
-                  <% if (!p.isFallback && p.awardedCount === 0) { %>
+                  <% if (typeof user !== 'undefined' && user?.roleName === 'admin' && !p.isFallback && p.awardedCount === 0) { %>
                     <button form="prize-del-<%= p.id %>" type="submit" class="btn btn-sm btn-outline-danger" title="Briše nagradu sa točka"><i class="bi bi-trash"></i></button>
                   <% } %>
                 </td>
@@ -72,7 +72,7 @@
           <input type="hidden" name="_method" value="PUT">
           <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">
         </form>
-        <% if (!p.isFallback && p.awardedCount === 0) { %>
+        <% if (typeof user !== 'undefined' && user?.roleName === 'admin' && !p.isFallback && p.awardedCount === 0) { %>
           <form action="/admin/tocak/nagrade/<%= p.id %>?tocak=<%= data.wheel.slug %>" method="POST" id="prize-del-<%= p.id %>" class="d-none" data-confirm="Obrisati nagradu „<%= p.label %>“ sa točka?">
             <input type="hidden" name="_method" value="DELETE">
             <input type="hidden" name="CSRFToken" value="<%= data.csrfToken %>">

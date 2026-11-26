@@ -11,7 +11,7 @@ The API uses **JWT (Bearer token)**, not sessions/cookies like the web side. Flo
 3. The token is valid for **24 hours** (`crypto.service.js`, `signJwt`), after which re-login is required - there is currently no refresh-token mechanism.
 4. `GET /api/v1/auth/me` returns the currently-authenticated account's data (a useful "who am I" call for client apps rehydrating a saved token).
 
-The token carries the user's role (`roleName`) and their **full permission list** (`permissions`) as of login time (the same pattern as the web session - see `01-users-roles-permissions.md`). Consequence: if an admin later edits or removes a permission from someone, **an already-issued token doesn't see that change** until it expires (up to 24h) or the user logs in again. For urgent access revocation (e.g. an employee let go), deactivating the account (`isActive: false`) is more reliable than editing the role alone, since that's checked on every request touching that account, not just at token issuance.
+The token carries the user's role (`roleName`) and permission list (`permissions`) as of sign-in, but **on every request the server reads the account and its role from the database** and replaces those values with the current ones. Editing a role's permissions therefore applies on the next request, with no new token. Suspending/deactivating an account, changing a user's role and resetting a password invalidate tokens already issued (`401`). The `isEmployee` and `isPartner` flags stay as of sign-in; the employee and partner routes additionally require the matching profile (see `01-users-roles-permissions.md`).
 
 Without an `Authorization` header (or with an invalid/expired/forged token), every protected route returns `401` before touching the database. Like every other error, it uses the standard error shape below.
 
@@ -20,9 +20,11 @@ Without an `Authorization` header (or with an invalid/expired/forged token), eve
 Two layers, both applied as Express middleware before a request ever reaches a controller:
 
 - **`apiAuthMiddleware`** - does a token even exist and is it valid. There's no "partial" access - a token is either valid or it isn't.
-- **`requirePermission("some_permission")`** - does the decoded `permissions` array from the token contain that specific permission. Same permission list and meaning as the web side (`01-users-roles-permissions.md`) - the API doesn't introduce a parallel/different permission system.
+- **`requirePermission("some_permission")`** - does the caller's current permission list (refreshed from the role) contain that specific permission. Same permission list and meaning as the web side (`01-users-roles-permissions.md`) - the API doesn't introduce a parallel/different permission system.
 
 `/admin/*` routes have **two independent levels**, mirroring the web `/admin` panel: one gate on the whole `/api/v1/admin` mount (`apiAuthMiddleware` + `adminMiddleware` in `routes/api/v1/index.routes.js`) requires a valid token **and** the general `access_admin_panel` permission ("are you even allowed into the admin panel"), and each individual route on top of that requires its own specific permission (e.g. `manage_users`, `manage_payouts`). This is deliberate defense in depth - forgetting the specific check on one route still leaves the general gate in place, and holding a specific permission without `access_admin_panel` gets you nowhere.
+
+In addition, every `DELETE` under `/api/v1/admin/*` is allowed to the `admin` role only (`requireAdminForDelete`), whatever permission the tables below list; others get `403`.
 
 All `/admin/*` routes return `403` (not `404`) when the token is valid but the matching permission is missing - the distinction between "you don't exist" and "you're not allowed" is intentional, same as on the web side.
 
@@ -146,7 +148,7 @@ Requires the admin-mount gate (token + `access_admin_panel`) plus the same permi
 
 ### Appointments (`admin-appointment.routes.js`)
 
-Whole router behind `manage_appointments_all`. `GET /`, `GET /manual/check-package`, `POST /manual`, `GET /:appointmentId`, `PUT /:appointmentId/confirm|reject|cancel|complete|no-show|reopen|reassign|reschedule`, `DELETE /:appointmentId`.
+Whole router behind `manage_appointments_all`. `GET /`, `GET /manual/check-package`, `POST /manual`, `GET /:appointmentId`, `PUT /:appointmentId/confirm|reject|cancel|complete|no-show|reopen|reassign|reschedule`, `DELETE /:appointmentId`. If the appointment was changed or deleted in the meantime, status changes and deletion return `409` (see `02-services-booking-appointments.md`).
 
 ### Orders (`admin-order.routes.js`)
 
@@ -180,11 +182,15 @@ Whole router behind `manage_orders`. `GET /orders`, `POST /orders/manual`, `GET 
 | PUT | `/site-settings/neradni-dani` | `manage_site_content` |
 | GET/PUT | `/profile` | just `access_admin_panel` (always the caller's own admin profile) |
 
+## API tokens (assistant)
+
+Besides the sign-in JWT, `/api/v1/admin/*` also accepts an API token of the form `elk_...` (`Authorization: Bearer elk_...`) that the owner creates in `/admin/api-tokeni`. A token lasts 1 to 90 days, can be revoked at any time, reads permissions live from the role on every request, is limited by a route allowlist and always creates drafts. Full description: `21-claude-assistant-access.md`. Materials (`/materials`, multipart, field `file`) are available only through this API.
+
 ## What's NOT covered by the API yet
 
 - **Any web `/admin` sub-area not explicitly listed above** - if a new web-only admin screen is added, check whether it needs an API equivalent rather than assuming one already exists.
 
 ## Known limitations (deliberate trade-offs, not bugs)
 
-- **Up to 24h stale permissions in the token** - see the Authentication section above.
-- **Rate limiting is per IP, not per token/user** - every `/api/v1` request goes through `apiLimiter` (120 requests/minute) on top of the app-wide `globalLimiter` (200/minute); `POST /auth/login` additionally has the stricter `apiAuthLimiter` (10 failed attempts per 15 minutes), and the public forms/booking routes have their own limiters. There is no additional admin-API-specific limit.
+- **`isEmployee`/`isPartner` are as of sign-in** - role and permissions are refreshed on every request, these two flags are not (see Authentication).
+- **Rate limiting for sign-in and normal users is per IP** - every `/api/v1` request is counted by `apiLimiter` (`RATE_LIMIT_API_MAX`, default 120 per minute), whatever the address ends with; the general `globalLimiter` (`RATE_LIMIT_GLOBAL_MAX`, 100) skips only `/api/v1` and counts everything else under `/api/`. `POST /auth/login` additionally has the stricter `apiAuthLimiter` (10 failed attempts per 15 minutes), and the public forms and booking routes have their own limiters. API tokens (assistant) also have per-token limits (`21-claude-assistant-access.md`).

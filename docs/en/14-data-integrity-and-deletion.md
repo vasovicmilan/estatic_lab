@@ -17,6 +17,12 @@ principle behind the whole system:
 
 ---
 
+## Who may delete
+
+The rules below describe **what happens** on deletion. **Who may** start a permanent deletion in the admin area is a separate check: only the `admin` role, on both the web panel and the API (`requireAdminForDelete`), whatever area permission the caller has. A user's own actions outside the admin area (such as deleting their address) are not covered by it.
+
+---
+
 ## The four tiers
 
 ### Tier 0 - Structural hierarchy: hard block, no exceptions

@@ -6,7 +6,7 @@ Ovaj dokument opisuje četiri nezavisne celine: više točkova sreće sa leadovi
 
 - **Model `Wheel`**: svaki točak ima jedinstven `slug`, naziv, aktivnost i opcioni period važenja. Podrazumevani točak ima slug `tocak`; slug `vrti` je rezervisan (to je ruta za vrtenje).
 - **Javne stranice**: `/tocak` (podrazumevani) i `/tocak/:slug`. Nepoznat slug vraća 404.
-- **Vrtenje**: `POST /tocak/vrti` sa poljem `wheel` (slug). Ruta je izuzeta iz CSRF provere, a ograničava je `RATE_LIMIT_WHEEL_MAX` (podrazumevano 80 zahteva u minuti po klijentu).
+- **Vrtenje**: `POST /tocak/vrti` sa poljem `wheel` (slug). Ruta je izuzeta iz CSRF provere, a ograničava je `RATE_LIMIT_WHEEL_MAX` (podrazumevano 80 zahteva na 10 minuta po klijentu).
 - **Kad je točak otvoren**: aktivan je, u okviru datuma i ima najmanje 2 nagrade koje se mogu osvojiti. Nagrade se mogu dodavati i ispod minimuma, ali se ne mogu smanjivati ispod njega.
 - **Nagrade**: `WheelPrize.key` je globalno jedinstven (kuponi se vezuju preko `wheelPrizeKey`). Rezervna nagrada ("fallback") je jedna po točku.
 - **Leadovi**: jedinstvenost je po točku: `(wheel, email)` i `(wheel, phone.hash)`. Ista osoba može da vrti na drugom točku. Lista leadova ima kolonu "Točak" i CSV izvoz je sadrži.

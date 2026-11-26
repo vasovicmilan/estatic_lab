@@ -116,3 +116,9 @@ The reminder only goes out for `confirmed` appointments — appointments still a
 If a third window is ever wanted (e.g. 1 hour before), adding an entry to `reminder.config.js` is enough - both the cron schedule (`scheduler.js`) and the sending logic itself (`appointment-reminder-jobs.js`) are driven by that config, with no further code changes needed.
 
 **Backdating.** Admin and employees can manually create an appointment in the past (logging what was already done outside the app) at the catalog price, from a package or with a manual price; the no-past rule and the minimum notice apply only to customers' self-service booking.
+
+## Concurrent changes to the same appointment
+
+A status change is written only if the appointment is still in the status that was read. If somebody else changed or deleted it in the meantime (a double click, an admin and an employee at the same moment), the second action gets a 409 error asking to reload the page, and changes nothing.
+
+When a change touches a package session or a coupon, **the appointment status, the session and the coupon are written in one transaction**: all of it happens, or none of it. Deleting an appointment works the same way. One appointment therefore cannot consume or return a session twice. If reopening collides with a slot that has been taken, a clear message is returned and nothing changes.

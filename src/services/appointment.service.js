@@ -16,7 +16,7 @@ import { buildPhoneRecord } from "../utils/phone.util.js";
 import { isEmployeeWorkingAt } from "../utils/working-hours.util.js";
 import { zonedInputToUtcDate, getStartOfDayInZone, nextDayStartInZone, formatTime } from "../utils/date.time.util.js";
 import { getBookingPolicy, isDateClosed } from "../config/runtime-settings.cache.js";
-import { validationError, notFound, forbidden, badRequest } from "../utils/error.util.js";
+import { validationError, notFound, forbidden, badRequest, conflict } from "../utils/error.util.js";
 import { logInfo, logError } from "../utils/logger.util.js";
 
 const defaultPopulate = [
@@ -629,46 +629,72 @@ async function transitionStatus(appointmentId, nextStatus, actorId, actorRole, e
   // freed one in the meantime), the whole reopen aborts - the appointment stays in
   // its prior terminal status rather than becoming a "pending" appointment with
   // nothing (or the wrong thing) backing it, which is the correct failure mode here.
-  if (appointment.packagePurchase) {
-    if (nextStatus === "completed" || nextStatus === "no_show") {
-      await packagePurchaseService.commitSession(appointment.packagePurchase, appointment.variant.servicePackageId);
-    } else if (nextStatus === "cancelled" || nextStatus === "rejected") {
-      await packagePurchaseService.releaseSession(appointment.packagePurchase, appointment.variant.servicePackageId);
-    } else if (nextStatus === "pending" && appointment.status === "no_show") {
-      await packagePurchaseService.uncommitSession(appointment.packagePurchase, appointment.variant.servicePackageId);
-    } else if (nextStatus === "pending") {
-      await packagePurchaseService.reserveSession(appointment.packagePurchase, appointment.variant.servicePackageId);
-    }
-  }
 
   // Coupon: a cancelled/rejected appointment never happened, so its coupon use goes back to the
-  // customer (they can book again with it); reopening it spends the use again. Same transaction as
-  // the status update, so the coupon and the status can't disagree. "no_show"/"completed" keep the use.
+  // customer (they can book again with it); reopening it spends the use again.
+  // "no_show"/"completed" keep the use.
   const couponId = appointment.coupon?._id ?? appointment.coupon;
   const releasesCoupon = Boolean(couponId) && (nextStatus === "cancelled" || nextStatus === "rejected");
   const reclaimsCoupon = Boolean(couponId) && nextStatus === "pending" && (appointment.status === "cancelled" || appointment.status === "rejected");
 
-  let updated;
-  if (releasesCoupon || reclaimsCoupon) {
+  // The status is written only if it is still the one this decision was based on. Without that,
+  // two simultaneous requests (double click, two tabs) would both apply their side effects -
+  // e.g. "completed" twice would consume a second session of the same package.
+  const writeStatus = async (session) => {
+    const written = await appointmentRepo.updateAppointmentById(
+      appointmentId,
+      { status: nextStatus, ...extra },
+      { session, expectedStatus: appointment.status }
+    );
+    if (!written) conflict("Termin je u međuvremenu izmenjen - osvežite stranicu i pokušajte ponovo");
+    return written;
+  };
+
+  // Status, package session and coupon are written in ONE transaction, so they can't disagree:
+  // if any step fails, none of them happens.
+  let consumed = null;
+  if (appointment.packagePurchase || releasesCoupon || reclaimsCoupon) {
     const session = await mongoose.startSession();
     try {
       await session.withTransaction(async () => {
+        consumed = null; // the driver may run this callback again after a write conflict
+        await writeStatus(session);
+
+        if (appointment.packagePurchase) {
+          const purchaseId = appointment.packagePurchase;
+          const variantId = appointment.variant.servicePackageId;
+          if (nextStatus === "completed" || nextStatus === "no_show") {
+            const purchase = await packagePurchaseService.commitSession(purchaseId, variantId, { session });
+            consumed = { purchaseId, variantId, status: purchase?.status };
+          } else if (nextStatus === "cancelled" || nextStatus === "rejected") {
+            await packagePurchaseService.releaseSession(purchaseId, variantId, { session });
+          } else if (nextStatus === "pending" && appointment.status === "no_show") {
+            await packagePurchaseService.uncommitSession(purchaseId, variantId, { session });
+          } else if (nextStatus === "pending") {
+            await packagePurchaseService.reserveSession(purchaseId, variantId, { session });
+          }
+        }
+
         if (releasesCoupon) {
           await couponService.releaseCoupon(couponId, { appointmentId }, { session });
-        } else {
+        } else if (reclaimsCoupon) {
           await couponService.reclaimCoupon(
             couponId,
             { userId: appointment.user?._id ?? appointment.user, appointmentId, discountAmount: appointment.discountApplied || 0 },
             { session }
           );
         }
-        updated = await appointmentRepo.updateAppointmentById(appointmentId, { status: nextStatus, ...extra }, { session });
       });
+    } catch (error) {
+      // reopening can lose the race for the slot to a new booking (unique employee+startTime index)
+      if (error.code === 11000) badRequest("Termin se ne može ponovo otvoriti: termin je u međuvremenu zauzet");
+      throw error;
     } finally {
       await session.endSession();
     }
+    if (consumed) packagePurchaseService.emitSessionConsumed(consumed.purchaseId, consumed.variantId, consumed.status);
   } else {
-    updated = await appointmentRepo.updateAppointmentById(appointmentId, { status: nextStatus, ...extra });
+    await writeStatus();
   }
   logInfo("Appointment status changed", { appointmentId, from: appointment.status, to: nextStatus, actorId, actorRole });
 
@@ -947,20 +973,34 @@ export async function deleteAppointmentById(appointmentId, actorId) {
   if (!appointment) notFound("Termin");
 
   // if this appointment still holds a reserved (not yet committed/released) package
-  // session, give it back before deleting - otherwise the customer's package would
-  // show a phantom reservation that can never be used or released (see
-  // package-purchase.service.js's reserveSession/releaseSession/commitSession)
-  if (appointment.packagePurchase && (appointment.status === "pending" || appointment.status === "confirmed")) {
-    await packagePurchaseService.releaseSession(appointment.packagePurchase, appointment.variant.servicePackageId);
-  }
-
+  // session, give it back - otherwise the customer's package would show a phantom
+  // reservation that can never be used or released (see package-purchase.service.js's
+  // reserveSession/releaseSession/commitSession)
+  const releasesSession = Boolean(appointment.packagePurchase) && (appointment.status === "pending" || appointment.status === "confirmed");
   // a hard-deleted appointment never happened either - give its coupon use back (idempotent: no-op if already released)
   const deletedCouponId = appointment.coupon?._id ?? appointment.coupon;
-  if (deletedCouponId) {
-    await couponService.releaseCoupon(deletedCouponId, { appointmentId: appointment._id });
-  }
 
-  await appointmentRepo.deleteAppointmentById(appointmentId);
+  if (releasesSession || deletedCouponId) {
+    // one transaction, delete first: a second, simultaneous delete (or a status change in
+    // between) finds nothing to delete and aborts before releasing anything twice
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const deleted = await appointmentRepo.deleteAppointmentById(appointmentId, { session, expectedStatus: appointment.status });
+        if (!deleted) conflict("Termin je u međuvremenu izmenjen - osvežite stranicu i pokušajte ponovo");
+        if (releasesSession) {
+          await packagePurchaseService.releaseSession(appointment.packagePurchase, appointment.variant.servicePackageId, { session });
+        }
+        if (deletedCouponId) {
+          await couponService.releaseCoupon(deletedCouponId, { appointmentId: appointment._id }, { session });
+        }
+      });
+    } finally {
+      await session.endSession();
+    }
+  } else {
+    await appointmentRepo.deleteAppointmentById(appointmentId);
+  }
   logInfo("Appointment deleted", { appointmentId, actorId });
 
   // Fired with employeeId/googleEventId captured above (the doc is gone by now,

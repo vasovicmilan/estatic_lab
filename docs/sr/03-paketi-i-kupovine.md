@@ -23,3 +23,7 @@ Sistem ovo rešava tako što, u trenutku kupovine paketa, beleži tačno koliko 
 ## Otkazivanje Paketa
 
 Kupovina paketa može biti otkazana ako je potrebno — na primer, ako klijent zatraži povraćaj novca ubrzo nakon kupovine. Otkazivanje ispravno poništava sve što je bilo vezano za tu kupovinu, uključujući poništavanje bilo koje provizije koja je već bila odobrena kao njen rezultat.
+
+## Doslednost stanja seansi
+
+Svaki prelaz seanse (rezervacija, trošenje, vraćanje) koji nastaje promenom ili brisanjem termina upisuje se u istoj transakciji sa tom promenom (videti `02-usluge-zakazivanje-termini.md`), pa stanje paketa ne može da se raziđe sa statusom termina. Događaj o iskorišćenoj seansi šalje se tek kada je transakcija potvrđena.

@@ -8,6 +8,19 @@ import { authenticateApiToken, looksLikeApiToken } from "../services/api-token.s
 // currently usable even though the JWT signature itself is still valid.
 const USABLE_STATUSES = new Set(["active"]);
 
+// Role name and permissions are copied into the session / JWT at login, so on their own
+// they would stay as they were until the user signs in again (up to 14 days for a web
+// session). Both auth paths overwrite that copy with what the database says now.
+// `role === undefined` means the lookup did not return the field (leave the copy alone);
+// `role === null` means the account points at a role that no longer exists - no permissions.
+export function currentRoleFields(authState) {
+  const role = authState?.role;
+  if (role === undefined) return {};
+  if (role === null) return { roleId: null, roleName: "user", permissions: [] };
+  if (!role.name) return {}; // not populated - nothing reliable to copy
+  return { roleId: String(role._id), roleName: role.name, permissions: [...(role.permissions || [])] };
+}
+
 // A verified JWT's signature/expiry alone says nothing about whether the account
 // has since been suspended or deactivated - jwt.verify (crypto.service.js's
 // verifyJwt) only proves the token was issued by us and hasn't expired yet, and
@@ -33,15 +46,18 @@ async function assertTokenStillValid(decoded) {
   if (authState.tokenValidAfter && decoded.iat && decoded.iat * 1000 < new Date(authState.tokenValidAfter).getTime()) {
     throw new AuthenticationError("Nalog je suspendovan.");
   }
+  return authState;
 }
 
 // Web sessions live for days and carry a snapshot of role/permissions taken at
 // login, so on their own they would keep working after an admin suspends the
 // account, changes its role or a password reset revokes credentials. This runs
 // early on every request (mounted in app.js, before locals) and, at most once per
-// SESSION_RECHECK_MS per session, re-reads the account's auth state (status +
-// tokenValidAfter, the same fields the Bearer-token path checks). A session that
-// no longer qualifies is logged out in place. If the lookup itself fails the
+// SESSION_RECHECK_MS per session, re-reads the account's auth state (status,
+// tokenValidAfter and the role, the same fields the Bearer-token path checks). A
+// session that no longer qualifies is logged out in place; one that does gets its
+// role name and permissions refreshed, so editing a role applies within
+// SESSION_RECHECK_MS without logging anyone out. If the lookup itself fails the
 // session is left alone - an outage must not log everybody out.
 export const SESSION_RECHECK_MS = 60 * 1000;
 
@@ -64,6 +80,7 @@ export async function sessionRevalidation(req, res, next) {
       delete session.authCheckedAt;
       return next();
     }
+    Object.assign(session.user, currentRoleFields(authState));
     session.authCheckedAt = now;
   } catch (error) {
     // keep the session, retry on the next request
@@ -125,13 +142,14 @@ export async function apiAuthMiddleware(req, res, next) {
     return next(new AuthenticationError("Token nije validan ili je istekao"));
   }
 
+  let authState;
   try {
-    await assertTokenStillValid(decoded);
+    authState = await assertTokenStillValid(decoded);
   } catch (error) {
     return next(error instanceof AuthenticationError ? error : new AuthenticationError("Token nije validan ili je istekao"));
   }
 
-  req.user = decoded;
+  req.user = { ...decoded, ...currentRoleFields(authState) };
   next();
 }
 
@@ -141,8 +159,8 @@ export async function optionalApiAuth(req, res, next) {
   if (authHeader?.startsWith("Bearer ")) {
     try {
       const decoded = verifyJwt(authHeader.split(" ")[1]);
-      await assertTokenStillValid(decoded);
-      req.user = decoded;
+      const authState = await assertTokenStillValid(decoded);
+      req.user = { ...decoded, ...currentRoleFields(authState) };
     } catch (error) {
       // not logged in (or account suspended/deactivated since the token was
       // issued) - ignore, this is optional

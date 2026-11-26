@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { adminMiddleware } from "../../middlewares/admin.middleware.js";
-import { requirePermission } from "../../middlewares/permission.middleware.js";
+import { requirePermission, requireAdminForDelete } from "../../middlewares/permission.middleware.js";
 import { PERMISSION } from "../../models/role.model.js";
 import { adminLimiter } from "../../middlewares/rate-limiter.middleware.js";
 
@@ -43,6 +43,9 @@ const router = Router();
 
 router.use(adminMiddleware);
 router.use(adminLimiter);
+// trajno brisanje je rezervisano za rolu "admin" - isto pravilo kao na /api/v1/admin. Mora da stoji
+// IZNAD svih router.use(...) montiranja da bi pokrilo svaku DELETE rutu panela.
+router.use(requireAdminForDelete);
 
 router.get("/", DashboardController.dashboard);
 router.use("/pregled", areaDashboardRoutes);

@@ -321,13 +321,19 @@ export async function commitSession(packagePurchaseId, servicePackageId, { sessi
     status: completed?.status || updated.status,
   });
 
+  // inside a caller's transaction nothing is committed yet (and the callback may be retried),
+  // so the caller announces it itself after the commit - see emitSessionConsumed
+  if (!session) emitSessionConsumed(packagePurchaseId, servicePackageId, completed?.status || updated.status);
+
+  return completed || updated;
+}
+
+export function emitSessionConsumed(packagePurchaseId, servicePackageId, purchaseStatus) {
   eventEmitter.emit("package_session:consumed", {
     packagePurchaseId: packagePurchaseId.toString(),
     servicePackageId: servicePackageId.toString(),
-    purchaseStatus: completed?.status || updated.status,
+    purchaseStatus,
   });
-
-  return completed || updated;
 }
 
 // Undoes a commitSession - specifically for an admin reopening a "no_show"
@@ -465,6 +471,7 @@ export default {
   reserveSession,
   releaseSession,
   commitSession,
+  emitSessionConsumed,
   uncommitSession,
   cancelPurchase,
   updatePurchase,

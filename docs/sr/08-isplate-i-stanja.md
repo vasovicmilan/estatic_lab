@@ -24,6 +24,8 @@ Administrator koji pregleda zahtev za isplatu može:
 - **Označiti kao isplaćen**, kada je novac zaista poslat.
 - **Odbiti** ga, uz objašnjenje koje zarada može da vidi.
 
+Odbiti se može samo zahtev koji je **na čekanju ili odobren**. Isplaćen zahtev se ne može odbiti, a već odbijen se ne može odbiti ponovo (greška 409), pa zarada ne dobija drugi mejl i prvobitni razlog ostaje sačuvan.
+
 Odvojeno, administrator takođe može **direktno evidentirati isplatu** — za situacije kada je novac promenio ruke van uobičajenog toka zahteva (na primer, gotovinsko plaćanje lično) i jednostavno treba da bude odraženo u sistemu naknadno, bez potrebe da zarada prethodno podnese zahtev za to.
 
 Bez obzira koji put se koristi, zarada biva obaveštena putem email-a čim se status njegove isplate promeni, uključujući razlog ako je zahtev odbijen — tako da nikada ne ostane u nedoumici šta se desilo sa zahtevom koji je podneo.

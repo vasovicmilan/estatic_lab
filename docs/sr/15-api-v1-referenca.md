@@ -11,7 +11,7 @@ API koristi **JWT (Bearer token)**, ne sesije/kolačiće kao web strana. Tok:
 3. Token važi **24 sata** (`crypto.service.js`, `signJwt`), posle čega je potrebna ponovna prijava - trenutno ne postoji refresh-token mehanizam.
 4. `GET /api/v1/auth/me` vraća podatke o trenutno prijavljenom nalogu (koristan "ko sam ja" poziv za klijentske aplikacije posle učitavanja sačuvanog tokena).
 
-Token nosi ulogu (`roleName`) i **kompletan spisak dozvola** (`permissions`) korisnika u trenutku prijave (isti obrazac kao sesija na web strani - videti `01-korisnici-role-dozvole.md`). Posledica: ako admin nekom naknadno izmeni ili oduzme dozvolu, **već izdati token to ne vidi** dok ne istekne (do 24h) ili se korisnik ponovo ne prijavi. Za hitno oduzimanje pristupa (npr. otkaz zaposlenom), deaktiviranje naloga (`isActive: false`) je pouzdanije od same izmene role, jer se proverava pri svakom zahtevu koji dotiče taj nalog, ne samo pri izdavanju tokena.
+Token nosi ulogu (`roleName`) i spisak dozvola (`permissions`) iz trenutka prijave, ali server **na svakom zahtevu čita nalog i njegovu rolu iz baze** i te vrednosti zamenjuje aktuelnim. Izmena dozvola role zato važi već na sledećem zahtevu, bez novog tokena. Suspendovanje/deaktivacija naloga, promena role korisnika i reset lozinke poništavaju već izdate tokene (`401`). Oznake `isEmployee` i `isPartner` ostaju iz trenutka prijave; rute zaposlenog i partnera dodatno traže odgovarajući profil (videti `01-korisnici-role-dozvole.md`).
 
 Bez `Authorization` header-a (ili sa nevažećim/isteklim/falsifikovanim tokenom), svaka zaštićena ruta vraća `401`, pre nego što dotakne bazu. Kao i svaka druga greška, koristi standardan oblik greške ispod.
 
@@ -20,9 +20,11 @@ Bez `Authorization` header-a (ili sa nevažećim/isteklim/falsifikovanim tokenom
 Dva sloja, oba primenjena kao Express middleware pre nego što zahtev uopšte stigne do kontrolera:
 
 - **`apiAuthMiddleware`** - da li token uopšte postoji i validan je. Ne postoji nikakav "polovičan" pristup - token je ili validan ili nije.
-- **`requirePermission("neka_dozvola")`** - da li dekodirani `permissions` niz iz tokena sadrži tačno tu dozvolu. Isti spisak dozvola i isto značenje kao na web strani (`01-korisnici-role-dozvole.md`) - API ne uvodi paralelan/drugačiji sistem dozvola.
+- **`requirePermission("neka_dozvola")`** - da li aktuelni spisak dozvola pozivaoca (osvežen iz role) sadrži tačno tu dozvolu. Isti spisak dozvola i isto značenje kao na web strani (`01-korisnici-role-dozvole.md`) - API ne uvodi paralelan/drugačiji sistem dozvola.
 
 `/admin/*` rute imaju **dva nezavisna nivoa**, kao i web `/admin` panel: jedna kapija na celom `/api/v1/admin` mount-u (`apiAuthMiddleware` + `adminMiddleware` u `routes/api/v1/index.routes.js`) zahteva validan token **i** opštu dozvolu `access_admin_panel` ("sme li uopšte u admin panel"), a svaka pojedinačna ruta iznad toga zahteva svoju specifičnu dozvolu (npr. `manage_users`, `manage_payouts`). Ovo je namerno "defense in depth" - propust da se doda specifična provera na jednoj ruti i dalje ostavlja opštu kapiju, a specifična dozvola bez `access_admin_panel` ne vodi nikuda.
+
+Povrh toga, svaki `DELETE` pod `/api/v1/admin/*` sme samo rola `admin` (`requireAdminForDelete`), bez obzira na dozvolu navedenu u tabelama ispod; ostali dobijaju `403`.
 
 Sve `/admin/*` rute vraćaju `403` (ne `404`) kada je token validan ali fali odgovarajuća dozvola - razlika između "ne postojiš" i "ne smeš" je namerna, isto kao na web strani.
 
@@ -146,7 +148,7 @@ Zahteva admin kapiju (token + `access_admin_panel`) plus istu dozvolu kao create
 
 ### Zakazivanja (`admin-appointment.routes.js`)
 
-Ceo router iza `manage_appointments_all`. `GET /`, `GET /manual/check-package`, `POST /manual`, `GET /:appointmentId`, `PUT /:appointmentId/confirm|reject|cancel|complete|no-show|reopen|reassign|reschedule`, `DELETE /:appointmentId`.
+Ceo router iza `manage_appointments_all`. `GET /`, `GET /manual/check-package`, `POST /manual`, `GET /:appointmentId`, `PUT /:appointmentId/confirm|reject|cancel|complete|no-show|reopen|reassign|reschedule`, `DELETE /:appointmentId`. Ako je termin u međuvremenu promenjen ili obrisan, promena statusa i brisanje vraćaju `409` (videti `02-usluge-zakazivanje-termini.md`).
 
 ### Porudžbine (`admin-order.routes.js`)
 
@@ -190,5 +192,5 @@ Pored JWT-a iz prijave, `/api/v1/admin/*` prihvata i API token oblika `elk_...` 
 
 ## Poznata ograničenja (namerni kompromisi, ne bagovi)
 
-- **Do 24h zastarela dozvola u tokenu** - videti sekciju Autentikacija iznad.
-- **Rate limiting je po IP adresi, ne po tokenu/korisniku** - svaki `/api/v1` zahtev prolazi kroz `apiLimiter` (120 zahteva/minut) povrh aplikacijskog `globalLimiter` (200/minut); `POST /auth/login` ima dodatno stroži `apiAuthLimiter` (10 neuspelih pokušaja na 15 minuta), a javne forme/booking rute imaju svoje limitere. Dodatnog limita specifičnog za admin API nema.
+- **`isEmployee`/`isPartner` iz trenutka prijave** - dozvole i rola se osvežavaju na svakom zahtevu, ove dve oznake ne (videti sekciju Autentikacija).
+- **Rate limiting za prijavu i obične korisnike je po IP adresi** - svaki `/api/v1` zahtev broji `apiLimiter` (`RATE_LIMIT_API_MAX`, podrazumevano 120 u minuti), bez obzira na nastavak adrese; opšti `globalLimiter` (`RATE_LIMIT_GLOBAL_MAX`, 100) preskače samo `/api/v1`, a sve ostalo pod `/api/` broji. `POST /auth/login` ima dodatno stroži `apiAuthLimiter` (10 neuspelih pokušaja na 15 minuta), a javne forme i booking rute svoje limitere. API tokeni (asistent) imaju i limite po tokenu (`21-claude-asistent-pristup.md`).

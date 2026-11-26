@@ -23,5 +23,8 @@ This documentation is split into focused files, each covering one area of the bu
 | `17-backups.md` | Daily local backup of the database and uploaded images/videos — what's covered, server setup (`mongodump`/cron), restore instructions, and what's still missing (offsite copies) |
 | `18-marketing-seo-blog-newsletter.md` | Marketing: SEO (meta, structured data, sitemap, robots), AI optimization (`llms.txt`), blog and newsletter campaigns, automatic emails, limits |
 | `19-video-tutorials.md` | Video tutorials on `/uputstva`: recording, subtitles, publishing, role-based access, `npm run tutorials:all` |
+| `20-wheels-materials-employee-card-eur.md` | Multiple prize wheels and leads, downloadable materials, the public employee card (vCard, QR), prices in euros |
+| `21-claude-assistant-access.md` | Claude as an assistant: API tokens, role, route allowlist, forced drafts, revocation, pause, audit, rollout |
+| `22-attack-resilience.md` | Resilience against botnet attacks: sessions only when needed (flash, CSRF), limiter before the session, sitemap cache, request body limit, rate-limit rules, post-deploy check |
 
 Each file stands on its own — you don't need to read them in order, though `06` (affiliate program) draws on concepts from `03`, `05`, and `07`, `11` builds on the appointment lifecycle described in `02`, and `14` (deletion) is most useful once you already know the entities described in `02`, `03`, and `04`.

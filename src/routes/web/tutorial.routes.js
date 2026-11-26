@@ -13,10 +13,11 @@ router.use((req, res, next) => {
 // req.user is already set (or absent for a guest) by optionalWebAuth in web.routes.js -
 // access to each video is decided per file inside the controller, from the manifest's audience
 router.get("/", TutorialController.tutorialsPage);
-// the URLs end in a real file extension (.mp4 / .jpg) on purpose: rate limiters (this app's own and the
-// Cloudflare rule in front of it) treat "static" by extension, and a page with dozens of posters plus a
-// video that is fetched in many Range requests must not count against a visitor's per-minute budget.
-// Access is still decided per file in the controller, the extension carries no meaning for it.
+// These two are dynamic routes (access is decided per file in the controller), not static files. A page with
+// dozens of posters plus a video fetched in many Range requests would eat the normal per-minute budget, so
+// the app's globalLimiter gives exactly these two URL shapes their own, higher quota (isTutorialMedia in
+// rate-limiter.middleware.js, RATE_LIMIT_MEDIA_MAX). Keep that pattern in sync with the two routes below.
+// The .mp4/.jpg endings also let a Cloudflare rule treat them as media; they carry no meaning for access.
 router.get("/video/:id/:device/:lang.mp4", TutorialController.tutorialVideo);
 router.get("/poster/:id/:device.jpg", TutorialController.tutorialPoster);
 

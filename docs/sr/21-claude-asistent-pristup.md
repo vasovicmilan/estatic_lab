@@ -22,9 +22,9 @@ Tri nezavisna sloja; svaki mora da propusti zahtev.
 | `blog` | čitanje postova, pravljenje i izmena posta, upload slika (`/uploads/posts`, `/gallery`), čitanje, pravljenje i izmena kategorija i tagova | `status = draft`, bez zakazivanja. Izmena objavljenog posta ga skida sa sajta i vraća u nacrt |
 | `catalog` | čitanje, pravljenje i izmena usluga, paketa i proizvoda; upload slika i galerije; čitanje resursa; čitanje, pravljenje i izmena kategorija i tagova | `isActive = false`. Izmena aktivnog artikla ga skida sa sajta dok ga ne aktiviraš |
 | `materials` | čitanje, otpremanje i izmena materijala (PDF, katalozi, brošure do 25 MB) | `isActive = false` |
-| `site` | čitanje i izmena tekstova sajta: početna (hero i uvod), o nama, FAQ, partnerski program, zašto mi | **Ništa: izmena je odmah javna** (nema nacrta). Stara i nova vrednost ostaju u dnevniku revizije |
+| `site` | čitanje i izmena tekstova sajta: početna (hero i uvod), o nama, FAQ, partnerski program, zašto mi, uvodi za usluge, pakete, prodavnicu, blog i tim, kontakt stranica i **SEO naslovi i opisi stranica** (`seo-stranica`) | **Ništa: izmena je odmah javna** (nema nacrta). Stara i nova vrednost ostaju u dnevniku revizije |
 
-**Nikad, bez obzira na rolu:** pravne stranice (politika privatnosti, uslovi korišćenja), brisanje bilo čega, objava i promena statusa posta, SEO polja (`/seo`), aktivacija, slanje i pravljenje newslettera, kuponi, korisnici, role, porudžbine, termini, isplate, kontakti, logovi, izveštaji, tekstovi i podešavanja sajta, pravljenje drugih tokena. Token važi samo na `/api/v1/admin/*` (ne na `/me`, `/employee`, `/partner`, korpi).
+**Nikad, bez obzira na rolu:** pravne stranice (politika privatnosti, uslovi korišćenja), brisanje bilo čega, objava i promena statusa posta, SEO polja pojedinačnih artikala, usluga i postova (rute `/seo`), aktivacija, slanje i pravljenje newslettera, kuponi, korisnici, role, porudžbine, termini, isplate, kontakti (poruke), logovi, izveštaji, podešavanja sajta i tekstovi koji nisu navedeni u tabeli, pravljenje drugih tokena. Token važi samo na `/api/v1/admin/*` (ne na `/me`, `/employee`, `/partner`, korpi).
 
 Kategorije i tagovi: nova kategorija ili tag se pravi **neaktivan** (aktiviraš je ti). Izmena postojeće ne može da menja aktivnost, prioritet, domen ni roditelja, pa je ne skida sa sajta i ne seli po strukturi; ostala polja (naziv, opis, sadržaj, SEO) menjaju se odmah i vide se u dnevniku revizije. Brisanje je samo za admina. Podrazumevano asistent vidi samo aktivne kategorije, a svoje nacrte vidi kad traži `?isActive=false`. Čitanje ličnih podataka klijenata nije u allowlist-i: tekst u poljima koja piše bilo ko na internetu ne sme da stigne do asistenta kao instrukcija.
 
@@ -65,6 +65,6 @@ Pregledaš nacrte i objaviš ili aktiviraš: blog u `/admin/blog`, usluge/pakete
 ## 8. Poznata ograničenja
 
 - Izmena aktivne usluge, paketa ili proizvoda je skida sa sajta dok je ne vratiš (tako je dogovoreno: sve što Claude dotakne ti potvrđuješ). Za sitnu ispravku to znači kratko isključenje; ako to smeta, ispravku radi sam.
-- Tekstovi sajta (oblast `site`) nemaju nacrt: kad Claude izmeni tekst, izmena je odmah javna. Pravne stranice, podešavanja sajta, kampanje, kuponi i SEO polja nisu u opsegu.
+- Tekstovi sajta (oblast `site`) nemaju nacrt: kad Claude izmeni tekst, izmena je odmah javna. Pravne stranice, podešavanja sajta, kampanje, kuponi i SEO polja pojedinačnih stavki nisu u opsegu. Pošto oblast `site` obuhvata i SEO naslove stranica, dodeljuj je samo kad treba.
 - Brojači ograničenja su u memoriji procesa; restart `pm2` ih briše.
 - Token ne zamenjuje reviziju: Claude može da napiše pogrešan sadržaj, zato je sve nacrt.

@@ -63,10 +63,9 @@ export async function login(email, password) {
   // employeeMiddleware/partnerMiddleware all read req.session.user, so a Bearer-token
   // request could never actually pass any of those gates even with a valid token, and
   // even once those middlewares are fixed to read req.user, the old token shape had
-  // nothing for them to check. Same 1-day expiry as before (signJwt's default) bounds
-  // how stale an embedded permission set can get after a role change - if that's ever
-  // too long for a specific deployment, shortening expiresIn here is the lever, not a
-  // DB lookup on every request.
+  // nothing for them to check. The embedded roleName/permissions are only the value at
+  // login: apiAuthMiddleware replaces them with the current ones from the database on
+  // every request (see auth.middleware.js's currentRoleFields).
   const token = signJwt({ id: user._id, email: user.email, roleId, roleName, permissions, isEmployee, isPartner });
 
   logInfo("User logged in", { userId: user._id, email: user.email });

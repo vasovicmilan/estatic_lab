@@ -30,13 +30,13 @@ npx playwright test --list   # samo prikazuje koji testovi postoje, ne pokreće 
 ## Šta je pokriveno
 
 ### Jedinični testovi
-Jedinični i integracioni testovi zajedno: **3228 testova u 1112 grupa** (poslednje poznato stanje; tačan broj daje `npm test`). Jedinični su pod `test/unit/`, organizovani po servisu/mapperu/repozitorijumu/validatoru. Finansijski najosetljiviji servisi — `commission.service.js`, `payout-request.service.js`, `resource.service.js` — su na 100% pokrivenosti linija i funkcija.
+Jedinični i integracioni testovi zajedno: **3605 testova u 1196 grupa** (stanje od 26.11.2026; tačan broj daje `npm test`). Na svežem klonu jedan test pada iz razloga okruženja: `static-cross-origin` traži `src/public/favicon.ico`, koji je u `.gitignore`; gde fajl postoji, test ima šta da posluži. Jedinični su pod `test/unit/`, organizovani po servisu/mapperu/repozitorijumu/validatoru. Finansijski najosetljiviji servisi — `commission.service.js`, `payout-request.service.js`, `resource.service.js` — bili su na 100% pokrivenosti linija i funkcija pri poslednjem merenju pokrivenosti.
 
 ### Provera slobodnih termina pri izmeni (SrediMe)
 `appointment.service.test.js` pokriva i pomeranje i preraspodelu: SrediMe blok, sudar sa sopstvenim terminom zaposlenog i slobodan termin koji se normalno upisuje. Vidi `02-usluge-zakazivanje-termini.md`.
 
 ### Tutorijali (odvojen Playwright skup)
-Pored 25 E2E testova postoji `playwright.tutorials.config.js` sa 41 scenarijem koji snimaju video uputstva. Nije deo `npm test` ni `npx playwright test`; pokreće se sa `npm run tutorials:all`. Vidi `19-video-uputstva.md`.
+Pored 25 E2E testova postoji `playwright.tutorials.config.js` čiji scenariji snimaju video uputstva. Nije deo `npm test` ni `npx playwright test`; pokreće se sa `npm run tutorials:all`. Vidi `19-video-uputstva.md`.
 
 ### E2E testovi
 25 testova pod `test/e2e/`, po poslovnom toku:

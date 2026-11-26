@@ -23,3 +23,7 @@ The system resolves this by recording, at the moment a package is purchased, exa
 ## Cancelling a Package
 
 A package purchase can be cancelled if needed — for example, if a customer requests a refund shortly after purchasing. Cancellation correctly unwinds anything that was tied to that purchase, including reversing any commission that had already been credited as a result of it.
+
+## Session state stays consistent
+
+Every session transition (reserve, consume, return) caused by changing or deleting an appointment is written in the same transaction as that change (see `02-services-booking-appointments.md`), so a package cannot drift away from the appointment status. The "session consumed" event is sent only after the transaction has committed.

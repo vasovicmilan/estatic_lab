@@ -29,6 +29,12 @@ Kada neko bude unapređen u profil Zaposlenog ili Partnera, sistem mora da odlu�
 Ovo postoji tako da unapređenje, recimo, Admina da bude i Partner (da bi testirao partnerski program, ili zato što je zaista i poslovni partner) nikada slučajno ne *degradira* njegov pristup — on zadržava svoju Admin rolu, dok istovremeno dobija Partner profil ispod nje sa sopstvenim referalnim linkom i praćenjem zarade.
 ## Web sesije: kada prestaju da važe
 
-Web sesija (14 dana) čuva kopiju role i dozvola iz trenutka prijave. Da ta kopija ne bi preživela promenu naloga, `sessionRevalidation` (`auth.middleware.js`) najviše jednom u 60 sekundi po sesiji proverava status naloga i `tokenValidAfter` (ista polja kao za Bearer token). Sesija se odjavljuje ako je nalog suspendovan/neaktivan/obrisan ili je `tokenValidAfter` noviji od trenutka prijave. `tokenValidAfter` se pomera pri suspendovanju/deaktivaciji, **promeni role** (korisnik mora ponovo da se prijavi da bi dobio nove dozvole) i **resetu lozinke**. Ako provera ne uspe (baza nedostupna), sesija se ne prekida.
+Web sesija (14 dana) čuva kopiju role i dozvola iz trenutka prijave. Da ta kopija ne bi preživela promenu naloga, `sessionRevalidation` (`auth.middleware.js`) najviše jednom u 60 sekundi po sesiji proverava status naloga i `tokenValidAfter` (ista polja kao za Bearer token). Sesija se odjavljuje ako je nalog suspendovan/neaktivan/obrisan ili je `tokenValidAfter` noviji od trenutka prijave. `tokenValidAfter` se pomera pri suspendovanju/deaktivaciji, **promeni role korisnika** (korisnik mora ponovo da se prijavi) i **resetu lozinke**. Ako provera ne uspe (baza nedostupna), sesija se ne prekida.
+
+**Izmena dozvola same role** ne odjavljuje nikoga, ali važi bez ponovne prijave: ista provera osvežava naziv role i spisak dozvola iz baze. U web sesiji to je najkasnije za 60 sekundi, a na API-ju (JWT) već na sledećem zahtevu. Ako rola korisnika više ne postoji (obrisana je), korisnik ostaje bez dozvola. Oznake `isEmployee` i `isPartner` se i dalje računaju pri prijavi.
+
+## Trajno brisanje
+
+Pored dozvole za oblast, **trajno brisanje u admin delu (web `/admin` i `/api/v1/admin`) sme samo rola `admin`** (`requireAdminForDelete`). Menadžerske role (blog, usluge, prodavnica) i druge prilagođene role mogu da deaktiviraju ili arhiviraju. Pokušaj se beleži u dnevniku revizije kao `PERMISSION_DENIED`; dugmad za brisanje im se ne prikazuju.
 
 Pri prijavi (lozinka i Google) sesija dobija nov identifikator (`session.regenerate`), a `redirect` parametar prihvata samo putanju na istom sajtu (`/...`). Google prijava odbija suspendovane i nepotvrđene naloge, a postojeći lokalni nalog povezuje po email-u samo ako Google vrati `verified_email: true`.

@@ -54,6 +54,28 @@ describe("sessionRevalidation", () => {
     assert.equal(req.session.isLoggedIn, true);
   });
 
+  it("refreshes role name and permissions without logging the user out", async (t) => {
+    const session = freshSession({ user: { id: "u1", roleName: "menadzer bloga", permissions: ["access_admin_panel", "manage_blog"], isEmployee: true } });
+    const { req } = await run(session, t, { status: "active", role: { _id: "r1", name: "menadzer bloga", permissions: ["access_admin_panel"] } });
+    assert.equal(req.session.isLoggedIn, true);
+    assert.deepEqual(req.session.user.permissions, ["access_admin_panel"]);
+    assert.equal(req.session.user.roleId, "r1");
+    assert.equal(req.session.user.isEmployee, true); // ostala polja ostaju
+  });
+
+  it("drops every permission when the role no longer exists", async (t) => {
+    const session = freshSession({ user: { id: "u1", roleName: "stara rola", permissions: ["manage_users"] } });
+    const { req } = await run(session, t, { status: "active", role: null });
+    assert.equal(req.session.user.roleName, "user");
+    assert.deepEqual(req.session.user.permissions, []);
+  });
+
+  it("does not touch permissions when the lookup fails", async (t) => {
+    const session = freshSession({ user: { id: "u1", permissions: ["manage_blog"] } });
+    const { req } = await run(session, t, null, { fail: true });
+    assert.deepEqual(req.session.user.permissions, ["manage_blog"]);
+  });
+
   it("fails open when the lookup throws", async (t) => {
     const { req, nextCalled } = await run(freshSession(), t, null, { fail: true });
     assert.equal(req.session.isLoggedIn, true);
